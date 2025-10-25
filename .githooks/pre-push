@@ -5,23 +5,6 @@
 set -euo pipefail
 
 ROOT_DIR="$(git rev-parse --show-toplevel)"
-GIT_HOOKS_DIR="$ROOT_DIR/.git/hooks"
-PROJECT_HOOKS_DIR="$ROOT_DIR/.githooks"
-
-echo "Setting up pre-commit hooks..."
-
-# Create .githooks directory if it doesn't exist
-mkdir -p "$PROJECT_HOOKS_DIR"
-
-# Create pre-push hook
-cat > "$PROJECT_HOOKS_DIR/pre-push" << 'EOF'
-#!/usr/bin/env bash
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
-# SPDX-License-Identifier: MIT
-
-set -euo pipefail
-
-ROOT_DIR="$(git rev-parse --show-toplevel)"
 cd "$ROOT_DIR"
 
 # Check if current branch is spike/*
@@ -54,16 +37,3 @@ if [ -f "$ROOT_DIR/scripts/preflight.sh" ]; then
 else
   echo "Warning: preflight.sh not found - skipping pre-push checks" >&2
 fi
-EOF
-
-chmod +x "$PROJECT_HOOKS_DIR/pre-push"
-
-# Create symlink in .git/hooks
-ln -sf "$PROJECT_HOOKS_DIR/pre-push" "$GIT_HOOKS_DIR/pre-push"
-
-echo "✅ Pre-commit hooks configured successfully"
-echo "   - Pre-push hook: Runs preflight.sh before every push"
-echo "   - Spike branches: Only formatting + REUSE (tests skipped)"
-echo ""
-echo "To bypass (NOT RECOMMENDED):"
-echo "   git push --no-verify"
