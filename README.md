@@ -124,7 +124,7 @@ This runs:
 
 ## 📁 Project Structure
 
-```
+```text
 frontend/
 ├── src/
 │   ├── components/     # React components
@@ -177,7 +177,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 feat: add user authentication
 fix: resolve memory leak in dashboard
 docs: update API integration guide
