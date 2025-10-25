@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 SecPal
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
