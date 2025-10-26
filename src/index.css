@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 SecPal */
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+@import "tailwindcss";
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
