@@ -5,9 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # SecPal Frontend
 
-[![REUSE Compliance](https://github.com/SecPal/frontend/actions/workflows/reuse.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/reuse.yml)
-[![License Check](https://github.com/SecPal/frontend/actions/workflows/license-compatibility.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/license-compatibility.yml)
 [![Quality Gates](https://github.com/SecPal/frontend/actions/workflows/quality.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/quality.yml)
+[![CodeQL](https://github.com/SecPal/frontend/actions/workflows/codeql.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/codeql.yml)
+[![PR Size](https://github.com/SecPal/frontend/actions/workflows/pr-size.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/pr-size.yml)
+[![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
 React/TypeScript frontend for the SecPal platform.
 
