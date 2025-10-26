@@ -25,7 +25,7 @@ repos:
     rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
-        args: ["--config", ".markdownlint.json"]
+        args: ["--config", ".markdownlint-cli2.yaml"]
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
