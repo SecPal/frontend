@@ -27,28 +27,6 @@ git clone https://github.com/SecPal/frontend.git
 cd frontend
 ```
 
-### ⚠️ IMPORTANT: Create Symlinks (DRY Principle)
-
-**Before installing dependencies**, you MUST create symlinks to avoid file duplication:
-
-```bash
-# Navigate to frontend repository
-cd ~/code/SecPal/frontend
-
-# Create symlinks to .github repository (governance files)
-ln -sf ../.github/CONTRIBUTING.md .
-ln -sf ../.github/SECURITY.md .
-ln -sf ../.github/CODE_OF_CONDUCT.md .
-ln -sf ../.github/CODEOWNERS .
-ln -sf ../.github/.editorconfig .editorconfig
-ln -sf ../.github/.gitattributes .gitattributes
-
-# Verify symlinks were created correctly
-file CONTRIBUTING.md  # Should show: symbolic link to ../.github/CONTRIBUTING.md
-```
-
-**Why symlinks?** To maintain DRY (Don't Repeat Yourself) principle across repositories. All governance files are centralized in the `.github` repository.
-
 ### Install Dependencies
 
 ```bash
@@ -192,9 +170,9 @@ This project is REUSE 3.3 compliant. All files contain SPDX license headers.
 
 ## 🔗 Related Repositories
 
-- [API](https://github.com/SecPal/api) - Laravel backend
-- [Contracts](https://github.com/SecPal/contracts) - OpenAPI specifications
-- [.github](https://github.com/SecPal/.github) - Organization defaults
+- [Contracts](https://github.com/SecPal/contracts) - OpenAPI 3.1 specifications
+- [.github](https://github.com/SecPal/.github) - Organization-wide settings and documentation
+- API - Laravel backend (planned)
 
 ## 📞 Support
 
