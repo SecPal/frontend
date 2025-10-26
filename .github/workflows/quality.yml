@@ -1,144 +1,51 @@
 # SPDX-FileCopyrightText: 2025 SecPal
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: CC0-1.0
 
-name: Quality Gates
+name: Quality Checks
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  formatting:
+  reuse:
+    name: Check REUSE Compliance
+    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@main
+
+  license-compatibility:
+    name: Check License Compatibility
+    uses: SecPal/.github/.github/workflows/reusable-license-compatibility.yml@main
+
+  prettier:
     name: Formatting Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@main
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
+  markdown-lint:
+    name: Markdown Lint
+    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@main
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check formatting with Prettier
-        run: npm run format:check
-
-      - name: Lint Markdown
-        run: npx markdownlint-cli2 "**/*.md"
-
-  actionlint:
-    name: GitHub Actions Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Run actionlint
-        uses: reviewdog/action-actionlint@v1
-        with:
-          level: error
-
-  lint:
+  eslint:
     name: ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
+    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@main
+    with:
+      node-version: "20"
 
   typecheck:
     name: TypeScript Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@main
+    with:
+      node-version: "20"
+      build-command: "npm run typecheck"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript type checking
-        run: npm run typecheck
-
-  test:
+  vitest:
     name: Vitest Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Generate coverage report
-        run: npm run test:coverage
-
-      - name: Upload coverage to artifacts
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage
-          path: coverage/
-
-  pr-size:
-    name: PR Size Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Check PR size
-        env:
-          BASE_BRANCH: ${{ github.base_ref }}
-        run: |
-          git fetch origin "$BASE_BRANCH"
-          MERGE_BASE=$(git merge-base "origin/$BASE_BRANCH" HEAD)
-
-          CHANGED=$(git diff --numstat "$MERGE_BASE"..HEAD | awk '{ins+=$1; del+=$2} END {print ins+del+0}')
-
-          echo "Changed lines: $CHANGED"
-
-          if [ "$CHANGED" -gt 600 ]; then
-            echo "::error::PR too large ($CHANGED > 600 lines). Please split into smaller PRs."
-            exit 1
-          fi
-
-          echo "::notice::PR size OK ($CHANGED lines)"
+    uses: SecPal/.github/.github/workflows/reusable-node-test.yml@main
+    with:
+      node-version: "20"
+      test-command: "npm test"
