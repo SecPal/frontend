@@ -20,6 +20,7 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+      - "npm"
       - "dependabot"
     rebase-strategy: "auto"
     target-branch: "main"
@@ -39,8 +40,8 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
-      - "dependabot"
       - "github-actions"
+      - "dependabot"
     rebase-strategy: "auto"
     target-branch: "main"
     pull-request-branch-name:
