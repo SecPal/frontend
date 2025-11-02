@@ -177,7 +177,6 @@ export function DropdownLabel({
       {...props}
       data-slot="label"
       className={clsx(className, "col-start-2 row-start-1")}
-      {...props}
     />
   );
 }
