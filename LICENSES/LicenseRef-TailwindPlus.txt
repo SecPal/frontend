@@ -1,6 +1,6 @@
 Tailwind Plus License
 
-Components in this directory are from the Catalyst UI Kit by Tailwind Labs Inc.
+Catalyst UI Kit components by Tailwind Labs Inc.
 
 Copyright (c) Tailwind Labs Inc.
 
