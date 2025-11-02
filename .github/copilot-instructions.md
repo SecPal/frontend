@@ -3,12 +3,40 @@ SPDX-FileCopyrightText: 2025 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Frontend Instructions (React/TypeScript)
+<!-- @EXTENDS: ../../.github/.github/copilot-instructions.md -->
+<!-- INHERITANCE: Core Principles + Org Rules from parent -->
+<!-- Frontend-specific rules below -->
 
-> **Note:** These instructions are organization-level defaults from `SecPal/.github`.
-> Copy to `SecPal/frontend/.github/copilot-instructions.md` when frontend repo is created.
+<!--
+╔════════════════════════════════════════════════════════════════╗
+║  🚨 AI MUST READ ORGANIZATION-WIDE INSTRUCTIONS FIRST 🚨       ║
+╠════════════════════════════════════════════════════════════════╣
+║  Location: `../.github/.github/copilot-instructions.md`        ║
+║                                                                ║
+║  Critical Topics Defined There:                                ║
+║  - 🛡️ Copilot Review Protocol (ALWAYS request after PR)       ║
+║  - 🧪 Quality Gates (NEVER bypass)                            ║
+║  - 📝 TDD Policy (Write tests FIRST)                          ║
+║  - 🔐 Security Requirements                                    ║
+║                                                                ║
+║  ⚠️ This file contains REPO-SPECIFIC rules only               ║
+╚════════════════════════════════════════════════════════════════╝
+-->
 
-**Applies to:** `src/**`, `apps/**`, `packages/**`, `*.tsx`, `*.ts`
+# Frontend Repository Instructions (React/TypeScript)
+
+**Scope:** `src/**`, `apps/**`, `packages/**`, `*.tsx`, `*.ts`
+
+**Pre-push Quality Gates:**
+
+```bash
+npm test                      # All tests pass
+npm run typecheck            # TypeScript strict mode clean
+npm run lint                 # ESLint clean
+npx prettier --write src/    # Code formatted
+```
+
+---
 
 ## Path-Scoped Rules (Preflight Integration)
 
@@ -79,7 +107,7 @@ interface ButtonProps {
 }
 
 // API responses (from OpenAPI-generated types)
-// Note: To use the '@' path alias prefix (as in import statements like `import x from '@/...'`), configure your project as follows:
+// Note: To use the '@' path alias prefix, configure your project:
 // In tsconfig.json, add the following to map '@/*' to 'src/*':
 //   "compilerOptions": {
 //     "baseUrl": ".",
