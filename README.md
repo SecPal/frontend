@@ -12,6 +12,18 @@ SPDX-License-Identifier: CC0-1.0
 
 React/TypeScript frontend for the SecPal platform.
 
+## 📱 Progressive Web App (PWA)
+
+SecPal is an **offline-first PWA** providing seamless experience regardless of network connectivity.
+
+**Features:**
+
+- 📴 **Offline Support**: Service Worker with intelligent caching strategies
+- 📲 **Installable**: Add to home screen on mobile/desktop
+- 🔄 **Auto-Updates**: Automatic service worker updates
+- 🌐 **Network Detection**: Real-time online/offline status monitoring
+- 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
+
 ## 🎨 UI Components & Design System
 
 This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
