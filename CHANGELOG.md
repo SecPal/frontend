@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Catalyst UI Kit integration**: All 27 Catalyst components copied from `/home/user/code/catalyst/typescript/`
+- **Catalyst UI Kit integration**: All 27 Catalyst components
   - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
   - Dependencies: `@headlessui/react`, `motion`, `clsx`
   - Documentation reference in README
