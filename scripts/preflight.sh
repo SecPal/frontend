@@ -105,7 +105,8 @@ if [ -f CHANGELOG.md ] && [ "$CURRENT_BRANCH" != "main" ] && ! echo "$CURRENT_BR
   UNRELEASED_START=$(grep -n '^## \[Unreleased\]' CHANGELOG.md | cut -d: -f1)
   if [ -n "$UNRELEASED_START" ]; then
     # Find next heading after [Unreleased], or use EOF if none found
-    UNRELEASED_END=$(tail -n +"$((UNRELEASED_START + 1))" CHANGELOG.md | grep -n -m 1 '^## ' | cut -d: -f1)
+    # grep returns exit 1 when no match found - this is expected when [Unreleased] is last section
+    UNRELEASED_END=$(tail -n +"$((UNRELEASED_START + 1))" CHANGELOG.md | grep -n -m 1 '^## ' | cut -d: -f1 || true)
     if [ -n "$UNRELEASED_END" ]; then
       # Extract content between [Unreleased] and next heading (using helper function)
       UNRELEASED_CONTENT=$(sed -n "$((UNRELEASED_START + 1)),$((UNRELEASED_START + UNRELEASED_END - 1))p" CHANGELOG.md | filter_changelog_content | wc -l)
