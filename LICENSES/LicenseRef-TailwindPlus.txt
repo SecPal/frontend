@@ -1,0 +1,22 @@
+Tailwind Plus License
+
+This component is from the Catalyst UI Kit, which is part of Tailwind Plus.
+
+Full license text available at: https://tailwindcss.com/plus/license
+
+Copyright (c) Tailwind Labs Inc.
+
+This component is licensed for use under the Tailwind Plus license terms.
+The SecPal project has a valid Tailwind Plus license that permits:
+
+- Use of components to create End Products
+- Modification of components to create derivative components
+- Use in End Products that are open source and freely available to End Users
+- Commercial and non-commercial use within the SecPal application
+
+The license prohibits:
+- Re-distribution of components separately from an End Product
+- Creating UI libraries or kits based on these components
+- Use in products that compete with Tailwind Plus
+
+For complete license terms, see: https://tailwindcss.com/plus/license

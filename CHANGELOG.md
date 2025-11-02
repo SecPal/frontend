@@ -12,12 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Catalyst UI Kit integration**: All 27 Catalyst components copied from `/home/user/code/catalyst/typescript/`
+  - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
+  - Dependencies: `@headlessui/react`, `motion`, `clsx`
+  - Documentation reference in README
+  - SPDX license headers for REUSE compliance
+
 ### Fixed
 
 - Pre-push hook no longer fails with exit code 1 when [Unreleased] is the last CHANGELOG section
 - Project automation now triggers on label changes (labeled event)
 
-### Added
+### Added (Previous)
 
 - Initial repository setup
 - React + TypeScript + Vite configuration

@@ -12,6 +12,14 @@ SPDX-License-Identifier: CC0-1.0
 
 React/TypeScript frontend for the SecPal platform.
 
+## 🎨 UI Components
+
+This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
+
+**Component Source:** `/home/user/code/catalyst/typescript/`  
+**License:** [Tailwind Plus License](https://tailwindcss.com/plus/license)  
+**Documentation:** [Catalyst Docs](https://catalyst.tailwindui.com/docs)
+
 ## 📋 Prerequisites
 
 - Node.js >= 20.0.0

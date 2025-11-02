@@ -9,6 +9,11 @@ path = "src/**"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
+path = "src/components/**"
+SPDX-FileCopyrightText = "Tailwind Labs Inc."
+SPDX-License-Identifier = "LicenseRef-TailwindPlus"
+
+[[annotations]]
 path = "public/**"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
