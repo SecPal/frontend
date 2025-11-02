@@ -85,11 +85,12 @@ MIN_CHANGELOG_LINES=3
 
 # Helper function to filter CHANGELOG content (POSIX-compliant with whitespace tolerance)
 filter_changelog_content() {
-  grep -Ev '^##' | grep -Ev '^$' | grep -Ev '^[[:space:]]*<!--' | grep -Ev '^[[:space:]]*-->'
+  grep -Ev '(^##|^$|^[[:space:]]*<!--|^[[:space:]]*-->)'
 }
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 # Use POSIX-compliant grep instead of bash-specific [[ =~ ]] for portability
+# The pattern in CHANGELOG_EXEMPT_PREFIXES uses the ^ anchor intentionally to match branch prefixes from the start of the branch name.
 if [ -f CHANGELOG.md ] && [ "$CURRENT_BRANCH" != "main" ] && ! echo "$CURRENT_BRANCH" | grep -qE "$CHANGELOG_EXEMPT_PREFIXES"; then
   # Check if CHANGELOG has [Unreleased] section
   if ! grep -q "## \[Unreleased\]" CHANGELOG.md; then
@@ -104,7 +105,7 @@ if [ -f CHANGELOG.md ] && [ "$CURRENT_BRANCH" != "main" ] && ! echo "$CURRENT_BR
   UNRELEASED_START=$(grep -n '^## \[Unreleased\]' CHANGELOG.md | cut -d: -f1)
   if [ -n "$UNRELEASED_START" ]; then
     # Find next heading after [Unreleased], or use EOF if none found
-    UNRELEASED_END=$(tail -n +"$((UNRELEASED_START + 1))" CHANGELOG.md | grep -n '^## ' | head -1 | cut -d: -f1)
+    UNRELEASED_END=$(tail -n +"$((UNRELEASED_START + 1))" CHANGELOG.md | grep -n -m 1 '^## ' | cut -d: -f1)
     if [ -n "$UNRELEASED_END" ]; then
       # Extract content between [Unreleased] and next heading (using helper function)
       UNRELEASED_CONTENT=$(sed -n "$((UNRELEASED_START + 1)),$((UNRELEASED_START + UNRELEASED_END - 1))p" CHANGELOG.md | filter_changelog_content | wc -l)
@@ -114,8 +115,10 @@ if [ -f CHANGELOG.md ] && [ "$CURRENT_BRANCH" != "main" ] && ! echo "$CURRENT_BR
     fi
 
     if [ "$UNRELEASED_CONTENT" -lt "$MIN_CHANGELOG_LINES" ]; then
-      echo "⚠️  Warning: [Unreleased] section appears empty in CHANGELOG.md" >&2
+      echo "⚠️  Warning: [Unreleased] section appears empty in CHANGELOG.md (found fewer than $MIN_CHANGELOG_LINES content lines)" >&2
       echo "Did you forget to document your changes?" >&2
+      echo "Please add entries under [Unreleased] in the format: '### Added', '### Changed', or '### Fixed'." >&2
+      echo "See CONTRIBUTING.md or the top of CHANGELOG.md for format requirements." >&2
     fi
   fi
 fi
