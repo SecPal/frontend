@@ -51,11 +51,11 @@ describe("useOnlineStatus", () => {
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "online",
-      expect.any(Function),
+      expect.any(Function)
     );
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "offline",
-      expect.any(Function),
+      expect.any(Function)
     );
   });
 });
