@@ -1,18 +1,9 @@
 Tailwind Plus License
 
-Components in this directory are from the Catalyst UI Kit, part of Tailwind Plus.
+Components in this directory are from the Catalyst UI Kit by Tailwind Labs Inc.
 
 Copyright (c) Tailwind Labs Inc.
 
+Licensed under the Tailwind Plus License.
+
 Full license text: https://tailwindcss.com/plus/license
-
-Key restrictions from the Tailwind Plus license:
-
-- Components may NOT be re-distributed separately from this application
-- Components may NOT be used to create UI libraries or kits for distribution
-- Components may NOT be published as standalone downloads or packages
-- Use in products that compete with Tailwind Plus is prohibited
-
-These components are licensed for use within this End Product only.
-
-For complete license terms, see: https://tailwindcss.com/plus/license
