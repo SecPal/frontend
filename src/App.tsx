@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { OfflineIndicator } from "./components/OfflineIndicator";
 
 function Home() {
   return (
@@ -47,7 +46,6 @@ function App() {
           <Route path="/about" element={<About />} />
         </Routes>
       </div>
-      <OfflineIndicator />
     </BrowserRouter>
   );
 }
