@@ -14,7 +14,7 @@ describe("App", () => {
   it("renders main content", () => {
     render(<App />);
     expect(
-      screen.getByText(/Your Security Pal - the security guard's best friend/i),
+      screen.getByText(/Your Security Pal - the security guard's best friend/i)
     ).toBeInTheDocument();
   });
 
