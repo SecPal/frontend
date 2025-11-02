@@ -1,0 +1,9 @@
+Tailwind Plus License
+
+Catalyst UI Kit components by Tailwind Labs Inc.
+
+Copyright (c) Tailwind Labs Inc.
+
+Licensed under the Tailwind Plus License.
+
+Full license text: https://tailwindcss.com/plus/license
