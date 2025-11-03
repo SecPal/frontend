@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Catalyst Setup Completion**: Production-ready configuration
-  - React Router v6 for client-side navigation with SPA routing
+  - React Router v7 for client-side navigation with SPA routing
   - Inter font family integration via @fontsource/inter (weights 400-700)
   - Heroicons icon library (@heroicons/react) for UI consistency
   - Updated Link component for React Router integration

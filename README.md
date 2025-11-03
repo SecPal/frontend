@@ -17,7 +17,7 @@ React/TypeScript frontend for the SecPal platform.
 This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
 
 **Components:** 27 production-ready React components
-**Routing:** React Router v6 with client-side navigation
+**Routing:** React Router v7 with client-side navigation
 **Typography:** Inter font family (optimized for Catalyst)
 **Icons:** Heroicons (16×16 and 20×20)
 **License:** [Tailwind Plus License](https://tailwindcss.com/plus/license)
