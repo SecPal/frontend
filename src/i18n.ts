@@ -15,16 +15,9 @@ export async function activateLocale(locale: string) {
   const selectedLocale = locale in locales ? locale : defaultLocale;
 
   try {
-    // Dynamic import of compiled message catalogs
-    let messagesModule: { messages: Record<string, string | string[]> };
-    if (selectedLocale === "en") {
-      messagesModule = await import("./locales/en/messages.js");
-    } else if (selectedLocale === "de") {
-      messagesModule = await import("./locales/de/messages.js");
-    } else {
-      // Fallback to default
-      messagesModule = await import("./locales/en/messages.js");
-    }
+    // Use dynamic import with template literal for scalability
+    const messagesModule: { messages: Record<string, string | string[]> } =
+      await import(`./locales/${selectedLocale}/messages.js`);
 
     i18n.load(selectedLocale, messagesModule.messages);
     i18n.activate(selectedLocale);

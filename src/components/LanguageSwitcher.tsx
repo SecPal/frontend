@@ -15,11 +15,10 @@ export function LanguageSwitcher() {
       await activateLocale(locale);
       setLocalePreference(locale);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to change language. Please try again."
+      const fallbackMessage = i18n._(
+        "Failed to change language. Please try again."
       );
+      setError(err instanceof Error ? err.message : fallbackMessage);
     }
   };
 

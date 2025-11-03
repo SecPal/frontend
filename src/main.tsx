@@ -35,7 +35,6 @@ export function AppWithI18n() {
       <div
         role="status"
         aria-live="polite"
-        aria-label="Loading translations"
         style={{ padding: "2rem", textAlign: "center" }}
       >
         Loading...
@@ -51,7 +50,6 @@ export function AppWithI18n() {
 }
 
 // Only run if not in test environment
-// @ts-expect-error - VITEST is injected by vitest at runtime
 const isTest = typeof import.meta.env !== "undefined" && import.meta.env.VITEST;
 if (typeof window !== "undefined" && !isTest) {
   const rootElement = document.getElementById("root");
