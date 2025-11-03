@@ -13,7 +13,7 @@ import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "./index.css";
 
-function AppWithI18n() {
+export function AppWithI18n() {
   const [localeLoaded, setLocaleLoaded] = useState(false);
 
   useEffect(() => {
