@@ -63,7 +63,7 @@ import { Trans } from "@lingui/macro";
 
 **Translation Service:** This project uses [Translation.io](https://translation.io/) for collaborative translation management. Translation.io provides a free, unlimited account for open-source projects. Thank you, Translation.io! 🙏
 
-##  UI Components & Design System
+## 🎨 UI Components & Design System
 
 This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
 
