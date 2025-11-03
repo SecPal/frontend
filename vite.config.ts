@@ -35,6 +35,7 @@ export default defineConfig({
             sizes: "512x512",
             type: "image/svg+xml",
           },
+          // Duplicate 512x512 entry with 'any maskable' purpose for adaptive icons
           {
             src: "pwa-512x512.svg",
             sizes: "512x512",
