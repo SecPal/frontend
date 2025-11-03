@@ -42,7 +42,11 @@ npm run lingui:extract
 # Compile translation catalogs for production
 npm run lingui:compile
 
+<<<<<<< HEAD
 # Sync with Translation.io (extract + compile)
+=======
+# Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
+>>>>>>> origin/main
 npm run sync
 
 # Sync and remove unused translations

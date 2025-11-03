@@ -35,7 +35,6 @@ export function AppWithI18n() {
       <div
         role="status"
         aria-live="polite"
-        aria-label="Loading translations"
         style={{ padding: "2rem", textAlign: "center" }}
       >
         Loading...
@@ -50,13 +49,17 @@ export function AppWithI18n() {
   );
 }
 
-const rootElement = document.getElementById("root");
-if (!rootElement) {
-  throw new Error("Root element not found");
-}
+// Only run if not in test environment
+const isTest = typeof import.meta.env !== "undefined" && import.meta.env.VITEST;
+if (typeof window !== "undefined" && !isTest) {
+  const rootElement = document.getElementById("root");
+  if (!rootElement) {
+    throw new Error("Root element not found");
+  }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <AppWithI18n />
-  </StrictMode>
-);
+  createRoot(rootElement).render(
+    <StrictMode>
+      <AppWithI18n />
+    </StrictMode>
+  );
+}
