@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Demo routes (Home, About) showcasing routing capabilities
   - Updated tests for new router-based structure
 
+- **PWA Offline-First Foundation**: Progressive Web App infrastructure
+  - Vite PWA plugin with Workbox for service worker management
+  - Web App Manifest for installability (name, icons, theme)
+  - `useOnlineStatus` hook for network detection
+  - `OfflineIndicator` component for user feedback
+  - Runtime caching strategies (NetworkFirst for API, CacheFirst for assets)
+  - Auto-update service worker registration
+  - PWA icons (192x192, 512x512) with SecPal branding
+  - Comprehensive test coverage for online/offline detection
+
 - **Catalyst UI Kit integration**: All 27 Catalyst components
   - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
   - Dependencies: `@headlessui/react`, `motion`, `clsx`

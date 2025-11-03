@@ -3,6 +3,7 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Link } from "./components/link";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 
 function Home() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path="/about" element={<About />} />
         </Routes>
       </div>
+      <OfflineIndicator />
     </BrowserRouter>
   );
 }
