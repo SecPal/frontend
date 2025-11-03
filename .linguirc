@@ -10,6 +10,6 @@
   "format": "po",
   "service": {
     "name": "TranslationIO",
-    "apiKey": "${TRANSLATION_IO_API_KEY}"
+    "apiKey": "a82321169f81484d9e47fe8f285090ad"
   }
 }
