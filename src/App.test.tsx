@@ -8,7 +8,9 @@ import App from "./App";
 describe("App", () => {
   it("renders home page", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: /SecPal/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /SecPal/i })
+    ).toBeInTheDocument();
   });
 
   it("renders main content", () => {
