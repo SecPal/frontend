@@ -63,7 +63,7 @@
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
     "@vitejs/plugin-react": "^5.1.0",
-    "@vitest/coverage-v8": "^4.0.5",
+    "@vitest/coverage-v8": "^4.0.6",
     "@vitest/ui": "^4.0.3",
     "babel-plugin-macros": "^3.1.0",
     "cross-env": "^10.1.0",
