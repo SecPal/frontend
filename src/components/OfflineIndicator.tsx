@@ -17,15 +17,12 @@ export function OfflineIndicator() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
-      <Alert open={!isOnline} onClose={() => {}}>
+      <Alert open={!isOnline}>
         <AlertTitle>You're offline</AlertTitle>
         <AlertDescription>
           Some features may be limited. Your changes will sync when you're back
           online.
         </AlertDescription>
-        <AlertActions>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </AlertActions>
       </Alert>
     </div>
   );
