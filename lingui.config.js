@@ -16,6 +16,9 @@ module.exports = {
     },
   ],
   format: "po",
+  // Translation.io service configuration
+  // Used by Translation.io CLI for syncing translations
+  // See: https://translation.io/lingui
   service: {
     name: "TranslationIO",
     apiKey: process.env.TRANSLATION_IO_API_KEY || "",
