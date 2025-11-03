@@ -4,6 +4,10 @@
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { Alert, AlertDescription, AlertTitle } from "./alert";
 
+// No-op function for Alert's required onClose prop
+// Alert dismisses automatically when back online
+const noop = () => {};
+
 /**
  * Component that displays a banner when the user is offline
  */
@@ -16,8 +20,7 @@ export function OfflineIndicator() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
-      {/* Alert requires onClose prop but dismisses automatically when online */}
-      <Alert open={!isOnline} onClose={() => {}}>
+      <Alert open={!isOnline} onClose={noop}>
         <AlertTitle>You're offline</AlertTitle>
         <AlertDescription>
           Some features may be limited. Your changes will sync when you're back
