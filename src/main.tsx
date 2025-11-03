@@ -18,15 +18,29 @@ export function AppWithI18n() {
 
   useEffect(() => {
     const initLocale = async () => {
-      const locale = detectLocale();
-      await activateLocale(locale);
-      setLocaleLoaded(true);
+      try {
+        const locale = detectLocale();
+        await activateLocale(locale);
+      } catch (err) {
+        console.error("Failed to initialize i18n locale:", err);
+      } finally {
+        setLocaleLoaded(true);
+      }
     };
     initLocale();
   }, []);
 
   if (!localeLoaded) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading translations"
+        style={{ padding: "2rem", textAlign: "center" }}
+      >
+        Loading...
+      </div>
+    );
   }
 
   return (

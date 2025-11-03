@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-03 02:50+0100\n"
+"POT-Creation-Date: 2025-11-03 03:08+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,7 +21,7 @@ msgstr "Zurück zur Startseite"
 
 #: src/App.tsx:18
 msgid "SecPal - a guard's best friend"
-msgstr "SecPal - der beste Freund eines Wachmanns"
+msgstr "SecPal - a guard's best friend"
 
 #: src/App.tsx:39
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."

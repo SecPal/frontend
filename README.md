@@ -24,7 +24,7 @@ SecPal is an **offline-first PWA** providing seamless experience regardless of n
 - 🌐 **Network Detection**: Real-time online/offline status monitoring
 - 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
 
-## � Internationalization (i18n)
+## 🌍 Internationalization (i18n)
 
 SecPal supports multiple languages using [Lingui](https://lingui.dev/) and [Translation.io](https://translation.io/).
 
@@ -63,7 +63,7 @@ import { Trans } from "@lingui/macro";
 
 **Translation Service:** This project uses [Translation.io](https://translation.io/) for collaborative translation management. Translation.io provides a free, unlimited account for open-source projects. Thank you, Translation.io! 🙏
 
-## �🎨 UI Components & Design System
+##  UI Components & Design System
 
 This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
 
