@@ -35,8 +35,8 @@
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",
     "lingui:compile": "lingui compile",
-    "sync": "TRANSLATION_IO_API_KEY=$VITE_TRANSLATION_IO_API_KEY lingui extract --overwrite && lingui compile",
-    "sync:purge": "TRANSLATION_IO_API_KEY=$VITE_TRANSLATION_IO_API_KEY lingui extract --overwrite --clean && lingui compile"
+    "sync": "export TRANSLATION_IO_API_KEY=$(grep VITE_TRANSLATION_IO_API_KEY .env.local | cut -d '=' -f2) && lingui extract --overwrite && lingui compile",
+    "sync:purge": "export TRANSLATION_IO_API_KEY=$(grep VITE_TRANSLATION_IO_API_KEY .env.local | cut -d '=' -f2) && lingui extract --overwrite --clean && lingui compile"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

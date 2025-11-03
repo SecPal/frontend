@@ -1,5 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Lukas Jansen <lukas@lightlike.one>
-# SPDX-License-Identifier: AGPL-3.0-or-later
 msgid ""
 msgstr ""
 "POT-Creation-Date: 2025-05-31 20:02+0100\n"
