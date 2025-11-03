@@ -11,10 +11,7 @@ import {
 } from "react-router-dom";
 
 export const Link = forwardRef(function Link(
-  props: { href: string; children?: React.ReactNode } & Omit<
-    RouterLinkProps,
-    "to" | "children"
-  >,
+  props: { href: string } & Omit<RouterLinkProps, "to">,
   ref: React.ForwardedRef<HTMLAnchorElement>
 ) {
   return (
