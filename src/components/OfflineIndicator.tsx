@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { Alert, AlertActions, AlertDescription, AlertTitle } from "./alert";
-import { Button } from "./button";
+import { Alert, AlertDescription, AlertTitle } from "./alert";
 
 /**
  * Component that displays a banner when the user is offline
