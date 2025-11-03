@@ -2,17 +2,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Trans } from "@lingui/macro";
 import { Link } from "./components/link";
 import { OfflineIndicator } from "./components/OfflineIndicator";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
 
 function Home() {
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">SecPal</h1>
-      <p className="text-lg mb-6">SecPal - a guard's best friend</p>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">SecPal</h1>
+        <LanguageSwitcher />
+      </div>
+      <p className="text-lg mb-6">
+        <Trans>SecPal - a guard's best friend</Trans>
+      </p>
       <nav className="space-x-4">
         <Link href="/about" className="text-blue-600 hover:underline">
-          About
+          <Trans>About</Trans>
         </Link>
       </nav>
     </div>
@@ -22,15 +29,22 @@ function Home() {
 function About() {
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">About SecPal</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          <Trans>About SecPal</Trans>
+        </h1>
+        <LanguageSwitcher />
+      </div>
       <p className="text-lg mb-6">
-        SecPal - a guard's best friend. An offline-first progressive web app for
-        security personnel, combining digital guard books with modern service
-        management.
+        <Trans>
+          SecPal - a guard's best friend. An offline-first progressive web app
+          for security personnel, combining digital guard books with modern
+          service management.
+        </Trans>
       </p>
       <nav>
         <Link href="/" className="text-blue-600 hover:underline">
-          Back to Home
+          <Trans>Back to Home</Trans>
         </Link>
       </nav>
     </div>
