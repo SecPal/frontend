@@ -32,11 +32,16 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "format": "prettier --write '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
-    "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'"
+    "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
+    "lingui:extract": "lingui extract",
+    "lingui:compile": "lingui compile",
+    "sync": "lingui extract --overwrite && lingui compile",
+    "sync:purge": "lingui extract --overwrite --clean && lingui compile"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
+    "@lingui/react": "^5.5.2",
     "clsx": "^2.1.1",
     "motion": "^12.23.24",
     "react": "^18.3.1",
@@ -46,6 +51,8 @@
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@fontsource/inter": "^5.2.8",
+    "@lingui/cli": "^5.5.2",
+    "@lingui/macro": "^5.5.2",
     "@tailwindcss/vite": "^4.1.16",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
@@ -58,6 +65,8 @@
     "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "^4.0.5",
     "@vitest/ui": "^4.0.3",
+    "babel-plugin-macros": "^3.1.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.18",

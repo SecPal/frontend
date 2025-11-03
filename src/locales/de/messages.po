@@ -1,0 +1,42 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-11-03 03:08+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: de\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/App.tsx:22
+msgid "About"
+msgstr "Über uns"
+
+#: src/App.tsx:34
+msgid "About SecPal"
+msgstr "Über SecPal"
+
+#: src/App.tsx:47
+msgid "Back to Home"
+msgstr "Zurück zur Startseite"
+
+#: src/App.tsx:18
+msgid "SecPal - a guard's best friend"
+msgstr "SecPal - a guard's best friend"
+
+#: src/App.tsx:39
+msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
+msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
+
+#: src/components/OfflineIndicator.tsx:29
+msgid "Some features may be limited. Your changes will sync when you're back online."
+msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
+
+#: src/components/OfflineIndicator.tsx:26
+msgid "You're offline"
+msgstr "Sie sind offline"

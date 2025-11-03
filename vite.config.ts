@@ -18,7 +18,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      react(),
+      react({
+        babel: {
+          plugins: ["macros"],
+        },
+      }),
       tailwindcss(),
       VitePWA({
         registerType: "autoUpdate",

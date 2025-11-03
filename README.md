@@ -24,6 +24,55 @@ SecPal is an **offline-first PWA** providing seamless experience regardless of n
 - 🌐 **Network Detection**: Real-time online/offline status monitoring
 - 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
 
+## 🌍 Internationalization (i18n)
+
+SecPal supports multiple languages using [Lingui](https://lingui.dev/) and [Translation.io](https://translation.io/).
+
+**Supported Languages:**
+
+- 🇬🇧 English (source)
+- 🇩🇪 German (Deutsch)
+
+**Translation Management:**
+
+```bash
+# Extract translatable strings from source code
+npm run lingui:extract
+
+# Compile translation catalogs for production
+npm run lingui:compile
+
+# Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
+npm run sync
+
+# Sync and remove unused translations
+npm run sync:purge
+```
+
+**Setup Translation.io (Optional):**
+
+Translation.io integration is optional. For local development, you can edit `.po` files directly.
+
+To enable Translation.io sync:
+
+1. Get a free API key from [Translation.io](https://translation.io/)
+2. Create `.env.local` in the frontend directory
+3. Add: `TRANSLATION_IO_API_KEY=your_key_here`
+
+**Adding Translations:**
+
+```tsx
+import { Trans } from "@lingui/macro";
+
+// Simple text
+<Trans>Hello World</Trans>
+
+// With variables
+<Trans>Welcome, {userName}</Trans>
+```
+
+**Translation Service:** This project uses [Translation.io](https://translation.io/) for collaborative translation management. Translation.io provides a free, unlimited account for open-source projects. Thank you, Translation.io! 🙏
+
 ## 🎨 UI Components & Design System
 
 This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
