@@ -4,12 +4,9 @@
   "catalogs": [
     {
       "path": "src/locales/{locale}/messages",
-      "include": ["src"]
+      "include": ["src"],
+      "exclude": ["src/locales/**"]
     }
   ],
-  "format": "po",
-  "service": {
-    "name": "TranslationIO",
-    "apiKey": "a82321169f81484d9e47fe8f285090ad"
-  }
+  "format": "po"
 }

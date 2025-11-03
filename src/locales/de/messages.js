@@ -1,3 +1,5 @@
-/*eslint-disable*/ export const messages = JSON.parse(
-  '{"EH48dY":["Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."],"Kzoh+W":["SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."],"RWLG6K":["Zurück zur Startseite"],"kpt2yf":["SecPal - a guard\'s best friend"],"uRTwI2":["Über SecPal"],"uyJsf6":["Über uns"],"ysdDIA":["Sie sind offline"]}'
-);
+/*eslint-disable*/ module.exports = {
+  messages: JSON.parse(
+    '{"EH48dY":["Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."],"Kzoh+W":["SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."],"RWLG6K":["Zurück zur Startseite"],"kpt2yf":["SecPal - a guard\'s best friend"],"uRTwI2":["Über SecPal"],"uyJsf6":["Über uns"],"ysdDIA":["Sie sind offline"]}'
+  ),
+};
