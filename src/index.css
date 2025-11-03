@@ -3,6 +3,11 @@
 
 @import "tailwindcss";
 
+@theme {
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-sans--font-feature-settings: "cv11";
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

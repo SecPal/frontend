@@ -6,15 +6,22 @@ import { render, screen } from "@testing-library/react";
 import App from "./App";
 
 describe("App", () => {
-  it("renders welcome message", () => {
+  it("renders home page", () => {
     render(<App />);
-    expect(screen.getByText(/SecPal Frontend/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /SecPal/i })
+    ).toBeInTheDocument();
   });
 
   it("renders main content", () => {
     render(<App />);
     expect(
-      screen.getByText(/Welcome to SecPal - Your secure platform/i)
+      screen.getByText(/SecPal - a guard's best friend/i)
     ).toBeInTheDocument();
+  });
+
+  it("renders about link", () => {
+    render(<App />);
+    expect(screen.getByText(/About/i)).toBeInTheDocument();
   });
 });
