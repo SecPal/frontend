@@ -55,5 +55,8 @@ export function detectLocale(): string {
 
 // Save locale preference
 export function setLocalePreference(locale: string) {
-  localStorage.setItem("secpal-locale", locale);
+  // Only save valid locales
+  if (locale in locales) {
+    localStorage.setItem("secpal-locale", locale);
+  }
 }
