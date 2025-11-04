@@ -21,7 +21,7 @@ export interface SyncOperation {
   type: "create" | "update" | "delete";
   entity: string;
   data: unknown;
-  status: "pending" | "synced" | "failed" | "error" | "completed";
+  status: "pending" | "synced" | "error";
   createdAt: Date;
   attempts: number;
   lastAttemptAt?: Date;

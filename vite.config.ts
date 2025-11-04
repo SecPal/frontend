@@ -128,7 +128,7 @@ export default defineConfig(({ mode }) => {
                 backgroundSync: {
                   name: "api-sync-queue",
                   options: {
-                    maxRetentionTime: 60 * 24, // Retry for max of 24 Hours (in minutes)
+                    maxRetentionTime: 60 * 24, // Max retention time: 24 hours (1440 minutes)
                   },
                 },
               },

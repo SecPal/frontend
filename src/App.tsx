@@ -7,6 +7,7 @@ import { Link } from "./components/link";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
+import { getApiBaseUrl } from "./config";
 
 function Home() {
   return (
@@ -53,8 +54,6 @@ function About() {
 }
 
 function App() {
-  const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
   return (
     <BrowserRouter>
       <div className="app">
@@ -64,7 +63,7 @@ function App() {
         </Routes>
       </div>
       <OfflineIndicator />
-      <SyncStatusIndicator apiBaseUrl={apiBaseUrl} />
+      <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
     </BrowserRouter>
   );
 }

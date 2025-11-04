@@ -106,7 +106,7 @@ describe("API Cache Utilities", () => {
       const operation = {
         type: "create" as const,
         entity: "guard",
-        data: { name: "New Guard", email: "test@secpal.app" },
+        data: { name: "New Guard", email: "test@secpal.dev" },
       };
 
       const id = await addToSyncQueue(operation);
@@ -361,11 +361,11 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith("https://api.secpal.app/guards", {
+      expect(mockFetch).toHaveBeenCalledWith("https://api.secpal.dev/guards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "John Doe" }),
@@ -395,12 +395,12 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.secpal.app/guards/123",
+        "https://api.secpal.dev/guards/123",
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -429,14 +429,15 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.secpal.app/guards/123",
+        "https://api.secpal.dev/guards/123",
         {
           method: "DELETE",
+          headers: {}, // Auth headers (empty when no token in localStorage)
         }
       );
 
@@ -462,7 +463,7 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(false);
@@ -489,7 +490,7 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(false);
@@ -515,7 +516,7 @@ describe("API Cache Utilities", () => {
 
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(false);
@@ -546,7 +547,7 @@ describe("API Cache Utilities", () => {
       // Since last attempt was 500ms ago, should skip retry
       const success = await retrySyncOperation(
         operation,
-        "https://api.secpal.app"
+        "https://api.secpal.dev"
       );
 
       expect(success).toBe(false);
@@ -573,7 +574,7 @@ describe("API Cache Utilities", () => {
       await addToSyncQueue({ type: "update", entity: "shifts", data: {} });
       await addToSyncQueue({ type: "delete", entity: "reports", data: {} });
 
-      const stats = await processSyncQueue("https://api.secpal.app");
+      const stats = await processSyncQueue("https://api.secpal.dev");
 
       expect(stats.total).toBe(3);
       expect(stats.synced).toBe(3);
@@ -603,7 +604,7 @@ describe("API Cache Utilities", () => {
       await addToSyncQueue({ type: "create", entity: "shifts", data: {} });
       await addToSyncQueue({ type: "create", entity: "reports", data: {} });
 
-      const stats = await processSyncQueue("https://api.secpal.app");
+      const stats = await processSyncQueue("https://api.secpal.dev");
 
       expect(stats.total).toBe(3);
       expect(stats.synced).toBe(2);
@@ -613,7 +614,7 @@ describe("API Cache Utilities", () => {
     });
 
     it("should return zero stats when queue is empty", async () => {
-      const stats = await processSyncQueue("https://api.secpal.app");
+      const stats = await processSyncQueue("https://api.secpal.dev");
 
       expect(stats.total).toBe(0);
       expect(stats.synced).toBe(0);

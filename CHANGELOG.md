@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Offline notice when device is disconnected
   - Fixed bottom-right positioning with shadow and dark mode support
   - 9 comprehensive tests covering all user interactions
-  - Dependencies: `dexie-react-hooks@^1.1.7`
+  - Dependencies: `dexie-react-hooks@4.2.0`
 
 - **IndexedDB Integration with Dexie.js**: Structured client-side storage for offline-first architecture
   - Database schema with tables for guards, sync queue, and API cache

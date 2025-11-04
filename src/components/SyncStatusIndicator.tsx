@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -21,7 +21,7 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
  *
  * @example
  * ```tsx
- * <SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />
+ * <SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />
  * ```
  */
 export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
@@ -41,7 +41,7 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
     []
   );
 
-  const handleManualSync = async () => {
+  const handleManualSync = useCallback(async () => {
     if (!isOnline || isSyncing) return;
 
     setIsSyncing(true);
@@ -51,6 +51,7 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
       const stats = await processSyncQueue(apiBaseUrl);
 
       if (stats.failed > 0) {
+        // Error messages are developer-facing and don't need translation
         setSyncError(
           `Failed to sync ${stats.failed} operation(s). Will retry later.`
         );
@@ -66,15 +67,14 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [isOnline, isSyncing, apiBaseUrl]);
 
   // Auto-sync when coming online
   useEffect(() => {
     if (isOnline && pendingOps && pendingOps > 0) {
       handleManualSync();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline]);
+  }, [isOnline, pendingOps, handleManualSync]);
 
   // Don't show indicator if nothing to sync and no errors
   if (!pendingOps && !errorOps) {

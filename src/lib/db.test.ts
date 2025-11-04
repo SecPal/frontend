@@ -18,7 +18,7 @@ describe("IndexedDB Database", () => {
       const guard: Guard = {
         id: "test-uuid-1",
         name: "John Doe",
-        email: "john@secpal.app",
+        email: "john@secpal.dev",
         lastSynced: new Date(),
       };
 
@@ -27,7 +27,7 @@ describe("IndexedDB Database", () => {
       const retrieved = await db.guards.get("test-uuid-1");
       expect(retrieved).toBeDefined();
       expect(retrieved?.name).toBe("John Doe");
-      expect(retrieved?.email).toBe("john@secpal.app");
+      expect(retrieved?.email).toBe("john@secpal.dev");
     });
 
     it("should query guards by email", async () => {
@@ -35,7 +35,7 @@ describe("IndexedDB Database", () => {
         {
           id: "1",
           name: "Alice",
-          email: "alice@secpal.app",
+          email: "alice@secpal.dev",
           lastSynced: new Date(),
         },
         {
@@ -47,14 +47,14 @@ describe("IndexedDB Database", () => {
         {
           id: "3",
           name: "Charlie",
-          email: "charlie@secpal.app",
+          email: "charlie@secpal.dev",
           lastSynced: new Date(),
         },
       ]);
 
       // Filter using .filter() since Dexie doesn't have .endsWith()
       const secpalGuards = await db.guards
-        .filter((guard: Guard) => guard.email.endsWith("@secpal.app"))
+        .filter((guard: Guard) => guard.email.endsWith("@secpal.dev"))
         .toArray();
 
       expect(secpalGuards).toHaveLength(2);
@@ -66,7 +66,7 @@ describe("IndexedDB Database", () => {
       const guard: Guard = {
         id: "update-test",
         name: "Initial Name",
-        email: "test@secpal.app",
+        email: "test@secpal.dev",
         lastSynced: new Date(),
       };
 
@@ -75,14 +75,14 @@ describe("IndexedDB Database", () => {
 
       const updated = await db.guards.get("update-test");
       expect(updated?.name).toBe("Updated Name");
-      expect(updated?.email).toBe("test@secpal.app");
+      expect(updated?.email).toBe("test@secpal.dev");
     });
 
     it("should delete a guard", async () => {
       const guard: Guard = {
         id: "delete-test",
         name: "To Delete",
-        email: "delete@secpal.app",
+        email: "delete@secpal.dev",
         lastSynced: new Date(),
       };
 

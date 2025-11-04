@@ -3,6 +3,7 @@
 
 import { db } from "./db";
 import type { SyncOperation } from "./db";
+import { getAuthHeaders } from "../config";
 
 /**
  * Cache an API response in IndexedDB
@@ -76,7 +77,7 @@ export async function getCachedResponse(url: string): Promise<unknown | null> {
  * await addToSyncQueue({
  *   type: 'create',
  *   entity: 'guard',
- *   data: { name: 'John Doe', email: 'john@secpal.app' }
+ *   data: { name: 'John Doe', email: 'john@secpal.dev' }
  * });
  * ```
  */
@@ -204,7 +205,7 @@ export async function updateSyncOperationStatus(
  * ```ts
  * const operation = await db.syncQueue.get('abc-123');
  * if (operation) {
- *   const success = await retrySyncOperation(operation, 'https://api.secpal.app');
+ *   const success = await retrySyncOperation(operation, 'https://api.secpal.dev');
  * }
  * ```
  */
@@ -234,6 +235,7 @@ export async function retrySyncOperation(
 
   try {
     const endpoint = `${apiBaseUrl}/${operation.entity}`;
+    const authHeaders = getAuthHeaders();
     let response: Response;
 
     switch (operation.type) {
@@ -242,6 +244,7 @@ export async function retrySyncOperation(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...authHeaders,
           },
           body: JSON.stringify(operation.data),
         });
@@ -252,6 +255,7 @@ export async function retrySyncOperation(
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            ...authHeaders,
           },
           body: JSON.stringify(operation.data),
         });
@@ -260,6 +264,7 @@ export async function retrySyncOperation(
       case "delete":
         response = await fetch(endpoint, {
           method: "DELETE",
+          headers: authHeaders,
         });
         break;
 
@@ -284,7 +289,7 @@ export async function retrySyncOperation(
       error instanceof Error ? error.message : "Unknown error";
     await updateSyncOperationStatus(
       operation.id,
-      operation.attempts + 1 >= 5 ? "error" : "pending",
+      operation.attempts >= 4 ? "error" : "pending",
       errorMessage
     );
     return false;
@@ -299,7 +304,7 @@ export async function retrySyncOperation(
  *
  * @example
  * ```ts
- * const stats = await processSyncQueue('https://api.secpal.app');
+ * const stats = await processSyncQueue('https://api.secpal.dev');
  * console.log(`Synced: ${stats.synced}, Failed: ${stats.failed}`);
  * ```
  */
