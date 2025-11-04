@@ -35,12 +35,16 @@ if command -v npx >/dev/null 2>&1; then
     fi
 
     if [ -n "$CHANGED_FILES" ]; then
-      echo "ℹ️  Checking formatting on $(echo "$CHANGED_FILES" | wc -l | tr -d ' ') changed files"
-      # Check prettier-relevant files
-      echo "$CHANGED_FILES" | xargs npx prettier --check || FORMAT_EXIT=1
+      # Count non-empty lines correctly (wc -l returns 1 for empty string)
+      FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | grep -c '.')
+      echo "ℹ️  Checking formatting on $FILE_COUNT changed files"
+      # Check prettier-relevant files (only if non-empty)
+      if echo "$CHANGED_FILES" | grep -q '[^[:space:]]'; then
+        echo "$CHANGED_FILES" | xargs npx prettier --check || FORMAT_EXIT=1
+      fi
       # Check markdown files
       MD_FILES=$(echo "$CHANGED_FILES" | grep '\.md$' || true)
-      if [ -n "$MD_FILES" ]; then
+      if echo "$MD_FILES" | grep -q '[^[:space:]]'; then
         echo "$MD_FILES" | xargs npx markdownlint-cli2 || FORMAT_EXIT=1
       fi
     else
@@ -183,10 +187,26 @@ if [ -f "$FETCH_MARKER" ]; then
   FETCH_AGE=$(($(date +%s) - $(stat -c %Y "$FETCH_MARKER" 2>/dev/null || stat -f %m "$FETCH_MARKER" 2>/dev/null || echo 0)))
 fi
 
+# Portable timeout function (works on Linux and macOS)
+run_with_timeout() {
+  local seconds="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    # GNU timeout (Linux)
+    timeout "$seconds" "$@"
+  elif command -v perl >/dev/null 2>&1; then
+    # Perl fallback (macOS, portable)
+    perl -e 'alarm shift; exec @ARGV' "$seconds" "$@"
+  else
+    # No timeout available, run without
+    "$@"
+  fi
+}
+
 if [ $FETCH_AGE -gt 300 ]; then
   echo "Fetching base branch for PR size check (cached for 5 minutes)..."
-  # Add timeout to prevent hanging on slow networks
-  timeout 30 git fetch origin "$BASE" 2>/dev/null || {
+  # Add timeout to prevent hanging on slow networks (portable)
+  run_with_timeout 30 git fetch origin "$BASE" 2>/dev/null || {
     echo "⚠️  Warning: git fetch timed out or failed - skipping PR size check" >&2
     echo "Preflight checks passed (PR size check skipped due to network issue)"
     exit 0
