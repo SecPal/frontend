@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **IndexedDB Integration with Dexie.js**: Structured client-side storage for offline-first architecture
+  - Database schema with tables for guards, sync queue, and API cache
+  - TypeScript-first implementation with full type safety
+  - CRUD operations for all entities
+  - Automatic schema versioning and migrations
+  - API response caching with TTL (24h default, customizable)
+  - Expired cache cleanup functionality
+  - Sync queue for offline operations with retry logic
+  - Storage quota monitoring utilities
+  - Dependencies: `dexie@^4.0.0`, `fake-indexeddb@^6.0.0` (dev)
+  - 27 passing tests with 100% coverage of core functionality
+
 ### Changed
 
 - **Preflight Script Performance**: Optimized `scripts/preflight.sh` for significantly faster local development
