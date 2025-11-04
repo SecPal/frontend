@@ -50,6 +50,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Blank Page Issue**: Fixed blank page caused by incompatible module format in translation catalogs
+  - Changed Lingui compilation from CommonJS (`module.exports`) to ES modules (`export`)
+  - Updated `package.json` scripts to use `--namespace es` flag for `lingui compile`
+  - Changed imports in `i18n.ts` from `.js` to `.mjs` extension
+  - Added TypeScript declaration file for `.mjs` message catalogs
+  - Added safety checks for `localStorage` and `navigator` access in `detectLocale()`
+  - Issue occurred because Vite requires ES modules, but Lingui compiled to CommonJS by default
 - Pre-push hook no longer fails with exit code 1 when [Unreleased] is the last CHANGELOG section
 - Project automation now triggers on label changes for issues AND pull requests (labeled event)
 

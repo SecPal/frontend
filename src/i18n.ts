@@ -17,7 +17,7 @@ export async function activateLocale(locale: string) {
   try {
     // Use dynamic import with template literal for scalability
     const messagesModule: { messages: Record<string, string | string[]> } =
-      await import(`./locales/${selectedLocale}/messages.js`);
+      await import(`./locales/${selectedLocale}/messages.mjs`);
 
     i18n.load(selectedLocale, messagesModule.messages);
     i18n.activate(selectedLocale);
@@ -26,7 +26,7 @@ export async function activateLocale(locale: string) {
     // Fallback to default locale if not already tried
     if (selectedLocale !== defaultLocale) {
       try {
-        const messagesModule = await import("./locales/en/messages.js");
+        const messagesModule = await import("./locales/en/messages.mjs");
         i18n.load(defaultLocale, messagesModule.messages);
         i18n.activate(defaultLocale);
       } catch (fallbackError) {
@@ -38,16 +38,30 @@ export async function activateLocale(locale: string) {
 
 // Detect locale from browser or localStorage
 export function detectLocale(): string {
-  // Check localStorage first
-  const stored = localStorage.getItem("secpal-locale");
-  if (stored && stored in locales) {
-    return stored;
+  // Check localStorage first (with safety check)
+  try {
+    if (typeof localStorage !== "undefined") {
+      const stored = localStorage.getItem("secpal-locale");
+      if (stored && stored in locales) {
+        return stored;
+      }
+    }
+  } catch (error) {
+    // localStorage might be blocked or unavailable
+    console.warn("localStorage access failed:", error);
   }
 
   // Fall back to browser language
-  const browserLang = navigator.language.split("-")[0];
-  if (browserLang && browserLang in locales) {
-    return browserLang;
+  try {
+    if (typeof navigator !== "undefined" && navigator.language) {
+      const browserLang = navigator.language.split("-")[0];
+      if (browserLang && browserLang in locales) {
+        return browserLang;
+      }
+    }
+  } catch (error) {
+    // navigator might be unavailable
+    console.warn("navigator access failed:", error);
   }
 
   return defaultLocale;
@@ -57,6 +71,13 @@ export function detectLocale(): string {
 export function setLocalePreference(locale: string) {
   // Only save valid locales
   if (locale in locales) {
-    localStorage.setItem("secpal-locale", locale);
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("secpal-locale", locale);
+      }
+    } catch (error) {
+      // localStorage might be blocked or unavailable
+      console.warn("Failed to save locale preference:", error);
+    }
   }
 }

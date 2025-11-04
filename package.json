@@ -34,9 +34,9 @@
     "format": "prettier --write '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",
-    "lingui:compile": "lingui compile",
-    "sync": "cross-env-shell \"lingui extract --overwrite && lingui compile\"",
-    "sync:purge": "cross-env-shell \"lingui extract --overwrite --clean && lingui compile\""
+    "lingui:compile": "lingui compile --namespace es",
+    "sync": "cross-env-shell \"lingui extract --overwrite && lingui compile --namespace es\"",
+    "sync:purge": "cross-env-shell \"lingui extract --overwrite --clean && lingui compile --namespace es\""
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
