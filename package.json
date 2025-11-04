@@ -49,7 +49,7 @@
     "react-router-dom": "^7.9.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^9.39.1",
     "@fontsource/inter": "^5.2.8",
     "@lingui/cli": "^5.5.2",
     "@lingui/macro": "^5.5.2",
