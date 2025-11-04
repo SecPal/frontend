@@ -12,16 +12,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **Preflight Script Performance**: Optimized `scripts/preflight.sh` for significantly faster local development
-  - Prettier/markdownlint: Check only changed files in branch instead of all files (10-100x faster for small changes)
-  - npm/pnpm/yarn: Skip dependency installation if lockfile unchanged and node_modules exists (saves minutes per push)
-  - npm audit: Only run after fresh install, skip when dependencies unchanged (saves 5-10s network call)
-  - git fetch: Cache for 5 minutes with 30s timeout to prevent hanging on slow networks
-  - Expected improvement: 60s → 10s for small fixes, 90s → 25s for features without dependency changes
-
 ### Added
+
+- **IndexedDB Integration with Dexie.js**: Structured client-side storage for offline-first architecture
+  - Database schema with tables for guards, sync queue, and API cache
+  - TypeScript-first implementation with full type safety
+  - CRUD operations for all entities
+  - Automatic schema versioning and migrations
+  - API response caching with TTL (24h default, customizable)
+  - Expired cache cleanup functionality
+  - Sync queue for offline operations with retry logic
+  - Storage quota monitoring utilities
+  - Dependencies: `dexie@^4.2.1`, `fake-indexeddb@^6.2.4` (dev)
+  - 27 passing tests with 100% coverage of core functionality
+
+- **PWA App Shortcuts**: Quick access to key features from app icon
+  - 4 shortcuts: View Schedule, Quick Report, My Profile, Emergency Contact
+  - Deep linking to specific app sections
+  - Configured in Web App Manifest for all platforms
+  - Mobile and desktop support (Android, iOS, Chrome, Edge)
+
+- **Storage Quota Indicator**: UI component for storage monitoring
+  - Real-time display of IndexedDB usage (MB / Quota)
+  - Percentage-based progress bar with visual feedback
+  - Warning indicator when storage exceeds 80% capacity
+  - Graceful fallback when Storage API unavailable
+  - 4 comprehensive tests for all scenarios
 
 - **Catalyst Setup Completion**: Production-ready configuration
   - React Router v7 for client-side navigation with SPA routing
@@ -47,6 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dependencies: `@headlessui/react`, `motion`, `clsx`
   - Documentation reference in README
   - SPDX license headers for REUSE compliance
+
+### Changed
+
+- **Preflight Script Performance**: Optimized `scripts/preflight.sh` for significantly faster local development
+  - Prettier/markdownlint: Check only changed files in branch instead of all files (10-100x faster for small changes)
+  - npm/pnpm/yarn: Skip dependency installation if lockfile unchanged and node_modules exists (saves minutes per push)
+  - npm audit: Only run after fresh install, skip when dependencies unchanged (saves 5-10s network call)
+  - git fetch: Cache for 5 minutes with 30s timeout to prevent hanging on slow networks
+  - Expected improvement: 60s → 10s for small fixes, 90s → 25s for features without dependency changes
 
 ### Fixed
 
