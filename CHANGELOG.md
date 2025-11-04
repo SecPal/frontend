@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Expired cache cleanup functionality
   - Sync queue for offline operations with retry logic
   - Storage quota monitoring utilities
-  - Dependencies: `dexie@^4.0.0`, `fake-indexeddb@^6.0.0` (dev)
+  - Dependencies: `dexie@^4.2.1`, `fake-indexeddb@^6.2.4` (dev)
   - 27 passing tests with 100% coverage of core functionality
 
 - **PWA App Shortcuts**: Quick access to key features from app icon
