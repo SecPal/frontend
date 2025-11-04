@@ -27,16 +27,16 @@ if command -v npx >/dev/null 2>&1; then
     fi
 
     if [ -n "$MERGE_BASE" ]; then
-      # Get files changed in current branch
-      CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR "$MERGE_BASE"..HEAD 2>/dev/null | grep -E '\.(md|yml|yaml|json|ts|tsx|js|jsx)$' || true)
+      # Get files changed in current branch (case-insensitive for extensions)
+      CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR "$MERGE_BASE"..HEAD 2>/dev/null | grep -iE '\.(md|yml|yaml|json|ts|tsx|js|jsx)$' || true)
     else
       # Fallback: check all files if merge-base unavailable
       CHANGED_FILES=""
     fi
 
     if [ -n "$CHANGED_FILES" ]; then
-      # Count non-empty lines correctly (wc -l returns 1 for empty string)
-      FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | grep -c '.')
+      # Count files correctly (handles filenames with spaces/special chars)
+      FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | wc -l | tr -d ' ')
       echo "ℹ️  Checking formatting on $FILE_COUNT changed files"
       # Check prettier-relevant files (only if non-empty)
       if echo "$CHANGED_FILES" | grep -q '[^[:space:]]'; then
@@ -195,8 +195,8 @@ run_with_timeout() {
     # GNU timeout (Linux)
     timeout "$seconds" "$@"
   elif command -v perl >/dev/null 2>&1; then
-    # Perl fallback (macOS, portable)
-    perl -e 'alarm shift; exec @ARGV' "$seconds" "$@"
+    # Perl fallback (macOS, portable) with robust signal handling
+    perl -MPOSIX -e 'POSIX::sigaction(SIGALRM, POSIX::SigAction->new(sub { exit 142 })); alarm shift; exec @ARGV' "$seconds" "$@"
   else
     # No timeout available, run without
     "$@"
@@ -206,11 +206,22 @@ run_with_timeout() {
 if [ $FETCH_AGE -gt 300 ]; then
   echo "Fetching base branch for PR size check (cached for 5 minutes)..."
   # Add timeout to prevent hanging on slow networks (portable)
-  run_with_timeout 30 git fetch origin "$BASE" 2>/dev/null || {
-    echo "⚠️  Warning: git fetch timed out or failed - skipping PR size check" >&2
-    echo "Preflight checks passed (PR size check skipped due to network issue)"
+  run_with_timeout 30 git fetch origin "$BASE" 2>/dev/null
+  FETCH_EXIT_CODE=$?
+  if [ $FETCH_EXIT_CODE -eq 0 ]; then
+    # Fetch successful, continue
+    :
+  elif [ $FETCH_EXIT_CODE -eq 124 ] || [ $FETCH_EXIT_CODE -eq 142 ]; then
+    # Timeout (124=GNU timeout, 142=Perl alarm)
+    echo "⚠️  Warning: git fetch timed out - skipping PR size check" >&2
+    echo "Preflight checks passed (PR size check skipped due to timeout)"
     exit 0
-  }
+  else
+    # Other error - be strict
+    echo "❌ Error: git fetch failed (exit code $FETCH_EXIT_CODE)" >&2
+    echo "This may indicate authentication or network issues." >&2
+    exit 1
+  fi
 else
   echo "ℹ️  Using cached fetch from $((FETCH_AGE / 60)) minute(s) ago"
 fi
