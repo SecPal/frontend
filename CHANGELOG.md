@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Preflight Script Performance**: Optimized `scripts/preflight.sh` for significantly faster local development
+  - Prettier/Markdownlint: Check only changed files in branch instead of all files (10-100x faster for small changes)
+  - npm/pnpm/yarn: Skip dependency installation if lockfile unchanged and node_modules exists (saves minutes per push)
+  - npm audit: Only run after fresh install, skip when dependencies unchanged (saves 5-10s network call)
+  - git fetch: Cache for 5 minutes with 30s timeout to prevent hanging on slow networks
+  - Expected improvement: 60s → 10s for small fixes, 90s → 25s for features without dependency changes
+
 ### Added
 
 - **Catalyst Setup Completion**: Production-ready configuration
