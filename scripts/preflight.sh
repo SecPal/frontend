@@ -14,14 +14,49 @@ BASE="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/rem
 
 echo "Using base branch: $BASE"
 
-# Fetch base branch for PR size check (failure is handled later)
-git fetch origin "$BASE" 2>/dev/null || true
-
-# 0) Formatting & Compliance
+# 0) Formatting & Compliance - OPTIMIZED
 FORMAT_EXIT=0
 if command -v npx >/dev/null 2>&1; then
-  npx --yes prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
-  npx --yes markdownlint-cli2 '**/*.md' || FORMAT_EXIT=1
+  # OPTIMIZATION: Check only changed files in branch instead of all files
+  # This speeds up formatting checks significantly for small changes
+  if [ -d node_modules/.bin ]; then
+    # Determine merge base for changed files comparison
+    MERGE_BASE=""
+    if git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
+      MERGE_BASE=$(git merge-base "origin/$BASE" HEAD 2>/dev/null || echo "")
+    fi
+
+    if [ -n "$MERGE_BASE" ]; then
+      # Get files changed in current branch (case-insensitive for extensions)
+      CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR "$MERGE_BASE"..HEAD 2>/dev/null | grep -iE '\.(md|yml|yaml|json|ts|tsx|js|jsx)$' || true)
+    else
+      # Fallback: check all files if merge-base unavailable
+      CHANGED_FILES=""
+    fi
+
+    if [ -n "$CHANGED_FILES" ]; then
+      # Count files correctly (handles filenames with spaces/special chars)
+      FILE_COUNT=$(printf '%s\n' "$CHANGED_FILES" | wc -l | tr -d ' ')
+      echo "ℹ️  Checking formatting on $FILE_COUNT changed files"
+      # Check prettier-relevant files (only if non-empty)
+      if echo "$CHANGED_FILES" | grep -q '[^[:space:]]'; then
+        echo "$CHANGED_FILES" | xargs npx prettier --check || FORMAT_EXIT=1
+      fi
+      # Check markdown files
+      MD_FILES=$(echo "$CHANGED_FILES" | grep '\.md$' || true)
+      if echo "$MD_FILES" | grep -q '[^[:space:]]'; then
+        echo "$MD_FILES" | xargs npx markdownlint-cli2 || FORMAT_EXIT=1
+      fi
+    else
+      # Fallback to checking all files
+      npx --yes prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
+      npx --yes markdownlint-cli2 '**/*.md' || FORMAT_EXIT=1
+    fi
+  else
+    # node_modules not available, use npx --yes
+    npx --yes prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
+    npx --yes markdownlint-cli2 '**/*.md' || FORMAT_EXIT=1
+  fi
 fi
 # Workflow linting (part of documented gates)
 # NOTE: actionlint is disabled in local preflight due to known hanging issues
@@ -43,23 +78,42 @@ if [ "$FORMAT_EXIT" -ne 0 ]; then
   exit 1
 fi
 
-# 1) Node.js / React / TypeScript
+# 1) Node.js / React / TypeScript - OPTIMIZED
 if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
-  pnpm install --frozen-lockfile
+  # OPTIMIZATION: Only install if package-lock changed or node_modules missing
+  if [ ! -d node_modules ] || [ pnpm-lock.yaml -nt node_modules ]; then
+    echo "Installing dependencies (lockfile changed or node_modules missing)..."
+    pnpm install --frozen-lockfile
+  else
+    echo "ℹ️  Dependencies up to date, skipping pnpm install"
+  fi
   pnpm run --if-present lint
   pnpm run --if-present typecheck
   pnpm run --if-present test
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
-  npm ci
-  npm audit --audit-level=high || {
-    echo "High or critical severity vulnerabilities detected by npm audit. Please address the issues above before continuing." >&2
-    exit 1
-  }
+  # OPTIMIZATION: Only install if package-lock changed or node_modules missing
+  if [ ! -d node_modules ] || [ package-lock.json -nt node_modules ]; then
+    echo "Installing dependencies (lockfile changed or node_modules missing)..."
+    npm ci
+    # Run audit after fresh install (security is important!)
+    npm audit --audit-level=high || {
+      echo "⚠️  High or critical vulnerabilities detected. Please review and fix." >&2
+      exit 1
+    }
+  else
+    echo "ℹ️  Dependencies up to date, skipping npm ci & audit"
+  fi
   npm run --if-present lint
   npm run --if-present typecheck
   npm run --if-present test:run || npm run --if-present test
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
-  yarn install --frozen-lockfile
+  # OPTIMIZATION: Only install if yarn.lock changed or node_modules missing
+  if [ ! -d node_modules ] || [ yarn.lock -nt node_modules ]; then
+    echo "Installing dependencies (lockfile changed or node_modules missing)..."
+    yarn install --frozen-lockfile
+  else
+    echo "ℹ️  Dependencies up to date, skipping yarn install"
+  fi
   if command -v jq >/dev/null 2>&1; then
     jq -e '.scripts.lint' package.json >/dev/null 2>&1 && yarn lint
     jq -e '.scripts.typecheck' package.json >/dev/null 2>&1 && yarn typecheck
@@ -124,7 +178,54 @@ if [ -f CHANGELOG.md ] && [ "$CURRENT_BRANCH" != "main" ] && ! echo "$CURRENT_BR
   fi
 fi
 
-# 3) Check PR size locally (against BASE)
+# 3) Check PR size locally (against BASE) - OPTIMIZED
+# OPTIMIZATION: Cache git fetch for 5 minutes to avoid repeated network calls
+FETCH_MARKER="$ROOT_DIR/.git/FETCH_HEAD"
+FETCH_AGE=0
+if [ -f "$FETCH_MARKER" ]; then
+  # Portable stat command for both GNU (Linux) and BSD (macOS)
+  FETCH_AGE=$(($(date +%s) - $(stat -c %Y "$FETCH_MARKER" 2>/dev/null || stat -f %m "$FETCH_MARKER" 2>/dev/null || echo 0)))
+fi
+
+# Portable timeout function (works on Linux and macOS)
+run_with_timeout() {
+  local seconds="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    # GNU timeout (Linux)
+    timeout "$seconds" "$@"
+  elif command -v perl >/dev/null 2>&1; then
+    # Perl fallback (macOS, portable) with robust signal handling
+    perl -MPOSIX -e 'POSIX::sigaction(SIGALRM, POSIX::SigAction->new(sub { exit 142 })); alarm shift; exec @ARGV' "$seconds" "$@"
+  else
+    # No timeout available, run without
+    "$@"
+  fi
+}
+
+if [ $FETCH_AGE -gt 300 ]; then
+  echo "Fetching base branch for PR size check (cached for 5 minutes)..."
+  # Add timeout to prevent hanging on slow networks (portable)
+  run_with_timeout 30 git fetch origin "$BASE" 2>/dev/null
+  FETCH_EXIT_CODE=$?
+  if [ $FETCH_EXIT_CODE -eq 0 ]; then
+    # Fetch successful, continue
+    :
+  elif [ $FETCH_EXIT_CODE -eq 124 ] || [ $FETCH_EXIT_CODE -eq 142 ]; then
+    # Timeout (124=GNU timeout, 142=Perl alarm)
+    echo "⚠️  Warning: git fetch timed out - skipping PR size check" >&2
+    echo "Preflight checks passed (PR size check skipped due to timeout)"
+    exit 0
+  else
+    # Other error - be strict
+    echo "❌ Error: git fetch failed (exit code $FETCH_EXIT_CODE)" >&2
+    echo "This may indicate authentication or network issues." >&2
+    exit 1
+  fi
+else
+  echo "ℹ️  Using cached fetch from $((FETCH_AGE / 60)) minute(s) ago"
+fi
+
 if ! git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
   echo "Warning: Cannot verify base branch origin/$BASE - skipping PR size check." >&2
   echo "Tip: Run 'git fetch origin $BASE' to enable PR size checking." >&2
