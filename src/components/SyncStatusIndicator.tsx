@@ -51,7 +51,8 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
       const stats = await processSyncQueue(apiBaseUrl);
 
       if (stats.failed > 0) {
-        // Error messages are developer-facing and don't need translation
+        // Technical error message for debugging - not localized
+        // User sees the visual error indicator icon instead
         setSyncError(
           `Failed to sync ${stats.failed} operation(s). Will retry later.`
         );
@@ -61,6 +62,7 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
         setLastSyncTime(new Date());
       }
     } catch (error) {
+      // Technical error message for debugging - not localized
       setSyncError(
         error instanceof Error ? error.message : "Unknown sync error occurred"
       );

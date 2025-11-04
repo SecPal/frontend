@@ -3,7 +3,7 @@
 
 import { db } from "./db";
 import type { SyncOperation } from "./db";
-import { getAuthHeaders } from "../config";
+import { apiConfig, getAuthHeaders } from "../config";
 
 /**
  * Cache an API response in IndexedDB
@@ -213,8 +213,8 @@ export async function retrySyncOperation(
   operation: SyncOperation,
   apiBaseUrl: string
 ): Promise<boolean> {
-  // Max retry attempts: 5
-  if (operation.attempts >= 5) {
+  // Check if max retry attempts reached (from config)
+  if (operation.attempts >= apiConfig.retry.maxAttempts) {
     await updateSyncOperationStatus(
       operation.id,
       "error",
@@ -223,8 +223,9 @@ export async function retrySyncOperation(
     return false;
   }
 
-  // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-  const backoffDelay = Math.pow(2, operation.attempts) * 1000;
+  // Exponential backoff using configured multiplier
+  const backoffDelay =
+    Math.pow(apiConfig.retry.backoffMultiplier, operation.attempts) * 1000;
   if (operation.lastAttemptAt) {
     const timeSinceLastAttempt = Date.now() - operation.lastAttemptAt.getTime();
     if (timeSinceLastAttempt < backoffDelay) {
@@ -287,9 +288,11 @@ export async function retrySyncOperation(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+    // Mark as error if this was the final attempt, otherwise keep pending
+    const finalAttemptThreshold = apiConfig.retry.maxAttempts - 1;
     await updateSyncOperationStatus(
       operation.id,
-      operation.attempts >= 4 ? "error" : "pending",
+      operation.attempts >= finalAttemptThreshold ? "error" : "pending",
       errorMessage
     );
     return false;
