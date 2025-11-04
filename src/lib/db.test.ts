@@ -213,7 +213,7 @@ describe("IndexedDB Database", () => {
 
       const remaining = await db.apiCache.toArray();
       expect(remaining).toHaveLength(1);
-      expect(remaining[0].url).toBe("/api/valid");
+      expect(remaining[0]?.url).toBe("/api/valid");
     });
   });
 

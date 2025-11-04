@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { db } from './db';
-import type { SyncOperation } from './db';
+import { db } from "./db";
+import type { SyncOperation } from "./db";
 
 /**
  * Cache an API response in IndexedDB
@@ -81,7 +81,7 @@ export async function getCachedResponse(url: string): Promise<unknown | null> {
  * ```
  */
 export async function addToSyncQueue(operation: {
-  type: SyncOperation['type'];
+  type: SyncOperation["type"];
   entity: string;
   data: unknown;
 }): Promise<string> {
@@ -92,7 +92,7 @@ export async function addToSyncQueue(operation: {
     type: operation.type,
     entity: operation.entity,
     data: operation.data,
-    status: 'pending',
+    status: "pending",
     createdAt: new Date(),
     attempts: 0,
   });
@@ -114,10 +114,7 @@ export async function addToSyncQueue(operation: {
  * ```
  */
 export async function getPendingSyncOperations(): Promise<SyncOperation[]> {
-  return db.syncQueue
-    .where('status')
-    .equals('pending')
-    .sortBy('createdAt');
+  return db.syncQueue.where("status").equals("pending").sortBy("createdAt");
 }
 
 /**
@@ -138,7 +135,7 @@ export async function checkStorageQuota(): Promise<{
   quota: number;
   percentUsed: number;
 } | null> {
-  if ('storage' in navigator && 'estimate' in navigator.storage) {
+  if ("storage" in navigator && "estimate" in navigator.storage) {
     const { usage, quota } = await navigator.storage.estimate();
     return {
       usage: usage || 0,
@@ -162,5 +159,5 @@ export async function checkStorageQuota(): Promise<{
  */
 export async function cleanExpiredCache(): Promise<number> {
   const now = new Date();
-  return db.apiCache.where('expiresAt').below(now).delete();
+  return db.apiCache.where("expiresAt").below(now).delete();
 }

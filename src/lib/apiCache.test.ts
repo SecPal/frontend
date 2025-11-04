@@ -211,9 +211,10 @@ describe("API Cache Utilities", () => {
 
       const pending = await getPendingSyncOperations();
 
-      expect(pending[0].id).toBe("3"); // Oldest
-      expect(pending[1].id).toBe("2");
-      expect(pending[2].id).toBe("1"); // Newest
+      expect(pending).toHaveLength(3);
+      expect(pending[0]?.id).toBe("3"); // Oldest
+      expect(pending[1]?.id).toBe("2");
+      expect(pending[2]?.id).toBe("1"); // Newest
     });
   });
 
@@ -280,7 +281,7 @@ describe("API Cache Utilities", () => {
 
       const remaining = await db.apiCache.toArray();
       expect(remaining).toHaveLength(1);
-      expect(remaining[0].url).toBe("/api/valid");
+      expect(remaining[0]?.url).toBe("/api/valid");
     });
 
     it("should return 0 when no expired entries", async () => {
