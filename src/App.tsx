@@ -6,6 +6,8 @@ import { Trans } from "@lingui/macro";
 import { Link } from "./components/link";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
+import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
+import { getApiBaseUrl } from "./config";
 
 function Home() {
   return (
@@ -61,6 +63,7 @@ function App() {
         </Routes>
       </div>
       <OfflineIndicator />
+      <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
     </BrowserRouter>
   );
 }

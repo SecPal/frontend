@@ -3,6 +3,7 @@
 
 import { db } from "./db";
 import type { SyncOperation } from "./db";
+import { apiConfig, getAuthHeaders } from "../config";
 
 /**
  * Cache an API response in IndexedDB
@@ -76,7 +77,7 @@ export async function getCachedResponse(url: string): Promise<unknown | null> {
  * await addToSyncQueue({
  *   type: 'create',
  *   entity: 'guard',
- *   data: { name: 'John Doe', email: 'john@secpal.app' }
+ *   data: { name: 'John Doe', email: 'john@secpal.dev' }
  * });
  * ```
  */
@@ -160,4 +161,200 @@ export async function checkStorageQuota(): Promise<{
 export async function cleanExpiredCache(): Promise<number> {
   const now = new Date();
   return db.apiCache.where("expiresAt").below(now).delete();
+}
+
+/**
+ * Update the status of a sync operation
+ *
+ * @param id - Operation ID
+ * @param status - New status
+ * @param error - Optional error message
+ *
+ * @example
+ * ```ts
+ * await updateSyncOperationStatus('abc-123', 'synced');
+ * await updateSyncOperationStatus('def-456', 'error', 'Network timeout');
+ * ```
+ */
+export async function updateSyncOperationStatus(
+  id: string,
+  status: SyncOperation["status"],
+  error?: string
+): Promise<void> {
+  const operation = await db.syncQueue.get(id);
+  if (!operation) {
+    throw new Error(`Sync operation ${id} not found`);
+  }
+
+  await db.syncQueue.update(id, {
+    status,
+    error,
+    lastAttemptAt: new Date(),
+    attempts: operation.attempts + 1,
+  });
+}
+
+/**
+ * Retry a single sync operation with exponential backoff
+ *
+ * @param operation - Operation to retry
+ * @param apiBaseUrl - Base URL for API requests
+ * @returns Success status
+ *
+ * @example
+ * ```ts
+ * const operation = await db.syncQueue.get('abc-123');
+ * if (operation) {
+ *   const success = await retrySyncOperation(operation, 'https://api.secpal.dev');
+ * }
+ * ```
+ */
+export async function retrySyncOperation(
+  operation: SyncOperation,
+  apiBaseUrl: string
+): Promise<boolean> {
+  // Check if max retry attempts reached (from config)
+  if (operation.attempts >= apiConfig.retry.maxAttempts) {
+    await updateSyncOperationStatus(
+      operation.id,
+      "error",
+      "Max retry attempts reached"
+    );
+    return false;
+  }
+
+  // Exponential backoff using configured multiplier
+  const backoffDelay =
+    Math.pow(apiConfig.retry.backoffMultiplier, operation.attempts) * 1000;
+  if (operation.lastAttemptAt) {
+    const timeSinceLastAttempt = Date.now() - operation.lastAttemptAt.getTime();
+    if (timeSinceLastAttempt < backoffDelay) {
+      // Too soon to retry
+      return false;
+    }
+  }
+
+  try {
+    const endpoint = `${apiBaseUrl}/${operation.entity}`;
+    const authHeaders = getAuthHeaders();
+    let response: Response;
+
+    switch (operation.type) {
+      case "create":
+        response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify(operation.data),
+        });
+        break;
+
+      case "update":
+        response = await fetch(endpoint, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify(operation.data),
+        });
+        break;
+
+      case "delete":
+        response = await fetch(endpoint, {
+          method: "DELETE",
+          headers: authHeaders,
+        });
+        break;
+
+      default:
+        throw new Error(`Unknown operation type: ${operation.type}`);
+    }
+
+    if (response.ok) {
+      await updateSyncOperationStatus(operation.id, "synced");
+      return true;
+    } else {
+      const errorText = await response.text();
+      await updateSyncOperationStatus(
+        operation.id,
+        "error",
+        `HTTP ${response.status}: ${errorText}`
+      );
+      return false;
+    }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    // Mark as error if this was the final attempt, otherwise keep pending
+    const finalAttemptThreshold = apiConfig.retry.maxAttempts - 1;
+    await updateSyncOperationStatus(
+      operation.id,
+      operation.attempts >= finalAttemptThreshold ? "error" : "pending",
+      errorMessage
+    );
+    return false;
+  }
+}
+
+/**
+ * Process all pending sync operations
+ *
+ * @param apiBaseUrl - Base URL for API requests
+ * @returns Statistics about processed operations
+ *
+ * @example
+ * ```ts
+ * const stats = await processSyncQueue('https://api.secpal.dev');
+ * console.log(`Synced: ${stats.synced}, Failed: ${stats.failed}`);
+ * ```
+ */
+export async function processSyncQueue(apiBaseUrl: string): Promise<{
+  total: number;
+  synced: number;
+  failed: number;
+  pending: number;
+}> {
+  const operations = await getPendingSyncOperations();
+  let synced = 0;
+  let failed = 0;
+  let pending = 0;
+
+  for (const operation of operations) {
+    const success = await retrySyncOperation(operation, apiBaseUrl);
+    if (success) {
+      synced++;
+    } else {
+      const updatedOp = await db.syncQueue.get(operation.id);
+      if (updatedOp?.status === "error") {
+        failed++;
+      } else {
+        pending++;
+      }
+    }
+  }
+
+  return {
+    total: operations.length,
+    synced,
+    failed,
+    pending,
+  };
+}
+
+/**
+ * Clear all completed (synced) sync operations
+ *
+ * @returns Number of deleted operations
+ *
+ * @example
+ * ```ts
+ * const deleted = await clearCompletedSyncOperations();
+ * console.log(`Cleared ${deleted} completed operations`);
+ * ```
+ */
+export async function clearCompletedSyncOperations(): Promise<number> {
+  return db.syncQueue.where("status").equals("synced").delete();
 }
