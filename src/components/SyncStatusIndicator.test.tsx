@@ -37,7 +37,7 @@ describe("SyncStatusIndicator", () => {
     vi.mocked(useOnlineStatusModule.useOnlineStatus).mockReturnValue(true);
 
     const { container } = renderWithI18n(
-      <SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />
+      <SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />
     );
 
     // Wait for live query to update
@@ -71,7 +71,7 @@ describe("SyncStatusIndicator", () => {
       },
     ]);
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(screen.getByText(/2 operation\(s\) pending/i)).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("SyncStatusIndicator", () => {
       },
     ]);
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(screen.getByText(/1 operation\(s\) failed/i)).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe("SyncStatusIndicator", () => {
       },
     ]);
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     // Wait for component to render with pending count
     await waitFor(() => {
@@ -150,7 +150,7 @@ describe("SyncStatusIndicator", () => {
     // Verify processSyncQueue was called
     await waitFor(() => {
       expect(mockProcessSyncQueue).toHaveBeenCalledWith(
-        "https://api.secpal.dev"
+        "https://api.secpal.app"
       );
     });
 
@@ -174,7 +174,7 @@ describe("SyncStatusIndicator", () => {
       attempts: 0,
     });
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(
@@ -213,7 +213,7 @@ describe("SyncStatusIndicator", () => {
     mockUseOnlineStatus.mockReturnValue(false);
 
     const { rerender } = renderWithI18n(
-      <SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />
+      <SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />
     );
 
     await waitFor(() => {
@@ -226,7 +226,7 @@ describe("SyncStatusIndicator", () => {
     mockUseOnlineStatus.mockReturnValue(true);
     rerender(
       <I18nProvider i18n={i18n}>
-        <SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />
+        <SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />
       </I18nProvider>
     );
 
@@ -261,7 +261,7 @@ describe("SyncStatusIndicator", () => {
       },
     ]);
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(screen.getByText(/1 operation\(s\) pending/i)).toBeInTheDocument();
@@ -302,7 +302,7 @@ describe("SyncStatusIndicator", () => {
       attempts: 0,
     });
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(screen.getByText(/1 operation\(s\) pending/i)).toBeInTheDocument();
@@ -352,7 +352,7 @@ describe("SyncStatusIndicator", () => {
       attempts: 0,
     });
 
-    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.app" />);
 
     await waitFor(() => {
       expect(screen.getByText(/1 operation\(s\) pending/i)).toBeInTheDocument();

@@ -130,7 +130,7 @@ describe("IndexedDB Database", () => {
           type: "update",
           entity: "shift",
           data: {},
-          status: "completed",
+          status: "synced",
           createdAt: new Date(),
           attempts: 1,
         },

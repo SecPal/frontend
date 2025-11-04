@@ -69,12 +69,14 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
     }
   }, [isOnline, isSyncing, apiBaseUrl]);
 
-  // Auto-sync when coming online
+  // Auto-sync when coming online (only trigger on online status change)
   useEffect(() => {
     if (isOnline && pendingOps && pendingOps > 0) {
       handleManualSync();
     }
-  }, [isOnline, pendingOps, handleManualSync]);
+    // Only re-run when online status changes, not on every pendingOps change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]);
 
   // Don't show indicator if nothing to sync and no errors
   if (!pendingOps && !errorOps) {
