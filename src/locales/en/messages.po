@@ -13,6 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. js-lingui-explicit-id
+#: src/components/LanguageSwitcher.tsx:18
+msgid "Failed to change language. Please try again."
+msgstr "Failed to change language. Please try again."
+
 #: src/App.tsx:22
 msgid "About"
 msgstr "About"
