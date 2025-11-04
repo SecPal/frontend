@@ -125,6 +125,12 @@ export default defineConfig(({ mode }) => {
                   maxAgeSeconds: 60 * 60 * 24, // 24 hours
                 },
                 networkTimeoutSeconds: 10,
+                backgroundSync: {
+                  name: "api-sync-queue",
+                  options: {
+                    maxRetentionTime: 60 * 24, // Retry for max of 24 Hours (in minutes)
+                  },
+                },
               },
             },
             {

@@ -14,6 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Background Sync API**: Automatic retry of failed operations when connection restored
+  - Workbox Background Sync integration for API requests
+  - Exponential backoff retry strategy (1s, 2s, 4s, 8s, 16s)
+  - Max 5 retry attempts before marking operation as failed
+  - Batch processing of pending sync operations
+  - Status tracking (pending, synced, error) for each operation
+  - Auto-cleanup of successfully synced operations
+  - 15 comprehensive tests for sync logic and error handling
+
+- **Sync Status Indicator UI Component**: Real-time sync status visualization
+  - Live display of pending/error operations count using Dexie React Hooks
+  - Auto-sync when device comes online after being offline
+  - Manual sync trigger button for user-initiated synchronization
+  - Last sync timestamp display
+  - Error message display with retry information
+  - Offline notice when device is disconnected
+  - Fixed bottom-right positioning with shadow and dark mode support
+  - 9 comprehensive tests covering all user interactions
+  - Dependencies: `dexie-react-hooks@^1.1.7`
+
 - **IndexedDB Integration with Dexie.js**: Structured client-side storage for offline-first architecture
   - Database schema with tables for guards, sync queue, and API cache
   - TypeScript-first implementation with full type safety
