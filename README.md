@@ -16,13 +16,41 @@ React/TypeScript frontend for the SecPal platform.
 
 SecPal is an **offline-first PWA** providing seamless experience regardless of network connectivity.
 
-**Features:**
+**Core Features:**
 
 - 📴 **Offline Support**: Service Worker with intelligent caching strategies
 - 📲 **Installable**: Add to home screen on mobile/desktop
 - 🔄 **Auto-Updates**: Automatic service worker updates
 - 🌐 **Network Detection**: Real-time online/offline status monitoring
 - 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
+
+**Phase 3 Features (Issue #67):**
+
+- 🔔 **Push Notifications**: Permission management, Service Worker integration, preference UI
+- 📤 **Share Target API**: Receive shared content (text, URLs, images, PDFs, documents) from other apps
+- 📊 **Offline Analytics**: Privacy-first event tracking with IndexedDB persistence and automatic sync
+
+**Using PWA Features:**
+
+```tsx
+// Push Notifications
+import { useNotifications } from "@/hooks/useNotifications";
+
+const { permission, requestPermission, showNotification } = useNotifications();
+
+// Share Target API
+import { useShareTarget } from "@/hooks/useShareTarget";
+
+const { sharedData, clearSharedData } = useShareTarget();
+
+// Offline Analytics
+import { analytics } from "@/lib/analytics";
+
+await analytics.trackPageView("/dashboard", "Dashboard");
+await analytics.trackClick("submit-button", { form: "login" });
+```
+
+See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing guide.
 
 ## 🌍 Internationalization (i18n)
 
@@ -42,11 +70,7 @@ npm run lingui:extract
 # Compile translation catalogs for production
 npm run lingui:compile
 
-<<<<<<< HEAD
-# Sync with Translation.io (extract + compile)
-=======
 # Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
->>>>>>> origin/main
 npm run sync
 
 # Sync and remove unused translations

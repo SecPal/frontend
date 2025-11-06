@@ -39,17 +39,36 @@ export interface ApiCacheEntry {
 }
 
 /**
+ * Analytics event for offline tracking
+ */
+export interface AnalyticsEvent {
+  id?: number;
+  type: string;
+  category: string;
+  action: string;
+  label?: string;
+  value?: number;
+  metadata?: Record<string, unknown>;
+  timestamp: number;
+  synced: boolean;
+  sessionId: string;
+  userId?: string;
+}
+
+/**
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
  * - Guards (employees)
  * - Sync queue (operations to sync when online)
  * - API cache (cached responses for offline access)
+ * - Analytics (offline event tracking)
  */
 export const db = new Dexie("SecPalDB") as Dexie & {
   guards: EntityTable<Guard, "id">;
   syncQueue: EntityTable<SyncOperation, "id">;
   apiCache: EntityTable<ApiCacheEntry, "url">;
+  analytics: EntityTable<AnalyticsEvent, "id">;
 };
 
 // Schema version 1
@@ -57,4 +76,12 @@ db.version(1).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, status, createdAt, attempts",
   apiCache: "url, expiresAt",
+});
+
+// Schema version 2 - Add analytics table
+db.version(2).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
 });
