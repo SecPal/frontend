@@ -41,7 +41,7 @@ export function useShareTarget(): UseShareTargetReturn {
     // Only run in browser
     if (typeof window === "undefined") return;
 
-    const handleShareTarget = async () => {
+    const handleShareTarget = () => {
       const url = new URL(window.location.href);
 
       // Check if this is a share target navigation

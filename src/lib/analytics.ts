@@ -228,16 +228,19 @@ class OfflineAnalytics {
       // Simulate network request
       console.log(`Syncing ${unsyncedEvents.length} analytics events...`);
 
-      // Mark events as synced
-      const eventIds = unsyncedEvents.map((e) => e.id!).filter((id) => id);
+      // Mark events as synced - filter first to avoid runtime errors
       await db.analytics.bulkUpdate(
-        eventIds.map((id) => ({
-          key: id,
-          changes: { synced: true },
-        }))
+        unsyncedEvents
+          .filter((e) => e.id !== undefined)
+          .map((e) => ({
+            key: e.id!,
+            changes: { synced: true },
+          }))
       );
 
-      console.log(`Successfully synced ${eventIds.length} events`);
+      console.log(
+        `Successfully synced ${unsyncedEvents.filter((e) => e.id !== undefined).length} events`
+      );
     } catch (error) {
       console.error("Failed to sync analytics events:", error);
     }

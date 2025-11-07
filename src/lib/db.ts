@@ -87,6 +87,8 @@ db.version(1).stores({
 });
 
 // Schema version 2 - Add analytics table
+// Note: Per Dexie.js best practices, all existing tables must be re-declared
+// when upgrading schema versions, even if they haven't changed
 db.version(2).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, status, createdAt, attempts",

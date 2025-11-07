@@ -66,8 +66,9 @@ export function NotificationPreferences() {
     [_]
   );
 
-  const [preferences, setPreferences] =
-    useState<NotificationPreference[]>(defaultPreferences);
+  const [preferences, setPreferences] = useState<NotificationPreference[]>(
+    () => defaultPreferences
+  );
 
   const [isEnabling, setIsEnabling] = useState(false);
 
