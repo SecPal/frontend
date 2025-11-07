@@ -38,12 +38,20 @@ export interface ApiCacheEntry {
   expiresAt: Date;
 }
 
+export type AnalyticsEventType =
+  | "page_view"
+  | "button_click"
+  | "form_submit"
+  | "error"
+  | "performance"
+  | "feature_usage";
+
 /**
  * Analytics event for offline tracking
  */
 export interface AnalyticsEvent {
   id?: number;
-  type: string;
+  type: AnalyticsEventType;
   category: string;
   action: string;
   label?: string;

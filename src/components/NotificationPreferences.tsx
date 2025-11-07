@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -35,34 +35,59 @@ export function NotificationPreferences() {
   const { permission, isSupported, requestPermission, showNotification } =
     useNotifications();
 
-  const [preferences, setPreferences] = useState<NotificationPreference[]>([
-    {
-      category: "alerts",
-      enabled: true,
-      label: _(msg`Security Alerts`),
-      description: _(msg`Critical security notifications and warnings`),
-    },
-    {
-      category: "updates",
-      enabled: true,
-      label: _(msg`System Updates`),
-      description: _(msg`App updates and maintenance notifications`),
-    },
-    {
-      category: "reminders",
-      enabled: true,
-      label: _(msg`Shift Reminders`),
-      description: _(msg`Reminders about upcoming shifts and duties`),
-    },
-    {
-      category: "messages",
-      enabled: false,
-      label: _(msg`Team Messages`),
-      description: _(msg`Messages from team members and supervisors`),
-    },
-  ]);
+  // Default preferences with translations that update when locale changes
+  const defaultPreferences = useMemo<NotificationPreference[]>(
+    () => [
+      {
+        category: "alerts",
+        enabled: true,
+        label: _(msg`Security Alerts`),
+        description: _(msg`Critical security notifications and warnings`),
+      },
+      {
+        category: "updates",
+        enabled: true,
+        label: _(msg`System Updates`),
+        description: _(msg`App updates and maintenance notifications`),
+      },
+      {
+        category: "reminders",
+        enabled: true,
+        label: _(msg`Shift Reminders`),
+        description: _(msg`Reminders about upcoming shifts and duties`),
+      },
+      {
+        category: "messages",
+        enabled: false,
+        label: _(msg`Team Messages`),
+        description: _(msg`Messages from team members and supervisors`),
+      },
+    ],
+    [_]
+  );
+
+  const [preferences, setPreferences] =
+    useState<NotificationPreference[]>(defaultPreferences);
 
   const [isEnabling, setIsEnabling] = useState(false);
+
+  // Update translations when locale changes
+  useEffect(() => {
+    setPreferences((current) =>
+      current.map((pref) => {
+        const defaultPref = defaultPreferences.find(
+          (d) => d.category === pref.category
+        );
+        return defaultPref
+          ? {
+              ...pref,
+              label: defaultPref.label,
+              description: defaultPref.description,
+            }
+          : pref;
+      })
+    );
+  }, [defaultPreferences]);
 
   // Load preferences from localStorage
   useEffect(() => {

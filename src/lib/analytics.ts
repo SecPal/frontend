@@ -1,29 +1,10 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { db } from "./db";
+import { db, type AnalyticsEvent, type AnalyticsEventType } from "./db";
 
-export type AnalyticsEventType =
-  | "page_view"
-  | "button_click"
-  | "form_submit"
-  | "error"
-  | "performance"
-  | "feature_usage";
-
-export interface AnalyticsEvent {
-  id?: number;
-  type: AnalyticsEventType;
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  metadata?: Record<string, unknown>;
-  timestamp: number;
-  synced: boolean;
-  sessionId: string;
-  userId?: string;
-}
+// Re-export types for external use
+export type { AnalyticsEvent, AnalyticsEventType };
 
 class OfflineAnalytics {
   private sessionId: string;
@@ -46,9 +27,13 @@ class OfflineAnalytics {
   }
 
   /**
-   * Generate a unique session ID
+   * Generate a unique session ID using cryptographically secure random
    */
   private generateSessionId(): string {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return `session_${crypto.randomUUID()}`;
+    }
+    // Fallback for older browsers (though we're targeting modern PWA environments)
     return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
