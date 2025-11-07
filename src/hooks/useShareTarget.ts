@@ -42,36 +42,49 @@ export function useShareTarget(): UseShareTargetReturn {
     if (typeof window === "undefined") return;
 
     const handleShareTarget = () => {
-      const url = new URL(window.location.href);
+      try {
+        const url = new URL(window.location.href);
 
-      // Check if this is a share target navigation
-      if (url.pathname === "/share" && url.searchParams.size > 0) {
-        setIsSharing(true);
+        // Check if this is a share target navigation
+        if (url.pathname === "/share" && url.searchParams.size > 0) {
+          setIsSharing(true);
 
-        // Parse share data with explicit null/empty checks
-        const title = url.searchParams.get("title");
-        const text = url.searchParams.get("text");
-        const urlParam = url.searchParams.get("url");
+          // Parse share data with explicit null/empty checks
+          const title = url.searchParams.get("title");
+          const text = url.searchParams.get("text");
+          const urlParam = url.searchParams.get("url");
 
-        const data: SharedData = {
-          title: title !== null && title !== "" ? title : undefined,
-          text: text !== null && text !== "" ? text : undefined,
-          url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
-        };
+          const data: SharedData = {
+            title: title !== null && title !== "" ? title : undefined,
+            text: text !== null && text !== "" ? text : undefined,
+            url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
+          };
 
-        // Handle files from POST request (if available)
-        // Note: Files are typically handled via formData in the Service Worker
-        // This is a simplified client-side version
+          // Handle files from POST request (if available)
+          // Note: Files are typically handled via formData in the Service Worker
+          // This is a simplified client-side version
 
-        setSharedData(data);
+          setSharedData(data);
 
-        // Clean up URL without the share parameters (preserve hash)
-        const cleanUrl =
-          window.location.pathname === "/share"
-            ? "/"
-            : window.location.pathname;
-        window.history.replaceState({}, "", cleanUrl + window.location.hash);
+          // Clean up URL without the share parameters (preserve hash)
+          const cleanUrl =
+            window.location.pathname === "/share"
+              ? "/"
+              : window.location.pathname;
 
+          // Only update history if replaceState is available
+          if (window.history?.replaceState) {
+            window.history.replaceState(
+              {},
+              "",
+              cleanUrl + window.location.hash
+            );
+          }
+
+          setIsSharing(false);
+        }
+      } catch (error) {
+        console.error("Failed to process share target:", error);
         setIsSharing(false);
       }
     };

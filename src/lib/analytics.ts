@@ -14,6 +14,8 @@ class OfflineAnalytics {
   private syncTimeout?: number;
   private onlineHandler: () => void;
   private offlineHandler: () => void;
+  private isSyncing: boolean = false;
+  private isDestroyed: boolean = false;
 
   constructor() {
     this.sessionId = this.generateSessionId();
@@ -66,6 +68,14 @@ class OfflineAnalytics {
       metadata?: Record<string, unknown>;
     }
   ): Promise<void> {
+    // Prevent tracking after destroy
+    if (this.isDestroyed) {
+      console.warn(
+        "Analytics instance has been destroyed, ignoring track call"
+      );
+      return;
+    }
+
     const event: AnalyticsEvent = {
       type,
       category,
@@ -232,6 +242,8 @@ class OfflineAnalytics {
    * Call this when the analytics instance is no longer needed (e.g., in tests)
    */
   destroy(): void {
+    this.isDestroyed = true;
+
     // Remove event listeners
     if (typeof window !== "undefined") {
       window.removeEventListener("online", this.onlineHandler);
@@ -253,7 +265,15 @@ class OfflineAnalytics {
    * Sync unsynced events to the server
    */
   async syncEvents(): Promise<void> {
-    if (!this.isOnline) return;
+    if (!this.isOnline || this.isDestroyed) return;
+
+    // Prevent concurrent syncs with a simple lock
+    if (this.isSyncing) {
+      console.log("Sync already in progress, skipping...");
+      return;
+    }
+
+    this.isSyncing = true;
 
     try {
       // Get all unsynced events
@@ -286,6 +306,8 @@ class OfflineAnalytics {
       );
     } catch (error) {
       console.error("Failed to sync analytics events:", error);
+    } finally {
+      this.isSyncing = false;
     }
   }
 
@@ -333,5 +355,18 @@ class OfflineAnalytics {
   }
 }
 
-// Export singleton instance
-export const analytics = new OfflineAnalytics();
+// Export singleton instance with safe initialization
+// If crypto.randomUUID is not available, the constructor will throw
+// and the module will fail to load - this is intentional for PWAs
+let analyticsInstance: OfflineAnalytics | null = null;
+
+try {
+  analyticsInstance = new OfflineAnalytics();
+} catch (error) {
+  console.error(
+    "Failed to initialize analytics singleton. This browser may not support required PWA features:",
+    error
+  );
+}
+
+export const analytics = analyticsInstance!;
