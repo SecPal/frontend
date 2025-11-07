@@ -60,6 +60,9 @@ export function useNotifications(): UseNotificationsReturn {
     if (isSupported) {
       setPermission(Notification.permission);
     }
+    // Note: Permission changes are rare (user must manually change in browser settings)
+    // We don't poll for changes to avoid performance overhead
+    // Permission state is updated after requestPermission() is called
   }, [isSupported]);
 
   /**
@@ -132,7 +135,21 @@ export function useNotifications(): UseNotificationsReturn {
           });
         }
       } catch (err) {
+        // Handle specific notification errors
         const error = err instanceof Error ? err : new Error(String(err));
+
+        if (error.name === "SecurityError") {
+          console.error(
+            "Notification failed due to security error (cross-origin or insecure context):",
+            error
+          );
+        } else if (error.name === "NotAllowedError") {
+          console.error(
+            "Notification blocked by user or browser policy:",
+            error
+          );
+        }
+
         setError(error);
         throw error;
       } finally {

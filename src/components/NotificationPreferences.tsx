@@ -92,21 +92,52 @@ export function NotificationPreferences() {
 
   // Load preferences from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setPreferences((current) =>
-          current.map((pref) => {
-            const storedPref = parsed.find(
-              (p: NotificationPreference) => p.category === pref.category
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // Validate that parsed data is an array
+          if (!Array.isArray(parsed)) {
+            console.warn(
+              "Invalid notification preferences format, using defaults"
             );
-            return storedPref ? { ...pref, enabled: storedPref.enabled } : pref;
-          })
-        );
-      } catch (error) {
-        console.error("Failed to load notification preferences:", error);
+            return;
+          }
+
+          setPreferences((current) =>
+            current.map((pref) => {
+              const storedPref = parsed.find(
+                (p: NotificationPreference) =>
+                  p &&
+                  typeof p === "object" &&
+                  p.category === pref.category &&
+                  typeof p.enabled === "boolean"
+              );
+              return storedPref
+                ? { ...pref, enabled: storedPref.enabled }
+                : pref;
+            })
+          );
+        } catch (parseError) {
+          console.error(
+            "Failed to parse notification preferences, using defaults:",
+            parseError
+          );
+          // Clear corrupted data
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch {
+            // Ignore removal errors (e.g., SecurityError in private mode)
+          }
+        }
       }
+    } catch (error) {
+      // Handle QuotaExceededError or SecurityError when accessing localStorage
+      console.error(
+        "Failed to load notification preferences (storage access denied):",
+        error
+      );
     }
   }, []);
 
@@ -118,7 +149,21 @@ export function NotificationPreferences() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
       } catch (error) {
-        console.error("Failed to save notification preferences:", error);
+        // Handle QuotaExceededError or SecurityError
+        if (error instanceof Error) {
+          if (error.name === "QuotaExceededError") {
+            console.error(
+              "Failed to save notification preferences: Storage quota exceeded"
+            );
+            // Optionally notify user about storage issues
+          } else if (error.name === "SecurityError") {
+            console.error(
+              "Failed to save notification preferences: Storage access denied (private mode?)"
+            );
+          } else {
+            console.error("Failed to save notification preferences:", error);
+          }
+        }
       }
     });
   };
