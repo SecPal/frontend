@@ -28,13 +28,15 @@ class OfflineAnalytics {
 
   /**
    * Generate a unique session ID using cryptographically secure random
+   * @throws {Error} If crypto.randomUUID is not available (unsupported browser)
    */
   private generateSessionId(): string {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return `session_${crypto.randomUUID()}`;
+    if (typeof crypto === "undefined" || !crypto.randomUUID) {
+      throw new Error(
+        "crypto.randomUUID is not available. This browser does not support secure random ID generation."
+      );
     }
-    // Fallback for older browsers (though we're targeting modern PWA environments)
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    return `session_${crypto.randomUUID()}`;
   }
 
   /**
