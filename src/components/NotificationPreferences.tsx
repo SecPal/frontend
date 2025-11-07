@@ -110,10 +110,17 @@ export function NotificationPreferences() {
     }
   }, []);
 
-  // Save preferences to localStorage
+  // Save preferences to localStorage (with queueMicrotask to avoid blocking)
   const savePreferences = (newPreferences: NotificationPreference[]) => {
     setPreferences(newPreferences);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
+    // Use queueMicrotask to defer localStorage write and avoid blocking render
+    queueMicrotask(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
+      } catch (error) {
+        console.error("Failed to save notification preferences:", error);
+      }
+    });
   };
 
   // Handle enabling notifications

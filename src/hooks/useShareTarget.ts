@@ -48,10 +48,15 @@ export function useShareTarget(): UseShareTargetReturn {
       if (url.pathname === "/share" && url.searchParams.size > 0) {
         setIsSharing(true);
 
+        // Parse share data with explicit null/empty checks
+        const title = url.searchParams.get("title");
+        const text = url.searchParams.get("text");
+        const urlParam = url.searchParams.get("url");
+
         const data: SharedData = {
-          title: url.searchParams.get("title") || undefined,
-          text: url.searchParams.get("text") || undefined,
-          url: url.searchParams.get("url") || undefined,
+          title: title !== null && title !== "" ? title : undefined,
+          text: text !== null && text !== "" ? text : undefined,
+          url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
         };
 
         // Handle files from POST request (if available)
@@ -60,8 +65,12 @@ export function useShareTarget(): UseShareTargetReturn {
 
         setSharedData(data);
 
-        // Clean up URL without the share parameters
-        window.history.replaceState({}, "", "/");
+        // Clean up URL without the share parameters (preserve hash)
+        const cleanUrl =
+          window.location.pathname === "/share"
+            ? "/"
+            : window.location.pathname;
+        window.history.replaceState({}, "", cleanUrl + window.location.hash);
 
         setIsSharing(false);
       }

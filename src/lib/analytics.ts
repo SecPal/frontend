@@ -11,15 +11,22 @@ class OfflineAnalytics {
   private userId?: string;
   private isOnline: boolean;
   private syncInterval?: number;
+  private syncTimeout?: number;
+  private onlineHandler: () => void;
+  private offlineHandler: () => void;
 
   constructor() {
     this.sessionId = this.generateSessionId();
     this.isOnline = typeof navigator !== "undefined" && navigator.onLine;
 
+    // Bind event handlers for cleanup
+    this.onlineHandler = () => this.handleOnline();
+    this.offlineHandler = () => this.handleOffline();
+
     // Set up online/offline listeners
     if (typeof window !== "undefined") {
-      window.addEventListener("online", () => this.handleOnline());
-      window.addEventListener("offline", () => this.handleOffline());
+      window.addEventListener("online", this.onlineHandler);
+      window.addEventListener("offline", this.offlineHandler);
     }
 
     // Start periodic sync
@@ -76,13 +83,27 @@ class OfflineAnalytics {
       // Store event in IndexedDB
       await db.analytics.add(event);
 
-      // If online, try to sync immediately
+      // If online, debounce sync to avoid excessive syncing
       if (this.isOnline) {
-        await this.syncEvents();
+        this.debouncedSync();
       }
     } catch (error) {
       console.error("Failed to track analytics event:", error);
     }
+  }
+
+  /**
+   * Debounced sync - waits 1 second after last event before syncing
+   */
+  private debouncedSync(): void {
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+    }
+
+    this.syncTimeout = window.setTimeout(() => {
+      this.syncEvents();
+      this.syncTimeout = undefined;
+    }, 1000); // 1 second debounce
   }
 
   /**
@@ -203,6 +224,28 @@ class OfflineAnalytics {
   stopPeriodicSync(): void {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
+    }
+  }
+
+  /**
+   * Clean up resources (event listeners, intervals)
+   * Call this when the analytics instance is no longer needed (e.g., in tests)
+   */
+  destroy(): void {
+    // Remove event listeners
+    if (typeof window !== "undefined") {
+      window.removeEventListener("online", this.onlineHandler);
+      window.removeEventListener("offline", this.offlineHandler);
+    }
+
+    // Clear intervals and timeouts
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = undefined;
+    }
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+      this.syncTimeout = undefined;
     }
   }
 

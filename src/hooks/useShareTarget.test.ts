@@ -14,6 +14,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/",
       pathname: "/",
       search: "",
+      hash: "",
     });
 
     // Mock window.history
@@ -43,6 +44,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?title=Hello&text=World&url=https://example.com",
       pathname: "/share",
       search: "?title=Hello&text=World&url=https://example.com",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -55,6 +57,7 @@ describe("useShareTarget", () => {
       });
     });
 
+    // URL cleanup: cleanUrl="/", hash=""
     expect(window.history.replaceState).toHaveBeenCalledWith({}, "", "/");
   });
 
@@ -65,6 +68,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?text=SharedText",
       pathname: "/share",
       search: "?text=SharedText",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -85,6 +89,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?title=Hello%20World&text=Test%20%26%20More",
       pathname: "/share",
       search: "?title=Hello%20World&text=Test%20%26%20More",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -105,6 +110,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/home?title=Hello",
       pathname: "/home",
       search: "?title=Hello",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -120,6 +126,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share",
       pathname: "/share",
       search: "",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -135,6 +142,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?text=Test",
       pathname: "/share",
       search: "?text=Test",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -161,6 +169,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?text=First",
       pathname: "/share",
       search: "?text=First",
+      hash: "",
     } as Location;
 
     const { result, rerender } = renderHook(() => useShareTarget());
@@ -182,6 +191,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?text=Second",
       pathname: "/share",
       search: "?text=Second",
+      hash: "",
     } as Location;
 
     rerender();
@@ -197,6 +207,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?title=&text=NotEmpty",
       pathname: "/share",
       search: "?title=&text=NotEmpty",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
@@ -217,6 +228,7 @@ describe("useShareTarget", () => {
       href: "https://secpal.app/share?text=Test",
       pathname: "/share",
       search: "?text=Test",
+      hash: "",
     } as Location;
 
     const { result } = renderHook(() => useShareTarget());
