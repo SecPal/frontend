@@ -72,24 +72,53 @@ export function NotificationPreferences() {
 
   const [isEnabling, setIsEnabling] = useState(false);
 
-  // Update translations when locale changes (not when _ function reference changes)
-  // This prevents potential infinite loop from frequent _ reference changes
+  // Update translations when locale changes
+  // We compute translations directly here to avoid depending on defaultPreferences
+  // which would cause infinite loops due to the _ function reference changing
   useEffect(() => {
     setPreferences((current) =>
       current.map((pref) => {
-        const defaultPref = defaultPreferences.find(
-          (d) => d.category === pref.category
-        );
-        return defaultPref
-          ? {
-              ...pref,
-              label: defaultPref.label,
-              description: defaultPref.description,
-            }
-          : pref;
+        // Compute translations directly using i18n._ to avoid dependency issues
+        let label: string;
+        let description: string;
+
+        switch (pref.category) {
+          case "alerts":
+            label = i18n._(msg`Security Alerts`);
+            description = i18n._(
+              msg`Critical security notifications and warnings`
+            );
+            break;
+          case "updates":
+            label = i18n._(msg`System Updates`);
+            description = i18n._(
+              msg`App updates and maintenance notifications`
+            );
+            break;
+          case "reminders":
+            label = i18n._(msg`Shift Reminders`);
+            description = i18n._(
+              msg`Reminders about upcoming shifts and duties`
+            );
+            break;
+          case "messages":
+            label = i18n._(msg`Team Messages`);
+            description = i18n._(
+              msg`Messages from team members and supervisors`
+            );
+            break;
+          default:
+            return pref;
+        }
+
+        return {
+          ...pref,
+          label,
+          description,
+        };
       })
     );
-  }, [i18n.locale, defaultPreferences]); // Depend on locale instead of defaultPreferences alone
+  }, [i18n]); // Only depend on i18n object which is stable
 
   // Load preferences from localStorage
   useEffect(() => {
