@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Documentation**: Created `docs/KNOWN_ISSUES.md` to track upstream dependency issues
+  - Documents npm deprecation warnings from `workbox-build@7.3.0` transitive dependencies
+  - Explains why warnings appear and why we cannot fix them directly
+  - Provides impact assessment, upstream issue links, and expected resolution timeline
+  - Follows Gebot #2 (Qualität vor Geschwindigkeit) by accepting the issue rather than hiding it
+
 - **PWA Phase 3 Features (Issue #67)**: Complete implementation of Push Notifications, Share Target API, and Offline Analytics
   - **Push Notifications**: Permission management, Service Worker integration, notification display
     - `useNotifications` hook with permission state management
