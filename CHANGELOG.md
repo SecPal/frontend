@@ -20,8 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provides impact assessment, upstream issue links, and expected resolution timeline
   - Follows Gebot #2 (Qualität vor Geschwindigkeit) by accepting the issue rather than hiding it
 
-### Added (PWA Phase 3)
-
 - **PWA Phase 3 Features (Issue #67)**: Complete implementation of Push Notifications, Share Target API, and Offline Analytics
   - **Push Notifications**: Permission management, Service Worker integration, notification display
     - `useNotifications` hook with permission state management
