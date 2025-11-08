@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { useShareTarget } from "./useShareTarget";
 
 describe("useShareTarget", () => {
@@ -154,7 +154,9 @@ describe("useShareTarget", () => {
       });
     });
 
-    result.current.clearSharedData();
+    act(() => {
+      result.current.clearSharedData();
+    });
 
     await waitFor(() => {
       expect(result.current.sharedData).toBeNull();
@@ -177,7 +179,9 @@ describe("useShareTarget", () => {
       expect(result.current.sharedData?.text).toBe("First");
     });
 
-    result.current.clearSharedData();
+    act(() => {
+      result.current.clearSharedData();
+    });
 
     await waitFor(() => {
       expect(result.current.sharedData).toBeNull();
