@@ -72,6 +72,8 @@ npm ci 2>&1 | grep -v "npm warn deprecated"
 
 ### When This Will Be Resolved
 
+> **Note:** The following estimates are speculative and based on current upstream development activity; actual release dates may vary significantly.
+
 Expected resolution timeline:
 
 - **Q1 2026**: `workbox@8.x` likely to drop `glob@7` and `inflight`
