@@ -222,8 +222,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 1", () => {
-      expect(db.verno).toBe(1);
+    it("should have version 2", () => {
+      expect(db.verno).toBe(2);
     });
 
     it("should have all required tables", () => {
@@ -231,6 +231,7 @@ describe("IndexedDB Database", () => {
       expect(tableNames).toContain("guards");
       expect(tableNames).toContain("syncQueue");
       expect(tableNames).toContain("apiCache");
+      expect(tableNames).toContain("analytics");
     });
   });
 });

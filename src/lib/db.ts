@@ -38,6 +38,31 @@ export interface ApiCacheEntry {
   expiresAt: Date;
 }
 
+export type AnalyticsEventType =
+  | "page_view"
+  | "button_click"
+  | "form_submit"
+  | "error"
+  | "performance"
+  | "feature_usage";
+
+/**
+ * Analytics event for offline tracking
+ */
+export interface AnalyticsEvent {
+  id?: number;
+  type: AnalyticsEventType;
+  category: string;
+  action: string;
+  label?: string;
+  value?: number;
+  metadata?: Record<string, unknown>;
+  timestamp: number;
+  synced: boolean;
+  sessionId: string;
+  userId?: string;
+}
+
 /**
  * SecPal IndexedDB database
  *
@@ -45,11 +70,13 @@ export interface ApiCacheEntry {
  * - Guards (employees)
  * - Sync queue (operations to sync when online)
  * - API cache (cached responses for offline access)
+ * - Analytics (offline event tracking)
  */
 export const db = new Dexie("SecPalDB") as Dexie & {
   guards: EntityTable<Guard, "id">;
   syncQueue: EntityTable<SyncOperation, "id">;
   apiCache: EntityTable<ApiCacheEntry, "url">;
+  analytics: EntityTable<AnalyticsEvent, "id">;
 };
 
 // Schema version 1
@@ -57,4 +84,14 @@ db.version(1).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, status, createdAt, attempts",
   apiCache: "url, expiresAt",
+});
+
+// Schema version 2 - Add analytics table
+// Note: Per Dexie.js best practices, all existing tables must be re-declared
+// when upgrading schema versions, even if they haven't changed
+db.version(2).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
 });

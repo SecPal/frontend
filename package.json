@@ -19,7 +19,13 @@
     "frontend",
     "react",
     "typescript",
-    "vite"
+    "vite",
+    "pwa",
+    "progressive-web-app",
+    "offline-first",
+    "push-notifications",
+    "share-target",
+    "analytics"
   ],
   "scripts": {
     "dev": "vite",

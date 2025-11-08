@@ -109,6 +109,25 @@ export default defineConfig(({ mode }) => {
               ],
             },
           ],
+          share_target: {
+            action: "/share",
+            method: "POST",
+            enctype: "multipart/form-data",
+            params: {
+              title: "title",
+              text: "text",
+              url: "url",
+              // Note: File handling is configured here but not yet fully implemented
+              // in useShareTarget hook. The hook currently uses GET parameters only.
+              // Full POST + file support tracked in Issue #101
+              files: [
+                {
+                  name: "files",
+                  accept: ["image/*", "application/pdf", ".doc", ".docx"],
+                },
+              ],
+            },
+          },
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],

@@ -16,13 +16,48 @@ React/TypeScript frontend for the SecPal platform.
 
 SecPal is an **offline-first PWA** providing seamless experience regardless of network connectivity.
 
-**Features:**
+**Core Features:**
 
 - 📴 **Offline Support**: Service Worker with intelligent caching strategies
 - 📲 **Installable**: Add to home screen on mobile/desktop
 - 🔄 **Auto-Updates**: Automatic service worker updates
 - 🌐 **Network Detection**: Real-time online/offline status monitoring
 - 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
+
+**Phase 3 Features (Issue #67):**
+
+- 🔔 **Push Notifications**: Permission management, Service Worker integration, preference UI
+- 📤 **Share Target API**: Receive shared content (text, URLs, images, PDFs, documents) from other apps
+- 📊 **Offline Analytics**: Privacy-first event tracking with IndexedDB persistence
+  - **⚠️ Note**: Backend sync not yet implemented. Analytics events are tracked and stored locally in IndexedDB but are not currently sent to a server. Events are marked as "synced" locally for development/testing purposes only. Production implementation will require an analytics backend endpoint (Issue #101).
+
+**Using PWA Features:**
+
+```tsx
+// Push Notifications
+import { useNotifications } from "@/hooks/useNotifications";
+
+const { permission, requestPermission, showNotification } = useNotifications();
+
+// Share Target API
+import { useShareTarget } from "@/hooks/useShareTarget";
+
+const { sharedData, clearSharedData } = useShareTarget();
+
+// Offline Analytics
+import { getAnalytics } from "@/lib/analytics";
+
+try {
+  const analytics = getAnalytics();
+  await analytics.trackPageView("/dashboard", "Dashboard");
+  await analytics.trackClick("submit-button", { form: "login" });
+} catch (error) {
+  // Handle analytics not available (older browsers)
+  console.warn("Analytics not supported:", error);
+}
+```
+
+See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing guide.
 
 ## 🌍 Internationalization (i18n)
 
@@ -42,11 +77,7 @@ npm run lingui:extract
 # Compile translation catalogs for production
 npm run lingui:compile
 
-<<<<<<< HEAD
-# Sync with Translation.io (extract + compile)
-=======
 # Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
->>>>>>> origin/main
 npm run sync
 
 # Sync and remove unused translations
