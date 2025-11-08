@@ -87,6 +87,16 @@ if [ "$FORMAT_EXIT" -ne 0 ]; then
   exit 1
 fi
 
+# Domain Policy Check (CRITICAL: ZERO TOLERANCE)
+if [ -f scripts/check-domains.sh ]; then
+  bash scripts/check-domains.sh || {
+    echo "" >&2
+    echo "❌ Domain Policy Violation detected!" >&2
+    echo "Fix the violations above before committing." >&2
+    exit 1
+  }
+fi
+
 # 1) Node.js / React / TypeScript - OPTIMIZED
 if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   # OPTIMIZATION: Only install if package-lock changed or node_modules missing
