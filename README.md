@@ -28,7 +28,8 @@ SecPal is an **offline-first PWA** providing seamless experience regardless of n
 
 - 🔔 **Push Notifications**: Permission management, Service Worker integration, preference UI
 - 📤 **Share Target API**: Receive shared content (text, URLs, images, PDFs, documents) from other apps
-- 📊 **Offline Analytics**: Privacy-first event tracking with IndexedDB persistence and automatic sync
+- 📊 **Offline Analytics**: Privacy-first event tracking with IndexedDB persistence
+  - **⚠️ Note**: Backend sync not yet implemented. Analytics events are tracked and stored locally in IndexedDB but are not currently sent to a server. Events are marked as "synced" locally for development/testing purposes only. Production implementation will require an analytics backend endpoint (Issue #101).
 
 **Using PWA Features:**
 

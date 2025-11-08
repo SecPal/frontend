@@ -62,22 +62,19 @@ export function useShareTarget(): UseShareTargetReturn {
 
           // Handle files from POST request (if available)
           // Note: Files are typically handled via formData in the Service Worker
-          // This is a simplified client-side version
+          // This is a simplified client-side version for GET-based sharing
 
           setSharedData(data);
 
           // Clean up URL without the share parameters (preserve hash)
-          const cleanUrl =
-            window.location.pathname === "/share"
-              ? "/"
-              : window.location.pathname;
-
           // Only update history if replaceState is available
           if (window.history?.replaceState) {
             window.history.replaceState(
               {},
               "",
-              cleanUrl + window.location.hash
+              window.location.pathname === "/share"
+                ? "/" + window.location.hash
+                : window.location.pathname + window.location.hash
             );
           }
 
@@ -90,6 +87,14 @@ export function useShareTarget(): UseShareTargetReturn {
     };
 
     handleShareTarget();
+
+    // Listen for navigation events (popstate) to detect URL changes for multiple shares
+    window.addEventListener("popstate", handleShareTarget);
+
+    // Clean up event listener on unmount
+    return () => {
+      window.removeEventListener("popstate", handleShareTarget);
+    };
   }, []);
 
   const clearSharedData = () => {

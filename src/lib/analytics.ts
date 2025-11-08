@@ -37,15 +37,19 @@ class OfflineAnalytics {
 
   /**
    * Generate a unique session ID using cryptographically secure random
-   * @throws {Error} If crypto.randomUUID is not available (unsupported browser)
+   * Falls back to timestamp + Math.random for older browsers
    */
   private generateSessionId(): string {
-    if (typeof crypto === "undefined" || !crypto.randomUUID) {
-      throw new Error(
-        "crypto.randomUUID is not available. This browser does not support secure random ID generation."
-      );
+    // Prefer crypto.randomUUID for cryptographic security
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return `session_${crypto.randomUUID()}`;
     }
-    return `session_${crypto.randomUUID()}`;
+
+    // Fallback for older browsers: not cryptographically secure, but unique enough for session tracking
+    console.warn(
+      "crypto.randomUUID not available, falling back to timestamp-based session ID"
+    );
+    return `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
   }
 
   /**
@@ -57,6 +61,7 @@ class OfflineAnalytics {
 
   /**
    * Track an analytics event
+   * @param metadata - Additional context (do not include PII or sensitive data)
    */
   async track(
     type: AnalyticsEventType,
@@ -156,16 +161,20 @@ class OfflineAnalytics {
 
   /**
    * Track an error
+   * @param error - Error object
+   * @param context - Additional context (do not include sensitive data)
+   * @param includeStack - Whether to include full stack trace (default: false). Stack traces may contain sensitive file paths.
    */
   async trackError(
     error: Error,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
+    includeStack: boolean = false
   ): Promise<void> {
     await this.track("error", "error", error.name, {
       label: error.message,
       metadata: {
         ...context,
-        stack: error.stack,
+        ...(includeStack ? { stack: error.stack } : {}),
       },
     });
   }
@@ -240,6 +249,9 @@ class OfflineAnalytics {
   /**
    * Clean up resources (event listeners, intervals)
    * Call this when the analytics instance is no longer needed (e.g., in tests)
+   *
+   * Note: For the singleton instance, this is intentionally only called during
+   * test cleanup. In production, event listeners persist for the app lifetime.
    */
   destroy(): void {
     this.isDestroyed = true;
@@ -263,11 +275,15 @@ class OfflineAnalytics {
 
   /**
    * Sync unsynced events to the server
+   *
+   * NOTE: Backend sync is not yet implemented. Events are currently only
+   * marked as "synced" locally. In production, this would send events to
+   * an analytics endpoint. See README for current limitations.
    */
   async syncEvents(): Promise<void> {
     if (!this.isOnline || this.isDestroyed) return;
 
-    // Prevent concurrent syncs with a simple lock
+    // Prevent concurrent syncs - atomic check and set
     if (this.isSyncing) {
       console.log("Sync already in progress, skipping...");
       return;
@@ -284,26 +300,26 @@ class OfflineAnalytics {
 
       if (unsyncedEvents.length === 0) return;
 
-      // In a real implementation, this would send to an analytics endpoint
-      // For now, we'll just mark them as synced
-      // TODO: Implement actual sync to backend
+      // TODO: Implement actual sync to backend endpoint
+      // In production, this would POST events to /api/analytics
+      // For now, we just mark them as synced for local testing
 
       // Simulate network request
       console.log(`Syncing ${unsyncedEvents.length} analytics events...`);
 
-      // Mark events as synced - filter first to avoid runtime errors
-      await db.analytics.bulkUpdate(
-        unsyncedEvents
-          .filter((e) => e.id !== undefined)
-          .map((e) => ({
-            key: e.id!,
-            changes: { synced: true },
-          }))
+      // Mark events as synced - single-pass bulk update with proper type narrowing
+      const eventsWithId = unsyncedEvents.filter(
+        (e): e is AnalyticsEvent & { id: number } => e.id !== undefined
       );
 
-      console.log(
-        `Successfully synced ${unsyncedEvents.filter((e) => e.id !== undefined).length} events`
+      await db.analytics.bulkUpdate(
+        eventsWithId.map((e) => ({
+          key: e.id,
+          changes: { synced: true },
+        }))
       );
+
+      console.log(`Successfully synced ${eventsWithId.length} events`);
     } catch (error) {
       console.error("Failed to sync analytics events:", error);
     } finally {
@@ -355,9 +371,22 @@ class OfflineAnalytics {
   }
 }
 
+/**
+ * Get the singleton analytics instance
+ * @throws {Error} If analytics is not available in this environment
+ */
+export function getAnalytics(): OfflineAnalytics {
+  if (!analyticsInstance) {
+    throw new Error(
+      "Analytics not available in this environment. Browser may not support required PWA features."
+    );
+  }
+  return analyticsInstance;
+}
+
 // Export singleton instance with safe initialization
-// If crypto.randomUUID is not available, the constructor will throw
-// and the module will fail to load - this is intentional for PWAs
+// If initialization fails (e.g., old browser), instance will be null
+// Use getAnalytics() for safe access with error handling
 let analyticsInstance: OfflineAnalytics | null = null;
 
 try {
@@ -369,4 +398,6 @@ try {
   );
 }
 
-export const analytics = analyticsInstance!;
+// Backwards compatibility: Direct export (may be null)
+// Prefer using getAnalytics() for better error handling
+export const analytics = analyticsInstance;

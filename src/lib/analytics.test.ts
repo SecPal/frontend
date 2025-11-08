@@ -43,16 +43,16 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should set userId", () => {
-      analytics.setUserId("test-user-123");
+      analytics!.setUserId("test-user-123");
       // User ID will be included in subsequent events
     });
   });
 
   describe("track", () => {
     it("should track basic event", async () => {
-      await analytics.track("page_view", "navigation", "view_home");
+      await analytics!.track("page_view", "navigation", "view_home");
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "page_view",
           category: "navigation",
@@ -65,13 +65,13 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track event with options", async () => {
-      await analytics.track("button_click", "interaction", "submit", {
+      await analytics!.track("button_click", "interaction", "submit", {
         label: "login-button",
         value: 1,
         metadata: { page: "/login" },
       });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "button_click",
           category: "interaction",
@@ -84,11 +84,11 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should include userId if set", async () => {
-      analytics.setUserId("user-456");
+      analytics!.setUserId("user-456");
 
-      await analytics.track("page_view", "navigation", "view_dashboard");
+      await analytics!.track("page_view", "navigation", "view_dashboard");
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "user-456",
         })
@@ -98,9 +98,9 @@ describe("OfflineAnalytics", () => {
     it("should handle tracking errors gracefully", async () => {
       const consoleError = vi.spyOn(console, "error");
       const error = new Error("Database error");
-      vi.mocked(db.analytics.add).mockRejectedValueOnce(error);
+      vi.mocked(db.analytics!.add).mockRejectedValueOnce(error);
 
-      await analytics.track("page_view", "test", "test");
+      await analytics!.track("page_view", "test", "test");
 
       expect(consoleError).toHaveBeenCalledWith(
         "Failed to track analytics event:",
@@ -111,9 +111,9 @@ describe("OfflineAnalytics", () => {
 
   describe("convenience methods", () => {
     it("should track page view", async () => {
-      await analytics.trackPageView("/dashboard", "Dashboard");
+      await analytics!.trackPageView("/dashboard", "Dashboard");
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "page_view",
           category: "navigation",
@@ -125,9 +125,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track click", async () => {
-      await analytics.trackClick("submit-button", { form: "login" });
+      await analytics!.trackClick("submit-button", { form: "login" });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "button_click",
           category: "interaction",
@@ -139,9 +139,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track form submit", async () => {
-      await analytics.trackFormSubmit("login-form", true, { method: "email" });
+      await analytics!.trackFormSubmit("login-form", true, { method: "email" });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "form_submit",
           category: "interaction",
@@ -154,25 +154,46 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track form submit failure", async () => {
-      await analytics.trackFormSubmit("login-form", false);
+      await analytics!.trackFormSubmit("login-form", false);
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           value: 0,
         })
       );
     });
 
-    it("should track error", async () => {
+    it("should track error without stack by default", async () => {
       const error = new Error("Test error");
-      await analytics.trackError(error, { component: "LoginForm" });
+      await analytics!.trackError(error, { component: "LoginForm" });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "error",
           category: "error",
           action: "Error",
           label: "Test error",
+          metadata: expect.objectContaining({
+            component: "LoginForm",
+          }),
+        })
+      );
+
+      // Ensure stack is NOT included by default
+      const call = vi.mocked(db.analytics!.add).mock.calls[0]?.[0];
+      expect(call?.metadata).not.toHaveProperty("stack");
+    });
+
+    it("should track error with stack when explicitly requested", async () => {
+      const error = new Error("Test error with stack");
+      await analytics!.trackError(error, { component: "LoginForm" }, true);
+
+      expect(db.analytics!.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "error",
+          category: "error",
+          action: "Error",
+          label: "Test error with stack",
           metadata: expect.objectContaining({
             component: "LoginForm",
             stack: expect.any(String),
@@ -182,9 +203,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track performance", async () => {
-      await analytics.trackPerformance("page_load", 1234, { page: "/home" });
+      await analytics!.trackPerformance("page_load", 1234, { page: "/home" });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "performance",
           category: "performance",
@@ -196,9 +217,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track feature usage", async () => {
-      await analytics.trackFeatureUsage("dark-mode", { enabled: true });
+      await analytics!.trackFeatureUsage("dark-mode", { enabled: true });
 
-      expect(db.analytics.add).toHaveBeenCalledWith(
+      expect(db.analytics!.add).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "feature_usage",
           category: "feature",
@@ -233,42 +254,42 @@ describe("OfflineAnalytics", () => {
         },
       ];
 
-      vi.mocked(db.analytics.where).mockReturnValue({
+      vi.mocked(db.analytics!.where).mockReturnValue({
         equals: vi.fn().mockReturnValue({
           toArray: vi.fn().mockResolvedValue(mockEvents),
           and: vi.fn(),
         }),
       } as never);
 
-      await analytics.syncEvents();
+      await analytics!.syncEvents();
 
-      expect(db.analytics.bulkUpdate).toHaveBeenCalledWith([
+      expect(db.analytics!.bulkUpdate).toHaveBeenCalledWith([
         { key: 1, changes: { synced: true } },
         { key: 2, changes: { synced: true } },
       ]);
     });
 
     it("should not sync when no unsynced events", async () => {
-      vi.mocked(db.analytics.where).mockReturnValue({
+      vi.mocked(db.analytics!.where).mockReturnValue({
         equals: vi.fn().mockReturnValue({
           toArray: vi.fn().mockResolvedValue([]),
           and: vi.fn(),
         }),
       } as never);
 
-      await analytics.syncEvents();
+      await analytics!.syncEvents();
 
-      expect(db.analytics.bulkUpdate).not.toHaveBeenCalled();
+      expect(db.analytics!.bulkUpdate).not.toHaveBeenCalled();
     });
 
     it("should handle sync errors gracefully", async () => {
       const consoleError = vi.spyOn(console, "error");
       const error = new Error("Sync failed");
-      vi.mocked(db.analytics.where).mockImplementation(() => {
+      vi.mocked(db.analytics!.where).mockImplementation(() => {
         throw error;
       });
 
-      await analytics.syncEvents();
+      await analytics!.syncEvents();
 
       expect(consoleError).toHaveBeenCalledWith(
         "Failed to sync analytics events:",
@@ -309,9 +330,9 @@ describe("OfflineAnalytics", () => {
         },
       ];
 
-      vi.mocked(db.analytics.toArray).mockResolvedValue(mockEvents);
+      vi.mocked(db.analytics!.toArray).mockResolvedValue(mockEvents);
 
-      const stats = await analytics.getStats();
+      const stats = await analytics!.getStats();
 
       expect(stats).toEqual({
         total: 3,
@@ -325,9 +346,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should return empty stats when no events", async () => {
-      vi.mocked(db.analytics.toArray).mockResolvedValue([]);
+      vi.mocked(db.analytics!.toArray).mockResolvedValue([]);
 
-      const stats = await analytics.getStats();
+      const stats = await analytics!.getStats();
 
       expect(stats).toEqual({
         total: 0,
@@ -342,7 +363,7 @@ describe("OfflineAnalytics", () => {
     it("should delete old synced events", async () => {
       const mockDelete = vi.fn().mockResolvedValue(5);
 
-      vi.mocked(db.analytics.where).mockReturnValue({
+      vi.mocked(db.analytics!.where).mockReturnValue({
         equals: vi.fn().mockReturnValue({
           and: vi.fn().mockReturnValue({
             delete: mockDelete,
@@ -351,9 +372,9 @@ describe("OfflineAnalytics", () => {
         }),
       } as never);
 
-      await analytics.clearOldEvents();
+      await analytics!.clearOldEvents();
 
-      expect(db.analytics.where).toHaveBeenCalledWith("synced");
+      expect(db.analytics!.where).toHaveBeenCalledWith("synced");
     });
   });
 
@@ -364,7 +385,7 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should trigger sync when coming online", async () => {
-      const syncSpy = vi.spyOn(analytics, "syncEvents");
+      const syncSpy = vi.spyOn(analytics!, "syncEvents");
 
       // Simulate coming online
       window.dispatchEvent(new Event("online"));
@@ -379,7 +400,7 @@ describe("OfflineAnalytics", () => {
     it("should stop periodic sync", () => {
       const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
 
-      analytics.stopPeriodicSync();
+      analytics!.stopPeriodicSync();
 
       expect(clearIntervalSpy).toHaveBeenCalled();
     });

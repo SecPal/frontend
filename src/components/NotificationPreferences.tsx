@@ -141,31 +141,28 @@ export function NotificationPreferences() {
     }
   }, []);
 
-  // Save preferences to localStorage (with queueMicrotask to avoid blocking)
+  // Save preferences to localStorage synchronously for immediate error feedback
   const savePreferences = (newPreferences: NotificationPreference[]) => {
     setPreferences(newPreferences);
-    // Use queueMicrotask to defer localStorage write and avoid blocking render
-    queueMicrotask(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
-      } catch (error) {
-        // Handle QuotaExceededError or SecurityError
-        if (error instanceof Error) {
-          if (error.name === "QuotaExceededError") {
-            console.error(
-              "Failed to save notification preferences: Storage quota exceeded"
-            );
-            // Optionally notify user about storage issues
-          } else if (error.name === "SecurityError") {
-            console.error(
-              "Failed to save notification preferences: Storage access denied (private mode?)"
-            );
-          } else {
-            console.error("Failed to save notification preferences:", error);
-          }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
+    } catch (error) {
+      // Handle QuotaExceededError or SecurityError
+      if (error instanceof Error) {
+        if (error.name === "QuotaExceededError") {
+          console.error(
+            "Failed to save notification preferences: Storage quota exceeded"
+          );
+          // Optionally notify user about storage issues
+        } else if (error.name === "SecurityError") {
+          console.error(
+            "Failed to save notification preferences: Storage access denied (private mode?)"
+          );
+        } else {
+          console.error("Failed to save notification preferences:", error);
         }
       }
-    });
+    }
   };
 
   // Handle enabling notifications
