@@ -16,7 +16,6 @@ export interface SharedData {
 }
 
 interface UseShareTargetReturn {
-  isSharing: boolean;
   sharedData: SharedData | null;
   clearSharedData: () => void;
 }
@@ -39,7 +38,6 @@ interface UseShareTargetReturn {
  * ```
  */
 export function useShareTarget(): UseShareTargetReturn {
-  const [isSharing, setIsSharing] = useState(false);
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
 
   useEffect(() => {
@@ -52,8 +50,6 @@ export function useShareTarget(): UseShareTargetReturn {
 
         // Check if this is a share target navigation
         if (url.pathname === "/share" && url.searchParams.size > 0) {
-          setIsSharing(true);
-
           // Parse share data with explicit null/empty checks
           const title = url.searchParams.get("title");
           const text = url.searchParams.get("text");
@@ -82,12 +78,9 @@ export function useShareTarget(): UseShareTargetReturn {
                 : window.location.pathname + window.location.hash
             );
           }
-
-          setIsSharing(false);
         }
       } catch (error) {
         console.error("Failed to process share target:", error);
-        setIsSharing(false);
       }
     };
 
@@ -107,7 +100,6 @@ export function useShareTarget(): UseShareTargetReturn {
   };
 
   return {
-    isSharing,
     sharedData,
     clearSharedData,
   };

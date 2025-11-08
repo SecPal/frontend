@@ -32,7 +32,6 @@ describe("useShareTarget", () => {
   it("should initialize with default values", () => {
     const { result } = renderHook(() => useShareTarget());
 
-    expect(result.current.isSharing).toBe(false);
     expect(result.current.sharedData).toBeNull();
     expect(typeof result.current.clearSharedData).toBe("function");
   });
@@ -221,7 +220,7 @@ describe("useShareTarget", () => {
     });
   });
 
-  it("should set isSharing flag during processing", async () => {
+  it("should handle shared data processing", async () => {
     // @ts-expect-error - Mocking location for tests
     window.location = {
       ...window.location,
@@ -233,9 +232,8 @@ describe("useShareTarget", () => {
 
     const { result } = renderHook(() => useShareTarget());
 
-    // isSharing should be set briefly and then cleared
+    // Data should be parsed and available
     await waitFor(() => {
-      expect(result.current.isSharing).toBe(false);
       expect(result.current.sharedData).not.toBeNull();
     });
   });
@@ -243,11 +241,10 @@ describe("useShareTarget", () => {
   it("should work in SSR environment", () => {
     // The hook has a guard: if (typeof window === "undefined") return default values
     // Since we can't actually delete window in this test environment,
-    // we verify that it returns null/false when not on the /share path
+    // we verify that it returns null when not on the /share path
     const { result } = renderHook(() => useShareTarget());
 
     // Should have default values since we're not on /share
     expect(result.current.sharedData).toBeNull();
-    expect(result.current.isSharing).toBe(false);
   });
 });

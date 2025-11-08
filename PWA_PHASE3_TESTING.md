@@ -152,13 +152,18 @@ This document describes how to test the new PWA Phase 3 features locally.
 1. **Use the Analytics SDK**
 
    ```tsx
-   import { analytics } from "@/lib/analytics";
+   import { getAnalytics } from "@/lib/analytics";
 
    // In components:
-   await analytics.trackPageView("/dashboard", "Dashboard");
-   await analytics.trackClick("login-button", { form: "login" });
-   await analytics.trackFormSubmit("login-form", true);
-   await analytics.trackError(new Error("Test error"));
+   try {
+     const analytics = getAnalytics();
+     await analytics.trackPageView("/dashboard", "Dashboard");
+     await analytics.trackClick("login-button", { form: "login" });
+     await analytics.trackFormSubmit("login-form", true);
+     await analytics.trackError(new Error("Test error"));
+   } catch (error) {
+     console.error("Analytics not available:", error);
+   }
    ```
 
 2. **Check IndexedDB**
@@ -177,7 +182,8 @@ This document describes how to test the new PWA Phase 3 features locally.
    # Trigger some events (Page Views, Clicks)
    # Check IndexedDB: Events should be stored
    # DevTools → Network → Toggle "Online"
-   # Wait 30 seconds → Events will sync automatically
+   # Wait up to 5 minutes OR come online → Events will sync automatically
+   # (Coming online triggers immediate sync)
    ```
 
 4. **Get stats**

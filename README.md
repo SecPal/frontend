@@ -45,10 +45,16 @@ import { useShareTarget } from "@/hooks/useShareTarget";
 const { sharedData, clearSharedData } = useShareTarget();
 
 // Offline Analytics
-import { analytics } from "@/lib/analytics";
+import { getAnalytics } from "@/lib/analytics";
 
-await analytics.trackPageView("/dashboard", "Dashboard");
-await analytics.trackClick("submit-button", { form: "login" });
+try {
+  const analytics = getAnalytics();
+  await analytics.trackPageView("/dashboard", "Dashboard");
+  await analytics.trackClick("submit-button", { form: "login" });
+} catch (error) {
+  // Handle analytics not available (older browsers)
+  console.warn("Analytics not supported:", error);
+}
 ```
 
 See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing guide.
