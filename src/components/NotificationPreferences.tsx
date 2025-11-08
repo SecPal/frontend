@@ -10,6 +10,7 @@ import { Fieldset, Field, Label, Description } from "./fieldset";
 import { Switch } from "./switch";
 import { Heading } from "./heading";
 import { Text } from "./text";
+import type { I18n } from "@lingui/core";
 
 export type NotificationCategory =
   | "alerts"
@@ -27,6 +28,38 @@ interface NotificationPreference {
 const STORAGE_KEY = "secpal-notification-preferences";
 
 /**
+ * Helper function to get translations for a given category
+ * Centralizes translation strings to follow DRY principle
+ */
+function getTranslationsForCategory(
+  category: NotificationCategory,
+  i18n: I18n
+): { label: string; description: string } {
+  switch (category) {
+    case "alerts":
+      return {
+        label: i18n._(msg`Security Alerts`),
+        description: i18n._(msg`Critical security notifications and warnings`),
+      };
+    case "updates":
+      return {
+        label: i18n._(msg`System Updates`),
+        description: i18n._(msg`App updates and maintenance notifications`),
+      };
+    case "reminders":
+      return {
+        label: i18n._(msg`Shift Reminders`),
+        description: i18n._(msg`Reminders about upcoming shifts and duties`),
+      };
+    case "messages":
+      return {
+        label: i18n._(msg`Team Messages`),
+        description: i18n._(msg`Messages from team members and supervisors`),
+      };
+  }
+}
+
+/**
  * Component for managing notification preferences
  * Allows users to control which types of notifications they receive
  */
@@ -39,31 +72,27 @@ export function NotificationPreferences() {
   const defaultPreferences = useMemo<NotificationPreference[]>(
     () => [
       {
-        category: "alerts",
+        category: "alerts" as const,
         enabled: true,
-        label: _(msg`Security Alerts`),
-        description: _(msg`Critical security notifications and warnings`),
+        ...getTranslationsForCategory("alerts", i18n),
       },
       {
-        category: "updates",
+        category: "updates" as const,
         enabled: true,
-        label: _(msg`System Updates`),
-        description: _(msg`App updates and maintenance notifications`),
+        ...getTranslationsForCategory("updates", i18n),
       },
       {
-        category: "reminders",
+        category: "reminders" as const,
         enabled: true,
-        label: _(msg`Shift Reminders`),
-        description: _(msg`Reminders about upcoming shifts and duties`),
+        ...getTranslationsForCategory("reminders", i18n),
       },
       {
-        category: "messages",
+        category: "messages" as const,
         enabled: false,
-        label: _(msg`Team Messages`),
-        description: _(msg`Messages from team members and supervisors`),
+        ...getTranslationsForCategory("messages", i18n),
       },
     ],
-    [_]
+    [i18n]
   );
 
   const [preferences, setPreferences] = useState<NotificationPreference[]>(
@@ -73,52 +102,16 @@ export function NotificationPreferences() {
   const [isEnabling, setIsEnabling] = useState(false);
 
   // Update translations when locale changes
-  // We compute translations directly here to avoid depending on defaultPreferences
-  // which would cause infinite loops due to the _ function reference changing
+  // We compute translations directly using helper function to avoid depending on
+  // defaultPreferences which would cause infinite loops due to the _ function reference changing
   useEffect(() => {
     setPreferences((current) =>
-      current.map((pref) => {
-        // Compute translations directly using i18n._ to avoid dependency issues
-        let label: string;
-        let description: string;
-
-        switch (pref.category) {
-          case "alerts":
-            label = i18n._(msg`Security Alerts`);
-            description = i18n._(
-              msg`Critical security notifications and warnings`
-            );
-            break;
-          case "updates":
-            label = i18n._(msg`System Updates`);
-            description = i18n._(
-              msg`App updates and maintenance notifications`
-            );
-            break;
-          case "reminders":
-            label = i18n._(msg`Shift Reminders`);
-            description = i18n._(
-              msg`Reminders about upcoming shifts and duties`
-            );
-            break;
-          case "messages":
-            label = i18n._(msg`Team Messages`);
-            description = i18n._(
-              msg`Messages from team members and supervisors`
-            );
-            break;
-          default:
-            return pref;
-        }
-
-        return {
-          ...pref,
-          label,
-          description,
-        };
-      })
+      current.map((pref) => ({
+        ...pref,
+        ...getTranslationsForCategory(pref.category, i18n),
+      }))
     );
-  }, [i18n]); // Only depend on i18n object which is stable
+  }, [i18n, i18n.locale]); // Depend on i18n.locale to update translations on locale change
 
   // Load preferences from localStorage
   useEffect(() => {
