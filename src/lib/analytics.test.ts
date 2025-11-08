@@ -305,6 +305,63 @@ describe("OfflineAnalytics", () => {
         error
       );
     });
+
+    it("should cancel pending debounced sync when manual sync is triggered", async () => {
+      // Simulate a debounced sync being scheduled
+      const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+
+      // Track an event to trigger debounced sync
+      await analytics!.trackPageView("/test", "Test");
+
+      // Verify debounced sync was scheduled
+      expect(analytics!["syncTimeout"]).toBeDefined();
+      const scheduledTimeoutId = analytics!["syncTimeout"];
+
+      // Manually trigger sync (like when coming online)
+      await analytics!.syncEvents();
+
+      // Verify pending timeout was cleared
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(scheduledTimeoutId);
+      expect(analytics!["syncTimeout"]).toBeUndefined();
+
+      clearTimeoutSpy.mockRestore();
+    });
+
+    it("should not create duplicate syncs from debounce and manual trigger", async () => {
+      const mockEvents = [
+        {
+          id: 1,
+          type: "page_view",
+          category: "test",
+          action: "test",
+          synced: false,
+          timestamp: Date.now(),
+          sessionId: "test",
+        },
+      ];
+
+      vi.mocked(db.analytics!.where).mockReturnValue({
+        equals: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue(mockEvents),
+          and: vi.fn(),
+        }),
+      } as never);
+
+      // Track an event (schedules debounced sync)
+      await analytics!.trackPageView("/test", "Test");
+
+      // Manually trigger sync immediately (before debounce fires)
+      await analytics!.syncEvents();
+
+      // Verify sync was called (via bulkUpdate)
+      expect(db.analytics!.bulkUpdate).toHaveBeenCalledTimes(1);
+
+      // Wait for debounce timeout to potentially fire
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
+      // Verify sync was NOT called again (debounce was cancelled)
+      expect(db.analytics!.bulkUpdate).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("getStats", () => {
