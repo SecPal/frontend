@@ -45,7 +45,13 @@ class OfflineAnalytics {
       return `session_${crypto.randomUUID()}`;
     }
 
-    // Fallback for older browsers: not cryptographically secure, but unique enough for session tracking
+    // Fallback for older browsers using Math.random()
+    // SECURITY NOTE: This is acceptable because:
+    // 1. Session IDs are NOT used for authentication or authorization
+    // 2. They are only used for grouping analytics events (non-security context)
+    // 3. Collision risk is negligible (timestamp ensures uniqueness across sessions)
+    // 4. No PII is stored (privacy-first design)
+    // 5. Primary path uses crypto.randomUUID (cryptographically secure)
     console.warn(
       "crypto.randomUUID not available, falling back to timestamp-based session ID"
     );
