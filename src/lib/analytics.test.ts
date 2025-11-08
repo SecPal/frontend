@@ -24,6 +24,15 @@ vi.mock("./db", () => ({
   },
 }));
 
+// NOTE: Singleton persistence across tests is intentional
+// The analytics singleton is created once at module load and persists across all test runs.
+// This mirrors production behavior where event listeners and intervals remain active for
+// the entire app lifetime. Test isolation is maintained through:
+// - vi.clearAllMocks() clears mock call history between tests
+// - Mocked dependencies (db, window.addEventListener, etc.) prevent side effects
+// - Each test operates on the same singleton but with fresh mocks
+// The destroy() method exists for explicit cleanup but is not called in tests to match
+// production behavior where the singleton lives for the app lifetime.
 describe("OfflineAnalytics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
