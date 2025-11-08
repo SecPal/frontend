@@ -289,6 +289,13 @@ class OfflineAnalytics {
   async syncEvents(): Promise<void> {
     if (!this.isOnline || this.isDestroyed) return;
 
+    // Clear any pending debounced sync to prevent duplicate sync attempts
+    // This ensures manual sync (e.g., from handleOnline) cancels debounced sync
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+      this.syncTimeout = undefined;
+    }
+
     // Prevent concurrent syncs - atomic check and set
     if (this.isSyncing) {
       console.log("Sync already in progress, skipping...");
