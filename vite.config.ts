@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: "autoUpdate",
+        strategies: "generateSW",
+        injectRegister: "auto",
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
         manifest: {
           name: "SecPal",
