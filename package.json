@@ -55,7 +55,7 @@
     "@fontsource/inter": "^5.2.8",
     "@lingui/cli": "^5.5.2",
     "@lingui/macro": "^5.5.2",
-    "@tailwindcss/vite": "^4.1.16",
+    "@tailwindcss/vite": "^4.1.17",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
