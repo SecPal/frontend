@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Share Target API**: Receive shared content from other apps
     - PWA manifest share_target configuration
     - `useShareTarget` hook for URL parameter parsing
-    - Support for text, URLs, images, PDFs, and documents (.doc/.docx)
+    - Support for text and URLs (file sharing planned for future release - Issue #101)
     - Automatic URL cleanup after processing shared data
     - 11 comprehensive tests
   - **Offline Analytics**: Privacy-first event tracking with offline persistence

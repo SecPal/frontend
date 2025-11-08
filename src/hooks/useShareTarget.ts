@@ -3,11 +3,16 @@
 
 import { useState, useEffect } from "react";
 
+/**
+ * Data structure for shared content received via Share Target API
+ * Note: File sharing is not yet implemented. The hook currently only handles
+ * text-based sharing (title, text, url). File support planned for Issue #101.
+ */
 export interface SharedData {
   title?: string;
   text?: string;
   url?: string;
-  files?: File[];
+  // files?: File[]; // Planned for future implementation (Issue #101)
 }
 
 interface UseShareTargetReturn {

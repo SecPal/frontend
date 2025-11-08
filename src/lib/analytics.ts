@@ -298,7 +298,10 @@ class OfflineAnalytics {
         .equals(0)
         .toArray();
 
-      if (unsyncedEvents.length === 0) return;
+      if (unsyncedEvents.length === 0) {
+        this.isSyncing = false;
+        return;
+      }
 
       // TODO: Implement actual sync to backend endpoint
       // In production, this would POST events to /api/analytics
