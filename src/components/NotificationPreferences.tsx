@@ -102,8 +102,8 @@ export function NotificationPreferences() {
   const [isEnabling, setIsEnabling] = useState(false);
 
   // Update translations when locale changes
-  // We compute translations directly using helper function to avoid depending on
-  // defaultPreferences which would cause infinite loops due to the _ function reference changing
+  // We compute translations directly using the helper function and depend on i18n.locale,
+  // avoiding defaultPreferences to prevent unnecessary re-renders or infinite loops.
   useEffect(() => {
     setPreferences((current) =>
       current.map((pref) => ({
@@ -111,7 +111,8 @@ export function NotificationPreferences() {
         ...getTranslationsForCategory(pref.category, i18n),
       }))
     );
-  }, [i18n, i18n.locale]); // Depend on i18n.locale to update translations on locale change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.locale]); // Only locale changes should trigger translation updates
 
   // Load preferences from localStorage
   useEffect(() => {
