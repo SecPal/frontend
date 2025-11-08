@@ -14,6 +14,15 @@ BASE="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/rem
 
 echo "Using base branch: $BASE"
 
+# Check for merge conflict markers in committed files
+echo "ℹ️  Checking for merge conflict markers..."
+if git grep -n -E '^(<{7}|={7}|>{7})( |$)' HEAD -- ':!*.md' ':!docs/**' ':!CHANGELOG.md' 2>/dev/null; then
+  echo "❌ Merge conflict markers found in committed files!" >&2
+  echo "   Please resolve all conflicts before committing." >&2
+  echo "   Run 'git show HEAD' to see the committed changes." >&2
+  exit 1
+fi
+
 # 0) Formatting & Compliance - OPTIMIZED
 FORMAT_EXIT=0
 if command -v npx >/dev/null 2>&1; then
