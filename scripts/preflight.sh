@@ -19,7 +19,7 @@ echo "ℹ️  Checking for merge conflict markers..."
 if git grep -n -E '^(<{7}|={7}|>{7})( |$)' HEAD -- ':!*.md' ':!docs/**' ':!CHANGELOG.md' 2>/dev/null; then
   echo "❌ Merge conflict markers found in committed files!" >&2
   echo "   Please resolve all conflicts before committing." >&2
-  echo "   Run 'git diff' to see uncommitted changes." >&2
+  echo "   Run 'git show HEAD' to see the committed changes." >&2
   exit 1
 fi
 
