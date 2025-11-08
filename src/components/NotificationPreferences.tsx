@@ -31,7 +31,7 @@ const STORAGE_KEY = "secpal-notification-preferences";
  * Allows users to control which types of notifications they receive
  */
 export function NotificationPreferences() {
-  const { _ } = useLingui();
+  const { _, i18n } = useLingui();
   const { permission, isSupported, requestPermission, showNotification } =
     useNotifications();
 
@@ -72,7 +72,8 @@ export function NotificationPreferences() {
 
   const [isEnabling, setIsEnabling] = useState(false);
 
-  // Update translations when locale changes
+  // Update translations when locale changes (not when _ function reference changes)
+  // This prevents potential infinite loop from frequent _ reference changes
   useEffect(() => {
     setPreferences((current) =>
       current.map((pref) => {
@@ -88,7 +89,7 @@ export function NotificationPreferences() {
           : pref;
       })
     );
-  }, [defaultPreferences]);
+  }, [i18n.locale, defaultPreferences]); // Depend on locale instead of defaultPreferences alone
 
   // Load preferences from localStorage
   useEffect(() => {

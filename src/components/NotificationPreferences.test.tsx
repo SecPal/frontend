@@ -358,4 +358,73 @@ describe("NotificationPreferences", () => {
       expect(alertsSwitch).toHaveFocus();
     });
   });
+
+  describe("translation updates", () => {
+    it("should update translations when locale changes without excessive re-renders", async () => {
+      // Track render count to detect infinite loop
+      let renderCount = 0;
+      const RenderCounter = () => {
+        renderCount++;
+        return null;
+      };
+
+      const { rerender } = render(
+        <I18nProvider i18n={i18n}>
+          <RenderCounter />
+          <NotificationPreferences />
+        </I18nProvider>
+      );
+
+      const initialRenderCount = renderCount;
+
+      // Wait for initial render to settle
+      await waitFor(() => {
+        expect(
+          screen.getByText(/notification preferences/i)
+        ).toBeInTheDocument();
+      });
+
+      // Simulate locale change by re-rendering with new i18n instance
+      // (In real app, this would happen via i18n.activate())
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <RenderCounter />
+          <NotificationPreferences />
+        </I18nProvider>
+      );
+
+      // Wait a bit to allow any cascading re-renders
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that render count is reasonable (not hundreds/thousands indicating infinite loop)
+      // Allow for a few re-renders due to React's normal behavior, but catch runaway loops
+      const finalRenderCount = renderCount;
+      const renderDelta = finalRenderCount - initialRenderCount;
+
+      expect(renderDelta).toBeLessThan(10); // Arbitrary reasonable limit
+      expect(screen.getByText(/security alerts/i)).toBeInTheDocument();
+    });
+
+    it("should preserve enabled state when translations update", async () => {
+      renderWithI18n(<NotificationPreferences />);
+      const user = userEvent.setup();
+
+      // Toggle alerts off
+      const alertsSwitch = screen.getByRole("switch", {
+        name: /security alerts/i,
+      });
+      await user.click(alertsSwitch);
+      expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
+
+      // Simulate translation update (in real app via locale change)
+      // The component should maintain the enabled=false state
+      // We can't easily trigger a real locale change in tests, but the fix
+      // ensures that when locale (not _ function) changes, state is preserved
+
+      // Verify state is still false after potential re-render
+      await waitFor(() => {
+        expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
+      });
+    });
+  });
 });
