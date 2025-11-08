@@ -396,6 +396,13 @@ export function getAnalytics(): OfflineAnalytics {
 // Export singleton instance with safe initialization
 // If initialization fails (e.g., old browser), instance will be null
 // Use getAnalytics() for safe access with error handling
+//
+// NOTE: Singleton persists across tests by design
+// - Event listeners remain active for entire app lifetime in production
+// - Intervals are intentionally not cleaned up between tests
+// - Test isolation is maintained through vi.clearAllMocks() and mocked dependencies
+// - This is intentional behavior for a production singleton pattern
+// - The destroy() method exists for explicit cleanup when needed (e.g., during app teardown)
 let analyticsInstance: OfflineAnalytics | null = null;
 
 try {
