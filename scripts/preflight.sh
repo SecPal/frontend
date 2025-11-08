@@ -8,7 +8,7 @@ ROOT_DIR="$(git rev-parse --show-toplevel)"
 cd "$ROOT_DIR"
 
 # Check if pushing from a protected branch
-# NOTE: Keep this list in sync with .pre-commit-config.yaml (no-commit-to-branch hook)
+# NOTE: Update PROTECTED_BRANCHES here if protected branch policy changes.
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "detached")
 PROTECTED_BRANCHES=("main" "master" "production")
 
