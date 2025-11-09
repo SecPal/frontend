@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Git Conflict Marker Detection**: Automated check for unresolved merge conflicts
+  - `scripts/check-conflict-markers.sh` - Scans all tracked files for conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`, `|||||||`)
+  - `.github/workflows/check-conflict-markers.yml` - CI integration (runs on all PRs and pushes to main)
+  - `docs/scripts/CHECK_CONFLICT_MARKERS.md` - Complete usage guide with examples and troubleshooting
+  - Exit codes: 0 = clean, 1 = conflicts detected
+  - Prevents accidental commits of broken code from merge conflicts
+  - Colored output shows exact file locations and line numbers
+
 - **Documentation**: Created `docs/KNOWN_ISSUES.md` to track upstream dependency issues
   - Documents npm deprecation warnings from `workbox-build@7.3.0` transitive dependencies
   - Explains why warnings appear and why we cannot fix them directly
