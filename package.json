@@ -88,7 +88,7 @@
     "typescript-eslint": "^8.46.3",
     "vite": "^7.2.2",
     "vite-plugin-pwa": "^1.1.0",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.8",
     "workbox-window": "^7.3.0"
   },
   "engines": {
