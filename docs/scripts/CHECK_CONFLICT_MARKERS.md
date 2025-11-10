@@ -191,6 +191,5 @@ brew install file
 
 ## See Also
 
-- [Preflight Scripts](../scripts/preflight.sh) - Quality Gate Checks
-- [System Requirements Check](CHECK_SYSTEM_REQUIREMENTS.md) - Development Prerequisites
+- [Preflight Scripts](../../scripts/preflight.sh) - Quality Gate Checks
 - [Git Merge Conflicts](https://git-scm.com/docs/git-merge#_how_conflicts_are_presented) - Official Git Documentation
