@@ -47,7 +47,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
-    "@lingui/react": "^5.5.2",
+    "@lingui/react": "^5.6.0",
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.2.0",
@@ -59,8 +59,8 @@
   "devDependencies": {
     "@eslint/js": "^9.18.0",
     "@fontsource/inter": "^5.2.8",
-    "@lingui/cli": "^5.5.2",
-    "@lingui/macro": "^5.5.2",
+    "@lingui/cli": "^5.6.0",
+    "@lingui/macro": "^5.6.0",
     "@tailwindcss/vite": "^4.1.17",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
