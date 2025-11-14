@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { LanguageSwitcher } from "./LanguageSwitcher";

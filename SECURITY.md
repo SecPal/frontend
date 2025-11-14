@@ -9,8 +9,8 @@ We follow [Semantic Versioning](https://semver.org/) (SEMVER). Security updates 
 
 | Version | Supported | Notes                                                     |
 | ------- | --------- | --------------------------------------------------------- |
-| 0.x.x   | ✅        | Development phase - all versions receive security updates |
-| < 0.0.1 | ❌        | Not yet released                                          |
+| 0.x.x   | Yes       | Development phase - all versions receive security updates |
+| < 0.0.1 | No        | Not yet released                                          |
 
 **Note:** Once we reach 1.0.0 (stable release), we will support:
 
@@ -147,14 +147,14 @@ SecPal repositories have the following security features enabled:
 
 | Feature                         | Status | Description                            |
 | ------------------------------- | ------ | -------------------------------------- |
-| **Secret Scanning**             | ✅     | Detects leaked credentials             |
-| **Push Protection**             | ✅     | Blocks commits with secrets            |
-| **Dependabot Security Updates** | ✅     | Automated security patches             |
-| **Dependabot Version Updates**  | ✅     | Daily dependency updates (04:00 CET)   |
-| **CodeQL Analysis**             | ✅     | SAST for JavaScript/TypeScript         |
-| **Branch Protection**           | ✅     | Enforced status checks, signed commits |
-| **Security Advisories**         | ✅     | Private vulnerability reporting        |
-| **Two-Factor Authentication**   | ✅     | Required for all maintainers           |
+| **Secret Scanning**             | Yes    | Detects leaked credentials             |
+| **Push Protection**             | Yes    | Blocks commits with secrets            |
+| **Dependabot Security Updates** | Yes    | Automated security patches             |
+| **Dependabot Version Updates**  | Yes    | Daily dependency updates (04:00 CET)   |
+| **CodeQL Analysis**             | Yes    | SAST for JavaScript/TypeScript         |
+| **Branch Protection**           | Yes    | Enforced status checks, signed commits |
+| **Security Advisories**         | Yes    | Private vulnerability reporting        |
+| **Two-Factor Authentication**   | Yes    | Required for all maintainers           |
 
 ## Known Security Limitations
 
