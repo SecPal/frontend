@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/dom";
 import { StorageQuotaIndicator } from "./StorageQuotaIndicator";
 
 describe("StorageQuotaIndicator", () => {

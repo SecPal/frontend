@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/dom";
 import { StrictMode } from "react";
 import { AppWithI18n } from "./main";
 
