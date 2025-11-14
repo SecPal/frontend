@@ -60,7 +60,7 @@
     "@eslint/js": "^9.18.0",
     "@fontsource/inter": "^5.2.8",
     "@lingui/cli": "^5.5.2",
-    "@lingui/macro": "^5.5.2",
+    "@lingui/macro": "^5.6.0",
     "@tailwindcss/vite": "^4.1.17",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
