@@ -4,15 +4,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { ShareTarget } from "./ShareTarget";
-
-// Mock the i18n macro
-vi.mock("@lingui/macro", () => ({
-  Trans: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
 describe("ShareTarget Component", () => {
   beforeEach(() => {
+    // Setup i18n
+    i18n.load("en", {});
+    i18n.activate("en");
+
     // Reset window.location
     Object.defineProperty(window, "location", {
       value: {
@@ -26,15 +27,21 @@ describe("ShareTarget Component", () => {
     });
   });
 
+  const renderComponent = () => {
+    return render(
+      <I18nProvider i18n={i18n}>
+        <BrowserRouter>
+          <ShareTarget />
+        </BrowserRouter>
+      </I18nProvider>
+    );
+  };
+
   describe("GET method - Text sharing (existing functionality)", () => {
     it("should handle shared text via URL parameters", async () => {
       window.location.search = "?title=Test&text=Hello&url=https://example.com";
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Test/)).toBeInTheDocument();
@@ -46,11 +53,7 @@ describe("ShareTarget Component", () => {
     it("should handle empty URL parameters gracefully", () => {
       window.location.search = "?title=&text=&url=";
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
     });
@@ -76,11 +79,7 @@ describe("ShareTarget Component", () => {
         )
       );
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test\.pdf/)).toBeInTheDocument();
@@ -108,11 +107,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/document\.pdf/)).toBeInTheDocument();
@@ -133,11 +128,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify([oversizedFile])
       );
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/File too large/i)).toBeInTheDocument();
@@ -155,11 +146,7 @@ describe("ShareTarget Component", () => {
 
       sessionStorage.setItem("share-target-files", JSON.stringify([imageFile]));
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         const img = screen.getByAltText(/photo\.jpg/i);
@@ -177,11 +164,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Report/)).toBeInTheDocument();
@@ -201,11 +184,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       const clearButton = await screen.findByRole("button", { name: /clear/i });
       clearButton.click();
@@ -222,11 +201,7 @@ describe("ShareTarget Component", () => {
       const replaceStateSpy = vi.spyOn(window.history, "replaceState");
       window.location.search = "?title=Test&text=Hello";
 
-      render(
-        <BrowserRouter>
-          <ShareTarget />
-        </BrowserRouter>
-      );
+      renderComponent();
 
       await waitFor(() => {
         expect(replaceStateSpy).toHaveBeenCalledWith(
