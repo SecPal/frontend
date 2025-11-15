@@ -14,6 +14,9 @@ describe("ShareTarget Component", () => {
     i18n.load("en", {});
     i18n.activate("en");
 
+    // Clear sessionStorage
+    sessionStorage.clear();
+
     // Reset window.location
     Object.defineProperty(window, "location", {
       value: {
@@ -141,7 +144,7 @@ describe("ShareTarget Component", () => {
         name: "photo.jpg",
         type: "image/jpeg",
         size: 50000,
-        dataUrl: "data:image/jpeg;base64,fakebase64data",
+        dataUrl: "data:image/jpeg;base64,/9j/4AAQSkZJRg==", // Valid JPEG data URL
       };
 
       sessionStorage.setItem("share-target-files", JSON.stringify([imageFile]));
@@ -198,17 +201,119 @@ describe("ShareTarget Component", () => {
 
   describe("Navigation cleanup", () => {
     it("should clean URL parameters after processing", async () => {
-      const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+      // Mock history.replaceState
+      const replaceStateMock = vi.fn();
+      Object.defineProperty(window.history, "replaceState", {
+        writable: true,
+        value: replaceStateMock,
+      });
+
       window.location.search = "?title=Test&text=Hello";
 
       renderComponent();
 
       await waitFor(() => {
-        expect(replaceStateSpy).toHaveBeenCalledWith(
-          {},
-          "",
-          expect.stringContaining("/")
+        expect(screen.getByText(/Test/)).toBeInTheDocument();
+        expect(replaceStateMock).toHaveBeenCalledWith({}, "", "/");
+      });
+    });
+  });
+
+  describe("Security: Data URL Sanitization", () => {
+    it("should reject data URLs with non-image MIME types", async () => {
+      const maliciousFile = {
+        name: "malicious.jpg",
+        type: "image/jpeg",
+        size: 50000,
+        dataUrl:
+          "data:text/html;base64,PHNjcmlwdD5hbGVydCgneHNzJyk8L3NjcmlwdD4=", // HTML/JS
+      };
+
+      sessionStorage.setItem(
+        "share-target-files",
+        JSON.stringify([maliciousFile])
+      );
+
+      renderComponent();
+
+      await waitFor(() => {
+        // Image should NOT be rendered
+        expect(
+          screen.queryByAltText(/malicious\.jpg/i)
+        ).not.toBeInTheDocument();
+        // File metadata should still be shown
+        expect(screen.getByText(/malicious\.jpg/)).toBeInTheDocument();
+      });
+    });
+
+    it("should reject javascript: URLs in data URLs", async () => {
+      const xssFile = {
+        name: "xss.jpg",
+        type: "image/jpeg",
+        size: 50000,
+        dataUrl: "javascript:alert('xss')",
+      };
+
+      sessionStorage.setItem("share-target-files", JSON.stringify([xssFile]));
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.queryByAltText(/xss\.jpg/i)).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Security: URL Sanitization", () => {
+    it("should reject URLs with credentials", async () => {
+      window.location.search = "?text=test&url=https://user:pass@evil.com";
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/test/)).toBeInTheDocument();
+        expect(screen.getByText(/Invalid or unsafe URL/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should reject javascript: protocol URLs", async () => {
+      window.location.search = "?text=test&url=javascript:alert('xss')";
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/test/)).toBeInTheDocument();
+        expect(screen.getByText(/Invalid or unsafe URL/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should reject data: protocol URLs", async () => {
+      window.location.search =
+        "?text=test&url=data:text/html,<script>alert('xss')</script>";
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/test/)).toBeInTheDocument();
+        expect(screen.getByText(/Invalid or unsafe URL/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should accept valid http and https URLs", async () => {
+      window.location.search =
+        "?text=test&url=https://example.com/path?query=1";
+
+      renderComponent();
+
+      await waitFor(() => {
+        expect(screen.getByText(/test/)).toBeInTheDocument();
+        const link = screen.getByRole("link");
+        expect(link).toHaveAttribute(
+          "href",
+          "https://example.com/path?query=1"
         );
+        expect(link).toHaveAttribute("rel", "noopener noreferrer");
+        expect(link).toHaveAttribute("target", "_blank");
       });
     });
   });

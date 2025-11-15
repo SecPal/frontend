@@ -32,6 +32,30 @@ const ALLOWED_TYPES = [
   ".docx",
 ];
 
+/**
+ * Validates data URL to prevent XSS attacks.
+ * Only allows data URLs with safe image MIME types.
+ * @returns The data URL if valid, null otherwise
+ */
+function sanitizeDataUrl(dataUrl: string | undefined): string | null {
+  if (!dataUrl || !dataUrl.startsWith("data:")) return null;
+
+  // Only allow image data URLs
+  const allowedImageTypes = [
+    "data:image/jpeg",
+    "data:image/jpg",
+    "data:image/png",
+    "data:image/gif",
+    "data:image/webp",
+  ];
+
+  const isAllowed = allowedImageTypes.some((type) =>
+    dataUrl.toLowerCase().startsWith(type)
+  );
+
+  return isAllowed ? dataUrl : null;
+}
+
 function isFileTypeAllowed(fileType: string): boolean {
   return ALLOWED_TYPES.some((allowed) => {
     if (allowed.endsWith("/*")) {
@@ -50,7 +74,7 @@ function formatFileSize(bytes: number): string {
 
 /**
  * Validates and sanitizes URLs to prevent XSS and open redirect attacks.
- * Only allows http and https protocols.
+ * Only allows http and https protocols AND validates domain is not suspicious.
  * @returns The sanitized URL or null if invalid
  */
 function sanitizeUrl(url: string | undefined): string | null {
@@ -59,10 +83,21 @@ function sanitizeUrl(url: string | undefined): string | null {
   try {
     const parsed = new URL(url);
     // Only allow http and https protocols to prevent javascript:, data:, etc.
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return parsed.toString();
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
     }
-    return null;
+
+    // Additional validation: Reject URLs with credentials
+    if (parsed.username || parsed.password) {
+      return null;
+    }
+
+    // Reject suspicious patterns (e.g., double slashes after protocol)
+    if (url.includes("///") || url.includes("//\\")) {
+      return null;
+    }
+
+    return parsed.toString();
   } catch {
     // Invalid URL format
     return null;
@@ -237,36 +272,37 @@ export function ShareTarget() {
             </div>
           )}
 
-          {sharedData.url && (() => {
-            const sanitizedUrl = sanitizeUrl(sharedData.url);
-            if (!sanitizedUrl) {
+          {sharedData.url &&
+            (() => {
+              const sanitizedUrl = sanitizeUrl(sharedData.url);
+              if (!sanitizedUrl) {
+                return (
+                  <div className="mb-2">
+                    <Text className="font-semibold text-gray-700">
+                      <Trans>URL:</Trans>
+                    </Text>
+                    <Text className="text-red-600 text-sm">
+                      <Trans>Invalid or unsafe URL</Trans>
+                    </Text>
+                  </div>
+                );
+              }
               return (
                 <div className="mb-2">
                   <Text className="font-semibold text-gray-700">
                     <Trans>URL:</Trans>
                   </Text>
-                  <Text className="text-red-600 text-sm">
-                    <Trans>Invalid or unsafe URL</Trans>
-                  </Text>
+                  <a
+                    href={sanitizedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
+                  >
+                    {sanitizedUrl}
+                  </a>
                 </div>
               );
-            }
-            return (
-              <div className="mb-2">
-                <Text className="font-semibold text-gray-700">
-                  <Trans>URL:</Trans>
-                </Text>
-                <a
-                  href={sanitizedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline break-all"
-                >
-                  {sanitizedUrl}
-                </a>
-              </div>
-            );
-          })()}
+            })()}
         </div>
       )}
 
@@ -284,13 +320,20 @@ export function ShareTarget() {
                 className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
               >
                 {/* Image preview */}
-                {file.dataUrl && file.type.startsWith("image/") && (
-                  <img
-                    src={file.dataUrl}
-                    alt={file.name}
-                    className="w-full h-48 object-cover rounded mb-3"
-                  />
-                )}
+                {file.dataUrl &&
+                  file.type.startsWith("image/") &&
+                  (() => {
+                    const sanitizedDataUrl = sanitizeDataUrl(file.dataUrl);
+                    if (!sanitizedDataUrl) return null;
+
+                    return (
+                      <img
+                        src={sanitizedDataUrl}
+                        alt={file.name}
+                        className="w-full h-48 object-cover rounded mb-3"
+                      />
+                    );
+                  })()}
 
                 {/* File info */}
                 <div className="flex items-start justify-between">
