@@ -360,7 +360,8 @@ export function ShareTarget() {
     sessionStorage.removeItem("share-target-files");
   };
 
-  if (!sharedData) {
+  // Show errors even if no valid shared data
+  if (!sharedData && errors.length === 0) {
     return (
       <div className="p-8">
         <Heading>
@@ -404,64 +405,65 @@ export function ShareTarget() {
       )}
 
       {/* Display text content */}
-      {(sharedData.title || sharedData.text || sharedData.url) && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          {sharedData.title && (
-            <div className="mb-2">
-              <Text className="font-semibold text-gray-700">
-                <Trans>Title:</Trans>
-              </Text>
-              <Text className="text-gray-900">{sharedData.title}</Text>
-            </div>
-          )}
+      {sharedData &&
+        (sharedData.title || sharedData.text || sharedData.url) && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            {sharedData.title && (
+              <div className="mb-2">
+                <Text className="font-semibold text-gray-700">
+                  <Trans>Title:</Trans>
+                </Text>
+                <Text className="text-gray-900">{sharedData.title}</Text>
+              </div>
+            )}
 
-          {sharedData.text && (
-            <div className="mb-2">
-              <Text className="font-semibold text-gray-700">
-                <Trans>Text:</Trans>
-              </Text>
-              <Text className="text-gray-900 whitespace-pre-wrap">
-                {sharedData.text}
-              </Text>
-            </div>
-          )}
+            {sharedData.text && (
+              <div className="mb-2">
+                <Text className="font-semibold text-gray-700">
+                  <Trans>Text:</Trans>
+                </Text>
+                <Text className="text-gray-900 whitespace-pre-wrap">
+                  {sharedData.text}
+                </Text>
+              </div>
+            )}
 
-          {sharedData.url &&
-            (() => {
-              const sanitizedUrl = sanitizeUrl(sharedData.url);
-              if (!sanitizedUrl) {
+            {sharedData.url &&
+              (() => {
+                const sanitizedUrl = sanitizeUrl(sharedData.url);
+                if (!sanitizedUrl) {
+                  return (
+                    <div className="mb-2">
+                      <Text className="font-semibold text-gray-700">
+                        <Trans>URL:</Trans>
+                      </Text>
+                      <Text className="text-red-600 text-sm">
+                        <Trans>Invalid or unsafe URL</Trans>
+                      </Text>
+                    </div>
+                  );
+                }
                 return (
                   <div className="mb-2">
                     <Text className="font-semibold text-gray-700">
                       <Trans>URL:</Trans>
                     </Text>
-                    <Text className="text-red-600 text-sm">
-                      <Trans>Invalid or unsafe URL</Trans>
-                    </Text>
+                    <a
+                      href={sanitizedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {sanitizedUrl}
+                    </a>
                   </div>
                 );
-              }
-              return (
-                <div className="mb-2">
-                  <Text className="font-semibold text-gray-700">
-                    <Trans>URL:</Trans>
-                  </Text>
-                  <a
-                    href={sanitizedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline break-all"
-                  >
-                    {sanitizedUrl}
-                  </a>
-                </div>
-              );
-            })()}
-        </div>
-      )}
+              })()}
+          </div>
+        )}
 
       {/* Display shared files */}
-      {sharedData.files && sharedData.files.length > 0 && (
+      {sharedData && sharedData.files && sharedData.files.length > 0 && (
         <div>
           <Heading level={2} className="mb-4">
             <Trans>Attached Files</Trans> ({sharedData.files.length})
