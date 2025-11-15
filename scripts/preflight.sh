@@ -44,11 +44,20 @@ echo "Using base branch: $BASE"
 # Fetch base branch for PR size check (failure is handled later)
 git fetch origin "$BASE" 2>/dev/null || true
 
+# Get list of changed files for conditional checks
+CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
+
 # 0) Formatting & Compliance
 FORMAT_EXIT=0
 if command -v npx >/dev/null 2>&1; then
-  npx --yes prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
-  npx --yes markdownlint-cli2 '**/*.md' '#node_modules' '#vendor' '#storage' '#build' || FORMAT_EXIT=1
+  npx --yes prettier --check --cache '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
+
+  # Only run markdownlint if .md files changed
+  if echo "$CHANGED_FILES" | grep -q '\.md$'; then
+    npx --yes markdownlint-cli2 '**/*.md' '#node_modules' '#vendor' '#storage' '#build' || FORMAT_EXIT=1
+  else
+    echo "ℹ️  No markdown files changed, skipping markdownlint"
+  fi
 fi
 # Workflow linting (part of documented gates)
 # NOTE: actionlint is disabled in local preflight due to known hanging issues
@@ -62,9 +71,22 @@ if [ -d .github/workflows ]; then
     echo "Warning: .github/workflows found but actionlint not installed - skipping workflow lint" >&2
   fi
 fi
+
+# Only run REUSE lint if new files were added or license-related files changed
 if command -v reuse >/dev/null 2>&1; then
-  reuse lint || FORMAT_EXIT=1
+  if [ -n "$CHANGED_FILES" ]; then
+    # Check if any new files were added (A) or license files changed
+    NEW_OR_LICENSE=$(git diff --name-status --cached 2>/dev/null | grep -E '^(A|M.*LICENSE)' || echo "")
+    if [ -n "$NEW_OR_LICENSE" ]; then
+      reuse lint || FORMAT_EXIT=1
+    else
+      echo "ℹ️  No new files or license changes, skipping REUSE lint"
+    fi
+  else
+    reuse lint || FORMAT_EXIT=1
+  fi
 fi
+
 if [ "$FORMAT_EXIT" -ne 0 ]; then
   echo "Formatting/compliance checks failed. Fix issues above." >&2
   exit 1
@@ -115,12 +137,34 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   # Check if scripts exist before running (pnpm run <script> exits 0 with --if-present)
   pnpm run --if-present lint
   pnpm run --if-present typecheck
-  pnpm run --if-present test
+
+  # Run only tests related to changed files for faster feedback
+  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
+    pnpm run --if-present test:related
+  elif [ -z "$CHANGED_FILES" ]; then
+    pnpm run --if-present test:run
+  else
+    echo "No source files changed, skipping tests"
+  fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
-  npm ci
+  # Only run npm ci if node_modules is missing or package-lock.json is newer
+  if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
+    npm ci
+  else
+    echo "Dependencies up to date, skipping npm ci"
+  fi
+
   npm run --if-present lint
   npm run --if-present typecheck
-  npm run --if-present test:run
+
+  # Run only tests related to changed files for faster feedback
+  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
+    npm run --if-present test:related
+  elif [ -z "$CHANGED_FILES" ]; then
+    npm run --if-present test:run
+  else
+    echo "No source files changed, skipping tests"
+  fi
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
