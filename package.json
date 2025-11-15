@@ -35,7 +35,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run --bail=1 --reporter=verbose",
-    "test:run:all": "vitest run",
+    "test:run:all": "vitest run --reporter=verbose",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "format": "prettier --write '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
