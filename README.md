@@ -172,15 +172,23 @@ npm run build
 ### Run Tests
 
 ```bash
-# Run all tests
-npm test
+# Run all tests (stops on first failure - fast feedback)
+npm run test:run
+
+# Run all tests regardless of failures (CI/comprehensive check)
+npm run test:run:all
 
 # Run tests in watch mode
+npm test
+
+# Run tests in UI mode
 npm run test:ui
 
 # Generate coverage report
 npm run test:coverage
 ```
+
+**Note:** `test:run` uses fail-fast mode (`--bail=1`) to stop immediately on first failure, providing faster feedback during development and pre-push checks. Use `test:run:all` for CI pipelines or when you need a complete test report.
 
 ### Code Quality
 
