@@ -66,7 +66,21 @@ export function useShareTarget(): UseShareTargetReturn {
 
           if (filesJson) {
             try {
-              files = JSON.parse(filesJson) as SharedFile[];
+              const parsed = JSON.parse(filesJson);
+              // Runtime type validation
+              if (
+                Array.isArray(parsed) &&
+                parsed.every(
+                  (f) =>
+                    typeof f === "object" &&
+                    f !== null &&
+                    typeof f.name === "string" &&
+                    typeof f.type === "string" &&
+                    typeof f.size === "number"
+                )
+              ) {
+                files = parsed as SharedFile[];
+              }
             } catch (error) {
               console.error("Failed to parse shared files:", error);
             }

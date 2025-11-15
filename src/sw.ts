@@ -169,8 +169,9 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
               : "Unknown error processing shared content",
         });
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      // Log error but don't fail the whole operation
+      console.error("Failed to notify clients about error:", error);
     }
 
     return Response.redirect(

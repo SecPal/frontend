@@ -91,11 +91,6 @@ function sanitizeUrl(url: string | undefined): string | null {
       return null;
     }
 
-    // Reject suspicious patterns (e.g., double slashes after protocol)
-    if (url.includes("///") || url.includes("//\\")) {
-      return null;
-    }
-
     return parsed.toString();
   } catch {
     // Invalid URL format
@@ -142,8 +137,9 @@ export function ShareTarget() {
           // Apply business logic validation
           return isFileTypeAllowed(file.type) && file.size <= MAX_FILE_SIZE;
         });
-      } catch {
-        // Failed to parse, ignore files
+      } catch (error) {
+        // Log parsing errors for debugging
+        console.error("Failed to parse shared files during init:", error);
       }
     }
 
