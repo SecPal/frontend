@@ -208,10 +208,6 @@ describe("ShareTarget Component", () => {
       const clearButton = await screen.findByRole("button", { name: /clear/i });
       await user.click(clearButton);
 
-      // Debug: log html to help diagnose failure
-      // eslint-disable-next-line no-console
-      console.log(document.body.innerHTML);
-
       await waitFor(() => {
         expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
         expect(sessionStorage.getItem("share-target-files")).toBeNull();

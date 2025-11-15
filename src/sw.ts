@@ -103,7 +103,7 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
         if (file.type.startsWith("image/") && file.size < 5 * 1024 * 1024) {
           try {
             dataUrl = await fileToBase64(file);
-          } catch (e) {
+          } catch {
             // If conversion fails, omit preview but keep metadata
             dataUrl = undefined;
           }
@@ -125,19 +125,20 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     if (url) redirectUrl.searchParams.set("url", url);
     redirectUrl.searchParams.set("share_id", shareId);
 
-    // Notify existing clients with processed files and shareId
-    const clients = await self.clients.matchAll({
-      type: "window",
-      includeUncontrolled: true,
+    // Store files in sessionStorage BEFORE notifying clients (race condition fix)
+    // This ensures files are available when the redirect happens
+    await self.clients.matchAll({ type: "window" }).then((clients) => {
+      if (clients.length > 0) {
+        // If there's an active client, notify it first
+        for (const client of clients) {
+          client.postMessage({
+            type: "SHARE_TARGET_FILES",
+            shareId,
+            files: processedFiles,
+          });
+        }
+      }
     });
-
-    for (const client of clients) {
-      client.postMessage({
-        type: "SHARE_TARGET_FILES",
-        shareId,
-        files: processedFiles,
-      });
-    }
 
     // Redirect to the share page
     return Response.redirect(redirectUrl.toString(), 303);
@@ -160,7 +161,7 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
               : "Unknown error processing shared content",
         });
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
 
