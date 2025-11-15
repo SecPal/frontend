@@ -6,7 +6,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { ShareTarget } from "./ShareTarget";
+import { ShareTarget, handleShareTargetMessage } from "./ShareTarget";
 
 describe("ShareTarget Component", () => {
   // Helper function to set window.location with search params
@@ -558,5 +558,167 @@ describe("ShareTarget Component", () => {
         expect(screen.getByText("FILE")).toBeInTheDocument();
       });
     });
+  });
+});
+
+describe("handleShareTargetMessage (unit tests)", () => {
+  let loadSharedDataSpy: ReturnType<typeof vi.fn>;
+  let setErrorsSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    loadSharedDataSpy = vi.fn();
+    setErrorsSpy = vi.fn();
+  });
+
+  it("should handle SHARE_TARGET_FILES message", () => {
+    const mockFiles = [
+      { name: "test.pdf", type: "application/pdf", size: 1000 },
+    ];
+
+    const event = {
+      data: {
+        type: "SHARE_TARGET_FILES",
+        files: mockFiles,
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
+
+    // Should store files in sessionStorage
+    const stored = sessionStorage.getItem("share-target-files");
+    expect(stored).toBe(JSON.stringify(mockFiles));
+
+    // Should call loadSharedData
+    expect(loadSharedDataSpy).toHaveBeenCalledOnce();
+    expect(setErrorsSpy).not.toHaveBeenCalled();
+  });
+
+  it("should ignore SHARE_TARGET_FILES with mismatched shareId", () => {
+    const mockFiles = [
+      { name: "test.pdf", type: "application/pdf", size: 1000 },
+    ];
+
+    const event = {
+      data: {
+        type: "SHARE_TARGET_FILES",
+        shareId: "abc",
+        files: mockFiles,
+      },
+    } as MessageEvent;
+
+    // Current shareId is "xyz", message shareId is "abc" - should be ignored
+    handleShareTargetMessage(event, "xyz", loadSharedDataSpy, setErrorsSpy);
+
+    // Should NOT store files or reload
+    expect(sessionStorage.getItem("share-target-files")).toBeNull();
+    expect(loadSharedDataSpy).not.toHaveBeenCalled();
+    expect(setErrorsSpy).not.toHaveBeenCalled();
+  });
+
+  it("should accept SHARE_TARGET_FILES with matching shareId", () => {
+    const mockFiles = [
+      { name: "test.pdf", type: "application/pdf", size: 1000 },
+    ];
+
+    const event = {
+      data: {
+        type: "SHARE_TARGET_FILES",
+        shareId: "abc",
+        files: mockFiles,
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, "abc", loadSharedDataSpy, setErrorsSpy);
+
+    // Should store and reload
+    expect(sessionStorage.getItem("share-target-files")).toBe(
+      JSON.stringify(mockFiles)
+    );
+    expect(loadSharedDataSpy).toHaveBeenCalledOnce();
+  });
+
+  it("should handle SHARE_TARGET_ERROR message", () => {
+    const event = {
+      data: {
+        type: "SHARE_TARGET_ERROR",
+        error: "File processing failed",
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
+
+    // Should add error via setErrors
+    expect(setErrorsSpy).toHaveBeenCalledOnce();
+    const errorUpdater = setErrorsSpy.mock.calls[0][0];
+    const newErrors = errorUpdater([]);
+    expect(newErrors).toEqual(["File processing failed"]);
+  });
+
+  it("should handle SHARE_TARGET_ERROR with matching shareId", () => {
+    const event = {
+      data: {
+        type: "SHARE_TARGET_ERROR",
+        shareId: "abc",
+        error: "Matched error",
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, "abc", loadSharedDataSpy, setErrorsSpy);
+
+    expect(setErrorsSpy).toHaveBeenCalledOnce();
+  });
+
+  it("should ignore SHARE_TARGET_ERROR with mismatched shareId", () => {
+    const event = {
+      data: {
+        type: "SHARE_TARGET_ERROR",
+        shareId: "abc",
+        error: "Should be ignored",
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, "xyz", loadSharedDataSpy, setErrorsSpy);
+
+    // Should NOT add error
+    expect(setErrorsSpy).not.toHaveBeenCalled();
+  });
+
+  it("should use default error message if none provided", () => {
+    const event = {
+      data: {
+        type: "SHARE_TARGET_ERROR",
+        // No error property
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
+
+    const errorUpdater = setErrorsSpy.mock.calls[0][0];
+    const newErrors = errorUpdater([]);
+    expect(newErrors).toEqual(["Unknown error"]);
+  });
+
+  it("should ignore messages without data", () => {
+    const event = {} as MessageEvent;
+
+    handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
+
+    expect(loadSharedDataSpy).not.toHaveBeenCalled();
+    expect(setErrorsSpy).not.toHaveBeenCalled();
+  });
+
+  it("should ignore messages with unknown type", () => {
+    const event = {
+      data: {
+        type: "UNKNOWN_TYPE",
+        someData: "test",
+      },
+    } as MessageEvent;
+
+    handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
+
+    expect(loadSharedDataSpy).not.toHaveBeenCalled();
+    expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 });

@@ -98,6 +98,41 @@ function sanitizeUrl(url: string | undefined): string | null {
   }
 }
 
+/**
+ * Handles Service Worker message events for Share Target API
+ * Exported for testing purposes
+ */
+export function handleShareTargetMessage(
+  event: MessageEvent,
+  shareId: string | null,
+  loadSharedData: () => void,
+  setErrors: (updater: (prev: string[]) => string[]) => void
+): void {
+  if (event.data && event.data.type === "SHARE_TARGET_FILES") {
+    // Only accept messages that match current shareId if present
+    if (event.data.shareId && shareId && event.data.shareId !== shareId) {
+      // ignore mismatched share sessions
+      return;
+    }
+
+    // Store files in sessionStorage so they persist across reloads
+    sessionStorage.setItem(
+      "share-target-files",
+      JSON.stringify(event.data.files)
+    );
+
+    // Trigger reload of shared data
+    loadSharedData();
+  }
+
+  if (event.data && event.data.type === "SHARE_TARGET_ERROR") {
+    // If we receive an error from SW, show it
+    if (!event.data.shareId || (shareId && event.data.shareId === shareId)) {
+      setErrors((prev) => [...prev, event.data.error || "Unknown error"]);
+    }
+  }
+}
+
 export function ShareTarget() {
   // Parse initial data once using lazy initialization
   const [sharedData, setSharedData] = useState<SharedData | null>(() => {
@@ -307,46 +342,15 @@ export function ShareTarget() {
 
   // Service Worker message handler
   useEffect(() => {
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === "SHARE_TARGET_FILES") {
-        // Only accept messages that match current/shareId if present
-        if (event.data.shareId && shareId && event.data.shareId !== shareId) {
-          // ignore mismatched share sessions
-          return;
-        }
-
-        // Store files in sessionStorage so they persist across reloads
-        sessionStorage.setItem(
-          "share-target-files",
-          JSON.stringify(event.data.files)
-        );
-
-        // Trigger reload of shared data
-        loadSharedData();
-      }
-
-      if (event.data && event.data.type === "SHARE_TARGET_ERROR") {
-        // If we receive an error from SW, show it
-        if (
-          !event.data.shareId ||
-          (shareId && event.data.shareId === shareId)
-        ) {
-          setErrors((prev) => [...prev, event.data.error || "Unknown error"]);
-        }
-      }
+    const handleMessage = (event: MessageEvent) => {
+      handleShareTargetMessage(event, shareId, loadSharedData, setErrors);
     };
 
-    navigator.serviceWorker?.addEventListener(
-      "message",
-      handleServiceWorkerMessage
-    );
+    navigator.serviceWorker?.addEventListener("message", handleMessage);
 
     // Clean up event listener on unmount
     return () => {
-      navigator.serviceWorker?.removeEventListener(
-        "message",
-        handleServiceWorkerMessage
-      );
+      navigator.serviceWorker?.removeEventListener("message", handleMessage);
     };
   }, [shareId, loadSharedData]);
 
