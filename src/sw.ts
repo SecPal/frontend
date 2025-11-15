@@ -76,10 +76,17 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
   try {
     const formData = await request.clone().formData();
 
-    // Extract text fields
-    const title = formData.get("title") as string | null;
-    const text = formData.get("text") as string | null;
-    const url = formData.get("url") as string | null;
+    // Extract text fields with length validation
+    const MAX_PARAM_LENGTH = 1000;
+    const rawTitle = formData.get("title") as string | null;
+    const rawText = formData.get("text") as string | null;
+    const rawUrl = formData.get("url") as string | null;
+
+    const title =
+      rawTitle && rawTitle.length <= MAX_PARAM_LENGTH ? rawTitle : null;
+    const text =
+      rawText && rawText.length <= MAX_PARAM_LENGTH * 5 ? rawText : null; // 5000 chars for text
+    const url = rawUrl && rawUrl.length <= MAX_PARAM_LENGTH * 2 ? rawUrl : null; // 2000 chars for URLs
 
     // Extract and validate files before heavy processing
     const rawFiles = formData.getAll("files") as File[];
@@ -99,8 +106,9 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     const processedFiles = await Promise.all(
       allowedFiles.map(async (file) => {
         // Convert file to Base64 for preview only for images and limited size
+        // Reduced to 2MB to prevent memory issues (Base64 is ~33% larger)
         let dataUrl: string | undefined;
-        if (file.type.startsWith("image/") && file.size < 5 * 1024 * 1024) {
+        if (file.type.startsWith("image/") && file.size < 2 * 1024 * 1024) {
           try {
             dataUrl = await fileToBase64(file);
           } catch {

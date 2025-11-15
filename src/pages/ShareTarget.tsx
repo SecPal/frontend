@@ -115,10 +115,33 @@ export function ShareTarget() {
 
     if (filesJson) {
       try {
-        const parsedFiles = JSON.parse(filesJson) as SharedFile[];
-        files = parsedFiles.filter(
-          (file) => isFileTypeAllowed(file.type) && file.size <= MAX_FILE_SIZE
-        );
+        const parsedFiles = JSON.parse(filesJson);
+
+        // Runtime type validation
+        if (!Array.isArray(parsedFiles)) {
+          throw new Error("Invalid files format: not an array");
+        }
+
+        files = parsedFiles.filter((file): file is SharedFile => {
+          // Validate required properties exist and have correct types
+          if (
+            typeof file !== "object" ||
+            file === null ||
+            typeof file.name !== "string" ||
+            typeof file.type !== "string" ||
+            typeof file.size !== "number"
+          ) {
+            return false;
+          }
+
+          // Validate dataUrl if present
+          if (file.dataUrl !== undefined && typeof file.dataUrl !== "string") {
+            return false;
+          }
+
+          // Apply business logic validation
+          return isFileTypeAllowed(file.type) && file.size <= MAX_FILE_SIZE;
+        });
       } catch {
         // Failed to parse, ignore files
       }
@@ -146,8 +169,27 @@ export function ShareTarget() {
 
     if (filesJson) {
       try {
-        const parsedFiles = JSON.parse(filesJson) as SharedFile[];
+        const parsedFiles = JSON.parse(filesJson);
+
+        // Runtime type validation
+        if (!Array.isArray(parsedFiles)) {
+          newErrors.push("Invalid files format");
+          return newErrors;
+        }
+
         parsedFiles.forEach((file) => {
+          // Validate required properties
+          if (
+            typeof file !== "object" ||
+            file === null ||
+            typeof file.name !== "string" ||
+            typeof file.type !== "string" ||
+            typeof file.size !== "number"
+          ) {
+            newErrors.push("Invalid file data structure");
+            return;
+          }
+
           if (!isFileTypeAllowed(file.type)) {
             newErrors.push(
               `Invalid file type: ${file.name} (${file.type}) is not supported`
@@ -196,10 +238,35 @@ export function ShareTarget() {
 
     if (filesJson) {
       try {
-        const parsedFiles = JSON.parse(filesJson) as SharedFile[];
+        const parsedFiles = JSON.parse(filesJson);
 
-        // Validate each file
-        files = parsedFiles.filter((file) => {
+        // Runtime type validation
+        if (!Array.isArray(parsedFiles)) {
+          console.error("Invalid files format: not an array");
+          newErrors.push("Failed to load shared files");
+          return;
+        }
+
+        // Validate each file with type guard
+        files = parsedFiles.filter((file): file is SharedFile => {
+          // Validate required properties exist and have correct types
+          if (
+            typeof file !== "object" ||
+            file === null ||
+            typeof file.name !== "string" ||
+            typeof file.type !== "string" ||
+            typeof file.size !== "number"
+          ) {
+            console.warn("Invalid file structure:", file);
+            return false;
+          }
+
+          // Validate dataUrl if present
+          if (file.dataUrl !== undefined && typeof file.dataUrl !== "string") {
+            console.warn("Invalid dataUrl type for file:", file.name);
+            return false;
+          }
+
           if (!isFileTypeAllowed(file.type)) {
             newErrors.push(
               `Invalid file type: ${file.name} (${file.type}) is not supported`
