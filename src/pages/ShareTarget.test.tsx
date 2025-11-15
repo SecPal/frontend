@@ -9,6 +9,23 @@ import { i18n } from "@lingui/core";
 import { ShareTarget } from "./ShareTarget";
 
 describe("ShareTarget Component", () => {
+  // Helper function to set window.location with search params
+  const setLocationSearch = (search: string) => {
+    const fullUrl = search
+      ? `http://localhost:5173/share${search}`
+      : "http://localhost:5173/share";
+    Object.defineProperty(window, "location", {
+      value: {
+        pathname: "/share",
+        search,
+        hash: "",
+        href: fullUrl,
+      },
+      writable: true,
+      configurable: true,
+    });
+  };
+
   beforeEach(() => {
     // Setup i18n
     i18n.load("en", {});
@@ -18,16 +35,7 @@ describe("ShareTarget Component", () => {
     sessionStorage.clear();
 
     // Reset window.location
-    Object.defineProperty(window, "location", {
-      value: {
-        pathname: "/share",
-        search: "",
-        hash: "",
-        href: "http://localhost:5173/share",
-      },
-      writable: true,
-      configurable: true,
-    });
+    setLocationSearch("");
   });
 
   const renderComponent = () => {
@@ -42,7 +50,7 @@ describe("ShareTarget Component", () => {
 
   describe("GET method - Text sharing (existing functionality)", () => {
     it("should handle shared text via URL parameters", async () => {
-      window.location.search = "?title=Test&text=Hello&url=https://example.com";
+      setLocationSearch("?title=Test&text=Hello&url=https://example.com");
 
       renderComponent();
 
@@ -54,7 +62,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should handle empty URL parameters gracefully", () => {
-      window.location.search = "?title=&text=&url=";
+      setLocationSearch("?title=&text=&url=");
 
       renderComponent();
 
@@ -113,9 +121,14 @@ describe("ShareTarget Component", () => {
       renderComponent();
 
       await waitFor(() => {
+        // Valid file should be displayed
         expect(screen.getByText(/document\.pdf/)).toBeInTheDocument();
-        expect(screen.queryByText(/script\.exe/)).not.toBeInTheDocument();
-        expect(screen.getByText(/Invalid file type/i)).toBeInTheDocument();
+        // Error message should mention the invalid file
+        expect(
+          screen.getByText(/Invalid file type: script\.exe/i)
+        ).toBeInTheDocument();
+        // Only 1 file should be shown in the grid (the valid one)
+        expect(screen.getByText(/Attached Files.*\(1\)/)).toBeInTheDocument();
       });
     });
 
@@ -159,7 +172,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should combine text and files from POST request", async () => {
-      window.location.search = "?title=Report&text=See+attached";
+      setLocationSearch("?title=Report&text=See+attached");
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify([
@@ -179,7 +192,7 @@ describe("ShareTarget Component", () => {
 
   describe("Clear functionality", () => {
     it("should clear shared data when user clicks clear button", async () => {
-      window.location.search = "?text=Hello";
+      setLocationSearch("?text=Hello");
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify([
@@ -208,7 +221,7 @@ describe("ShareTarget Component", () => {
         value: replaceStateMock,
       });
 
-      window.location.search = "?title=Test&text=Hello";
+      setLocationSearch("?title=Test&text=Hello");
 
       renderComponent();
 
@@ -266,7 +279,7 @@ describe("ShareTarget Component", () => {
 
   describe("Security: URL Sanitization", () => {
     it("should reject URLs with credentials", async () => {
-      window.location.search = "?text=test&url=https://user:pass@evil.com";
+      setLocationSearch("?text=test&url=https://user:pass@evil.com");
 
       renderComponent();
 
@@ -277,7 +290,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should reject javascript: protocol URLs", async () => {
-      window.location.search = "?text=test&url=javascript:alert('xss')";
+      setLocationSearch("?text=test&url=javascript:alert('xss')");
 
       renderComponent();
 
@@ -288,8 +301,9 @@ describe("ShareTarget Component", () => {
     });
 
     it("should reject data: protocol URLs", async () => {
-      window.location.search =
-        "?text=test&url=data:text/html,<script>alert('xss')</script>";
+      setLocationSearch(
+        "?text=test&url=data:text/html,<script>alert('xss')</script>"
+      );
 
       renderComponent();
 
@@ -300,8 +314,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should accept valid http and https URLs", async () => {
-      window.location.search =
-        "?text=test&url=https://example.com/path?query=1";
+      setLocationSearch("?text=test&url=https://example.com/path?query=1");
 
       renderComponent();
 

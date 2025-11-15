@@ -168,12 +168,13 @@ export function ShareTarget() {
         }
       }
 
-      // Only set shared data if we have something
+      // Only set shared data if we have something (including errors)
       const hasContent =
         (title && title !== "") ||
         (text && text !== "") ||
         (urlParam && urlParam !== "") ||
-        files.length > 0;
+        files.length > 0 ||
+        newErrors.length > 0;
 
       if (hasContent) {
         setSharedData({

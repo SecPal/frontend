@@ -180,12 +180,6 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./tests/setup.ts",
-      pool: "forks",
-      poolOptions: {
-        forks: {
-          singleFork: true,
-        },
-      },
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html", "lcov", "clover"],
