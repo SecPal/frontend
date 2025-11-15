@@ -407,6 +407,24 @@ describe("ShareTarget Component", () => {
     });
   });
 
+  describe("URL Cleanup", () => {
+    it("should clean up URL parameters after mounting", () => {
+      setLocationSearch("?title=Test&text=Hello");
+
+      const replaceStateSpy = vi.fn();
+      Object.defineProperty(window, "history", {
+        value: { replaceState: replaceStateSpy },
+        writable: true,
+        configurable: true,
+      });
+
+      renderComponent();
+
+      // useEffect runs synchronously in tests
+      expect(replaceStateSpy).toHaveBeenCalledWith({}, "", "/");
+    });
+  });
+
   describe("Service Worker Integration", () => {
     // Skip - Service Worker requires complex setup with global.navigator mocking
     // These are tested manually via PWA_PHASE3_TESTING.md
