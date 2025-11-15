@@ -408,9 +408,20 @@ describe("ShareTarget Component", () => {
   });
 
   describe("Service Worker Integration", () => {
-    // Skip these tests - Service Worker integration requires complex mocking
-    // These scenarios are covered by manual testing in PWA_PHASE3_TESTING.md
+    // Skip - Service Worker requires complex setup with global.navigator mocking
+    // These are tested manually via PWA_PHASE3_TESTING.md
     it.skip("should handle SHARE_TARGET_FILES message from Service Worker", async () => {
+      const listeners: ((event: MessageEvent) => void)[] = [];
+      vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
+        (
+          type: string,
+          listener: ((event: MessageEvent) => void) | EventListener
+        ) => {
+          if (type === "message")
+            listeners.push(listener as (event: MessageEvent) => void);
+        }
+      );
+
       renderComponent();
 
       const mockFiles = [
@@ -418,16 +429,15 @@ describe("ShareTarget Component", () => {
       ];
 
       // Simulate Service Worker message
-      const messageEvent = new MessageEvent("message", {
+      const messageEvent = {
         data: {
           type: "SHARE_TARGET_FILES",
           files: mockFiles,
         },
-      });
+      } as MessageEvent;
 
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.dispatchEvent(messageEvent);
-      }
+      // Trigger all registered message listeners
+      listeners.forEach((listener) => listener(messageEvent));
 
       await waitFor(() => {
         expect(screen.getByText(/sw-file\.pdf/i)).toBeInTheDocument();
@@ -436,45 +446,61 @@ describe("ShareTarget Component", () => {
 
     it.skip("should ignore SHARE_TARGET_FILES with mismatched shareId", async () => {
       setLocationSearch("?title=Test&share_id=123");
-      renderComponent();
 
+      const listeners: ((event: MessageEvent) => void)[] = [];
+      vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
+        (
+          type: string,
+          listener: ((event: MessageEvent) => void) | EventListener
+        ) => {
+          if (type === "message")
+            listeners.push(listener as (event: MessageEvent) => void);
+        }
+      );
+
+      renderComponent();
       const mockFiles = [
         { name: "ignored.pdf", type: "application/pdf", size: 1000 },
       ];
 
       // Simulate Service Worker message with different shareId
-      const messageEvent = new MessageEvent("message", {
+      const messageEvent = {
         data: {
           type: "SHARE_TARGET_FILES",
           shareId: "999", // Different from URL param
           files: mockFiles,
         },
-      });
+      } as MessageEvent;
 
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.dispatchEvent(messageEvent);
-      }
+      listeners.forEach((listener) => listener(messageEvent));
 
-      await waitFor(() => {
-        // File should NOT appear because shareId mismatch
-        expect(screen.queryByText(/ignored\.pdf/i)).not.toBeInTheDocument();
-      });
+      // Wait a bit to ensure no file appears
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(screen.queryByText(/ignored\.pdf/i)).not.toBeInTheDocument();
     });
 
     it.skip("should handle SHARE_TARGET_ERROR message from Service Worker", async () => {
+      const listeners: ((event: MessageEvent) => void)[] = [];
+      vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
+        (
+          type: string,
+          listener: ((event: MessageEvent) => void) | EventListener
+        ) => {
+          if (type === "message")
+            listeners.push(listener as (event: MessageEvent) => void);
+        }
+      );
+
       renderComponent();
 
-      // Simulate Service Worker error message
-      const messageEvent = new MessageEvent("message", {
+      const errorEvent = {
         data: {
           type: "SHARE_TARGET_ERROR",
           error: "Service Worker processing failed",
         },
-      });
+      } as MessageEvent;
 
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.dispatchEvent(messageEvent);
-      }
+      listeners.forEach((listener) => listener(errorEvent));
 
       await waitFor(() => {
         expect(
