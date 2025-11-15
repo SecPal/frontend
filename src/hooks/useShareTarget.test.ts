@@ -509,7 +509,6 @@ describe("useShareTarget", () => {
     });
 
     it("should not crash when history.replaceState is undefined", async () => {
-      // @ts-expect-error - Testing edge case
       vi.stubGlobal("history", {});
 
       // @ts-expect-error - Mocking location for tests
@@ -602,9 +601,9 @@ describe("useShareTarget", () => {
         .mockImplementation(() => {});
 
       // Mock URL constructor to throw error
-      const OriginalURL = global.URL;
+      const OriginalURL = globalThis.URL;
       // @ts-expect-error - Mocking for error testing
-      global.URL = class extends OriginalURL {
+      globalThis.URL = class extends OriginalURL {
         constructor(url: string) {
           if (url.includes("invalid-url-format")) {
             throw new Error("Invalid URL");
@@ -631,7 +630,7 @@ describe("useShareTarget", () => {
         );
       });
 
-      global.URL = OriginalURL;
+      globalThis.URL = OriginalURL;
       consoleErrorSpy.mockRestore();
     });
   });
