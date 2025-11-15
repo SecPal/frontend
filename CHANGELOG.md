@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Code Coverage Integration** (#137)
+  - Integrated Codecov for automated coverage tracking
+  - Vitest now generates LCOV and Clover coverage reports
+  - CI pipeline uploads coverage to Codecov dashboard
+  - Added coverage badge to README.md
+  - Coverage configuration in `vite.config.ts` with v8 provider
+  - Supports organization-wide 80% coverage threshold
+
 - **Git Conflict Marker Detection**: Automated check for unresolved merge conflicts
   - `scripts/check-conflict-markers.sh` - Scans all tracked files for conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`, `|||||||`)
   - `.github/workflows/check-conflict-markers.yml` - CI integration (runs on all PRs and pushes to main)

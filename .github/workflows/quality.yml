@@ -45,7 +45,30 @@ jobs:
 
   vitest:
     name: Vitest Tests
-    uses: SecPal/.github/.github/workflows/reusable-node-test.yml@main
-    with:
-      node-version: "20"
-      test-command: "npm test"
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info,./coverage/clover.xml
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: true
