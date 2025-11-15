@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Share Target POST Method \u0026 File Sharing** (#101)
+- **Share Target POST Method & File Sharing** (#101)
   - Extended Share Target API to support POST method with file uploads
   - Created `ShareTarget` page component with file preview and validation
   - Extended `useShareTarget` hook to handle files from sessionStorage

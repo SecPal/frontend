@@ -28,8 +28,6 @@ const ALLOWED_TYPES = [
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ".doc",
-  ".docx",
 ];
 
 /**
@@ -62,7 +60,8 @@ function isFileTypeAllowed(fileType: string): boolean {
       const prefix = allowed.slice(0, -2);
       return fileType.startsWith(prefix);
     }
-    return fileType === allowed || fileType.includes(allowed.slice(1));
+    // Only exact MIME type matches for non-wildcard entries
+    return fileType === allowed;
   });
 }
 
@@ -107,18 +106,105 @@ function sanitizeUrl(url: string | undefined): string | null {
 export function ShareTarget() {
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [shareId, setShareId] = useState<string | null>(null);
+
+  // Move loadSharedData out so it can be referenced without stale closures
+  const loadSharedData = () => {
+    const url = new URL(window.location.href);
+    const newErrors: string[] = [];
+
+    // Parse text data from URL parameters (GET method)
+    const title = url.searchParams.get("title");
+    const text = url.searchParams.get("text");
+    const urlParam = url.searchParams.get("url");
+    const incomingShareId = url.searchParams.get("share_id");
+
+    if (incomingShareId) setShareId(incomingShareId);
+
+    // Parse files from sessionStorage (set by Service Worker)
+    const filesJson = sessionStorage.getItem("share-target-files");
+    let files: SharedFile[] = [];
+
+    if (filesJson) {
+      try {
+        const parsedFiles = JSON.parse(filesJson) as SharedFile[];
+
+        // Validate each file
+        files = parsedFiles.filter((file) => {
+          if (!isFileTypeAllowed(file.type)) {
+            newErrors.push(
+              `Invalid file type: ${file.name} (${file.type}) is not supported`
+            );
+            return false;
+          }
+
+          if (file.size > MAX_FILE_SIZE) {
+            newErrors.push(
+              `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
+            );
+            return false;
+          }
+
+          return true;
+        });
+      } catch (error) {
+        console.error("Failed to parse shared files:", error);
+        newErrors.push("Failed to load shared files");
+      }
+    }
+
+    // Only set shared data if we have something (including errors)
+    const hasContent =
+      (title && title !== "") ||
+      (text && text !== "") ||
+      (urlParam && urlParam !== "") ||
+      files.length > 0 ||
+      newErrors.length > 0;
+
+    if (hasContent) {
+      setSharedData({
+        title: title || undefined,
+        text: text || undefined,
+        url: urlParam || undefined,
+        files: files.length > 0 ? files : undefined,
+      });
+
+      // Clean up URL parameters only after successful processing
+      if (window.history?.replaceState && url.searchParams.size > 0) {
+        window.history.replaceState({}, "", "/");
+      }
+    }
+
+    setErrors(newErrors);
+  };
 
   useEffect(() => {
     // Listen for messages from Service Worker (POST file sharing)
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "SHARE_TARGET_FILES") {
+        // Only accept messages that match current/shareId if present
+        if (event.data.shareId && shareId && event.data.shareId !== shareId) {
+          // ignore mismatched share sessions
+        }
+
         // Store files in sessionStorage so they persist across reloads
         sessionStorage.setItem(
           "share-target-files",
           JSON.stringify(event.data.files)
         );
+
         // Trigger reload of shared data
         loadSharedData();
+      }
+
+      if (event.data && event.data.type === "SHARE_TARGET_ERROR") {
+        // If we receive an error from SW, show it
+        if (
+          !event.data.shareId ||
+          (shareId && event.data.shareId === shareId)
+        ) {
+          setErrors((prev) => [...prev, event.data.error || "Unknown error"]);
+        }
       }
     };
 
@@ -127,72 +213,7 @@ export function ShareTarget() {
       handleServiceWorkerMessage
     );
 
-    const loadSharedData = () => {
-      const url = new URL(window.location.href);
-      const newErrors: string[] = [];
-
-      // Parse text data from URL parameters (GET method)
-      const title = url.searchParams.get("title");
-      const text = url.searchParams.get("text");
-      const urlParam = url.searchParams.get("url");
-
-      // Parse files from sessionStorage (set by Service Worker)
-      const filesJson = sessionStorage.getItem("share-target-files");
-      let files: SharedFile[] = [];
-
-      if (filesJson) {
-        try {
-          const parsedFiles = JSON.parse(filesJson) as SharedFile[];
-
-          // Validate each file
-          files = parsedFiles.filter((file) => {
-            if (!isFileTypeAllowed(file.type)) {
-              newErrors.push(
-                `Invalid file type: ${file.name} (${file.type}) is not supported`
-              );
-              return false;
-            }
-
-            if (file.size > MAX_FILE_SIZE) {
-              newErrors.push(
-                `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
-              );
-              return false;
-            }
-
-            return true;
-          });
-        } catch (error) {
-          console.error("Failed to parse shared files:", error);
-          newErrors.push("Failed to load shared files");
-        }
-      }
-
-      // Only set shared data if we have something (including errors)
-      const hasContent =
-        (title && title !== "") ||
-        (text && text !== "") ||
-        (urlParam && urlParam !== "") ||
-        files.length > 0 ||
-        newErrors.length > 0;
-
-      if (hasContent) {
-        setSharedData({
-          title: title || undefined,
-          text: text || undefined,
-          url: urlParam || undefined,
-          files: files.length > 0 ? files : undefined,
-        });
-      }
-
-      setErrors(newErrors);
-
-      // Clean up URL parameters
-      if (window.history?.replaceState && url.searchParams.size > 0) {
-        window.history.replaceState({}, "", "/");
-      }
-    };
-
+    // Initial load
     loadSharedData();
 
     // Clean up event listener on unmount
@@ -202,7 +223,7 @@ export function ShareTarget() {
         handleServiceWorkerMessage
       );
     };
-  }, []);
+  }, [shareId]);
 
   const handleClear = () => {
     setSharedData(null);
@@ -242,7 +263,10 @@ export function ShareTarget() {
           </Text>
           <ul className="list-disc list-inside space-y-1">
             {errors.map((error, index) => (
-              <li key={index} className="text-red-700 text-sm">
+              <li
+                key={`error-${index}-${error.slice(0, 20)}`}
+                className="text-red-700 text-sm"
+              >
                 {error}
               </li>
             ))}
@@ -317,7 +341,7 @@ export function ShareTarget() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {sharedData.files.map((file, index) => (
               <div
-                key={index}
+                key={`${file.name}-${file.size}-${index}`}
                 className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
               >
                 {/* Image preview */}

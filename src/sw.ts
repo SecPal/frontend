@@ -60,7 +60,19 @@ self.addEventListener("fetch", (event: FetchEvent) => {
  * Extracts FormData, converts files to Base64, stores in sessionStorage,
  * and redirects to /share route with URL parameters
  */
+// File validation constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  "image/",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats",
+];
+
 async function handleShareTargetPost(request: Request): Promise<Response> {
+  // Use a shareId to correlate messages and redirects across navigation
+  const shareId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
   try {
     const formData = await request.clone().formData();
 
@@ -69,15 +81,32 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     const text = formData.get("text") as string | null;
     const url = formData.get("url") as string | null;
 
-    // Extract files
-    const files = formData.getAll("files") as File[];
+    // Extract and validate files before heavy processing
+    const rawFiles = formData.getAll("files") as File[];
+    const allowedFiles = rawFiles.filter((file) => {
+      // Validate file type (prefix match for image/ and explicit prefixes for others)
+      if (!ALLOWED_TYPES.some((t) => file.type.startsWith(t))) {
+        // reject unsupported types
+        return false;
+      }
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        return false;
+      }
+      return true;
+    });
+
     const processedFiles = await Promise.all(
-      files.map(async (file) => {
-        // Convert file to Base64 for preview (only for images, limited size)
+      allowedFiles.map(async (file) => {
+        // Convert file to Base64 for preview only for images and limited size
         let dataUrl: string | undefined;
         if (file.type.startsWith("image/") && file.size < 5 * 1024 * 1024) {
-          // Only process images < 5MB
-          dataUrl = await fileToBase64(file);
+          try {
+            dataUrl = await fileToBase64(file);
+          } catch (e) {
+            // If conversion fails, omit preview but keep metadata
+            dataUrl = undefined;
+          }
         }
 
         return {
@@ -89,14 +118,14 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
       })
     );
 
-    // Build redirect URL with query parameters
+    // Build redirect URL with query parameters and shareId
     const redirectUrl = new URL("/share", self.location.origin);
     if (title) redirectUrl.searchParams.set("title", title);
     if (text) redirectUrl.searchParams.set("text", text);
     if (url) redirectUrl.searchParams.set("url", url);
+    redirectUrl.searchParams.set("share_id", shareId);
 
-    // Store files data in a way the client can access it
-    // We'll use a broadcast message since Service Workers can't directly write to sessionStorage
+    // Notify existing clients with processed files and shareId
     const clients = await self.clients.matchAll({
       type: "window",
       includeUncontrolled: true,
@@ -105,6 +134,7 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     for (const client of clients) {
       client.postMessage({
         type: "SHARE_TARGET_FILES",
+        shareId,
         files: processedFiles,
       });
     }
@@ -114,8 +144,30 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
   } catch (error) {
     console.error("Error processing share target:", error);
 
-    // Fallback: redirect to /share without files
-    return Response.redirect(`${self.location.origin}/share`, 303);
+    // Notify clients about the error so UI can display it
+    try {
+      const clients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clients) {
+        client.postMessage({
+          type: "SHARE_TARGET_ERROR",
+          shareId,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unknown error processing shared content",
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return Response.redirect(
+      `${self.location.origin}/share?share_id=${shareId}`,
+      303
+    );
   }
 }
 

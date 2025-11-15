@@ -202,8 +202,15 @@ describe("ShareTarget Component", () => {
 
       renderComponent();
 
+      const user = (
+        await import("@testing-library/user-event")
+      ).default.setup();
       const clearButton = await screen.findByRole("button", { name: /clear/i });
-      clearButton.click();
+      await user.click(clearButton);
+
+      // Debug: log html to help diagnose failure
+      // eslint-disable-next-line no-console
+      console.log(document.body.innerHTML);
 
       await waitFor(() => {
         expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
