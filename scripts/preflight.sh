@@ -148,7 +148,7 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   # Only run npm ci if node_modules is missing or package-lock.json is newer
-  if [ ! -d node_modules ] || [ package-lock.json -nt node_modules ]; then
+  if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
     npm ci
   else
     echo "Dependencies up to date, skipping npm ci"
