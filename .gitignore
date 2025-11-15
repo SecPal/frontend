@@ -57,5 +57,11 @@ lerna-debug.log*
 *.temp
 .cache/
 
+# Tool caches
+.eslintcache
+.prettiercache
+*.tsbuildinfo
+node_modules/.cache/
+
 # Storybook
 storybook-static/
