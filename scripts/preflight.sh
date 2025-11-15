@@ -158,10 +158,27 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   npm run --if-present typecheck
 
   # Run only tests related to changed files for faster feedback
+  # Use timeout to prevent hanging tests (max 5 minutes)
   if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
-    npm run --if-present test:related
+    timeout 300 npm run --if-present test:related || {
+      EXIT_CODE=$?
+      if [ $EXIT_CODE -eq 124 ]; then
+        echo "❌ Tests timed out after 5 minutes" >&2
+        exit 1
+      else
+        exit $EXIT_CODE
+      fi
+    }
   elif [ -z "$CHANGED_FILES" ]; then
-    npm run --if-present test:run
+    timeout 300 npm run --if-present test:run || {
+      EXIT_CODE=$?
+      if [ $EXIT_CODE -eq 124 ]; then
+        echo "❌ Tests timed out after 5 minutes" >&2
+        exit 1
+      else
+        exit $EXIT_CODE
+      fi
+    }
   else
     echo "No source files changed, skipping tests"
   fi

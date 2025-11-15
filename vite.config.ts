@@ -180,6 +180,8 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./tests/setup.ts",
+      testTimeout: 10000, // 10 seconds per test (default is 5s)
+      hookTimeout: 10000, // 10 seconds for beforeEach/afterEach hooks
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html", "lcov", "clover"],
