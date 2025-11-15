@@ -1,0 +1,280 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { useEffect, useState } from "react";
+import { Trans } from "@lingui/macro";
+import { Heading } from "../components/heading";
+import { Text } from "../components/text";
+import { Button } from "../components/button";
+import { Badge } from "../components/badge";
+
+interface SharedFile {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl?: string;
+}
+
+interface SharedData {
+  title?: string;
+  text?: string;
+  url?: string;
+  files?: SharedFile[];
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_TYPES = [
+  "image/*",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".doc",
+  ".docx",
+];
+
+function isFileTypeAllowed(fileType: string): boolean {
+  return ALLOWED_TYPES.some((allowed) => {
+    if (allowed.endsWith("/*")) {
+      const prefix = allowed.slice(0, -2);
+      return fileType.startsWith(prefix);
+    }
+    return fileType === allowed || fileType.includes(allowed.slice(1));
+  });
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function ShareTarget() {
+  const [sharedData, setSharedData] = useState<SharedData | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Listen for messages from Service Worker (POST file sharing)
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === "SHARE_TARGET_FILES") {
+        // Store files in sessionStorage so they persist across reloads
+        sessionStorage.setItem(
+          "share-target-files",
+          JSON.stringify(event.data.files)
+        );
+        // Trigger reload of shared data
+        loadSharedData();
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener(
+      "message",
+      handleServiceWorkerMessage
+    );
+
+    const loadSharedData = () => {
+      const url = new URL(window.location.href);
+      const newErrors: string[] = [];
+
+      // Parse text data from URL parameters (GET method)
+      const title = url.searchParams.get("title");
+      const text = url.searchParams.get("text");
+      const urlParam = url.searchParams.get("url");
+
+      // Parse files from sessionStorage (set by Service Worker)
+      const filesJson = sessionStorage.getItem("share-target-files");
+      let files: SharedFile[] = [];
+
+      if (filesJson) {
+        try {
+          const parsedFiles = JSON.parse(filesJson) as SharedFile[];
+
+          // Validate each file
+          files = parsedFiles.filter((file) => {
+            if (!isFileTypeAllowed(file.type)) {
+              newErrors.push(
+                `Invalid file type: ${file.name} (${file.type}) is not supported`
+              );
+              return false;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+              newErrors.push(
+                `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
+              );
+              return false;
+            }
+
+            return true;
+          });
+        } catch (error) {
+          console.error("Failed to parse shared files:", error);
+          newErrors.push("Failed to load shared files");
+        }
+      }
+
+      // Only set shared data if we have something
+      const hasContent =
+        (title && title !== "") ||
+        (text && text !== "") ||
+        (urlParam && urlParam !== "") ||
+        files.length > 0;
+
+      if (hasContent) {
+        setSharedData({
+          title: title || undefined,
+          text: text || undefined,
+          url: urlParam || undefined,
+          files: files.length > 0 ? files : undefined,
+        });
+      }
+
+      setErrors(newErrors);
+
+      // Clean up URL parameters
+      if (window.history?.replaceState && url.searchParams.size > 0) {
+        window.history.replaceState({}, "", "/");
+      }
+    };
+
+    loadSharedData();
+
+    // Clean up event listener on unmount
+    return () => {
+      navigator.serviceWorker?.removeEventListener(
+        "message",
+        handleServiceWorkerMessage
+      );
+    };
+  }, []);
+
+  const handleClear = () => {
+    setSharedData(null);
+    setErrors([]);
+    sessionStorage.removeItem("share-target-files");
+  };
+
+  if (!sharedData) {
+    return (
+      <div className="p-8">
+        <Heading>
+          <Trans>Share Target</Trans>
+        </Heading>
+        <Text className="mt-4">
+          <Trans>No content shared</Trans>
+        </Text>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <Heading>
+          <Trans>Shared Content</Trans>
+        </Heading>
+        <Button onClick={handleClear} outline>
+          <Trans>Clear</Trans>
+        </Button>
+      </div>
+
+      {/* Display errors */}
+      {errors.length > 0 && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <Text className="font-semibold text-red-900 mb-2">
+            <Trans>Errors:</Trans>
+          </Text>
+          <ul className="list-disc list-inside space-y-1">
+            {errors.map((error, index) => (
+              <li key={index} className="text-red-700 text-sm">
+                {error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Display text content */}
+      {(sharedData.title || sharedData.text || sharedData.url) && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          {sharedData.title && (
+            <div className="mb-2">
+              <Text className="font-semibold text-gray-700">
+                <Trans>Title:</Trans>
+              </Text>
+              <Text className="text-gray-900">{sharedData.title}</Text>
+            </div>
+          )}
+
+          {sharedData.text && (
+            <div className="mb-2">
+              <Text className="font-semibold text-gray-700">
+                <Trans>Text:</Trans>
+              </Text>
+              <Text className="text-gray-900 whitespace-pre-wrap">
+                {sharedData.text}
+              </Text>
+            </div>
+          )}
+
+          {sharedData.url && (
+            <div className="mb-2">
+              <Text className="font-semibold text-gray-700">
+                <Trans>URL:</Trans>
+              </Text>
+              <a
+                href={sharedData.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline break-all"
+              >
+                {sharedData.url}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Display shared files */}
+      {sharedData.files && sharedData.files.length > 0 && (
+        <div>
+          <Heading level={2} className="mb-4">
+            <Trans>Attached Files</Trans> ({sharedData.files.length})
+          </Heading>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {sharedData.files.map((file, index) => (
+              <div
+                key={index}
+                className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+              >
+                {/* Image preview */}
+                {file.dataUrl && file.type.startsWith("image/") && (
+                  <img
+                    src={file.dataUrl}
+                    alt={file.name}
+                    className="w-full h-48 object-cover rounded mb-3"
+                  />
+                )}
+
+                {/* File info */}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <Text className="font-medium text-gray-900 truncate">
+                      {file.name}
+                    </Text>
+                    <Text className="text-sm text-gray-500">
+                      {formatFileSize(file.size)}
+                    </Text>
+                  </div>
+                  <Badge color="zinc" className="ml-2">
+                    {file.type.split("/")[1]?.toUpperCase() || "FILE"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

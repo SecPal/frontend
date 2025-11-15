@@ -5,14 +5,19 @@ import { useState, useEffect } from "react";
 
 /**
  * Data structure for shared content received via Share Target API
- * Note: File sharing is not yet implemented. The hook currently only handles
- * text-based sharing (title, text, url). File support planned for Issue #101.
  */
 export interface SharedData {
   title?: string;
   text?: string;
   url?: string;
-  // files?: File[]; // Planned for future implementation (Issue #101)
+  files?: SharedFile[];
+}
+
+export interface SharedFile {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl?: string; // Base64 data URL for image previews
 }
 
 interface UseShareTargetReturn {
@@ -55,15 +60,24 @@ export function useShareTarget(): UseShareTargetReturn {
           const text = url.searchParams.get("text");
           const urlParam = url.searchParams.get("url");
 
+          // Parse files from sessionStorage (set by Service Worker for POST requests)
+          const filesJson = sessionStorage.getItem("share-target-files");
+          let files: SharedFile[] | undefined;
+
+          if (filesJson) {
+            try {
+              files = JSON.parse(filesJson) as SharedFile[];
+            } catch (error) {
+              console.error("Failed to parse shared files:", error);
+            }
+          }
+
           const data: SharedData = {
             title: title !== null && title !== "" ? title : undefined,
             text: text !== null && text !== "" ? text : undefined,
             url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
+            files,
           };
-
-          // Handle files from POST request (if available)
-          // Note: Files are typically handled via formData in the Service Worker
-          // This is a simplified client-side version for GET-based sharing
 
           setSharedData(data);
 
@@ -97,6 +111,8 @@ export function useShareTarget(): UseShareTargetReturn {
 
   const clearSharedData = () => {
     setSharedData(null);
+    // Also clear files from sessionStorage
+    sessionStorage.removeItem("share-target-files");
   };
 
   return {
