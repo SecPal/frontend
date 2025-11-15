@@ -51,6 +51,7 @@ CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-onl
 FORMAT_EXIT=0
 if command -v npx >/dev/null 2>&1; then
   npx --yes prettier --check --cache '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}' || FORMAT_EXIT=1
+<<<<<<< HEAD
 
   # Only run markdownlint if .md files changed
   if echo "$CHANGED_FILES" | grep -q '\.md$'; then
@@ -58,6 +59,9 @@ if command -v npx >/dev/null 2>&1; then
   else
     echo "ℹ️  No markdown files changed, skipping markdownlint"
   fi
+=======
+  npx --yes markdownlint-cli2 '**/*.md' '#node_modules' '#vendor' '#storage' '#build' || FORMAT_EXIT=1
+>>>>>>> 7d9577a (perf(tests): optimize preflight script for faster development)
 fi
 # Workflow linting (part of documented gates)
 # NOTE: actionlint is disabled in local preflight due to known hanging issues
@@ -137,34 +141,31 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   # Check if scripts exist before running (pnpm run <script> exits 0 with --if-present)
   pnpm run --if-present lint
   pnpm run --if-present typecheck
-  pnpm run --if-present test
+
+  # Run only tests related to changed files for faster feedback
+  CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
+  if [ -n "$CHANGED_FILES" ]; then
+    echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' >/dev/null && pnpm run --if-present test:related || echo "No test files changed, skipping tests"
+  else
+    pnpm run --if-present test
+  fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
-<<<<<<< HEAD
-  npm ci
-  npm run --if-present lint
-  npm run --if-present typecheck
-  npm run --if-present test
-=======
   # Only run npm ci if node_modules is missing or package-lock.json is newer
   if [ ! -d node_modules ] || [ package-lock.json -nt node_modules ]; then
     npm ci
   else
     echo "Dependencies up to date, skipping npm ci"
   fi
-
-  # Run checks sequentially (parallel execution causes terminal issues)
   npm run --if-present lint
   npm run --if-present typecheck
 
-  # Run tests based on changed files
-  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
-    npm run --if-present test:related
-  elif [ -z "$CHANGED_FILES" ]; then
-    npm run --if-present test:run
+  # Run only tests related to changed files for faster feedback
+  CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
+  if [ -n "$CHANGED_FILES" ]; then
+    echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' >/dev/null && npm run --if-present test:related || echo "No source files changed, skipping tests"
   else
-    echo "No source files changed, skipping tests"
+    npm run --if-present test:run
   fi
->>>>>>> afb462d (perf(preflight): add conditional checks for faster execution)
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
