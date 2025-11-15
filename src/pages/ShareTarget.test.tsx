@@ -98,6 +98,93 @@ describe("ShareTarget Component", () => {
       });
     });
 
+    it("should handle invalid JSON in sessionStorage gracefully", () => {
+      sessionStorage.setItem("share-target-files", "not valid json{");
+
+      renderComponent();
+
+      // Component should still render without crashing
+      expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
+    });
+
+    it("should handle non-array JSON in sessionStorage", () => {
+      sessionStorage.setItem(
+        "share-target-files",
+        JSON.stringify({ notAnArray: true })
+      );
+
+      renderComponent();
+
+      // Should show error message
+      expect(screen.getByText(/Invalid files format/i)).toBeInTheDocument();
+      expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
+    });
+
+    it("should filter out files with missing required properties", () => {
+      sessionStorage.setItem(
+        "share-target-files",
+        JSON.stringify([
+          { name: "valid.pdf", type: "application/pdf", size: 1000 },
+          { name: "missing-type.pdf", size: 1000 }, // Missing 'type'
+          { type: "application/pdf", size: 1000 }, // Missing 'name'
+          { name: "missing-size.pdf", type: "application/pdf" }, // Missing 'size'
+        ])
+      );
+
+      renderComponent();
+
+      // Only valid file should be displayed
+      expect(screen.getByText(/valid\.pdf/)).toBeInTheDocument();
+      expect(screen.queryByText(/missing-type\.pdf/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/missing-size\.pdf/)).not.toBeInTheDocument();
+    });
+
+    it("should validate dataUrl property if present", () => {
+      sessionStorage.setItem(
+        "share-target-files",
+        JSON.stringify([
+          {
+            name: "valid.jpg",
+            type: "image/jpeg",
+            size: 1000,
+            dataUrl: "data:image/jpeg;base64,abc123", // Valid string
+          },
+          {
+            name: "invalid.jpg",
+            type: "image/jpeg",
+            size: 1000,
+            dataUrl: 12345, // Invalid: not a string
+          },
+        ])
+      );
+
+      renderComponent();
+
+      // Only file with valid dataUrl should be shown
+      expect(screen.getByText(/valid\.jpg/)).toBeInTheDocument();
+      expect(screen.queryByText(/invalid\.jpg/)).not.toBeInTheDocument();
+    });
+
+    it("should show error for invalid file data structure", () => {
+      sessionStorage.setItem(
+        "share-target-files",
+        JSON.stringify([
+          "not an object", // Invalid: should be object
+          null, // Invalid: null
+          { name: "test.pdf", type: "application/pdf", size: 1000 }, // Valid
+        ])
+      );
+
+      renderComponent();
+
+      // Should show error for invalid structure
+      expect(
+        screen.getByText(/Invalid file data structure/i)
+      ).toBeInTheDocument();
+      // But valid file should still work
+      expect(screen.getByText(/test\.pdf/)).toBeInTheDocument();
+    });
+
     it("should validate file types (accept images, PDFs, docs)", async () => {
       const validFile = new File(["content"], "document.pdf", {
         type: "application/pdf",
