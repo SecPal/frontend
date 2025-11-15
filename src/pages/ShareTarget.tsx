@@ -48,6 +48,27 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/**
+ * Validates and sanitizes URLs to prevent XSS and open redirect attacks.
+ * Only allows http and https protocols.
+ * @returns The sanitized URL or null if invalid
+ */
+function sanitizeUrl(url: string | undefined): string | null {
+  if (!url || url.trim() === "") return null;
+
+  try {
+    const parsed = new URL(url);
+    // Only allow http and https protocols to prevent javascript:, data:, etc.
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    // Invalid URL format
+    return null;
+  }
+}
+
 export function ShareTarget() {
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -216,21 +237,36 @@ export function ShareTarget() {
             </div>
           )}
 
-          {sharedData.url && (
-            <div className="mb-2">
-              <Text className="font-semibold text-gray-700">
-                <Trans>URL:</Trans>
-              </Text>
-              <a
-                href={sharedData.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
-              >
-                {sharedData.url}
-              </a>
-            </div>
-          )}
+          {sharedData.url && (() => {
+            const sanitizedUrl = sanitizeUrl(sharedData.url);
+            if (!sanitizedUrl) {
+              return (
+                <div className="mb-2">
+                  <Text className="font-semibold text-gray-700">
+                    <Trans>URL:</Trans>
+                  </Text>
+                  <Text className="text-red-600 text-sm">
+                    <Trans>Invalid or unsafe URL</Trans>
+                  </Text>
+                </div>
+              );
+            }
+            return (
+              <div className="mb-2">
+                <Text className="font-semibold text-gray-700">
+                  <Trans>URL:</Trans>
+                </Text>
+                <a
+                  href={sanitizedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline break-all"
+                >
+                  {sanitizedUrl}
+                </a>
+              </div>
+            );
+          })()}
         </div>
       )}
 
