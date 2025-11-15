@@ -186,7 +186,7 @@ export default defineConfig(({ mode }) => {
       },
       coverage: {
         provider: "v8",
-        reporter: ["text", "json", "html"],
+        reporter: ["text", "json", "html", "lcov", "clover"],
         exclude: [
           "node_modules/",
           "tests/",
@@ -194,6 +194,7 @@ export default defineConfig(({ mode }) => {
           "**/*.d.ts",
           "**/index.ts",
         ],
+        reportsDirectory: "./coverage",
       },
     },
   };
