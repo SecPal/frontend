@@ -120,7 +120,7 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   npm ci
   npm run --if-present lint
   npm run --if-present typecheck
-  npm run --if-present test
+  npm run --if-present test:run
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
