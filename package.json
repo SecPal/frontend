@@ -39,7 +39,7 @@
     "test:related": "vitest related --run --bail=1",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "format": "prettier --write '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
+    "format": "prettier --write --cache '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",
     "lingui:compile": "lingui compile --namespace es",

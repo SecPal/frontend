@@ -139,11 +139,12 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   pnpm run --if-present typecheck
 
   # Run only tests related to changed files for faster feedback
-  CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
-  if [ -n "$CHANGED_FILES" ]; then
-    echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' >/dev/null && pnpm run --if-present test:related || echo "No test files changed, skipping tests"
+  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
+    pnpm run --if-present test:related
+  elif [ -z "$CHANGED_FILES" ]; then
+    pnpm run --if-present test:run
   else
-    pnpm run --if-present test
+    echo "No source files changed, skipping tests"
   fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   # Only run npm ci if node_modules is missing or package-lock.json is newer
@@ -152,30 +153,17 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   else
     echo "Dependencies up to date, skipping npm ci"
   fi
-<<<<<<< HEAD
+
   npm run --if-present lint
   npm run --if-present typecheck
 
   # Run only tests related to changed files for faster feedback
-  CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
-  if [ -n "$CHANGED_FILES" ]; then
-    echo "$CHANGED_FILES" | grep -E '\.(ts|tsx|js|jsx)$' >/dev/null && npm run --if-present test:related || echo "No source files changed, skipping tests"
-  else
-    npm run --if-present test:run
-=======
-
-  # Run checks sequentially (parallel execution causes terminal issues)
-  npm run --if-present lint
-  npm run --if-present typecheck
-
-  # Run tests based on changed files
   if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
     npm run --if-present test:related
   elif [ -z "$CHANGED_FILES" ]; then
     npm run --if-present test:run
   else
     echo "No source files changed, skipping tests"
->>>>>>> f096d8a (feat(tests): add fail-fast mode and optimize preflight performance)
   fi
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile
