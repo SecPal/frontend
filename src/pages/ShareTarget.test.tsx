@@ -519,11 +519,7 @@ describe("ShareTarget Component", () => {
     it.skip("should handle SHARE_TARGET_FILES message from Service Worker", async () => {
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
-        (
-          type: string,
-          listener: EventListenerOrEventListenerObject,
-          options?: boolean | AddEventListenerOptions
-        ) => {
+        (type: string, listener: EventListenerOrEventListenerObject) => {
           if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
@@ -556,11 +552,7 @@ describe("ShareTarget Component", () => {
 
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
-        (
-          type: string,
-          listener: EventListenerOrEventListenerObject,
-          options?: boolean | AddEventListenerOptions
-        ) => {
+        (type: string, listener: EventListenerOrEventListenerObject) => {
           if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
@@ -590,11 +582,7 @@ describe("ShareTarget Component", () => {
     it.skip("should handle SHARE_TARGET_ERROR message from Service Worker", async () => {
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
-        (
-          type: string,
-          listener: EventListenerOrEventListenerObject,
-          options?: boolean | AddEventListenerOptions
-        ) => {
+        (type: string, listener: EventListenerOrEventListenerObject) => {
           if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
