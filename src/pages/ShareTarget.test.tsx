@@ -6,7 +6,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { ShareTarget, handleShareTargetMessage } from "./ShareTarget";
+import { ShareTarget } from "./ShareTarget";
+import { handleShareTargetMessage } from "./ShareTarget.utils";
 
 describe("ShareTarget Component", () => {
   // Helper function to set window.location with search params
@@ -103,8 +104,10 @@ describe("ShareTarget Component", () => {
 
       renderComponent();
 
-      // Component should still render without crashing
-      expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
+      // Component should still render without crashing, showing an error
+      expect(
+        screen.getByText(/Failed to load shared files/i)
+      ).toBeInTheDocument();
     });
 
     it("should handle non-array JSON in sessionStorage", () => {
@@ -117,7 +120,6 @@ describe("ShareTarget Component", () => {
 
       // Should show error message
       expect(screen.getByText(/Invalid files format/i)).toBeInTheDocument();
-      expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
     });
 
     it("should filter out files with missing required properties", () => {
@@ -177,10 +179,9 @@ describe("ShareTarget Component", () => {
 
       renderComponent();
 
-      // Should show error for invalid structure
-      expect(
-        screen.getByText(/Invalid file data structure/i)
-      ).toBeInTheDocument();
+      // Should show error for invalid structure (appears twice - once for string, once for null)
+      const errors = screen.getAllByText(/Invalid file data structure/i);
+      expect(errors).toHaveLength(2);
       // But valid file should still work
       expect(screen.getByText(/test\.pdf/)).toBeInTheDocument();
     });

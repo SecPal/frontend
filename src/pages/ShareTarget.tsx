@@ -7,6 +7,7 @@ import { Heading } from "../components/heading";
 import { Text } from "../components/text";
 import { Button } from "../components/button";
 import { Badge } from "../components/badge";
+import { handleShareTargetMessage } from "./ShareTarget.utils";
 
 interface SharedFile {
   name: string;
@@ -95,41 +96,6 @@ function sanitizeUrl(url: string | undefined): string | null {
   } catch {
     // Invalid URL format
     return null;
-  }
-}
-
-/**
- * Handles Service Worker message events for Share Target API
- * Exported for testing purposes
- */
-export function handleShareTargetMessage(
-  event: MessageEvent,
-  shareId: string | null,
-  loadSharedData: () => void,
-  setErrors: (updater: (prev: string[]) => string[]) => void
-): void {
-  if (event.data && event.data.type === "SHARE_TARGET_FILES") {
-    // Only accept messages that match current shareId if present
-    if (event.data.shareId && shareId && event.data.shareId !== shareId) {
-      // ignore mismatched share sessions
-      return;
-    }
-
-    // Store files in sessionStorage so they persist across reloads
-    sessionStorage.setItem(
-      "share-target-files",
-      JSON.stringify(event.data.files)
-    );
-
-    // Trigger reload of shared data
-    loadSharedData();
-  }
-
-  if (event.data && event.data.type === "SHARE_TARGET_ERROR") {
-    // If we receive an error from SW, show it
-    if (!event.data.shareId || (shareId && event.data.shareId === shareId)) {
-      setErrors((prev) => [...prev, event.data.error || "Unknown error"]);
-    }
   }
 }
 
