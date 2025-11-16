@@ -64,6 +64,32 @@ export interface AnalyticsEvent {
 }
 
 /**
+ * File metadata for file queue entries
+ */
+export interface FileMetadata {
+  name: string;
+  type: string;
+  size: number;
+  timestamp: number;
+}
+
+/**
+ * File queue entry for offline file uploads
+ * Stores files in IndexedDB for persistent offline queue
+ */
+export interface FileQueueEntry {
+  id: string; // UUID
+  file: Blob; // Actual file data
+  metadata: FileMetadata;
+  uploadState: "pending" | "uploading" | "failed" | "completed";
+  secretId?: string; // Target Secret (if known)
+  retryCount: number;
+  error?: string;
+  createdAt: Date;
+  lastAttemptAt?: Date;
+}
+
+/**
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
@@ -71,12 +97,14 @@ export interface AnalyticsEvent {
  * - Sync queue (operations to sync when online)
  * - API cache (cached responses for offline access)
  * - Analytics (offline event tracking)
+ * - File queue (offline file upload queue)
  */
 export const db = new Dexie("SecPalDB") as Dexie & {
   guards: EntityTable<Guard, "id">;
   syncQueue: EntityTable<SyncOperation, "id">;
   apiCache: EntityTable<ApiCacheEntry, "url">;
   analytics: EntityTable<AnalyticsEvent, "id">;
+  fileQueue: EntityTable<FileQueueEntry, "id">;
 };
 
 // Schema version 1
@@ -94,4 +122,13 @@ db.version(2).stores({
   syncQueue: "id, status, createdAt, attempts",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
+});
+
+// Schema version 3 - Add fileQueue table
+db.version(3).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: "id, uploadState, createdAt, retryCount",
 });
