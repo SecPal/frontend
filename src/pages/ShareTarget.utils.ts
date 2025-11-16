@@ -13,8 +13,10 @@
 export function handleShareTargetMessage(
   event: MessageEvent,
   shareId: string | null,
-  loadSharedData: () => void,
-  setErrors: (errors: string[] | ((prev: string[]) => string[])) => void
+  loadSharedData: (() => void) | ((...args: unknown[]) => unknown),
+  setErrors:
+    | ((errors: string[] | ((prev: string[]) => string[])) => void)
+    | ((...args: unknown[]) => unknown)
 ): void {
   if (!event.data) return;
 
