@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -660,8 +661,8 @@ describe("ShareTarget Component", () => {
 });
 
 describe("handleShareTargetMessage (unit tests)", () => {
-  let loadSharedDataSpy: vi.Mock<() => void>;
-  let setErrorsSpy: vi.Mock<
+  let loadSharedDataSpy: Mock<() => void>;
+  let setErrorsSpy: Mock<
     (errors: string[] | ((prev: string[]) => string[])) => void
   >;
 
