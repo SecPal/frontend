@@ -514,9 +514,22 @@ describe("ShareTarget Component", () => {
   });
 
   describe("Service Worker Integration", () => {
-    // Skip - Service Worker requires complex setup with global.navigator mocking
-    // These are tested manually via PWA_PHASE3_TESTING.md
-    it.skip("should handle SHARE_TARGET_FILES message from Service Worker", async () => {
+    // Mock navigator.serviceWorker for these tests
+    beforeEach(() => {
+      // Create a simple mock for serviceWorker
+      if (!navigator.serviceWorker) {
+        Object.defineProperty(navigator, "serviceWorker", {
+          value: {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          },
+          configurable: true,
+          writable: true,
+        });
+      }
+    });
+
+    it("should handle SHARE_TARGET_FILES message from Service Worker", async () => {
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (type: string, listener: EventListenerOrEventListenerObject) => {
@@ -547,7 +560,7 @@ describe("ShareTarget Component", () => {
       });
     });
 
-    it.skip("should ignore SHARE_TARGET_FILES with mismatched shareId", async () => {
+    it("should ignore SHARE_TARGET_FILES with mismatched shareId", async () => {
       setLocationSearch("?title=Test&share_id=123");
 
       const listeners: ((event: MessageEvent) => void)[] = [];
@@ -579,7 +592,7 @@ describe("ShareTarget Component", () => {
       expect(screen.queryByText(/ignored\.pdf/i)).not.toBeInTheDocument();
     });
 
-    it.skip("should handle SHARE_TARGET_ERROR message from Service Worker", async () => {
+    it("should handle SHARE_TARGET_ERROR message from Service Worker", async () => {
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (type: string, listener: EventListenerOrEventListenerObject) => {
