@@ -641,13 +641,13 @@ describe("ShareTarget Component", () => {
 });
 
 describe("handleShareTargetMessage (unit tests)", () => {
-  let loadSharedDataSpy: vi.Mock<[], void>;
-  let setErrorsSpy: vi.Mock<[updater: (prev: string[]) => string[]], void>;
+  let loadSharedDataSpy: ReturnType<typeof vi.fn>;
+  let setErrorsSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     sessionStorage.clear();
-    loadSharedDataSpy = vi.fn<[], void>();
-    setErrorsSpy = vi.fn<[updater: (prev: string[]) => string[]], void>();
+    loadSharedDataSpy = vi.fn();
+    setErrorsSpy = vi.fn();
   });
 
   it("should handle SHARE_TARGET_FILES message", () => {
