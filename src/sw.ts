@@ -7,8 +7,18 @@ import { clientsClaim } from "workbox-core";
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, CacheFirst } from "workbox-strategies";
+import { openDB } from "idb";
 
 declare const self: ServiceWorkerGlobalScope;
+
+/**
+ * Background Sync Event interface
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/SyncEvent
+ */
+interface SyncEvent extends ExtendableEvent {
+  readonly tag: string;
+  readonly lastChance: boolean;
+}
 
 // Take control of all pages immediately
 clientsClaim();
@@ -69,6 +79,31 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats",
 ];
 
+/**
+ * Store file in IndexedDB fileQueue
+ * Service Worker cannot import from lib/fileQueue.ts, so we inline the logic
+ */
+async function storeFileInQueue(
+  file: File,
+  metadata: { name: string; type: string; size: number; timestamp: number }
+): Promise<string> {
+  const db = await openDB("SecPalDB", 3);
+  const id = crypto.randomUUID();
+
+  await db.add("fileQueue", {
+    id,
+    file: await file
+      .arrayBuffer()
+      .then((buf) => new Blob([buf], { type: file.type })),
+    metadata,
+    uploadState: "pending",
+    retryCount: 0,
+    createdAt: new Date(),
+  });
+
+  return id;
+}
+
 async function handleShareTargetPost(request: Request): Promise<Response> {
   // Use a shareId to correlate messages and redirects across navigation
   const shareId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -103,8 +138,22 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
       return true;
     });
 
-    const processedFiles = await Promise.all(
+    // Store files in IndexedDB for persistent offline queue
+    const fileIds = await Promise.all(
       allowedFiles.map(async (file) => {
+        const id = await storeFileInQueue(file, {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          timestamp: Date.now(),
+        });
+        return id;
+      })
+    );
+
+    // Generate lightweight file metadata for client notification
+    const processedFiles = await Promise.all(
+      allowedFiles.map(async (file, index) => {
         // Convert file to Base64 for preview only for images and limited size
         // Reduced to 2MB to prevent memory issues (Base64 is ~33% larger)
         let dataUrl: string | undefined;
@@ -118,6 +167,7 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
         }
 
         return {
+          id: fileIds[index],
           name: file.name,
           type: file.type,
           size: file.size,
@@ -133,7 +183,7 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     if (url) redirectUrl.searchParams.set("url", url);
     redirectUrl.searchParams.set("share_id", shareId);
 
-    // Store files in sessionStorage BEFORE notifying clients (race condition fix)
+    // Notify clients about shared files (stored in IndexedDB)
     // This ensures files are available when the redirect happens
     await self.clients.matchAll({ type: "window" }).then((clients) => {
       if (clients.length > 0) {
@@ -178,6 +228,50 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
       `${self.location.origin}/share?share_id=${shareId}`,
       303
     );
+  }
+}
+
+/**
+ * Background Sync handler for file uploads
+ * Triggered when network connection is restored
+ */
+self.addEventListener("sync", ((event: SyncEvent) => {
+  if (event.tag === "sync-file-queue") {
+    event.waitUntil(syncFileQueue());
+  }
+}) as EventListener);
+
+/**
+ * Process pending file uploads from IndexedDB queue
+ */
+async function syncFileQueue(): Promise<void> {
+  try {
+    const db = await openDB("SecPalDB", 3);
+    const pendingFiles = await db.getAllFromIndex(
+      "fileQueue",
+      "uploadState",
+      "pending"
+    );
+
+    console.log(`[SW] Syncing ${pendingFiles.length} pending files`);
+
+    // Note: Actual upload logic will be implemented when Secret API is ready
+    // For now, we just log that sync would happen
+    for (const file of pendingFiles) {
+      console.log(`[SW] Would upload file: ${file.metadata.name}`);
+    }
+
+    // Notify clients about sync completion
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({
+        type: "FILE_QUEUE_SYNCED",
+        count: pendingFiles.length,
+      });
+    }
+  } catch (error) {
+    console.error("[SW] File queue sync failed:", error);
+    throw error; // Re-throw to trigger retry
   }
 }
 
