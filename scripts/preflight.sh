@@ -122,6 +122,7 @@ if [ -f composer.json ]; then
     fi
     # ⚠️ SKIP PHP TESTS IN PRE-PUSH HOOK
     # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+    # Reason: Tests take >2 minutes and block every push
     # Full test suite runs on every PR via .github/workflows/quality.yml
     echo "ℹ️  Skipping PHP tests in pre-push hook (tests run in CI)"
   fi
@@ -171,6 +172,8 @@ elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   fi
   # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
   # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+  # Reason: Tests take >2 minutes and block every push
+  # Full test suite runs on every PR via .github/workflows/quality.yml
   echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
 fi
 
