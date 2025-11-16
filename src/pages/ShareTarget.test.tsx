@@ -296,11 +296,15 @@ describe("ShareTarget Component", () => {
       const clearButton = await screen.findByRole("button", { name: /clear/i });
       await user.click(clearButton);
 
+      // Wait for state updates to complete BEFORE unmount
       await waitFor(() => {
         expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
-        expect(sessionStorage.getItem("share-target-files")).toBeNull();
       });
 
+      // Verify sessionStorage was cleared
+      expect(sessionStorage.getItem("share-target-files")).toBeNull();
+
+      // Clean unmount after all state updates are done
       unmount();
     });
   });
