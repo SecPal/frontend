@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -660,8 +661,10 @@ describe("ShareTarget Component", () => {
 });
 
 describe("handleShareTargetMessage (unit tests)", () => {
-  let loadSharedDataSpy: ReturnType<typeof vi.fn>;
-  let setErrorsSpy: ReturnType<typeof vi.fn>;
+  let loadSharedDataSpy: Mock<() => void>;
+  let setErrorsSpy: Mock<
+    (errors: string[] | ((prev: string[]) => string[])) => void
+  >;
 
   beforeEach(() => {
     sessionStorage.clear();
@@ -750,7 +753,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).toHaveBeenCalledOnce();
     const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
     expect(errorUpdater).toBeDefined();
-    if (errorUpdater) {
+    if (typeof errorUpdater === "function") {
       const newErrors = errorUpdater([]);
       expect(newErrors).toEqual(["File processing failed"]);
     }
@@ -797,7 +800,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
 
     const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
     expect(errorUpdater).toBeDefined();
-    if (errorUpdater) {
+    if (typeof errorUpdater === "function") {
       const newErrors = errorUpdater([]);
       expect(newErrors).toEqual(["Unknown error"]);
     }

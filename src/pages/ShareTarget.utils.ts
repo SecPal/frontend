@@ -7,14 +7,14 @@
  *
  * @param event - MessageEvent from Service Worker
  * @param shareId - Current session's share ID (from URL param)
- * @param loadSharedData - Callback to reload shared data after files are received (production: () => void)
- * @param setErrors - Callback to update error state (production: (errors: string[] | ((prev: string[]) => string[])) => void)
+ * @param loadSharedData - Callback to reload shared data after files are received
+ * @param setErrors - Callback to update error state
  */
 export function handleShareTargetMessage(
   event: MessageEvent,
   shareId: string | null,
-  loadSharedData: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  setErrors: any // eslint-disable-line @typescript-eslint/no-explicit-any
+  loadSharedData: () => void,
+  setErrors: (errors: string[] | ((prev: string[]) => string[])) => void
 ): void {
   if (!event.data) return;
 
@@ -42,8 +42,7 @@ export function handleShareTargetMessage(
 
     // Only add error if shareId matches (or if no shareId provided)
     if (!shareId || !messageShareId || shareId === messageShareId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrors((prev: any) => [...prev, error]);
+      setErrors((prev) => [...prev, error]);
     }
   }
 }
