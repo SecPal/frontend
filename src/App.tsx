@@ -7,6 +7,7 @@ import { Link } from "./components/link";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
+import { ShareTarget } from "./pages/ShareTarget";
 import { getApiBaseUrl } from "./config";
 
 function Home() {
@@ -60,6 +61,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/share" element={<ShareTarget />} />
         </Routes>
       </div>
       <OfflineIndicator />

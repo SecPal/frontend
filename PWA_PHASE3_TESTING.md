@@ -92,11 +92,16 @@ This document describes how to test the new PWA Phase 3 features locally.
 
 ### Share Target Components
 
-- PWA Manifest Share Target Config
-- URL Parameter Parsing
+- PWA Manifest Share Target Config (GET + POST methods)
+- URL Parameter Parsing (GET method - text only)
+- FormData Parsing (POST method - files + text)
+- Service Worker File Processing
 - Shared Data Hook (`useShareTarget`)
+- File Preview and Validation
 
 ### How to Test Share Target
+
+#### Method 1: Text Sharing (GET - Simple)
 
 1. **Install PWA**
 
@@ -105,8 +110,8 @@ This document describes how to test the new PWA Phase 3 features locally.
    # Or: DevTools → Application → Manifest → "Install"
    ```
 
-2. **Share from another app**
-   - **Option A (Desktop):** Right-click on image → "Share" → Select SecPal
+2. **Share text from another app**
+   - **Option A (Desktop):** Right-click on text/link → "Share" → Select SecPal
    - **Option B (Mobile):** Browser share button → Select SecPal
    - **Option C (Test URL):** Manually open:
 
@@ -114,16 +119,65 @@ This document describes how to test the new PWA Phase 3 features locally.
      http://localhost:5173/share?title=Test&text=Hello&url=https://example.com
      ```
 
-3. **Test hook integration**
+3. **Verify text display**
+   - App opens at `/share` route
+   - Title, text, and URL are displayed
+   - URL parameters are cleaned from address bar
+
+#### Method 2: File Sharing (POST - Advanced)
+
+1. **Install PWA** (same as above)
+
+2. **Share files from another app**
+   - **Option A (Desktop):** Right-click on image/PDF → "Share" → Select SecPal
+   - **Option B (Mobile):** Gallery/Files app → Share button → Select SecPal
+   - **Option C (Test with multiple files):** Select multiple files → Share → SecPal
+
+3. **Verify file handling**
+   - App opens at `/share` route
+   - Files are listed with name, size, type badge
+   - Image files show preview thumbnails
+   - PDF/DOC files show file icon
+   - File size is displayed (e.g., "1.2 MB")
+
+4. **Test file validation**
+   - Try sharing `.exe` or unsupported file → Error message shown
+   - Try sharing file >10MB → Error "File too large. Maximum 10MB"
+   - Only valid files (images, PDFs, .doc, .docx) are accepted
+
+5. **Check Service Worker processing**
+
+   ```bash
+   # Chrome DevTools → Application → Service Workers
+   # Status should be "activated and is running"
+   # Console → Check for Service Worker messages:
+   # "Processing shared files: 2 files"
+   ```
+
+6. **Check sessionStorage**
+
+   ```bash
+   # DevTools → Application → Storage → Session Storage
+   # Key: share-target-files
+   # Value: JSON array with file metadata + Base64 previews
+   ```
+
+7. **Test combined sharing**
+   - Share files + text together
+   - Example: Share image with caption
+   - Both text and files should appear
+
+8. **Test hook integration**
 
    ```tsx
    // In a component:
-   const { sharedData, isSharing, clearSharedData } = useShareTarget();
+   const { sharedData, clearSharedData } = useShareTarget();
 
    useEffect(() => {
      if (sharedData) {
        console.log("Shared data:", sharedData);
-       // Handle: sharedData.title, sharedData.text, sharedData.url
+       // Handle text: sharedData.title, sharedData.text, sharedData.url
+       // Handle files: sharedData.files (array of SharedFile objects)
        clearSharedData();
      }
    }, [sharedData]);
@@ -131,10 +185,17 @@ This document describes how to test the new PWA Phase 3 features locally.
 
 ### Share Target - Success Criteria
 
-- ✅ SecPal appears in OS share menu
+- ✅ SecPal appears in OS share menu (both text and file options)
+- ✅ **GET method:** Text sharing works (title, text, url)
+- ✅ **POST method:** File sharing works (images, PDFs, docs)
+- ✅ Files are validated (type + size limits)
+- ✅ Image previews are generated (Base64 thumbnails)
+- ✅ Service Worker processes FormData correctly
 - ✅ App opens with `/share` route
-- ✅ `useShareTarget` detects shared data
+- ✅ `useShareTarget` detects shared data (text + files)
 - ✅ URL is cleaned to `/` after processing
+- ✅ sessionStorage stores file metadata
+- ✅ Clear button removes all shared data
 
 ---
 

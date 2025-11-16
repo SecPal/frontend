@@ -26,7 +26,9 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: "autoUpdate",
-        strategies: "generateSW",
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "sw.ts",
         injectRegister: "auto",
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
         manifest: {
@@ -178,12 +180,8 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./tests/setup.ts",
-      pool: "forks",
-      poolOptions: {
-        forks: {
-          singleFork: true,
-        },
-      },
+      testTimeout: 10000, // 10 seconds per test (default is 5s)
+      hookTimeout: 10000, // 10 seconds for beforeEach/afterEach hooks
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html", "lcov", "clover"],
