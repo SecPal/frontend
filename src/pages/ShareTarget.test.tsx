@@ -753,7 +753,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).toHaveBeenCalledOnce();
     const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
     expect(errorUpdater).toBeDefined();
-    if (errorUpdater) {
+    if (typeof errorUpdater === "function") {
       const newErrors = errorUpdater([]);
       expect(newErrors).toEqual(["File processing failed"]);
     }
@@ -800,7 +800,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
 
     const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
     expect(errorUpdater).toBeDefined();
-    if (errorUpdater) {
+    if (typeof errorUpdater === "function") {
       const newErrors = errorUpdater([]);
       expect(newErrors).toEqual(["Unknown error"]);
     }
