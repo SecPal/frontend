@@ -18,6 +18,9 @@ import {
  *
  * Provides real-time access to queued files and queue operations
  *
+ * @param options - Configuration options
+ * @param options.quotaUpdateInterval - Interval in ms for quota updates (default: 30000ms/30s)
+ *
  * @example
  * ```tsx
  * const { pending, failed, quota, processQueue } = useFileQueue();
@@ -32,7 +35,9 @@ import {
  * );
  * ```
  */
-export function useFileQueue() {
+export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
+  const { quotaUpdateInterval = 30000 } = options || {};
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [quota, setQuota] = useState<{
     used: number;
@@ -55,11 +60,11 @@ export function useFileQueue() {
 
     updateQuota();
 
-    // Update quota every 30 seconds
-    const interval = setInterval(updateQuota, 30000);
+    // Update quota at configured interval
+    const interval = setInterval(updateQuota, quotaUpdateInterval);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [quotaUpdateInterval]);
 
   /**
    * Process all pending files in the queue
@@ -121,10 +126,23 @@ export function useFileQueue() {
     if ("serviceWorker" in navigator) {
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === "FILE_QUEUE_SYNCED") {
-          console.log(
-            `[FileQueue] Background sync completed: ${event.data.count} files`
-          );
+          const { count, success, failed } = event.data;
+
+          if (failed && failed > 0) {
+            console.warn(
+              `[FileQueue] Background sync completed with errors: ${success || 0} succeeded, ${failed} failed`
+            );
+          } else {
+            console.log(
+              `[FileQueue] Background sync completed successfully: ${count} files`
+            );
+          }
           // Files are automatically updated via useLiveQuery
+        } else if (event.data?.type === "FILE_QUEUE_SYNC_ERROR") {
+          console.error(
+            `[FileQueue] Background sync failed:`,
+            event.data.error
+          );
         }
       };
 

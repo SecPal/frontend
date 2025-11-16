@@ -136,8 +136,9 @@ export async function retryFileUpload(
     return false;
   }
 
-  // Exponential backoff: 2^retryCount seconds (1s, 2s, 4s, 8s, 16s)
-  // Only apply backoff if there was a previous attempt
+  // Exponential backoff: 2^retryCount seconds
+  // Retry 0 (first retry): 1s, Retry 1: 2s, Retry 2: 4s, Retry 3: 8s, Retry 4: 16s
+  // Skip backoff check on very first upload attempt (lastAttemptAt not set yet)
   if (entry.lastAttemptAt) {
     const backoffMs = Math.pow(2, entry.retryCount) * 1000;
     const timeSinceLastAttempt = Date.now() - entry.lastAttemptAt.getTime();
@@ -180,9 +181,51 @@ export async function retryFileUpload(
 }
 
 /**
+ * Process files with concurrency limit
+ * @param items - Items to process
+ * @param worker - Async worker function for each item
+ * @param concurrency - Maximum parallel operations
+ */
+async function processWithConcurrency<T, R>(
+  items: T[],
+  worker: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  const executing: Promise<void>[] = [];
+
+  async function enqueue(): Promise<void> {
+    if (index >= items.length) return;
+    const currentIndex = index++;
+    const item = items[currentIndex];
+    if (!item) return; // Type guard for TypeScript
+    
+    const p = worker(item).then((result) => {
+      results[currentIndex] = result;
+    });
+    executing.push(
+      p.then(() => {
+        executing.splice(executing.indexOf(p), 1);
+      })
+    );
+    if (executing.length < concurrency) {
+      await enqueue();
+    } else {
+      await Promise.race(executing);
+      await enqueue();
+    }
+  }
+  await enqueue();
+  await Promise.all(executing);
+  return results;
+}
+
+/**
  * Process all pending files in the queue
  *
  * @param apiBaseUrl - Base URL for API requests
+ * @param concurrency - Maximum parallel uploads (default: 3)
  * @returns Statistics about processed files
  *
  * @example
@@ -191,29 +234,45 @@ export async function retryFileUpload(
  * console.log(`Uploaded: ${stats.completed}, Failed: ${stats.failed}`);
  * ```
  */
-export async function processFileQueue(apiBaseUrl: string): Promise<{
+export async function processFileQueue(
+  apiBaseUrl: string,
+  concurrency = 3
+): Promise<{
   total: number;
   completed: number;
   failed: number;
   pending: number;
 }> {
   const files = await getPendingFiles();
+
+  // Process files in parallel with concurrency limit
+  const results = await processWithConcurrency(
+    files,
+    async (file) => {
+      const success = await retryFileUpload(file, apiBaseUrl);
+      if (success) {
+        return { status: "completed" as const, file };
+      } else {
+        const updatedFile = await db.fileQueue.get(file.id);
+        if (updatedFile?.uploadState === "failed") {
+          return { status: "failed" as const, file };
+        } else {
+          return { status: "pending" as const, file };
+        }
+      }
+    },
+    concurrency
+  );
+
+  // Count results
   let completed = 0;
   let failed = 0;
   let pending = 0;
 
-  for (const file of files) {
-    const success = await retryFileUpload(file, apiBaseUrl);
-    if (success) {
-      completed++;
-    } else {
-      const updatedFile = await db.fileQueue.get(file.id);
-      if (updatedFile?.uploadState === "failed") {
-        failed++;
-      } else {
-        pending++;
-      }
-    }
+  for (const result of results) {
+    if (result.status === "completed") completed++;
+    else if (result.status === "failed") failed++;
+    else if (result.status === "pending") pending++;
   }
 
   return {
