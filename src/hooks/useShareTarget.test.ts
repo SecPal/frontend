@@ -253,237 +253,273 @@ describe("useShareTarget", () => {
 
   // sessionStorage file handling was replaced with Service Worker messages
   // These tests are obsolete with the new IndexedDB architecture
-  describe.skip("sessionStorage Files Parsing (OBSOLETE - now via SW messages)", () => {
+  describe("Service Worker Message Handling", () => {
+    let mockServiceWorker: {
+      addEventListener: ReturnType<typeof vi.fn>;
+      removeEventListener: ReturnType<typeof vi.fn>;
+    };
+
     beforeEach(() => {
-      sessionStorage.clear();
+      // Mock Service Worker API
+      mockServiceWorker = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+
+      vi.stubGlobal("navigator", {
+        serviceWorker: mockServiceWorker,
+      });
     });
 
-    it("should parse valid files from sessionStorage", async () => {
-      const mockFiles = [
-        { name: "test.pdf", type: "application/pdf", size: 1024 },
-        { name: "image.jpg", type: "image/jpeg", size: 2048 },
-      ];
+    it("should register Service Worker message listener", () => {
+      renderHook(() => useShareTarget());
 
-      sessionStorage.setItem("share-target-files", JSON.stringify(mockFiles));
+      expect(mockServiceWorker.addEventListener).toHaveBeenCalledWith(
+        "message",
+        expect.any(Function)
+      );
+    });
+
+    it("should process SHARE_TARGET_FILES message with matching shareId", async () => {
+      const mockFiles = [
+        { id: 1, name: "test.pdf", type: "application/pdf", size: 1024 },
+        { id: 2, name: "image.jpg", type: "image/jpeg", size: 2048 },
+      ];
 
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?title=Files",
+        href: "https://secpal.app/share?title=Files&share_id=abc123",
         pathname: "/share",
-        search: "?title=Files",
+        search: "?title=Files&share_id=abc123",
         hash: "",
       } as Location;
 
       const { result } = renderHook(() => useShareTarget());
+
+      // Get the registered message handler
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      // Simulate SW message
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "abc123",
+              files: mockFiles,
+            },
+          })
+        );
+      });
 
       await waitFor(() => {
         expect(result.current.sharedData).toEqual({
           title: "Files",
-          files: undefined,
+          files: mockFiles,
         });
       });
     });
 
-    it("should parse files with dataUrl property", async () => {
-      const mockFiles = [
-        {
-          name: "photo.jpg",
-          type: "image/jpeg",
-          size: 5000,
-          dataUrl: "data:image/jpeg;base64,/9j/4AAQ",
-        },
-      ];
-
-      sessionStorage.setItem("share-target-files", JSON.stringify(mockFiles));
-
+    it("should ignore SHARE_TARGET_FILES with mismatched shareId", async () => {
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?text=Image",
+        href: "https://secpal.app/share?share_id=abc123",
         pathname: "/share",
-        search: "?text=Image",
+        search: "?share_id=abc123",
         hash: "",
       } as Location;
 
       const { result } = renderHook(() => useShareTarget());
 
-      await waitFor(() => {
-        expect(result.current.sharedData).toEqual({
-          text: "Image",
-          files: undefined,
-        });
-      });
-    });
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
 
-    it("should handle invalid JSON in sessionStorage", async () => {
-      sessionStorage.setItem("share-target-files", "invalid-json{{{");
-
-      // @ts-expect-error - Mocking location for tests
-      window.location = {
-        ...window.location,
-        href: "https://secpal.app/share?title=Test",
-        pathname: "/share",
-        search: "?title=Test",
-        hash: "",
-      } as Location;
-
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
-      const { result } = renderHook(() => useShareTarget());
-
-      await waitFor(() => {
-        expect(result.current.sharedData).toEqual({
-          title: "Test",
-        });
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          "Failed to parse shared files:",
-          expect.any(Error)
+      // Simulate SW message with different shareId
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "different-id",
+              files: [{ id: 1, name: "test.pdf" }],
+            },
+          })
         );
       });
 
-      consoleErrorSpy.mockRestore();
+      // Should not update sharedData
+      expect(result.current.sharedData).toBeNull();
     });
 
-    it("should reject all files if any file has missing required properties", async () => {
+    it("should ignore non-SHARE_TARGET_FILES messages", async () => {
+      // @ts-expect-error - Mocking location for tests
+      window.location = {
+        ...window.location,
+        href: "https://secpal.app/share?share_id=abc123",
+        pathname: "/share",
+        search: "?share_id=abc123",
+        hash: "",
+      } as Location;
+
+      const { result } = renderHook(() => useShareTarget());
+
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      // Simulate other SW message
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "OTHER_MESSAGE",
+              payload: "data",
+            },
+          })
+        );
+      });
+
+      // Should not update sharedData
+      expect(result.current.sharedData).toBeNull();
+    });
+
+    it("should cleanup Service Worker listener on unmount", () => {
+      const { unmount } = renderHook(() => useShareTarget());
+
+      unmount();
+
+      expect(mockServiceWorker.removeEventListener).toHaveBeenCalledWith(
+        "message",
+        expect.any(Function)
+      );
+    });
+
+    it("should handle all URL parameters with files", async () => {
       const mockFiles = [
-        { name: "valid.pdf", type: "application/pdf", size: 1024 },
-        { name: "invalid.txt" }, // Missing type and size - causes ALL files to be rejected
-        { type: "image/jpeg", size: 2048 }, // Missing name
+        { id: 1, name: "doc.pdf", type: "application/pdf", size: 5000 },
       ];
 
-      sessionStorage.setItem("share-target-files", JSON.stringify(mockFiles));
-
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?title=Mixed",
+        href: "https://secpal.app/share?title=Report&text=See%20attachment&url=https://example.com&share_id=xyz789",
         pathname: "/share",
-        search: "?title=Mixed",
+        search:
+          "?title=Report&text=See%20attachment&url=https://example.com&share_id=xyz789",
         hash: "",
       } as Location;
 
       const { result } = renderHook(() => useShareTarget());
 
-      await waitFor(() => {
-        // Hook uses .every() validation - if ANY file is invalid, ALL are rejected
-        expect(result.current.sharedData).toEqual({
-          title: "Mixed",
-        });
-      });
-    });
-
-    it("should accept files even if dataUrl type is invalid (not validated in hook)", async () => {
-      const mockFiles = [
-        {
-          name: "valid.jpg",
-          type: "image/jpeg",
-          size: 1024,
-          dataUrl: "data:image/jpeg;base64,valid",
-        },
-        {
-          name: "invalid.jpg",
-          type: "image/jpeg",
-          size: 2048,
-          dataUrl: 12345 as unknown as string, // Invalid type - but hook doesn't validate dataUrl
-        },
-      ];
-
-      sessionStorage.setItem("share-target-files", JSON.stringify(mockFiles));
-
-      // @ts-expect-error - Mocking location for tests
-      window.location = {
-        ...window.location,
-        href: "https://secpal.app/share?title=DataURL",
-        pathname: "/share",
-        search: "?title=DataURL",
-        hash: "",
-      } as Location;
-
-      const { result } = renderHook(() => useShareTarget());
-
-      await waitFor(() => {
-        // Hook doesn't validate dataUrl type in .every() check - accepts both files
-        expect(result.current.sharedData).toEqual({
-          title: "DataURL",
-          files: undefined, // Both files accepted
-        });
-      });
-    });
-
-    it("should handle non-array files data", async () => {
-      sessionStorage.setItem(
-        "share-target-files",
-        JSON.stringify({ invalid: "object" })
-      );
-
-      // @ts-expect-error - Mocking location for tests
-      window.location = {
-        ...window.location,
-        href: "https://secpal.app/share?title=Test",
-        pathname: "/share",
-        search: "?title=Test",
-        hash: "",
-      } as Location;
-
-      const { result } = renderHook(() => useShareTarget());
-
-      await waitFor(() => {
-        expect(result.current.sharedData).toEqual({
-          title: "Test",
-        });
-      });
-    });
-
-    it("should clear files from sessionStorage when clearSharedData is called", async () => {
-      sessionStorage.setItem(
-        "share-target-files",
-        JSON.stringify([
-          { name: "test.pdf", type: "application/pdf", size: 1024 },
-        ])
-      );
-
-      // @ts-expect-error - Mocking location for tests
-      window.location = {
-        ...window.location,
-        href: "https://secpal.app/share?title=Test",
-        pathname: "/share",
-        search: "?title=Test",
-        hash: "",
-      } as Location;
-
-      const { result } = renderHook(() => useShareTarget());
-
-      await waitFor(() => {
-        expect(sessionStorage.getItem("share-target-files")).not.toBeNull();
-      });
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
 
       act(() => {
-        result.current.clearSharedData();
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "xyz789",
+              files: mockFiles,
+            },
+          })
+        );
       });
 
       await waitFor(() => {
-        expect(sessionStorage.getItem("share-target-files")).toBeNull();
+        expect(result.current.sharedData).toEqual({
+          title: "Report",
+          text: "See attachment",
+          url: "https://example.com",
+          files: mockFiles,
+        });
+      });
+    });
+
+    it("should handle empty string values in URL params", async () => {
+      const mockFiles = [{ id: 1, name: "test.txt" }];
+
+      // @ts-expect-error - Mocking location for tests
+      window.location = {
+        ...window.location,
+        href: "https://secpal.app/share?title=&text=Content&share_id=empty123",
+        pathname: "/share",
+        search: "?title=&text=Content&share_id=empty123",
+        hash: "",
+      } as Location;
+
+      const { result } = renderHook(() => useShareTarget());
+
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "empty123",
+              files: mockFiles,
+            },
+          })
+        );
+      });
+
+      await waitFor(() => {
+        expect(result.current.sharedData).toEqual({
+          title: undefined, // Empty string becomes undefined
+          text: "Content",
+          files: mockFiles,
+        });
       });
     });
   });
 
-  // history.replaceState is now triggered by Service Worker messages
-  // These tests require SW integration mocking
-  describe.skip("history.replaceState Handling (requires SW message mocking)", () => {
-    it("should preserve hash when cleaning URL", async () => {
+  describe("history.replaceState Handling", () => {
+    let mockServiceWorker: {
+      addEventListener: ReturnType<typeof vi.fn>;
+      removeEventListener: ReturnType<typeof vi.fn>;
+    };
+
+    beforeEach(() => {
+      mockServiceWorker = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+
+      vi.stubGlobal("navigator", {
+        serviceWorker: mockServiceWorker,
+      });
+    });
+
+    it("should preserve hash when cleaning URL via SW message", async () => {
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?title=Test#section",
+        href: "https://secpal.app/share?title=Test&share_id=hash123#section",
         pathname: "/share",
-        search: "?title=Test",
+        search: "?title=Test&share_id=hash123",
         hash: "#section",
       } as Location;
 
       renderHook(() => useShareTarget());
+
+      const messageHandler = mockServiceWorker.addEventListener.mock
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "hash123",
+              files: [{ id: 1, name: "test.pdf" }],
+            },
+          })
+        );
+      });
 
       await waitFor(() => {
         expect(window.history.replaceState).toHaveBeenCalledWith(
@@ -494,7 +530,7 @@ describe("useShareTarget", () => {
       });
     });
 
-    it("should handle non-share paths correctly when cleaning URL", async () => {
+    it("should handle non-share paths correctly", async () => {
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
@@ -506,7 +542,7 @@ describe("useShareTarget", () => {
 
       renderHook(() => useShareTarget());
 
-      // Should not parse since not on /share path, but if it did:
+      // Should not parse since not on /share path
       expect(window.history.replaceState).not.toHaveBeenCalled();
     });
 
@@ -516,17 +552,33 @@ describe("useShareTarget", () => {
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?title=Test",
+        href: "https://secpal.app/share?title=Test&share_id=nohistory456",
         pathname: "/share",
-        search: "?title=Test",
+        search: "?title=Test&share_id=nohistory456",
         hash: "",
       } as Location;
 
       const { result } = renderHook(() => useShareTarget());
 
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "nohistory456",
+              files: [],
+            },
+          })
+        );
+      });
+
       await waitFor(() => {
         expect(result.current.sharedData).toEqual({
           title: "Test",
+          files: [],
         });
       });
     });
@@ -638,33 +690,58 @@ describe("useShareTarget", () => {
   });
 
   describe("Integration: Combined Scenarios", () => {
+    let mockServiceWorker: {
+      addEventListener: ReturnType<typeof vi.fn>;
+      removeEventListener: ReturnType<typeof vi.fn>;
+    };
+
     beforeEach(() => {
-      sessionStorage.clear();
+      mockServiceWorker = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+
+      vi.stubGlobal("navigator", {
+        serviceWorker: mockServiceWorker,
+      });
     });
 
-    it("should handle text and files together", async () => {
+    it("should handle text and files together via SW message", async () => {
       const mockFiles = [
-        { name: "document.pdf", type: "application/pdf", size: 5000 },
+        { id: 1, name: "document.pdf", type: "application/pdf", size: 5000 },
       ];
-
-      sessionStorage.setItem("share-target-files", JSON.stringify(mockFiles));
 
       // @ts-expect-error - Mocking location for tests
       window.location = {
         ...window.location,
-        href: "https://secpal.app/share?title=Report&text=See+attached",
+        href: "https://secpal.app/share?title=Report&text=See+attached&share_id=combo123",
         pathname: "/share",
-        search: "?title=Report&text=See+attached",
+        search: "?title=Report&text=See+attached&share_id=combo123",
         hash: "",
       } as Location;
 
       const { result } = renderHook(() => useShareTarget());
 
+      const messageHandler = mockServiceWorker.addEventListener.mock!
+        .calls[0]![1] as (event: MessageEvent) => void;
+
+      act(() => {
+        messageHandler(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "combo123",
+              files: mockFiles,
+            },
+          })
+        );
+      });
+
       await waitFor(() => {
         expect(result.current.sharedData).toEqual({
           title: "Report",
           text: "See attached",
-          files: undefined,
+          files: mockFiles,
         });
       });
     });
