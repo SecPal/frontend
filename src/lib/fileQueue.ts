@@ -200,7 +200,7 @@ async function processWithConcurrency<T, R>(
     const currentIndex = index++;
     const item = items[currentIndex];
     if (!item) return; // Type guard for TypeScript
-    
+
     const p = worker(item).then((result) => {
       results[currentIndex] = result;
     });
