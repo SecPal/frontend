@@ -14,6 +14,7 @@ export interface SharedData {
 }
 
 export interface SharedFile {
+  id?: string; // Queue ID (from IndexedDB)
   name: string;
   type: string;
   size: number;
@@ -49,6 +50,44 @@ export function useShareTarget(): UseShareTargetReturn {
     // Only run in browser
     if (typeof window === "undefined") return;
 
+    // Listen for Service Worker messages with shared files
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SHARE_TARGET_FILES") {
+        const { shareId, files } = event.data;
+
+        // Parse URL parameters for text data
+        const url = new URL(window.location.href);
+        const urlShareId = url.searchParams.get("share_id");
+
+        // Only process if shareId matches (prevents stale messages)
+        if (urlShareId === shareId) {
+          const title = url.searchParams.get("title");
+          const text = url.searchParams.get("text");
+          const urlParam = url.searchParams.get("url");
+
+          const data: SharedData = {
+            title: title !== null && title !== "" ? title : undefined,
+            text: text !== null && text !== "" ? text : undefined,
+            url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
+            files: files as SharedFile[] | undefined,
+          };
+
+          setSharedData(data);
+
+          // Clean up URL without the share parameters (preserve hash)
+          if (window.history?.replaceState) {
+            window.history.replaceState(
+              {},
+              "",
+              window.location.pathname === "/share"
+                ? "/" + window.location.hash
+                : window.location.pathname + window.location.hash
+            );
+          }
+        }
+      }
+    };
+
     const handleShareTarget = () => {
       try {
         const url = new URL(window.location.href);
@@ -60,51 +99,21 @@ export function useShareTarget(): UseShareTargetReturn {
           const text = url.searchParams.get("text");
           const urlParam = url.searchParams.get("url");
 
-          // Parse files from sessionStorage (set by Service Worker for POST requests)
-          const filesJson = sessionStorage.getItem("share-target-files");
-          let files: SharedFile[] | undefined;
-
-          if (filesJson) {
-            try {
-              const parsed = JSON.parse(filesJson);
-              // Runtime type validation
-              if (
-                Array.isArray(parsed) &&
-                parsed.every(
-                  (f) =>
-                    typeof f === "object" &&
-                    f !== null &&
-                    typeof f.name === "string" &&
-                    typeof f.type === "string" &&
-                    typeof f.size === "number"
-                )
-              ) {
-                files = parsed as SharedFile[];
-              }
-            } catch (error) {
-              console.error("Failed to parse shared files:", error);
-            }
-          }
-
+          // Files are now handled via Service Worker messages
+          // This fallback handles cases where SW message hasn't arrived yet
           const data: SharedData = {
             title: title !== null && title !== "" ? title : undefined,
             text: text !== null && text !== "" ? text : undefined,
             url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
-            files,
+            files: undefined, // Will be populated by SW message
           };
 
-          setSharedData(data);
-
-          // Clean up URL without the share parameters (preserve hash)
-          // Only update history if replaceState is available
-          if (window.history?.replaceState) {
-            window.history.replaceState(
-              {},
-              "",
-              window.location.pathname === "/share"
-                ? "/" + window.location.hash
-                : window.location.pathname + window.location.hash
-            );
+          // Only set if we have text data (files come later via SW)
+          if (data.title || data.text || data.url) {
+            setSharedData((prev) => ({
+              ...prev,
+              ...data,
+            }));
           }
         }
       } catch (error) {
@@ -114,19 +123,31 @@ export function useShareTarget(): UseShareTargetReturn {
 
     handleShareTarget();
 
+    // Listen for Service Worker messages
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener(
+        "message",
+        handleServiceWorkerMessage
+      );
+    }
+
     // Listen for navigation events (popstate) to detect URL changes for multiple shares
     window.addEventListener("popstate", handleShareTarget);
 
-    // Clean up event listener on unmount
+    // Clean up event listeners on unmount
     return () => {
       window.removeEventListener("popstate", handleShareTarget);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener(
+          "message",
+          handleServiceWorkerMessage
+        );
+      }
     };
   }, []);
 
   const clearSharedData = () => {
     setSharedData(null);
-    // Also clear files from sessionStorage
-    sessionStorage.removeItem("share-target-files");
   };
 
   return {

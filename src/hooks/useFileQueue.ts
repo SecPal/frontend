@@ -3,8 +3,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../lib/db";
-import type { FileQueueEntry } from "../lib/db";
 import {
   getPendingFiles,
   getFailedFiles,
