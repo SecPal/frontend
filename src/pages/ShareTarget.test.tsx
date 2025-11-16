@@ -521,9 +521,10 @@ describe("ShareTarget Component", () => {
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (
           type: string,
-          listener: ((event: MessageEvent) => void) | EventListener
+          listener: EventListenerOrEventListenerObject,
+          options?: boolean | AddEventListenerOptions
         ) => {
-          if (type === "message")
+          if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
       );
@@ -557,9 +558,10 @@ describe("ShareTarget Component", () => {
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (
           type: string,
-          listener: ((event: MessageEvent) => void) | EventListener
+          listener: EventListenerOrEventListenerObject,
+          options?: boolean | AddEventListenerOptions
         ) => {
-          if (type === "message")
+          if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
       );
@@ -590,9 +592,10 @@ describe("ShareTarget Component", () => {
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (
           type: string,
-          listener: ((event: MessageEvent) => void) | EventListener
+          listener: EventListenerOrEventListenerObject,
+          options?: boolean | AddEventListenerOptions
         ) => {
-          if (type === "message")
+          if (type === "message" && typeof listener === "function")
             listeners.push(listener as (event: MessageEvent) => void);
         }
       );
@@ -650,13 +653,13 @@ describe("ShareTarget Component", () => {
 });
 
 describe("handleShareTargetMessage (unit tests)", () => {
-  let loadSharedDataSpy: ReturnType<typeof vi.fn>;
-  let setErrorsSpy: ReturnType<typeof vi.fn>;
+  let loadSharedDataSpy: vi.Mock<[], void>;
+  let setErrorsSpy: vi.Mock<[updater: (prev: string[]) => string[]], void>;
 
   beforeEach(() => {
     sessionStorage.clear();
-    loadSharedDataSpy = vi.fn();
-    setErrorsSpy = vi.fn();
+    loadSharedDataSpy = vi.fn<[], void>();
+    setErrorsSpy = vi.fn<[updater: (prev: string[]) => string[]], void>();
   });
 
   it("should handle SHARE_TARGET_FILES message", () => {
@@ -738,9 +741,12 @@ describe("handleShareTargetMessage (unit tests)", () => {
 
     // Should add error via setErrors
     expect(setErrorsSpy).toHaveBeenCalledOnce();
-    const errorUpdater = setErrorsSpy.mock.calls[0][0];
-    const newErrors = errorUpdater([]);
-    expect(newErrors).toEqual(["File processing failed"]);
+    const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
+    expect(errorUpdater).toBeDefined();
+    if (errorUpdater) {
+      const newErrors = errorUpdater([]);
+      expect(newErrors).toEqual(["File processing failed"]);
+    }
   });
 
   it("should handle SHARE_TARGET_ERROR with matching shareId", () => {
@@ -782,9 +788,12 @@ describe("handleShareTargetMessage (unit tests)", () => {
 
     handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
 
-    const errorUpdater = setErrorsSpy.mock.calls[0][0];
-    const newErrors = errorUpdater([]);
-    expect(newErrors).toEqual(["Unknown error"]);
+    const errorUpdater = setErrorsSpy.mock.calls[0]?.[0];
+    expect(errorUpdater).toBeDefined();
+    if (errorUpdater) {
+      const newErrors = errorUpdater([]);
+      expect(newErrors).toEqual(["Unknown error"]);
+    }
   });
 
   it("should ignore messages without data", () => {
