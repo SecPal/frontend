@@ -44,7 +44,8 @@ export function handleShareTargetMessage(
 
     // Only add error if shareId matches (or if no shareId provided)
     if (!shareId || !messageShareId || shareId === messageShareId) {
-      setErrors((prev) => [...prev, error]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setErrors((prev: any) => [...prev, error]);
     }
   }
 }
