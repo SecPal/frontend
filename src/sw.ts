@@ -83,18 +83,26 @@ const ALLOWED_TYPES = [
  * Store file in IndexedDB fileQueue
  * Service Worker cannot import from lib/fileQueue.ts, so we inline the logic
  */
+// Database version constant - must match db.ts schema version
+// IMPORTANT: Keep in sync with src/lib/db.ts when schema changes!
+const DB_VERSION = 3;
+
+// Maximum retry attempts before marking file as permanently failed
+const MAX_RETRY_COUNT = 5;
+
 async function storeFileInQueue(
   file: File,
   metadata: { name: string; type: string; size: number; timestamp: number }
 ): Promise<string> {
-  const db = await openDB("SecPalDB", 3);
+  const db = await openDB("SecPalDB", DB_VERSION);
   const id = crypto.randomUUID();
 
+  // NOTE: This schema duplicates FileQueueEntry from db.ts
+  // Service Worker cannot import from lib/, so schema is inlined
+  // SYNC RISK: Keep structure in sync with db.ts manually!
   await db.add("fileQueue", {
     id,
-    file: await file
-      .arrayBuffer()
-      .then((buf) => new Blob([buf], { type: file.type })),
+    file, // File extends Blob, no conversion needed
     metadata,
     uploadState: "pending",
     retryCount: 0,
@@ -246,7 +254,7 @@ self.addEventListener("sync", ((event: SyncEvent) => {
  */
 async function syncFileQueue(): Promise<void> {
   try {
-    const db = await openDB("SecPalDB", 3);
+    const db = await openDB("SecPalDB", DB_VERSION);
     const pendingFiles = await db.getAllFromIndex(
       "fileQueue",
       "uploadState",
@@ -258,7 +266,18 @@ async function syncFileQueue(): Promise<void> {
     // Note: Actual upload logic will be implemented when Secret API is ready
     // For now, we just log that sync would happen
     for (const file of pendingFiles) {
-      console.log(`[SW] Would upload file: ${file.metadata.name}`);
+      // Skip files that exceeded max retry attempts (prevents infinite loops)
+      if (file.retryCount >= MAX_RETRY_COUNT) {
+        console.warn(
+          `[SW] File ${file.metadata.name} exceeded max retries (${MAX_RETRY_COUNT}), marking as failed`
+        );
+        await db.put("fileQueue", { ...file, uploadState: "failed" });
+        continue;
+      }
+
+      console.log(
+        `[SW] Would upload file: ${file.metadata.name} (retry: ${file.retryCount})`
+      );
     }
 
     // Notify clients about sync completion

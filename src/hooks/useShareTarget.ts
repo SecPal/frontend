@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * Data structure for shared content received via Share Target API
@@ -46,81 +46,83 @@ interface UseShareTargetReturn {
 export function useShareTarget(): UseShareTargetReturn {
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
 
+  // Memoize event handlers to prevent listener re-creation on every render
+  const handleServiceWorkerMessage = useCallback((event: MessageEvent) => {
+    if (event.data?.type === "SHARE_TARGET_FILES") {
+      const { shareId, files } = event.data;
+
+      // Parse URL parameters for text data
+      const url = new URL(window.location.href);
+      const urlShareId = url.searchParams.get("share_id");
+
+      // Only process if shareId matches (prevents stale messages)
+      if (urlShareId === shareId) {
+        const title = url.searchParams.get("title");
+        const text = url.searchParams.get("text");
+        const urlParam = url.searchParams.get("url");
+
+        const data: SharedData = {
+          title: title !== null && title !== "" ? title : undefined,
+          text: text !== null && text !== "" ? text : undefined,
+          url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
+          files: files as SharedFile[] | undefined,
+        };
+
+        setSharedData(data);
+
+        // Clean up URL without the share parameters (preserve hash)
+        if (window.history?.replaceState) {
+          window.history.replaceState(
+            {},
+            "",
+            window.location.pathname === "/share"
+              ? "/" + window.location.hash
+              : window.location.pathname + window.location.hash
+          );
+        }
+      }
+    }
+  }, []);
+
+  const handleShareTarget = useCallback(() => {
+    try {
+      const url = new URL(window.location.href);
+
+      // Check if this is a share target navigation
+      if (url.pathname === "/share" && url.searchParams.size > 0) {
+        // Parse share data with explicit null/empty checks
+        const title = url.searchParams.get("title");
+        const text = url.searchParams.get("text");
+        const urlParam = url.searchParams.get("url");
+
+        // Files are now handled via Service Worker messages
+        // This fallback handles cases where SW message hasn't arrived yet
+        const data: SharedData = {
+          title: title !== null && title !== "" ? title : undefined,
+          text: text !== null && text !== "" ? text : undefined,
+          url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
+          files: undefined, // Will be populated by SW message
+        };
+
+        // Only set if we have text data (files come later via SW)
+        if (data.title || data.text || data.url) {
+          setSharedData((prev) => ({
+            ...prev,
+            ...data,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to process share target:", error);
+    }
+  }, []);
+
   useEffect(() => {
     // Only run in browser
     if (typeof window === "undefined") return;
 
-    // Listen for Service Worker messages with shared files
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
-      if (event.data?.type === "SHARE_TARGET_FILES") {
-        const { shareId, files } = event.data;
-
-        // Parse URL parameters for text data
-        const url = new URL(window.location.href);
-        const urlShareId = url.searchParams.get("share_id");
-
-        // Only process if shareId matches (prevents stale messages)
-        if (urlShareId === shareId) {
-          const title = url.searchParams.get("title");
-          const text = url.searchParams.get("text");
-          const urlParam = url.searchParams.get("url");
-
-          const data: SharedData = {
-            title: title !== null && title !== "" ? title : undefined,
-            text: text !== null && text !== "" ? text : undefined,
-            url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
-            files: files as SharedFile[] | undefined,
-          };
-
-          setSharedData(data);
-
-          // Clean up URL without the share parameters (preserve hash)
-          if (window.history?.replaceState) {
-            window.history.replaceState(
-              {},
-              "",
-              window.location.pathname === "/share"
-                ? "/" + window.location.hash
-                : window.location.pathname + window.location.hash
-            );
-          }
-        }
-      }
-    };
-
-    const handleShareTarget = () => {
-      try {
-        const url = new URL(window.location.href);
-
-        // Check if this is a share target navigation
-        if (url.pathname === "/share" && url.searchParams.size > 0) {
-          // Parse share data with explicit null/empty checks
-          const title = url.searchParams.get("title");
-          const text = url.searchParams.get("text");
-          const urlParam = url.searchParams.get("url");
-
-          // Files are now handled via Service Worker messages
-          // This fallback handles cases where SW message hasn't arrived yet
-          const data: SharedData = {
-            title: title !== null && title !== "" ? title : undefined,
-            text: text !== null && text !== "" ? text : undefined,
-            url: urlParam !== null && urlParam !== "" ? urlParam : undefined,
-            files: undefined, // Will be populated by SW message
-          };
-
-          // Only set if we have text data (files come later via SW)
-          if (data.title || data.text || data.url) {
-            setSharedData((prev) => ({
-              ...prev,
-              ...data,
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Failed to process share target:", error);
-      }
-    };
-
+    // This is safe: reading URL params (external system) once on mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     handleShareTarget();
 
     // Listen for Service Worker messages
@@ -144,7 +146,7 @@ export function useShareTarget(): UseShareTargetReturn {
         );
       }
     };
-  }, []);
+  }, [handleShareTarget, handleServiceWorkerMessage]);
 
   const clearSharedData = () => {
     setSharedData(null);
