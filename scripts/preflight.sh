@@ -120,14 +120,10 @@ if [ -f composer.json ]; then
         ./vendor/bin/phpstan analyse --level=max
       fi
     fi
-    # Run tests (Laravel Artisan → Pest → PHPUnit)
-    if [ -f artisan ]; then
-      php artisan test --parallel
-    elif [ -x ./vendor/bin/pest ]; then
-      ./vendor/bin/pest --parallel
-    elif [ -x ./vendor/bin/phpunit ]; then
-      ./vendor/bin/phpunit
-    fi
+    # ⚠️ SKIP PHP TESTS IN PRE-PUSH HOOK
+    # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+    # Full test suite runs on every PR via .github/workflows/quality.yml
+    echo "ℹ️  Skipping PHP tests in pre-push hook (tests run in CI)"
   fi
 fi
 
@@ -138,14 +134,11 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   pnpm run --if-present lint
   pnpm run --if-present typecheck
 
-  # Run only tests related to changed files for faster feedback
-  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
-    pnpm run --if-present test:related
-  elif [ -z "$CHANGED_FILES" ]; then
-    pnpm run --if-present test:run
-  else
-    echo "No source files changed, skipping tests"
-  fi
+  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
+  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+  # Reason: Tests take >2 minutes and block every push
+  # Full test suite runs on every PR via .github/workflows/quality.yml
+  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   # Only run npm ci if node_modules is missing or package-lock.json is newer
   if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
@@ -157,48 +150,28 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   npm run --if-present lint
   npm run --if-present typecheck
 
-  # Run only tests related to changed files for faster feedback
-  # Use timeout to prevent hanging tests (max 5 minutes)
-  if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE '\.(ts|tsx|js|jsx)$'; then
-    timeout 300 npm run --if-present test:related || {
-      EXIT_CODE=$?
-      if [ $EXIT_CODE -eq 124 ]; then
-        echo "❌ Tests timed out after 5 minutes" >&2
-        exit 1
-      else
-        exit $EXIT_CODE
-      fi
-    }
-  elif [ -z "$CHANGED_FILES" ]; then
-    timeout 300 npm run --if-present test:run || {
-      EXIT_CODE=$?
-      if [ $EXIT_CODE -eq 124 ]; then
-        echo "❌ Tests timed out after 5 minutes" >&2
-        exit 1
-      else
-        exit $EXIT_CODE
-      fi
-    }
-  else
-    echo "No source files changed, skipping tests"
-  fi
+  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
+  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+  # Reason: Tests take >2 minutes and block every push
+  # Full test suite runs on every PR via .github/workflows/quality.yml
+  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   yarn install --frozen-lockfile
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
   if command -v jq >/dev/null 2>&1; then
     jq -e '.scripts.lint' package.json >/dev/null 2>&1 && yarn lint
     jq -e '.scripts.typecheck' package.json >/dev/null 2>&1 && yarn typecheck
-    jq -e '.scripts.test' package.json >/dev/null 2>&1 && yarn test
   elif command -v node >/dev/null 2>&1; then
     node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)" && yarn lint
     node -e "process.exit(require('./package.json').scripts?.typecheck ? 0 : 1)" && yarn typecheck
-    node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)" && yarn test
   else
     echo "Warning: jq and node not found - attempting to run yarn scripts (failures will be ignored)" >&2
     yarn lint 2>/dev/null || true
     yarn typecheck 2>/dev/null || true
-    yarn test 2>/dev/null || true
   fi
+  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
+  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
+  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
 fi
 
 # 3) OpenAPI (Spectral)
