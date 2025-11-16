@@ -660,8 +660,10 @@ describe("ShareTarget Component", () => {
 });
 
 describe("handleShareTargetMessage (unit tests)", () => {
-  let loadSharedDataSpy: () => void;
-  let setErrorsSpy: (errors: string[] | ((prev: string[]) => string[])) => void;
+  let loadSharedDataSpy: vi.Mock<() => void>;
+  let setErrorsSpy: vi.Mock<
+    (errors: string[] | ((prev: string[]) => string[])) => void
+  >;
 
   beforeEach(() => {
     sessionStorage.clear();
