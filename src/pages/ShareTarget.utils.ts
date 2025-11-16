@@ -13,10 +13,8 @@
 export function handleShareTargetMessage(
   event: MessageEvent,
   shareId: string | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  loadSharedData: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setErrors: any
+  loadSharedData: () => void,
+  setErrors: (errors: string[] | ((prev: string[]) => string[])) => void
 ): void {
   if (!event.data) return;
 
