@@ -288,7 +288,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      const { unmount } = renderComponent();
 
       const user = (
         await import("@testing-library/user-event")
@@ -300,6 +300,8 @@ describe("ShareTarget Component", () => {
         expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
         expect(sessionStorage.getItem("share-target-files")).toBeNull();
       });
+
+      unmount();
     });
   });
 
