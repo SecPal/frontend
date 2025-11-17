@@ -139,9 +139,10 @@ export async function retryFileUpload(
   }
 
   // Exponential backoff: 2^retryCount seconds, capped at MAX_BACKOFF_MS (60s)
-  // Retry 0 (first retry): 1s, Retry 1: 2s, Retry 2: 4s, Retry 3: 8s, Retry 4: 16s
-  // Retry 5+: 32s, 60s (capped), 60s (capped), ...
-  // Skip backoff check on very first upload attempt (lastAttemptAt not set yet)
+  // Backoff applies after initial upload attempt fails (when lastAttemptAt is set)
+  // Retry 0 (1st attempt after initial failure): 1s
+  // Retry 1 (2nd attempt): 2s, Retry 2: 4s, Retry 3: 8s, Retry 4: 16s
+  // Retry 5+: 32s, then capped at 60s for all subsequent attempts
   if (entry.lastAttemptAt) {
     const backoffMs = Math.min(
       Math.pow(2, entry.retryCount) * 1000,

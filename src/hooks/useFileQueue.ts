@@ -108,23 +108,14 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
       try {
         const registration = await navigator.serviceWorker.ready;
 
-        // Runtime check: Verify sync property exists on registration instance
         // TypeScript doesn't have types for Background Sync API, so we use type assertion
+        // Prototype check above ensures sync exists, no instance check needed
         const regWithSync = registration as ServiceWorkerRegistration & {
-          sync?: { register: (tag: string) => Promise<void> };
+          sync: { register: (tag: string) => Promise<void> };
         };
 
-        if (
-          regWithSync.sync &&
-          typeof regWithSync.sync.register === "function"
-        ) {
-          await regWithSync.sync.register("sync-file-queue");
-          console.log("[FileQueue] Background sync registered");
-        } else {
-          console.warn(
-            "[FileQueue] Background sync not available on registration"
-          );
-        }
+        await regWithSync.sync.register("sync-file-queue");
+        console.log("[FileQueue] Background sync registered");
       } catch (error) {
         console.error(
           "[FileQueue] Background sync registration failed:",

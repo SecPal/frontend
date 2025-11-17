@@ -133,8 +133,9 @@ export function useShareTarget(): UseShareTargetReturn {
     // Only run in browser
     if (typeof window === "undefined") return;
 
-    // This is safe: reading URL params (external system) on mount and navigation events (popstate).
-    // The handler is memoized, so it reads the URL at event time, not at creation time.
+    // Handle share target on mount and navigation events (popstate)
+    // Handler is memoized and reads URL at event time (not stale)
+    // setState here is safe: triggered by external system (Share Target API navigation)
     // eslint-disable-next-line react-hooks/set-state-in-effect
     handleShareTarget();
 

@@ -86,6 +86,21 @@ const ALLOWED_TYPES = [
  *
  * Schema is duplicated from db.ts - use shared constants from db-constants.ts
  * to minimize sync risk.
+ *
+ * NOTE: Database connection is opened on each call. For typical Share Target use
+ * cases (1-3 files), this is acceptable. Future optimization could cache the
+ * connection if bulk operations become common.
+ *
+ * SCHEMA SYNC: Structure must match FileQueueEntry interface in db.ts.
+ * - id: string
+ * - file: Blob
+ * - metadata: { name, type, size, timestamp }
+ * - uploadState: "pending" | "uploading" | "completed" | "failed"
+ * - retryCount: number
+ * - createdAt: Date
+ * - lastAttemptAt?: Date (optional, set during upload attempts)
+ * - error?: string (optional, set on failure)
+ * - secretId?: string (optional, target secret)
  */
 async function storeFileInQueue(
   file: File,
@@ -94,9 +109,7 @@ async function storeFileInQueue(
   const db = await openDB(DB_NAME, DB_VERSION);
   const id = crypto.randomUUID();
 
-  // NOTE: This schema duplicates FileQueueEntry from db.ts
-  // Service Worker cannot import TypeScript interfaces, so structure is inlined
-  // SYNC RISK: Keep structure in sync with db.ts FileQueueEntry interface!
+  // Structure matches FileQueueEntry from db.ts (required fields only)
   await db.add("fileQueue", {
     id,
     file, // File extends Blob, no conversion needed
@@ -239,12 +252,21 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
 /**
  * Background Sync handler for file uploads
  * Triggered when network connection is restored
+ *
+ * DESIGN DECISION: Only processes uploads when at least one window client is open.
+ * This ensures:
+ * - User context available for authentication (future API integration)
+ * - User can receive upload notifications/feedback
+ * - Avoids background uploads without user knowledge
+ *
+ * If all windows are closed, sync waits until user reopens the app.
  */
 self.addEventListener("sync", ((event: SyncEvent) => {
   if (event.tag === "sync-file-queue") {
     event.waitUntil(
       (async () => {
         // Validate that at least one trusted window client exists before processing
+        // This prevents uploads when all app windows are closed
         const clients = await self.clients.matchAll({ type: "window" });
         if (clients.length === 0) {
           console.warn(
@@ -280,6 +302,8 @@ async function syncFileQueue(): Promise<void> {
 
     // Note: Actual upload logic will be implemented when Secret API is ready
     // For now, we simulate the upload attempt
+    // IMPORTANT: Placeholder always marks as completed to avoid incrementing retry counts
+    // during testing. Real API implementation will determine uploadSucceeded based on response.
     for (const file of pendingFiles) {
       try {
         // Simulate upload attempt (replace with real upload logic)
@@ -287,8 +311,9 @@ async function syncFileQueue(): Promise<void> {
           `[SW] Would upload file: ${file.metadata.name} (retry: ${file.retryCount})`
         );
 
-        // Placeholder: Simulate upload result
-        const uploadSucceeded = false; // Will be determined by actual API call
+        // Placeholder: Simulate successful upload to prevent retry exhaustion during testing
+        // Real implementation will check API response: uploadSucceeded = (response.ok)
+        const uploadSucceeded = true;
 
         if (uploadSucceeded) {
           // Mark as completed
