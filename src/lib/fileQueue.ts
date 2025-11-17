@@ -3,6 +3,11 @@
 
 import { db } from "./db";
 import type { FileQueueEntry, FileMetadata } from "./db";
+import {
+  MAX_RETRY_COUNT,
+  MAX_BACKOFF_MS,
+  UPLOAD_CONCURRENCY,
+} from "./db-constants";
 
 /**
  * Add a file to the upload queue
@@ -128,19 +133,20 @@ export async function retryFileUpload(
   entry: FileQueueEntry,
   apiBaseUrl: string
 ): Promise<boolean> {
-  // Maximum retry attempts with exponential backoff
-  const MAX_RETRIES = 5;
-
-  if (entry.retryCount >= MAX_RETRIES) {
+  if (entry.retryCount >= MAX_RETRY_COUNT) {
     await updateFileUploadState(entry.id, "failed", "Max retries exceeded");
     return false;
   }
 
-  // Exponential backoff: 2^retryCount seconds
+  // Exponential backoff: 2^retryCount seconds, capped at MAX_BACKOFF_MS (60s)
   // Retry 0 (first retry): 1s, Retry 1: 2s, Retry 2: 4s, Retry 3: 8s, Retry 4: 16s
+  // Retry 5+: 32s, 60s (capped), 60s (capped), ...
   // Skip backoff check on very first upload attempt (lastAttemptAt not set yet)
   if (entry.lastAttemptAt) {
-    const backoffMs = Math.pow(2, entry.retryCount) * 1000;
+    const backoffMs = Math.min(
+      Math.pow(2, entry.retryCount) * 1000,
+      MAX_BACKOFF_MS
+    );
     const timeSinceLastAttempt = Date.now() - entry.lastAttemptAt.getTime();
 
     if (timeSinceLastAttempt < backoffMs) {
@@ -181,7 +187,11 @@ export async function retryFileUpload(
 }
 
 /**
- * Process files with concurrency limit
+ * Process files with concurrency limit using worker pool pattern
+ *
+ * This implementation uses a worker pool to avoid race conditions and
+ * maintain strict concurrency limits.
+ *
  * @param items - Items to process
  * @param worker - Async worker function for each item
  * @param concurrency - Maximum parallel operations
@@ -191,33 +201,29 @@ async function processWithConcurrency<T, R>(
   worker: (item: T) => Promise<R>,
   concurrency: number
 ): Promise<R[]> {
-  const results: R[] = [];
+  const results: R[] = new Array(items.length);
   let index = 0;
-  const executing: Promise<void>[] = [];
 
-  async function enqueue(): Promise<void> {
-    if (index >= items.length) return;
-    const currentIndex = index++;
-    const item = items[currentIndex];
-    if (!item) return; // Type guard for TypeScript
-
-    const p = worker(item).then((result) => {
-      results[currentIndex] = result;
-    });
-    executing.push(
-      p.then(() => {
-        executing.splice(executing.indexOf(p), 1);
-      })
-    );
-    if (executing.length < concurrency) {
-      await enqueue();
-    } else {
-      await Promise.race(executing);
-      await enqueue();
+  async function workerLoop(): Promise<void> {
+    while (true) {
+      const currentIndex = index++;
+      if (currentIndex >= items.length) {
+        break;
+      }
+      const item = items[currentIndex];
+      if (item === undefined) {
+        throw new Error(`Invalid array index: ${currentIndex}`);
+      }
+      results[currentIndex] = await worker(item);
     }
   }
-  await enqueue();
-  await Promise.all(executing);
+
+  // Create worker pool with specified concurrency
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    () => workerLoop()
+  );
+  await Promise.all(workers);
   return results;
 }
 
@@ -225,7 +231,7 @@ async function processWithConcurrency<T, R>(
  * Process all pending files in the queue
  *
  * @param apiBaseUrl - Base URL for API requests
- * @param concurrency - Maximum parallel uploads (default: 3)
+ * @param concurrency - Maximum parallel uploads (default: UPLOAD_CONCURRENCY constant)
  * @returns Statistics about processed files
  *
  * @example
@@ -236,12 +242,13 @@ async function processWithConcurrency<T, R>(
  */
 export async function processFileQueue(
   apiBaseUrl: string,
-  concurrency = 3
+  concurrency = UPLOAD_CONCURRENCY
 ): Promise<{
   total: number;
   completed: number;
   failed: number;
   pending: number;
+  skipped: number;
 }> {
   const files = await getPendingFiles();
 
@@ -253,11 +260,16 @@ export async function processFileQueue(
       if (success) {
         return { status: "completed" as const, file };
       } else {
+        // Check updated state to distinguish between failed and skipped (backoff)
         const updatedFile = await db.fileQueue.get(file.id);
         if (updatedFile?.uploadState === "failed") {
           return { status: "failed" as const, file };
-        } else {
+        } else if (updatedFile?.uploadState === "uploading") {
+          // Should not happen, but handle gracefully
           return { status: "pending" as const, file };
+        } else {
+          // Still pending - likely skipped due to backoff
+          return { status: "skipped" as const, file };
         }
       }
     },
@@ -268,11 +280,13 @@ export async function processFileQueue(
   let completed = 0;
   let failed = 0;
   let pending = 0;
+  let skipped = 0;
 
   for (const result of results) {
     if (result.status === "completed") completed++;
     else if (result.status === "failed") failed++;
     else if (result.status === "pending") pending++;
+    else if (result.status === "skipped") skipped++;
   }
 
   return {
@@ -280,6 +294,7 @@ export async function processFileQueue(
     completed,
     failed,
     pending,
+    skipped,
   };
 }
 

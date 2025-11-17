@@ -46,7 +46,12 @@ interface UseShareTargetReturn {
 export function useShareTarget(): UseShareTargetReturn {
   const [sharedData, setSharedData] = useState<SharedData | null>(null);
 
-  // Memoize event handlers to prevent listener re-creation on every render
+  /**
+   * Handle Service Worker messages for shared files
+   *
+   * Memoized with empty deps: URL is read on-demand when message arrives,
+   * which is correct behavior since we want the current URL at message time.
+   */
   const handleServiceWorkerMessage = useCallback((event: MessageEvent) => {
     if (event.data?.type === "SHARE_TARGET_FILES") {
       const { shareId, files } = event.data;
@@ -84,6 +89,13 @@ export function useShareTarget(): UseShareTargetReturn {
     }
   }, []);
 
+  /**
+   * Handle share target navigation (URL params)
+   *
+   * Memoized with empty deps: Reads URL on-demand when called (mount or popstate).
+   * This is intentional - we want to read the URL at the time of the event, not
+   * create a new handler when URL changes.
+   */
   const handleShareTarget = useCallback(() => {
     try {
       const url = new URL(window.location.href);
@@ -121,7 +133,8 @@ export function useShareTarget(): UseShareTargetReturn {
     // Only run in browser
     if (typeof window === "undefined") return;
 
-    // This is safe: reading URL params (external system) once on mount
+    // This is safe: reading URL params (external system) on mount and navigation events (popstate).
+    // The handler is memoized, so it reads the URL at event time, not at creation time.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     handleShareTarget();
 

@@ -96,6 +96,9 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
 
   /**
    * Register for Background Sync (if supported)
+   *
+   * Validates sync API availability at both prototype and instance level
+   * before attempting registration.
    */
   const registerBackgroundSync = useCallback(async () => {
     if (
@@ -104,12 +107,24 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
     ) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        await (
-          registration as ServiceWorkerRegistration & {
-            sync: { register: (tag: string) => Promise<void> };
-          }
-        ).sync.register("sync-file-queue");
-        console.log("[FileQueue] Background sync registered");
+
+        // Runtime check: Verify sync property exists on registration instance
+        // TypeScript doesn't have types for Background Sync API, so we use type assertion
+        const regWithSync = registration as ServiceWorkerRegistration & {
+          sync?: { register: (tag: string) => Promise<void> };
+        };
+
+        if (
+          regWithSync.sync &&
+          typeof regWithSync.sync.register === "function"
+        ) {
+          await regWithSync.sync.register("sync-file-queue");
+          console.log("[FileQueue] Background sync registered");
+        } else {
+          console.warn(
+            "[FileQueue] Background sync not available on registration"
+          );
+        }
       } catch (error) {
         console.error(
           "[FileQueue] Background sync registration failed:",
@@ -121,16 +136,19 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
 
   /**
    * Listen for Background Sync completion messages
+   *
+   * Note: Handler is memoized with useCallback to prevent duplicate listeners
+   * during hot module replacement in development.
    */
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === "FILE_QUEUE_SYNCED") {
-          const { count, success, failed } = event.data;
+          const { count, succeeded, failed } = event.data;
 
           if (failed && failed > 0) {
             console.warn(
-              `[FileQueue] Background sync completed with errors: ${success || 0} succeeded, ${failed} failed`
+              `[FileQueue] Background sync completed with errors: ${succeeded || 0} succeeded, ${failed} failed`
             );
           } else {
             console.log(

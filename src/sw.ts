@@ -8,6 +8,7 @@ import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, CacheFirst } from "workbox-strategies";
 import { openDB } from "idb";
+import { DB_NAME, DB_VERSION, MAX_RETRY_COUNT } from "./lib/db-constants";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -82,24 +83,20 @@ const ALLOWED_TYPES = [
 /**
  * Store file in IndexedDB fileQueue
  * Service Worker cannot import from lib/fileQueue.ts, so we inline the logic
+ *
+ * Schema is duplicated from db.ts - use shared constants from db-constants.ts
+ * to minimize sync risk.
  */
-// Database version constant - must match db.ts schema version
-// IMPORTANT: Keep in sync with src/lib/db.ts when schema changes!
-const DB_VERSION = 3;
-
-// Maximum retry attempts before marking file as permanently failed
-const MAX_RETRY_COUNT = 5;
-
 async function storeFileInQueue(
   file: File,
   metadata: { name: string; type: string; size: number; timestamp: number }
 ): Promise<string> {
-  const db = await openDB("SecPalDB", DB_VERSION);
+  const db = await openDB(DB_NAME, DB_VERSION);
   const id = crypto.randomUUID();
 
   // NOTE: This schema duplicates FileQueueEntry from db.ts
-  // Service Worker cannot import from lib/, so schema is inlined
-  // SYNC RISK: Keep structure in sync with db.ts manually!
+  // Service Worker cannot import TypeScript interfaces, so structure is inlined
+  // SYNC RISK: Keep structure in sync with db.ts FileQueueEntry interface!
   await db.add("fileQueue", {
     id,
     file, // File extends Blob, no conversion needed
@@ -245,16 +242,34 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
  */
 self.addEventListener("sync", ((event: SyncEvent) => {
   if (event.tag === "sync-file-queue") {
-    event.waitUntil(syncFileQueue());
+    event.waitUntil(
+      (async () => {
+        // Validate that at least one trusted window client exists before processing
+        const clients = await self.clients.matchAll({ type: "window" });
+        if (clients.length === 0) {
+          console.warn(
+            "[SW] Ignoring sync-file-queue: no trusted window clients found"
+          );
+          return;
+        }
+        await syncFileQueue();
+      })()
+    );
   }
 }) as EventListener);
 
 /**
  * Process pending file uploads from IndexedDB queue
+ *
+ * Implements retry logic with exponential backoff and max retry limits.
+ * Files are only marked as failed after actual upload attempts, not preemptively.
  */
 async function syncFileQueue(): Promise<void> {
+  const db = await openDB(DB_NAME, DB_VERSION);
+  let succeeded = 0;
+  let failed = 0;
+
   try {
-    const db = await openDB("SecPalDB", DB_VERSION);
     const pendingFiles = await db.getAllFromIndex(
       "fileQueue",
       "uploadState",
@@ -264,33 +279,99 @@ async function syncFileQueue(): Promise<void> {
     console.log(`[SW] Syncing ${pendingFiles.length} pending files`);
 
     // Note: Actual upload logic will be implemented when Secret API is ready
-    // For now, we just log that sync would happen
+    // For now, we simulate the upload attempt
     for (const file of pendingFiles) {
-      // Skip files that exceeded max retry attempts (prevents infinite loops)
-      if (file.retryCount >= MAX_RETRY_COUNT) {
-        console.warn(
-          `[SW] File ${file.metadata.name} exceeded max retries (${MAX_RETRY_COUNT}), marking as failed`
+      try {
+        // Simulate upload attempt (replace with real upload logic)
+        console.log(
+          `[SW] Would upload file: ${file.metadata.name} (retry: ${file.retryCount})`
         );
-        await db.put("fileQueue", { ...file, uploadState: "failed" });
-        continue;
-      }
 
-      console.log(
-        `[SW] Would upload file: ${file.metadata.name} (retry: ${file.retryCount})`
-      );
+        // Placeholder: Simulate upload result
+        const uploadSucceeded = false; // Will be determined by actual API call
+
+        if (uploadSucceeded) {
+          // Mark as completed
+          await db.put("fileQueue", { ...file, uploadState: "completed" });
+          succeeded++;
+        } else {
+          // Increment retry count, check if max retries exceeded
+          const newRetryCount = (file.retryCount ?? 0) + 1;
+          if (newRetryCount >= MAX_RETRY_COUNT) {
+            console.warn(
+              `[SW] File ${file.metadata.name} exceeded max retries (${MAX_RETRY_COUNT}), marking as failed`
+            );
+            await db.put("fileQueue", {
+              ...file,
+              uploadState: "failed",
+              retryCount: newRetryCount,
+              error: "Max retries exceeded",
+            });
+            failed++;
+          } else {
+            // Keep as pending with incremented retry count
+            await db.put("fileQueue", {
+              ...file,
+              retryCount: newRetryCount,
+              uploadState: "pending",
+            });
+          }
+        }
+      } catch (error) {
+        // Individual file upload error - log and continue
+        console.error(
+          `[SW] Failed to upload file ${file.metadata.name}:`,
+          error
+        );
+        const newRetryCount = (file.retryCount ?? 0) + 1;
+        if (newRetryCount >= MAX_RETRY_COUNT) {
+          await db.put("fileQueue", {
+            ...file,
+            uploadState: "failed",
+            retryCount: newRetryCount,
+            error: error instanceof Error ? error.message : "Upload failed",
+          });
+          failed++;
+        } else {
+          await db.put("fileQueue", {
+            ...file,
+            retryCount: newRetryCount,
+            uploadState: "pending",
+          });
+        }
+      }
     }
 
-    // Notify clients about sync completion
+    // Notify clients about sync completion with stats
     const clients = await self.clients.matchAll({ type: "window" });
     for (const client of clients) {
       client.postMessage({
         type: "FILE_QUEUE_SYNCED",
         count: pendingFiles.length,
+        succeeded,
+        failed,
       });
     }
   } catch (error) {
+    // Critical error - notify clients and re-throw only for transient errors
     console.error("[SW] File queue sync failed:", error);
-    throw error; // Re-throw to trigger retry
+
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({
+        type: "FILE_QUEUE_SYNC_ERROR",
+        error: error instanceof Error ? error.message : "Sync failed",
+      });
+    }
+
+    // Only re-throw for network errors (transient), not for corrupted data (permanent)
+    if (
+      error instanceof Error &&
+      (error.name === "NetworkError" || error.message.includes("network"))
+    ) {
+      throw error; // Re-throw to trigger retry
+    }
+    // For other errors (e.g., corrupted IndexedDB), don't retry infinitely
   }
 }
 

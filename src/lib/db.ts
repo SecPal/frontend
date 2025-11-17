@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Dexie, { type EntityTable } from "dexie";
+import { DB_NAME } from "./db-constants";
 
 /**
  * Guard entity stored in IndexedDB
@@ -99,7 +100,7 @@ export interface FileQueueEntry {
  * - Analytics (offline event tracking)
  * - File queue (offline file upload queue)
  */
-export const db = new Dexie("SecPalDB") as Dexie & {
+export const db = new Dexie(DB_NAME) as Dexie & {
   guards: EntityTable<Guard, "id">;
   syncQueue: EntityTable<SyncOperation, "id">;
   apiCache: EntityTable<ApiCacheEntry, "url">;
