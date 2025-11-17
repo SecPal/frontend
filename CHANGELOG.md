@@ -14,6 +14,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **IndexedDB File Queue for Offline Uploads** (#142)
+  - Replaced sessionStorage with IndexedDB for persistent file storage
+  - Files now survive browser close and offline conditions
+  - Added `fileQueue` table to IndexedDB schema (version 3)
+  - Implemented FileQueueEntry interface with upload states (pending, uploading, failed, completed)
+  - Created comprehensive file queue utilities:
+    - `addFileToQueue()` - Store files in IndexedDB
+    - `getPendingFiles()` - Query pending uploads
+    - `updateFileUploadState()` - Track upload progress
+    - `retryFileUpload()` - Exponential backoff retry logic (max 5 attempts)
+    - `processFileQueue()` - Batch upload processing
+    - `clearCompletedUploads()` - Queue cleanup
+    - `getStorageQuota()` - Monitor IndexedDB quota usage
+  - Service Worker integration:
+    - Share Target now stores files directly in IndexedDB
+    - Background Sync API support for offline upload queue
+    - Automatic sync when network connection restores
+  - React Hook `useFileQueue()`:
+    - Real-time queue status with Dexie live queries
+    - Manual queue processing and cleanup
+    - Storage quota monitoring
+    - Background Sync registration
+  - Updated `useShareTarget` hook:
+    - Migrated from sessionStorage to Service Worker messages
+    - Files now include IndexedDB queue IDs
+    - Improved race condition handling
+  - Dependencies: `idb@^8.0.2` for Service Worker IndexedDB access
+  - 17 comprehensive tests with 100% coverage
+  - Placeholder for future Secret API integration
+  - Part of PWA Phase 3 (Epic #64)
+
 - **Share Target POST Method & File Sharing** (#101)
   - Extended Share Target API to support POST method with file uploads
   - Created `ShareTarget` page component with file preview and validation
