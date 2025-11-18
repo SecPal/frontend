@@ -71,4 +71,4 @@ jobs:
           files: ./coverage/lcov.info,./coverage/clover.xml
           flags: frontend
           name: frontend-coverage
-          fail_ci_if_error: true
+          fail_ci_if_error: ${{ github.actor != 'dependabot[bot]' }}
