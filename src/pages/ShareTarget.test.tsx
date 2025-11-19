@@ -10,6 +10,11 @@ import { i18n } from "@lingui/core";
 import { ShareTarget } from "./ShareTarget";
 import { handleShareTargetMessage } from "./ShareTarget.utils";
 
+// Mock secretApi to prevent real API calls
+vi.mock("../services/secretApi", () => ({
+  fetchSecrets: vi.fn().mockResolvedValue([]),
+}));
+
 describe("ShareTarget Component", () => {
   // Helper function to set window.location with search params
   const setLocationSearch = (search: string) => {
