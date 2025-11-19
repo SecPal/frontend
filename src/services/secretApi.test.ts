@@ -376,10 +376,10 @@ describe("Secret API", () => {
 
       const masterKey = await getSecretMasterKey("secret-123");
 
-      // Verify key was imported correctly (can't export as it's not extractable)
+      // Verify key was imported correctly
       expect(masterKey).toBeInstanceOf(CryptoKey);
       expect(masterKey.type).toBe("secret");
-      expect(masterKey.extractable).toBe(false); // Security: not extractable
+      expect(masterKey.extractable).toBe(true); // Needed for deriveFileKey
 
       // Verify we can use the key for encryption
       const testData = new Uint8Array([1, 2, 3, 4, 5]);
@@ -389,10 +389,11 @@ describe("Secret API", () => {
         masterKey,
         testData
       );
-      expect(encrypted).toBeInstanceOf(ArrayBuffer);
+      expect(encrypted).toBeInstanceOf(Object);
+      expect(encrypted.byteLength).toBeGreaterThan(0);
     });
 
-    it("should create non-extractable CryptoKey for security", async () => {
+    it("should create extractable CryptoKey (required for HKDF)", async () => {
       const testKeyBytes = new Uint8Array(32).fill(0x01);
       const base64Key = btoa(String.fromCharCode(...testKeyBytes));
 
@@ -411,12 +412,12 @@ describe("Secret API", () => {
 
       const masterKey = await getSecretMasterKey("secret-123");
 
-      expect(masterKey.extractable).toBe(false);
+      expect(masterKey.extractable).toBe(true);
 
-      // Should NOT be able to export it
-      await expect(
-        crypto.subtle.exportKey("raw", masterKey)
-      ).rejects.toThrow();
+      // Should be able to export it (needed for deriveFileKey)
+      const exported = await crypto.subtle.exportKey("raw", masterKey);
+      expect(exported).toBeInstanceOf(Object);
+      expect(exported.byteLength).toBe(32); // 256 bits
     });
   });
 });
