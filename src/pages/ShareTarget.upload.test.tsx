@@ -20,7 +20,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("ShareTarget - Upload Functionality", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks
     vi.clearAllMocks();
 
@@ -39,6 +39,14 @@ describe("ShareTarget - Upload Functionality", () => {
         updated_at: "2025-01-01",
       },
     ]);
+
+    // Mock getSecretMasterKey to return a valid CryptoKey
+    const mockKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockKey);
 
     // Mock addFileToQueue
     vi.mocked(fileQueue.addFileToQueue).mockResolvedValue("file-123");
@@ -130,24 +138,25 @@ describe("ShareTarget - Upload Functionality", () => {
     });
     await user.click(uploadBtn);
 
-    // Verify files were queued
-    await waitFor(() => {
-      expect(fileQueue.addFileToQueue).toHaveBeenCalledWith(
-        expect.objectContaining({
-          size: 3,
-          type: "image/jpeg",
-        }),
-        expect.objectContaining({
-          name: "test.jpg",
-          type: "image/jpeg",
-          size: 3, // Now uses blob.size, not original file.size
-        }),
-        "secret-1"
-      );
-    });
+    // Wait for encryption to complete and upload to be processed
+    await waitFor(
+      () => {
+        expect(fileQueue.addFileToQueue).toHaveBeenCalled();
+        expect(fileQueue.processFileQueue).toHaveBeenCalled();
+      },
+      { timeout: 5000 }
+    );
 
-    // Verify upload was processed
-    expect(fileQueue.processFileQueue).toHaveBeenCalled();
+    // Verify the call was made with encrypted blob
+    expect(fileQueue.addFileToQueue).toHaveBeenCalledWith(
+      expect.any(Blob), // Encrypted blob
+      expect.objectContaining({
+        name: "test.jpg",
+        type: "image/jpeg",
+        size: 3, // Original plaintext size
+      }),
+      "secret-1"
+    );
   });
 
   it("should show upload progress during upload", async () => {
