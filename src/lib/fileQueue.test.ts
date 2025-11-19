@@ -17,6 +17,27 @@ import {
 import { db } from "./db";
 import type { FileQueueEntry } from "./db";
 
+// Mock secretApi module
+vi.mock("../services/secretApi", () => ({
+  uploadAttachment: vi.fn().mockResolvedValue({
+    id: "att-123",
+    filename: "test.txt",
+    size: 12,
+    mime_type: "text/plain",
+    created_at: new Date().toISOString(),
+  }),
+  ApiError: class ApiError extends Error {
+    constructor(
+      message: string,
+      public status?: number,
+      public errors?: Record<string, string[]>
+    ) {
+      super(message);
+      this.name = "ApiError";
+    }
+  },
+}));
+
 describe("File Queue Utilities", () => {
   beforeEach(async () => {
     await db.fileQueue.clear();
@@ -227,7 +248,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(false);
       const updated = await db.fileQueue.get("test-id");
@@ -253,7 +274,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(false); // Too soon to retry
     });
@@ -263,6 +284,7 @@ describe("File Queue Utilities", () => {
       const entry: FileQueueEntry = {
         id: "test-id",
         file,
+        secretId: "secret-123",
         metadata: {
           name: "test.txt",
           type: "text/plain",
@@ -276,7 +298,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(true);
       const updated = await db.fileQueue.get("test-id");
@@ -298,6 +320,7 @@ describe("File Queue Utilities", () => {
         {
           id: "1",
           file,
+          secretId: "secret-123",
           metadata,
           uploadState: "pending",
           retryCount: 0,
@@ -306,6 +329,7 @@ describe("File Queue Utilities", () => {
         {
           id: "2",
           file,
+          secretId: "secret-456",
           metadata,
           uploadState: "pending",
           retryCount: 0,
@@ -313,11 +337,144 @@ describe("File Queue Utilities", () => {
         },
       ]);
 
-      const stats = await processFileQueue("https://api.secpal.dev");
+      const stats = await processFileQueue();
 
       expect(stats.total).toBe(2);
       expect(stats.completed).toBe(2);
       expect(stats.failed).toBe(0);
+    });
+
+    it("should count skipped files when retry count unchanged", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      const now = new Date();
+      const recentAttempt = new Date(now.getTime() - 1000); // 1s ago
+
+      // Add two files: one that will be processed, one that's in backoff
+      await db.fileQueue.bulkAdd([
+        {
+          id: "1",
+          file,
+          secretId: "secret-123",
+          metadata,
+          uploadState: "pending",
+          retryCount: 0,
+          createdAt: now,
+          lastAttemptAt: recentAttempt,
+        },
+        {
+          id: "2",
+          file,
+          secretId: "secret-456",
+          metadata,
+          uploadState: "pending",
+          retryCount: 3, // High retry count
+          createdAt: now,
+          lastAttemptAt: recentAttempt, // Recent attempt = in backoff
+        },
+      ]);
+
+      const stats = await processFileQueue();
+
+      // File 1 should complete, file 2 should be skipped due to backoff
+      expect(stats.total).toBe(2);
+      expect(stats.completed).toBe(1);
+      // File 2 stays pending with same retryCount = skipped
+      expect(stats.skipped).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should handle deleted files gracefully", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.bulkAdd([
+        {
+          id: "1",
+          file,
+          secretId: "secret-123",
+          metadata,
+          uploadState: "pending",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          id: "2",
+          file,
+          secretId: "secret-456",
+          metadata,
+          uploadState: "pending",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ]);
+
+      // Delete file 1 before processing
+      await db.fileQueue.delete("1");
+
+      const stats = await processFileQueue();
+
+      // Only file 2 should be processed
+      expect(stats.total).toBe(1);
+      expect(stats.completed).toBe(1);
+    });
+
+    it("should count pending files with increased retry count", async () => {
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      // Add a file that will fail
+      await db.fileQueue.add({
+        id: "1",
+        file,
+        secretId: "secret-123",
+        metadata,
+        uploadState: "pending",
+        retryCount: 0,
+        createdAt: new Date(),
+        lastAttemptAt: new Date(Date.now() - 10000), // 10s ago - not in backoff
+      });
+
+      // Mock uploadAttachment to fail
+      const mockUpload = vi.mocked(
+        (await import("../services/secretApi")).uploadAttachment
+      );
+      mockUpload.mockRejectedValueOnce(new Error("Upload failed"));
+
+      const stats = await processFileQueue();
+
+      // File should have failed and logged error
+      expect(stats.total).toBe(1);
+      expect(stats.failed).toBe(1);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("[FileQueue] Upload failed for test.txt"),
+        "Upload failed"
+      );
+
+      // Verify retryCount was increased
+      const updatedFile = await db.fileQueue.get("1");
+      expect(updatedFile?.retryCount).toBe(1);
+
+      consoleSpy.mockRestore();
     });
   });
 

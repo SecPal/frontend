@@ -8,6 +8,7 @@ import {
   MAX_BACKOFF_MS,
   UPLOAD_CONCURRENCY,
 } from "./db-constants";
+import { uploadAttachment, ApiError } from "../services/secretApi";
 
 /**
  * Add a file to the upload queue
@@ -118,21 +119,17 @@ export async function updateFileUploadState(
  * Retry a failed file upload
  *
  * @param entry - File queue entry to retry
- * @param apiBaseUrl - Base URL for API requests
  * @returns true if upload succeeded, false otherwise
  *
  * @example
  * ```ts
  * const failedFiles = await getFailedFiles();
  * for (const file of failedFiles) {
- *   await retryFileUpload(file, 'https://api.secpal.dev');
+ *   await retryFileUpload(file);
  * }
  * ```
  */
-export async function retryFileUpload(
-  entry: FileQueueEntry,
-  apiBaseUrl: string
-): Promise<boolean> {
+export async function retryFileUpload(entry: FileQueueEntry): Promise<boolean> {
   if (entry.retryCount >= MAX_RETRY_COUNT) {
     await updateFileUploadState(entry.id, "failed", "Max retries exceeded");
     return false;
@@ -158,30 +155,50 @@ export async function retryFileUpload(
   try {
     await updateFileUploadState(entry.id, "uploading");
 
-    // TODO: Implement actual file upload logic when Secret API is ready
-    // For now, just log the placeholder and mark as completed
+    // Validate secretId before uploading
+    if (!entry.secretId) {
+      throw new Error("Cannot upload file without target Secret ID");
+    }
+
+    // Create File object from Blob with metadata
+    const file = new File([entry.file], entry.metadata.name, {
+      type: entry.metadata.type,
+    });
+
+    // Upload file to backend API
+    const attachment = await uploadAttachment(entry.secretId, file);
+
     console.log(
-      `[FileQueue] Would upload to ${apiBaseUrl}/api/v1/secrets/${entry.secretId || "new"}/files`,
-      {
-        name: entry.metadata.name,
-        size: entry.metadata.size,
-      }
+      `[FileQueue] Successfully uploaded ${attachment.filename} (${attachment.size} bytes) to secret ${entry.secretId}`,
+      { attachmentId: attachment.id }
     );
 
-    // Placeholder: In real implementation, we would:
-    // const formData = new FormData();
-    // formData.append("file", entry.file, entry.metadata.name);
-    // if (entry.secretId) formData.append("secret_id", entry.secretId);
-    // const response = await fetch(`${apiBaseUrl}/api/v1/secrets/${entry.secretId}/files`, {
-    //   method: 'POST',
-    //   body: formData
-    // });
-
-    // Mark as completed (placeholder until real API is integrated)
+    // Mark as completed
     await updateFileUploadState(entry.id, "completed");
     return true;
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : "Upload failed";
+    let errorMsg = "Upload failed";
+
+    if (error instanceof ApiError) {
+      // Extract detailed error message from API response
+      errorMsg = error.message;
+      if (error.errors && Object.keys(error.errors).length > 0) {
+        const firstErrorField = Object.keys(error.errors)[0];
+        if (firstErrorField) {
+          const fieldErrors = error.errors[firstErrorField];
+          if (fieldErrors && fieldErrors.length > 0) {
+            errorMsg = `${errorMsg}: ${fieldErrors[0]}`;
+          }
+        }
+      }
+    } else if (error instanceof Error) {
+      errorMsg = error.message;
+    }
+
+    console.error(
+      `[FileQueue] Upload failed for ${entry.metadata.name}:`,
+      errorMsg
+    );
     await updateFileUploadState(entry.id, "failed", errorMsg);
     return false;
   }
@@ -231,18 +248,16 @@ async function processWithConcurrency<T, R>(
 /**
  * Process all pending files in the queue
  *
- * @param apiBaseUrl - Base URL for API requests
  * @param concurrency - Maximum parallel uploads (default: UPLOAD_CONCURRENCY constant)
  * @returns Statistics about processed files
  *
  * @example
  * ```ts
- * const stats = await processFileQueue('https://api.secpal.dev');
+ * const stats = await processFileQueue();
  * console.log(`Uploaded: ${stats.completed}, Failed: ${stats.failed}`);
  * ```
  */
 export async function processFileQueue(
-  apiBaseUrl: string,
   concurrency = UPLOAD_CONCURRENCY
 ): Promise<{
   total: number;
@@ -254,40 +269,36 @@ export async function processFileQueue(
   const files = await getPendingFiles();
 
   // Process files in parallel with concurrency limit
-  const results = await processWithConcurrency(
+  await processWithConcurrency(
     files,
-    async (file) => {
-      const success = await retryFileUpload(file, apiBaseUrl);
-      if (success) {
-        return { status: "completed" as const, file };
-      } else {
-        // Check updated state to distinguish between failed and skipped (backoff)
-        const updatedFile = await db.fileQueue.get(file.id);
-        if (updatedFile?.uploadState === "failed") {
-          return { status: "failed" as const, file };
-        } else if (updatedFile?.uploadState === "uploading") {
-          // Should not happen, but handle gracefully
-          return { status: "pending" as const, file };
-        } else {
-          // Still pending - likely skipped due to backoff
-          return { status: "skipped" as const, file };
-        }
-      }
-    },
+    (entry) => retryFileUpload(entry),
     concurrency
   );
 
-  // Count results
+  // Re-fetch only the files we processed to get their updated states
+  const updatedFiles = await Promise.all(
+    files.map((f) => db.fileQueue.get(f.id))
+  );
+
+  // Count results from processed files only
   let completed = 0;
   let failed = 0;
   let pending = 0;
   let skipped = 0;
 
-  for (const result of results) {
-    if (result.status === "completed") completed++;
-    else if (result.status === "failed") failed++;
-    else if (result.status === "pending") pending++;
-    else if (result.status === "skipped") skipped++;
+  for (const file of updatedFiles) {
+    if (!file) continue; // Skip if file was deleted
+    if (file.uploadState === "completed") completed++;
+    else if (file.uploadState === "failed") failed++;
+    else if (file.uploadState === "pending") {
+      // Check if retry count increased - if not, it was skipped due to backoff
+      const originalFile = files.find((f) => f.id === file.id);
+      if (originalFile && file.retryCount === originalFile.retryCount) {
+        skipped++;
+      } else {
+        pending++;
+      }
+    } else if (file.uploadState === "uploading") pending++;
   }
 
   return {

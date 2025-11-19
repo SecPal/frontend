@@ -69,10 +69,10 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
   /**
    * Process all pending files in the queue
    */
-  const processQueue = useCallback(async (apiBaseUrl: string) => {
+  const processQueue = useCallback(async () => {
     setIsProcessing(true);
     try {
-      const stats = await processFileQueue(apiBaseUrl);
+      const stats = await processFileQueue();
       return stats;
     } finally {
       setIsProcessing(false);
