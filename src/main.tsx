@@ -7,6 +7,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
 import { activateLocale, detectLocale } from "./i18n";
+import { initWebVitals } from "./lib/webVitals";
 import "@fontsource/inter";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -62,4 +63,7 @@ if (typeof window !== "undefined" && !isTest) {
       <AppWithI18n />
     </StrictMode>
   );
+
+  // Initialize Web Vitals tracking
+  initWebVitals();
 }
