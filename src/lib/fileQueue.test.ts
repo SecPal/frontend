@@ -23,14 +23,14 @@ vi.mock("../services/secretApi", () => ({
     id: "att-123",
     filename: "test.txt",
     size: 12,
-    mimeType: "text/plain",
-    uploadedAt: new Date().toISOString(),
+    mime_type: "text/plain",
+    created_at: new Date().toISOString(),
   }),
   ApiError: class ApiError extends Error {
     constructor(
       message: string,
       public status?: number,
-      public validationErrors?: Record<string, string[]>
+      public errors?: Record<string, string[]>
     ) {
       super(message);
       this.name = "ApiError";

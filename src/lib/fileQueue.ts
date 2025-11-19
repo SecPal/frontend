@@ -275,26 +275,34 @@ export async function processFileQueue(
     concurrency
   );
 
-  // Re-fetch files to get updated states
-  const updatedFiles = await db.fileQueue.toArray();
+  // Re-fetch only the files we processed to get their updated states
+  const updatedFiles = await Promise.all(
+    files.map((f) => db.fileQueue.get(f.id))
+  );
 
-  // Count results
+  // Count results from processed files only
   let completed = 0;
   let failed = 0;
   let pending = 0;
   let skipped = 0;
 
   for (const file of updatedFiles) {
+    if (!file) continue; // Skip if file was deleted
     if (file.uploadState === "completed") completed++;
     else if (file.uploadState === "failed") failed++;
-    else if (file.uploadState === "pending") pending++;
-    else if (file.uploadState === "uploading") pending++; // Count uploading as pending
+    else if (file.uploadState === "pending") {
+      // Check if retry count increased - if not, it was skipped due to backoff
+      const originalFile = files.find((f) => f.id === file.id);
+      if (originalFile && file.retryCount === originalFile.retryCount) {
+        skipped++;
+      } else {
+        pending++;
+      }
+    } else if (file.uploadState === "uploading") pending++;
   }
 
-  skipped = files.length - (completed + failed + pending);
-
   return {
-    total: updatedFiles.length,
+    total: files.length,
     completed,
     failed,
     pending,

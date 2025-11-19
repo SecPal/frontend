@@ -243,8 +243,7 @@ export function ShareTarget() {
     if (sharedData?.files && sharedData.files.length > 0) {
       void loadSecrets();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sharedData?.files?.length]);
+  }, [sharedData?.files]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -413,7 +412,7 @@ export function ShareTarget() {
 
       if (stats.failed > 0) {
         setUploadError(
-          `Failed to upload ${stats.failed} of ${stats.total} file(s)`
+          `Failed to upload ${stats.failed} of ${sharedData.files.length} file(s)`
         );
       } else if (stats.completed === stats.total) {
         setUploadSuccess(true);
@@ -588,7 +587,11 @@ export function ShareTarget() {
                 </div>
 
                 {uploading && (
-                  <div className="mb-4 p-3 bg-blue-100 rounded">
+                  <div
+                    className="mb-4 p-3 bg-blue-100 rounded"
+                    role="status"
+                    aria-live="polite"
+                  >
                     <Text className="text-blue-900 font-semibold">
                       <Trans>Uploading...</Trans>
                     </Text>
@@ -599,7 +602,11 @@ export function ShareTarget() {
                 )}
 
                 {uploadSuccess && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                  <div
+                    className="mb-4 p-3 bg-green-50 border border-green-200 rounded"
+                    role="status"
+                    aria-live="polite"
+                  >
                     <Text className="text-green-900 font-semibold">
                       <Trans>Successfully uploaded files!</Trans>
                     </Text>
@@ -607,7 +614,11 @@ export function ShareTarget() {
                 )}
 
                 {uploadError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                  <div
+                    className="mb-4 p-3 bg-red-50 border border-red-200 rounded"
+                    role="alert"
+                    aria-live="assertive"
+                  >
                     <Text className="text-red-900 font-semibold">
                       {uploadError}
                     </Text>

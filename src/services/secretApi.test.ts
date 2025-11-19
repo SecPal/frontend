@@ -218,4 +218,39 @@ describe("Secret API", () => {
       await expect(fetchSecrets()).rejects.toThrow("Internal Server Error");
     });
   });
+
+  describe("Input Validation", () => {
+    it("should reject empty secretId in uploadAttachment", async () => {
+      const file = new File(["test"], "test.txt", { type: "text/plain" });
+      await expect(uploadAttachment("", file)).rejects.toThrow(
+        "secretId is required"
+      );
+      await expect(uploadAttachment("   ", file)).rejects.toThrow(
+        "secretId is required"
+      );
+    });
+
+    it("should reject invalid file in uploadAttachment", async () => {
+      const emptyFile = new File([], "empty.txt", { type: "text/plain" });
+      await expect(uploadAttachment("secret-123", emptyFile)).rejects.toThrow(
+        "file must be a non-empty File object"
+      );
+    });
+
+    it("should reject empty secretId in listAttachments", async () => {
+      await expect(listAttachments("")).rejects.toThrow("secretId is required");
+      await expect(listAttachments("   ")).rejects.toThrow(
+        "secretId is required"
+      );
+    });
+
+    it("should reject empty attachmentId in deleteAttachment", async () => {
+      await expect(deleteAttachment("")).rejects.toThrow(
+        "attachmentId is required"
+      );
+      await expect(deleteAttachment("   ")).rejects.toThrow(
+        "attachmentId is required"
+      );
+    });
+  });
 });

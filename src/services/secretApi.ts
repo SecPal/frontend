@@ -99,6 +99,13 @@ export async function uploadAttachment(
   secretId: string,
   file: File
 ): Promise<SecretAttachment> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+  if (!file || typeof file !== "object" || file.size === 0) {
+    throw new Error("file must be a non-empty File object");
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -138,6 +145,10 @@ export async function uploadAttachment(
 export async function listAttachments(
   secretId: string
 ): Promise<SecretAttachment[]> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+
   const response = await fetch(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
@@ -173,6 +184,10 @@ export async function listAttachments(
  * ```
  */
 export async function deleteAttachment(attachmentId: string): Promise<void> {
+  if (!attachmentId || attachmentId.trim() === "") {
+    throw new Error("attachmentId is required");
+  }
+
   const response = await fetch(
     `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}`,
     {
