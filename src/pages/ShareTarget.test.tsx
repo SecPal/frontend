@@ -834,3 +834,66 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Phase 2: File Encryption Integration Tests
+ * Testing encryption before IndexedDB storage
+ */
+describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
+  beforeEach(() => {
+    // Setup i18n
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    // Clear sessionStorage
+    sessionStorage.clear();
+
+    // Reset window.location
+    Object.defineProperty(window, "location", {
+      value: {
+        pathname: "/share",
+        search: "",
+        hash: "",
+        href: "http://localhost:5173/share",
+      },
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("should encrypt files before adding to IndexedDB queue", async () => {
+    // TODO: Implement encryption test
+    // This test MUST fail initially (TDD principle)
+    expect(true).toBe(false);
+  });
+
+  it("should show encryption progress indicator", async () => {
+    // TODO: Implement progress test
+    expect(true).toBe(false);
+  });
+
+  it("should handle encryption errors gracefully", async () => {
+    // TODO: Implement error handling test
+    expect(true).toBe(false);
+  });
+
+  it("should not expose encryption keys in console/errors", async () => {
+    // TODO: Implement security test
+    expect(true).toBe(false);
+  });
+
+  it("should update uploadState to 'encrypted' after encryption", async () => {
+    // TODO: Implement state update test
+    expect(true).toBe(false);
+  });
+
+  it("should store encrypted blob in IndexedDB", async () => {
+    // TODO: Implement storage test
+    expect(true).toBe(false);
+  });
+
+  it("should calculate checksums correctly", async () => {
+    // TODO: Implement checksum test
+    expect(true).toBe(false);
+  });
+});
