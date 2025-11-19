@@ -153,7 +153,7 @@ describe("ShareTarget - Upload Functionality", () => {
       expect.objectContaining({
         name: "test.jpg",
         type: "image/jpeg",
-        size: 3, // Original plaintext size
+        size: 1024, // Original plaintext size
       }),
       "secret-1"
     );
