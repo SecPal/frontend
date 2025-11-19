@@ -14,6 +14,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Push Notifications Infrastructure** (#166, Part of #144 PWA Phase 3)
+  - Service Worker push event handlers for backend notifications
+  - Notification click routing with deep-link support
+  - `usePushSubscription` hook for VAPID-based subscription management
+    - Subscribe/unsubscribe to push notifications
+    - Automatic subscription restoration on page load
+    - Push subscription data extraction for backend API
+  - `NotificationPermissionPrompt` component
+    - Non-intrusive banner UI for permission requests
+    - Dismissible with session persistence
+    - Test notification on successful grant
+  - Push notification features:
+    - Notification display with custom title, body, icon, badge
+    - Action buttons (Open, Dismiss)
+    - Deep-link URL routing on click
+    - Support for notification tags and custom data
+  - 13 tests for push subscription management
+  - 10 tests for permission prompt UI/UX
+  - Accessibility: keyboard navigation, ARIA labels
+  - Security: VAPID key support via environment variables
+  - Part of PWA Phase 3 (Epic #64, Sub-Issue #166)
+
 - **IndexedDB File Queue for Offline Uploads** (#142)
   - Replaced sessionStorage with IndexedDB for persistent file storage
   - Files now survive browser close and offline conditions
