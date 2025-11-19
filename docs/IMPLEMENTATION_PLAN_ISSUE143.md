@@ -876,7 +876,7 @@ export async function downloadAndDecryptAttachment(
 
 **File:** `frontend/docs/CRYPTO_ARCHITECTURE.md` (NEW)
 
-```markdown
+````markdown
 # Client-Side Encryption Architecture
 
 ## Overview
@@ -884,15 +884,15 @@ export async function downloadAndDecryptAttachment(
 SecPal implements end-to-end encryption for file attachments using Web Crypto API with AES-GCM-256.
 
 ## Key Hierarchy
-```
 
+```text
 User Master Key (from authentication)
 └─> Secret Master Key (per Secret)
 └─> File Encryption Key (derived via HKDF + filename salt)
+```
+````
 
-```text
-
-## Encryption Flow
+### Encryption Workflow
 
 1. User shares file via Share Target API
 2. Derive file key from Secret's master key (HKDF)
@@ -901,7 +901,7 @@ User Master Key (from authentication)
 5. Upload encrypted blob to backend
 6. Backend stores encrypted file (cannot decrypt)
 
-## Security Guarantees
+### Security Guarantees
 
 - **Zero-Knowledge Backend**: Server cannot decrypt files
 - **End-to-End Encryption**: Only client can decrypt
@@ -909,9 +909,15 @@ User Master Key (from authentication)
 - **Tampering Detection**: Modified files rejected
 - **Forward Secrecy**: Unique IV per encryption
 
-## API
+### API Reference
 
 See `src/lib/crypto/encryption.ts` for implementation details.
+
+```text
+Example Usage:
+const masterKey = await generateMasterKey();
+const fileKey = await deriveFileKey(masterKey, "document.pdf");
+const encrypted = await encryptFile(file, fileKey);
 ```
 
 **Update:** `frontend/README.md` (add encryption section)

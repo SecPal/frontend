@@ -11,13 +11,6 @@
  */
 
 /**
- * NIST Test Vector #1 (AES-GCM-256)
- *
- * Source: NIST CAVP
- * Mode: GCM
- * Key Length: 256 bits
- * IV Length: 96 bits (12 bytes)
-/**
  * Simple test vector for basic functionality
  * Uses all zeros for easy debugging
  */
