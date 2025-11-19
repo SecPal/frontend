@@ -140,7 +140,7 @@ describe("ShareTarget - Upload Functionality", () => {
         expect.objectContaining({
           name: "test.jpg",
           type: "image/jpeg",
-          size: 1024,
+          size: 3, // Now uses blob.size, not original file.size
         }),
         "secret-1"
       );
@@ -271,5 +271,24 @@ describe("ShareTarget - Upload Functionality", () => {
       },
       { timeout: 200 }
     );
+  });
+
+  it("should display error when secrets fail to load", async () => {
+    // Mock API error
+    vi.mocked(secretApi.fetchSecrets).mockRejectedValue(
+      new Error("Network error")
+    );
+
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    // Should show secrets loading error
+    expect(
+      await screen.findByText(/failed to load secrets/i)
+    ).toBeInTheDocument();
+
+    // Upload button should not be visible
+    expect(
+      screen.queryByRole("button", { name: /save to secret/i })
+    ).not.toBeInTheDocument();
   });
 });

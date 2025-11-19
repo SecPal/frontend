@@ -184,10 +184,10 @@ export async function retryFileUpload(entry: FileQueueEntry): Promise<boolean> {
       errorMsg = error.message;
       if (error.errors && Object.keys(error.errors).length > 0) {
         const firstErrorField = Object.keys(error.errors)[0];
-        if (firstErrorField && error.errors[firstErrorField]) {
-          const firstError = error.errors[firstErrorField][0];
-          if (firstError) {
-            errorMsg = `${errorMsg}: ${firstError}`;
+        if (firstErrorField) {
+          const fieldErrors = error.errors[firstErrorField];
+          if (fieldErrors && fieldErrors.length > 0) {
+            errorMsg = `${errorMsg}: ${fieldErrors[0]}`;
           }
         }
       }

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Trans } from "@lingui/macro";
 import { Heading } from "../components/heading";
 import { Text } from "../components/text";
@@ -220,17 +220,20 @@ export function ShareTarget() {
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [secretsLoadError, setSecretsLoadError] = useState<string | null>(null);
+  const clearTimeoutRef = useRef<number | null>(null);
 
   // Load secrets on mount
   useEffect(() => {
     const loadSecrets = async () => {
       setLoadingSecrets(true);
+      setSecretsLoadError(null);
       try {
         const loadedSecrets = await fetchSecrets();
         setSecrets(loadedSecrets);
       } catch (error) {
         console.error("Failed to load secrets:", error);
-        setUploadError("Failed to load secrets");
+        setSecretsLoadError("Failed to load secrets");
       } finally {
         setLoadingSecrets(false);
       }
@@ -240,7 +243,17 @@ export function ShareTarget() {
     if (sharedData?.files && sharedData.files.length > 0) {
       void loadSecrets();
     }
-  }, [sharedData?.files]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedData?.files?.length]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (clearTimeoutRef.current !== null) {
+        clearTimeout(clearTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Clean up URL parameters on mount
   useEffect(() => {
@@ -370,17 +383,25 @@ export function ShareTarget() {
     try {
       // Queue all files for upload
       for (const file of sharedData.files) {
+        // Validate dataUrl
+        if (!file.dataUrl) {
+          throw new Error(`File ${file.name} has no data URL`);
+        }
+
         // Fetch file data from dataUrl
-        const response = await fetch(file.dataUrl || "");
+        const response = await fetch(file.dataUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file data for ${file.name}`);
+        }
         const blob = await response.blob();
 
-        // Add to queue
+        // Add to queue (use actual blob size for consistency)
         await addFileToQueue(
           blob,
           {
             name: file.name,
             type: file.type,
-            size: file.size,
+            size: blob.size,
             timestamp: Date.now(),
           },
           selectedSecretId
@@ -394,12 +415,19 @@ export function ShareTarget() {
         setUploadError(
           `Failed to upload ${stats.failed} of ${stats.total} file(s)`
         );
-      } else {
+      } else if (stats.completed === stats.total) {
         setUploadSuccess(true);
         // Clear shared data after successful upload
-        setTimeout(() => {
+        clearTimeoutRef.current = window.setTimeout(() => {
           handleClear();
         }, 3000);
+      } else {
+        // Some files are pending or skipped
+        const pending = stats.pending || 0;
+        const skipped = stats.skipped || 0;
+        setUploadError(
+          `Upload incomplete: ${stats.completed} succeeded, ${pending + skipped} pending`
+        );
       }
     } catch (error) {
       console.error("Upload failed:", error);
@@ -522,7 +550,13 @@ export function ShareTarget() {
 
           {/* Upload Section */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            {loadingSecrets ? (
+            {secretsLoadError ? (
+              <div className="p-3 bg-red-50 border border-red-200 rounded">
+                <Text className="text-red-900 font-semibold">
+                  {secretsLoadError}
+                </Text>
+              </div>
+            ) : loadingSecrets ? (
               <Text className="text-blue-900">
                 <Trans>Loading secrets...</Trans>
               </Text>
