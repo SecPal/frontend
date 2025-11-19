@@ -1,0 +1,202 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { usePrefetch } from "./usePrefetch";
+
+// Extend Window type for test mocks
+declare global {
+  // eslint-disable-next-line no-var
+  var fetch: typeof fetch;
+  // eslint-disable-next-line no-var
+  var requestIdleCallback: typeof requestIdleCallback;
+}
+
+// Mock global fetch
+global.fetch = vi.fn();
+
+// Mock requestIdleCallback
+global.requestIdleCallback = vi.fn((callback) => {
+  callback({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline);
+  return 0;
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  document.head.innerHTML = "";
+});
+
+describe("usePrefetch", () => {
+  describe("prefetchOnIdle", () => {
+    it("should prefetch URL using requestIdleCallback", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response()
+      );
+
+      const { result } = renderHook(() => usePrefetch());
+
+      result.current.prefetchOnIdle("/api/v1/secrets");
+
+      // Wait for requestIdleCallback to execute
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(global.requestIdleCallback).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith("/api/v1/secrets", {
+        priority: "low",
+      });
+    });
+
+    it("should not prefetch same URL twice", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response()
+      );
+
+      const { result } = renderHook(() => usePrefetch());
+
+      result.current.prefetchOnIdle("/api/v1/secrets");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Try to prefetch again
+      result.current.prefetchOnIdle("/api/v1/secrets");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle prefetch failures gracefully", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Network error")
+      );
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => usePrefetch());
+
+      result.current.prefetchOnIdle("/api/v1/secrets");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(consoleWarnSpy).toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should fall back to setTimeout if requestIdleCallback not available", async () => {
+      // @ts-expect-error - Remove requestIdleCallback to test fallback
+      delete global.requestIdleCallback;
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response()
+      );
+
+      const { result } = renderHook(() => usePrefetch());
+
+      result.current.prefetchOnIdle("/api/v1/secrets");
+
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      expect(global.fetch).toHaveBeenCalledWith("/api/v1/secrets", undefined);
+    });
+  });
+
+  describe("prefetchOnHover", () => {
+    it("should return event handlers for prefetch", () => {
+      const { result } = renderHook(() => usePrefetch());
+
+      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+
+      expect(handlers).toHaveProperty("onMouseEnter");
+      expect(handlers).toHaveProperty("onTouchStart");
+      expect(typeof handlers.onMouseEnter).toBe("function");
+      expect(typeof handlers.onTouchStart).toBe("function");
+    });
+
+    it("should add prefetch link on hover", () => {
+      const { result } = renderHook(() => usePrefetch());
+
+      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+      handlers.onMouseEnter?.({} as React.MouseEvent);
+
+      const link = document.head.querySelector(
+        'link[rel="prefetch"]'
+      ) as HTMLLinkElement;
+      expect(link).not.toBeNull();
+      expect(link.href).toContain("/api/v1/secrets");
+      expect(link.as).toBe("fetch");
+    });
+
+    it("should not prefetch same URL twice", () => {
+      const { result } = renderHook(() => usePrefetch());
+
+      const handlers1 = result.current.prefetchOnHover("/api/v1/secrets");
+      handlers1.onMouseEnter?.({} as React.MouseEvent);
+
+      const handlers2 = result.current.prefetchOnHover("/api/v1/secrets");
+      expect(handlers2).toEqual({});
+
+      const links = document.head.querySelectorAll('link[rel="prefetch"]');
+      expect(links.length).toBe(1);
+    });
+
+    it("should clean up link after timeout", async () => {
+      vi.useFakeTimers();
+
+      const { result } = renderHook(() => usePrefetch());
+
+      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+      handlers.onMouseEnter?.({} as React.MouseEvent);
+
+      expect(
+        document.head.querySelector('link[rel="prefetch"]')
+      ).not.toBeNull();
+
+      vi.advanceTimersByTime(5000);
+
+      expect(document.head.querySelector('link[rel="prefetch"]')).toBeNull();
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("prefetchBatch", () => {
+    it("should prefetch multiple URLs", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response()
+      );
+
+      const { result } = renderHook(() => usePrefetch());
+
+      result.current.prefetchBatch([
+        "/api/v1/secrets",
+        "/api/v1/users",
+        "/api/v1/roles",
+      ]);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("clearPrefetchCache", () => {
+    it("should clear prefetch cache", async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Response()
+      );
+
+      const { result } = renderHook(() => usePrefetch());
+
+      // Prefetch URL
+      result.current.prefetchOnIdle("/api/v1/secrets");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear cache
+      result.current.clearPrefetchCache();
+
+      // Prefetch same URL again - should work now
+      result.current.prefetchOnIdle("/api/v1/secrets");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+  });
+});
