@@ -212,7 +212,7 @@ export async function decryptFile(
   const decrypted = await crypto.subtle.decrypt(
     {
       name: "AES-GCM",
-      iv: iv as BufferSource,
+      iv,
       tagLength: 128,
     },
     fileKey,

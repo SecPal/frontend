@@ -57,6 +57,14 @@ describe("AES-GCM-256 Encryption", () => {
       expect((imported.algorithm as AesKeyAlgorithm).length).toBe(256);
     });
 
+    it("should reject invalid key length", async () => {
+      const invalidKey = new Uint8Array(16); // Too short (128 bits)
+
+      await expect(importMasterKey(invalidKey)).rejects.toThrow(
+        "Invalid master key length"
+      );
+    });
+
     it("should maintain key material through export/import cycle", async () => {
       const originalKey = await generateMasterKey();
       const exported = await exportMasterKey(originalKey);
@@ -289,8 +297,7 @@ describe("AES-GCM-256 Encryption", () => {
 
       // Tamper with auth tag
       const tamperedAuthTag = new Uint8Array(encrypted.authTag);
-      if (tamperedAuthTag[0] !== undefined)
-        if (tamperedAuthTag[0] !== undefined) tamperedAuthTag[0] ^= 0x01; // Flip one bit
+      if (tamperedAuthTag[0] !== undefined) tamperedAuthTag[0] ^= 0x01; // Flip one bit
 
       await expect(
         decryptFile(
@@ -313,10 +320,11 @@ describe("AES-GCM-256 Encryption", () => {
 
       // Tamper with ciphertext
       const tamperedCiphertext = new Uint8Array(encrypted.ciphertext);
-      if (tamperedCiphertext.length > 0) {
-        if (tamperedCiphertext[0] !== undefined)
-          if (tamperedCiphertext[0] !== undefined)
-            tamperedCiphertext[0] ^= 0x01; // Flip one bit
+      if (
+        tamperedCiphertext.length > 0 &&
+        tamperedCiphertext[0] !== undefined
+      ) {
+        tamperedCiphertext[0] ^= 0x01; // Flip one bit
       }
 
       await expect(
@@ -372,6 +380,38 @@ describe("AES-GCM-256 Encryption", () => {
           encrypted.authTag
         )
       ).rejects.toThrow();
+    });
+
+    it("should reject invalid IV length", async () => {
+      const key = await importMasterKey(SIMPLE_TEST_VECTOR.key);
+      const fileKey = await deriveFileKey(key, "test.txt");
+
+      const encrypted = await encryptFile(
+        SIMPLE_TEST_VECTOR.plaintext,
+        fileKey
+      );
+
+      const invalidIV = new Uint8Array(8); // Too short
+
+      await expect(
+        decryptFile(encrypted.ciphertext, fileKey, invalidIV, encrypted.authTag)
+      ).rejects.toThrow("Invalid IV length");
+    });
+
+    it("should reject invalid auth tag length", async () => {
+      const key = await importMasterKey(SIMPLE_TEST_VECTOR.key);
+      const fileKey = await deriveFileKey(key, "test.txt");
+
+      const encrypted = await encryptFile(
+        SIMPLE_TEST_VECTOR.plaintext,
+        fileKey
+      );
+
+      const invalidAuthTag = new Uint8Array(8); // Too short
+
+      await expect(
+        decryptFile(encrypted.ciphertext, fileKey, encrypted.iv, invalidAuthTag)
+      ).rejects.toThrow("Invalid auth tag length");
     });
   });
 
