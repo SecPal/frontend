@@ -205,5 +205,17 @@ describe("Secret API", () => {
       });
       expect(error.name).toBe("ApiError");
     });
+
+    it("should handle malformed JSON error responses", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        json: () => Promise.reject(new Error("Invalid JSON")),
+      });
+      vi.stubGlobal("fetch", mockFetch);
+
+      await expect(fetchSecrets()).rejects.toThrow("Internal Server Error");
+    });
   });
 });

@@ -291,4 +291,94 @@ describe("ShareTarget - Upload Functionality", () => {
       screen.queryByRole("button", { name: /save to secret/i })
     ).not.toBeInTheDocument();
   });
+
+  it("should handle missing dataUrl in files", async () => {
+    // Mock shared data with file missing dataUrl
+    sessionStorage.setItem(
+      "share-target-files",
+      JSON.stringify([
+        {
+          name: "test.jpg",
+          type: "image/jpeg",
+          size: 1024,
+          // dataUrl is missing
+        },
+      ])
+    );
+
+    const user = userEvent.setup();
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    // Should show error about missing dataUrl
+    await waitFor(() => {
+      expect(
+        screen.getByText(/file test\.jpg has no data url/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should handle failed file fetch", async () => {
+    // Mock fetch to fail
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const user = userEvent.setup();
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    // Should show error about failed fetch
+    await waitFor(() => {
+      expect(
+        screen.getByText(/failed to fetch file data for test\.jpg/i)
+      ).toBeInTheDocument();
+    });
+
+    vi.unstubAllGlobals();
+  });
+
+  it("should handle partial upload completion", async () => {
+    vi.mocked(fileQueue.processFileQueue).mockResolvedValue({
+      total: 3,
+      completed: 1,
+      failed: 0,
+      pending: 2,
+      skipped: 0,
+    });
+
+    const user = userEvent.setup();
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    // Should show incomplete message
+    await waitFor(() => {
+      expect(
+        screen.getByText(/upload incomplete.*1 succeeded.*2 pending/i)
+      ).toBeInTheDocument();
+    });
+  });
 });
