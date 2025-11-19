@@ -1168,4 +1168,61 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
       { timeout: 5000 }
     );
   });
+
+  it("should reject files larger than 10MB", async () => {
+    // Mock successful key fetch
+    const mockKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    vi.mocked(getSecretMasterKey).mockResolvedValue(mockKey);
+
+    vi.mocked(fetchSecrets).mockResolvedValue([
+      {
+        id: "secret-123",
+        title: "Test Secret",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+
+    // Create a file larger than 10MB (11MB = 11 * 1024 * 1024 bytes)
+    const largeFileSize = 11 * 1024 * 1024;
+    const largeFile = {
+      name: "large-file.jpg",
+      type: "image/jpeg",
+      size: largeFileSize, // 11MB
+      dataUrl: "data:image/jpeg;base64,/9j/4AAQ", // Minimal JPEG header
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([largeFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    // Should show error about file size
+    await waitFor(() => {
+      expect(
+        screen.getByText(/File too large.*large-file\.jpg.*Maximum 10MB/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should handle file parsing errors gracefully", () => {
+    // Set invalid JSON in sessionStorage
+    sessionStorage.setItem("share-target-files", "{invalid json");
+
+    vi.mocked(fetchSecrets).mockResolvedValue([]);
+
+    renderComponentWithContext();
+
+    // Should show error message
+    expect(
+      screen.getByText(/Failed to load shared files/i)
+    ).toBeInTheDocument();
+  });
 });
