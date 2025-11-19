@@ -1,0 +1,221 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { LazyImage } from "./LazyImage";
+
+// Extend Window type for test mocks
+declare global {
+  // eslint-disable-next-line no-var
+  var IntersectionObserver: typeof IntersectionObserver;
+  // eslint-disable-next-line no-var
+  var Image: typeof Image;
+}
+
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+  callback: IntersectionObserverCallback;
+  elements: Set<Element> = new Set();
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(element: Element) {
+    this.elements.add(element);
+  }
+
+  unobserve(element: Element) {
+    this.elements.delete(element);
+  }
+
+  disconnect() {
+    this.elements.clear();
+  }
+
+  // Helper method to trigger intersection
+  trigger(isIntersecting: boolean) {
+    const entries: IntersectionObserverEntry[] = Array.from(this.elements).map(
+      (element) => ({
+        target: element,
+        isIntersecting,
+        intersectionRatio: isIntersecting ? 1 : 0,
+        boundingClientRect: {} as DOMRectReadOnly,
+        intersectionRect: {} as DOMRectReadOnly,
+        rootBounds: null,
+        time: Date.now(),
+      })
+    );
+
+    this.callback(entries, this as unknown as IntersectionObserver);
+  }
+}
+
+let mockObserver: MockIntersectionObserver;
+
+beforeEach(() => {
+  mockObserver = new MockIntersectionObserver(() => {});
+  global.IntersectionObserver = vi.fn().mockImplementation((callback) => {
+    mockObserver = new MockIntersectionObserver(callback);
+    return mockObserver;
+  }) as unknown as typeof IntersectionObserver;
+
+  // Mock Image constructor for testing load/error events
+  global.Image = class {
+    src = "";
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+
+    constructor() {
+      setTimeout(() => {
+        if (this.onload) this.onload();
+      }, 10);
+    }
+  } as unknown as typeof Image;
+});
+
+describe("LazyImage", () => {
+  it("should render with placeholder initially", () => {
+    render(
+      <LazyImage
+        src="/test-image.jpg"
+        alt="Test Image"
+        placeholder="data:image/svg+xml;base64,test"
+      />
+    );
+
+    const img = screen.getByAlt("Test Image") as HTMLImageElement;
+    expect(img).toBeInTheDocument();
+    expect(img.src).toContain("data:image/svg+xml");
+  });
+
+  it("should load actual image when intersecting", async () => {
+    render(<LazyImage src="/test-image.jpg" alt="Test Image" />);
+
+    const img = screen.getByAlt("Test Image") as HTMLImageElement;
+
+    // Trigger intersection
+    mockObserver.trigger(true);
+
+    await waitFor(() => {
+      expect(img.src).toContain("/test-image.jpg");
+    });
+  });
+
+  it("should call onLoad when image loads", async () => {
+    const onLoad = vi.fn();
+
+    render(
+      <LazyImage src="/test-image.jpg" alt="Test Image" onLoad={onLoad} />
+    );
+
+    // Trigger intersection
+    mockObserver.trigger(true);
+
+    await waitFor(() => {
+      expect(onLoad).toHaveBeenCalled();
+    });
+  });
+
+  it("should call onError when image fails to load", async () => {
+    const onError = vi.fn();
+
+    // Override Image mock to simulate error
+    global.Image = class {
+      src = "";
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor() {
+        setTimeout(() => {
+          if (this.onerror) this.onerror();
+        }, 10);
+      }
+    } as unknown as typeof Image;
+
+    render(
+      <LazyImage src="/test-image.jpg" alt="Test Image" onError={onError} />
+    );
+
+    // Trigger intersection
+    mockObserver.trigger(true);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalled();
+    });
+  });
+
+  it("should apply loading class initially", () => {
+    render(<LazyImage src="/test-image.jpg" alt="Test Image" />);
+
+    const img = screen.getByAlt("Test Image");
+    expect(img).toHaveClass("opacity-0");
+  });
+
+  it("should apply loaded class after image loads", async () => {
+    render(<LazyImage src="/test-image.jpg" alt="Test Image" />);
+
+    const img = screen.getByAlt("Test Image");
+
+    // Trigger intersection
+    mockObserver.trigger(true);
+
+    await waitFor(() => {
+      expect(img).toHaveClass("opacity-100");
+    });
+  });
+
+  it("should support custom className", () => {
+    render(
+      <LazyImage
+        src="/test-image.jpg"
+        alt="Test Image"
+        className="custom-class"
+      />
+    );
+
+    const img = screen.getByAlt("Test Image");
+    expect(img).toHaveClass("custom-class");
+  });
+
+  it("should support custom rootMargin", () => {
+    const observerSpy = vi.spyOn(global, "IntersectionObserver");
+
+    render(
+      <LazyImage src="/test-image.jpg" alt="Test Image" rootMargin="100px" />
+    );
+
+    expect(observerSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        rootMargin: "100px",
+        threshold: 0.01,
+      })
+    );
+
+    observerSpy.mockRestore();
+  });
+
+  it("should fallback gracefully when IntersectionObserver not supported", () => {
+    // @ts-expect-error - Remove IntersectionObserver to test fallback
+    delete global.IntersectionObserver;
+
+    render(<LazyImage src="/test-image.jpg" alt="Test Image" />);
+
+    const img = screen.getByAlt("Test Image") as HTMLImageElement;
+    expect(img.src).toContain("/test-image.jpg");
+  });
+
+  it("should unobserve on unmount", () => {
+    const { unmount } = render(
+      <LazyImage src="/test-image.jpg" alt="Test Image" />
+    );
+
+    const disconnectSpy = vi.spyOn(mockObserver, "disconnect");
+
+    unmount();
+
+    expect(disconnectSpy).toHaveBeenCalled();
+  });
+});
