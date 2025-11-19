@@ -487,6 +487,21 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
   // Get target URL from notification data
   const urlToOpen = event.notification.data?.url || "/";
 
+  // Validate URL is safe to navigate to (security: prevent phishing)
+  let targetUrl: URL;
+  try {
+    targetUrl = new URL(urlToOpen, self.location.origin);
+
+    // Only allow same-origin URLs
+    if (targetUrl.origin !== self.location.origin) {
+      console.warn("[SW] Blocked external URL in notification:", urlToOpen);
+      return;
+    }
+  } catch (err) {
+    console.error("[SW] Invalid URL in notification data:", urlToOpen, err);
+    return;
+  }
+
   event.waitUntil(
     (async () => {
       // Check if there's already a window open
@@ -498,7 +513,6 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       // Focus existing window if found
       for (const client of clients) {
         const clientUrl = new URL(client.url);
-        const targetUrl = new URL(urlToOpen, self.location.origin);
 
         // If window is already on target URL, focus it
         if (clientUrl.pathname === targetUrl.pathname) {
@@ -510,17 +524,13 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       if (clients.length > 0) {
         const client = clients[0];
         if (client) {
-          await client.navigate(
-            new URL(urlToOpen, self.location.origin).toString()
-          );
+          await client.navigate(targetUrl.toString());
           return client.focus();
         }
       }
 
       // Otherwise, open new window
-      return self.clients.openWindow(
-        new URL(urlToOpen, self.location.origin).toString()
-      );
+      return self.clients.openWindow(targetUrl.toString());
     })()
   );
 });

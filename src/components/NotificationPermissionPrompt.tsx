@@ -41,11 +41,20 @@ export function NotificationPermissionPrompt() {
 
       if (result === "granted") {
         // Show test notification
-        await showNotification({
-          title: "Notifications Enabled",
-          body: "You'll now receive important updates from SecPal",
-        });
-        setIsDismissed(true);
+        try {
+          await showNotification({
+            title: "Notifications Enabled",
+            body: "You'll now receive important updates from SecPal",
+          });
+          setIsDismissed(true);
+        } catch (notifErr) {
+          // Keep prompt visible to show error
+          setError(
+            notifErr instanceof Error
+              ? notifErr.message
+              : "Failed to show test notification"
+          );
+        }
       } else if (result === "denied") {
         // User denied, just hide the prompt
         setIsDismissed(true);
