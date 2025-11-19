@@ -36,6 +36,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Security: VAPID key support via environment variables
   - Part of PWA Phase 3 (Epic #64, Sub-Issue #166)
 
+- **Offline Analytics & Telemetry** (#167, Part of #144 PWA Phase 3)
+  - Web Vitals integration for performance monitoring:
+    - CLS (Cumulative Layout Shift) - Visual stability tracking
+    - INP (Interaction to Next Paint) - Responsiveness measurement (Web Vitals v4)
+    - LCP (Largest Contentful Paint) - Loading performance
+    - FCP (First Contentful Paint) - Perceived load speed
+    - TTFB (Time to First Byte) - Server response time
+    - Automatic metric collection via `initWebVitals()` in main.tsx
+    - Metrics tracked to analytics IndexedDB for offline queuing
+  - Error tracking with React Error Boundary:
+    - `AnalyticsErrorBoundary` component - Automatic error capture
+    - Graceful fallback UI with refresh option
+    - Development-mode error details display
+    - Analytics integration for error reporting
+  - Dependencies: `web-vitals@5.1.0` for Core Web Vitals metrics
+  - 13 comprehensive tests for new features (100% coverage)
+  - Privacy-first design: No PII, no file paths, anonymous session IDs
+  - Part of PWA Phase 3 (Epic #144, Sub-Issue #167)
+
 - **IndexedDB File Queue for Offline Uploads** (#142)
   - Replaced sessionStorage with IndexedDB for persistent file storage
   - Files now survive browser close and offline conditions

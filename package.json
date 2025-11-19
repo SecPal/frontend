@@ -93,6 +93,7 @@
     "vite": "^7.2.2",
     "vite-plugin-pwa": "^1.1.0",
     "vitest": "^4.0.3",
+    "web-vitals": "^5.1.0",
     "workbox-window": "^7.3.0"
   },
   "engines": {
