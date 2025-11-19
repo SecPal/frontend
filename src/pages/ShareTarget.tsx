@@ -7,9 +7,17 @@ import { Heading } from "../components/heading";
 import { Text } from "../components/text";
 import { Button } from "../components/button";
 import { Badge } from "../components/badge";
+import { EncryptionProgress } from "../components/EncryptionProgress";
 import { handleShareTargetMessage } from "./ShareTarget.utils";
-import { fetchSecrets, type Secret } from "../services/secretApi";
+import {
+  fetchSecrets,
+  getSecretMasterKey,
+  type Secret,
+} from "../services/secretApi";
 import { addFileToQueue, processFileQueue } from "../lib/fileQueue";
+import { encryptFile, deriveFileKey } from "../lib/crypto/encryption";
+import { calculateChecksum } from "../lib/crypto/checksum";
+import { db } from "../lib/db";
 
 interface SharedFile {
   name: string;
@@ -223,6 +231,12 @@ export function ShareTarget() {
   const [secretsLoadError, setSecretsLoadError] = useState<string | null>(null);
   const clearTimeoutRef = useRef<number | null>(null);
 
+  // Encryption state
+  const [encryptionProgress, setEncryptionProgress] = useState<
+    Map<string, number>
+  >(new Map());
+  const [isEncrypting, setIsEncrypting] = useState(false);
+
   // Load secrets on mount
   useEffect(() => {
     const loadSecrets = async () => {
@@ -376,38 +390,98 @@ export function ShareTarget() {
     if (!selectedSecretId || !sharedData?.files) return;
 
     setUploading(true);
+    setIsEncrypting(true);
     setUploadError(null);
     setUploadSuccess(false);
+    setEncryptionProgress(new Map());
 
     try {
-      // Queue all files for upload
+      // Get master key for the secret
+      const masterKey = await getSecretMasterKey(selectedSecretId);
+
+      // Encrypt and queue all files
       for (const file of sharedData.files) {
-        // Validate dataUrl
-        if (!file.dataUrl) {
-          throw new Error(`File ${file.name} has no data URL`);
-        }
+        try {
+          // Validate dataUrl
+          if (!file.dataUrl) {
+            throw new Error(`File ${file.name} has no data URL`);
+          }
 
-        // Fetch file data from dataUrl
-        const response = await fetch(file.dataUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file data for ${file.name}`);
-        }
-        const blob = await response.blob();
+          // Update encryption progress (0%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 0));
 
-        // Add to queue (use actual blob size for consistency)
-        await addFileToQueue(
-          blob,
-          {
-            name: file.name,
-            type: file.type,
-            size: blob.size,
-            timestamp: Date.now(),
-          },
-          selectedSecretId
-        );
+          // Fetch file data from dataUrl
+          const response = await fetch(file.dataUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch file data for ${file.name}`);
+          }
+          const blob = await response.blob();
+          const plaintext = new Uint8Array(await blob.arrayBuffer());
+
+          // Update encryption progress (25%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 25));
+
+          // Derive file-specific key
+          const fileKey = await deriveFileKey(masterKey, file.name);
+
+          // Update encryption progress (50%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 50));
+
+          // Encrypt file
+          const encryptedFile = await encryptFile(plaintext, fileKey);
+
+          // Update encryption progress (75%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 75));
+
+          // Combine IV + authTag + ciphertext into single blob
+          // Ensure type compatibility for Blob constructor
+          const ivBuffer = new Uint8Array(encryptedFile.iv);
+          const authTagBuffer = new Uint8Array(encryptedFile.authTag);
+          const ciphertextBuffer = new Uint8Array(encryptedFile.ciphertext);
+
+          const encryptedBlob = new Blob([
+            ivBuffer,
+            authTagBuffer,
+            ciphertextBuffer,
+          ]);
+
+          // Calculate checksum of encrypted data
+          const encryptedArrayBuffer = await encryptedBlob.arrayBuffer();
+          const encryptedData = new Uint8Array(encryptedArrayBuffer);
+          const checksum = await calculateChecksum(encryptedData);
+
+          // Update encryption progress (100%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 100));
+
+          // Add encrypted file to queue
+          const queueId = await addFileToQueue(
+            encryptedBlob,
+            {
+              name: file.name,
+              type: file.type,
+              size: file.size, // Original plaintext size
+              timestamp: Date.now(),
+            },
+            selectedSecretId
+          );
+
+          // Update queue entry with encryption state and checksum
+          await db.fileQueue.update(queueId, {
+            uploadState: "encrypted",
+            checksum,
+          });
+        } catch (error) {
+          console.error(`Encryption failed for ${file.name}:`, error);
+          throw new Error(
+            `Encryption failed for ${file.name}: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+        }
       }
 
-      // Process the queue
+      // All files encrypted successfully
+      setIsEncrypting(false);
+
+      // Process the queue (upload encrypted files)
       const stats = await processFileQueue();
 
       if (stats.failed > 0) {
@@ -430,8 +504,11 @@ export function ShareTarget() {
       }
     } catch (error) {
       console.error("Upload failed:", error);
+      setIsEncrypting(false);
       setUploadError(
-        error instanceof Error ? error.message : "Failed to upload files"
+        error instanceof Error
+          ? error.message
+          : "Failed to encrypt/upload files"
       );
     } finally {
       setUploading(false);
@@ -586,7 +663,14 @@ export function ShareTarget() {
                   </select>
                 </div>
 
-                {uploading && (
+                {isEncrypting && (
+                  <EncryptionProgress
+                    progress={encryptionProgress}
+                    isEncrypting={isEncrypting}
+                  />
+                )}
+
+                {uploading && !isEncrypting && (
                   <div
                     className="mb-4 p-3 bg-blue-100 rounded"
                     role="status"

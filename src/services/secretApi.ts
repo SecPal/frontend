@@ -203,3 +203,63 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     throw new ApiError(error.message, response.status, error.errors);
   }
 }
+
+/**
+ * Get the master key for a secret
+ *
+ * @param secretId - Secret ID
+ * @returns CryptoKey for encryption/decryption
+ * @throws ApiError if request fails
+ *
+ * @example
+ * ```ts
+ * const masterKey = await getSecretMasterKey('secret-123');
+ * // Use masterKey for file encryption
+ * ```
+ */
+export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+
+  const response = await fetch(
+    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
+    {
+      method: "GET",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const result: ApiResponse<Secret & { master_key: string }> =
+    await response.json();
+
+  // The master_key is Base64-encoded
+  const masterKeyBase64 = result.data.master_key;
+  if (!masterKeyBase64) {
+    throw new Error("Secret has no master key");
+  }
+
+  // Decode Base64 to ArrayBuffer
+  const bytes = Uint8Array.from(atob(masterKeyBase64), (c) => c.charCodeAt(0));
+
+  // Import as CryptoKey (extractable needed for deriveFileKey)
+  const key = await crypto.subtle.importKey(
+    "raw",
+    bytes,
+    { name: "AES-GCM", length: 256 },
+    true,
+    ["encrypt", "decrypt"]
+  );
+
+  return key;
+}

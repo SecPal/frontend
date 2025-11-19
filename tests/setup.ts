@@ -9,3 +9,21 @@ import "fake-indexeddb/auto";
 // Initialize i18n for tests
 i18n.load("en", enMessages);
 i18n.activate("en");
+
+// Polyfill for Blob.arrayBuffer() in test environment (JSDOM doesn't have it)
+if (typeof Blob.prototype.arrayBuffer === "undefined") {
+  Blob.prototype.arrayBuffer = function (): Promise<ArrayBuffer> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Failed to read Blob as ArrayBuffer"));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(this);
+    });
+  };
+}
