@@ -90,7 +90,7 @@ export class CacheMonitor {
     if (this.lookupTimes.length === 0) return 0;
 
     const sorted = [...this.lookupTimes].sort((a, b) => a - b);
-    const index = Math.floor(sorted.length * 0.95);
+    const index = Math.ceil((sorted.length - 1) * 0.95);
     return sorted[index] ?? 0;
   }
 

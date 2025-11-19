@@ -159,7 +159,7 @@ export default defineConfig(({ mode }) => {
             // Instant load from cache, background refresh
             {
               urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/secrets/[^/]+$`
+                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/secrets/[a-zA-Z0-9_-]+$`
               ),
               handler: "StaleWhileRevalidate",
               options: {
@@ -184,6 +184,9 @@ export default defineConfig(({ mode }) => {
                 expiration: {
                   maxEntries: 20,
                   maxAgeSeconds: 60 * 60, // 1 hour
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
                 },
               },
             },
@@ -218,7 +221,7 @@ export default defineConfig(({ mode }) => {
             // Images (CacheFirst + 30 days TTL)
             // Rarely change, immutable with versioned URLs
             {
-              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)(?:\?.*)?$/i,
               handler: "CacheFirst",
               options: {
                 cacheName: "images",
@@ -231,7 +234,7 @@ export default defineConfig(({ mode }) => {
             // Static Assets: JS/CSS (CacheFirst + 1 year TTL)
             // Immutable, versioned by build hash
             {
-              urlPattern: /\.(?:js|css)$/i,
+              urlPattern: /\.(?:js|css)(?:\?.*)?$/i,
               handler: "CacheFirst",
               options: {
                 cacheName: "static-assets",

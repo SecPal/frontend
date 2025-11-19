@@ -45,13 +45,23 @@ export const usePrefetch = () => {
     if ("requestIdleCallback" in window) {
       requestIdleCallback(
         () => {
-          fetch(url, { ...options, priority: "low" as RequestPriority })
+          const fetchOptions: RequestInit = { ...options };
+          // Only add priority if supported (experimental API)
+          if ("priority" in Request.prototype) {
+            (fetchOptions as RequestInit & { priority: string }).priority =
+              "low";
+          }
+          fetch(url, fetchOptions)
             .then(() => {
               prefetchedUrls.current.add(url);
-              console.log(`[Prefetch] Prefetched on idle: ${url}`);
+              if (import.meta.env.DEV) {
+                console.log(`[Prefetch] Prefetched on idle: ${url}`);
+              }
             })
             .catch((error) => {
-              console.warn(`[Prefetch] Failed to prefetch ${url}:`, error);
+              if (import.meta.env.DEV) {
+                console.warn(`[Prefetch] Failed to prefetch ${url}:`, error);
+              }
             });
         },
         { timeout: 2000 }
@@ -93,11 +103,19 @@ export const usePrefetch = () => {
       document.head.appendChild(link);
 
       prefetchedUrls.current.add(url);
-      console.log(`[Prefetch] Prefetched on hover: ${url}`);
+      if (import.meta.env.DEV) {
+        console.log(`[Prefetch] Prefetched on hover: ${url}`);
+      }
 
       // Clean up link after 5 seconds
       setTimeout(() => {
-        document.head.removeChild(link);
+        try {
+          if (link.parentNode === document.head) {
+            document.head.removeChild(link);
+          }
+        } catch {
+          // Link already removed or never added; ignore
+        }
       }, 5000);
     };
 
@@ -125,7 +143,9 @@ export const usePrefetch = () => {
    */
   const clearPrefetchCache = useCallback(() => {
     prefetchedUrls.current.clear();
-    console.log("[Prefetch] Cleared prefetch cache");
+    if (import.meta.env.DEV) {
+      console.log("[Prefetch] Cleared prefetch cache");
+    }
   }, []);
 
   return {

@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Cache hit ratio >80% for returning users
     - Cache lookup time <50ms (p95)
     - Offline load time <2s (cached app shell)
-  - 50+ comprehensive tests with ≥80% coverage
+  - 25 active tests passing (useCache: 13, cacheMonitor: 12)
   - Part of PWA Phase 3 (Epic #144, Sub-Issue #168)
   - ✅ **COMPLETES PWA PHASE 3 EPIC #144**
 

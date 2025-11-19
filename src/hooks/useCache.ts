@@ -36,7 +36,7 @@ export const useCache = () => {
     try {
       for (const name of cacheNames) {
         const deleted = await caches.delete(name);
-        if (deleted) {
+        if (deleted && import.meta.env.DEV) {
           console.log(`[Cache] Invalidated cache: ${name}`);
         }
       }
@@ -62,7 +62,9 @@ export const useCache = () => {
     try {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
-      console.log(`[Cache] Cleared ${cacheNames.length} caches`);
+      if (import.meta.env.DEV) {
+        console.log(`[Cache] Cleared ${cacheNames.length} caches`);
+      }
     } catch (error) {
       console.error("[Cache] Failed to clear all caches:", error);
       throw error;

@@ -77,6 +77,13 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     !("IntersectionObserver" in window)
   );
   const imgRef = useRef<HTMLImageElement>(null);
+  const onLoadRef = useRef(onLoad);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onLoadRef.current = onLoad;
+    onErrorRef.current = onError;
+  });
 
   useEffect(() => {
     if (shouldLoad && !loaded && !error) {
@@ -86,15 +93,21 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       tempImg.onload = () => {
         setImageSrc(src);
         setLoaded(true);
-        onLoad?.();
+        onLoadRef.current?.();
       };
 
       tempImg.onerror = () => {
         setError(true);
-        onError?.();
+        onErrorRef.current?.();
+      };
+
+      // Cleanup function to prevent memory leaks
+      return () => {
+        tempImg.onload = null;
+        tempImg.onerror = null;
       };
     }
-  }, [shouldLoad, loaded, error, src, onLoad, onError]);
+  }, [shouldLoad, loaded, error, src]);
 
   useEffect(() => {
     if (!imgRef.current || !("IntersectionObserver" in window)) {
