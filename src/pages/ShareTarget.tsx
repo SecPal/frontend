@@ -430,11 +430,11 @@ export function ShareTarget() {
           // Encrypt file
           const encryptedFile = await encryptFile(plaintext, fileKey);
 
-          // Update encryption progress (100%)
-          setEncryptionProgress((prev) => new Map(prev).set(file.name, 100));
+          // Update encryption progress (75%)
+          setEncryptionProgress((prev) => new Map(prev).set(file.name, 75));
 
           // Combine IV + authTag + ciphertext into single blob
-          // Create new Uint8Arrays with explicit ArrayBuffer type
+          // Ensure type compatibility for Blob constructor
           const ivBuffer = new Uint8Array(encryptedFile.iv);
           const authTagBuffer = new Uint8Array(encryptedFile.authTag);
           const ciphertextBuffer = new Uint8Array(encryptedFile.ciphertext);
@@ -459,7 +459,7 @@ export function ShareTarget() {
             {
               name: file.name,
               type: file.type,
-              size: blob.size, // Original plaintext size
+              size: file.size, // Original plaintext size
               timestamp: Date.now(),
             },
             selectedSecretId

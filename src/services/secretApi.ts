@@ -250,18 +250,14 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
   }
 
   // Decode Base64 to ArrayBuffer
-  const binaryString = atob(masterKeyBase64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+  const bytes = Uint8Array.from(atob(masterKeyBase64), (c) => c.charCodeAt(0));
 
-  // Import as CryptoKey
+  // Import as CryptoKey (not extractable for security)
   const key = await crypto.subtle.importKey(
     "raw",
     bytes,
     { name: "AES-GCM", length: 256 },
-    true,
+    false,
     ["encrypt", "decrypt"]
   );
 

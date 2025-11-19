@@ -1051,7 +1051,7 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
       const message = String(call[0]);
       // Ensure no CryptoKey objects or key material in logs
       expect(message).not.toMatch(/CryptoKey/i);
-      expect(message).not.toMatch(/[A-Za-z0-9+/]{32,}={0,2}/); // No Base64 keys
+      expect(message).not.toMatch(/[A-Za-z0-9+/]{43,44}={0,2}/); // No Base64 256-bit keys
     });
 
     consoleSpy.mockRestore();

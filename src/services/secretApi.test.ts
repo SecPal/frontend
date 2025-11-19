@@ -376,15 +376,23 @@ describe("Secret API", () => {
 
       const masterKey = await getSecretMasterKey("secret-123");
 
-      // Export and verify the key bytes
-      const exportedKey = await crypto.subtle.exportKey("raw", masterKey);
-      const exportedBytes = new Uint8Array(exportedKey);
+      // Verify key was imported correctly (can't export as it's not extractable)
+      expect(masterKey).toBeInstanceOf(CryptoKey);
+      expect(masterKey.type).toBe("secret");
+      expect(masterKey.extractable).toBe(false); // Security: not extractable
 
-      expect(exportedBytes).toEqual(testKeyBytes);
-      expect(exportedBytes.length).toBe(32); // 256 bits
+      // Verify we can use the key for encryption
+      const testData = new Uint8Array([1, 2, 3, 4, 5]);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        masterKey,
+        testData
+      );
+      expect(encrypted).toBeInstanceOf(ArrayBuffer);
     });
 
-    it("should create extractable CryptoKey", async () => {
+    it("should create non-extractable CryptoKey for security", async () => {
       const testKeyBytes = new Uint8Array(32).fill(0x01);
       const base64Key = btoa(String.fromCharCode(...testKeyBytes));
 
@@ -403,12 +411,12 @@ describe("Secret API", () => {
 
       const masterKey = await getSecretMasterKey("secret-123");
 
-      expect(masterKey.extractable).toBe(true);
+      expect(masterKey.extractable).toBe(false);
 
-      // Should be able to export it
-      const exported = await crypto.subtle.exportKey("raw", masterKey);
-      expect(exported).toBeInstanceOf(Object);
-      expect(exported.byteLength).toBe(32); // 256 bits
+      // Should NOT be able to export it
+      await expect(
+        crypto.subtle.exportKey("raw", masterKey)
+      ).rejects.toThrow();
     });
   });
 });
