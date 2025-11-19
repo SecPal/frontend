@@ -67,7 +67,8 @@ describe("AnalyticsErrorBoundary", () => {
         }),
         expect.objectContaining({
           errorBoundary: true,
-        })
+        }),
+        false // includeStack parameter
       );
     });
 

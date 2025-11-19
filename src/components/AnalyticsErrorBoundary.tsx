@@ -37,12 +37,15 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Track error in analytics
+    // Track error in analytics (privacy-first: no file paths/stack traces)
     if (analytics) {
-      analytics.trackError(error, {
-        componentStack: errorInfo.componentStack,
-        errorBoundary: true,
-      });
+      analytics.trackError(
+        error,
+        {
+          errorBoundary: true,
+        },
+        false // Explicitly disable stack traces (privacy)
+      );
     }
 
     // Call optional error handler
