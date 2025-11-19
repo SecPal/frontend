@@ -17,6 +17,27 @@ import {
 import { db } from "./db";
 import type { FileQueueEntry } from "./db";
 
+// Mock secretApi module
+vi.mock("../services/secretApi", () => ({
+  uploadAttachment: vi.fn().mockResolvedValue({
+    id: "att-123",
+    filename: "test.txt",
+    size: 12,
+    mimeType: "text/plain",
+    uploadedAt: new Date().toISOString(),
+  }),
+  ApiError: class ApiError extends Error {
+    constructor(
+      message: string,
+      public status?: number,
+      public validationErrors?: Record<string, string[]>
+    ) {
+      super(message);
+      this.name = "ApiError";
+    }
+  },
+}));
+
 describe("File Queue Utilities", () => {
   beforeEach(async () => {
     await db.fileQueue.clear();
@@ -227,7 +248,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(false);
       const updated = await db.fileQueue.get("test-id");
@@ -253,7 +274,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(false); // Too soon to retry
     });
@@ -263,6 +284,7 @@ describe("File Queue Utilities", () => {
       const entry: FileQueueEntry = {
         id: "test-id",
         file,
+        secretId: "secret-123",
         metadata: {
           name: "test.txt",
           type: "text/plain",
@@ -276,7 +298,7 @@ describe("File Queue Utilities", () => {
 
       await db.fileQueue.add(entry);
 
-      const success = await retryFileUpload(entry, "https://api.secpal.dev");
+      const success = await retryFileUpload(entry);
 
       expect(success).toBe(true);
       const updated = await db.fileQueue.get("test-id");
@@ -298,6 +320,7 @@ describe("File Queue Utilities", () => {
         {
           id: "1",
           file,
+          secretId: "secret-123",
           metadata,
           uploadState: "pending",
           retryCount: 0,
@@ -306,6 +329,7 @@ describe("File Queue Utilities", () => {
         {
           id: "2",
           file,
+          secretId: "secret-456",
           metadata,
           uploadState: "pending",
           retryCount: 0,
@@ -313,7 +337,7 @@ describe("File Queue Utilities", () => {
         },
       ]);
 
-      const stats = await processFileQueue("https://api.secpal.dev");
+      const stats = await processFileQueue();
 
       expect(stats.total).toBe(2);
       expect(stats.completed).toBe(2);

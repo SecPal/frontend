@@ -8,6 +8,8 @@ import { Text } from "../components/text";
 import { Button } from "../components/button";
 import { Badge } from "../components/badge";
 import { handleShareTargetMessage } from "./ShareTarget.utils";
+import { fetchSecrets, type Secret } from "../services/secretApi";
+import { addFileToQueue, processFileQueue } from "../lib/fileQueue";
 
 interface SharedFile {
   name: string;
@@ -211,6 +213,35 @@ export function ShareTarget() {
     return url.searchParams.get("share_id");
   });
 
+  // Upload state
+  const [secrets, setSecrets] = useState<Secret[]>([]);
+  const [loadingSecrets, setLoadingSecrets] = useState(false);
+  const [selectedSecretId, setSelectedSecretId] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Load secrets on mount
+  useEffect(() => {
+    const loadSecrets = async () => {
+      setLoadingSecrets(true);
+      try {
+        const loadedSecrets = await fetchSecrets();
+        setSecrets(loadedSecrets);
+      } catch (error) {
+        console.error("Failed to load secrets:", error);
+        setUploadError("Failed to load secrets");
+      } finally {
+        setLoadingSecrets(false);
+      }
+    };
+
+    // Only load if we have files to upload
+    if (sharedData?.files && sharedData.files.length > 0) {
+      void loadSecrets();
+    }
+  }, [sharedData?.files]);
+
   // Clean up URL parameters on mount
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -324,6 +355,60 @@ export function ShareTarget() {
     setSharedData(null);
     setErrors([]);
     sessionStorage.removeItem("share-target-files");
+    setSelectedSecretId("");
+    setUploadSuccess(false);
+    setUploadError(null);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedSecretId || !sharedData?.files) return;
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadSuccess(false);
+
+    try {
+      // Queue all files for upload
+      for (const file of sharedData.files) {
+        // Fetch file data from dataUrl
+        const response = await fetch(file.dataUrl || "");
+        const blob = await response.blob();
+
+        // Add to queue
+        await addFileToQueue(
+          blob,
+          {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            timestamp: Date.now(),
+          },
+          selectedSecretId
+        );
+      }
+
+      // Process the queue
+      const stats = await processFileQueue();
+
+      if (stats.failed > 0) {
+        setUploadError(
+          `Failed to upload ${stats.failed} of ${stats.total} file(s)`
+        );
+      } else {
+        setUploadSuccess(true);
+        // Clear shared data after successful upload
+        setTimeout(() => {
+          handleClear();
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setUploadError(
+        error instanceof Error ? error.message : "Failed to upload files"
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Show errors even if no valid shared data
@@ -434,6 +519,77 @@ export function ShareTarget() {
           <Heading level={2} className="mb-4">
             <Trans>Attached Files</Trans> ({sharedData.files.length})
           </Heading>
+
+          {/* Upload Section */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            {loadingSecrets ? (
+              <Text className="text-blue-900">
+                <Trans>Loading secrets...</Trans>
+              </Text>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <label
+                    htmlFor="secret-selector"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    <Trans>Select Secret to attach files:</Trans>
+                  </label>
+                  <select
+                    id="secret-selector"
+                    value={selectedSecretId}
+                    onChange={(e) => setSelectedSecretId(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={uploading}
+                  >
+                    <option value="">
+                      <Trans>-- Choose a Secret --</Trans>
+                    </option>
+                    {secrets.map((secret) => (
+                      <option key={secret.id} value={secret.id}>
+                        {secret.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {uploading && (
+                  <div className="mb-4 p-3 bg-blue-100 rounded">
+                    <Text className="text-blue-900 font-semibold">
+                      <Trans>Uploading...</Trans>
+                    </Text>
+                    <div className="mt-2 w-full bg-blue-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full animate-pulse w-full"></div>
+                    </div>
+                  </div>
+                )}
+
+                {uploadSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+                    <Text className="text-green-900 font-semibold">
+                      <Trans>Successfully uploaded files!</Trans>
+                    </Text>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                    <Text className="text-red-900 font-semibold">
+                      {uploadError}
+                    </Text>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleUpload}
+                  disabled={!selectedSecretId || uploading || uploadSuccess}
+                  className="w-full"
+                >
+                  <Trans>Save to Secret</Trans>
+                </Button>
+              </>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {sharedData.files.map((file, index) => (
