@@ -80,14 +80,21 @@ export interface FileMetadata {
  */
 export interface FileQueueEntry {
   id: string; // UUID
-  file: Blob; // Actual file data
+  file: Blob; // Actual file data (encrypted)
   metadata: FileMetadata;
-  uploadState: "pending" | "uploading" | "failed" | "completed";
+  uploadState:
+    | "pending"
+    | "encrypting"
+    | "encrypted"
+    | "uploading"
+    | "failed"
+    | "completed";
   secretId?: string; // Target Secret (if known)
   retryCount: number;
   error?: string;
   createdAt: Date;
   lastAttemptAt?: Date;
+  checksum?: string; // SHA-256 checksum of encrypted file
 }
 
 /**

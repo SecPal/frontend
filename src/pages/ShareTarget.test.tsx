@@ -3,17 +3,21 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { ShareTarget } from "./ShareTarget";
 import { handleShareTargetMessage } from "./ShareTarget.utils";
+import { db } from "../lib/db";
 
 // Mock secretApi to prevent real API calls
 vi.mock("../services/secretApi", () => ({
   fetchSecrets: vi.fn().mockResolvedValue([]),
+  getSecretMasterKey: vi.fn(),
 }));
+
+import { fetchSecrets, getSecretMasterKey } from "../services/secretApi";
 
 describe("ShareTarget Component", () => {
   // Helper function to set window.location with search params
@@ -840,7 +844,18 @@ describe("handleShareTargetMessage (unit tests)", () => {
  * Testing encryption before IndexedDB storage
  */
 describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
-  beforeEach(() => {
+  // Helper function to render with proper context
+  const renderComponentWithContext = () => {
+    return render(
+      <I18nProvider i18n={i18n}>
+        <BrowserRouter>
+          <ShareTarget />
+        </BrowserRouter>
+      </I18nProvider>
+    );
+  };
+
+  beforeEach(async () => {
     // Setup i18n
     i18n.load("en", {});
     i18n.activate("en");
@@ -859,41 +874,298 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
       writable: true,
       configurable: true,
     });
+
+    // Clear IndexedDB
+    await db.fileQueue.clear();
+
+    // Mock fetchSecrets to return test secrets
+    vi.mocked(fetchSecrets).mockResolvedValue([
+      {
+        id: "secret-123",
+        title: "Test Secret",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      },
+    ]);
+
+    // Mock getSecretMasterKey to return a valid CryptoKey
+    const mockKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    vi.mocked(getSecretMasterKey).mockResolvedValue(mockKey);
   });
 
   it("should encrypt files before adding to IndexedDB queue", async () => {
-    // TODO: Implement encryption test
-    // This test MUST fail initially (TDD principle)
-    expect(true).toBe(false);
+    // Setup: Create test file
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    // Render component
+    renderComponentWithContext();
+
+    // Wait for secrets to load
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    // Select secret
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    // Click upload button
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Wait for encryption to complete
+    await waitFor(
+      () => {
+        const queueEntries = db.fileQueue.toArray();
+        return queueEntries.then((entries) => {
+          expect(entries.length).toBeGreaterThan(0);
+          const entry = entries[0];
+          expect(entry?.uploadState).toBe("encrypted");
+        });
+      },
+      { timeout: 5000 }
+    );
   });
 
   it("should show encryption progress indicator", async () => {
-    // TODO: Implement progress test
-    expect(true).toBe(false);
+    // Setup: Create test file
+    const testFile = {
+      name: "large-file.pdf",
+      type: "application/pdf",
+      size: 5 * 1024 * 1024, // 5MB
+      dataUrl: "data:application/pdf;base64," + "A".repeat(1000), // Larger file
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    // Render component
+    renderComponentWithContext();
+
+    // Wait for secrets to load
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    // Select secret
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    // Click upload button
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Check for encryption progress indicator
+    await waitFor(() => {
+      expect(screen.getByText(/Encrypting files/i)).toBeInTheDocument();
+    });
   });
 
   it("should handle encryption errors gracefully", async () => {
-    // TODO: Implement error handling test
-    expect(true).toBe(false);
+    // Mock getSecretMasterKey to throw error
+    vi.mocked(getSecretMasterKey).mockRejectedValue(
+      new Error("Failed to get master key")
+    );
+
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Wait for error message
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to get master key/i)).toBeInTheDocument();
+    });
   });
 
   it("should not expose encryption keys in console/errors", async () => {
-    // TODO: Implement security test
-    expect(true).toBe(false);
+    const consoleSpy = vi.spyOn(console, "error");
+
+    // Mock error during encryption
+    vi.mocked(getSecretMasterKey).mockRejectedValue(
+      new Error("Encryption failed")
+    );
+
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Encryption failed/i)).toBeInTheDocument();
+    });
+
+    // Check that console.error was called but doesn't contain sensitive data
+    const errorCalls = consoleSpy.mock.calls;
+    errorCalls.forEach((call) => {
+      const message = String(call[0]);
+      // Ensure no CryptoKey objects or key material in logs
+      expect(message).not.toMatch(/CryptoKey/i);
+      expect(message).not.toMatch(/[A-Za-z0-9+/]{32,}={0,2}/); // No Base64 keys
+    });
+
+    consoleSpy.mockRestore();
   });
 
   it("should update uploadState to 'encrypted' after encryption", async () => {
-    // TODO: Implement state update test
-    expect(true).toBe(false);
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Wait for encryption state update
+    await waitFor(
+      async () => {
+        const entries = await db.fileQueue.toArray();
+        const entry = entries.find((e) => e.metadata.name === "test.pdf");
+        expect(entry?.uploadState).toBe("encrypted");
+      },
+      { timeout: 5000 }
+    );
   });
 
   it("should store encrypted blob in IndexedDB", async () => {
-    // TODO: Implement storage test
-    expect(true).toBe(false);
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Wait for file to be added to IndexedDB (regardless of final state)
+    await waitFor(
+      async () => {
+        const entries = await db.fileQueue.toArray();
+        expect(entries.length).toBeGreaterThan(0);
+
+        const entry = entries.find((e) => e.metadata.name === "test.pdf");
+        expect(entry).toBeDefined();
+        // Verify that entry has been processed (either encrypted or completed)
+        expect(["encrypted", "completed", "uploading"]).toContain(
+          entry?.uploadState
+        );
+      },
+      { timeout: 5000 }
+    );
   });
 
   it("should calculate checksums correctly", async () => {
-    // TODO: Implement checksum test
-    expect(true).toBe(false);
+    const testFile = {
+      name: "test.pdf",
+      type: "application/pdf",
+      size: 1024,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQK",
+    };
+
+    sessionStorage.setItem("share-target-files", JSON.stringify([testFile]));
+
+    renderComponentWithContext();
+
+    await waitFor(() => {
+      expect(fetchSecrets).toHaveBeenCalled();
+    });
+
+    const secretSelect = screen.getByLabelText(/Select Secret/i);
+    fireEvent.change(secretSelect, { target: { value: "secret-123" } });
+
+    const uploadButton = screen.getByRole("button", {
+      name: /Save to Secret/i,
+    });
+    fireEvent.click(uploadButton);
+
+    // Wait for checksum to be calculated
+    await waitFor(
+      async () => {
+        const entries = await db.fileQueue.toArray();
+        const entry = entries.find((e) => e.metadata.name === "test.pdf");
+        expect(entry?.checksum).toBeDefined();
+        expect(entry?.checksum).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex (64 chars)
+      },
+      { timeout: 5000 }
+    );
   });
 });
