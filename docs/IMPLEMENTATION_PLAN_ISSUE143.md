@@ -57,7 +57,7 @@ Implement end-to-end client-side file encryption for files shared via Share Targ
 
 ### Encryption Flow
 
-```
+```text
 1. User shares file via Share Target API
    → File stored in IndexedDB (unencrypted, temporary)
 
@@ -890,7 +890,7 @@ User Master Key (from authentication)
 └─> Secret Master Key (per Secret)
 └─> File Encryption Key (derived via HKDF + filename salt)
 
-```
+```text
 
 ## Encryption Flow
 
