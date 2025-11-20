@@ -261,6 +261,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CI/CD**: Codecov upload now fully functional for Dependabot PRs
+  - Added `continue-on-error` for dependabot/renovate bots to prevent blocking
+  - Made `CODECOV_TOKEN` optional (tokenless uploads work for public repos)
+  - Upload step succeeds even without token access (Dependabot security restriction)
+  - Normal PRs still fail CI on codecov errors (security preserved)
+  - Fixes issue where Codecov checks remained pending/missing on Dependabot PRs
 - **Blank Page Issue**: Fixed blank page caused by incompatible module format in translation catalogs
   - Changed Lingui compilation from CommonJS (`module.exports`) to ES modules (`export`)
   - Updated `package.json` scripts to use `--namespace es` flag for `lingui compile`
