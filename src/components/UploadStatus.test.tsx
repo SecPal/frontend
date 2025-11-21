@@ -78,7 +78,7 @@ describe("UploadStatus Component", () => {
 
     expect(screen.getByText("Upload Queue")).toBeInTheDocument();
     expect(screen.getByText("document.pdf")).toBeInTheDocument();
-    expect(screen.getByText("1 files ready for upload")).toBeInTheDocument();
+    expect(screen.getByText("1 file ready for upload")).toBeInTheDocument();
   });
 
   it("should display progress bar with correct percentage", () => {
