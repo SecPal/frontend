@@ -5,12 +5,14 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   fetchSecrets,
   uploadAttachment,
+  uploadEncryptedAttachment,
   listAttachments,
   deleteAttachment,
   getSecretMasterKey,
   ApiError,
   type Secret,
   type SecretAttachment,
+  type FileMetadata,
 } from "./secretApi";
 import { apiConfig } from "../config";
 
@@ -418,6 +420,192 @@ describe("Secret API", () => {
       const exported = await crypto.subtle.exportKey("raw", masterKey);
       expect(exported).toBeInstanceOf(Object);
       expect(exported.byteLength).toBe(32); // 256 bits
+    });
+  });
+
+  describe("uploadEncryptedAttachment", () => {
+    it("should upload encrypted blob successfully", async () => {
+      const mockAttachment: SecretAttachment = {
+        id: "att-1",
+        filename: "encrypted.bin",
+        size: 128,
+        mime_type: "application/octet-stream",
+        created_at: "2025-11-21T10:00:00Z",
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: mockAttachment }),
+      });
+
+      const encryptedBlob = new Blob([new Uint8Array([1, 2, 3, 4, 5])]);
+      const metadata = {
+        filename: "document.pdf",
+        type: "application/pdf",
+        size: 1024,
+        encryptedSize: 128,
+        checksum: "abc123def456",
+        checksumEncrypted: "789ghi012jkl",
+      };
+
+      const result = await uploadEncryptedAttachment(
+        "secret-123",
+        encryptedBlob,
+        metadata
+      );
+
+      expect(result).toEqual(mockAttachment);
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/api/v1/secrets/secret-123/attachments`,
+        expect.objectContaining({
+          method: "POST",
+          body: expect.any(FormData),
+        })
+      );
+
+      // Verify FormData contains encrypted blob
+      const callArgs = mockFetch.mock.calls[0];
+      const formData = callArgs[1].body as FormData;
+      expect(formData.get("file")).toBeInstanceOf(Blob);
+      expect(formData.get("metadata")).toBe(JSON.stringify(metadata));
+    });
+
+    it("should include metadata in upload", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: { id: "att-1", filename: "test.bin", size: 100 },
+        }),
+      });
+
+      const blob = new Blob([new Uint8Array(10)]);
+      const metadata = {
+        filename: "secret.txt",
+        type: "text/plain",
+        size: 500,
+        encryptedSize: 512,
+        checksum: "original-checksum",
+        checksumEncrypted: "encrypted-checksum",
+      };
+
+      await uploadEncryptedAttachment("secret-456", blob, metadata);
+
+      const callArgs = mockFetch.mock.calls[0];
+      const formData = callArgs[1].body as FormData;
+      const metadataJson = formData.get("metadata");
+      expect(metadataJson).toBe(JSON.stringify(metadata));
+
+      const parsedMetadata = JSON.parse(metadataJson as string);
+      expect(parsedMetadata.checksum).toBe("original-checksum");
+      expect(parsedMetadata.checksumEncrypted).toBe("encrypted-checksum");
+    });
+
+    it("should handle upload errors gracefully", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 413,
+        json: async () => ({
+          message: "File too large",
+          errors: { file: ["Maximum size is 10MB"] },
+        }),
+      });
+
+      const blob = new Blob([new Uint8Array(1)]);
+      const metadata = {
+        filename: "large.bin",
+        type: "application/octet-stream",
+        size: 15000000,
+        encryptedSize: 15000128,
+        checksum: "abc",
+        checksumEncrypted: "def",
+      };
+
+      await expect(
+        uploadEncryptedAttachment("secret-123", blob, metadata)
+      ).rejects.toThrow(ApiError);
+      await expect(
+        uploadEncryptedAttachment("secret-123", blob, metadata)
+      ).rejects.toThrow("File too large");
+    });
+
+    it("should handle network failures", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      const blob = new Blob([new Uint8Array(1)]);
+      const metadata = {
+        filename: "test.txt",
+        type: "text/plain",
+        size: 100,
+        encryptedSize: 128,
+        checksum: "abc",
+        checksumEncrypted: "def",
+      };
+
+      await expect(
+        uploadEncryptedAttachment("secret-123", blob, metadata)
+      ).rejects.toThrow("Network error");
+    });
+
+    it("should reject empty secretId", async () => {
+      const blob = new Blob([new Uint8Array(1)]);
+      const metadata = {
+        filename: "test.txt",
+        type: "text/plain",
+        size: 100,
+        encryptedSize: 128,
+        checksum: "abc",
+        checksumEncrypted: "def",
+      };
+
+      await expect(
+        uploadEncryptedAttachment("", blob, metadata)
+      ).rejects.toThrow("secretId is required");
+      await expect(
+        uploadEncryptedAttachment("   ", blob, metadata)
+      ).rejects.toThrow("secretId is required");
+    });
+
+    it("should reject empty blob", async () => {
+      const emptyBlob = new Blob([]);
+      const metadata = {
+        filename: "test.txt",
+        type: "text/plain",
+        size: 100,
+        encryptedSize: 0,
+        checksum: "abc",
+        checksumEncrypted: "def",
+      };
+
+      await expect(
+        uploadEncryptedAttachment("secret-123", emptyBlob, metadata)
+      ).rejects.toThrow("encryptedBlob must be a non-empty Blob");
+    });
+
+    it("should not include Content-Type header (FormData auto-sets it)", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: { id: "att-1", filename: "test.bin", size: 100 },
+        }),
+      });
+
+      const blob = new Blob([new Uint8Array(10)]);
+      const metadata = {
+        filename: "test.txt",
+        type: "text/plain",
+        size: 100,
+        encryptedSize: 128,
+        checksum: "abc",
+        checksumEncrypted: "def",
+      };
+
+      await uploadEncryptedAttachment("secret-123", blob, metadata);
+
+      const callArgs = mockFetch.mock.calls[0];
+      const headers = callArgs[1].headers;
+
+      // Should NOT include Content-Type (FormData sets it automatically with boundary)
+      expect(headers["Content-Type"]).toBeUndefined();
     });
   });
 });
