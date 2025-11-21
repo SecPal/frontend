@@ -76,8 +76,8 @@
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.47.0",
     "@vitejs/plugin-react": "^5.1.1",
-    "@vitest/coverage-v8": "^4.0.12",
-    "@vitest/ui": "^4.0.8",
+    "@vitest/coverage-v8": "^4.0.13",
+    "@vitest/ui": "^4.0.13",
     "babel-plugin-macros": "^3.1.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
@@ -93,7 +93,7 @@
     "typescript-eslint": "^8.47.0",
     "vite": "^7.2.4",
     "vite-plugin-pwa": "^1.1.0",
-    "vitest": "^4.0.3",
+    "vitest": "^4.0.13",
     "workbox-window": "^7.4.0"
   },
   "engines": {
