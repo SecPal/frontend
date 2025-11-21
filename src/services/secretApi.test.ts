@@ -12,7 +12,6 @@ import {
   ApiError,
   type Secret,
   type SecretAttachment,
-  type FileMetadata,
 } from "./secretApi";
 import { apiConfig } from "../config";
 
@@ -465,6 +464,7 @@ describe("Secret API", () => {
 
       // Verify FormData contains encrypted blob
       const callArgs = mockFetch.mock.calls[0];
+      if (!callArgs) throw new Error("mockFetch not called");
       const formData = callArgs[1].body as FormData;
       expect(formData.get("file")).toBeInstanceOf(Blob);
       expect(formData.get("metadata")).toBe(JSON.stringify(metadata));
@@ -491,6 +491,7 @@ describe("Secret API", () => {
       await uploadEncryptedAttachment("secret-456", blob, metadata);
 
       const callArgs = mockFetch.mock.calls[0];
+      if (!callArgs) throw new Error("mockFetch not called");
       const formData = callArgs[1].body as FormData;
       const metadataJson = formData.get("metadata");
       expect(metadataJson).toBe(JSON.stringify(metadata));
@@ -602,6 +603,7 @@ describe("Secret API", () => {
       await uploadEncryptedAttachment("secret-123", blob, metadata);
 
       const callArgs = mockFetch.mock.calls[0];
+      if (!callArgs) throw new Error("mockFetch not called");
       const headers = callArgs[1].headers;
 
       // Should NOT include Content-Type (FormData sets it automatically with boundary)
