@@ -639,4 +639,136 @@ describe("UploadStatus Component", () => {
     // Unmount should not throw
     expect(() => unmount()).not.toThrow();
   });
+
+  it("should handle multiple errors in quick succession", async () => {
+    const mockRetryFailed = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("First error"))
+      .mockRejectedValueOnce(new Error("Second error"));
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      failed: [
+        {
+          id: "failed-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "failed",
+          retryCount: 2,
+          createdAt: new Date(),
+        },
+      ],
+      retryFailed: mockRetryFailed,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const retryButton = screen.getByText("Retry Failed");
+
+    // Trigger first error
+    await user.click(retryButton);
+    await waitFor(() => {
+      expect(screen.getByText("First error")).toBeInTheDocument();
+    });
+
+    // Trigger second error immediately (should clear first timeout)
+    await user.click(retryButton);
+    await waitFor(() => {
+      expect(screen.getByText("Second error")).toBeInTheDocument();
+      expect(screen.queryByText("First error")).not.toBeInTheDocument();
+    });
+  });
+
+  it("should show success after clearCompleted with count", async () => {
+    const mockClearCompleted = vi.fn().mockResolvedValue(5);
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      clearCompleted: mockClearCompleted,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const clearButton = screen.getByText("Clear Completed");
+    await user.click(clearButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Cleared 5 completed upload(s)")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should show success after deleting file", async () => {
+    const mockDeleteFile = vi.fn().mockResolvedValue(undefined);
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "document.pdf",
+            type: "application/pdf",
+            size: 1024,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      deleteFile: mockDeleteFile,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const deleteButton = screen.getByLabelText("Remove document.pdf");
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Removed document.pdf from queue")
+      ).toBeInTheDocument();
+    });
+  });
 });
