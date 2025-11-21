@@ -19,6 +19,7 @@ describe("UploadStatus Component", () => {
     isProcessing: false,
     clearCompleted: vi.fn(),
     deleteFile: vi.fn(),
+    retryFailed: vi.fn(),
     registerEncryptedUploadSync: vi.fn(),
   };
 
@@ -124,7 +125,7 @@ describe("UploadStatus Component", () => {
     renderWithI18n(<UploadStatus />);
 
     const progressBar = screen.getByRole("progressbar");
-    expect(progressBar).toHaveAttribute("aria-valuenow", "50"); // 1 encrypted out of 2 total = 50%
+    expect(progressBar).toHaveAttribute("aria-valuenow", "50"); // 1 processed (failed) out of 2 total = 50%
   });
 
   it("should show failed files with error messages", () => {
@@ -161,7 +162,7 @@ describe("UploadStatus Component", () => {
   });
 
   it("should call registerEncryptedUploadSync when retry button clicked", async () => {
-    const mockRegisterSync = vi.fn().mockResolvedValue(undefined);
+    const mockRetryFailed = vi.fn().mockResolvedValue(undefined);
 
     vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
       ...mockFileQueue,
@@ -180,7 +181,7 @@ describe("UploadStatus Component", () => {
           createdAt: new Date(),
         },
       ],
-      registerEncryptedUploadSync: mockRegisterSync,
+      retryFailed: mockRetryFailed,
       allFiles: [],
       pending: [],
       quota: null,
@@ -194,7 +195,7 @@ describe("UploadStatus Component", () => {
     const retryButton = screen.getByText("Retry Failed");
     await user.click(retryButton);
 
-    expect(mockRegisterSync).toHaveBeenCalledOnce();
+    expect(mockRetryFailed).toHaveBeenCalledOnce();
   });
 
   it("should call deleteFile when delete button clicked", async () => {
@@ -231,11 +232,11 @@ describe("UploadStatus Component", () => {
     const deleteButton = screen.getByLabelText("Remove delete-me.txt");
     await user.click(deleteButton);
 
-    expect(mockDeleteFile).toHaveBeenCalledWith("file-1", "delete-me.txt");
+    expect(mockDeleteFile).toHaveBeenCalledWith("file-1");
   });
 
   it("should show success notification after retry", async () => {
-    const mockRegisterSync = vi.fn().mockResolvedValue(undefined);
+    const mockRetryFailed = vi.fn().mockResolvedValue(undefined);
 
     vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
       ...mockFileQueue,
@@ -254,7 +255,7 @@ describe("UploadStatus Component", () => {
           createdAt: new Date(),
         },
       ],
-      registerEncryptedUploadSync: mockRegisterSync,
+      retryFailed: mockRetryFailed,
       allFiles: [],
       pending: [],
       quota: null,

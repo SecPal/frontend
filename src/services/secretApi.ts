@@ -122,6 +122,7 @@ export async function uploadAttachment(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
+      credentials: "include",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
       body: formData,
     }
@@ -184,6 +185,7 @@ export async function uploadEncryptedAttachment(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
+      credentials: "include",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
       body: formData,
     }

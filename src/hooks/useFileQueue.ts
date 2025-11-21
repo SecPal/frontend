@@ -12,6 +12,7 @@ import {
   clearCompletedUploads,
   deleteQueuedFile,
   getStorageQuota,
+  retryFailedUploads,
 } from "../lib/fileQueue";
 
 /**
@@ -157,6 +158,19 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
   }, []);
 
   /**
+   * Retry all failed uploads
+   *
+   * Transitions failed files back to encrypted state and triggers sync.
+   */
+  const retryFailed = useCallback(async () => {
+    const count = await retryFailedUploads();
+    if (count > 0) {
+      await registerEncryptedUploadSync();
+    }
+    return count;
+  }, [registerEncryptedUploadSync]);
+
+  /**
    * Listen for Background Sync completion messages
    *
    * Note: Handler is memoized with useCallback to prevent duplicate listeners
@@ -225,6 +239,7 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
     processQueue,
     clearCompleted,
     deleteFile,
+    retryFailed,
     registerBackgroundSync,
     registerEncryptedUploadSync,
   };

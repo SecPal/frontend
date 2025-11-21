@@ -8,7 +8,12 @@ import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { NetworkFirst, CacheFirst } from "workbox-strategies";
 import { openDB } from "idb";
-import { DB_NAME, DB_VERSION, MAX_RETRY_COUNT } from "./lib/db-constants";
+import {
+  DB_NAME,
+  DB_VERSION,
+  MAX_RETRY_COUNT,
+  MAX_BACKOFF_MS,
+} from "./lib/db-constants";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -447,6 +452,7 @@ async function syncEncryptedUploads(): Promise<void> {
         await db.put("fileQueue", {
           ...fileEntry,
           uploadState: "failed",
+          retryCount: MAX_RETRY_COUNT,
           error: "Missing secretId for upload",
         });
         failed++;
@@ -455,8 +461,8 @@ async function syncEncryptedUploads(): Promise<void> {
 
       // Calculate exponential backoff delay
       const backoffMs = Math.min(
-        1000 * Math.pow(2, fileEntry.retryCount),
-        30000 // Max 30s
+        1000 * Math.pow(2, fileEntry.retryCount ?? 0),
+        MAX_BACKOFF_MS
       );
       const timeSinceLastAttempt = fileEntry.lastAttemptAt
         ? Date.now() - fileEntry.lastAttemptAt.getTime()
@@ -478,6 +484,17 @@ async function syncEncryptedUploads(): Promise<void> {
       });
 
       try {
+        // Calculate checksum of encrypted file if not already present
+        let checksumEncrypted = fileEntry.checksumEncrypted || "";
+        if (!checksumEncrypted) {
+          const arrayBuffer = await fileEntry.file.arrayBuffer();
+          const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          checksumEncrypted = hashArray
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+        }
+
         // Build metadata JSON
         const metadata = {
           filename: fileEntry.metadata.name,
@@ -485,7 +502,7 @@ async function syncEncryptedUploads(): Promise<void> {
           size: fileEntry.metadata.size,
           encryptedSize: fileEntry.file.size,
           checksum: fileEntry.checksum || "",
-          checksumEncrypted: fileEntry.checksumEncrypted || "",
+          checksumEncrypted,
         };
 
         // Create FormData
@@ -504,10 +521,13 @@ async function syncEncryptedUploads(): Promise<void> {
         );
 
         if (response.ok) {
-          // Mark as completed
+          // Mark as completed and cleanup retry metadata
           await db.put("fileQueue", {
             ...fileEntry,
             uploadState: "completed",
+            retryCount: 0,
+            lastAttemptAt: undefined,
+            error: undefined,
           });
           succeeded++;
           console.log(

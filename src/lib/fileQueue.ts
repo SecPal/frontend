@@ -386,6 +386,34 @@ export async function getFailedFiles(): Promise<FileQueueEntry[]> {
 }
 
 /**
+ * Retry all failed uploads by transitioning them back to encrypted state
+ *
+ * This function resets failed files to 'encrypted' state with retry count of 0,
+ * allowing them to be picked up by the encrypted upload sync process.
+ *
+ * @returns Number of files transitioned to retry
+ *
+ * @example
+ * ```ts
+ * const count = await retryFailedUploads();
+ * console.log(`Retrying ${count} failed uploads`);
+ * ```
+ */
+export async function retryFailedUploads(): Promise<number> {
+  const failedFiles = await getFailedFiles();
+
+  for (const file of failedFiles) {
+    await db.fileQueue.update(file.id, {
+      uploadState: "encrypted",
+      retryCount: 0,
+      error: undefined,
+    });
+  }
+
+  return failedFiles.length;
+}
+
+/**
  * Get all files with uploadState='encrypted' (ready for upload)
  *
  * @returns Array of encrypted file entries waiting for upload

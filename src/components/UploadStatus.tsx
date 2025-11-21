@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useState } from "react";
-import { Trans } from "@lingui/react/macro";
+import { useCallback, useState, useRef, useEffect } from "react";
+import { Trans, Plural } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
+import { msg } from "@lingui/core/macro";
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -32,13 +34,14 @@ import { Button } from "./button";
  * ```
  */
 export function UploadStatus() {
+  const { _ } = useLingui();
   const {
     encrypted,
     failed,
     isProcessing,
     clearCompleted,
     deleteFile,
-    registerEncryptedUploadSync,
+    retryFailed,
   } = useFileQueue();
 
   const [notification, setNotification] = useState<{
@@ -46,66 +49,95 @@ export function UploadStatus() {
     message: string;
   } | null>(null);
 
+  const timeoutRef = useRef<number | null>(null);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearNotificationTimeout = useCallback(() => {
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
   const handleRetryFailed = useCallback(async () => {
     try {
-      await registerEncryptedUploadSync();
+      await retryFailed();
+      clearNotificationTimeout();
       setNotification({
         type: "success",
-        message:
-          "Retry scheduled. Files will upload when network is available.",
+        message: _(
+          msg`Retry scheduled. Files will upload when network is available.`
+        ),
       });
 
       // Auto-dismiss success notification after 5 seconds
-      setTimeout(() => setNotification(null), 5000);
+      timeoutRef.current = window.setTimeout(() => setNotification(null), 5000);
     } catch (error) {
       setNotification({
         type: "error",
         message:
           error instanceof Error
             ? error.message
-            : "Failed to schedule upload retry",
+            : _(msg`Failed to schedule upload retry`),
       });
     }
-  }, [registerEncryptedUploadSync]);
+  }, [retryFailed, clearNotificationTimeout, _]);
 
   const handleClearCompleted = useCallback(async () => {
     try {
       const count = await clearCompleted();
+      clearNotificationTimeout();
       setNotification({
         type: "success",
-        message: `Cleared ${count} completed upload(s)`,
+        message: _(msg`Cleared ${count} completed upload(s)`),
       });
 
       // Auto-dismiss after 3 seconds
-      setTimeout(() => setNotification(null), 3000);
+      timeoutRef.current = window.setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       setNotification({
         type: "error",
         message:
-          error instanceof Error ? error.message : "Failed to clear uploads",
+          error instanceof Error
+            ? error.message
+            : _(msg`Failed to clear uploads`),
       });
     }
-  }, [clearCompleted]);
+  }, [clearCompleted, clearNotificationTimeout, _]);
 
   const handleDeleteFile = useCallback(
     async (id: string, filename: string) => {
       try {
         await deleteFile(id);
+        clearNotificationTimeout();
         setNotification({
           type: "success",
-          message: `Removed ${filename} from queue`,
+          message: _(msg`Removed ${filename} from queue`),
         });
 
-        setTimeout(() => setNotification(null), 3000);
+        timeoutRef.current = window.setTimeout(
+          () => setNotification(null),
+          3000
+        );
       } catch (error) {
         setNotification({
           type: "error",
           message:
-            error instanceof Error ? error.message : "Failed to delete file",
+            error instanceof Error
+              ? error.message
+              : _(msg`Failed to delete file`),
         });
       }
     },
-    [deleteFile]
+    [deleteFile, clearNotificationTimeout, _]
   );
 
   // Don't show component if nothing in queue
@@ -114,9 +146,10 @@ export function UploadStatus() {
     return null;
   }
 
-  // Calculate progress percentage
+  // Calculate progress percentage (files that have left the encrypted state)
+  const completedCount = totalFiles - encrypted.length;
   const progressPercentage =
-    totalFiles > 0 ? Math.round((encrypted.length / totalFiles) * 100) : 0;
+    totalFiles > 0 ? Math.round((completedCount / totalFiles) * 100) : 0;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 rounded-lg bg-white shadow-lg dark:bg-gray-800">
@@ -193,7 +226,11 @@ export function UploadStatus() {
             />
           </div>
           <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-            <Trans>{encrypted.length} files ready for upload</Trans>
+            <Plural
+              value={encrypted.length}
+              one="# file ready for upload"
+              other="# files ready for upload"
+            />
           </p>
         </div>
       )}
