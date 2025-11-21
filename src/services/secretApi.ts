@@ -437,4 +437,3 @@ export async function downloadAndDecryptAttachment(
     type: metadata.type,
   });
 }
-
