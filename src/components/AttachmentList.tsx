@@ -172,7 +172,7 @@ export function AttachmentList({
               {canPreview && (
                 <Button
                   type="button"
-                  color="secondary"
+                  color="zinc"
                   onClick={() => onPreview(attachment.id, masterKey)}
                   disabled={isLoading}
                   aria-label={`Preview ${attachment.filename}`}
@@ -187,7 +187,7 @@ export function AttachmentList({
 
               <Button
                 type="button"
-                color="secondary"
+                color="zinc"
                 onClick={() => onDownload(attachment.id, masterKey)}
                 disabled={isLoading}
                 aria-label={`Download ${attachment.filename}`}
@@ -201,7 +201,7 @@ export function AttachmentList({
 
               <Button
                 type="button"
-                color="destructive"
+                color="red"
                 onClick={() => onDelete(attachment.id)}
                 disabled={isLoading}
                 aria-label={`Delete ${attachment.filename}`}
