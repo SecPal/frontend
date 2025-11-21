@@ -386,6 +386,24 @@ export async function getFailedFiles(): Promise<FileQueueEntry[]> {
 }
 
 /**
+ * Get all files with uploadState='encrypted' (ready for upload)
+ *
+ * @returns Array of encrypted file entries waiting for upload
+ *
+ * @example
+ * ```ts
+ * const encrypted = await getEncryptedFiles();
+ * console.log(`${encrypted.length} encrypted files ready for upload`);
+ * ```
+ */
+export async function getEncryptedFiles(): Promise<FileQueueEntry[]> {
+  return db.fileQueue
+    .where("uploadState")
+    .equals("encrypted")
+    .sortBy("createdAt");
+}
+
+/**
  * Delete a file from the queue
  *
  * @param id - File queue entry ID
