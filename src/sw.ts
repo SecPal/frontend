@@ -277,6 +277,20 @@ self.addEventListener("sync", ((event: SyncEvent) => {
         await syncFileQueue();
       })()
     );
+  } else if (event.tag === "encrypted-upload-sync") {
+    event.waitUntil(
+      (async () => {
+        // Validate that at least one trusted window client exists before processing
+        const clients = await self.clients.matchAll({ type: "window" });
+        if (clients.length === 0) {
+          console.warn(
+            "[SW] Ignoring encrypted-upload-sync: no trusted window clients found"
+          );
+          return;
+        }
+        await syncEncryptedUploads();
+      })()
+    );
   }
 }) as EventListener);
 
@@ -397,6 +411,168 @@ async function syncFileQueue(): Promise<void> {
       throw error; // Re-throw to trigger retry
     }
     // For other errors (e.g., corrupted IndexedDB), don't retry infinitely
+  }
+}
+
+/**
+ * Process encrypted file uploads from IndexedDB queue
+ *
+ * Implements retry logic with exponential backoff (1s, 2s, 4s, 8s, 16s, max 30s)
+ * and max retry limits. Only processes files with uploadState='encrypted'.
+ *
+ * WORKFLOW:
+ * 1. Query fileQueue for files with uploadState='encrypted'
+ * 2. For each file, call /api/v1/secrets/{secretId}/attachments
+ * 3. Update uploadState: 'encrypted' → 'uploading' → 'completed'/'failed'
+ * 4. Notify clients of progress and results
+ */
+async function syncEncryptedUploads(): Promise<void> {
+  const db = await openDB(DB_NAME, DB_VERSION);
+  let succeeded = 0;
+  let failed = 0;
+
+  try {
+    const encryptedFiles = await db.getAllFromIndex(
+      "fileQueue",
+      "uploadState",
+      "encrypted"
+    );
+
+    console.log(`[SW] Syncing ${encryptedFiles.length} encrypted file uploads`);
+
+    for (const fileEntry of encryptedFiles) {
+      // Skip files without secretId (cannot upload without target)
+      if (!fileEntry.secretId) {
+        console.warn(`[SW] Skipping file ${fileEntry.id}: missing secretId`);
+        await db.put("fileQueue", {
+          ...fileEntry,
+          uploadState: "failed",
+          error: "Missing secretId for upload",
+        });
+        failed++;
+        continue;
+      }
+
+      // Calculate exponential backoff delay
+      const backoffMs = Math.min(
+        1000 * Math.pow(2, fileEntry.retryCount),
+        30000 // Max 30s
+      );
+      const timeSinceLastAttempt = fileEntry.lastAttemptAt
+        ? Date.now() - fileEntry.lastAttemptAt.getTime()
+        : Infinity;
+
+      // Skip if backoff period not elapsed
+      if (timeSinceLastAttempt < backoffMs) {
+        console.log(
+          `[SW] Skipping file ${fileEntry.metadata.name}: backoff not elapsed (${backoffMs}ms)`
+        );
+        continue;
+      }
+
+      // Mark as uploading
+      await db.put("fileQueue", {
+        ...fileEntry,
+        uploadState: "uploading",
+        lastAttemptAt: new Date(),
+      });
+
+      try {
+        // Build metadata JSON
+        const metadata = {
+          filename: fileEntry.metadata.name,
+          type: fileEntry.metadata.type,
+          size: fileEntry.metadata.size,
+          encryptedSize: fileEntry.file.size,
+          checksum: fileEntry.checksum || "",
+          checksumEncrypted: fileEntry.checksum || "", // TODO: Separate original checksum
+        };
+
+        // Create FormData
+        const formData = new FormData();
+        formData.append("file", fileEntry.file, "encrypted.bin");
+        formData.append("metadata", JSON.stringify(metadata));
+
+        // POST to backend
+        const response = await fetch(
+          `${self.location.origin}/api/v1/secrets/${fileEntry.secretId}/attachments`,
+          {
+            method: "POST",
+            credentials: "include", // Include cookies for authentication
+            body: formData,
+          }
+        );
+
+        if (response.ok) {
+          // Mark as completed
+          await db.put("fileQueue", {
+            ...fileEntry,
+            uploadState: "completed",
+          });
+          succeeded++;
+          console.log(
+            `[SW] Successfully uploaded file: ${fileEntry.metadata.name}`
+          );
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (error) {
+        // Upload failed - increment retry count
+        const newRetryCount = (fileEntry.retryCount ?? 0) + 1;
+        console.error(
+          `[SW] Failed to upload file ${fileEntry.metadata.name} (retry ${newRetryCount}/${MAX_RETRY_COUNT}):`,
+          error
+        );
+
+        if (newRetryCount >= MAX_RETRY_COUNT) {
+          // Max retries exceeded - mark as failed permanently
+          await db.put("fileQueue", {
+            ...fileEntry,
+            uploadState: "failed",
+            retryCount: newRetryCount,
+            error: error instanceof Error ? error.message : "Upload failed",
+          });
+          failed++;
+        } else {
+          // Keep as encrypted with incremented retry count
+          await db.put("fileQueue", {
+            ...fileEntry,
+            uploadState: "encrypted",
+            retryCount: newRetryCount,
+          });
+        }
+      }
+    }
+
+    // Notify clients about sync completion with stats
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({
+        type: "ENCRYPTED_UPLOAD_SYNCED",
+        count: encryptedFiles.length,
+        succeeded,
+        failed,
+      });
+    }
+  } catch (error) {
+    // Critical error - notify clients
+    console.error("[SW] Encrypted upload sync failed:", error);
+
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      client.postMessage({
+        type: "ENCRYPTED_UPLOAD_SYNC_ERROR",
+        error: error instanceof Error ? error.message : "Sync failed",
+      });
+    }
+
+    // Only re-throw for network errors (transient), not for corrupted data
+    if (
+      error instanceof Error &&
+      (error.name === "NetworkError" || error.message.includes("network"))
+    ) {
+      throw error; // Re-throw to trigger retry
+    }
   }
 }
 
