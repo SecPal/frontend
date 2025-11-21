@@ -15,7 +15,7 @@ SecPal implements **end-to-end client-side file encryption** for attachments usi
 
 ## 🔑 Key Hierarchy
 
-```
+```text
 User Authentication
     ↓
 Secret Master Key (per Secret, 256-bit AES-GCM)
@@ -67,9 +67,9 @@ sequenceDiagram
     Frontend->>User: Upload complete
 ```
 
-### Detailed Implementation
+### Encryption Detailed Implementation
 
-**1. File Preparation**
+#### 1. File Preparation
 
 ```typescript
 // User shares file via Share Target API
@@ -77,7 +77,7 @@ const file = new File([...], "document.pdf", { type: "application/pdf" });
 const checksum = await calculateChecksum(file); // SHA-256
 ```
 
-**2. Key Derivation**
+#### 2. Key Derivation
 
 ```typescript
 const secretKey = await getSecretMasterKey(secretId);
@@ -85,7 +85,7 @@ const fileKey = await deriveFileKey(secretKey, file.name);
 // fileKey is non-extractable CryptoKey (cannot be exported)
 ```
 
-**3. Encryption**
+#### 3. Encryption
 
 ```typescript
 const iv = crypto.getRandomValues(new Uint8Array(12)); // Random 96-bit IV
@@ -97,7 +97,7 @@ const encrypted = await crypto.subtle.encrypt(
 // encrypted includes: ciphertext + authentication tag (16 bytes)
 ```
 
-**4. Metadata Preparation**
+#### 4. Metadata Preparation
 
 ```typescript
 const metadata = {
@@ -110,7 +110,7 @@ const metadata = {
 };
 ```
 
-**5. Upload**
+#### 5. Upload
 
 ```typescript
 const encryptedBlob = new Blob([iv, authTag, ciphertext]);
@@ -121,7 +121,7 @@ await uploadEncryptedAttachment(secretId, encryptedBlob, metadata);
 
 ## 🔓 Decryption Flow
 
-### Step-by-Step Process
+### Decryption Step-by-Step Processtep Process
 
 ```mermaid
 sequenceDiagram
@@ -139,9 +139,9 @@ sequenceDiagram
     Frontend->>User: Decrypted file ready
 ```
 
-### Detailed Implementation
+### Decryption Detailed Implementation
 
-**1. Download Encrypted Blob**
+#### 1. Download Encrypted Blob
 
 ```typescript
 const response = await fetch(`/api/v1/attachments/${attachmentId}/download`);
@@ -151,7 +151,7 @@ const encryptedBytes = Uint8Array.from(atob(encryptedBlob), (c) =>
 );
 ```
 
-**2. Parse Encrypted Data**
+#### 2. Parse Encrypted Data
 
 ```typescript
 const iv = encryptedBytes.slice(0, 12); // 96 bits
@@ -159,14 +159,14 @@ const authTag = encryptedBytes.slice(12, 28); // 128 bits
 const ciphertext = encryptedBytes.slice(28); // Rest
 ```
 
-**3. Key Derivation (Same as Encryption)**
+#### 3. Key Derivation (Same as Encryption)
 
 ```typescript
 const secretKey = await getSecretMasterKey(secretId);
 const fileKey = await deriveFileKey(secretKey, metadata.filename);
 ```
 
-**4. Decryption**
+#### 4. Decryption
 
 ```typescript
 const decrypted = await crypto.subtle.decrypt(
@@ -176,7 +176,7 @@ const decrypted = await crypto.subtle.decrypt(
 );
 ```
 
-**5. Integrity Verification**
+#### 5. Integrity Verification
 
 ```typescript
 const actualChecksum = await calculateChecksum(new Uint8Array(decrypted));
@@ -185,7 +185,7 @@ if (actualChecksum !== metadata.checksum) {
 }
 ```
 
-**6. File Restoration**
+#### 6. File Restoration
 
 ```typescript
 return new File([decrypted], metadata.filename, { type: metadata.type });
@@ -507,7 +507,7 @@ const checksum = await calculateChecksum(fileData);
 
 For security issues or vulnerabilities, please report to:
 
-**Email:** security@secpal.app
+**Email:** <security@secpal.app>  
 **PGP Key:** (Available on keyserver)
 
 **Please DO NOT open public GitHub issues for security vulnerabilities.**
