@@ -26,6 +26,15 @@ export interface SecretAttachment {
   created_at: string;
 }
 
+export interface FileMetadata {
+  filename: string;
+  type: string;
+  size: number;
+  encryptedSize: number;
+  checksum: string;
+  checksumEncrypted: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
 }
@@ -64,6 +73,7 @@ export class ApiError extends Error {
 export async function fetchSecrets(): Promise<Secret[]> {
   const response = await fetch(`${apiConfig.baseUrl}/api/v1/secrets`, {
     method: "GET",
+    credentials: "include",
     headers: {
       ...getAuthHeaders(),
       "Content-Type": "application/json",
@@ -113,6 +123,70 @@ export async function uploadAttachment(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
+      credentials: "include",
+      headers: getAuthHeaders(), // Don't set Content-Type for FormData
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const result: ApiResponse<SecretAttachment> = await response.json();
+  return result.data;
+}
+
+/**
+ * Upload encrypted file attachment to secret
+ *
+ * Uploads an already-encrypted blob with metadata including checksums.
+ * This is used for zero-knowledge client-side encryption (Phase 3).
+ *
+ * @param secretId - Target secret ID
+ * @param encryptedBlob - Encrypted file blob (IV + AuthTag + Ciphertext)
+ * @param metadata - File metadata including original filename and checksums
+ * @returns Uploaded attachment metadata
+ * @throws ApiError if upload fails
+ *
+ * @example
+ * ```ts
+ * const encryptedBlob = await encryptFile(file, fileKey);
+ * const metadata = {
+ *   filename: 'document.pdf',
+ *   type: 'application/pdf',
+ *   size: 1024,
+ *   encryptedSize: 1152,
+ *   checksum: 'abc123...',
+ *   checksumEncrypted: 'def456...'
+ * };
+ * const attachment = await uploadEncryptedAttachment('secret-123', encryptedBlob, metadata);
+ * ```
+ */
+export async function uploadEncryptedAttachment(
+  secretId: string,
+  encryptedBlob: Blob,
+  metadata: FileMetadata
+): Promise<SecretAttachment> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+  if (!encryptedBlob || encryptedBlob.size === 0) {
+    throw new Error("encryptedBlob must be a non-empty Blob");
+  }
+
+  const formData = new FormData();
+  formData.append("file", encryptedBlob, "encrypted.bin");
+  formData.append("metadata", JSON.stringify(metadata));
+
+  const response = await fetch(
+    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
+    {
+      method: "POST",
+      credentials: "include",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
       body: formData,
     }
@@ -153,6 +227,7 @@ export async function listAttachments(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
@@ -192,6 +267,7 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
+      credentials: "include",
       headers: getAuthHeaders(),
     }
   );
@@ -226,6 +302,7 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",

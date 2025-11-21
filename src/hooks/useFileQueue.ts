@@ -6,11 +6,13 @@ import { useLiveQuery } from "dexie-react-hooks";
 import {
   getPendingFiles,
   getFailedFiles,
+  getEncryptedFiles,
   getAllQueuedFiles,
   processFileQueue,
   clearCompletedUploads,
   deleteQueuedFile,
   getStorageQuota,
+  retryFailedUploads,
 } from "../lib/fileQueue";
 
 /**
@@ -50,6 +52,7 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
   const allFiles = useLiveQuery(() => getAllQueuedFiles(), []);
   const pending = useLiveQuery(() => getPendingFiles(), []);
   const failed = useLiveQuery(() => getFailedFiles(), []);
+  const encrypted = useLiveQuery(() => getEncryptedFiles(), []);
 
   // Update quota periodically
   useEffect(() => {
@@ -126,6 +129,48 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
   }, []);
 
   /**
+   * Register for encrypted upload Background Sync
+   *
+   * Triggers Service Worker to upload files with uploadState='encrypted'
+   * when network connection is restored.
+   */
+  const registerEncryptedUploadSync = useCallback(async () => {
+    if (
+      "serviceWorker" in navigator &&
+      "sync" in ServiceWorkerRegistration.prototype
+    ) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+
+        const regWithSync = registration as ServiceWorkerRegistration & {
+          sync: { register: (tag: string) => Promise<void> };
+        };
+
+        await regWithSync.sync.register("encrypted-upload-sync");
+        console.log("[FileQueue] Encrypted upload sync registered");
+      } catch (error) {
+        console.error(
+          "[FileQueue] Encrypted upload sync registration failed:",
+          error
+        );
+      }
+    }
+  }, []);
+
+  /**
+   * Retry all failed uploads
+   *
+   * Transitions failed files back to encrypted state and triggers sync.
+   */
+  const retryFailed = useCallback(async () => {
+    const count = await retryFailedUploads();
+    if (count > 0) {
+      await registerEncryptedUploadSync();
+    }
+    return count;
+  }, [registerEncryptedUploadSync]);
+
+  /**
    * Listen for Background Sync completion messages
    *
    * Note: Handler is memoized with useCallback to prevent duplicate listeners
@@ -152,6 +197,24 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
             `[FileQueue] Background sync failed:`,
             event.data.error
           );
+        } else if (event.data?.type === "ENCRYPTED_UPLOAD_SYNCED") {
+          const { count, succeeded, failed } = event.data;
+
+          if (failed && failed > 0) {
+            console.warn(
+              `[FileQueue] Encrypted upload sync completed with errors: ${succeeded || 0} succeeded, ${failed} failed`
+            );
+          } else {
+            console.log(
+              `[FileQueue] Encrypted upload sync completed successfully: ${count} files`
+            );
+          }
+          // Files are automatically updated via useLiveQuery
+        } else if (event.data?.type === "ENCRYPTED_UPLOAD_SYNC_ERROR") {
+          console.error(
+            `[FileQueue] Encrypted upload sync failed:`,
+            event.data.error
+          );
         }
       };
 
@@ -168,6 +231,7 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
     allFiles: allFiles ?? [],
     pending: pending ?? [],
     failed: failed ?? [],
+    encrypted: encrypted ?? [],
     isProcessing,
     quota,
 
@@ -175,6 +239,8 @@ export function useFileQueue(options?: { quotaUpdateInterval?: number }) {
     processQueue,
     clearCompleted,
     deleteFile,
+    retryFailed,
     registerBackgroundSync,
+    registerEncryptedUploadSync,
   };
 }

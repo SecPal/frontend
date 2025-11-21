@@ -94,7 +94,8 @@ export interface FileQueueEntry {
   error?: string;
   createdAt: Date;
   lastAttemptAt?: Date;
-  checksum?: string; // SHA-256 checksum of encrypted file
+  checksum?: string; // SHA-256 checksum of original (plaintext) file
+  checksumEncrypted?: string; // SHA-256 checksum of encrypted file
 }
 
 /**
