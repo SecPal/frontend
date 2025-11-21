@@ -113,7 +113,8 @@ const metadata = {
 #### 5. Upload
 
 ```typescript
-const encryptedBlob = new Blob([iv, authTag, ciphertext]);
+// Web Crypto API returns ArrayBuffer with auth tag already appended to ciphertext
+const encryptedBlob = new Blob([iv, new Uint8Array(encrypted)]);
 await uploadEncryptedAttachment(secretId, encryptedBlob, metadata);
 ```
 
@@ -121,7 +122,7 @@ await uploadEncryptedAttachment(secretId, encryptedBlob, metadata);
 
 ## 🔓 Decryption Flow
 
-### Decryption Step-by-Step Processtep Process
+### Decryption Process
 
 ```mermaid
 sequenceDiagram
@@ -204,7 +205,7 @@ return new File([decrypted], metadata.filename, { type: metadata.type });
 | **File Tampering**           | SHA-256 checksums + GCM auth tag, modified files rejected           | ✅ Protected |
 | **Replay Attacks**           | Random IV per encryption, unique ciphertext each time               | ✅ Protected |
 | **Key Reuse**                | HKDF with filename salt, different keys per file                    | ✅ Protected |
-| **Metadata Leakage**         | Original filenames and sizes stored in metadata (encrypted at REST) | ⚠️ Partial   |
+| **Metadata Leakage**         | Original filenames and sizes stored in metadata (encrypted at rest) | ⚠️ Partial   |
 
 ### Cryptographic Properties
 
@@ -411,8 +412,8 @@ const checksum = await calculateChecksum(fileData);
 
 ### Test Coverage
 
-- **Unit Tests**: 100% coverage for all crypto functions
-- **Integration Tests**: Roundtrip encryption/decryption
+- **Unit Tests**: 42.85% coverage for crypto utilities (tested with NIST vectors)
+- **Integration Tests**: Roundtrip encryption/decryption with 60%+ coverage
 - **Known Test Vectors**: NIST AES-GCM test vectors validated
 - **Edge Cases**: Empty files, large files (>10MB), network failures
 
@@ -508,11 +509,9 @@ const checksum = await calculateChecksum(fileData);
 For security issues or vulnerabilities, please report to:
 
 **Email:** <security@secpal.app>  
-**PGP Key:** (Available on keyserver)
+**PGP Key:** TBD (will be published on keys.openpgp.org)
 
-**Please DO NOT open public GitHub issues for security vulnerabilities.**
-
----
+**Please DO NOT open public GitHub issues for security vulnerabilities.**---
 
 **Document Version:** 1.0
 **Last Updated:** 2025-11-21

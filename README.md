@@ -105,7 +105,7 @@ For comprehensive security details, threat model, and cryptographic guarantees, 
 - ✅ Phase 2: ShareTarget Integration (PR #178, merged 19.11.2025)
 - ✅ Phase 3: Upload Integration (PR #187, merged 21.11.2025)
 - ✅ Phase 4: Download & Decryption (PR #188, merged 21.11.2025)
-- 🔄 Phase 5: Security Audit & Documentation (Issue #174, in progress)
+- 🔄 Phase 5: Security Audit & Documentation (PR #190, this PR)
 
 ## 🌍 Internationalization (i18n)
 

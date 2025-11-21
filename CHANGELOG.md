@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Security audit completed for all encryption code
   - Updated README with File Encryption section
   - Zero-knowledge architecture verified and documented
-  - All crypto tests passing (100% coverage)
+  - All crypto tests passing (42.85% coverage)
   - Part of File Encryption Epic #143 (Phase 5/5)
 
 - **Client-Side File Encryption - Phase 4: Download & Decryption** (#176, Part of #143) - **MERGED 21.11.2025**
