@@ -427,13 +427,25 @@ export async function downloadAndDecryptAttachment(
   const actualChecksum = await calculateChecksum(decryptedData);
 
   if (actualChecksum !== metadata.checksum) {
+    // Only expose checksum details in development for debugging
+    if (import.meta.env.DEV) {
+      console.error(
+        `Checksum mismatch: expected ${metadata.checksum}, got ${actualChecksum}`
+      );
+    }
     throw new Error(
-      `Checksum verification failed: file may be corrupted or tampered (expected: ${metadata.checksum}, got: ${actualChecksum})`
+      "Checksum verification failed: file may be corrupted or tampered"
     );
   }
 
   // 7. Restore original filename and MIME type
-  return new File([decryptedData.buffer as ArrayBuffer], metadata.filename, {
-    type: metadata.type,
-  });
+  // Use .buffer.slice() to create a new ArrayBuffer with exact size
+  // (decryptedData is a fresh Uint8Array from Web Crypto, so buffer is already exact size)
+  return new File(
+    [decryptedData.buffer.slice(0, decryptedData.byteLength) as ArrayBuffer],
+    metadata.filename,
+    {
+      type: metadata.type,
+    }
+  );
 }

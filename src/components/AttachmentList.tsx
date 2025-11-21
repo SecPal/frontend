@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/macro";
 import {
   ArrowDownTrayIcon,
   TrashIcon,
@@ -47,7 +47,10 @@ function formatFileSize(bytes: number): string {
 
   const units = ["B", "KB", "MB", "GB", "TB"];
   const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    units.length - 1
+  );
   const size = bytes / Math.pow(k, i);
 
   return `${size.toFixed(1)} ${units[i]}`;
@@ -154,7 +157,7 @@ export function AttachmentList({
             {/* File Icon & Info */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <Icon
-                className="h-8 w-8 flex-shrink-0 text-gray-400 dark:text-gray-500"
+                className="h-8 w-8 shrink-0 text-gray-400 dark:text-gray-500"
                 aria-hidden="true"
               />
               <div className="min-w-0 flex-1">
@@ -168,7 +171,7 @@ export function AttachmentList({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {canPreview && (
                 <Button
                   type="button"
