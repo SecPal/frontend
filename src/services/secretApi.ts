@@ -73,6 +73,7 @@ export class ApiError extends Error {
 export async function fetchSecrets(): Promise<Secret[]> {
   const response = await fetch(`${apiConfig.baseUrl}/api/v1/secrets`, {
     method: "GET",
+    credentials: "include",
     headers: {
       ...getAuthHeaders(),
       "Content-Type": "application/json",
@@ -226,6 +227,7 @@ export async function listAttachments(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
@@ -265,6 +267,7 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
+      credentials: "include",
       headers: getAuthHeaders(),
     }
   );
@@ -299,6 +302,7 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",

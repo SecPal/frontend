@@ -422,7 +422,7 @@ async function syncFileQueue(): Promise<void> {
 /**
  * Process encrypted file uploads from IndexedDB queue
  *
- * Implements retry logic with exponential backoff (1s, 2s, 4s, 8s, 16s, max 30s)
+ * Implements retry logic with exponential backoff (1s, 2s, 4s, 8s, 16s, 32s, max 60s)
  * and max retry limits. Only processes files with uploadState='encrypted'.
  *
  * WORKFLOW:

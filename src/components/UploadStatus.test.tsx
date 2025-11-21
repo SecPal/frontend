@@ -320,4 +320,292 @@ describe("UploadStatus Component", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("should handle retry error gracefully", async () => {
+    const mockRetryFailed = vi
+      .fn()
+      .mockRejectedValue(new Error("Network error"));
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      failed: [
+        {
+          id: "failed-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "failed",
+          retryCount: 2,
+          createdAt: new Date(),
+        },
+      ],
+      retryFailed: mockRetryFailed,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const retryButton = screen.getByText("Retry Failed");
+    await user.click(retryButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Network error")).toBeInTheDocument();
+    });
+  });
+
+  it("should handle clearCompleted error gracefully", async () => {
+    const mockClearCompleted = vi
+      .fn()
+      .mockRejectedValue(new Error("Database error"));
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      clearCompleted: mockClearCompleted,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const clearButton = screen.getByText("Clear Completed");
+    await user.click(clearButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Database error")).toBeInTheDocument();
+    });
+  });
+
+  it("should handle deleteFile error gracefully", async () => {
+    const mockDeleteFile = vi
+      .fn()
+      .mockRejectedValue(new Error("Delete failed"));
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "delete-me.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      deleteFile: mockDeleteFile,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const deleteButton = screen.getByLabelText("Remove delete-me.txt");
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Delete failed")).toBeInTheDocument();
+    });
+  });
+
+  it("should dismiss notification when close button clicked", async () => {
+    const mockRetryFailed = vi.fn().mockResolvedValue(undefined);
+
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      failed: [
+        {
+          id: "failed-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "failed",
+          retryCount: 2,
+          createdAt: new Date(),
+        },
+      ],
+      retryFailed: mockRetryFailed,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const user = userEvent.setup();
+    renderWithI18n(<UploadStatus />);
+
+    const retryButton = screen.getByText("Retry Failed");
+    await user.click(retryButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Retry scheduled. Files will upload when network is available."
+        )
+      ).toBeInTheDocument();
+    });
+
+    const dismissButton = screen.getByLabelText("Dismiss notification");
+    await user.click(dismissButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(
+          "Retry scheduled. Files will upload when network is available."
+        )
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("should show spinning indicator when isProcessing is true", () => {
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      isProcessing: true,
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    renderWithI18n(<UploadStatus />);
+
+    // The ArrowPathIcon with animate-spin should be present
+    const spinner = document.querySelector(".animate-spin");
+    expect(spinner).toBeInTheDocument();
+  });
+
+  it("should display multiple encrypted files", () => {
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "file1.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          id: "file-2",
+          file: new Blob(),
+          metadata: {
+            name: "file2.pdf",
+            type: "application/pdf",
+            size: 200,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    renderWithI18n(<UploadStatus />);
+
+    expect(screen.getByText("file1.txt")).toBeInTheDocument();
+    expect(screen.getByText("file2.pdf")).toBeInTheDocument();
+    expect(screen.getByText("2 files ready for upload")).toBeInTheDocument();
+  });
+
+  it("should display failed files without error message", () => {
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      failed: [
+        {
+          id: "failed-1",
+          file: new Blob(),
+          metadata: {
+            name: "failed.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "failed",
+          retryCount: 5,
+          // error is undefined
+          createdAt: new Date(),
+        },
+      ],
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    renderWithI18n(<UploadStatus />);
+
+    expect(screen.getByText("failed.txt")).toBeInTheDocument();
+    // Error message paragraph should not be rendered
+    expect(screen.queryByText("Upload failed")).not.toBeInTheDocument();
+  });
 });

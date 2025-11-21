@@ -13,6 +13,8 @@ import {
   getStorageQuota,
   getFailedFiles,
   deleteQueuedFile,
+  retryFailedUploads,
+  getEncryptedFiles,
 } from "./fileQueue";
 import { db } from "./db";
 import type { FileQueueEntry } from "./db";
@@ -632,6 +634,191 @@ describe("File Queue Utilities", () => {
 
       const deleted = await db.fileQueue.get(id);
       expect(deleted).toBeUndefined();
+    });
+  });
+
+  describe("retryFailedUploads", () => {
+    it("should transition failed files to encrypted state", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      // Add failed files
+      await db.fileQueue.bulkAdd([
+        {
+          id: "1",
+          file,
+          metadata,
+          uploadState: "failed",
+          retryCount: 3,
+          error: "Network error",
+          createdAt: new Date(),
+        },
+        {
+          id: "2",
+          file,
+          metadata,
+          uploadState: "failed",
+          retryCount: 5,
+          error: "Timeout",
+          createdAt: new Date(),
+        },
+      ]);
+
+      const count = await retryFailedUploads();
+
+      expect(count).toBe(2);
+
+      const file1 = await db.fileQueue.get("1");
+      expect(file1?.uploadState).toBe("encrypted");
+      expect(file1?.retryCount).toBe(0);
+      expect(file1?.error).toBeUndefined();
+
+      const file2 = await db.fileQueue.get("2");
+      expect(file2?.uploadState).toBe("encrypted");
+      expect(file2?.retryCount).toBe(0);
+      expect(file2?.error).toBeUndefined();
+    });
+
+    it("should return 0 when no failed files exist", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.add({
+        id: "1",
+        file,
+        metadata,
+        uploadState: "completed",
+        retryCount: 0,
+        createdAt: new Date(),
+      });
+
+      const count = await retryFailedUploads();
+
+      expect(count).toBe(0);
+    });
+
+    it("should not affect files in other states", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.bulkAdd([
+        {
+          id: "1",
+          file,
+          metadata,
+          uploadState: "failed",
+          retryCount: 2,
+          error: "Error",
+          createdAt: new Date(),
+        },
+        {
+          id: "2",
+          file,
+          metadata,
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          id: "3",
+          file,
+          metadata,
+          uploadState: "completed",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ]);
+
+      await retryFailedUploads();
+
+      const file2 = await db.fileQueue.get("2");
+      expect(file2?.uploadState).toBe("encrypted");
+
+      const file3 = await db.fileQueue.get("3");
+      expect(file3?.uploadState).toBe("completed");
+    });
+  });
+
+  describe("getEncryptedFiles", () => {
+    it("should return only encrypted files", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.bulkAdd([
+        {
+          id: "1",
+          file,
+          metadata,
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          id: "2",
+          file,
+          metadata,
+          uploadState: "pending",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          id: "3",
+          file,
+          metadata,
+          uploadState: "encrypted",
+          retryCount: 1,
+          createdAt: new Date(),
+        },
+      ]);
+
+      const encrypted = await getEncryptedFiles();
+
+      expect(encrypted).toHaveLength(2);
+      expect(encrypted[0]?.id).toBe("1");
+      expect(encrypted[1]?.id).toBe("3");
+    });
+
+    it("should return empty array when no encrypted files", async () => {
+      const file = new Blob(["test"], { type: "text/plain" });
+      const metadata = {
+        name: "test.txt",
+        type: "text/plain",
+        size: 4,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.add({
+        id: "1",
+        file,
+        metadata,
+        uploadState: "completed",
+        retryCount: 0,
+        createdAt: new Date(),
+      });
+
+      const encrypted = await getEncryptedFiles();
+
+      expect(encrypted).toHaveLength(0);
     });
   });
 });

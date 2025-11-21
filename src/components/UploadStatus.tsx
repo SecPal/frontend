@@ -81,6 +81,7 @@ export function UploadStatus() {
       // Auto-dismiss success notification after 5 seconds
       timeoutRef.current = window.setTimeout(() => setNotification(null), 5000);
     } catch (error) {
+      clearNotificationTimeout();
       setNotification({
         type: "error",
         message:
@@ -88,6 +89,12 @@ export function UploadStatus() {
             ? error.message
             : _(msg`Failed to schedule upload retry`),
       });
+
+      // Auto-dismiss error notification after 10 seconds
+      timeoutRef.current = window.setTimeout(
+        () => setNotification(null),
+        10000
+      );
     }
   }, [retryFailed, clearNotificationTimeout, _]);
 
@@ -103,6 +110,7 @@ export function UploadStatus() {
       // Auto-dismiss after 3 seconds
       timeoutRef.current = window.setTimeout(() => setNotification(null), 3000);
     } catch (error) {
+      clearNotificationTimeout();
       setNotification({
         type: "error",
         message:
@@ -110,6 +118,12 @@ export function UploadStatus() {
             ? error.message
             : _(msg`Failed to clear uploads`),
       });
+
+      // Auto-dismiss error notification after 10 seconds
+      timeoutRef.current = window.setTimeout(
+        () => setNotification(null),
+        10000
+      );
     }
   }, [clearCompleted, clearNotificationTimeout, _]);
 
@@ -128,6 +142,7 @@ export function UploadStatus() {
           3000
         );
       } catch (error) {
+        clearNotificationTimeout();
         setNotification({
           type: "error",
           message:
@@ -135,6 +150,12 @@ export function UploadStatus() {
               ? error.message
               : _(msg`Failed to delete file`),
         });
+
+        // Auto-dismiss error notification after 10 seconds
+        timeoutRef.current = window.setTimeout(
+          () => setNotification(null),
+          10000
+        );
       }
     },
     [deleteFile, clearNotificationTimeout, _]
@@ -146,10 +167,11 @@ export function UploadStatus() {
     return null;
   }
 
-  // Calculate progress percentage (files that have left the encrypted state)
-  const completedCount = totalFiles - encrypted.length;
+  // Calculate processing progress (files no longer in encrypted state)
+  // Note: This shows failed files as "processed" since they've left the encrypted queue
+  const processedCount = totalFiles - encrypted.length;
   const progressPercentage =
-    totalFiles > 0 ? Math.round((completedCount / totalFiles) * 100) : 0;
+    totalFiles > 0 ? Math.round((processedCount / totalFiles) * 100) : 0;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 rounded-lg bg-white shadow-lg dark:bg-gray-800">
@@ -209,7 +231,7 @@ export function UploadStatus() {
         <div className="p-4">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="text-gray-700 dark:text-gray-300">
-              <Trans>Progress</Trans>
+              <Trans>Processing Progress</Trans>
             </span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
               {progressPercentage}%
@@ -299,6 +321,9 @@ export function UploadStatus() {
           </Button>
         )}
 
+        {/* Note: Clear Completed removes files with uploadState='completed' from IndexedDB.
+            These files are not visible in this UI (which only shows encrypted/failed),
+            but may exist from previous successful uploads. */}
         <Button onClick={handleClearCompleted} outline disabled={isProcessing}>
           <Trans>Clear Completed</Trans>
         </Button>
