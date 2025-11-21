@@ -485,7 +485,7 @@ async function syncEncryptedUploads(): Promise<void> {
           size: fileEntry.metadata.size,
           encryptedSize: fileEntry.file.size,
           checksum: fileEntry.checksum || "",
-          checksumEncrypted: fileEntry.checksum || "", // TODO: Separate original checksum
+          checksumEncrypted: fileEntry.checksumEncrypted || "",
         };
 
         // Create FormData
