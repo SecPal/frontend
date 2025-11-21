@@ -610,4 +610,327 @@ describe("Secret API", () => {
       expect(headers["Content-Type"]).toBeUndefined();
     });
   });
+
+  describe("downloadAndDecryptAttachment", () => {
+    it("should download and decrypt file successfully", async () => {
+      // Step 1: Create test file and encrypt it
+      const originalFile = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      // Import encryption functions for test
+      const { deriveFileKey, encryptFile } = await import(
+        "../lib/crypto/encryption"
+      );
+      const { calculateChecksum } = await import("../lib/crypto/checksum");
+
+      const filename = "document.pdf";
+      const fileKey = await deriveFileKey(masterKey, filename);
+      const encrypted = await encryptFile(originalFile, fileKey);
+
+      // Calculate checksums
+      const checksum = await calculateChecksum(originalFile);
+      const encryptedData = new Uint8Array([
+        ...encrypted.iv,
+        ...encrypted.authTag,
+        ...encrypted.ciphertext,
+      ]);
+      const checksumEncrypted = await calculateChecksum(encryptedData);
+
+      // Step 2: Mock backend response
+      const mockResponse = {
+        encryptedBlob: btoa(String.fromCharCode(...encryptedData)),
+        metadata: {
+          filename,
+          type: "application/pdf",
+          size: originalFile.length,
+          encryptedSize: encryptedData.length,
+          checksum,
+          checksumEncrypted,
+        },
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      // Step 3: Import function under test
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      // Step 4: Test download and decrypt
+      const decryptedFile = await downloadAndDecryptAttachment(
+        "attachment-123",
+        masterKey
+      );
+
+      expect(decryptedFile).toBeInstanceOf(File);
+      expect(decryptedFile.name).toBe(filename);
+      expect(decryptedFile.type).toBe("application/pdf");
+      expect(decryptedFile.size).toBe(originalFile.length);
+
+      // Verify file contents
+      const decryptedBuffer = await decryptedFile.arrayBuffer();
+      const decryptedBytes = new Uint8Array(decryptedBuffer);
+      expect(decryptedBytes).toEqual(originalFile);
+
+      // Verify API call
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/api/v1/attachments/attachment-123/download`,
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+        })
+      );
+    });
+
+    it("should verify checksum after decryption", async () => {
+      const originalFile = new Uint8Array([10, 20, 30]);
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { deriveFileKey, encryptFile } = await import(
+        "../lib/crypto/encryption"
+      );
+      const { calculateChecksum } = await import("../lib/crypto/checksum");
+
+      const filename = "test.txt";
+      const fileKey = await deriveFileKey(masterKey, filename);
+      const encrypted = await encryptFile(originalFile, fileKey);
+
+      const checksum = await calculateChecksum(originalFile);
+      const encryptedData = new Uint8Array([
+        ...encrypted.iv,
+        ...encrypted.authTag,
+        ...encrypted.ciphertext,
+      ]);
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          encryptedBlob: btoa(String.fromCharCode(...encryptedData)),
+          metadata: {
+            filename,
+            type: "text/plain",
+            size: originalFile.length,
+            encryptedSize: encryptedData.length,
+            checksum,
+            checksumEncrypted: await calculateChecksum(encryptedData),
+          },
+        }),
+      });
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+      const result = await downloadAndDecryptAttachment(
+        "attachment-456",
+        masterKey
+      );
+
+      // Should succeed with valid checksum
+      expect(result).toBeInstanceOf(File);
+      expect(result.name).toBe(filename);
+    });
+
+    it("should reject tampered files (invalid checksum)", async () => {
+      const originalFile = new Uint8Array([1, 2, 3]);
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { deriveFileKey, encryptFile } = await import(
+        "../lib/crypto/encryption"
+      );
+      const { calculateChecksum } = await import("../lib/crypto/checksum");
+
+      const filename = "tampered.txt";
+      const fileKey = await deriveFileKey(masterKey, filename);
+      const encrypted = await encryptFile(originalFile, fileKey);
+
+      const encryptedData = new Uint8Array([
+        ...encrypted.iv,
+        ...encrypted.authTag,
+        ...encrypted.ciphertext,
+      ]);
+
+      // Use WRONG checksum (simulate tampering)
+      const wrongChecksum = "0".repeat(64);
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          encryptedBlob: btoa(String.fromCharCode(...encryptedData)),
+          metadata: {
+            filename,
+            type: "text/plain",
+            size: originalFile.length,
+            encryptedSize: encryptedData.length,
+            checksum: wrongChecksum, // WRONG!
+            checksumEncrypted: await calculateChecksum(encryptedData),
+          },
+        }),
+      });
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      await expect(
+        downloadAndDecryptAttachment("attachment-789", masterKey)
+      ).rejects.toThrow(/checksum verification failed/i);
+    });
+
+    it("should handle download errors gracefully", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({ message: "Attachment not found" }),
+      });
+
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      await expect(
+        downloadAndDecryptAttachment("missing-attachment", masterKey)
+      ).rejects.toThrow(ApiError);
+      await expect(
+        downloadAndDecryptAttachment("missing-attachment", masterKey)
+      ).rejects.toThrow("Attachment not found");
+    });
+
+    it("should handle network errors during download", async () => {
+      mockFetch.mockRejectedValue(new Error("Network timeout"));
+
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      await expect(
+        downloadAndDecryptAttachment("attachment-123", masterKey)
+      ).rejects.toThrow("Network timeout");
+    });
+
+    it("should handle decryption errors gracefully", async () => {
+      // Simulate corrupted encrypted data
+      const corruptedData = new Uint8Array(32).fill(0xff);
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          encryptedBlob: btoa(String.fromCharCode(...corruptedData)),
+          metadata: {
+            filename: "corrupt.bin",
+            type: "application/octet-stream",
+            size: 100,
+            encryptedSize: 128,
+            checksum: "abc123",
+            checksumEncrypted: "def456",
+          },
+        }),
+      });
+
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      // Should throw error due to invalid encrypted format or decryption failure
+      await expect(
+        downloadAndDecryptAttachment("corrupt-attachment", masterKey)
+      ).rejects.toThrow();
+    });
+
+    it("should restore original filename and MIME type", async () => {
+      const originalFile = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { deriveFileKey, encryptFile } = await import(
+        "../lib/crypto/encryption"
+      );
+      const { calculateChecksum } = await import("../lib/crypto/checksum");
+
+      const originalFilename = "secret-document.docx";
+      const originalMimeType =
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+      const fileKey = await deriveFileKey(masterKey, originalFilename);
+      const encrypted = await encryptFile(originalFile, fileKey);
+
+      const encryptedData = new Uint8Array([
+        ...encrypted.iv,
+        ...encrypted.authTag,
+        ...encrypted.ciphertext,
+      ]);
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          encryptedBlob: btoa(String.fromCharCode(...encryptedData)),
+          metadata: {
+            filename: originalFilename,
+            type: originalMimeType,
+            size: originalFile.length,
+            encryptedSize: encryptedData.length,
+            checksum: await calculateChecksum(originalFile),
+            checksumEncrypted: await calculateChecksum(encryptedData),
+          },
+        }),
+      });
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+      const result = await downloadAndDecryptAttachment(
+        "attachment-docx",
+        masterKey
+      );
+
+      expect(result.name).toBe(originalFilename);
+      expect(result.type).toBe(originalMimeType);
+    });
+
+    it("should handle missing files (404)", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          message: "Attachment not found or has been deleted",
+        }),
+      });
+
+      const masterKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const { downloadAndDecryptAttachment } = await import("./secretApi");
+
+      await expect(
+        downloadAndDecryptAttachment("deleted-attachment", masterKey)
+      ).rejects.toThrow(ApiError);
+      await expect(
+        downloadAndDecryptAttachment("deleted-attachment", masterKey)
+      ).rejects.toThrow("Attachment not found or has been deleted");
+    });
+  });
 });

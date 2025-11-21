@@ -340,3 +340,112 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
 
   return key;
 }
+
+/**
+ * Download encrypted attachment response from backend
+ */
+export interface EncryptedAttachmentResponse {
+  encryptedBlob: string; // Base64-encoded encrypted file data
+  metadata: FileMetadata;
+}
+
+/**
+ * Download and decrypt an encrypted attachment
+ *
+ * Downloads an encrypted file blob from the backend and decrypts it client-side.
+ * Verifies file integrity using SHA-256 checksums before returning the decrypted file.
+ *
+ * @param attachmentId - Attachment ID to download
+ * @param secretKey - Secret's master key for decryption
+ * @returns Promise resolving to decrypted File object with original filename and MIME type
+ * @throws ApiError if download fails
+ * @throws Error if decryption fails or checksum verification fails
+ *
+ * @example
+ * ```ts
+ * const masterKey = await getSecretMasterKey('secret-123');
+ * const file = await downloadAndDecryptAttachment('attachment-456', masterKey);
+ * console.log(`Downloaded: ${file.name} (${file.size} bytes)`);
+ * ```
+ */
+export async function downloadAndDecryptAttachment(
+  attachmentId: string,
+  secretKey: CryptoKey
+): Promise<File> {
+  if (!attachmentId || attachmentId.trim() === "") {
+    throw new Error("attachmentId is required");
+  }
+
+  // 1. Download encrypted blob + metadata from backend
+  const response = await fetch(
+    `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}/download`,
+    {
+      method: "GET",
+      credentials: "include",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const { encryptedBlob, metadata }: EncryptedAttachmentResponse =
+    await response.json();
+
+  // 2. Decode Base64 encrypted blob
+  const encryptedBytes = Uint8Array.from(atob(encryptedBlob), (c) =>
+    c.charCodeAt(0)
+  );
+
+  // 3. Parse encrypted blob (IV + AuthTag + Ciphertext)
+  // Format: [12 bytes IV][16 bytes AuthTag][... Ciphertext]
+  if (encryptedBytes.length < 28) {
+    throw new Error(
+      "Invalid encrypted blob: too short (expected at least IV + AuthTag)"
+    );
+  }
+
+  const iv = encryptedBytes.slice(0, 12); // 96 bits
+  const authTag = encryptedBytes.slice(12, 28); // 128 bits
+  const ciphertext = encryptedBytes.slice(28); // Rest is ciphertext
+
+  // 4. Derive file key (same as encryption)
+  const { deriveFileKey, decryptFile } = await import(
+    "../lib/crypto/encryption"
+  );
+  const fileKey = await deriveFileKey(secretKey, metadata.filename);
+
+  // 5. Decrypt file
+  const decryptedData = await decryptFile(ciphertext, fileKey, iv, authTag);
+
+  // 6. Verify checksum (integrity check)
+  const { calculateChecksum } = await import("../lib/crypto/checksum");
+  const actualChecksum = await calculateChecksum(decryptedData);
+
+  if (actualChecksum !== metadata.checksum) {
+    // Only expose checksum details in development for debugging
+    if (import.meta.env.DEV) {
+      console.error(
+        `Checksum mismatch: expected ${metadata.checksum}, got ${actualChecksum}`
+      );
+    }
+    throw new Error(
+      "Checksum verification failed: file may be corrupted or tampered"
+    );
+  }
+
+  // 7. Restore original filename and MIME type
+  // Use .buffer.slice() to create a new ArrayBuffer with exact size
+  // (decryptedData is a fresh Uint8Array from Web Crypto, so buffer is already exact size)
+  return new File(
+    [decryptedData.buffer.slice(0, decryptedData.byteLength) as ArrayBuffer],
+    metadata.filename,
+    {
+      type: metadata.type,
+    }
+  );
+}
