@@ -14,6 +14,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Client-Side File Encryption - Phase 5: Security Audit & Documentation** (#174, Part of #143)
+  - Comprehensive security documentation in `CRYPTO_ARCHITECTURE.md`
+  - Security audit completed for all encryption code
+  - Updated README with File Encryption section
+  - Zero-knowledge architecture verified and documented
+  - All crypto tests passing (100% coverage)
+  - Part of File Encryption Epic #143 (Phase 5/5)
+
+- **Client-Side File Encryption - Phase 4: Download & Decryption** (#176, Part of #143) - **MERGED 21.11.2025**
+  - `AttachmentList` component with download/preview/delete actions
+  - `downloadAndDecryptAttachment()` API function with integrity verification
+  - Automatic decryption on download with SHA-256 checksum validation
+  - File type detection and human-readable size formatting
+  - Loading states and error handling for decryption failures
+  - 11 active tests passing
+  - Part of File Encryption Epic #143 (Phase 4/5)
+
+- **Client-Side File Encryption - Phase 3: Upload Integration** (#175, Part of #143) - **MERGED 21.11.2025**
+  - Background sync for encrypted file uploads with exponential backoff
+  - `UploadStatus` component with progress indicators and retry functionality
+  - IndexedDB-based upload queue with persistent storage
+  - Service Worker integration for offline upload capability
+  - `registerEncryptedUploadSync()` function for automatic retries
+  - Real-time upload status tracking with i18n support
+  - 15 active tests passing
+  - Part of File Encryption Epic #143 (Phase 3/5)
+
+- **Client-Side File Encryption - Phase 2: ShareTarget Integration** (#173, Part of #143) - **MERGED 19.11.2025**
+  - ShareTarget PWA manifest configuration
+  - `useShareTarget` hook for receiving shared files
+  - Automatic encryption of shared files via Share Target API
+  - Queue management for files shared from other apps
+  - 8 active tests passing
+  - Part of File Encryption Epic #143 (Phase 2/5)
+
+- **Client-Side File Encryption - Phase 1: Crypto Utilities** (#172, Part of #143) - **MERGED 19.11.2025**
+  - AES-GCM-256 encryption/decryption with Web Crypto API
+  - HKDF-SHA-256 key derivation for per-file keys
+  - SHA-256 checksum calculation for integrity verification
+  - Non-extractable CryptoKey management
+  - NIST test vectors validation
+  - 12 active tests passing (100% coverage)
+  - Part of File Encryption Epic #143 (Phase 1/5)
+
 - **Advanced Caching Strategies** (#168, Part of #144 PWA Phase 3) **FINAL SUB-ISSUE - CLOSES EPIC #144**
   - Route-specific caching strategies for optimal performance:
     - Secrets List: NetworkFirst with 5-minute TTL (fresh data preferred)
