@@ -608,4 +608,35 @@ describe("UploadStatus Component", () => {
     // Error message paragraph should not be rendered
     expect(screen.queryByText("Upload failed")).not.toBeInTheDocument();
   });
+
+  it("should cleanup timeouts on unmount", () => {
+    vi.spyOn(fileQueueHook, "useFileQueue").mockReturnValue({
+      ...mockFileQueue,
+      encrypted: [
+        {
+          id: "file-1",
+          file: new Blob(),
+          metadata: {
+            name: "test.txt",
+            type: "text/plain",
+            size: 100,
+            timestamp: Date.now(),
+          },
+          uploadState: "encrypted",
+          retryCount: 0,
+          createdAt: new Date(),
+        },
+      ],
+      allFiles: [],
+      pending: [],
+      quota: null,
+      processQueue: vi.fn(),
+      registerBackgroundSync: vi.fn(),
+    });
+
+    const { unmount } = renderWithI18n(<UploadStatus />);
+
+    // Unmount should not throw
+    expect(() => unmount()).not.toThrow();
+  });
 });
