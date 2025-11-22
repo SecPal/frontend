@@ -42,33 +42,31 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-sm sm:max-w-md lg:max-w-xl xl:max-w-2xl space-y-8 px-4 sm:px-0">
-        <div>
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">SecPal</h1>
-            <LanguageSwitcher />
-          </div>
-          <h2 className="text-2xl font-semibold mb-2">
-            <Trans id="login.title">Login</Trans>
-          </h2>
-          <p className="text-zinc-600 dark:text-zinc-400">
-            <Trans id="login.subtitle">Your digital guard companion</Trans>
-          </p>
+      <div className="mx-auto w-full max-w-sm">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">SecPal</h1>
+          <LanguageSwitcher />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="mt-8 text-2xl font-semibold">
+          <Trans id="login.title">Login</Trans>
+        </h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <Trans id="login.subtitle">Your digital guard companion</Trans>
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-10 space-y-8">
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
+            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
           <Field>
-            <Label htmlFor="email">
+            <Label>
               <Trans id="login.email">Email</Trans>
             </Label>
             <Input
-              id="email"
               name="email"
               type="email"
               autoComplete="email"
@@ -80,11 +78,10 @@ export function Login() {
           </Field>
 
           <Field>
-            <Label htmlFor="password">
+            <Label>
               <Trans id="login.password">Password</Trans>
             </Label>
             <Input
-              id="password"
               name="password"
               type="password"
               autoComplete="current-password"
