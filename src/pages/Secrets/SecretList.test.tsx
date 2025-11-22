@@ -160,7 +160,7 @@ describe("SecretList", () => {
     });
 
     // Select "work" tag
-    const tagFilter = screen.getByRole("combobox", { name: /Tags/ });
+    const tagFilter = screen.getByRole("combobox", { name: /Filter by tag/ });
     await user.selectOptions(tagFilter, "work");
 
     // Should show Gmail and AWS (both have "work" tag)
@@ -186,7 +186,9 @@ describe("SecretList", () => {
     });
 
     // Filter by "expiring_soon"
-    const expirationFilter = screen.getByRole("combobox", { name: /Expires/ });
+    const expirationFilter = screen.getByRole("combobox", {
+      name: /Filter by expiration/,
+    });
     await user.selectOptions(expirationFilter, "expiring_soon");
 
     // Should show only AWS (expires in 2 days)

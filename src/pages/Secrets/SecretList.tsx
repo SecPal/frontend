@@ -201,6 +201,7 @@ export function SecretList() {
                 setSelectedTag(e.target.value);
                 setCurrentPage(1);
               }}
+              aria-label="Filter by tag"
               className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
             >
               <option value="all">Tags: All</option>
@@ -218,6 +219,7 @@ export function SecretList() {
                 setExpirationFilter(e.target.value as ExpirationFilter);
                 setCurrentPage(1);
               }}
+              aria-label="Filter by expiration"
               className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
             >
               <option value="all">Expires: All</option>
