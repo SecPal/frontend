@@ -464,7 +464,7 @@ msgstr "Anmelden läuft..."
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:59
 msgid "login.subtitle"
-msgstr "Geben Sie Ihre Anmeldedaten ein"
+msgstr "Ihr digitaler Wachbegleiter"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:56

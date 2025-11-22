@@ -35,7 +35,10 @@ export function Header() {
             <h1 className="text-xl font-bold">SecPal</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <span
+              className="text-sm text-zinc-600 dark:text-zinc-400"
+              aria-label={`Current user: ${user?.name}`}
+            >
               {user?.name}
             </span>
             <LanguageSwitcher />

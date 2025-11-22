@@ -117,6 +117,19 @@ describe("authApi", () => {
         login({ email: "test@example.com", password: "test" })
       ).rejects.toThrow("Login failed");
     });
+
+    it("handles non-JSON error responses gracefully", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => {
+          throw new Error("Unexpected token < in JSON");
+        },
+      } as Partial<Response> as Response);
+
+      await expect(
+        login({ email: "test@example.com", password: "test" })
+      ).rejects.toThrow("Login failed");
+    });
   });
 
   describe("logout", () => {
@@ -139,12 +152,24 @@ describe("authApi", () => {
       );
     });
 
-    it("does not throw on failed logout", async () => {
+    it("throws AuthApiError on failed logout", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
-      await expect(logout("invalid-token")).resolves.toBeUndefined();
+      await expect(logout("invalid-token")).rejects.toThrow(AuthApiError);
+    });
+
+    it("throws AuthApiError with fallback message on non-JSON response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => {
+          throw new Error("Not JSON");
+        },
+      } as Partial<Response> as Response);
+
+      await expect(logout("invalid-token")).rejects.toThrow("Logout failed");
     });
   });
 
@@ -168,12 +193,26 @@ describe("authApi", () => {
       );
     });
 
-    it("does not throw on failed logoutAll", async () => {
+    it("throws AuthApiError on failed logoutAll", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
-      await expect(logoutAll("invalid-token")).resolves.toBeUndefined();
+      await expect(logoutAll("invalid-token")).rejects.toThrow(AuthApiError);
+    });
+
+    it("throws AuthApiError with fallback message on non-JSON response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => {
+          throw new Error("Not JSON");
+        },
+      } as Partial<Response> as Response);
+
+      await expect(logoutAll("invalid-token")).rejects.toThrow(
+        "Logout all devices failed"
+      );
     });
   });
 

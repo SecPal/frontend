@@ -54,7 +54,13 @@ export async function login(
   });
 
   if (!response.ok) {
-    const error: ApiError = await response.json();
+    let error: ApiError | null = null;
+    try {
+      error = await response.json();
+    } catch {
+      // Fallback if response is not JSON (e.g., HTML error page)
+      throw new AuthApiError("Login failed");
+    }
     throw new AuthApiError(error.message || "Login failed", error.errors);
   }
 
@@ -64,27 +70,52 @@ export async function login(
 /**
  * Logout - revoke current token
  * @param token - The auth token to revoke
+ * @throws {AuthApiError} If logout fails
  */
 export async function logout(token: string): Promise<void> {
-  await fetch(`${getApiBaseUrl()}/v1/auth/logout`, {
+  const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
   });
+
+  if (!response.ok) {
+    let error: ApiError | null = null;
+    try {
+      error = await response.json();
+    } catch {
+      throw new AuthApiError("Logout failed");
+    }
+    throw new AuthApiError(error.message || "Logout failed", error.errors);
+  }
 }
 
 /**
  * Logout all devices - revoke all tokens
  * @param token - The auth token
+ * @throws {AuthApiError} If logout fails
  */
 export async function logoutAll(token: string): Promise<void> {
-  await fetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
+  const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
   });
+
+  if (!response.ok) {
+    let error: ApiError | null = null;
+    try {
+      error = await response.json();
+    } catch {
+      throw new AuthApiError("Logout all devices failed");
+    }
+    throw new AuthApiError(
+      error.message || "Logout all devices failed",
+      error.errors
+    );
+  }
 }

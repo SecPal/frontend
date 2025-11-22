@@ -83,7 +83,7 @@ export function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.name@secpal.app"
+              placeholder="your.email@example.com"
               aria-describedby={error ? "login-error" : undefined}
             />
           </Field>
