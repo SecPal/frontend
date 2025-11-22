@@ -374,7 +374,7 @@ git commit -S -m "feat: Implement Feature"
 **For detailed TDD workflow with Git verification:**
 
 - Frontend: See [`docs/development/TDD_WORKFLOW.md`](docs/development/TDD_WORKFLOW.md)
-- Backend: See [`api/docs/TDD_WORKFLOW.md`](../api/docs/TDD_WORKFLOW.md) (if exists)
+- Backend: See [SecPal/api TDD documentation](https://github.com/SecPal/api/blob/main/docs/TDD_WORKFLOW.md) (separate repository)
 
 **PR Reviewers:** Check `git log --oneline --name-status` to verify `.test.tsx` committed before `.tsx`
 
