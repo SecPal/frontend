@@ -19,10 +19,38 @@ msgstr "Über SecPal"
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
+#: src/App.tsx:13
+msgid "Welcome to SecPal"
+msgstr "Willkommen bei SecPal"
+
 #. js-lingui-explicit-id
 #: src/components/LanguageSwitcher.tsx:18
 msgid "Failed to change language. Please try again."
 msgstr ""
+
+#: src/pages/Login.tsx:40
+msgid "Sign in to your account"
+msgstr "Melden Sie sich an"
+
+#: src/pages/Login.tsx:64
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+#: src/pages/Login.tsx:82
+msgid "Password"
+msgstr "Passwort"
+
+#: src/pages/Login.tsx:103
+msgid "Signing in..."
+msgstr "Anmeldung läuft..."
+
+#: src/pages/Login.tsx:105
+msgid "Sign in"
+msgstr "Anmelden"
+
+#: src/components/Header.tsx:41
+msgid "Logout"
+msgstr "Abmelden"
 
 #: src/App.tsx:18
 msgid "SecPal - a guard's best friend"

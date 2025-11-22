@@ -1,0 +1,168 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
+import { BrowserRouter } from "react-router-dom";
+import { Login } from "./Login";
+import { AuthProvider } from "../contexts/AuthContext";
+import * as authApi from "../services/authApi";
+
+vi.mock("../services/authApi");
+
+const renderLogin = () => {
+  return render(
+    <BrowserRouter>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>
+          <Login />
+        </AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
+
+describe("Login", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    i18n.load("en", {});
+    i18n.activate("en");
+  });
+
+  it("renders login form", () => {
+    renderLogin();
+
+    expect(
+      screen.getByRole("heading", { name: /secpal/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /sign in/i })
+    ).toBeInTheDocument();
+  });
+
+  it("submits login form with email and password", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockResolvedValueOnce({
+      token: "test-token",
+      user: { id: 1, name: "Test User", email: "test@example.com" },
+    });
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: "test@example.com",
+        password: "password123",
+      });
+    });
+  });
+
+  it("displays error message on login failure", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockRejectedValueOnce(
+      new authApi.AuthApiError("Invalid credentials")
+    );
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+
+    fireEvent.change(emailInput, { target: { value: "wrong@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "wrongpass" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+    });
+  });
+
+  it("disables submit button while submitting", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 100))
+    );
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.click(submitButton);
+
+    expect(submitButton).toBeDisabled();
+    expect(screen.getByText(/signing in/i)).toBeInTheDocument();
+  });
+
+  it("clears error message on new submission", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockRejectedValueOnce(new authApi.AuthApiError("First error"));
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /sign in/i });
+
+    // First submission with error
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "wrong" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/first error/i)).toBeInTheDocument();
+    });
+
+    // Second submission should clear error
+    mockLogin.mockResolvedValueOnce({
+      token: "test-token",
+      user: { id: 1, name: "Test", email: "test@example.com" },
+    });
+
+    fireEvent.change(passwordInput, { target: { value: "correct" } });
+    fireEvent.click(submitButton);
+
+    expect(screen.queryByText(/first error/i)).not.toBeInTheDocument();
+  });
+
+  it("requires email and password fields", () => {
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+
+    expect(emailInput).toBeRequired();
+    expect(passwordInput).toBeRequired();
+  });
+
+  it("uses email input type for email field", () => {
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email address/i);
+    expect(emailInput).toHaveAttribute("type", "email");
+  });
+
+  it("uses password input type for password field", () => {
+    renderLogin();
+
+    const passwordInput = screen.getByLabelText(/password/i);
+    expect(passwordInput).toHaveAttribute("type", "password");
+  });
+});
