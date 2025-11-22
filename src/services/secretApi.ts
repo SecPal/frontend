@@ -527,3 +527,122 @@ export async function downloadAndDecryptAttachment(
     }
   );
 }
+
+/**
+ * Request/Response types for Create/Update operations
+ */
+export interface CreateSecretRequest {
+  title: string;
+  username?: string;
+  password?: string;
+  url?: string;
+  notes?: string;
+  tags?: string[];
+  expires_at?: string;
+}
+
+export interface UpdateSecretRequest {
+  title?: string;
+  username?: string;
+  password?: string;
+  url?: string;
+  notes?: string;
+  tags?: string[];
+  expires_at?: string;
+}
+
+/**
+ * Create a new secret
+ *
+ * @param data - Secret data (title is required)
+ * @returns Created secret with full details
+ * @throws ApiError if request fails (400, 401, 403, 422)
+ *
+ * @example
+ * ```ts
+ * const secret = await createSecret({
+ *   title: 'Gmail Account',
+ *   username: 'user@example.com',
+ *   password: 'super-secret',
+ *   tags: ['work', 'email'],
+ *   expires_at: '2025-12-31T23:59:59Z'
+ * });
+ * console.log(`Created secret: ${secret.id}`);
+ * ```
+ */
+export async function createSecret(
+  data: CreateSecretRequest
+): Promise<SecretDetail> {
+  if (!data.title || data.title.trim() === "") {
+    throw new Error("title is required");
+  }
+
+  const response = await fetch(`${apiConfig.baseUrl}/api/v1/secrets`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const result: ApiResponse<SecretDetail> = await response.json();
+  return result.data;
+}
+
+/**
+ * Update an existing secret
+ *
+ * @param secretId - Secret ID to update
+ * @param data - Fields to update (only provided fields will be updated)
+ * @returns Updated secret with full details
+ * @throws ApiError if request fails (400, 401, 403, 404, 422)
+ *
+ * @example
+ * ```ts
+ * const secret = await updateSecret('secret-123', {
+ *   title: 'Updated Title',
+ *   password: 'new-password'
+ * });
+ * console.log(`Updated secret: ${secret.title}`);
+ * ```
+ */
+export async function updateSecret(
+  secretId: string,
+  data: UpdateSecretRequest
+): Promise<SecretDetail> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+
+  const response = await fetch(
+    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const result: ApiResponse<SecretDetail> = await response.json();
+  return result.data;
+}
