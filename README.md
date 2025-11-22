@@ -60,6 +60,53 @@ try {
 
 See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing guide.
 
+## 🔐 Client-Side File Encryption
+
+SecPal implements **end-to-end client-side file encryption** using the Web Crypto API with **AES-GCM-256**. Files are encrypted on the client before upload, ensuring a **zero-knowledge architecture** where the backend cannot decrypt file contents.
+
+**Key Features:**
+
+- 🔒 **Zero-Knowledge Architecture**: Backend cannot decrypt files
+- 🔑 **AES-GCM-256**: Industry-standard authenticated encryption
+- 🧬 **HKDF-SHA-256**: Secure key derivation per file
+- ✅ **Integrity Verification**: SHA-256 checksums detect tampering
+- 📱 **Share Target Integration**: Encrypt files shared from other apps
+- 🔄 **Background Sync**: Automatic retry on network failures
+- 📊 **Progress Tracking**: Real-time upload status with queue management
+
+**Usage Example:**
+
+```tsx
+import { encryptFile, deriveFileKey } from "@/lib/crypto/encryption";
+import { uploadEncryptedAttachment } from "@/services/secretApi";
+
+// Encrypt and upload a file
+const fileData = new Uint8Array(await file.arrayBuffer());
+const fileKey = await deriveFileKey(masterKey, file.name);
+const encrypted = await encryptFile(fileData, fileKey);
+
+await uploadEncryptedAttachment(secretId, encrypted, {
+  filename: file.name,
+  type: file.type,
+  size: file.size,
+  checksum: await calculateChecksum(fileData),
+});
+```
+
+**Security Documentation:**
+
+For comprehensive security details, threat model, and cryptographic guarantees, see:
+
+📘 **[CRYPTO_ARCHITECTURE.md](docs/CRYPTO_ARCHITECTURE.md)** - Complete encryption architecture documentation
+
+**Implementation Status:**
+
+- ✅ Phase 1: Crypto Utilities (PR #177, merged 19.11.2025)
+- ✅ Phase 2: ShareTarget Integration (PR #178, merged 19.11.2025)
+- ✅ Phase 3: Upload Integration (PR #187, merged 21.11.2025)
+- ✅ Phase 4: Download & Decryption (PR #188, merged 21.11.2025)
+- 🔄 Phase 5: Security Audit & Documentation (PR #190, this PR)
+
 ## 🌍 Internationalization (i18n)
 
 SecPal supports multiple languages using [Lingui](https://lingui.dev/) and [Translation.io](https://translation.io/).
