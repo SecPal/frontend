@@ -117,6 +117,8 @@ describe("SecretEdit", () => {
       expect(mockUpdateSecret).toHaveBeenCalledWith("test-id-123", {
         title: "Updated Title",
         username: "user@example.com",
+        url: "",
+        notes: "",
       });
     });
 

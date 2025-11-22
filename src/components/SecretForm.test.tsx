@@ -173,8 +173,8 @@ describe("SecretForm", () => {
       />
     );
 
-    expect(screen.getByText(/creating/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /creating/i })).toBeDisabled();
+    expect(screen.getByText(/create\.\.\.$/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create/i })).toBeDisabled();
   });
 
   it("should display error message", () => {
