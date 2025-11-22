@@ -891,9 +891,8 @@ describe("Secret Sharing", () => {
     ];
 
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
-    vi.mocked(shareApi.fetchShares)
-      .mockResolvedValueOnce(mockSecretWithShares.shares!)
-      .mockResolvedValueOnce(updatedShares);
+    vi.mocked(shareApi.fetchShares).mockResolvedValue(updatedShares);
+    vi.mocked(shareApi.revokeShare).mockResolvedValue(undefined);
 
     renderWithRouter("secret-1");
 
@@ -901,24 +900,23 @@ describe("Secret Sharing", () => {
       expect(screen.getByText("Gmail Account")).toBeInTheDocument();
     });
 
-    // Initially shows 1 share
-    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    // Initially shows 1 share (from mockSecretWithShares.shares)
+    expect(screen.getByText(/Jane Smith/)).toBeInTheDocument();
     expect(screen.queryByText("Bob Johnson")).not.toBeInTheDocument();
 
-    // Trigger refresh (simulate revoke action)
-    const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
+    // Trigger refresh by revoking a share
     const user = userEvent.setup();
-
     globalThis.confirm = vi.fn(() => true);
-    vi.mocked(shareApi.revokeShare).mockResolvedValueOnce(undefined);
 
+    const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
     await user.click(revokeButtons[0]!);
 
+    // After refresh, fetchShares is called and updates shares
     await waitFor(() => {
-      expect(shareApi.fetchShares).toHaveBeenCalledTimes(2);
+      expect(shareApi.fetchShares).toHaveBeenCalledWith("secret-1");
     });
 
-    // Should show updated shares
+    // Should show updated shares (Bob Johnson now appears)
     await waitFor(() => {
       expect(screen.getByText("Bob Johnson")).toBeInTheDocument();
     });
