@@ -3,38 +3,28 @@
 
 import React, { useState } from "react";
 import { AuthContext, type User } from "./auth-context";
+import { authStorage } from "../services/storage";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem("auth_user");
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error("Failed to parse stored user data:", error);
-        localStorage.removeItem("auth_user");
-      }
-    }
-    return null;
+    return authStorage.getUser();
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    const storedToken = localStorage.getItem("auth_token");
-    return storedToken || null;
+    return authStorage.getToken();
   });
 
   const [isLoading] = useState(false);
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem("auth_token", newToken);
-    localStorage.setItem("auth_user", JSON.stringify(newUser));
+    authStorage.setToken(newToken);
+    authStorage.setUser(newUser);
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
+    authStorage.clear();
     setToken(null);
     setUser(null);
   };

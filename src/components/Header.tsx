@@ -18,16 +18,15 @@ export function Header() {
         await apiLogout(token);
       } catch (error) {
         console.error("Logout API call failed:", error);
+        // TODO: Add user notification (toast/alert) for better UX
       }
     }
     logout();
     navigate("/login");
   };
 
-  if (!user) {
-    return null;
-  }
-
+  // Note: user is guaranteed to be non-null when Header is rendered
+  // because Header is only rendered inside ProtectedRoute which checks authentication
   return (
     <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +36,7 @@ export function Header() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
-              {user.name}
+              {user?.name}
             </span>
             <LanguageSwitcher />
             <Button onClick={handleLogout} color="red">

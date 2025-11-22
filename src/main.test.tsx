@@ -34,10 +34,10 @@ describe("AppWithI18n Integration", () => {
       { timeout: 3000 }
     );
 
-    // Verify app actually rendered by checking for navigation elements
+    // Verify app actually rendered - should show login page when not authenticated
     await waitFor(() => {
-      const aboutLink = screen.getByText(/about/i);
-      expect(aboutLink).toBeInTheDocument();
+      const loginHeading = screen.getByText(/Sign in to your account/i);
+      expect(loginHeading).toBeInTheDocument();
     });
   });
 

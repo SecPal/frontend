@@ -92,6 +92,12 @@ describe("authApi", () => {
         login({ email: "wrong@example.com", password: "wrong" })
       ).rejects.toThrow(AuthApiError);
 
+      // Second call with fresh mock
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: async () => errorResponse,
+      } as Response);
+
       try {
         await login({ email: "wrong@example.com", password: "wrong" });
       } catch (error) {

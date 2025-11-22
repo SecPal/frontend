@@ -4,6 +4,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { AuthProvider } from "../contexts/AuthContext";
 
@@ -25,18 +27,20 @@ const TestComponent = () => <div>Protected Content</div>;
 const renderProtectedRoute = () => {
   return render(
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <TestComponent />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <TestComponent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </I18nProvider>
     </BrowserRouter>
   );
 };
@@ -45,6 +49,8 @@ describe("ProtectedRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    i18n.load("en", {});
+    i18n.activate("en");
   });
 
   it("redirects to login when not authenticated", () => {
@@ -83,11 +89,13 @@ describe("ProtectedRoute", () => {
   it("shows loading state initially", () => {
     const { container } = render(
       <BrowserRouter>
-        <AuthProvider>
-          <ProtectedRoute>
-            <TestComponent />
-          </ProtectedRoute>
-        </AuthProvider>
+        <I18nProvider i18n={i18n}>
+          <AuthProvider>
+            <ProtectedRoute>
+              <TestComponent />
+            </ProtectedRoute>
+          </AuthProvider>
+        </I18nProvider>
       </BrowserRouter>
     );
 

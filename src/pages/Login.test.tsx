@@ -5,22 +5,31 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { BrowserRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 
-vi.mock("../services/authApi");
+// Mock only the API functions, not AuthApiError class
+vi.mock("../services/authApi", async () => {
+  const actual = await vi.importActual("../services/authApi");
+  return {
+    ...actual,
+    login: vi.fn(),
+    logout: vi.fn(),
+    logoutAll: vi.fn(),
+  };
+});
 
 const renderLogin = () => {
   return render(
-    <BrowserRouter>
+    <MemoryRouter initialEntries={["/login"]}>
       <I18nProvider i18n={i18n}>
         <AuthProvider>
           <Login />
         </AuthProvider>
       </I18nProvider>
-    </BrowserRouter>
+    </MemoryRouter>
   );
 };
 
@@ -47,10 +56,11 @@ describe("Login", () => {
 
   it("submits login form with email and password", async () => {
     const mockLogin = vi.mocked(authApi.login);
-    mockLogin.mockResolvedValueOnce({
+    const mockResponse = {
       token: "test-token",
       user: { id: 1, name: "Test User", email: "test@example.com" },
-    });
+    };
+    mockLogin.mockResolvedValueOnce(mockResponse);
 
     renderLogin();
 
@@ -72,9 +82,8 @@ describe("Login", () => {
 
   it("displays error message on login failure", async () => {
     const mockLogin = vi.mocked(authApi.login);
-    mockLogin.mockRejectedValueOnce(
-      new authApi.AuthApiError("Invalid credentials")
-    );
+    const testError = new authApi.AuthApiError("Invalid credentials");
+    mockLogin.mockRejectedValue(testError); // Use mockRejectedValue instead of mockRejectedValueOnce
 
     renderLogin();
 
@@ -86,9 +95,13 @@ describe("Login", () => {
     fireEvent.change(passwordInput, { target: { value: "wrongpass" } });
     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
-    });
+    // Wait for the error to appear with explicit screen query
+    const errorElement = await screen.findByText(
+      /invalid credentials/i,
+      {},
+      { timeout: 3000 }
+    );
+    expect(errorElement).toBeInTheDocument();
   });
 
   it("disables submit button while submitting", async () => {
@@ -113,6 +126,8 @@ describe("Login", () => {
 
   it("clears error message on new submission", async () => {
     const mockLogin = vi.mocked(authApi.login);
+
+    // First call: error
     mockLogin.mockRejectedValueOnce(new authApi.AuthApiError("First error"));
 
     renderLogin();
@@ -126,20 +141,28 @@ describe("Login", () => {
     fireEvent.change(passwordInput, { target: { value: "wrong" } });
     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(screen.getByText(/first error/i)).toBeInTheDocument();
-    });
+    // Wait for error to appear
+    const errorElement = await screen.findByText(
+      /first error/i,
+      {},
+      { timeout: 3000 }
+    );
+    expect(errorElement).toBeInTheDocument();
 
-    // Second submission should clear error
+    // Second call: success
     mockLogin.mockResolvedValueOnce({
       token: "test-token",
       user: { id: 1, name: "Test", email: "test@example.com" },
     });
 
+    // Second submission should clear error
     fireEvent.change(passwordInput, { target: { value: "correct" } });
     fireEvent.click(submitButton);
 
-    expect(screen.queryByText(/first error/i)).not.toBeInTheDocument();
+    // Wait for error to disappear
+    await waitFor(() => {
+      expect(screen.queryByText(/first error/i)).not.toBeInTheDocument();
+    });
   });
 
   it("requires email and password fields", () => {

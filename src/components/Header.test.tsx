@@ -32,9 +32,12 @@ describe("Header", () => {
     i18n.activate("en");
   });
 
-  it("renders nothing when user is not authenticated", () => {
+  it("renders header even when user is not authenticated", () => {
+    // Note: Header now always renders, null check was removed as redundant
+    // since Header is only used in ProtectedRoute which ensures authentication
     const { container } = renderHeader();
-    expect(container.firstChild).toBeNull();
+    // Header renders but user name might not be present
+    expect(container.querySelector("header")).toBeInTheDocument();
   });
 
   it("displays user name when authenticated", () => {
