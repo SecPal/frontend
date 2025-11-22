@@ -61,7 +61,7 @@ export async function login(
       // Fallback if response is not JSON (e.g., HTML error page)
       throw new AuthApiError("Login failed");
     }
-    throw new AuthApiError(error.message || "Login failed", error.errors);
+    throw new AuthApiError(error?.message || "Login failed", error?.errors);
   }
 
   return response.json();
@@ -88,7 +88,7 @@ export async function logout(token: string): Promise<void> {
     } catch {
       throw new AuthApiError("Logout failed");
     }
-    throw new AuthApiError(error.message || "Logout failed", error.errors);
+    throw new AuthApiError(error?.message || "Logout failed", error?.errors);
   }
 }
 
@@ -114,8 +114,8 @@ export async function logoutAll(token: string): Promise<void> {
       throw new AuthApiError("Logout all devices failed");
     }
     throw new AuthApiError(
-      error.message || "Logout all devices failed",
-      error.errors
+      error?.message || "Logout all devices failed",
+      error?.errors
     );
   }
 }
