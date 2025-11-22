@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { SecretForm, SecretFormData } from "../../components/SecretForm";
 import { createSecret, ApiError } from "../../services/secretApi";
+import { formatValidationErrors } from "../../lib/errorUtils";
 
 /**
  * Page for creating a new secret
@@ -34,7 +35,6 @@ export function SecretCreate() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 422 && err.errors) {
-          // Display validation errors
           const errorMessages = Object.entries(err.errors)
             .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
             .join("; ");
@@ -42,14 +42,9 @@ export function SecretCreate() {
         } else {
           setError(err.message);
         }
-      } else if (typeof err === "object" && err !== null && "status" in err && err.status === 422 && "errors" in err) {
-        // Handle error objects with validation errors
-        const errorMessages = Object.entries(err.errors as Record<string, string[]>)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("; ");
-        setError(errorMessages);
       } else {
-        setError("An unexpected error occurred");
+        const validationError = formatValidationErrors(err);
+        setError(validationError || "An unexpected error occurred");
       }
     } finally {
       setIsSubmitting(false);

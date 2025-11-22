@@ -9,6 +9,7 @@ import {
   updateSecret,
   ApiError,
 } from "../../services/secretApi";
+import { formatValidationErrors } from "../../lib/errorUtils";
 
 /**
  * Page for editing an existing secret
@@ -36,7 +37,7 @@ export function SecretEdit() {
         setInitialValues({
           title: secret.title,
           username: secret.username || "",
-          password: "", // Don't pre-fill password for security
+          password: "", // Don't pre-fill password for security. If left blank, existing password remains unchanged
           url: secret.url || "",
           notes: secret.notes || "",
           tags: secret.tags || [],
@@ -63,17 +64,19 @@ export function SecretEdit() {
     setError("");
 
     try {
-      // Only send fields that have values
+      // Only send fields that were provided
       const updateData: Record<string, unknown> = {
         title: data.title,
       };
 
-      if (data.username) updateData.username = data.username;
-      if (data.password) updateData.password = data.password;
-      if (data.url) updateData.url = data.url;
-      if (data.notes) updateData.notes = data.notes;
+      if (data.username !== undefined) updateData.username = data.username;
+      if (data.password !== undefined && data.password !== "")
+        updateData.password = data.password;
+      if (data.url !== undefined) updateData.url = data.url;
+      if (data.notes !== undefined) updateData.notes = data.notes;
       if (data.tags.length > 0) updateData.tags = data.tags;
-      if (data.expires_at) updateData.expires_at = data.expires_at;
+      if (data.expires_at !== undefined)
+        updateData.expires_at = data.expires_at;
 
       await updateSecret(id, updateData);
 
@@ -90,14 +93,9 @@ export function SecretEdit() {
         } else {
           setError(err.message);
         }
-      } else if (typeof err === "object" && err !== null && "status" in err && err.status === 422 && "errors" in err) {
-        // Handle error objects with validation errors
-        const errorMessages = Object.entries(err.errors as Record<string, string[]>)
-          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-          .join("; ");
-        setError(errorMessages);
       } else {
-        setError("An unexpected error occurred");
+        const validationError = formatValidationErrors(err);
+        setError(validationError || "An unexpected error occurred");
       }
     } finally {
       setIsSubmitting(false);
