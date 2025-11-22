@@ -24,7 +24,9 @@ describe("SecretForm", () => {
     it("should generate password when generate button clicked", async () => {
       render(<SecretForm {...defaultProps} />);
 
-      const passwordInput = screen.getByLabelText("Password", { selector: "input" });
+      const passwordInput = screen.getByLabelText("Password", {
+        selector: "input",
+      });
       const generateButton = screen.getByLabelText(/generate password/i);
 
       expect(passwordInput).toHaveValue("");
@@ -39,7 +41,9 @@ describe("SecretForm", () => {
     it("should show password strength indicator when password is entered", async () => {
       render(<SecretForm {...defaultProps} />);
 
-      const passwordInput = screen.getByLabelText("Password", { selector: "input" });
+      const passwordInput = screen.getByLabelText("Password", {
+        selector: "input",
+      });
 
       // Type weak password
       await userEvent.type(passwordInput, "abc");
@@ -52,7 +56,9 @@ describe("SecretForm", () => {
     it("should update strength indicator as password improves", async () => {
       render(<SecretForm {...defaultProps} />);
 
-      const passwordInput = screen.getByLabelText("Password", { selector: "input" });
+      const passwordInput = screen.getByLabelText("Password", {
+        selector: "input",
+      });
 
       // Type weak password
       await userEvent.type(passwordInput, "abc");
@@ -71,9 +77,9 @@ describe("SecretForm", () => {
     it("should toggle password visibility", async () => {
       render(<SecretForm {...defaultProps} />);
 
-      const passwordInput = screen.getByLabelText(
-        "Password", { selector: "input" }
-      ) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText("Password", {
+        selector: "input",
+      }) as HTMLInputElement;
       const toggleButton = screen.getByLabelText(/show password/i);
 
       expect(passwordInput.type).toBe("password");
@@ -233,7 +239,9 @@ describe("SecretForm", () => {
       render(<SecretForm {...defaultProps} />);
 
       const titleInput = screen.getByLabelText(/title/i);
-      const passwordInput = screen.getByLabelText("Password", { selector: "input" });
+      const passwordInput = screen.getByLabelText("Password", {
+        selector: "input",
+      });
       const tagInput = screen.getByPlaceholderText(/enter tag name/i);
       const dateInput = screen.getByLabelText(/expiration date/i);
       const submitButton = screen.getByRole("button", { name: /save/i });

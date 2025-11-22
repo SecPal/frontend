@@ -105,7 +105,50 @@ For comprehensive security details, threat model, and cryptographic guarantees, 
 - ✅ Phase 2: ShareTarget Integration (PR #178, merged 19.11.2025)
 - ✅ Phase 3: Upload Integration (PR #187, merged 21.11.2025)
 - ✅ Phase 4: Download & Decryption (PR #188, merged 21.11.2025)
-- 🔄 Phase 5: Security Audit & Documentation (PR #190, this PR)
+- ✅ Phase 5: Security Audit & Documentation (PR #190, merged 22.11.2025)
+
+## 🔐 Secret Management (Password Vault UI)
+
+SecPal provides a comprehensive **password vault UI** with encrypted storage, file attachments, and sharing capabilities.
+
+**Features (Phases 1-3 Complete):**
+
+- 📋 **Secret List & Detail Views**: Browse, search, and filter secrets with grid/list toggle
+  - Search by title, filter by tags/expiration status
+  - Pagination (20 items/page)
+  - Password show/hide toggle
+  - Expiration badges, attachment count, shared indicator
+- ✏️ **Create/Edit Forms**: Full CRUD operations with validation
+  - Title, username, password, URL, notes fields
+  - Client-side validation
+  - Loading states and error handling
+- 📎 **File Attachments**: Upload, download, preview encrypted files
+  - Drag-and-drop upload with file validation (10MB max)
+  - Image preview with zoom controls (50%-200%)
+  - PDF preview in modal
+  - File type validation (images, PDFs, documents)
+  - Download with automatic decryption
+
+**Usage Example:**
+
+```tsx
+import { SecretList } from "@/pages/Secrets/SecretList";
+import { SecretDetail } from "@/pages/Secrets/SecretDetail";
+
+// List all secrets
+<SecretList />
+
+// View secret details
+<SecretDetail secretId="uuid" />
+```
+
+**Implementation Status:**
+
+- ✅ Phase 1: Secret List & Detail Views (PR #197, merged 22.11.2025)
+- ✅ Phase 2: Secret Create/Edit Forms (PR #198, merged 22.11.2025)
+- ✅ Phase 3: File Attachments UI Integration (PR #200, merged 22.11.2025)
+- 🔜 Phase 4: Secret Sharing UI (Issue #195)
+- 🔜 Phase 5: Offline Support & PWA Integration (Issue #196)
 
 ## 🌍 Internationalization (i18n)
 

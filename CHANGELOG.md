@@ -14,6 +14,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#200, Part of #191) - **MERGED 22.11.2025**
+  - `AttachmentUpload.tsx` component with drag-and-drop and file validation
+  - `AttachmentPreview.tsx` modal for images and PDFs with zoom controls
+  - Integration of `AttachmentList` component in `SecretDetail.tsx`
+  - Download, delete, and preview handlers with master key management
+  - File size limits (10MB) and type validation (images, PDFs, documents)
+  - Security: Blocks executable files, validates MIME types
+  - 21 new unit tests (547 total tests passing)
+  - Coverage: 87.95% (exceeds 80% requirement)
+  - Part of Secret Management Epic #191 (Phase 3/5)
+
+- **Secret Management Frontend - Phase 2: Secret Create/Edit Forms** (#198, Part of #191) - **MERGED 22.11.2025**
+  - `SecretForm.tsx` reusable form component with validation
+  - `SecretCreate.tsx` page for creating new secrets
+  - `SecretEdit.tsx` page for editing existing secrets
+  - API service extensions: `createSecret()`, `updateSecret()`
+  - Client-side validation and error handling
+  - Password show/hide toggle for security
+  - 28 new unit tests (all passing)
+  - Routing: `/secrets/new` and `/secrets/:id/edit`
+  - Part of Secret Management Epic #191 (Phase 2/5)
+
+- **Secret Management Frontend - Phase 1: Secret List & Detail Views** (#197, Part of #191) - **MERGED 22.11.2025**
+  - `SecretList.tsx` component with search, filtering, and pagination (20 items/page)
+  - `SecretDetail.tsx` full detail view with encrypted fields
+  - `SecretCard.tsx` reusable card component with badges
+  - API service: `secretApi.ts` with `getSecrets()`, `getSecretById()`
+  - Grid/List view toggle (persisted in localStorage)
+  - Filter by tags and expiration status
+  - Password show/hide toggle
+  - Tags, expiration badges, attachment count, shared indicator
+  - 31 new unit tests (450 total tests passing)
+  - Coverage: 87.95% (exceeds 80% requirement)
+  - Routing: `/secrets` and `/secrets/:id`
+  - Part of Secret Management Epic #191 (Phase 1/5)
+
 - **Client-Side File Encryption - Phase 5: Security Audit & Documentation** (#174, Part of #143)
   - Comprehensive security documentation in `CRYPTO_ARCHITECTURE.md`
   - Security audit completed for all encryption code
