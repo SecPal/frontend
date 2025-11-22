@@ -35,6 +35,7 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares`,
     {
       method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...getAuthHeaders(),
@@ -43,7 +44,9 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
   );
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new ApiError(
       errorData.message || "Failed to fetch shares",
       response.status,
@@ -80,6 +83,7 @@ export async function createShare(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares`,
     {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...getAuthHeaders(),
@@ -89,7 +93,9 @@ export async function createShare(
   );
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new ApiError(
       errorData.message || "Failed to create share",
       response.status,
@@ -121,6 +127,7 @@ export async function revokeShare(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares/${shareId}`,
     {
       method: "DELETE",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...getAuthHeaders(),
@@ -129,7 +136,9 @@ export async function revokeShare(
   );
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new ApiError(
       errorData.message || "Failed to revoke share",
       response.status,

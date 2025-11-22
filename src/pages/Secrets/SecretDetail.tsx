@@ -417,11 +417,13 @@ export function SecretDetail() {
                 </button>
               )}
             </div>
-            <SharedWithList
-              secretId={id!}
-              shares={shares}
-              onRevoke={refreshShares}
-            />
+            {id && (
+              <SharedWithList
+                secretId={id}
+                shares={shares}
+                onRevoke={refreshShares}
+              />
+            )}
           </div>
 
           {/* Metadata */}

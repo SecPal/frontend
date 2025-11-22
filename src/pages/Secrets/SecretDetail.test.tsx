@@ -871,7 +871,7 @@ describe("Secret Sharing", () => {
     vi.clearAllMocks();
   });
 
-  it("should call refreshShares after revoke", async () => {
+    it("should call refreshShares after revoke", async () => {
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
     vi.mocked(shareApi.fetchShares).mockResolvedValue([]);
     vi.mocked(shareApi.revokeShare).mockResolvedValue(undefined);

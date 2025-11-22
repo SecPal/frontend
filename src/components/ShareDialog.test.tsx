@@ -422,10 +422,11 @@ describe("ShareDialog", () => {
       await user.click(screen.getByRole("button", { name: /share/i }));
 
       await waitFor(() => {
+        const expectedDate = new Date("2025-12-31T23:59:59").toISOString();
         expect(shareApi.createShare).toHaveBeenCalledWith(mockSecretId, {
           user_id: "user-1",
           permission: "read",
-          expires_at: "2025-12-31T23:59:59Z",
+          expires_at: expectedDate,
         });
       });
     });

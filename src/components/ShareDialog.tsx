@@ -76,8 +76,9 @@ export function ShareDialog({
       }
 
       if (expiresAt) {
-        // Convert date to ISO 8601 with end-of-day time
-        payload.expires_at = `${expiresAt}T23:59:59Z`;
+        // Convert date to ISO 8601 with end-of-day time in user's local timezone
+        const localEndOfDay = new Date(`${expiresAt}T23:59:59`);
+        payload.expires_at = localEndOfDay.toISOString();
       }
 
       await createShare(secretId, payload);
