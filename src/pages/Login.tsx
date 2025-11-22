@@ -55,18 +55,28 @@ export function Login() {
           <Trans id="login.subtitle">Your digital guard companion</Trans>
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-10 space-y-8">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-10 space-y-8"
+          aria-label="Login form"
+        >
           {error && (
-            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+            <div
+              id="login-error"
+              role="alert"
+              aria-live="assertive"
+              className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+            >
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
           <Field>
-            <Label>
+            <Label htmlFor="email">
               <Trans id="login.email">Email</Trans>
             </Label>
             <Input
+              id="email"
               name="email"
               type="email"
               autoComplete="email"
@@ -74,14 +84,16 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.name@secpal.app"
+              aria-describedby={error ? "login-error" : undefined}
             />
           </Field>
 
           <Field>
-            <Label>
+            <Label htmlFor="password">
               <Trans id="login.password">Password</Trans>
             </Label>
             <Input
+              id="password"
               name="password"
               type="password"
               autoComplete="current-password"
@@ -89,10 +101,16 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              aria-describedby={error ? "login-error" : undefined}
             />
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full"
+            aria-busy={isSubmitting}
+          >
             {isSubmitting ? (
               <Trans id="login.submitting">Logging in...</Trans>
             ) : (
