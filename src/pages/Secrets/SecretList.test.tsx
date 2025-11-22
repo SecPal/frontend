@@ -9,8 +9,15 @@ import { SecretList } from "./SecretList";
 import * as secretApi from "../../services/secretApi";
 import type { Secret } from "../../services/secretApi";
 
-// Mock secret API
-vi.mock("../../services/secretApi");
+// Mock secret API (keep ApiError real)
+vi.mock("../../services/secretApi", async (importOriginal) => {
+  const actual =
+    (await importOriginal()) as typeof import("../../services/secretApi");
+  return {
+    ...actual,
+    fetchSecrets: vi.fn(),
+  };
+});
 
 describe("SecretList", () => {
   const mockSecrets: Secret[] = [

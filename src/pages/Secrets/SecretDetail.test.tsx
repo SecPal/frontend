@@ -4,13 +4,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { Route, Routes, MemoryRouter } from "react-router";
 import { SecretDetail } from "./SecretDetail";
 import * as secretApi from "../../services/secretApi";
 import type { SecretDetail as SecretDetailType } from "../../services/secretApi";
 
-// Mock secret API
-vi.mock("../../services/secretApi");
+// Mock secret API (keep ApiError real)
+vi.mock("../../services/secretApi", async (importOriginal) => {
+  const actual =
+    (await importOriginal()) as typeof import("../../services/secretApi");
+  return {
+    ...actual,
+    getSecretById: vi.fn(),
+  };
+});
 
 describe("SecretDetail", () => {
   const mockSecret: SecretDetailType = {
@@ -61,12 +68,11 @@ describe("SecretDetail", () => {
   // Helper to render with router
   const renderWithRouter = (secretId: string) => {
     return render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
         <Routes>
           <Route path="/secrets/:id" element={<SecretDetail />} />
         </Routes>
-      </BrowserRouter>,
-      { route: `/secrets/${secretId}` } as never
+      </MemoryRouter>
     );
   };
 
@@ -176,7 +182,7 @@ describe("SecretDetail", () => {
     });
 
     expect(screen.getByText(/Owner:/)).toBeInTheDocument();
-    expect(screen.getByText(/John Doe/)).toBeInTheDocument();
+    expect(screen.getAllByText(/John Doe/)[0]).toBeInTheDocument(); // Owner appears in metadata and shares
     expect(screen.getByText(/Created:/)).toBeInTheDocument();
     expect(screen.getByText(/Updated:/)).toBeInTheDocument();
   });
