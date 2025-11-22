@@ -10,6 +10,8 @@ import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { ShareTarget } from "./pages/ShareTarget";
 import { SecretList } from "./pages/Secrets/SecretList";
 import { SecretDetail } from "./pages/Secrets/SecretDetail";
+import { SecretCreate } from "./pages/Secrets/SecretCreate";
+import { SecretEdit } from "./pages/Secrets/SecretEdit";
 import { getApiBaseUrl } from "./config";
 
 function Home() {
@@ -68,7 +70,9 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/share" element={<ShareTarget />} />
           <Route path="/secrets" element={<SecretList />} />
+          <Route path="/secrets/new" element={<SecretCreate />} />
           <Route path="/secrets/:id" element={<SecretDetail />} />
+          <Route path="/secrets/:id/edit" element={<SecretEdit />} />
         </Routes>
       </div>
       <OfflineIndicator />

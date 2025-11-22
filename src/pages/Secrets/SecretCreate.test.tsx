@@ -1,0 +1,123 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { BrowserRouter } from "react-router";
+import { SecretCreate } from "./SecretCreate";
+import * as secretApi from "../../services/secretApi";
+
+// Mock the secretApi module
+vi.mock("../../services/secretApi");
+
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual("react-router");
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+describe("SecretCreate", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should render create form", () => {
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    expect(screen.getByText(/create secret/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^title/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
+  });
+
+  it("should create secret and navigate on success", async () => {
+    const mockCreateSecret = vi.mocked(secretApi.createSecret);
+    mockCreateSecret.mockResolvedValue({
+      id: "test-id-123",
+      title: "New Secret",
+      username: "user@example.com",
+      password: undefined,
+      url: undefined,
+      notes: undefined,
+      tags: [],
+      expires_at: undefined,
+      created_at: "2025-11-22T10:00:00Z",
+      updated_at: "2025-11-22T10:00:00Z",
+    });
+
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    // Fill in form
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "New Secret" },
+    });
+    fireEvent.change(screen.getByLabelText(/^username/i), {
+      target: { value: "user@example.com" },
+    });
+
+    // Submit
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(mockCreateSecret).toHaveBeenCalledWith({
+        title: "New Secret",
+        username: "user@example.com",
+        password: undefined,
+        url: undefined,
+        notes: undefined,
+        tags: undefined,
+        expires_at: undefined,
+      });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith("/secrets/test-id-123");
+  });
+
+  it("should display error on create failure", async () => {
+    const mockCreateSecret = vi.mocked(secretApi.createSecret);
+    mockCreateSecret.mockRejectedValue(new Error("Server error"));
+
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    // Fill in form
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Test Secret" },
+    });
+
+    // Submit
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/unexpected error/i)).toBeInTheDocument();
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("should navigate to secrets list on cancel", () => {
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/secrets");
+  });
+});
