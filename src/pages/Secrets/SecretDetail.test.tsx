@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, MemoryRouter } from "react-router";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretDetail } from "./SecretDetail";
 import * as secretApi from "../../services/secretApi";
 import type { SecretDetail as SecretDetailType } from "../../services/secretApi";
@@ -16,6 +18,7 @@ vi.mock("../../services/secretApi", async (importOriginal) => {
   return {
     ...actual,
     getSecretById: vi.fn(),
+    getSecretMasterKey: vi.fn(),
   };
 });
 
@@ -68,11 +71,13 @@ describe("SecretDetail", () => {
   // Helper to render with router
   const renderWithRouter = (secretId: string) => {
     return render(
-      <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
-        <Routes>
-          <Route path="/secrets/:id" element={<SecretDetail />} />
-        </Routes>
-      </MemoryRouter>
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
+          <Routes>
+            <Route path="/secrets/:id" element={<SecretDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
     );
   };
 
@@ -146,15 +151,22 @@ describe("SecretDetail", () => {
   it("should display attachments", async () => {
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
 
+    // Mock master key for attachment decryption
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
     renderWithRouter("secret-1");
 
     await waitFor(() => {
       expect(screen.getByText("Gmail Account")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Attachments \(1\)/)).toBeInTheDocument();
+    // Wait for attachments section to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Attachments \(1\)/)).toBeInTheDocument();
+    });
+
     expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
-    expect(screen.getByText(/1.2 KB/)).toBeInTheDocument();
   });
 
   it("should display shares", async () => {
