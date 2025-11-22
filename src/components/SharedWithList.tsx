@@ -62,17 +62,24 @@ export function SharedWithList({
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
+      <h2
+        className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white"
+        id="shared-with-heading"
+      >
         <Trans>Shared with ({shares.length})</Trans>
       </h2>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-400">
+        <div
+          className="mb-4 rounded-md bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-700 dark:text-red-400"
+          role="alert"
+          aria-live="assertive"
+        >
           {error}
         </div>
       )}
 
-      <ul className="space-y-3">
+      <ul className="space-y-3" aria-labelledby="shared-with-heading">
         {shares.map((share) => {
           const isUser = !!share.user;
           const name = share.user?.name || share.role?.name || "Unknown";

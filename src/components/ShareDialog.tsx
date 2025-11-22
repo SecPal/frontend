@@ -96,13 +96,26 @@ export function ShareDialog({
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} aria-label="Share secret">
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      aria-label="Share secret"
+      aria-labelledby="share-dialog-title"
+      aria-describedby="share-dialog-description"
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>
+        <DialogTitle id="share-dialog-title">
           <Trans>Share "{secretTitle}"</Trans>
         </DialogTitle>
 
         <DialogBody className="space-y-6">
+          <div id="share-dialog-description" className="sr-only">
+            <Trans>
+              Share this secret with users or roles. Select a recipient, choose
+              permission level, and optionally set an expiration date.
+            </Trans>
+          </div>
+
           {/* Share with selector */}
           <div>
             <label

@@ -28,9 +28,15 @@ export function Header() {
   // Note: user is guaranteed to be non-null when Header is rendered
   // because Header is only rendered inside ProtectedRoute which checks authentication
   return (
-    <header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+    <header
+      className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
+      role="banner"
+    >
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <nav
+          className="flex h-16 items-center justify-between"
+          aria-label="Main navigation"
+        >
           <div className="flex items-center">
             <h1 className="text-xl font-bold">SecPal</h1>
           </div>
@@ -46,7 +52,7 @@ export function Header() {
               <Trans>Logout</Trans>
             </Button>
           </div>
-        </div>
+        </nav>
       </div>
     </header>
   );

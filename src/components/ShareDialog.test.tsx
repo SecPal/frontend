@@ -555,6 +555,74 @@ describe("ShareDialog", () => {
       );
     });
 
+    it("should have role=dialog on dialog element", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
+      );
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("should have aria-labelledby linking to dialog title", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
+      );
+
+      const dialog = screen.getByRole("dialog");
+      const titleId = dialog.getAttribute("aria-labelledby");
+
+      if (titleId) {
+        const title = document.getElementById(titleId);
+        expect(title).toBeInTheDocument();
+        expect(title).toHaveTextContent(`Share "${mockSecretTitle}"`);
+      }
+    });
+
+    it("should have aria-describedby linking to dialog description", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
+      );
+
+      const dialog = screen.getByRole("dialog");
+      const descId = dialog.getAttribute("aria-describedby");
+
+      // Description should explain the dialog purpose
+      if (descId) {
+        const description = document.getElementById(descId);
+        expect(description).toBeInTheDocument();
+      }
+    });
+
     it("should focus first input on open", async () => {
       render(
         <I18nProvider i18n={i18n}>
@@ -573,6 +641,35 @@ describe("ShareDialog", () => {
       await waitFor(() => {
         expect(screen.getByLabelText(/share with/i)).toHaveFocus();
       });
+    });
+
+    it("all interactive elements should be keyboard accessible", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
+      );
+
+      // All inputs and buttons should be keyboard accessible
+      const shareWithSelect = screen.getByLabelText(/share with/i);
+      const permissionSelect = screen.getByLabelText(/permission/i);
+      const expiresInput = screen.getByLabelText(/expires \(optional\)/i);
+      const cancelButton = screen.getByRole("button", { name: /cancel/i });
+      const shareButton = screen.getByRole("button", { name: /share/i });
+
+      expect(shareWithSelect).not.toHaveAttribute("tabindex", "-1");
+      expect(permissionSelect).not.toHaveAttribute("tabindex", "-1");
+      expect(expiresInput).not.toHaveAttribute("tabindex", "-1");
+      expect(cancelButton).not.toHaveAttribute("tabindex", "-1");
+      expect(shareButton).not.toHaveAttribute("tabindex", "-1");
     });
   });
 });

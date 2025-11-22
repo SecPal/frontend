@@ -335,6 +335,49 @@ gpg --armor --export <YOUR_KEY_ID>
 - **Linting:** ESLint (JavaScript/TypeScript) and PHPStan (PHP) are enforced.
 - **Testing:** All new features should include tests.
 
+## Test-Driven Development (TDD)
+
+**TDD is MANDATORY for all SecPal contributions.** Tests must be written **before** implementation.
+
+### Quick TDD Workflow
+
+```bash
+# 1. Write failing test FIRST
+cat > src/components/Feature.test.tsx << 'EOF'
+it('does something', () => {
+  expect(doSomething()).toBe(expected);
+});
+EOF
+
+# 2. Commit test
+git add src/components/Feature.test.tsx
+git commit -S -m "test: Add Feature tests"
+
+# 3. Implement to make test pass
+cat > src/components/Feature.tsx << 'EOF'
+export function doSomething() {
+  return expected;
+}
+EOF
+
+# 4. Commit implementation
+git add src/components/Feature.tsx
+git commit -S -m "feat: Implement Feature"
+```
+
+**Why separate commits?**
+
+- Proves tests were written first (reviewers can verify via `git log`)
+- Enforces design-before-implementation thinking
+- Makes PR history transparent
+
+**For detailed TDD workflow with Git verification:**
+
+- Frontend: See [`docs/development/TDD_WORKFLOW.md`](docs/development/TDD_WORKFLOW.md)
+- Backend: See [SecPal/api TDD documentation](https://github.com/SecPal/api/blob/main/docs/TDD_WORKFLOW.md) (separate repository)
+
+**PR Reviewers:** Check `git log --oneline --name-status` to verify `.test.tsx` committed before `.tsx`
+
 ## REUSE Compliance
 
 All files must include SPDX license headers. **SecPal uses different licenses depending on file type:**

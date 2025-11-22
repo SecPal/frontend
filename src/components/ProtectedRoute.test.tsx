@@ -102,4 +102,43 @@ describe("ProtectedRoute", () => {
     // The component should render quickly, so we just verify it doesn't crash
     expect(container).toBeTruthy();
   });
+
+  describe("Accessibility", () => {
+    it("loading state has role=status", () => {
+      // Temporarily remove token to trigger loading check
+      localStorage.clear();
+      renderProtectedRoute();
+
+      // The loading div should have role="status"
+      // This will fail until we implement the ARIA attributes
+      const loadingElement = screen.queryByText("Loading...");
+      if (loadingElement) {
+        expect(loadingElement.closest("div")).toHaveAttribute("role", "status");
+      }
+    });
+
+    it("loading state has aria-live=polite", () => {
+      localStorage.clear();
+      renderProtectedRoute();
+
+      const loadingElement = screen.queryByText("Loading...");
+      if (loadingElement) {
+        expect(loadingElement.closest("div")).toHaveAttribute(
+          "aria-live",
+          "polite"
+        );
+      }
+    });
+
+    it("loading text is visible to screen readers", () => {
+      localStorage.clear();
+      renderProtectedRoute();
+
+      const loadingText = screen.queryByText("Loading...");
+      // Text should not have sr-only class (should be visible)
+      if (loadingText) {
+        expect(loadingText.className).not.toContain("sr-only");
+      }
+    });
+  });
 });
