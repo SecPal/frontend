@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   fetchSecrets,
+  getSecretById,
   uploadAttachment,
   uploadEncryptedAttachment,
   listAttachments,
@@ -11,6 +12,7 @@ import {
   getSecretMasterKey,
   ApiError,
   type Secret,
+  type SecretDetail,
   type SecretAttachment,
 } from "./secretApi";
 import { apiConfig } from "../config";
@@ -68,6 +70,107 @@ describe("Secret API", () => {
       mockFetch.mockRejectedValue(new Error("Network error"));
 
       await expect(fetchSecrets()).rejects.toThrow("Network error");
+    });
+  });
+
+  describe("getSecretById", () => {
+    it("should fetch secret by ID successfully", async () => {
+      const mockSecret: SecretDetail = {
+        id: "secret-1",
+        title: "My Secret",
+        username: "user@example.com",
+        password: "super-secret",
+        url: "https://example.com",
+        notes: "Some notes",
+        tags: ["work", "email"],
+        expires_at: "2025-12-31T23:59:59Z",
+        created_at: "2025-01-01T10:00:00Z",
+        updated_at: "2025-11-15T14:30:00Z",
+        owner: {
+          id: "user-1",
+          name: "John Doe",
+        },
+        attachment_count: 2,
+        is_shared: true,
+        attachments: [
+          {
+            id: "att-1",
+            filename: "document.pdf",
+            size: 1024,
+            mime_type: "application/pdf",
+            created_at: "2025-01-01",
+          },
+        ],
+        shares: [
+          {
+            id: "share-1",
+            user: {
+              id: "user-2",
+              name: "Jane Smith",
+            },
+            permission: "read",
+            granted_by: {
+              id: "user-1",
+              name: "John Doe",
+            },
+            granted_at: "2025-11-01T10:00:00Z",
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: mockSecret }),
+      });
+
+      const result = await getSecretById("secret-1");
+
+      expect(result).toEqual(mockSecret);
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/api/v1/secrets/secret-1`,
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({
+            "Content-Type": "application/json",
+          }),
+        })
+      );
+    });
+
+    it("should throw ApiError on 404 (not found)", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({ message: "Secret not found" }),
+      });
+
+      await expect(getSecretById("invalid-id")).rejects.toThrow(ApiError);
+      await expect(getSecretById("invalid-id")).rejects.toThrow(
+        "Secret not found"
+      );
+    });
+
+    it("should throw ApiError on 403 (forbidden)", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({ message: "Access denied" }),
+      });
+
+      await expect(getSecretById("secret-1")).rejects.toThrow(ApiError);
+    });
+
+    it("should throw error if secretId is empty", async () => {
+      await expect(getSecretById("")).rejects.toThrow("secretId is required");
+      await expect(getSecretById("   ")).rejects.toThrow(
+        "secretId is required"
+      );
+    });
+
+    it("should handle network errors", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      await expect(getSecretById("secret-1")).rejects.toThrow("Network error");
     });
   });
 

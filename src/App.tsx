@@ -8,6 +8,8 @@ import { OfflineIndicator } from "./components/OfflineIndicator";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { ShareTarget } from "./pages/ShareTarget";
+import { SecretList } from "./pages/Secrets/SecretList";
+import { SecretDetail } from "./pages/Secrets/SecretDetail";
 import { getApiBaseUrl } from "./config";
 
 function Home() {
@@ -23,6 +25,9 @@ function Home() {
       <nav className="space-x-4">
         <Link href="/about" className="text-blue-600 hover:underline">
           <Trans>About</Trans>
+        </Link>
+        <Link href="/secrets" className="text-blue-600 hover:underline">
+          <Trans>Secrets</Trans>
         </Link>
       </nav>
     </div>
@@ -62,6 +67,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/share" element={<ShareTarget />} />
+          <Route path="/secrets" element={<SecretList />} />
+          <Route path="/secrets/:id" element={<SecretDetail />} />
         </Routes>
       </div>
       <OfflineIndicator />
