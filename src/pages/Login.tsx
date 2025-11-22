@@ -42,27 +42,23 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-md lg:max-w-lg space-y-6 px-4 sm:px-6 md:px-0">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
-              SecPal
-            </h1>
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-xl xl:max-w-2xl space-y-8 px-4 sm:px-0">
+        <div>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">SecPal</h1>
             <LanguageSwitcher />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-lg sm:text-xl font-semibold">
-              <Trans id="login.title">Login</Trans>
-            </h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              <Trans id="login.subtitle">Your digital guard companion</Trans>
-            </p>
-          </div>
+          <h2 className="text-2xl font-semibold mb-2">
+            <Trans id="login.title">Login</Trans>
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            <Trans id="login.subtitle">Your digital guard companion</Trans>
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
@@ -99,7 +95,7 @@ export function Login() {
             />
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full mt-2">
+          <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? (
               <Trans id="login.submitting">Logging in...</Trans>
             ) : (
