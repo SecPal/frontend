@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useMemo } from "react";
 import { Button } from "@headlessui/react";
 import { generatePassword, assessPasswordStrength } from "../lib/passwordUtils";
 
@@ -22,6 +22,39 @@ export interface SecretFormProps {
   initialValues?: Partial<SecretFormData>;
   isSubmitting?: boolean;
   error?: string;
+}
+
+// Helper functions for password strength indicator styling
+type PasswordStrengthLevel = "weak" | "medium" | "strong" | "very-strong";
+
+function getStrengthStyles(strength: PasswordStrengthLevel): string {
+  const styles: Record<PasswordStrengthLevel, string> = {
+    weak: "w-1/4 bg-red-500",
+    medium: "w-2/4 bg-yellow-500",
+    strong: "w-3/4 bg-green-500",
+    "very-strong": "w-full bg-green-600",
+  };
+  return styles[strength] ?? styles.weak;
+}
+
+function getStrengthTextColor(strength: PasswordStrengthLevel): string {
+  const colors: Record<PasswordStrengthLevel, string> = {
+    weak: "text-red-600 dark:text-red-400",
+    medium: "text-yellow-600 dark:text-yellow-400",
+    strong: "text-green-600 dark:text-green-400",
+    "very-strong": "text-green-700 dark:text-green-300",
+  };
+  return colors[strength] ?? colors.weak;
+}
+
+function getStrengthLabel(strength: PasswordStrengthLevel): string {
+  const labels: Record<PasswordStrengthLevel, string> = {
+    weak: "Weak",
+    medium: "Medium",
+    strong: "Strong",
+    "very-strong": "Very Strong",
+  };
+  return labels[strength] ?? labels.weak;
 }
 
 /**
@@ -56,9 +89,12 @@ export function SecretForm({
   const [validationError, setValidationError] = useState<string>("");
   const [tagInput, setTagInput] = useState<string>("");
 
-  const passwordStrength = formData.password
-    ? assessPasswordStrength(formData.password)
-    : null;
+  // Memoize password strength to avoid recalculating on every render
+  const passwordStrength = useMemo(
+    () =>
+      formData.password ? assessPasswordStrength(formData.password) : null,
+    [formData.password]
+  );
 
   const handleGeneratePassword = () => {
     const newPassword = generatePassword(16);
@@ -209,35 +245,19 @@ export function SecretForm({
             <div className="flex items-center gap-2">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
                 <div
-                  className={`h-full transition-all duration-300 ${
-                    passwordStrength.strength === "weak"
-                      ? "w-1/4 bg-red-500"
-                      : passwordStrength.strength === "medium"
-                        ? "w-2/4 bg-yellow-500"
-                        : passwordStrength.strength === "strong"
-                          ? "w-3/4 bg-green-500"
-                          : "w-full bg-green-600"
-                  }`}
+                  className={`h-full transition-all duration-300 ${getStrengthStyles(
+                    passwordStrength.strength as PasswordStrengthLevel
+                  )}`}
                 />
               </div>
               <span
-                className={`text-xs font-medium ${
-                  passwordStrength.strength === "weak"
-                    ? "text-red-600 dark:text-red-400"
-                    : passwordStrength.strength === "medium"
-                      ? "text-yellow-600 dark:text-yellow-400"
-                      : passwordStrength.strength === "strong"
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-green-700 dark:text-green-300"
-                }`}
+                className={`text-xs font-medium ${getStrengthTextColor(
+                  passwordStrength.strength as PasswordStrengthLevel
+                )}`}
               >
-                {passwordStrength.strength === "weak"
-                  ? "Weak"
-                  : passwordStrength.strength === "medium"
-                    ? "Medium"
-                    : passwordStrength.strength === "strong"
-                      ? "Strong"
-                      : "Very Strong"}
+                {getStrengthLabel(
+                  passwordStrength.strength as PasswordStrengthLevel
+                )}
               </span>
             </div>
             {passwordStrength.feedback.length > 0 && (
@@ -356,7 +376,7 @@ export function SecretForm({
         <input
           type="date"
           id="expires_at"
-          value={formData.expires_at ? formData.expires_at.split("T")[0] : ""}
+          value={formData.expires_at?.split("T")[0] ?? ""}
           onChange={(e) =>
             handleChange(
               "expires_at",
