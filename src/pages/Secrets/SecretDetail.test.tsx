@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes, MemoryRouter } from "react-router";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretDetail } from "./SecretDetail";
 import * as secretApi from "../../services/secretApi";
 import type { SecretDetail as SecretDetailType } from "../../services/secretApi";
@@ -16,6 +18,9 @@ vi.mock("../../services/secretApi", async (importOriginal) => {
   return {
     ...actual,
     getSecretById: vi.fn(),
+    getSecretMasterKey: vi.fn(),
+    downloadAndDecryptAttachment: vi.fn(),
+    deleteAttachment: vi.fn(),
   };
 });
 
@@ -68,11 +73,13 @@ describe("SecretDetail", () => {
   // Helper to render with router
   const renderWithRouter = (secretId: string) => {
     return render(
-      <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
-        <Routes>
-          <Route path="/secrets/:id" element={<SecretDetail />} />
-        </Routes>
-      </MemoryRouter>
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
+          <Routes>
+            <Route path="/secrets/:id" element={<SecretDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
     );
   };
 
@@ -146,15 +153,22 @@ describe("SecretDetail", () => {
   it("should display attachments", async () => {
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
 
+    // Mock master key for attachment decryption
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
     renderWithRouter("secret-1");
 
     await waitFor(() => {
       expect(screen.getByText("Gmail Account")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Attachments \(1\)/)).toBeInTheDocument();
+    // Wait for attachments section to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Attachments \(1\)/)).toBeInTheDocument();
+    });
+
     expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
-    expect(screen.getByText(/1.2 KB/)).toBeInTheDocument();
   });
 
   it("should display shares", async () => {
@@ -257,5 +271,546 @@ describe("SecretDetail", () => {
     expect(screen.queryByText("Notes")).not.toBeInTheDocument();
     expect(screen.queryByText("Attachments")).not.toBeInTheDocument();
     expect(screen.queryByText("Shared with")).not.toBeInTheDocument();
+  });
+
+  it("should handle master key loading failure gracefully", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+    vi.mocked(secretApi.getSecretMasterKey).mockRejectedValue(
+      new Error("Failed to decrypt master key")
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    // Should still display secret details despite master key failure
+    expect(screen.getByText("user@example.com")).toBeInTheDocument();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to load master key:",
+      expect.any(Error)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should download attachment when download handler called", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const mockFile = new File(["test content"], "recovery-codes.txt", {
+      type: "text/plain",
+    });
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockResolvedValue(
+      mockFile
+    );
+
+    // Mock DOM APIs
+    const createElementSpy = vi.spyOn(document, "createElement");
+    const appendChildSpy = vi.spyOn(document.body, "appendChild");
+    const removeChildSpy = vi.spyOn(document.body, "removeChild");
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock-url");
+    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL");
+
+    const user = userEvent.setup();
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    // Wait for master key to load
+    await waitFor(() => {
+      expect(secretApi.getSecretMasterKey).toHaveBeenCalledWith("secret-1");
+    });
+
+    // Click download button
+    const downloadButton = screen.getByRole("button", {
+      name: /Download recovery-codes.txt/,
+    });
+    await user.click(downloadButton);
+
+    // Verify download flow
+    await waitFor(() => {
+      expect(secretApi.downloadAndDecryptAttachment).toHaveBeenCalledWith(
+        "att-1",
+        mockMasterKey
+      );
+    });
+
+    expect(createObjectURLSpy).toHaveBeenCalledWith(mockFile);
+    expect(createElementSpy).toHaveBeenCalledWith("a");
+    expect(appendChildSpy).toHaveBeenCalled();
+    expect(removeChildSpy).toHaveBeenCalled();
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
+
+    // Cleanup
+    createObjectURLSpy.mockRestore();
+    revokeObjectURLSpy.mockRestore();
+    createElementSpy.mockRestore();
+    appendChildSpy.mockRestore();
+    removeChildSpy.mockRestore();
+  });
+
+  it("should handle download failure with alert", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockRejectedValue(
+      new Error("Download failed")
+    );
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const user = userEvent.setup();
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(secretApi.getSecretMasterKey).toHaveBeenCalled();
+    });
+
+    const downloadButton = screen.getByRole("button", {
+      name: /Download recovery-codes.txt/,
+    });
+    await user.click(downloadButton);
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith("Failed to download attachment");
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Download failed:",
+      expect.any(Error)
+    );
+
+    alertSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should delete attachment with confirmation", async () => {
+    const mockMasterKey = {} as CryptoKey;
+
+    // Initial load with attachment
+    vi.mocked(secretApi.getSecretById)
+      .mockResolvedValueOnce(mockSecret)
+      .mockResolvedValueOnce({ ...mockSecret, attachments: [] }); // After delete
+
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(secretApi.deleteAttachment).mockResolvedValue();
+
+    const user = userEvent.setup();
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    // Wait for attachments to load
+    await waitFor(() => {
+      expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
+    });
+
+    const deleteButton = screen.getByRole("button", {
+      name: /Delete recovery-codes.txt/,
+    });
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(confirmSpy).toHaveBeenCalledWith(
+        "Are you sure you want to delete this attachment?"
+      );
+    });
+
+    expect(secretApi.deleteAttachment).toHaveBeenCalledWith("att-1");
+
+    // Verify secret was refreshed (second call to getSecretById)
+    await waitFor(() => {
+      expect(secretApi.getSecretById).toHaveBeenCalledTimes(2);
+    });
+
+    confirmSpy.mockRestore();
+  });
+
+  it("should cancel delete when confirmation rejected", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    vi.mocked(secretApi.deleteAttachment).mockResolvedValue();
+
+    const user = userEvent.setup();
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
+    });
+
+    const deleteButton = screen.getByRole("button", {
+      name: /Delete recovery-codes.txt/,
+    });
+    await user.click(deleteButton);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(secretApi.deleteAttachment).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it("should handle delete failure with alert", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.mocked(secretApi.deleteAttachment).mockRejectedValue(
+      new Error("Delete failed")
+    );
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const user = userEvent.setup();
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
+    });
+
+    const deleteButton = screen.getByRole("button", {
+      name: /Delete recovery-codes.txt/,
+    });
+    await user.click(deleteButton);
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith("Failed to delete attachment");
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Delete failed:",
+      expect.any(Error)
+    );
+
+    confirmSpy.mockRestore();
+    alertSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should open preview modal for previewable attachment", async () => {
+    // Use mock secret with image attachment
+    const secretWithImage = {
+      ...mockSecret,
+      attachments: [
+        {
+          id: "att-img",
+          filename: "image.png",
+          size: 5000,
+          mime_type: "image/png",
+          created_at: "2025-01-01T10:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(secretWithImage);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const mockFile = new File(["test content"], "image.png", {
+      type: "image/png",
+    });
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockResolvedValue(
+      mockFile
+    );
+
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock-url");
+
+    const user = userEvent.setup();
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/image.png/)).toBeInTheDocument();
+    });
+
+    const previewButton = screen.getByRole("button", {
+      name: /Preview image.png/,
+    });
+    await user.click(previewButton);
+
+    await waitFor(() => {
+      expect(secretApi.downloadAndDecryptAttachment).toHaveBeenCalledWith(
+        "att-img",
+        mockMasterKey
+      );
+    });
+
+    expect(createObjectURLSpy).toHaveBeenCalledWith(mockFile);
+
+    // Preview modal should be visible
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    createObjectURLSpy.mockRestore();
+  });
+
+  it("should handle preview failure with alert", async () => {
+    const secretWithImage = {
+      ...mockSecret,
+      attachments: [
+        {
+          id: "att-img",
+          filename: "image.png",
+          size: 5000,
+          mime_type: "image/png",
+          created_at: "2025-01-01T10:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(secretWithImage);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockRejectedValue(
+      new Error("Preview failed")
+    );
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const user = userEvent.setup();
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/image.png/)).toBeInTheDocument();
+    });
+
+    const previewButton = screen.getByRole("button", {
+      name: /Preview image.png/,
+    });
+    await user.click(previewButton);
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith("Failed to load preview");
+    });
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Preview failed:",
+      expect.any(Error)
+    );
+
+    alertSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should cleanup preview URL when modal is closed", async () => {
+    const secretWithImage = {
+      ...mockSecret,
+      attachments: [
+        {
+          id: "att-img",
+          filename: "image.png",
+          size: 5000,
+          mime_type: "image/png",
+          created_at: "2025-01-01T10:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(secretWithImage);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const mockFile = new File(["test content"], "image.png", {
+      type: "image/png",
+    });
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockResolvedValue(
+      mockFile
+    );
+
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock-url");
+    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL");
+
+    const user = userEvent.setup();
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/image.png/)).toBeInTheDocument();
+    });
+
+    const previewButton = screen.getByRole("button", {
+      name: /Preview image.png/,
+    });
+    await user.click(previewButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    // Close modal
+    const closeButton = screen.getByRole("button", { name: /close preview/i });
+    await user.click(closeButton);
+
+    await waitFor(() => {
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
+    });
+
+    createObjectURLSpy.mockRestore();
+    revokeObjectURLSpy.mockRestore();
+  });
+
+  it("should cleanup preview URL on component unmount", async () => {
+    const secretWithImage = {
+      ...mockSecret,
+      attachments: [
+        {
+          id: "att-img",
+          filename: "image.png",
+          size: 5000,
+          mime_type: "image/png",
+          created_at: "2025-01-01T10:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(secretWithImage);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    const mockFile = new File(["test content"], "image.png", {
+      type: "image/png",
+    });
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockResolvedValue(
+      mockFile
+    );
+
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock-url-unmount");
+    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL");
+
+    const user = userEvent.setup();
+
+    const { unmount } = renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/image.png/)).toBeInTheDocument();
+    });
+
+    const previewButton = screen.getByRole("button", {
+      name: /Preview image.png/,
+    });
+    await user.click(previewButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    // Unmount component
+    unmount();
+
+    // Verify URL was revoked on unmount
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url-unmount");
+
+    createObjectURLSpy.mockRestore();
+    revokeObjectURLSpy.mockRestore();
+  });
+
+  it("should use internationalized error messages", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
+
+    const mockMasterKey = {} as CryptoKey;
+    vi.mocked(secretApi.getSecretMasterKey).mockResolvedValue(mockMasterKey);
+
+    vi.mocked(secretApi.downloadAndDecryptAttachment).mockRejectedValue(
+      new Error("Network error")
+    );
+
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const user = userEvent.setup();
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/recovery-codes.txt/)).toBeInTheDocument();
+    });
+
+    const downloadButton = screen.getByRole("button", {
+      name: /Download recovery-codes.txt/,
+    });
+    await user.click(downloadButton);
+
+    await waitFor(() => {
+      // i18n._(msg`...`) returns the English string in tests
+      expect(alertSpy).toHaveBeenCalledWith("Failed to download attachment");
+    });
+
+    alertSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });

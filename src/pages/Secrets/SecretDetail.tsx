@@ -3,11 +3,31 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
+import { msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import {
   getSecretById,
   ApiError,
+  getSecretMasterKey,
+  downloadAndDecryptAttachment,
+  deleteAttachment,
   type SecretDetail as SecretDetailType,
 } from "../../services/secretApi";
+import { AttachmentList } from "../../components/AttachmentList";
+import { AttachmentPreview } from "../../components/AttachmentPreview";
+
+/**
+ * Helper function to trigger browser download
+ * Creates a temporary link element, clicks it, and cleans up
+ */
+function triggerDownload(url: string, filename: string): void {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 /**
  * Secret Detail Page
@@ -17,10 +37,26 @@ import {
  */
 export function SecretDetail() {
   const { id } = useParams<{ id: string }>();
+  const { i18n } = useLingui();
   const [secret, setSecret] = useState<SecretDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [masterKey, setMasterKey] = useState<CryptoKey | null>(null);
+  const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{
+    file: File;
+    url: string;
+  } | null>(null);
+
+  // Cleanup blob URL when previewFile changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewFile) {
+        URL.revokeObjectURL(previewFile.url);
+      }
+    };
+  }, [previewFile]);
 
   useEffect(() => {
     const loadSecret = async () => {
@@ -35,6 +71,17 @@ export function SecretDetail() {
         setError(null);
         const data = await getSecretById(id);
         setSecret(data);
+
+        // Load master key if secret has attachments
+        if (data.attachments && data.attachments.length > 0) {
+          try {
+            const key = await getSecretMasterKey(id);
+            setMasterKey(key);
+          } catch (keyErr) {
+            console.error("Failed to load master key:", keyErr);
+            // Non-fatal - user can still view secret details
+          }
+        }
       } catch (err) {
         if (err instanceof ApiError) {
           if (err.status === 404) {
@@ -54,6 +101,89 @@ export function SecretDetail() {
 
     loadSecret();
   }, [id]);
+
+  /**
+   * Handle attachment download
+   */
+  const handleDownload = async (
+    attachmentId: string,
+    key: CryptoKey
+  ): Promise<void> => {
+    try {
+      setAttachmentLoading(true);
+      const file = await downloadAndDecryptAttachment(attachmentId, key);
+
+      // Trigger browser download
+      const url = URL.createObjectURL(file);
+      try {
+        triggerDownload(url, file.name);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert(i18n._(msg`Failed to download attachment`));
+    } finally {
+      setAttachmentLoading(false);
+    }
+  };
+
+  /**
+   * Handle attachment delete
+   */
+  const handleDelete = async (attachmentId: string): Promise<void> => {
+    if (
+      !confirm(i18n._(msg`Are you sure you want to delete this attachment?`))
+    ) {
+      return;
+    }
+
+    try {
+      setAttachmentLoading(true);
+      await deleteAttachment(attachmentId);
+
+      // Refresh secret to update attachment list
+      if (id) {
+        const updatedSecret = await getSecretById(id);
+        setSecret(updatedSecret);
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert(i18n._(msg`Failed to delete attachment`));
+    } finally {
+      setAttachmentLoading(false);
+    }
+  };
+
+  /**
+   * Handle attachment preview
+   */
+  const handlePreview = async (
+    attachmentId: string,
+    key: CryptoKey
+  ): Promise<void> => {
+    try {
+      setAttachmentLoading(true);
+      const file = await downloadAndDecryptAttachment(attachmentId, key);
+      const url = URL.createObjectURL(file);
+      setPreviewFile({ file, url });
+    } catch (err) {
+      console.error("Preview failed:", err);
+      alert(i18n._(msg`Failed to load preview`));
+    } finally {
+      setAttachmentLoading(false);
+    }
+  };
+
+  /**
+   * Close preview modal
+   */
+  const handleClosePreview = () => {
+    if (previewFile) {
+      URL.revokeObjectURL(previewFile.url);
+      setPreviewFile(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -233,23 +363,23 @@ export function SecretDetail() {
               <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
                 Attachments ({secret.attachments.length})
               </h2>
-              <ul className="space-y-2">
-                {secret.attachments.map((attachment) => (
-                  <li
-                    key={attachment.id}
-                    className="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700"
-                  >
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-white">
-                        📄 {attachment.filename}
-                      </p>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {(attachment.size / 1024).toFixed(1)} KB
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {masterKey ? (
+                <AttachmentList
+                  attachments={secret.attachments}
+                  masterKey={masterKey}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                  onPreview={handlePreview}
+                  isLoading={attachmentLoading}
+                />
+              ) : (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                  <p className="text-sm">
+                    ⚠️ Unable to load encryption key for attachments. Please
+                    refresh the page or contact support if the problem persists.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -312,6 +442,18 @@ export function SecretDetail() {
           </div>
         </div>
       </div>
+
+      {/* Attachment Preview Modal */}
+      {previewFile && (
+        <AttachmentPreview
+          file={previewFile.file}
+          fileUrl={previewFile.url}
+          onClose={handleClosePreview}
+          onDownload={() => {
+            triggerDownload(previewFile.url, previewFile.file.name);
+          }}
+        />
+      )}
     </div>
   );
 }
