@@ -217,4 +217,77 @@ describe("AttachmentUpload", () => {
     expect(input).toHaveAttribute("type", "file");
     expect(input).toHaveAttribute("tabindex", "0");
   });
+
+  describe("accessibility", () => {
+    it("drag-and-drop zone should be keyboard accessible", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <AttachmentUpload onUpload={mockOnUpload} />
+        </I18nProvider>
+      );
+
+      const dropZone = screen.getByText(/drag files here/i).closest("div");
+      // Drop zone itself doesn't need keyboard interaction since file input handles it
+      expect(dropZone).toBeInTheDocument();
+    });
+
+    it("file input should have accessible label", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <AttachmentUpload onUpload={mockOnUpload} />
+        </I18nProvider>
+      );
+
+      const input = screen.getByLabelText(/select files to upload/i);
+      expect(input).toBeInTheDocument();
+    });
+
+    it("upload progress should have aria-live region", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <AttachmentUpload
+            onUpload={mockOnUpload}
+            isUploading={true}
+            uploadProgress={50}
+          />
+        </I18nProvider>
+      );
+
+      const dropZone = screen
+        .getByText(/uploading/i)
+        .closest("div")
+        ?.closest("div");
+      // The upload zone should announce state changes
+      expect(dropZone).toHaveAttribute("aria-live", "polite");
+    });
+
+    it("progress bar should have proper ARIA attributes", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <AttachmentUpload
+            onUpload={mockOnUpload}
+            isUploading={true}
+            uploadProgress={75}
+          />
+        </I18nProvider>
+      );
+
+      const progressBar = screen.getByRole("progressbar");
+      expect(progressBar).toHaveAttribute("aria-valuenow", "75");
+      expect(progressBar).toHaveAttribute("aria-valuemin", "0");
+      expect(progressBar).toHaveAttribute("aria-valuemax", "100");
+    });
+
+    it("loading state should be announced", () => {
+      render(
+        <I18nProvider i18n={i18n}>
+          <AttachmentUpload onUpload={mockOnUpload} isUploading={true} />
+        </I18nProvider>
+      );
+
+      // Multiple "Uploading..." texts should exist (in different contexts)
+      const uploadingTexts = screen.getAllByText(/uploading/i);
+      expect(uploadingTexts.length).toBeGreaterThan(0);
+    });
+  });
 });

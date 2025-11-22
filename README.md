@@ -347,6 +347,18 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+**Quick Links:**
+
+- **TDD Workflow**: [docs/development/TDD_WORKFLOW.md](docs/development/TDD_WORKFLOW.md) - Learn how to practice Test-Driven Development with Git verification
+- **Copilot Instructions**: [.github/copilot-instructions.md](.github/copilot-instructions.md) - AI development guidelines
+
+**Key Requirements:**
+
+- Test-Driven Development (TDD) is **mandatory** - tests must be written before implementation
+- PRs must be ≤600 lines (excluding generated files)
+- One PR = one topic (no mixing features/fixes/docs)
+- All commits must be GPG-signed
+
 ### Branch Naming Convention
 
 - `feature/` - New features
