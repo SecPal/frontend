@@ -190,7 +190,7 @@ export function SecretForm({
             aria-label={showPassword ? "Hide password" : "Show password"}
             className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
-            {showPassword ? "👁️‍🗨️" : "👁️"}
+            {showPassword ? "Hide" : "Show"}
           </button>
           <button
             type="button"
@@ -199,7 +199,7 @@ export function SecretForm({
             title="Generate secure password"
             className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
-            🔄
+            Generate
           </button>
         </div>
 
@@ -312,7 +312,7 @@ export function SecretForm({
                     aria-label={`Remove tag ${tag}`}
                     className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                   >
-                    ✕
+                    ×
                   </button>
                 </span>
               ))}
