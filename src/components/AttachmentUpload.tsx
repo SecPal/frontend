@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 import { Button } from "./button";
 
@@ -26,11 +27,10 @@ export interface AttachmentUploadProps {
 const ALLOWED_MIME_TYPES = [
   // Images
   "image/jpeg",
-  "image/jpg",
   "image/png",
   "image/gif",
   "image/webp",
-  "image/svg+xml",
+  "image/svg+xml", // ⚠️ Note: SVG files can contain embedded JavaScript. Ensure proper handling/sanitization when rendering.
   // PDFs
   "application/pdf",
   // Documents
@@ -96,6 +96,7 @@ export function AttachmentUpload({
   isUploading = false,
   uploadProgress = 0,
 }: AttachmentUploadProps) {
+  const { i18n } = useLingui();
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,14 +111,18 @@ export function AttachmentUpload({
       // Validate file type
       if (!isValidFileType(file)) {
         onError?.(
-          `Invalid file type: ${file.name}. Only images, PDFs, and documents are allowed.`
+          i18n._(
+            msg`Invalid file type: ${file.name}. Only images, PDFs, and documents are allowed.`
+          )
         );
         return;
       }
 
       // Validate file size
       if (!isValidFileSize(file)) {
-        onError?.(`File too large: ${file.name}. Maximum size is 10MB.`);
+        onError?.(
+          i18n._(msg`File too large: ${file.name}. Maximum size is 10MB.`)
+        );
         return;
       }
 
@@ -193,6 +198,8 @@ export function AttachmentUpload({
               : "hover:border-zinc-400 dark:hover:border-zinc-600"
           }
         `}
+        aria-live="polite"
+        aria-atomic="true"
       >
         {/* Icon */}
         <CloudArrowUpIcon className="mx-auto h-12 w-12 text-zinc-400 dark:text-zinc-500" />

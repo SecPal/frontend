@@ -185,6 +185,7 @@ export function AttachmentPreview({
               src={fileUrl}
               title="PDF Preview"
               className="h-full w-full"
+              sandbox="allow-scripts"
             />
           </div>
         )}

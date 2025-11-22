@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router";
+import { msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import {
   getSecretById,
   ApiError,
@@ -15,6 +17,19 @@ import { AttachmentList } from "../../components/AttachmentList";
 import { AttachmentPreview } from "../../components/AttachmentPreview";
 
 /**
+ * Helper function to trigger browser download
+ * Creates a temporary link element, clicks it, and cleans up
+ */
+function triggerDownload(url: string, filename: string): void {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/**
  * Secret Detail Page
  *
  * Displays full details of a secret including password (with show/hide toggle),
@@ -22,6 +37,7 @@ import { AttachmentPreview } from "../../components/AttachmentPreview";
  */
 export function SecretDetail() {
   const { id } = useParams<{ id: string }>();
+  const { i18n } = useLingui();
   const [secret, setSecret] = useState<SecretDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +48,15 @@ export function SecretDetail() {
     file: File;
     url: string;
   } | null>(null);
+
+  // Cleanup blob URL when previewFile changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewFile) {
+        URL.revokeObjectURL(previewFile.url);
+      }
+    };
+  }, [previewFile]);
 
   useEffect(() => {
     const loadSecret = async () => {
@@ -90,16 +115,14 @@ export function SecretDetail() {
 
       // Trigger browser download
       const url = URL.createObjectURL(file);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      try {
+        triggerDownload(url, file.name);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
     } catch (err) {
       console.error("Download failed:", err);
-      alert("Failed to download attachment");
+      alert(i18n._(msg`Failed to download attachment`));
     } finally {
       setAttachmentLoading(false);
     }
@@ -109,7 +132,9 @@ export function SecretDetail() {
    * Handle attachment delete
    */
   const handleDelete = async (attachmentId: string): Promise<void> => {
-    if (!confirm("Are you sure you want to delete this attachment?")) {
+    if (
+      !confirm(i18n._(msg`Are you sure you want to delete this attachment?`))
+    ) {
       return;
     }
 
@@ -124,7 +149,7 @@ export function SecretDetail() {
       }
     } catch (err) {
       console.error("Delete failed:", err);
-      alert("Failed to delete attachment");
+      alert(i18n._(msg`Failed to delete attachment`));
     } finally {
       setAttachmentLoading(false);
     }
@@ -144,7 +169,7 @@ export function SecretDetail() {
       setPreviewFile({ file, url });
     } catch (err) {
       console.error("Preview failed:", err);
-      alert("Failed to load preview");
+      alert(i18n._(msg`Failed to load preview`));
     } finally {
       setAttachmentLoading(false);
     }
@@ -333,19 +358,28 @@ export function SecretDetail() {
           )}
 
           {/* Attachments */}
-          {secret.attachments && secret.attachments.length > 0 && masterKey && (
+          {secret.attachments && secret.attachments.length > 0 && (
             <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
                 Attachments ({secret.attachments.length})
               </h2>
-              <AttachmentList
-                attachments={secret.attachments}
-                masterKey={masterKey}
-                onDownload={handleDownload}
-                onDelete={handleDelete}
-                onPreview={handlePreview}
-                isLoading={attachmentLoading}
-              />
+              {masterKey ? (
+                <AttachmentList
+                  attachments={secret.attachments}
+                  masterKey={masterKey}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                  onPreview={handlePreview}
+                  isLoading={attachmentLoading}
+                />
+              ) : (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                  <p className="text-sm">
+                    ⚠️ Unable to load encryption key for attachments. Please
+                    refresh the page or contact support if the problem persists.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -416,13 +450,7 @@ export function SecretDetail() {
           fileUrl={previewFile.url}
           onClose={handleClosePreview}
           onDownload={() => {
-            // Trigger browser download
-            const a = document.createElement("a");
-            a.href = previewFile.url;
-            a.download = previewFile.file.name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            triggerDownload(previewFile.url, previewFile.file.name);
           }}
         />
       )}
