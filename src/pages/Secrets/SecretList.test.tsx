@@ -315,4 +315,53 @@ describe("SecretList", () => {
     expect(screen.getByText(/Secret 0/)).toBeInTheDocument();
     expect(screen.queryByText(/Secret 20/)).not.toBeInTheDocument();
   });
+
+  it("should show ellipsis pagination for large datasets", async () => {
+    // Create 200 secrets (10 pages)
+    const manySecrets: Secret[] = Array.from({ length: 200 }, (_, i) => ({
+      id: `secret-${i}`,
+      title: `Secret ${i}`,
+      created_at: "2025-01-01T10:00:00Z",
+      updated_at: "2025-11-15T14:30:00Z",
+    }));
+
+    vi.mocked(secretApi.fetchSecrets).mockResolvedValue(manySecrets);
+    const user = userEvent.setup();
+
+    render(
+      <BrowserRouter>
+        <SecretList />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Secret 0/)).toBeInTheDocument();
+    });
+
+    // Should show ellipsis pagination (1 ... current ... 10)
+    expect(screen.getByRole("button", { name: "Page 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Page 2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Page 10" })).toBeInTheDocument();
+
+    // Should show ellipsis for pages 3-9
+    expect(screen.getByText("...")).toBeInTheDocument();
+
+    // Navigate to middle page (5)
+    const page5Button = screen.getByRole("button", { name: "Page 2" });
+    await user.click(page5Button);
+    const page3Button = screen.getByRole("button", { name: "Page 3" });
+    await user.click(page3Button);
+    const page4Button = screen.getByRole("button", { name: "Page 4" });
+    await user.click(page4Button);
+    const page5ButtonFinal = screen.getByRole("button", { name: "Page 5" });
+    await user.click(page5ButtonFinal);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Secret 80/)).toBeInTheDocument();
+    });
+
+    // Should show ellipsis on both sides: 1 ... 4 5 6 ... 10
+    const ellipses = screen.getAllByText("...");
+    expect(ellipses).toHaveLength(2); // Left and right ellipsis
+  });
 });
