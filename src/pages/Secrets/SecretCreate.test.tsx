@@ -109,6 +109,40 @@ describe("SecretCreate", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
+  it("should display 422 validation errors", async () => {
+    const mockCreateSecret = vi.mocked(secretApi.createSecret);
+    const validationError = Object.assign(new Error("Validation failed"), {
+      status: 422,
+      errors: {
+        title: ["Title is too long"],
+        url: ["Invalid URL format"],
+      },
+    });
+    mockCreateSecret.mockRejectedValue(validationError);
+
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    // Fill in form
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "Test Secret" },
+    });
+
+    // Submit
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/title: Title is too long; url: Invalid URL format/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("should navigate to secrets list on cancel", () => {
     render(
       <BrowserRouter>

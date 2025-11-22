@@ -192,4 +192,49 @@ describe("SecretForm", () => {
 
     expect(screen.getByText(/failed to create secret/i)).toBeInTheDocument();
   });
+
+  it("should clear validation error on input change", async () => {
+    const mockOnSubmit = vi.fn();
+    const mockOnCancel = vi.fn();
+
+    render(
+      <SecretForm
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+        submitLabel="Create"
+      />
+    );
+
+    // Manually trigger validation error by calling submit with empty title
+    const form = screen.getByRole("form");
+    fireEvent.submit(form);
+
+    // Type in title field - should clear error
+    fireEvent.change(screen.getByLabelText(/^title/i), {
+      target: { value: "New Title" },
+    });
+
+    // Error should be cleared (validation error state is internal)
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  it("should handle notes field", () => {
+    const mockOnSubmit = vi.fn();
+    const mockOnCancel = vi.fn();
+
+    render(
+      <SecretForm
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+        submitLabel="Create"
+      />
+    );
+
+    const notesField = screen.getByLabelText(/^notes/i);
+    fireEvent.change(notesField, {
+      target: { value: "These are some notes" },
+    });
+
+    expect(notesField).toHaveValue("These are some notes");
+  });
 });

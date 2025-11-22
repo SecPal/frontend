@@ -76,7 +76,7 @@ export function SecretForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" role="form">
       {/* Error Message */}
       {(error || validationError) && (
         <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-400">

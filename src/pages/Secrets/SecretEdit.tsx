@@ -90,6 +90,12 @@ export function SecretEdit() {
         } else {
           setError(err.message);
         }
+      } else if (typeof err === "object" && err !== null && "status" in err && err.status === 422 && "errors" in err) {
+        // Handle error objects with validation errors
+        const errorMessages = Object.entries(err.errors as Record<string, string[]>)
+          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+          .join("; ");
+        setError(errorMessages);
       } else {
         setError("An unexpected error occurred");
       }

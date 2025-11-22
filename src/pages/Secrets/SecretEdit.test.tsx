@@ -191,4 +191,63 @@ describe("SecretEdit", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith("/secrets/test-id-123");
   });
+
+  it("should display error when loading fails", async () => {
+    const mockGetSecretById = vi.mocked(secretApi.getSecretById);
+    mockGetSecretById.mockRejectedValue(new Error("Network error"));
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to load secret/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should display 422 validation errors on update", async () => {
+    const mockGetSecretById = vi.mocked(secretApi.getSecretById);
+    const mockUpdateSecret = vi.mocked(secretApi.updateSecret);
+
+    mockGetSecretById.mockResolvedValue({
+      id: "test-id-123",
+      title: "Test Secret",
+      username: undefined,
+      password: undefined,
+      url: undefined,
+      notes: undefined,
+      tags: [],
+      expires_at: undefined,
+      created_at: "2025-11-22T10:00:00Z",
+      updated_at: "2025-11-22T10:00:00Z",
+    });
+
+    const validationError = Object.assign(new Error("Validation failed"), {
+      status: 422,
+      errors: {
+        url: ["Invalid URL format"],
+      },
+    });
+    mockUpdateSecret.mockRejectedValue(validationError);
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    // Wait for form to load
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^title/i)).toHaveValue("Test Secret");
+    });
+
+    // Submit
+    fireEvent.click(screen.getByRole("button", { name: /update/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/url: Invalid URL format/i)).toBeInTheDocument();
+    });
+  });
 });
