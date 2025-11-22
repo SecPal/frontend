@@ -408,7 +408,7 @@ export function SecretDetail() {
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 Access Control
               </h2>
-              {secret.owner && (
+              {secret.owner != null && (
                 <button
                   onClick={() => setShareDialogOpen(true)}
                   className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
@@ -427,7 +427,7 @@ export function SecretDetail() {
           {/* Metadata */}
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <div className="grid gap-2 text-sm">
-              {secret.owner && (
+              {secret.owner != null && (
                 <p className="text-zinc-600 dark:text-zinc-400">
                   <span className="font-medium">Owner:</span>{" "}
                   {secret.owner.name}

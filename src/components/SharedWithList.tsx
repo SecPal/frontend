@@ -106,6 +106,7 @@ export function SharedWithList({
                 onClick={() => handleRevoke(share)}
                 disabled={revoking === share.id}
                 className="ml-4"
+                aria-label={i18n._(msg`Revoke access for ${name}`)}
               >
                 {revoking === share.id ? (
                   <Trans>Revoking...</Trans>
