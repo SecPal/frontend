@@ -1,8 +1,12 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Link } from "react-router";
+import { Link } from "../../components/link";
 import type { Secret } from "../../services/secretApi";
+
+// Expiring soon threshold (shared constant)
+const EXPIRING_SOON_DAYS = 7;
+const EXPIRING_SOON_MS = EXPIRING_SOON_DAYS * 24 * 60 * 60 * 1000;
 
 export interface SecretCardProps {
   secret: Secret;
@@ -21,11 +25,11 @@ export function SecretCard({ secret }: SecretCardProps) {
   const isExpiringSoon =
     !isExpired &&
     expires &&
-    expires < new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    expires < new Date(now.getTime() + EXPIRING_SOON_MS);
 
   return (
     <Link
-      to={`/secrets/${secret.id}`}
+      href={`/secrets/${secret.id}`}
       className="block rounded-lg border border-zinc-950/10 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-zinc-900"
     >
       {/* Header with title and status badges */}

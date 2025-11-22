@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router";
+import { useParams } from "react-router";
+import { Link } from "../../components/link";
 import {
   getSecretById,
   ApiError,
@@ -78,7 +79,7 @@ export function SecretDetail() {
             {error || "Secret not found"}
           </p>
           <Link
-            to="/secrets"
+            href="/secrets"
             className="inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
           >
             Back to Secrets
@@ -98,7 +99,7 @@ export function SecretDetail() {
         <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="mb-4">
             <Link
-              to="/secrets"
+              href="/secrets"
               className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
             >
               <span>&lt;</span> Back

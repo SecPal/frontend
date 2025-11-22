@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useMemo } from "react";
-import { fetchSecrets, ApiError, type Secret } from "../../services/secretApi";
+import { fetchSecrets, type Secret, ApiError } from "../../services/secretApi";
 import { SecretCard } from "./SecretCard";
+
+// Expiring soon threshold (shared constant)
+const EXPIRING_SOON_DAYS = 7;
+const EXPIRING_SOON_MS = EXPIRING_SOON_DAYS * 24 * 60 * 60 * 1000;
 
 type ViewMode = "grid" | "list";
 type ExpirationFilter = "all" | "expired" | "expiring_soon" | "no_expiration";
@@ -86,9 +90,7 @@ export function SecretList() {
         if (expirationFilter === "expired") {
           if (!expires || expires >= now) return false;
         } else if (expirationFilter === "expiring_soon") {
-          const sevenDaysFromNow = new Date(
-            now.getTime() + 7 * 24 * 60 * 60 * 1000
-          );
+          const sevenDaysFromNow = new Date(now.getTime() + EXPIRING_SOON_MS);
           if (!expires || expires < now || expires > sevenDaysFromNow)
             return false;
         } else if (expirationFilter === "no_expiration") {
@@ -275,23 +277,66 @@ export function SecretList() {
                   &lt;
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                        currentPage === page
-                          ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                          : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                      }`}
-                      aria-label={`Page ${page}`}
-                      aria-current={currentPage === page ? "page" : undefined}
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
+                {/* Pagination with ellipsis for large datasets */}
+                {(() => {
+                  const maxVisible = 7; // Show max 7 page buttons
+                  const pages: (number | string)[] = [];
+
+                  if (totalPages <= maxVisible) {
+                    // Show all pages if total is small
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    // Always show first page
+                    pages.push(1);
+
+                    // Calculate range around current page
+                    const leftBound = Math.max(2, currentPage - 1);
+                    const rightBound = Math.min(
+                      totalPages - 1,
+                      currentPage + 1
+                    );
+
+                    // Left ellipsis
+                    if (leftBound > 2) pages.push("...");
+
+                    // Pages around current
+                    for (let i = leftBound; i <= rightBound; i++) {
+                      pages.push(i);
+                    }
+
+                    // Right ellipsis
+                    if (rightBound < totalPages - 1) pages.push("...");
+
+                    // Always show last page
+                    pages.push(totalPages);
+                  }
+
+                  return pages.map((page, idx) =>
+                    typeof page === "number" ? (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                            : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        }`}
+                        aria-label={`Page ${page}`}
+                        aria-current={currentPage === page ? "page" : undefined}
+                      >
+                        {page}
+                      </button>
+                    ) : (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="px-2 py-2 text-sm text-zinc-500 dark:text-zinc-500"
+                        aria-hidden="true"
+                      >
+                        {page}
+                      </span>
+                    )
+                  );
+                })()}
 
                 <button
                   onClick={() =>

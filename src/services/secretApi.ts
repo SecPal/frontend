@@ -31,8 +31,6 @@ export interface SecretDetail extends Secret {
   };
   attachments?: SecretAttachment[];
   shares?: SecretShare[];
-  attachment_count?: number;
-  is_shared?: boolean;
 }
 
 /**
