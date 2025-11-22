@@ -6,6 +6,21 @@
  */
 
 /**
+ * Get a cryptographically secure random integer in range [0, max)
+ * @param max - Upper bound (exclusive)
+ * @returns Random integer
+ */
+function getSecureRandomInt(max: number): number {
+  const randomBuffer = new Uint32Array(1);
+  crypto.getRandomValues(randomBuffer);
+  const randomValue = randomBuffer[0];
+  if (randomValue === undefined) {
+    throw new Error("Failed to generate random value");
+  }
+  return Math.floor((randomValue / (0xffffffff + 1)) * max);
+}
+
+/**
  * Generate a secure random password
  *
  * @param length - Password length (default: 16)
@@ -17,6 +32,10 @@
  * const password = generatePassword();
  * console.log(password); // e.g., "Xy7#aB2$cD9!eF1@"
  * ```
+ *
+ * @security
+ * Uses `crypto.getRandomValues()` for cryptographically secure random number generation.
+ * All randomness (character selection and shuffling) is cryptographically secure.
  */
 export function generatePassword(
   length: number = 16,
@@ -44,24 +63,22 @@ export function generatePassword(
 
   if (uppercase) {
     charset += uppercaseChars;
-    const char =
-      uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)];
+    const char = uppercaseChars[getSecureRandomInt(uppercaseChars.length)];
     if (char) requiredChars.push(char);
   }
   if (lowercase) {
     charset += lowercaseChars;
-    const char =
-      lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)];
+    const char = lowercaseChars[getSecureRandomInt(lowercaseChars.length)];
     if (char) requiredChars.push(char);
   }
   if (numbers) {
     charset += numberChars;
-    const char = numberChars[Math.floor(Math.random() * numberChars.length)];
+    const char = numberChars[getSecureRandomInt(numberChars.length)];
     if (char) requiredChars.push(char);
   }
   if (symbols) {
     charset += symbolChars;
-    const char = symbolChars[Math.floor(Math.random() * symbolChars.length)];
+    const char = symbolChars[getSecureRandomInt(symbolChars.length)];
     if (char) requiredChars.push(char);
   }
 
@@ -79,20 +96,15 @@ export function generatePassword(
 
   const password = [...requiredChars];
   for (let i = 0; i < remainingLength; i++) {
-    const randomIndex = Math.floor(Math.random() * charset.length);
+    const randomIndex = getSecureRandomInt(charset.length);
     const char = charset[randomIndex];
     if (char) password.push(char);
   }
 
-  // Shuffle the password array
+  // Shuffle the password array (Fisher-Yates)
   for (let i = password.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = password[i];
-    const swap = password[j];
-    if (temp && swap) {
-      password[i] = swap;
-      password[j] = temp;
-    }
+    const j = getSecureRandomInt(i + 1);
+    [password[i], password[j]] = [password[j]!, password[i]!];
   }
 
   return password.join("");
