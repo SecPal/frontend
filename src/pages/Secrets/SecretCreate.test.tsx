@@ -154,4 +154,33 @@ describe("SecretCreate", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith("/secrets");
   });
+
+  it("should handle non-ApiError with validation format on create", async () => {
+    const mockCreateSecret = vi.mocked(secretApi.createSecret);
+    mockCreateSecret.mockRejectedValueOnce({
+      status: 422,
+      errors: {
+        title: ["Title is required"],
+        url: ["Invalid URL format"],
+      },
+    });
+
+    render(
+      <BrowserRouter>
+        <SecretCreate />
+      </BrowserRouter>
+    );
+
+    // Fill in form
+    fireEvent.change(screen.getByLabelText(/title/i), {
+      target: { value: "Test" },
+    });
+
+    // Submit
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/title: Title is required/i)).toBeInTheDocument();
+    });
+  });
 });

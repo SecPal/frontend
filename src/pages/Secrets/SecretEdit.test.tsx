@@ -252,4 +252,129 @@ describe("SecretEdit", () => {
       expect(screen.getByText(/url: Invalid URL format/i)).toBeInTheDocument();
     });
   });
+
+  it("should handle missing ID gracefully", () => {
+    // Mock useParams to return no ID
+    vi.mocked(secretApi.getSecretById).mockResolvedValueOnce(
+      {} as secretApi.SecretDetail
+    );
+
+    // Temporarily override mockParams
+    const originalParams = mockParams.id;
+    // @ts-expect-error - Testing missing ID scenario
+    mockParams.id = undefined;
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    expect(screen.getByText(/Secret ID is missing/i)).toBeInTheDocument();
+
+    // Restore
+    mockParams.id = originalParams;
+  });
+
+  it("should handle non-ApiError when loading", async () => {
+    vi.mocked(secretApi.getSecretById).mockRejectedValueOnce(
+      new Error("Network error")
+    );
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading.../i)).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Failed to load secret/i)).toBeInTheDocument();
+  });
+
+  it("should not send empty password on update", async () => {
+    const mockSecret: secretApi.SecretDetail = {
+      id: "test-id-123",
+      title: "Test Secret",
+      username: "user@example.com",
+      url: undefined,
+      notes: undefined,
+      tags: [],
+      expires_at: undefined,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    };
+
+    vi.mocked(secretApi.getSecretById).mockResolvedValueOnce(mockSecret);
+    vi.mocked(secretApi.updateSecret).mockResolvedValueOnce(mockSecret);
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Test Secret")).toBeInTheDocument();
+    });
+
+    // Submit without changing password (empty string should not be sent)
+    fireEvent.click(screen.getByRole("button", { name: /update/i }));
+
+    await waitFor(() => {
+      expect(vi.mocked(secretApi.updateSecret)).toHaveBeenCalledWith(
+        "test-id-123",
+        expect.objectContaining({
+          title: "Test Secret",
+          username: "user@example.com",
+        })
+      );
+    });
+
+    // Password should NOT be in the update data
+    const updateCall = vi.mocked(secretApi.updateSecret).mock.calls[0];
+    expect(updateCall).toBeDefined();
+    expect(updateCall![1]).not.toHaveProperty("password");
+  });
+
+  it("should handle non-ApiError with validation format on update", async () => {
+    const mockSecret: secretApi.SecretDetail = {
+      id: "test-id-123",
+      title: "Test Secret",
+      username: undefined,
+      url: undefined,
+      notes: undefined,
+      tags: [],
+      expires_at: undefined,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    };
+
+    vi.mocked(secretApi.getSecretById).mockResolvedValueOnce(mockSecret);
+    vi.mocked(secretApi.updateSecret).mockRejectedValueOnce({
+      status: 422,
+      errors: {
+        title: ["Title is required"],
+      },
+    });
+
+    render(
+      <BrowserRouter>
+        <SecretEdit />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Test Secret")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /update/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/title: Title is required/i)).toBeInTheDocument();
+    });
+  });
 });
