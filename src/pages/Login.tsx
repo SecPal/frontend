@@ -42,7 +42,7 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="mx-auto w-full max-w-sm">
+      <div className="w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">SecPal</h1>
           <LanguageSwitcher />
