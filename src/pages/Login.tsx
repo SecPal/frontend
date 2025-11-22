@@ -63,9 +63,7 @@ export function Login() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
-              <p className="text-sm text-red-800 dark:text-red-200">
-                {error}
-              </p>
+              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
             </div>
           )}
 
@@ -101,11 +99,7 @@ export function Login() {
             />
           </Field>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full mt-2"
-          >
+          <Button type="submit" disabled={isSubmitting} className="w-full mt-2">
             {isSubmitting ? (
               <Trans id="login.submitting">Logging in...</Trans>
             ) : (
