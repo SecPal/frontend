@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#194, Part of #191) - **MERGED 22.11.2025**
+- **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#200, Part of #191) - **MERGED 22.11.2025**
   - `AttachmentUpload.tsx` component with drag-and-drop and file validation
   - `AttachmentPreview.tsx` modal for images and PDFs with zoom controls
   - Integration of `AttachmentList` component in `SecretDetail.tsx`
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Coverage: 87.95% (exceeds 80% requirement)
   - Part of Secret Management Epic #191 (Phase 3/5)
 
-- **Secret Management Frontend - Phase 2: Secret Create/Edit Forms** (#193, Part of #191) - **MERGED 22.11.2025**
+- **Secret Management Frontend - Phase 2: Secret Create/Edit Forms** (#198, Part of #191) - **MERGED 22.11.2025**
   - `SecretForm.tsx` reusable form component with validation
   - `SecretCreate.tsx` page for creating new secrets
   - `SecretEdit.tsx` page for editing existing secrets
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Routing: `/secrets/new` and `/secrets/:id/edit`
   - Part of Secret Management Epic #191 (Phase 2/5)
 
-- **Secret Management Frontend - Phase 1: Secret List & Detail Views** (#192, Part of #191) - **MERGED 22.11.2025**
+- **Secret Management Frontend - Phase 1: Secret List & Detail Views** (#197, Part of #191) - **MERGED 22.11.2025**
   - `SecretList.tsx` component with search, filtering, and pagination (20 items/page)
   - `SecretDetail.tsx` full detail view with encrypted fields
   - `SecretCard.tsx` reusable card component with badges
