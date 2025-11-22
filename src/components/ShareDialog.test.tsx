@@ -4,12 +4,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { ShareDialog } from "./ShareDialog";
-import * as shareApi from "../../services/shareApi";
-import type { SecretShare } from "../../services/secretApi";
+import * as shareApi from "../services/shareApi";
+import type { SecretShare } from "../services/secretApi";
 
-// Mock shareApi
-vi.mock("../../services/shareApi");
+// Mock shareApi functions but keep ApiError
+vi.mock("../services/shareApi", async () => {
+  const actual = await vi.importActual<typeof import("../services/shareApi")>(
+    "../services/shareApi"
+  );
+  return {
+    ...actual,
+    createShare: vi.fn(),
+  };
+});
+
+// Setup minimal i18n for tests
+i18n.loadAndActivate({ locale: "en", messages: {} });
 
 describe("ShareDialog", () => {
   const mockSecretId = "019a9b50-test-secret";
@@ -23,8 +36,8 @@ describe("ShareDialog", () => {
   ];
 
   const mockRoles = [
-    { id: "role-1", name: "Admins" },
-    { id: "role-2", name: "Managers" },
+    { id: "1", name: "Admins" },
+    { id: "2", name: "Managers" },
   ];
 
   beforeEach(() => {
@@ -34,15 +47,17 @@ describe("ShareDialog", () => {
   describe("rendering", () => {
     it("should render dialog with title", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(
@@ -52,15 +67,17 @@ describe("ShareDialog", () => {
 
     it("should not render when isOpen is false", () => {
       const { container } = render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={false}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={false}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(container).toBeEmptyDOMElement();
@@ -68,15 +85,17 @@ describe("ShareDialog", () => {
 
     it("should render user/role selector", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(screen.getByLabelText(/share with/i)).toBeInTheDocument();
@@ -84,15 +103,17 @@ describe("ShareDialog", () => {
 
     it("should render permission dropdown", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(screen.getByLabelText(/permission/i)).toBeInTheDocument();
@@ -100,15 +121,17 @@ describe("ShareDialog", () => {
 
     it("should render expiration date input", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(
@@ -118,15 +141,17 @@ describe("ShareDialog", () => {
 
     it("should render share and cancel buttons", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(
@@ -139,15 +164,17 @@ describe("ShareDialog", () => {
 
     it("should render permission level descriptions", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(
@@ -167,15 +194,17 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       const select = screen.getByLabelText(/share with/i);
@@ -188,15 +217,17 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       const select = screen.getByLabelText(/share with/i);
@@ -209,15 +240,17 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       const permSelect = screen.getByLabelText(/permission/i);
@@ -230,15 +263,17 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       const dateInput = screen.getByLabelText(/expires \(optional\)/i);
@@ -251,15 +286,17 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.click(screen.getByRole("button", { name: /cancel/i }));
@@ -282,15 +319,17 @@ describe("ShareDialog", () => {
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
@@ -311,7 +350,7 @@ describe("ShareDialog", () => {
       const user = userEvent.setup();
       const mockShare: SecretShare = {
         id: "share-1",
-        role: { id: "role-1", name: "Admins" },
+        role: { id: "1", name: "Admins" },
         permission: "admin",
         granted_by: { id: "owner-1", name: "Owner" },
         granted_at: "2025-11-22T10:00:00Z",
@@ -320,15 +359,17 @@ describe("ShareDialog", () => {
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.selectOptions(screen.getByLabelText(/share with/i), "role-1");
@@ -337,7 +378,7 @@ describe("ShareDialog", () => {
 
       await waitFor(() => {
         expect(shareApi.createShare).toHaveBeenCalledWith(mockSecretId, {
-          role_id: "role-1",
+          role_id: "1",
           permission: "admin",
         });
         expect(mockOnSuccess).toHaveBeenCalledOnce();
@@ -359,15 +400,17 @@ describe("ShareDialog", () => {
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
@@ -389,15 +432,17 @@ describe("ShareDialog", () => {
 
     it("should disable share button when no user/role selected", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(screen.getByRole("button", { name: /share/i })).toBeDisabled();
@@ -410,15 +455,17 @@ describe("ShareDialog", () => {
       );
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
@@ -435,15 +482,17 @@ describe("ShareDialog", () => {
       vi.mocked(shareApi.createShare).mockRejectedValueOnce(apiError);
 
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
@@ -458,15 +507,17 @@ describe("ShareDialog", () => {
   describe("accessibility", () => {
     it("should have aria-label on dialog", () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
       expect(screen.getByRole("dialog")).toHaveAttribute(
@@ -475,20 +526,24 @@ describe("ShareDialog", () => {
       );
     });
 
-    it("should focus first input on open", () => {
+    it("should focus first input on open", async () => {
       render(
-        <ShareDialog
-          secretId={mockSecretId}
-          secretTitle={mockSecretTitle}
-          isOpen={true}
-          onClose={mockOnClose}
-          onSuccess={mockOnSuccess}
-          users={mockUsers}
-          roles={mockRoles}
-        />
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
       );
 
-      expect(screen.getByLabelText(/share with/i)).toHaveFocus();
+      await waitFor(() => {
+        expect(screen.getByLabelText(/share with/i)).toHaveFocus();
+      });
     });
   });
 });

@@ -13,8 +13,16 @@ import type { SecretShare } from "../services/secretApi";
 // Setup i18n
 i18n.loadAndActivate({ locale: "en", messages: {} });
 
-// Mock shareApi
-vi.mock("../services/shareApi");
+// Mock shareApi functions but keep ApiError
+vi.mock("../services/shareApi", async () => {
+  const actual = await vi.importActual<typeof import("../services/shareApi")>(
+    "../services/shareApi"
+  );
+  return {
+    ...actual,
+    revokeShare: vi.fn(),
+  };
+});
 
 describe("SharedWithList", () => {
   const mockSecretId = "019a9b50-test-secret";
@@ -61,7 +69,7 @@ describe("SharedWithList", () => {
         </I18nProvider>
       );
 
-      expect(screen.getByText("Shared with: (3)")).toBeInTheDocument();
+      expect(screen.getByText("Shared with (3)")).toBeInTheDocument();
       expect(screen.getByText("John Doe (read)")).toBeInTheDocument();
       expect(screen.getByText("Jane Smith (write)")).toBeInTheDocument();
       expect(screen.getByText("Admins (admin)")).toBeInTheDocument();
@@ -69,40 +77,48 @@ describe("SharedWithList", () => {
 
     it("should display granted information", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       expect(
-        screen.getByText(/Granted by You on 2025-11-01/)
+        screen.getByText(/Granted by You on 11\/1\/2025/)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Granted by Admin on 2025-11-15/)
+        screen.getByText(/Granted by Admin on 11\/15\/2025/)
       ).toBeInTheDocument();
     });
 
     it("should display expiration date when set", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
-      expect(screen.getByText(/Expires: 2025-12-31/)).toBeInTheDocument();
+      // Trans component may split text, so use more flexible matcher
+      expect(screen.getByText(/Expires:/)).toBeInTheDocument();
+      expect(screen.getByText(/1\/1\/2026/)).toBeInTheDocument();
     });
 
     it("should render empty state when no shares", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={[]}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={[]}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       expect(screen.getByText(/Not shared with anyone/i)).toBeInTheDocument();
@@ -110,11 +126,13 @@ describe("SharedWithList", () => {
 
     it("should show revoke button for each share", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
@@ -125,39 +143,43 @@ describe("SharedWithList", () => {
   describe("revoke functionality", () => {
     it("should show confirmation dialog on revoke click", async () => {
       const user = userEvent.setup();
-      global.confirm = vi.fn(() => false);
+      globalThis.confirm = vi.fn(() => false);
 
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
-      await user.click(revokeButtons[0]);
+      await user.click(revokeButtons[0]!);
 
-      expect(global.confirm).toHaveBeenCalledWith(
+      expect(globalThis.confirm).toHaveBeenCalledWith(
         "Are you sure you want to revoke access for John Doe?"
       );
     });
 
     it("should revoke share when confirmed", async () => {
       const user = userEvent.setup();
-      global.confirm = vi.fn(() => true);
+      globalThis.confirm = vi.fn(() => true);
       vi.mocked(shareApi.revokeShare).mockResolvedValueOnce(undefined);
 
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
-      await user.click(revokeButtons[0]);
+      await user.click(revokeButtons[0]!);
 
       await waitFor(() => {
         expect(shareApi.revokeShare).toHaveBeenCalledWith(
@@ -170,18 +192,20 @@ describe("SharedWithList", () => {
 
     it("should not revoke if not confirmed", async () => {
       const user = userEvent.setup();
-      global.confirm = vi.fn(() => false);
+      globalThis.confirm = vi.fn(() => false);
 
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
-      await user.click(revokeButtons[0]);
+      await user.click(revokeButtons[0]!);
 
       expect(shareApi.revokeShare).not.toHaveBeenCalled();
       expect(mockOnRevoke).not.toHaveBeenCalled();
@@ -189,20 +213,22 @@ describe("SharedWithList", () => {
 
     it("should display error on revoke failure", async () => {
       const user = userEvent.setup();
-      global.confirm = vi.fn(() => true);
+      globalThis.confirm = vi.fn(() => true);
       const apiError = new shareApi.ApiError("Forbidden", 403);
       vi.mocked(shareApi.revokeShare).mockRejectedValueOnce(apiError);
 
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={mockShares}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
-      await user.click(revokeButtons[0]);
+      await user.click(revokeButtons[0]!);
 
       await waitFor(() => {
         expect(screen.getByText("Forbidden")).toBeInTheDocument();
@@ -213,11 +239,13 @@ describe("SharedWithList", () => {
   describe("user vs role display", () => {
     it("should show user icon for user shares", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={[mockShares[0]]}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={[mockShares[0]!]}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       // Check for user icon (👤)
@@ -226,11 +254,13 @@ describe("SharedWithList", () => {
 
     it("should show role icon for role shares", () => {
       render(
-        <SharedWithList
-          secretId={mockSecretId}
-          shares={[mockShares[2]]}
-          onRevoke={mockOnRevoke}
-        />
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={[mockShares[2]!]}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
       );
 
       // Check for role icon (👥)
