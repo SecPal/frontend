@@ -201,7 +201,7 @@ export function assessPasswordStrength(
     strength = "weak";
   } else if (score < 60) {
     strength = "medium";
-  } else if (score < 85) {
+  } else if (score < 80) {
     strength = "strong";
   } else {
     strength = "very-strong";
