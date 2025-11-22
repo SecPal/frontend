@@ -16,6 +16,45 @@ export interface Secret {
   expires_at?: string;
   created_at: string;
   updated_at: string;
+  attachment_count?: number;
+  is_shared?: boolean;
+}
+
+/**
+ * Extended Secret with additional details (used in detail view)
+ */
+export interface SecretDetail extends Secret {
+  password?: string;
+  owner?: {
+    id: string;
+    name: string;
+  };
+  attachments?: SecretAttachment[];
+  shares?: SecretShare[];
+  attachment_count?: number;
+  is_shared?: boolean;
+}
+
+/**
+ * Secret Share information
+ */
+export interface SecretShare {
+  id: string;
+  user?: {
+    id: string;
+    name: string;
+  };
+  role?: {
+    id: string;
+    name: string;
+  };
+  permission: "read" | "write" | "admin";
+  granted_by: {
+    id: string;
+    name: string;
+  };
+  granted_at: string;
+  expires_at?: string;
 }
 
 export interface SecretAttachment {
@@ -88,6 +127,47 @@ export async function fetchSecrets(): Promise<Secret[]> {
   }
 
   const result: ApiResponse<Secret[]> = await response.json();
+  return result.data;
+}
+
+/**
+ * Fetch a single secret by ID with full details
+ *
+ * @param secretId - Secret ID
+ * @returns Secret with full details including password, attachments, and shares
+ * @throws ApiError if request fails or secret not found (404)
+ *
+ * @example
+ * ```ts
+ * const secret = await getSecretById('secret-123');
+ * console.log(`Secret: ${secret.title} (${secret.attachment_count} attachments)`);
+ * ```
+ */
+export async function getSecretById(secretId: string): Promise<SecretDetail> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+
+  const response = await fetch(
+    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
+    {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+
+  const result: ApiResponse<SecretDetail> = await response.json();
   return result.data;
 }
 
