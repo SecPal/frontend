@@ -42,30 +42,36 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-md space-y-8 px-4 sm:px-0">
         <div>
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-center flex-1">SecPal</h1>
-            <LanguageSwitcher />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-center sm:text-left flex-1 order-2 sm:order-1">
+              SecPal
+            </h1>
+            <div className="order-1 sm:order-2">
+              <LanguageSwitcher />
+            </div>
           </div>
-          <h2 className="text-xl text-center mb-2">
-            <Trans>Sign in to your account</Trans>
+          <h2 className="text-xl sm:text-2xl text-center mb-3">
+            <Trans id="login.title">Login</Trans>
           </h2>
-          <p className="text-center text-zinc-600 dark:text-zinc-400">
-            <Trans>SecPal - a guard's best friend</Trans>
+          <p className="text-sm sm:text-base text-center text-zinc-600 dark:text-zinc-400">
+            <Trans id="login.subtitle">Your digital guard companion</Trans>
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 sm:p-4">
+              <p className="text-sm sm:text-base text-red-800 dark:text-red-200">
+                {error}
+              </p>
             </div>
           )}
 
           <Field>
             <Label htmlFor="email">
-              <Trans>Email address</Trans>
+              <Trans id="login.email">Email</Trans>
             </Label>
             <Input
               id="email"
@@ -75,13 +81,14 @@ export function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="your.name@secpal.app"
+              className="text-base sm:text-sm"
             />
           </Field>
 
           <Field>
             <Label htmlFor="password">
-              <Trans>Password</Trans>
+              <Trans id="login.password">Password</Trans>
             </Label>
             <Input
               id="password"
@@ -92,14 +99,19 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              className="text-base sm:text-sm"
             />
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full mt-6 sm:mt-8 py-3 sm:py-2.5 text-base sm:text-sm"
+          >
             {isSubmitting ? (
-              <Trans>Signing in...</Trans>
+              <Trans id="login.submitting">Logging in...</Trans>
             ) : (
-              <Trans>Sign in</Trans>
+              <Trans id="login.submit">Log in</Trans>
             )}
           </Button>
         </form>

@@ -17,7 +17,7 @@ export async function activateLocale(locale: string) {
   try {
     // Use dynamic import with template literal for scalability
     const messagesModule: { messages: Record<string, string | string[]> } =
-      await import(`./locales/${selectedLocale}/messages.mjs`);
+      await import(`./locales/${selectedLocale}/messages.js`);
 
     i18n.load(selectedLocale, messagesModule.messages);
     i18n.activate(selectedLocale);
@@ -26,7 +26,7 @@ export async function activateLocale(locale: string) {
     // Fallback to default locale if not already tried
     if (selectedLocale !== defaultLocale) {
       try {
-        const messagesModule = await import("./locales/en/messages.mjs");
+        const messagesModule = await import("./locales/en/messages.js");
         i18n.load(defaultLocale, messagesModule.messages);
         i18n.activate(defaultLocale);
       } catch (fallbackError) {

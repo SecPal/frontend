@@ -25,15 +25,15 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Sign in to your account/i)).toBeInTheDocument();
+    expect(screen.getByText(/Login/i)).toBeInTheDocument();
   });
 
   it("renders login form", () => {
     renderWithI18n(<App />);
     expect(
-      screen.getByText(/SecPal - a guard's best friend/i)
+      screen.getByText(/Your digital guard companion/i)
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
   it("renders language switcher on login page", () => {

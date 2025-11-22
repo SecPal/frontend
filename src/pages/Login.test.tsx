@@ -47,11 +47,9 @@ describe("Login", () => {
     expect(
       screen.getByRole("heading", { name: /secpal/i })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /sign in/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
   });
 
   it("submits login form with email and password", async () => {
@@ -64,9 +62,9 @@ describe("Login", () => {
 
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    const submitButton = screen.getByRole("button", { name: /log in/i });
 
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
@@ -87,9 +85,9 @@ describe("Login", () => {
 
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    const submitButton = screen.getByRole("button", { name: /log in/i });
 
     fireEvent.change(emailInput, { target: { value: "wrong@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "wrongpass" } });
@@ -112,16 +110,16 @@ describe("Login", () => {
 
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
+    const submitButton = screen.getByRole("button", { name: /log in/i });
 
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);
 
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText(/signing in/i)).toBeInTheDocument();
+    expect(screen.getByText(/logging in/i)).toBeInTheDocument();
   });
 
   it("clears error message on new submission", async () => {
@@ -132,11 +130,9 @@ describe("Login", () => {
 
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole("button", { name: /sign in/i });
-
-    // First submission with error
+    const submitButton = screen.getByRole("button", { name: /log in/i });
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "wrong" } });
     fireEvent.click(submitButton);
@@ -168,7 +164,7 @@ describe("Login", () => {
   it("requires email and password fields", () => {
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
 
     expect(emailInput).toBeRequired();
@@ -178,7 +174,7 @@ describe("Login", () => {
   it("uses email input type for email field", () => {
     renderLogin();
 
-    const emailInput = screen.getByLabelText(/email address/i);
+    const emailInput = screen.getByLabelText(/email/i);
     expect(emailInput).toHaveAttribute("type", "email");
   });
 

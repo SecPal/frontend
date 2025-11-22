@@ -1,69 +1,501 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-04 05:30+0100\n"
+"POT-Creation-Date: 2025-11-22 21:06+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: de\n"
 
-#: src/App.tsx:22
+#: src/pages/ShareTarget.tsx:656
+msgid "-- Choose a Secret --"
+msgstr ""
+
+#: src/App.tsx:30
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:34
+#: src/App.tsx:44
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/App.tsx:47
+#: src/components/ShareDialog.tsx:163
+msgid "Admin"
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:125
+msgid "All synced"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:47
+msgid "App updates and maintenance notifications"
+msgstr ""
+
+#: src/pages/Secrets/SecretDetail.tsx:142
+msgid "Are you sure you want to delete this attachment?"
+msgstr ""
+
+#: src/components/SharedWithList.tsx:29
+msgid "Are you sure you want to revoke access for {name}?"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:624
+msgid "Attached Files"
+msgstr ""
+
+#: src/App.tsx:55
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
-#: src/App.tsx:13
-msgid "Welcome to SecPal"
-msgstr "Willkommen bei SecPal"
+#: src/components/ShareDialog.tsx:213
+msgid "Cancel"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:295
+msgid "Choose which notifications you want to receive"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:539
+msgid "Clear"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:328
+msgid "Clear Completed"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:107
+msgid "Cleared {count} completed upload(s)"
+msgstr ""
+
+#: src/components/AttachmentPreview.tsx:134
+#: src/components/AttachmentPreview.tsx:211
+msgid "Close"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:42
+msgid "Critical security notifications and warnings"
+msgstr ""
+
+#: src/components/AttachmentList.tsx:215
+msgid "Delete"
+msgstr ""
+
+#: src/components/AttachmentList.tsx:201
+#: src/components/AttachmentPreview.tsx:125
+#: src/components/AttachmentPreview.tsx:215
+msgid "Download"
+msgstr ""
+
+#: src/components/AttachmentPreview.tsx:202
+msgid "Download to view"
+msgstr ""
+
+#: src/components/AttachmentUpload.tsx:212
+msgid "Drag files here or click to browse"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:280
+msgid "Enable Notifications"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:266
+msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:278
+msgid "Enabling..."
+msgstr ""
+
+#: src/components/EncryptionProgress.tsx:47
+msgid "Encrypting files..."
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:547
+msgid "Errors:"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:174
+msgid "Expires (optional):"
+msgstr ""
+
+#. placeholder {0}: formatDate(share.expires_at)
+#: src/components/SharedWithList.tsx:99
+msgid "Expires: {0}"
+msgstr ""
 
 #. js-lingui-explicit-id
 #: src/components/LanguageSwitcher.tsx:18
 msgid "Failed to change language. Please try again."
 msgstr ""
 
-#: src/pages/Login.tsx:40
-msgid "Sign in to your account"
-msgstr "Melden Sie sich an"
+#: src/components/UploadStatus.tsx:119
+msgid "Failed to clear uploads"
+msgstr ""
 
-#: src/pages/Login.tsx:64
-msgid "Email address"
-msgstr "E-Mail-Adresse"
+#: src/pages/Secrets/SecretDetail.tsx:158
+msgid "Failed to delete attachment"
+msgstr ""
 
-#: src/pages/Login.tsx:82
-msgid "Password"
-msgstr "Passwort"
+#: src/components/UploadStatus.tsx:151
+msgid "Failed to delete file"
+msgstr ""
 
-#: src/pages/Login.tsx:103
-msgid "Signing in..."
-msgstr "Anmeldung läuft..."
+#: src/pages/Secrets/SecretDetail.tsx:131
+msgid "Failed to download attachment"
+msgstr ""
 
-#: src/pages/Login.tsx:105
-msgid "Sign in"
-msgstr "Anmelden"
+#: src/pages/Secrets/SecretDetail.tsx:178
+msgid "Failed to load preview"
+msgstr ""
 
-#: src/components/Header.tsx:41
+#: src/components/SharedWithList.tsx:44
+msgid "Failed to revoke access"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:90
+msgid "Failed to schedule upload retry"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:91
+msgid "Failed to share secret"
+msgstr ""
+
+#. placeholder {0}: file.name
+#: src/components/AttachmentUpload.tsx:124
+msgid "File too large: {0}. Maximum size is 10MB."
+msgstr ""
+
+#. placeholder {0}: share.granted_by.name
+#. placeholder {1}: formatDate(share.granted_at)
+#: src/components/SharedWithList.tsx:92
+msgid "Granted by {0} on {1}"
+msgstr ""
+
+#. placeholder {0}: file.name
+#: src/components/AttachmentUpload.tsx:115
+msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:596
+msgid "Invalid or unsafe URL"
+msgstr ""
+
+#. placeholder {0}: lastSyncTime.toLocaleTimeString()
+#: src/components/SyncStatusIndicator.tsx:132
+msgid "Last sync: {0}"
+msgstr ""
+
+#: src/components/AttachmentList.tsx:137
+msgid "Loading attachments..."
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:637
+msgid "Loading secrets..."
+msgstr ""
+
+#: src/components/AttachmentList.tsx:142
+msgid "Loading..."
+msgstr ""
+
+#: src/components/Header.tsx:43
 msgid "Logout"
-msgstr "Abmelden"
+msgstr ""
 
-#: src/App.tsx:18
+#: src/components/NotificationPreferences.tsx:57
+msgid "Messages from team members and supervisors"
+msgstr ""
+
+#: src/components/AttachmentList.tsx:126
+msgid "No attachments yet"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:526
+msgid "No content shared"
+msgstr ""
+
+#: src/components/SharedWithList.tsx:58
+msgid "Not shared with anyone"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:292
+msgid "Notification Preferences"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:199
+msgid "Notifications Enabled"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:239
+msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:252
+msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:158
+msgid "Offline - will sync when online"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:188
+msgid "Permission Levels:"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:146
+msgid "Permission:"
+msgstr ""
+
+#: src/components/AttachmentList.tsx:186
+msgid "Preview"
+msgstr ""
+
+#: src/components/AttachmentPreview.tsx:198
+msgid "Preview not available for this file type."
+msgstr ""
+
+#: src/components/UploadStatus.tsx:234
+msgid "Processing Progress"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:157
+msgid "Read"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:52
+msgid "Reminders about upcoming shifts and duties"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:137
+msgid "Removed {filename} from queue"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:320
+msgid "Retry Failed"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:77
+msgid "Retry scheduled. Files will upload when network is available."
+msgstr ""
+
+#: src/components/SharedWithList.tsx:114
+msgid "Revoke"
+msgstr ""
+
+#: src/components/SharedWithList.tsx:109
+msgid "Revoke access for {name}"
+msgstr ""
+
+#: src/components/SharedWithList.tsx:112
+msgid "Revoking..."
+msgstr ""
+
+#: src/components/ShareDialog.tsx:130
+msgid "Roles"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:717
+msgid "Save to Secret"
+msgstr ""
+
+#: src/App.tsx:26
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:39
+#: src/App.tsx:47
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
+
+#: src/App.tsx:33
+msgid "Secrets"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:41
+msgid "Security Alerts"
+msgstr ""
+
+#: src/components/AttachmentUpload.tsx:229
+msgid "Select Files"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:646
+msgid "Select Secret to attach files:"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:122
+msgid "Select user or role..."
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:299
+msgid "Send Test"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:216
+msgid "Share"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:102
+msgid "Share \"{secretTitle}\""
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:523
+msgid "Share Target"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:112
+msgid "Share with:"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:536
+msgid "Shared Content"
+msgstr ""
+
+#. placeholder {0}: shares.length
+#: src/components/SharedWithList.tsx:66
+msgid "Shared with ({0})"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:216
+msgid "Sharing..."
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:51
+msgid "Shift Reminders"
+msgstr ""
 
 #: src/components/OfflineIndicator.tsx:29
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
 
+#: src/pages/ShareTarget.tsx:695
+msgid "Successfully uploaded files!"
+msgstr ""
+
+#: src/components/AttachmentUpload.tsx:218
+msgid "Supported: Images, PDFs, Documents (max 10MB)"
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:151
+msgid "Sync"
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:113
+msgid "Syncing..."
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:46
+msgid "System Updates"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:56
+msgid "Team Messages"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:225
+msgid "Test Notification"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:578
+msgid "Text:"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:226
+msgid "This is a test notification from SecPal"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:569
+msgid "Title:"
+msgstr ""
+
+#: src/pages/ShareTarget.tsx:593
+#: src/pages/ShareTarget.tsx:604
+msgid "URL:"
+msgstr ""
+
+#: src/components/UploadStatus.tsx:217
+msgid "Upload Queue"
+msgstr ""
+
+#: src/components/AttachmentUpload.tsx:210
+#: src/components/AttachmentUpload.tsx:252
+#: src/pages/ShareTarget.tsx:680
+msgid "Uploading..."
+msgstr ""
+
+#: src/components/ShareDialog.tsx:123
+msgid "Users"
+msgstr ""
+
+#: src/App.tsx:23
+msgid "Welcome to SecPal"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:160
+msgid "Write"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:200
+msgid "You'll now receive important updates from SecPal"
+msgstr ""
+
 #: src/components/OfflineIndicator.tsx:26
 msgid "You're offline"
 msgstr "Sie sind offline"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:74
+msgid "login.email"
+msgstr "E-Mail"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:91
+msgid "login.password"
+msgstr "Passwort"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:114
+msgid "login.submit"
+msgstr "Anmelden"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:112
+msgid "login.submitting"
+msgstr "Anmelden läuft..."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:59
+msgid "login.subtitle"
+msgstr "Geben Sie Ihre Anmeldedaten ein"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:56
+msgid "login.title"
+msgstr "Anmelden"
+
+#. placeholder {0}: encrypted.length
+#: src/components/UploadStatus.tsx:251
+msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:121
+msgid "{errorOps} operation(s) failed"
+msgstr ""
+
+#: src/components/SyncStatusIndicator.tsx:117
+msgid "{pendingOps} operation(s) pending"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:198
+msgid "• Admin: View + edit + share + delete"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:192
+msgid "• Read: View secret details"
+msgstr ""
+
+#: src/components/ShareDialog.tsx:195
+msgid "• Write: View + edit secret"
+msgstr ""
+
+#: src/components/NotificationPreferences.tsx:323
+msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
+msgstr ""
