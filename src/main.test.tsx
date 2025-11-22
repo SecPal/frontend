@@ -34,10 +34,10 @@ describe("AppWithI18n Integration", () => {
       { timeout: 3000 }
     );
 
-    // Verify app actually rendered by checking for navigation elements
+    // Verify app actually rendered - should show login page when not authenticated
     await waitFor(() => {
-      const aboutLink = screen.getByText(/about/i);
-      expect(aboutLink).toBeInTheDocument();
+      const loginHeading = screen.getByText(/Login/i);
+      expect(loginHeading).toBeInTheDocument();
     });
   });
 
@@ -52,8 +52,8 @@ describe("AppWithI18n Integration", () => {
       expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
     });
 
-    // Check for English text
-    expect(screen.getByText(/guard's best friend/i)).toBeInTheDocument();
+    // Check for English text on Login page
+    expect(screen.getByText(/login/i)).toBeInTheDocument();
   });
 
   it("does not render blank/black screen on locale load failure", async () => {
