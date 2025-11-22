@@ -502,6 +502,34 @@ describe("ShareDialog", () => {
         expect(screen.getByText("User already has access")).toBeInTheDocument();
       });
     });
+
+    it("should display generic error message on non-API error", async () => {
+      const user = userEvent.setup();
+      vi.mocked(shareApi.createShare).mockRejectedValueOnce(
+        new Error("Network error")
+      );
+
+      render(
+        <I18nProvider i18n={i18n}>
+          <ShareDialog
+            secretId={mockSecretId}
+            secretTitle={mockSecretTitle}
+            isOpen={true}
+            onClose={mockOnClose}
+            onSuccess={mockOnSuccess}
+            users={mockUsers}
+            roles={mockRoles}
+          />
+        </I18nProvider>
+      );
+
+      await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
+      await user.click(screen.getByRole("button", { name: /share/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Failed to share secret")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("accessibility", () => {

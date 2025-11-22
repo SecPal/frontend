@@ -9,7 +9,9 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SecretDetail } from "./SecretDetail";
 import * as secretApi from "../../services/secretApi";
+import * as shareApi from "../../services/shareApi";
 import type { SecretDetail as SecretDetailType } from "../../services/secretApi";
+import type { SecretShare } from "../../services/secretApi";
 
 // Mock secret API (keep ApiError real)
 vi.mock("../../services/secretApi", async (importOriginal) => {
@@ -21,6 +23,18 @@ vi.mock("../../services/secretApi", async (importOriginal) => {
     getSecretMasterKey: vi.fn(),
     downloadAndDecryptAttachment: vi.fn(),
     deleteAttachment: vi.fn(),
+  };
+});
+
+// Mock share API
+vi.mock("../../services/shareApi", async (importOriginal) => {
+  const actual =
+    (await importOriginal()) as typeof import("../../services/shareApi");
+  return {
+    ...actual,
+    fetchShares: vi.fn(),
+    createShare: vi.fn(),
+    revokeShare: vi.fn(),
   };
 });
 
@@ -812,5 +826,193 @@ describe("SecretDetail", () => {
 
     alertSpy.mockRestore();
     consoleErrorSpy.mockRestore();
+  });
+});
+
+describe("Secret Sharing", () => {
+  const mockSecretWithShares: SecretDetailType = {
+    id: "secret-1",
+    title: "Gmail Account",
+    username: "user@example.com",
+    password: "super-secret-password",
+    url: "https://gmail.com",
+    notes: "Main work email account",
+    tags: ["work", "email"],
+    expires_at: "2025-12-31T23:59:59Z",
+    created_at: "2025-01-01T10:00:00Z",
+    updated_at: "2025-11-15T14:30:00Z",
+    owner: {
+      id: "user-1",
+      name: "John Doe",
+    },
+    shares: [
+      {
+        id: "share-1",
+        user: { id: "user-2", name: "Jane Smith" },
+        permission: "read",
+        granted_by: { id: "user-1", name: "You" },
+        granted_at: "2025-11-01T10:00:00Z",
+      },
+    ],
+  };
+
+  const renderWithRouter = (secretId: string) => {
+    return render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
+          <Routes>
+            <Route path="/secrets/:id" element={<SecretDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should refresh shares when refreshShares is called", async () => {
+    const updatedShares: SecretShare[] = [
+      {
+        id: "share-1",
+        user: { id: "user-2", name: "Jane Smith" },
+        permission: "read",
+        granted_by: { id: "user-1", name: "You" },
+        granted_at: "2025-11-01T10:00:00Z",
+      },
+      {
+        id: "share-2",
+        user: { id: "user-3", name: "Bob Johnson" },
+        permission: "write",
+        granted_by: { id: "user-1", name: "You" },
+        granted_at: "2025-11-20T12:00:00Z",
+      },
+    ];
+
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
+    vi.mocked(shareApi.fetchShares)
+      .mockResolvedValueOnce(mockSecretWithShares.shares!)
+      .mockResolvedValueOnce(updatedShares);
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    // Initially shows 1 share
+    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    expect(screen.queryByText("Bob Johnson")).not.toBeInTheDocument();
+
+    // Trigger refresh (simulate revoke action)
+    const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
+    const user = userEvent.setup();
+
+    globalThis.confirm = vi.fn(() => true);
+    vi.mocked(shareApi.revokeShare).mockResolvedValueOnce(undefined);
+
+    await user.click(revokeButtons[0]!);
+
+    await waitFor(() => {
+      expect(shareApi.fetchShares).toHaveBeenCalledTimes(2);
+    });
+
+    // Should show updated shares
+    await waitFor(() => {
+      expect(screen.getByText("Bob Johnson")).toBeInTheDocument();
+    });
+  });
+
+  it("should show Share button only when owner is set", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
+    vi.mocked(shareApi.fetchShares).mockResolvedValue(
+      mockSecretWithShares.shares!
+    );
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
+  });
+
+  it("should not show Share button when owner is null", async () => {
+    const secretWithoutOwner: SecretDetailType = {
+      ...mockSecretWithShares,
+      owner: undefined,
+    };
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(secretWithoutOwner);
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /share/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("should open ShareDialog when Share button is clicked", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
+    vi.mocked(shareApi.fetchShares).mockResolvedValue(
+      mockSecretWithShares.shares!
+    );
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    const shareButton = screen.getByRole("button", { name: /share/i });
+    await user.click(shareButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Share "Gmail Account"/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should refresh shares after successful share creation", async () => {
+    vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
+    vi.mocked(shareApi.fetchShares).mockResolvedValue(
+      mockSecretWithShares.shares!
+    );
+    vi.mocked(shareApi.createShare).mockResolvedValue({
+      id: "share-2",
+      user: { id: "user-3", name: "Bob Johnson" },
+      permission: "read",
+      granted_by: { id: "user-1", name: "You" },
+      granted_at: new Date().toISOString(),
+    });
+
+    renderWithRouter("secret-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Gmail Account")).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    const shareButton = screen.getByRole("button", { name: /share/i });
+    await user.click(shareButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Share "Gmail Account"/i)).toBeInTheDocument();
+    });
+
+    // Close dialog - actual form interactions tested in ShareDialog.test.tsx
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
+    await user.click(cancelButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/Share "Gmail Account"/i)
+      ).not.toBeInTheDocument();
+    });
   });
 });

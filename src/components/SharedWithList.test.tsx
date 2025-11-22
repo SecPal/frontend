@@ -233,6 +233,31 @@ describe("SharedWithList", () => {
         expect(screen.getByText("Forbidden")).toBeInTheDocument();
       });
     });
+
+    it("should display generic error message on non-API error", async () => {
+      const user = userEvent.setup();
+      globalThis.confirm = vi.fn(() => true);
+      vi.mocked(shareApi.revokeShare).mockRejectedValueOnce(
+        new Error("Network timeout")
+      );
+
+      render(
+        <I18nProvider i18n={i18n}>
+          <SharedWithList
+            secretId={mockSecretId}
+            shares={mockShares}
+            onRevoke={mockOnRevoke}
+          />
+        </I18nProvider>
+      );
+
+      const revokeButtons = screen.getAllByRole("button", { name: /revoke/i });
+      await user.click(revokeButtons[0]!);
+
+      await waitFor(() => {
+        expect(screen.getByText("Failed to revoke access")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("user vs role display", () => {
