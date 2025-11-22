@@ -42,28 +42,28 @@ export function Login() {
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-md space-y-8 px-4 sm:px-0">
-        <div>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-center sm:text-left flex-1 order-2 sm:order-1">
+      <div className="w-full max-w-md lg:max-w-lg space-y-6 px-4 sm:px-6 md:px-0">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
               SecPal
             </h1>
-            <div className="order-1 sm:order-2">
-              <LanguageSwitcher />
-            </div>
+            <LanguageSwitcher />
           </div>
-          <h2 className="text-xl sm:text-2xl text-center mb-3">
-            <Trans id="login.title">Login</Trans>
-          </h2>
-          <p className="text-sm sm:text-base text-center text-zinc-600 dark:text-zinc-400">
-            <Trans id="login.subtitle">Your digital guard companion</Trans>
-          </p>
+          <div className="space-y-2">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              <Trans id="login.title">Login</Trans>
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <Trans id="login.subtitle">Your digital guard companion</Trans>
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 sm:p-4">
-              <p className="text-sm sm:text-base text-red-800 dark:text-red-200">
+            <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-3">
+              <p className="text-sm text-red-800 dark:text-red-200">
                 {error}
               </p>
             </div>
@@ -82,7 +82,6 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.name@secpal.app"
-              className="text-base sm:text-sm"
             />
           </Field>
 
@@ -99,14 +98,13 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="text-base sm:text-sm"
             />
           </Field>
 
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-6 sm:mt-8 py-3 sm:py-2.5 text-base sm:text-sm"
+            className="w-full mt-2"
           >
             {isSubmitting ? (
               <Trans id="login.submitting">Logging in...</Trans>
