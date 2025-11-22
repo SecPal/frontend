@@ -50,17 +50,15 @@ export function SecretCard({ secret }: SecretCardProps) {
           )}
         </div>
       </div>
-
       {/* Username */}
       {secret.username && (
         <p className="mb-2 text-sm text-zinc-600 dark:text-zinc-400">
           {secret.username}
         </p>
       )}
-
       {/* Tags */}
       {secret.tags && secret.tags.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1">
+        <div className="mt-2 flex flex-wrap gap-1">
           {secret.tags.map((tag) => (
             <span
               key={tag}
@@ -71,7 +69,6 @@ export function SecretCard({ secret }: SecretCardProps) {
           ))}
         </div>
       )}
-
       {/* Footer with metadata */}
       <div className="mt-3 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-500">
         {secret.attachment_count !== undefined &&

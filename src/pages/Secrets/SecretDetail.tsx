@@ -13,8 +13,11 @@ import {
   deleteAttachment,
   type SecretDetail as SecretDetailType,
 } from "../../services/secretApi";
+import { fetchShares } from "../../services/shareApi";
 import { AttachmentList } from "../../components/AttachmentList";
 import { AttachmentPreview } from "../../components/AttachmentPreview";
+import { ShareDialog } from "../../components/ShareDialog";
+import { SharedWithList } from "../../components/SharedWithList";
 
 /**
  * Helper function to trigger browser download
@@ -48,6 +51,8 @@ export function SecretDetail() {
     file: File;
     url: string;
   } | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shares, setShares] = useState(secret?.shares || []);
 
   // Cleanup blob URL when previewFile changes or component unmounts
   useEffect(() => {
@@ -71,6 +76,7 @@ export function SecretDetail() {
         setError(null);
         const data = await getSecretById(id);
         setSecret(data);
+        setShares(data.shares || []);
 
         // Load master key if secret has attachments
         if (data.attachments && data.attachments.length > 0) {
@@ -182,6 +188,19 @@ export function SecretDetail() {
     if (previewFile) {
       URL.revokeObjectURL(previewFile.url);
       setPreviewFile(null);
+    }
+  };
+
+  /**
+   * Refresh shares list after create/revoke
+   */
+  const refreshShares = async () => {
+    if (!id) return;
+    try {
+      const updatedShares = await fetchShares(id);
+      setShares(updatedShares);
+    } catch (err) {
+      console.error("Failed to refresh shares:", err);
     }
   };
 
@@ -384,42 +403,26 @@ export function SecretDetail() {
           )}
 
           {/* Shared With */}
-          {secret.shares && secret.shares.length > 0 && (
-            <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
-                Shared with ({secret.shares.length})
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                Access Control
               </h2>
-              <ul className="space-y-3">
-                {secret.shares.map((share) => (
-                  <li
-                    key={share.id}
-                    className="flex items-start justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700"
-                  >
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-white">
-                        {share.user
-                          ? `👤 ${share.user.name}`
-                          : `👥 ${share.role?.name}`}{" "}
-                        <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                          ({share.permission})
-                        </span>
-                      </p>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Granted by {share.granted_by.name} on{" "}
-                        {new Date(share.granted_at).toLocaleDateString()}
-                      </p>
-                      {share.expires_at && (
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                          Expires:{" "}
-                          {new Date(share.expires_at).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {secret.owner && (
+                <button
+                  onClick={() => setShareDialogOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                >
+                  Share
+                </button>
+              )}
             </div>
-          )}
+            <SharedWithList
+              secretId={id!}
+              shares={shares}
+              onRevoke={refreshShares}
+            />
+          </div>
 
           {/* Metadata */}
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -452,6 +455,19 @@ export function SecretDetail() {
           onDownload={() => {
             triggerDownload(previewFile.url, previewFile.file.name);
           }}
+        />
+      )}
+
+      {/* Share Dialog */}
+      {secret && (
+        <ShareDialog
+          secretId={id!}
+          secretTitle={secret.title}
+          isOpen={shareDialogOpen}
+          onClose={() => setShareDialogOpen(false)}
+          onSuccess={refreshShares}
+          users={[]}
+          roles={[]}
         />
       )}
     </div>
