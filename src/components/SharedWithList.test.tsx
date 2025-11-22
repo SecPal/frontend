@@ -87,7 +87,9 @@ describe("SharedWithList", () => {
       );
 
       // toLocaleDateString() output varies by system locale, so just verify text structure
-      expect(screen.getByText(/Granted by You on/)).toBeInTheDocument();
+      // Note: Multiple shares can have same granter, so use getAllByText
+      const grantedByYou = screen.getAllByText(/Granted by You on/);
+      expect(grantedByYou.length).toBeGreaterThan(0);
       expect(screen.getByText(/Granted by Admin on/)).toBeInTheDocument();
     });
 
