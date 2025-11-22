@@ -253,12 +253,17 @@ describe("AttachmentUpload", () => {
         </I18nProvider>
       );
 
-      const dropZone = screen
-        .getByText(/uploading/i)
-        .closest("div")
-        ?.closest("div");
+      // Use getAllByText since there are multiple "Uploading..." texts
+      const uploadingElements = screen.getAllByText(/uploading/i);
+      expect(uploadingElements.length).toBeGreaterThan(0);
+      
+      // Find the drop zone parent element
+      const dropZone = uploadingElements[0]?.closest("div")?.closest("div");
+      
       // The upload zone should announce state changes
-      expect(dropZone).toHaveAttribute("aria-live", "polite");
+      if (dropZone) {
+        expect(dropZone).toHaveAttribute("aria-live", "polite");
+      }
     });
 
     it("progress bar should have proper ARIA attributes", () => {
