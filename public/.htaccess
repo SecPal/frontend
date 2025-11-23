@@ -18,7 +18,10 @@
 # Security headers
 <IfModule mod_headers.c>
   # Enable HSTS (HTTP Strict Transport Security)
-  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+  # NOTE: The 'preload' directive requires manual submission to hstspreload.org
+  # and only has effect if the domain is accepted into the preload list.
+  # Currently removed until secpal.app/secpal.dev are submitted and approved.
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
 
   # Prevent MIME type sniffing
   Header always set X-Content-Type-Options "nosniff"

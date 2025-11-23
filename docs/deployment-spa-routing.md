@@ -337,5 +337,5 @@ tail -f ~/logs/access_log
 If you encounter deployment issues:
 
 1. Check this guide's **Troubleshooting** section
-2. Review [GitHub Issues](https://github.com/SecPal/frontend/issues)
+2. Review [GitHub Issues](../../issues)
 3. Create a new issue with deployment logs and error details
