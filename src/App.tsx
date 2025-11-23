@@ -4,6 +4,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { Link } from "./components/link";
+import { Footer } from "./components/Footer";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -63,7 +64,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="app">
+        <div className="flex min-h-screen flex-col">
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
@@ -123,9 +124,10 @@ function App() {
               }
             />
           </Routes>
+          <Footer />
+          <OfflineIndicator />
+          <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
         </div>
-        <OfflineIndicator />
-        <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
       </BrowserRouter>
     </AuthProvider>
   );
