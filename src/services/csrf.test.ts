@@ -103,6 +103,22 @@ describe("csrf", () => {
 
       expect(token).toBeNull();
     });
+
+    it("returns null for invalid token format (not Base64/URL-safe)", () => {
+      document.cookie = "XSRF-TOKEN=invalid<>token!@#$%";
+
+      const token = getCsrfTokenFromCookie();
+
+      expect(token).toBeNull();
+    });
+
+    it("accepts valid Base64 token with special characters", () => {
+      document.cookie = "XSRF-TOKEN=abc123+/=_-XYZ";
+
+      const token = getCsrfTokenFromCookie();
+
+      expect(token).toBe("abc123+/=_-XYZ");
+    });
   });
 
   describe("fetchWithCsrf", () => {
@@ -124,12 +140,18 @@ describe("csrf", () => {
       expect(mockFetch).toHaveBeenCalledWith(
         "http://api.example.com/test",
         expect.objectContaining({
+          method: "POST",
           credentials: "include",
-          headers: expect.objectContaining({
-            "X-XSRF-TOKEN": "test-csrf-token",
-          }),
         })
       );
+
+      // Verify headers are set correctly
+      const callArgs = mockFetch.mock.calls[0];
+      if (callArgs) {
+        const requestInit = callArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("merges existing headers with X-XSRF-TOKEN", async () => {
@@ -149,13 +171,20 @@ describe("csrf", () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-XSRF-TOKEN": "test-csrf-token",
-          }),
+          method: "POST",
+          credentials: "include",
         })
       );
+
+      // Verify all headers are present
+      const callArgs = mockFetch.mock.calls[0];
+      if (callArgs) {
+        const requestInit = callArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Content-Type")).toBe("application/json");
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("does not include X-XSRF-TOKEN header when token is not available", async () => {
@@ -224,11 +253,18 @@ describe("csrf", () => {
         3,
         "http://api.example.com/test",
         expect.objectContaining({
-          headers: expect.objectContaining({
-            "X-XSRF-TOKEN": "new-csrf-token",
-          }),
+          method: "POST",
+          credentials: "include",
         })
       );
+
+      // Verify new CSRF token in headers
+      const retryCallArgs = mockFetch.mock.calls[2];
+      if (retryCallArgs) {
+        const requestInit = retryCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("X-XSRF-TOKEN")).toBe("new-csrf-token");
+      }
     });
 
     it("throws CsrfError when retry fails after 419", async () => {

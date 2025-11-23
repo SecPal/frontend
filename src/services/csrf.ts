@@ -18,8 +18,10 @@ export class CsrfError extends Error {
 
 /**
  * Fetch CSRF token from Laravel Sanctum
- * This must be called before making any state-changing requests (POST, PUT, PATCH, DELETE)
- * Laravel will set the XSRF-TOKEN cookie which will be automatically sent with subsequent requests
+ * This should be called before making state-changing requests (POST, PUT, PATCH, DELETE).
+ * Laravel will set the XSRF-TOKEN cookie which will be automatically included by fetchWithCsrf.
+ *
+ * Note: Safe methods (GET, HEAD, OPTIONS) don't require CSRF protection.
  *
  * @throws {CsrfError} If CSRF token fetch fails
  */
@@ -50,9 +52,23 @@ export function getCsrfTokenFromCookie(): string | null {
   const cookies = document.cookie.split(";");
 
   for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split("=");
-    if (name === "XSRF-TOKEN" && value) {
-      return decodeURIComponent(value);
+    const trimmed = cookie.trim();
+    if (trimmed.startsWith("XSRF-TOKEN=")) {
+      const value = trimmed.substring("XSRF-TOKEN=".length);
+      if (!value) {
+        return null;
+      }
+
+      try {
+        const decoded = decodeURIComponent(value);
+        // Basic validation: tokens should be alphanumeric with possible special chars (Base64/URL-safe)
+        if (decoded && /^[A-Za-z0-9+/=_-]+$/.test(decoded)) {
+          return decoded;
+        }
+      } catch {
+        // decodeURIComponent throws URIError for malformed sequences
+        return null;
+      }
     }
   }
 
@@ -74,12 +90,9 @@ export async function fetchWithCsrf(
 ): Promise<Response> {
   const csrfToken = getCsrfTokenFromCookie();
 
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
-
+  const headers = new Headers(options.headers);
   if (csrfToken) {
-    headers["X-XSRF-TOKEN"] = csrfToken;
+    headers.set("X-XSRF-TOKEN", csrfToken);
   }
 
   const response = await fetch(url, {
@@ -90,15 +103,22 @@ export async function fetchWithCsrf(
 
   // Retry on CSRF token mismatch
   if (response.status === 419) {
-    await fetchCsrfToken();
+    try {
+      await fetchCsrfToken();
+    } catch (error) {
+      if (error instanceof CsrfError) {
+        throw new CsrfError(
+          `Failed to refresh CSRF token after 419 response: ${error.message}`,
+          error.status
+        );
+      }
+      throw error;
+    }
 
     const newCsrfToken = getCsrfTokenFromCookie();
-    const newHeaders: Record<string, string> = {
-      ...(options.headers as Record<string, string>),
-    };
-
+    const newHeaders = new Headers(options.headers);
     if (newCsrfToken) {
-      newHeaders["X-XSRF-TOKEN"] = newCsrfToken;
+      newHeaders.set("X-XSRF-TOKEN", newCsrfToken);
     }
 
     return fetch(url, {
