@@ -11,31 +11,51 @@ let mockOfflineReady = false;
 const mockUpdateSW = vi.fn();
 let mockOnNeedRefresh: ((needRefresh: boolean) => void) | null = null;
 let mockOnOfflineReady: ((offlineReady: boolean) => void) | null = null;
+let capturedOnRegisteredSW:
+  | ((swUrl: string, registration?: ServiceWorkerRegistration) => void)
+  | null = null;
+let capturedOnRegisterError: ((error: unknown) => void) | null = null;
 
 vi.mock("virtual:pwa-register/react", () => ({
-  useRegisterSW: vi.fn(() => {
-    const needRefreshState: [boolean, (value: boolean) => void] = [
-      mockNeedRefresh,
-      (value: boolean) => {
-        mockNeedRefresh = value;
-        mockOnNeedRefresh?.(value);
-      },
-    ];
+  useRegisterSW: vi.fn(
+    (options?: {
+      onRegisteredSW?: (
+        swUrl: string,
+        registration?: ServiceWorkerRegistration
+      ) => void;
+      onRegisterError?: (error: unknown) => void;
+    }) => {
+      // Capture callbacks for testing
+      if (options?.onRegisteredSW) {
+        capturedOnRegisteredSW = options.onRegisteredSW;
+      }
+      if (options?.onRegisterError) {
+        capturedOnRegisterError = options.onRegisterError;
+      }
 
-    const offlineReadyState: [boolean, (value: boolean) => void] = [
-      mockOfflineReady,
-      (value: boolean) => {
-        mockOfflineReady = value;
-        mockOnOfflineReady?.(value);
-      },
-    ];
+      const needRefreshState: [boolean, (value: boolean) => void] = [
+        mockNeedRefresh,
+        (value: boolean) => {
+          mockNeedRefresh = value;
+          mockOnNeedRefresh?.(value);
+        },
+      ];
 
-    return {
-      needRefresh: needRefreshState,
-      offlineReady: offlineReadyState,
-      updateServiceWorker: mockUpdateSW,
-    };
-  }),
+      const offlineReadyState: [boolean, (value: boolean) => void] = [
+        mockOfflineReady,
+        (value: boolean) => {
+          mockOfflineReady = value;
+          mockOnOfflineReady?.(value);
+        },
+      ];
+
+      return {
+        needRefresh: needRefreshState,
+        offlineReady: offlineReadyState,
+        updateServiceWorker: mockUpdateSW,
+      };
+    }
+  ),
 }));
 
 describe("useServiceWorkerUpdate", () => {
@@ -46,6 +66,8 @@ describe("useServiceWorkerUpdate", () => {
     mockOfflineReady = false;
     mockOnNeedRefresh = null;
     mockOnOfflineReady = null;
+    capturedOnRegisteredSW = null;
+    capturedOnRegisterError = null;
   });
 
   afterEach(() => {
@@ -225,6 +247,92 @@ describe("useServiceWorkerUpdate", () => {
       expect(typeof result.current.offlineReady).toBe("boolean");
       expect(typeof result.current.updateServiceWorker).toBe("function");
       expect(typeof result.current.close).toBe("function");
+    });
+  });
+
+  describe("Service Worker Registration Callbacks", () => {
+    it("should log when service worker is registered", () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+      renderHook(() => useServiceWorkerUpdate());
+
+      // Simulate SW registration callback
+      if (capturedOnRegisteredSW) {
+        capturedOnRegisteredSW("https://example.com/sw.js");
+      }
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[SW] Service Worker registered: https://example.com/sw.js"
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should set up periodic update checks when registration is provided", () => {
+      const setIntervalSpy = vi.spyOn(global, "setInterval");
+      const mockRegistration = {
+        update: vi.fn(),
+      } as unknown as ServiceWorkerRegistration;
+
+      renderHook(() => useServiceWorkerUpdate());
+
+      // Simulate SW registration callback with registration object
+      if (capturedOnRegisteredSW) {
+        capturedOnRegisteredSW("https://example.com/sw.js", mockRegistration);
+      }
+
+      // Should set up interval for periodic checks
+      expect(setIntervalSpy).toHaveBeenCalledWith(
+        expect.any(Function),
+        60 * 60 * 1000 // 1 hour
+      );
+
+      setIntervalSpy.mockRestore();
+    });
+
+    it("should check for updates when periodic interval fires", () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const mockRegistration = {
+        update: vi.fn(),
+      } as unknown as ServiceWorkerRegistration;
+
+      renderHook(() => useServiceWorkerUpdate());
+
+      // Simulate SW registration callback
+      if (capturedOnRegisteredSW) {
+        capturedOnRegisteredSW("https://example.com/sw.js", mockRegistration);
+      }
+
+      // Fast-forward 1 hour to trigger periodic check
+      act(() => {
+        vi.advanceTimersByTime(60 * 60 * 1000);
+      });
+
+      expect(consoleSpy).toHaveBeenCalledWith("[SW] Checking for updates...");
+      expect(mockRegistration.update).toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should log registration errors", () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      renderHook(() => useServiceWorkerUpdate());
+
+      // Simulate registration error callback
+      const testError = new Error("Registration failed");
+      if (capturedOnRegisterError) {
+        capturedOnRegisterError(testError);
+      }
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[SW] Registration failed:",
+        testError
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });

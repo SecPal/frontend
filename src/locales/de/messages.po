@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-23 22:17+0100\n"
+"POT-Creation-Date: 2025-11-23 22:26+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -108,7 +108,7 @@ msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
 #: src/components/NotificationPreferences.tsx:280
 msgid "Enable Notifications"
-msgstr ""
+msgstr "Benachrichtigungen aktivieren"
 
 #: src/components/NotificationPreferences.tsx:266
 msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
@@ -223,27 +223,27 @@ msgstr ""
 
 #: src/components/UpdatePrompt.tsx:50
 msgid "New version available"
-msgstr ""
+msgstr "Neue Version verfügbar"
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
-msgstr ""
+msgstr "Noch keine Anhänge"
 
 #: src/pages/ShareTarget.tsx:526
 msgid "No content shared"
-msgstr ""
+msgstr "Keine gemeinsamen Inhalte"
 
 #: src/components/SharedWithList.tsx:58
 msgid "Not shared with anyone"
-msgstr ""
+msgstr "Nicht mit anderen geteilt"
 
 #: src/components/NotificationPreferences.tsx:292
 msgid "Notification Preferences"
-msgstr ""
+msgstr "Präferenzen für Benachrichtigungen"
 
 #: src/components/NotificationPreferences.tsx:199
 msgid "Notifications Enabled"
-msgstr ""
+msgstr "Benachrichtigungen aktiviert"
 
 #: src/components/NotificationPreferences.tsx:239
 msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
@@ -251,11 +251,11 @@ msgstr ""
 
 #: src/components/NotificationPreferences.tsx:252
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
-msgstr ""
+msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
 
 #: src/components/SyncStatusIndicator.tsx:158
 msgid "Offline - will sync when online"
-msgstr ""
+msgstr "Offline - wird synchronisiert, wenn online"
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
@@ -287,7 +287,7 @@ msgstr "Lesen"
 
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
-msgstr ""
+msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
 #: src/components/UploadStatus.tsx:137
 msgid "Removed {filename} from queue"
@@ -315,7 +315,7 @@ msgstr "Widerrufen..."
 
 #: src/components/ShareDialog.tsx:143
 msgid "Roles"
-msgstr ""
+msgstr "Rollen"
 
 #: src/pages/ShareTarget.tsx:717
 msgid "Save to Secret"
@@ -331,7 +331,7 @@ msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressiv
 
 #: src/App.tsx:35
 msgid "Secrets"
-msgstr ""
+msgstr "Geheimnisse"
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -355,7 +355,7 @@ msgstr "Test senden"
 
 #: src/components/ShareDialog.tsx:229
 msgid "Share"
-msgstr ""
+msgstr "Teilen"
 
 #: src/components/ShareDialog.tsx:108
 msgid "Share \"{secretTitle}\""
@@ -363,19 +363,19 @@ msgstr ""
 
 #: src/pages/ShareTarget.tsx:523
 msgid "Share Target"
-msgstr ""
+msgstr "Ziel teilen"
 
 #: src/components/ShareDialog.tsx:113
 msgid "Share this secret with users or roles. Select a recipient, choose permission level, and optionally set an expiration date."
-msgstr ""
+msgstr "Geben Sie dieses Geheimnis für Benutzer oder Rollen frei. Wählen Sie einen Empfänger und eine Berechtigungsstufe aus und legen Sie optional ein Verfallsdatum fest."
 
 #: src/components/ShareDialog.tsx:125
 msgid "Share with:"
-msgstr ""
+msgstr "Teilen mit:"
 
 #: src/pages/ShareTarget.tsx:536
 msgid "Shared Content"
-msgstr ""
+msgstr "Gemeinsamer Inhalt"
 
 #. placeholder {0}: shares.length
 #: src/components/SharedWithList.tsx:69
@@ -396,39 +396,39 @@ msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen 
 
 #: src/components/Footer.tsx:39
 msgid "Source Code"
-msgstr ""
+msgstr "Quelltext"
 
 #: src/pages/ShareTarget.tsx:695
 msgid "Successfully uploaded files!"
-msgstr ""
+msgstr "Dateien erfolgreich hochgeladen!"
 
 #: src/components/AttachmentUpload.tsx:218
 msgid "Supported: Images, PDFs, Documents (max 10MB)"
-msgstr ""
+msgstr "Unterstützt: Bilder, PDFs, Dokumente (max. 10MB)"
 
 #: src/components/SyncStatusIndicator.tsx:151
 msgid "Sync"
-msgstr ""
+msgstr "Synchronisieren"
 
 #: src/components/SyncStatusIndicator.tsx:113
 msgid "Syncing..."
-msgstr ""
+msgstr "Synchronisieren..."
 
 #: src/components/NotificationPreferences.tsx:46
 msgid "System Updates"
-msgstr ""
+msgstr "System-Updates"
 
 #: src/components/NotificationPreferences.tsx:56
 msgid "Team Messages"
-msgstr ""
+msgstr "Team-Nachrichten"
 
 #: src/components/NotificationPreferences.tsx:225
 msgid "Test Notification"
-msgstr ""
+msgstr "Test-Benachrichtigung"
 
 #: src/pages/ShareTarget.tsx:578
 msgid "Text:"
-msgstr ""
+msgstr "Text:"
 
 #: src/components/NotificationPreferences.tsx:226
 msgid "This is a test notification from SecPal"
@@ -436,46 +436,46 @@ msgstr ""
 
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"
-msgstr ""
+msgstr "Titel:"
 
 #: src/pages/ShareTarget.tsx:593
 #: src/pages/ShareTarget.tsx:604
 msgid "URL:"
-msgstr ""
+msgstr "URL:"
 
 #: src/components/UpdatePrompt.tsx:65
 msgid "Update"
-msgstr ""
+msgstr "Aktualisieren"
 
 #: src/components/UpdatePrompt.tsx:63
 msgid "Update application now"
-msgstr ""
+msgstr "Anwendung jetzt aktualisieren"
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
-msgstr ""
+msgstr "Upload-Warteschlange"
 
 #: src/components/AttachmentUpload.tsx:210
 #: src/components/AttachmentUpload.tsx:252
 #: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
-msgstr ""
+msgstr "Hochladen..."
 
 #: src/components/ShareDialog.tsx:136
 msgid "Users"
-msgstr ""
+msgstr "Benutzer"
 
 #: src/App.tsx:25
 msgid "Welcome to SecPal"
-msgstr ""
+msgstr "Willkommen zu SecPal"
 
 #: src/components/ShareDialog.tsx:173
 msgid "Write"
-msgstr ""
+msgstr "Schreiben"
 
 #: src/components/NotificationPreferences.tsx:200
 msgid "You'll now receive important updates from SecPal"
-msgstr ""
+msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 
 #: src/components/OfflineIndicator.tsx:26
 msgid "You're offline"
@@ -514,7 +514,7 @@ msgstr "Einloggen"
 #. placeholder {0}: encrypted.length
 #: src/components/UploadStatus.tsx:251
 msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
-msgstr ""
+msgstr "{ 0, plural, one {# Datei bereit zum Hochladen} other {# Dateien bereit zum Hochladen} }"
 
 #: src/components/SyncStatusIndicator.tsx:121
 msgid "{errorOps} operation(s) failed"
@@ -530,12 +530,12 @@ msgstr ""
 
 #: src/components/ShareDialog.tsx:205
 msgid "• Read: View secret details"
-msgstr ""
+msgstr "- Lesen: Geheime Details anzeigen"
 
 #: src/components/ShareDialog.tsx:208
 msgid "• Write: View + edit secret"
-msgstr ""
+msgstr "- Schreiben: Ansehen + Bearbeiten Geheimnis"
 
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
-msgstr ""
+msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
