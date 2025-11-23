@@ -59,8 +59,8 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   const [snoozedUntil, setSnoozedUntil] = useState<number | null>(null);
 
   const {
-    needRefresh: [swNeedRefresh, swSetNeedRefresh],
-    offlineReady: [swOfflineReady, swSetOfflineReady],
+    needRefresh: [swNeedRefresh],
+    offlineReady: [swOfflineReady],
     updateServiceWorker: swUpdate,
   } = useRegisterSW({
     onRegisteredSW(swUrl, registration) {
