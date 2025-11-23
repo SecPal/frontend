@@ -10,6 +10,14 @@ vi.stubGlobal("fetch", mockFetch);
 describe("authApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    // Set CSRF token cookie for tests
+    document.cookie = "XSRF-TOKEN=test-csrf-token";
   });
 
   afterEach(() => {
@@ -22,8 +30,15 @@ describe("authApi", () => {
         user: { id: 1, name: "Test User", email: "test@example.com" },
       };
 
+      // Mock CSRF token fetch
       mockFetch.mockResolvedValueOnce({
         ok: true,
+      } as Response);
+
+      // Mock login request
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
         json: async () => mockResponse,
       } as Response);
 
@@ -32,14 +47,21 @@ describe("authApi", () => {
         password: "password123",
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      // Verify CSRF token was fetched
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining("/sanctum/csrf-cookie"),
+        expect.objectContaining({
+          credentials: "include",
+        })
+      );
+
+      // Verify login request
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
         expect.stringContaining("/v1/auth/token"),
         expect.objectContaining({
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
           credentials: "include",
           body: JSON.stringify({
             email: "test@example.com",
@@ -49,6 +71,17 @@ describe("authApi", () => {
         })
       );
 
+      // Verify headers separately (Headers object)
+      const loginCallArgs = mockFetch.mock.calls[1];
+      expect(loginCallArgs).toBeDefined();
+      if (loginCallArgs) {
+        const requestInit = loginCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Content-Type")).toBe("application/json");
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
+
       expect(result).toEqual(mockResponse);
     });
 
@@ -57,8 +90,15 @@ describe("authApi", () => {
         user: { id: 1, name: "Test", email: "test@example.com" },
       };
 
+      // Mock CSRF token fetch
       mockFetch.mockResolvedValueOnce({
         ok: true,
+      } as Response);
+
+      // Mock login request
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
         json: async () => mockResponse,
       } as Response);
 
@@ -68,7 +108,8 @@ describe("authApi", () => {
         device_name: "custom-device",
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
         expect.any(String),
         expect.objectContaining({
           body: expect.stringContaining("custom-device"),
@@ -82,8 +123,15 @@ describe("authApi", () => {
         errors: { email: ["The provided credentials are incorrect."] },
       };
 
+      // Mock CSRF token fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      // Mock failed login
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 401,
         json: async () => errorResponse,
       } as Response);
 
@@ -93,7 +141,12 @@ describe("authApi", () => {
 
       // Second call with fresh mock
       mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 401,
         json: async () => errorResponse,
       } as Response);
 
@@ -107,8 +160,15 @@ describe("authApi", () => {
     });
 
     it("uses default error message when none provided", async () => {
+      // Mock CSRF token fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      // Mock failed login with empty error
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 401,
         json: async () => ({}),
       } as Response);
 
@@ -118,8 +178,15 @@ describe("authApi", () => {
     });
 
     it("handles non-JSON error responses gracefully", async () => {
+      // Mock CSRF token fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      // Mock failed login with non-JSON response
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 500,
         json: async () => {
           throw new Error("Unexpected token < in JSON");
         },
@@ -135,6 +202,7 @@ describe("authApi", () => {
     it("sends POST request to /v1/auth/logout with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 200,
       } as Response);
 
       await logout();
@@ -143,17 +211,25 @@ describe("authApi", () => {
         expect.stringContaining("/v1/auth/logout"),
         expect.objectContaining({
           method: "POST",
-          headers: {
-            Accept: "application/json",
-          },
           credentials: "include",
         })
       );
+
+      // Verify headers separately (Headers object)
+      const logoutCallArgs = mockFetch.mock.calls[0];
+      expect(logoutCallArgs).toBeDefined();
+      if (logoutCallArgs) {
+        const requestInit = logoutCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("throws AuthApiError on failed logout", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 401,
         json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
@@ -163,6 +239,7 @@ describe("authApi", () => {
     it("throws AuthApiError with fallback message on non-JSON response", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 500,
         json: async () => {
           throw new Error("Not JSON");
         },
@@ -176,6 +253,7 @@ describe("authApi", () => {
     it("sends POST request to /v1/auth/logout-all with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 200,
       } as Response);
 
       await logoutAll();
@@ -184,17 +262,25 @@ describe("authApi", () => {
         expect.stringContaining("/v1/auth/logout-all"),
         expect.objectContaining({
           method: "POST",
-          headers: {
-            Accept: "application/json",
-          },
           credentials: "include",
         })
       );
+
+      // Verify headers separately (Headers object)
+      const logoutAllCallArgs = mockFetch.mock.calls[0];
+      expect(logoutAllCallArgs).toBeDefined();
+      if (logoutAllCallArgs) {
+        const requestInit = logoutAllCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("throws AuthApiError on failed logoutAll", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 401,
         json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
@@ -204,6 +290,7 @@ describe("authApi", () => {
     it("throws AuthApiError with fallback message on non-JSON response", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
+        status: 500,
         json: async () => {
           throw new Error("Not JSON");
         },
