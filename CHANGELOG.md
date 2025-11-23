@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CSRF Token Handling & Request Interceptor** (#211, Part of Epic #208) - **MERGED [DATE]**
+  - `csrf.ts` service module with CSRF token management
+  - `fetchCsrfToken()`: Fetches CSRF token from Laravel Sanctum (`/sanctum/csrf-cookie`)
+  - `getCsrfTokenFromCookie()`: Extracts XSRF-TOKEN from browser cookies
+  - `fetchWithCsrf()`: Request interceptor with automatic CSRF token inclusion
+  - 419 (CSRF token mismatch) auto-retry with fresh token
+  - Integration in `authApi.ts`: CSRF token fetch before login, all auth endpoints use interceptor
+  - `CsrfError` class for CSRF-specific error handling
+  - 17 new unit tests for CSRF functionality (all passing)
+  - Updated `authApi.test.ts` to mock CSRF token calls (13 tests passing)
+  - Total: 677 tests passing, TypeScript strict mode clean, ESLint clean
+  - Part of httpOnly Cookie Authentication Migration Epic #208 (Phase 2/3)
+  - Security: Protects against CSRF attacks for all state-changing requests
+
 - **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#200, Part of #191) - **MERGED 22.11.2025**
   - `AttachmentUpload.tsx` component with drag-and-drop and file validation
   - `AttachmentPreview.tsx` modal for images and PDFs with zoom controls

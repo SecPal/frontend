@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
+import { fetchCsrfToken, fetchWithCsrf } from "./csrf";
 
 interface LoginCredentials {
   email: string;
@@ -39,9 +40,11 @@ export class AuthApiError extends Error {
 export async function login(
   credentials: LoginCredentials
 ): Promise<LoginResponse> {
-  const response = await fetch(`${getApiBaseUrl()}/v1/auth/token`, {
+  // Fetch CSRF token before login
+  await fetchCsrfToken();
+
+  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/token`, {
     method: "POST",
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -72,9 +75,8 @@ export async function login(
  * @throws {AuthApiError} If logout fails
  */
 export async function logout(): Promise<void> {
-  const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout`, {
+  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/logout`, {
     method: "POST",
-    credentials: "include",
     headers: {
       Accept: "application/json",
     },
@@ -96,13 +98,15 @@ export async function logout(): Promise<void> {
  * @throws {AuthApiError} If logout fails
  */
 export async function logoutAll(): Promise<void> {
-  const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  const response = await fetchWithCsrf(
+    `${getApiBaseUrl()}/v1/auth/logout-all`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     let error: ApiError | null = null;
