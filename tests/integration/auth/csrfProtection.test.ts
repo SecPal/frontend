@@ -243,31 +243,17 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       // Should throw CsrfError with specific message
-      await expect(
-        fetchWithCsrf("https://api.secpal.app/v1/resource", {
+      const error = await fetchWithCsrf(
+        "https://api.secpal.app/v1/resource",
+        {
           method: "POST",
-        })
-      ).rejects.toThrow(CsrfError);
-
-      // Also verify the error message contains expected text
-      await expect(
-        async () => {
-          // Reset mocks and mock again for message verification
-          mockFetch.mockClear();
-          mockFetch.mockResolvedValueOnce({
-            ok: false,
-            status: 419,
-          } as Response);
-          mockFetch.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-          } as Response);
-
-          await fetchWithCsrf("https://api.secpal.app/v1/resource", {
-            method: "POST",
-          });
         }
-      ).rejects.toThrow("Failed to refresh CSRF token after 419 response");
+      ).catch((e) => e);
+
+      expect(error).toBeInstanceOf(CsrfError);
+      expect(error.message).toContain(
+        "Failed to refresh CSRF token after 419 response"
+      );
     });
 
     it("retries only once on 419 (no infinite retry loop)", async () => {
@@ -330,10 +316,9 @@ describe("CSRF Protection Integration", () => {
         statusText: "Service Unavailable",
       } as Response);
 
-      await expect(fetchCsrfToken()).rejects.toThrow(CsrfError);
-      await expect(fetchCsrfToken()).rejects.toThrow(
-        "Failed to fetch CSRF token"
-      );
+      const error = await fetchCsrfToken().catch((e) => e);
+      expect(error).toBeInstanceOf(CsrfError);
+      expect(error.message).toContain("Failed to fetch CSRF token");
     });
 
     it("throws CsrfError on network failure", async () => {
@@ -375,8 +360,8 @@ describe("CSRF Protection Integration", () => {
   });
 
   describe("GET Requests (No CSRF Protection Needed)", () => {
-    it("does not require CSRF token for GET requests (safe method)", async () => {
-      // No CSRF token cookie set
+    it("fetchWithCsrf works for GET requests without CSRF token", async () => {
+      // No CSRF token cookie set - GET requests don't need CSRF protection
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -384,16 +369,23 @@ describe("CSRF Protection Integration", () => {
         json: async () => ({ data: "public data" }),
       } as Response);
 
-      const response = await fetch("https://api.secpal.app/v1/public", {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetchWithCsrf(
+        "https://api.secpal.app/v1/public",
+        {
+          method: "GET",
+        }
+      );
 
       expect(response.ok).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          credentials: "include",
+        })
+      );
 
-      // GET requests typically don't need CSRF tokens
-      // This test documents that fetchWithCsrf can be used for GET
-      // but CSRF protection is primarily for state-changing methods
+      // GET requests are safe methods - no CSRF token needed
+      // fetchWithCsrf adds credentials automatically
     });
   });
 

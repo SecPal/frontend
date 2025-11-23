@@ -170,7 +170,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173,https://secpal.app
 **Login:**
 
 ```typescript
-import { login } from "./services/authApi";
+import { login } from "@/services/authApi";
 
 // CSRF token is fetched automatically
 const response = await login({
@@ -188,7 +188,7 @@ console.log(response.user); // { id: 1, name: "User", email: "..." }
 **Logout:**
 
 ```typescript
-import { logout } from "./services/authApi";
+import { logout } from "@/services/authApi";
 
 // Revokes current session
 await logout();
@@ -199,7 +199,7 @@ await logout();
 **Logout All Devices:**
 
 ```typescript
-import { logoutAll } from "./services/authApi";
+import { logoutAll } from "@/services/authApi";
 
 // Revokes ALL sessions for current user
 await logoutAll();
@@ -210,7 +210,7 @@ await logoutAll();
 **Automatic (Recommended):**
 
 ```typescript
-import { fetchWithCsrf } from "./services/csrf";
+import { fetchWithCsrf } from "@/services/csrf";
 
 // For state-changing requests (POST, PUT, PATCH, DELETE)
 const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
@@ -252,7 +252,7 @@ await fetchWithCsrf(url, { method: "POST", body: data });
 **Manual handling (if needed):**
 
 ```typescript
-import { fetchCsrfToken, getCsrfTokenFromCookie } from "./services/csrf";
+import { fetchCsrfToken, getCsrfTokenFromCookie } from "@/services/csrf";
 
 // Fetch CSRF token before state-changing requests
 await fetchCsrfToken();
@@ -394,7 +394,7 @@ fetch(url, {
 
 ```typescript
 // ✅ Use fetchWithCsrf for automatic CSRF handling
-import { fetchWithCsrf } from "./services/csrf";
+import { fetchWithCsrf } from "@/services/csrf";
 
 await fetchWithCsrf(url, {
   method: "POST",
@@ -458,7 +458,7 @@ console.log(import.meta.env.VITE_API_URL);
 
 ```typescript
 // ✅ Centralize API base URL
-import { getApiBaseUrl } from "./config";
+import { getApiBaseUrl } from "@/config";
 
 fetch(`${getApiBaseUrl()}/v1/resource`, {
   credentials: "include",
@@ -479,7 +479,7 @@ fetch(`${getApiBaseUrl()}/v1/resource`, {
 
 ```typescript
 // ✅ Always fetch CSRF token first
-import { fetchCsrfToken } from "./services/csrf";
+import { fetchCsrfToken } from "@/services/csrf";
 
 await fetchCsrfToken(); // Sets XSRF-TOKEN cookie
 // Now login or make state-changing request
