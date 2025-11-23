@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `needRefresh` state indicates when new version is available
     - `offlineReady` state for offline capability
     - `updateServiceWorker()` method to trigger update and reload
-    - `close()` method to dismiss update prompt
+    - `close()` method to dismiss update prompt (with 1-hour snooze - prompt will reappear after 1 hour if update is still available)
     - Automatic hourly update checks via Service Worker registration
     - Comprehensive error handling and logging
   - `UpdatePrompt` component with Catalyst Design System
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Accessible with ARIA attributes (role=status, aria-live=polite)
     - i18n support with lingui
   - Integrated into `App.tsx` for global availability
-  - 23 comprehensive tests (13 for hook, 10 for component)
+  - 30 comprehensive tests (14 for hook, 16 for component)
   - **Benefit:** Users are immediately informed when new PWA versions are available and can choose when to update
   - Follows Gebot #1 (Qualität vor Geschwindigkeit) - Full TDD implementation with comprehensive tests
 

@@ -13,7 +13,8 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
  * Users can choose to update immediately or dismiss the prompt.
  *
  * This component automatically appears when the service worker detects
- * a new version and disappears after user interaction.
+ * a new version. If dismissed via the "Later" button, it will reappear
+ * after 1 hour if the update is still available.
  *
  * @example
  * ```tsx

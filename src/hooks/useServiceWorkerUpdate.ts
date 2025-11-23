@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 /**
@@ -58,6 +58,9 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   const [offlineReady, setOfflineReady] = useState(false);
   const [snoozedUntil, setSnoozedUntil] = useState<number | null>(null);
 
+  // Track interval ID for cleanup
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+
   const {
     needRefresh: [swNeedRefresh],
     offlineReady: [swOfflineReady],
@@ -68,7 +71,12 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
 
       // Check for updates every hour
       if (registration) {
-        setInterval(
+        // Clear any existing interval before creating a new one
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+        }
+
+        intervalIdRef.current = setInterval(
           () => {
             console.log("[SW] Checking for updates...");
             registration.update();
@@ -81,6 +89,16 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
       console.error("[SW] Registration failed:", error);
     },
   });
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
+    };
+  }, []);
 
   // Sync states from useRegisterSW
   useEffect(() => {

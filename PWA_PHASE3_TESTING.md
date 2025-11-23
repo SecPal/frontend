@@ -90,7 +90,7 @@ This document describes how to test the new PWA Phase 3 features locally.
    - Click "Later"
    - Prompt disappears
    - App continues with current version
-   - New version will be offered again on next check
+   - New version will be offered again after 1 hour (snooze period)
 
 #### Testing in Development
 
