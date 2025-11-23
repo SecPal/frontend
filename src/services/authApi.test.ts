@@ -62,11 +62,6 @@ describe("authApi", () => {
         expect.stringContaining("/v1/auth/token"),
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "X-XSRF-TOKEN": "test-csrf-token",
-          }),
           credentials: "include",
           body: JSON.stringify({
             email: "test@example.com",
@@ -75,6 +70,17 @@ describe("authApi", () => {
           }),
         })
       );
+
+      // Verify headers separately (Headers object)
+      const loginCallArgs = mockFetch.mock.calls[1];
+      expect(loginCallArgs).toBeDefined();
+      if (loginCallArgs) {
+        const requestInit = loginCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Content-Type")).toBe("application/json");
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
 
       expect(result).toEqual(mockResponse);
     });
@@ -205,13 +211,19 @@ describe("authApi", () => {
         expect.stringContaining("/v1/auth/logout"),
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            Accept: "application/json",
-            "X-XSRF-TOKEN": "test-csrf-token",
-          }),
           credentials: "include",
         })
       );
+
+      // Verify headers separately (Headers object)
+      const logoutCallArgs = mockFetch.mock.calls[0];
+      expect(logoutCallArgs).toBeDefined();
+      if (logoutCallArgs) {
+        const requestInit = logoutCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("throws AuthApiError on failed logout", async () => {
@@ -250,13 +262,19 @@ describe("authApi", () => {
         expect.stringContaining("/v1/auth/logout-all"),
         expect.objectContaining({
           method: "POST",
-          headers: expect.objectContaining({
-            Accept: "application/json",
-            "X-XSRF-TOKEN": "test-csrf-token",
-          }),
           credentials: "include",
         })
       );
+
+      // Verify headers separately (Headers object)
+      const logoutAllCallArgs = mockFetch.mock.calls[0];
+      expect(logoutAllCallArgs).toBeDefined();
+      if (logoutAllCallArgs) {
+        const requestInit = logoutAllCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
+      }
     });
 
     it("throws AuthApiError on failed logoutAll", async () => {
