@@ -4,21 +4,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { UpdatePrompt } from "./UpdatePrompt";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
-
-// Mock i18n - simple pass-through
-vi.mock("@lingui/macro", () => ({
-  Trans: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  msg: () => "mocked-aria-label",
-}));
-
-vi.mock("@lingui/react", () => ({
-  Trans: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useLingui: () => ({
-    _: () => "mocked-aria-label",
-  }),
-}));
 
 // Mock useServiceWorkerUpdate hook
 vi.mock("../hooks/useServiceWorkerUpdate");
@@ -30,6 +19,10 @@ describe("UpdatePrompt", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Setup i18n with English locale
+    i18n.load("en", {});
+    i18n.activate("en");
+
     // Default mock: no update available
     vi.mocked(useServiceWorkerUpdate).mockReturnValue({
       needRefresh: false,
@@ -39,13 +32,17 @@ describe("UpdatePrompt", () => {
     });
   });
 
+  function renderWithI18n(component: React.ReactElement) {
+    return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+  }
+
   describe("Visibility", () => {
     it("should not render when needRefresh is false", () => {
-      const { container } = render(<UpdatePrompt />);
+      const { container } = renderWithI18n(<UpdatePrompt />);
       expect(container.firstChild).toBeNull();
     });
 
-    it.skip("should render when needRefresh is true", () => {
+    it("should render when needRefresh is true", () => {
       vi.mocked(useServiceWorkerUpdate).mockReturnValue({
         needRefresh: true,
         offlineReady: false,
@@ -53,7 +50,7 @@ describe("UpdatePrompt", () => {
         close: mockClose,
       });
 
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
 
       expect(screen.getByText("New version available")).toBeInTheDocument();
     });
@@ -69,25 +66,25 @@ describe("UpdatePrompt", () => {
       });
     });
 
-    it.skip("should display title", () => {
-      render(<UpdatePrompt />);
+    it("should display title", () => {
+      renderWithI18n(<UpdatePrompt />);
       expect(screen.getByText("New version available")).toBeInTheDocument();
     });
 
-    it.skip("should display description", () => {
-      render(<UpdatePrompt />);
+    it("should display description", () => {
+      renderWithI18n(<UpdatePrompt />);
       expect(
         screen.getByText(/A new version of SecPal is ready/i)
       ).toBeInTheDocument();
     });
 
-    it.skip("should display Update button", () => {
-      render(<UpdatePrompt />);
+    it("should display Update button", () => {
+      renderWithI18n(<UpdatePrompt />);
       expect(screen.getByText("Update")).toBeInTheDocument();
     });
 
-    it.skip("should display Later button", () => {
-      render(<UpdatePrompt />);
+    it("should display Later button", () => {
+      renderWithI18n(<UpdatePrompt />);
       expect(screen.getByText("Later")).toBeInTheDocument();
     });
   });
@@ -102,9 +99,9 @@ describe("UpdatePrompt", () => {
       });
     });
 
-    it.skip("should call updateServiceWorker when Update button is clicked", async () => {
+    it("should call updateServiceWorker when Update button is clicked", async () => {
       const user = userEvent.setup();
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
 
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
@@ -112,9 +109,9 @@ describe("UpdatePrompt", () => {
       expect(mockUpdateServiceWorker).toHaveBeenCalledTimes(1);
     });
 
-    it.skip("should call close when Later button is clicked", async () => {
+    it("should call close when Later button is clicked", async () => {
       const user = userEvent.setup();
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
 
       const laterButton = screen.getByText("Later");
       await user.click(laterButton);
@@ -122,9 +119,9 @@ describe("UpdatePrompt", () => {
       expect(mockClose).toHaveBeenCalledTimes(1);
     });
 
-    it.skip("should not call updateServiceWorker when Later is clicked", async () => {
+    it("should not call updateServiceWorker when Later is clicked", async () => {
       const user = userEvent.setup();
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
 
       const laterButton = screen.getByText("Later");
       await user.click(laterButton);
@@ -144,18 +141,18 @@ describe("UpdatePrompt", () => {
     });
 
     it("should have role=status for screen readers", () => {
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
       expect(screen.getByRole("status")).toBeInTheDocument();
     });
 
     it("should have aria-live=polite", () => {
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
       const status = screen.getByRole("status");
       expect(status).toHaveAttribute("aria-live", "polite");
     });
 
     it("should have aria-atomic=true", () => {
-      render(<UpdatePrompt />);
+      renderWithI18n(<UpdatePrompt />);
       const status = screen.getByRole("status");
       expect(status).toHaveAttribute("aria-atomic", "true");
     });
@@ -172,7 +169,7 @@ describe("UpdatePrompt", () => {
     });
 
     it("should be fixed at bottom-right corner", () => {
-      const { container } = render(<UpdatePrompt />);
+      const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
       expect(wrapper).toHaveClass("fixed");
@@ -181,14 +178,14 @@ describe("UpdatePrompt", () => {
     });
 
     it("should have high z-index to overlay other content", () => {
-      const { container } = render(<UpdatePrompt />);
+      const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
       expect(wrapper).toHaveClass("z-50");
     });
 
     it("should have max-width constraint", () => {
-      const { container } = render(<UpdatePrompt />);
+      const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
       expect(wrapper).toHaveClass("max-w-md");
@@ -196,8 +193,8 @@ describe("UpdatePrompt", () => {
   });
 
   describe("State Changes", () => {
-    it.skip("should hide when needRefresh changes to false", () => {
-      const { rerender } = render(<UpdatePrompt />);
+    it("should hide when needRefresh changes to false", () => {
+      const { rerender } = renderWithI18n(<UpdatePrompt />);
 
       // Initially visible
       vi.mocked(useServiceWorkerUpdate).mockReturnValue({
@@ -207,7 +204,11 @@ describe("UpdatePrompt", () => {
         close: mockClose,
       });
 
-      rerender(<UpdatePrompt />);
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <UpdatePrompt />
+        </I18nProvider>
+      );
       expect(screen.getByText("New version available")).toBeInTheDocument();
 
       // Change to hidden
@@ -218,7 +219,11 @@ describe("UpdatePrompt", () => {
         close: mockClose,
       });
 
-      rerender(<UpdatePrompt />);
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <UpdatePrompt />
+        </I18nProvider>
+      );
       expect(
         screen.queryByText("New version available")
       ).not.toBeInTheDocument();

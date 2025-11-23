@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-23 20:34+0100\n"
+"POT-Creation-Date: 2025-11-23 22:17+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -11,15 +11,19 @@ msgstr ""
 msgid "-- Choose a Secret --"
 msgstr ""
 
+#: src/components/UpdatePrompt.tsx:53
+msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
+msgstr "Eine neue Version von SecPal ist verfügbar. Klicken Sie auf \"Aktualisieren\", um die neueste Version zu laden und zu verwenden."
+
 #: src/components/Footer.tsx:27
 msgid "AGPL v3+"
-msgstr ""
+msgstr "AGPL v3+"
 
-#: src/App.tsx:31
+#: src/App.tsx:32
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:45
+#: src/App.tsx:46
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -29,43 +33,43 @@ msgstr ""
 
 #: src/components/SyncStatusIndicator.tsx:125
 msgid "All synced"
-msgstr ""
+msgstr "Alles synchronisiert"
 
 #: src/components/NotificationPreferences.tsx:47
 msgid "App updates and maintenance notifications"
-msgstr ""
+msgstr "App-Updates und Wartungsbenachrichtigungen"
 
 #: src/pages/Secrets/SecretDetail.tsx:142
 msgid "Are you sure you want to delete this attachment?"
-msgstr ""
+msgstr "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?"
 
 #: src/components/SharedWithList.tsx:29
 msgid "Are you sure you want to revoke access for {name}?"
-msgstr ""
+msgstr "Sind Sie sicher, dass Sie den Zugang für {name} widerrufen wollen?"
 
 #: src/pages/ShareTarget.tsx:624
 msgid "Attached Files"
-msgstr ""
+msgstr "Angehängte Dateien"
 
-#: src/App.tsx:56
+#: src/App.tsx:57
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: src/components/NotificationPreferences.tsx:295
 msgid "Choose which notifications you want to receive"
-msgstr ""
+msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 
 #: src/pages/ShareTarget.tsx:539
 msgid "Clear"
-msgstr ""
+msgstr "Löschen"
 
 #: src/components/UploadStatus.tsx:328
 msgid "Clear Completed"
-msgstr ""
+msgstr "Löschen Abgeschlossen"
 
 #: src/components/UploadStatus.tsx:107
 msgid "Cleared {count} completed upload(s)"
@@ -74,29 +78,33 @@ msgstr ""
 #: src/components/AttachmentPreview.tsx:134
 #: src/components/AttachmentPreview.tsx:211
 msgid "Close"
-msgstr ""
+msgstr "Schließen"
 
 #: src/components/NotificationPreferences.tsx:42
 msgid "Critical security notifications and warnings"
-msgstr ""
+msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
 
 #: src/components/AttachmentList.tsx:215
 msgid "Delete"
-msgstr ""
+msgstr "Löschen"
+
+#: src/components/UpdatePrompt.tsx:70
+msgid "Dismiss update notification"
+msgstr "Update-Benachrichtigung verwerfen"
 
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
 #: src/components/AttachmentPreview.tsx:215
 msgid "Download"
-msgstr ""
+msgstr "Herunterladen"
 
 #: src/components/AttachmentPreview.tsx:202
 msgid "Download to view"
-msgstr ""
+msgstr "Zur Ansicht herunterladen"
 
 #: src/components/AttachmentUpload.tsx:212
 msgid "Drag files here or click to browse"
-msgstr ""
+msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
 #: src/components/NotificationPreferences.tsx:280
 msgid "Enable Notifications"
@@ -108,7 +116,7 @@ msgstr ""
 
 #: src/components/NotificationPreferences.tsx:278
 msgid "Enabling..."
-msgstr ""
+msgstr "Aktiviere ..."
 
 #: src/components/EncryptionProgress.tsx:47
 msgid "Encrypting files..."
@@ -116,41 +124,41 @@ msgstr ""
 
 #: src/pages/ShareTarget.tsx:547
 msgid "Errors:"
-msgstr ""
+msgstr "Fehler:"
 
 #: src/components/ShareDialog.tsx:187
 msgid "Expires (optional):"
-msgstr ""
+msgstr "Läuft ab (optional):"
 
 #. placeholder {0}: formatDate(share.expires_at)
 #: src/components/SharedWithList.tsx:106
 msgid "Expires: {0}"
-msgstr ""
+msgstr "Läuft ab: {0}"
 
 #. js-lingui-explicit-id
 #: src/components/LanguageSwitcher.tsx:18
 msgid "Failed to change language. Please try again."
-msgstr ""
+msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
 #: src/components/UploadStatus.tsx:119
 msgid "Failed to clear uploads"
-msgstr ""
+msgstr "Uploads konnten nicht gelöscht werden"
 
 #: src/pages/Secrets/SecretDetail.tsx:158
 msgid "Failed to delete attachment"
-msgstr ""
+msgstr "Anhang konnte nicht gelöscht werden"
 
 #: src/components/UploadStatus.tsx:151
 msgid "Failed to delete file"
-msgstr ""
+msgstr "Datei konnte nicht gelöscht werden"
 
 #: src/pages/Secrets/SecretDetail.tsx:131
 msgid "Failed to download attachment"
-msgstr ""
+msgstr "Download des Anhangs fehlgeschlagen"
 
 #: src/pages/Secrets/SecretDetail.tsx:178
 msgid "Failed to load preview"
-msgstr ""
+msgstr "Vorschau konnte nicht geladen werden"
 
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
@@ -158,7 +166,7 @@ msgstr ""
 
 #: src/components/UploadStatus.tsx:90
 msgid "Failed to schedule upload retry"
-msgstr ""
+msgstr "Upload-Wiederholungsversuch konnte nicht geplant werden"
 
 #: src/components/ShareDialog.tsx:91
 msgid "Failed to share secret"
@@ -167,13 +175,13 @@ msgstr ""
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:124
 msgid "File too large: {0}. Maximum size is 10MB."
-msgstr ""
+msgstr "Datei zu groß: {0}. Die maximale Größe beträgt 10MB."
 
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at)
 #: src/components/SharedWithList.tsx:99
 msgid "Granted by {0} on {1}"
-msgstr ""
+msgstr "Gewährt von {0} am {1}"
 
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:115
@@ -182,31 +190,39 @@ msgstr ""
 
 #: src/pages/ShareTarget.tsx:596
 msgid "Invalid or unsafe URL"
-msgstr ""
+msgstr "Ungültige oder unsichere URL"
 
 #. placeholder {0}: lastSyncTime.toLocaleTimeString()
 #: src/components/SyncStatusIndicator.tsx:132
 msgid "Last sync: {0}"
-msgstr ""
+msgstr "Letzte Synchronisation: {0}"
+
+#: src/components/UpdatePrompt.tsx:72
+msgid "Later"
+msgstr "Später"
 
 #: src/components/AttachmentList.tsx:137
 msgid "Loading attachments..."
-msgstr ""
+msgstr "Anhänge laden..."
 
 #: src/pages/ShareTarget.tsx:637
 msgid "Loading secrets..."
-msgstr ""
+msgstr "Geheimnisse laden..."
 
 #: src/components/AttachmentList.tsx:142
 msgid "Loading..."
-msgstr ""
+msgstr "Laden..."
 
 #: src/components/Header.tsx:53
 msgid "Logout"
-msgstr ""
+msgstr "Abmelden"
 
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
+msgstr ""
+
+#: src/components/UpdatePrompt.tsx:50
+msgid "New version available"
 msgstr ""
 
 #: src/components/AttachmentList.tsx:126
@@ -243,31 +259,31 @@ msgstr ""
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
-msgstr ""
+msgstr "Erlaubnisstufen:"
 
 #: src/components/ShareDialog.tsx:159
 msgid "Permission:"
-msgstr ""
+msgstr "Erlaubnis:"
 
 #: src/components/Footer.tsx:16
 msgid "Powered by SecPal - a guard's best friend"
-msgstr ""
+msgstr "Powered by SecPal - a guard's best friend"
 
 #: src/components/AttachmentList.tsx:186
 msgid "Preview"
-msgstr ""
+msgstr "Vorschau"
 
 #: src/components/AttachmentPreview.tsx:198
 msgid "Preview not available for this file type."
-msgstr ""
+msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 
 #: src/components/UploadStatus.tsx:234
 msgid "Processing Progress"
-msgstr ""
+msgstr "Fortschritt der Verarbeitung"
 
 #: src/components/ShareDialog.tsx:170
 msgid "Read"
-msgstr ""
+msgstr "Lesen"
 
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
@@ -275,27 +291,27 @@ msgstr ""
 
 #: src/components/UploadStatus.tsx:137
 msgid "Removed {filename} from queue"
-msgstr ""
+msgstr "{filename} aus der Warteschlange entfernt"
 
 #: src/components/UploadStatus.tsx:320
 msgid "Retry Failed"
-msgstr ""
+msgstr "Wiederholungsversuch fehlgeschlagen"
 
 #: src/components/UploadStatus.tsx:77
 msgid "Retry scheduled. Files will upload when network is available."
-msgstr ""
+msgstr "Wiederholungsversuch geplant. Dateien werden hochgeladen, wenn das Netzwerk verfügbar ist."
 
 #: src/components/SharedWithList.tsx:121
 msgid "Revoke"
-msgstr ""
+msgstr "Widerrufen"
 
 #: src/components/SharedWithList.tsx:116
 msgid "Revoke access for {name}"
-msgstr ""
+msgstr "Widerruf des Zugangs für {name}"
 
 #: src/components/SharedWithList.tsx:119
 msgid "Revoking..."
-msgstr ""
+msgstr "Widerrufen..."
 
 #: src/components/ShareDialog.tsx:143
 msgid "Roles"
@@ -305,37 +321,37 @@ msgstr ""
 msgid "Save to Secret"
 msgstr ""
 
-#: src/App.tsx:27
+#: src/App.tsx:28
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:48
+#: src/App.tsx:49
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/App.tsx:34
+#: src/App.tsx:35
 msgid "Secrets"
 msgstr ""
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
-msgstr ""
+msgstr "Sicherheitswarnungen"
 
 #: src/components/AttachmentUpload.tsx:229
 msgid "Select Files"
-msgstr ""
+msgstr "Dateien auswählen"
 
 #: src/pages/ShareTarget.tsx:646
 msgid "Select Secret to attach files:"
-msgstr ""
+msgstr "Wählen Sie Geheim, um Dateien anzuhängen:"
 
 #: src/components/ShareDialog.tsx:135
 msgid "Select user or role..."
-msgstr ""
+msgstr "Benutzer oder Rolle auswählen..."
 
 #: src/components/NotificationPreferences.tsx:299
 msgid "Send Test"
-msgstr ""
+msgstr "Test senden"
 
 #: src/components/ShareDialog.tsx:229
 msgid "Share"
@@ -427,6 +443,14 @@ msgstr ""
 msgid "URL:"
 msgstr ""
 
+#: src/components/UpdatePrompt.tsx:65
+msgid "Update"
+msgstr ""
+
+#: src/components/UpdatePrompt.tsx:63
+msgid "Update application now"
+msgstr ""
+
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
 msgstr ""
@@ -441,7 +465,7 @@ msgstr ""
 msgid "Users"
 msgstr ""
 
-#: src/App.tsx:24
+#: src/App.tsx:25
 msgid "Welcome to SecPal"
 msgstr ""
 
@@ -460,22 +484,22 @@ msgstr "Sie sind offline"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:76
 msgid "login.email"
-msgstr ""
+msgstr "E-Mail"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:93
 msgid "login.password"
-msgstr ""
+msgstr "Passwort"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:117
 msgid "login.submit"
-msgstr ""
+msgstr "Einloggen"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:115
 msgid "login.submitting"
-msgstr ""
+msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:55
@@ -485,7 +509,7 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:52
 msgid "login.title"
-msgstr ""
+msgstr "Einloggen"
 
 #. placeholder {0}: encrypted.length
 #: src/components/UploadStatus.tsx:251
