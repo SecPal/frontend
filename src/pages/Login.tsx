@@ -37,7 +37,7 @@ export function Login() {
         setError(err.message);
       } else {
         setError(
-          "An unexpected error occurred. Please check console for details."
+          "An unexpected error occurred. Please try again or contact support."
         );
       }
     } finally {

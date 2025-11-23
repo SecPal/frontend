@@ -147,7 +147,7 @@ describe("Login", () => {
     fireEvent.click(submitButton);
 
     const errorElement = await screen.findByText(
-      /an unexpected error occurred.*check console/i
+      /an unexpected error occurred.*try again.*contact support/i
     );
     expect(errorElement).toBeInTheDocument();
     expect(consoleErrorSpy).toHaveBeenCalled();
