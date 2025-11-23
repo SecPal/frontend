@@ -23,16 +23,13 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
   });
 
   it("initializes with user from localStorage", () => {
     const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
-    const mockToken = "mock-token-123";
 
-    localStorage.setItem("auth_token", mockToken);
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
     const { result } = renderHook(() => useAuth(), {
@@ -40,12 +37,10 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toEqual(mockUser);
-    expect(result.current.token).toBe(mockToken);
     expect(result.current.isAuthenticated).toBe(true);
   });
 
   it("handles corrupted user data in localStorage", () => {
-    localStorage.setItem("auth_token", "mock-token");
     localStorage.setItem("auth_user", "invalid-json");
 
     const { result } = renderHook(() => useAuth(), {
@@ -53,34 +48,28 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBe("mock-token");
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("login stores token and user", () => {
+  it("login stores user", () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
     const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
-    const mockToken = "new-token-456";
 
     act(() => {
-      result.current.login(mockToken, mockUser);
+      result.current.login(mockUser);
     });
 
     expect(result.current.user).toEqual(mockUser);
-    expect(result.current.token).toBe(mockToken);
     expect(result.current.isAuthenticated).toBe(true);
-    expect(localStorage.getItem("auth_token")).toBe(mockToken);
     expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
   });
 
-  it("logout clears token and user", () => {
+  it("logout clears user", () => {
     const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
-    const mockToken = "mock-token-123";
 
-    localStorage.setItem("auth_token", mockToken);
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
     const { result } = renderHook(() => useAuth(), {
@@ -92,13 +81,11 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(result.current.token).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("updates isAuthenticated when token changes", () => {
+  it("updates isAuthenticated when user changes", () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -106,7 +93,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      result.current.login("token", { id: 1, name: "User", email: "u@e.com" });
+      result.current.login({ id: 1, name: "User", email: "u@e.com" });
     });
 
     expect(result.current.isAuthenticated).toBe(true);

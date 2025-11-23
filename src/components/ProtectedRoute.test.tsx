@@ -61,7 +61,6 @@ describe("ProtectedRoute", () => {
   });
 
   it("renders children when authenticated", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -74,7 +73,6 @@ describe("ProtectedRoute", () => {
   });
 
   it("renders header when authenticated", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test User", email: "test@example.com" })

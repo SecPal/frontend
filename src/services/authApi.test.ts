@@ -17,9 +17,8 @@ describe("authApi", () => {
   });
 
   describe("login", () => {
-    it("sends POST request to /v1/auth/token", async () => {
+    it("sends POST request to /v1/auth/token with credentials", async () => {
       const mockResponse = {
-        token: "test-token-123",
         user: { id: 1, name: "Test User", email: "test@example.com" },
       };
 
@@ -41,6 +40,7 @@ describe("authApi", () => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({
             email: "test@example.com",
             password: "password123",
@@ -54,7 +54,6 @@ describe("authApi", () => {
 
     it("uses custom device_name when provided", async () => {
       const mockResponse = {
-        token: "test-token",
         user: { id: 1, name: "Test", email: "test@example.com" },
       };
 
@@ -133,21 +132,21 @@ describe("authApi", () => {
   });
 
   describe("logout", () => {
-    it("sends POST request to /v1/auth/logout with token", async () => {
+    it("sends POST request to /v1/auth/logout with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
       } as Response);
 
-      await logout("test-token-123");
+      await logout();
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/v1/auth/logout"),
         expect.objectContaining({
           method: "POST",
           headers: {
-            Authorization: "Bearer test-token-123",
             Accept: "application/json",
           },
+          credentials: "include",
         })
       );
     });
@@ -158,7 +157,7 @@ describe("authApi", () => {
         json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
-      await expect(logout("invalid-token")).rejects.toThrow(AuthApiError);
+      await expect(logout()).rejects.toThrow(AuthApiError);
     });
 
     it("throws AuthApiError with fallback message on non-JSON response", async () => {
@@ -169,26 +168,26 @@ describe("authApi", () => {
         },
       } as Partial<Response> as Response);
 
-      await expect(logout("invalid-token")).rejects.toThrow("Logout failed");
+      await expect(logout()).rejects.toThrow("Logout failed");
     });
   });
 
   describe("logoutAll", () => {
-    it("sends POST request to /v1/auth/logout-all with token", async () => {
+    it("sends POST request to /v1/auth/logout-all with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
       } as Response);
 
-      await logoutAll("test-token-123");
+      await logoutAll();
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/v1/auth/logout-all"),
         expect.objectContaining({
           method: "POST",
           headers: {
-            Authorization: "Bearer test-token-123",
             Accept: "application/json",
           },
+          credentials: "include",
         })
       );
     });
@@ -199,7 +198,7 @@ describe("authApi", () => {
         json: async () => ({ message: "Unauthorized" }),
       } as Response);
 
-      await expect(logoutAll("invalid-token")).rejects.toThrow(AuthApiError);
+      await expect(logoutAll()).rejects.toThrow(AuthApiError);
     });
 
     it("throws AuthApiError with fallback message on non-JSON response", async () => {
@@ -210,9 +209,7 @@ describe("authApi", () => {
         },
       } as Partial<Response> as Response);
 
-      await expect(logoutAll("invalid-token")).rejects.toThrow(
-        "Logout all devices failed"
-      );
+      await expect(logoutAll()).rejects.toThrow("Logout all devices failed");
     });
   });
 

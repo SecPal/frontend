@@ -10,16 +10,14 @@ import { Button } from "./button";
 
 export function Header() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    if (token) {
-      try {
-        await apiLogout(token);
-      } catch (error) {
-        console.error("Logout API call failed:", error);
-        // TODO: Add user notification (toast/alert) for better UX
-      }
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // TODO: Add user notification (toast/alert) for better UX
     }
     logout();
     navigate("/login");

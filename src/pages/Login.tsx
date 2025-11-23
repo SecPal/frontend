@@ -27,7 +27,7 @@ export function Login() {
 
     try {
       const response = await apiLogin({ email, password });
-      login(response.token, response.user);
+      login(response.user);
       navigate("/secrets");
     } catch (err) {
       if (err instanceof AuthApiError) {

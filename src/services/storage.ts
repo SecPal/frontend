@@ -7,10 +7,16 @@ import type { User } from "../contexts/auth-context";
  * Storage abstraction layer for auth data
  * Implements Single Responsibility Principle (SOLID)
  * Allows easy mocking in tests and future storage backend changes
+ *
+ * @deprecated Token methods (getToken, setToken, removeToken) are deprecated
+ * as authentication now uses httpOnly cookies. These will be removed in a future version.
  */
 export interface AuthStorage {
+  /** @deprecated Use httpOnly cookies instead */
   getToken(): string | null;
+  /** @deprecated Use httpOnly cookies instead */
   setToken(token: string): void;
+  /** @deprecated Use httpOnly cookies instead */
   removeToken(): void;
   getUser(): User | null;
   setUser(user: User): void;
@@ -59,6 +65,8 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   clear(): void {
+    // Note: Token methods still called for backwards compatibility
+    // but will be removed when token methods are fully removed
     this.removeToken();
     this.removeUser();
   }
