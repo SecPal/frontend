@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2025 SecPal
+# SPDX-License-Identifier: CC0-1.0
+
+# Apache configuration for SPA routing
+# Required for uberspace deployment to handle React Router routes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Don't rewrite files or directories that actually exist
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Rewrite everything else to index.html to allow React Router to handle routing
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+  # Enable HSTS (HTTP Strict Transport Security)
+  # NOTE: The 'preload' directive requires manual submission to hstspreload.org
+  # and only has effect if the domain is accepted into the preload list.
+  # Currently removed until secpal.app/secpal.dev are submitted and approved.
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+
+  # Prevent MIME type sniffing
+  Header always set X-Content-Type-Options "nosniff"
+
+  # XSS Protection (legacy browsers)
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Prevent clickjacking
+  Header always set X-Frame-Options "DENY"
+
+  # Referrer Policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions Policy (limit browser features)
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# Enable compression for better performance
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Images
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+
+  # CSS and JavaScript (versioned via build hash)
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+
+  # Fonts
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+
+  # HTML (no cache for index.html to get updates)
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
