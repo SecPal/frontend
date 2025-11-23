@@ -107,6 +107,70 @@ For comprehensive security details, threat model, and cryptographic guarantees, 
 - ✅ Phase 4: Download & Decryption (PR #188, merged 21.11.2025)
 - ✅ Phase 5: Security Audit & Documentation (PR #190, merged 22.11.2025)
 
+## 🔒 Authentication (httpOnly Cookies)
+
+SecPal uses **httpOnly cookie-based authentication** with Laravel Sanctum SPA mode for enhanced security. This protects authentication tokens from XSS attacks.
+
+**Security Benefits:**
+
+- 🛡️ **XSS Protection**: httpOnly cookies not accessible to JavaScript
+- 🔐 **CSRF Protection**: Sanctum CSRF token validation for state-changing requests
+- ✅ **Secure Attributes**: Cookies use `Secure`, `SameSite=Lax` in production
+- 🚫 **No localStorage**: Tokens never stored in localStorage (no XSS exposure)
+
+**Authentication Flow:**
+
+```typescript
+import { login, logout } from "@/services/authApi";
+
+// Login (CSRF token fetched automatically)
+const response = await login({
+  email: "user@secpal.app",
+  password: "SecurePassword123!",
+});
+// Response: { user: { id, name, email } }
+// Session cookie set by backend (httpOnly, not accessible to JS)
+
+// Logout (revokes session)
+await logout();
+```
+
+**Making Authenticated Requests:**
+
+```typescript
+import { fetchWithCsrf } from "@/services/csrf";
+
+// For state-changing requests (POST, PUT, PATCH, DELETE)
+const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ title: "My Secret" }),
+});
+// ✅ credentials: include added automatically
+// ✅ X-XSRF-TOKEN header added automatically
+// ✅ 419 retry handled automatically
+
+// For GET requests (no CSRF needed)
+const response = await fetch("https://api.secpal.app/v1/secrets", {
+  credentials: "include", // REQUIRED: Sends cookies
+});
+```
+
+**Migration from localStorage:**
+
+Previous versions used localStorage for token storage, which was vulnerable to XSS attacks. The migration to httpOnly cookies significantly improves security.
+
+📘 **[docs/authentication-migration.md](docs/authentication-migration.md)** - Complete migration guide with troubleshooting
+
+**Implementation Status:**
+
+- ✅ Backend PR-1: Sanctum SPA Configuration & CORS Setup (SecPal/api#209, merged 22.11.2025)
+- ✅ Backend PR-2: CSRF Token Endpoint & Security Hardening (SecPal/api#210, merged 23.11.2025)
+- ✅ Backend PR-3: Tests & API Documentation Update (SecPal/api#208, merged 23.11.2025)
+- ✅ Frontend PR-1: localStorage Removal & httpOnly Cookie Migration (#210, merged 23.11.2025)
+- ✅ Frontend PR-2: CSRF Token Handling & Request Interceptor (#211, merged 23.11.2025)
+- ✅ Frontend PR-3: Integration Tests & Developer Documentation (#212, current PR)
+
 ## 🔐 Secret Management (Password Vault UI)
 
 SecPal provides a comprehensive **password vault UI** with encrypted storage, file attachments, and sharing capabilities.
