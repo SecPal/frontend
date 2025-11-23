@@ -60,9 +60,17 @@ export async function login(
     let error: ApiError | null = null;
     try {
       error = await response.json();
+      console.error("Login API error:", error);
     } catch {
       // Fallback if response is not JSON (e.g., HTML error page)
-      throw new AuthApiError("Login failed");
+      console.error(
+        "Login failed - non-JSON response:",
+        response.status,
+        response.statusText
+      );
+      throw new AuthApiError(
+        `Login failed: ${response.status} ${response.statusText}`
+      );
     }
     throw new AuthApiError(error?.message || "Login failed", error?.errors);
   }

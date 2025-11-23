@@ -1,7 +1,5 @@
-/*
- * SPDX-FileCopyrightText: Tailwind Labs Inc.
- * SPDX-License-Identifier: LicenseRef-TailwindPlus
- */
+// SPDX-FileCopyrightText: Tailwind Labs Inc.
+// SPDX-License-Identifier: LicenseRef-TailwindPlus
 
 import * as Headless from "@headlessui/react";
 import React, { forwardRef } from "react";

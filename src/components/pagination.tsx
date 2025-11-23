@@ -1,7 +1,5 @@
-/*
- * SPDX-FileCopyrightText: Tailwind Labs Inc.
- * SPDX-License-Identifier: LicenseRef-TailwindPlus
- */
+// SPDX-FileCopyrightText: Tailwind Labs Inc.
+// SPDX-License-Identifier: LicenseRef-TailwindPlus
 
 import clsx from "clsx";
 import type React from "react";

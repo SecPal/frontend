@@ -30,10 +30,15 @@ export function Login() {
       login(response.user);
       navigate("/secrets");
     } catch (err) {
+      console.error("Login error:", err);
       if (err instanceof AuthApiError) {
         setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
-        setError("An unexpected error occurred");
+        setError(
+          "An unexpected error occurred. Please try again or contact support."
+        );
       }
     } finally {
       setIsSubmitting(false);
