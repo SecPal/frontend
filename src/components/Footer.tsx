@@ -1,8 +1,6 @@
-/*
- * SPDX-FileCopyrightText: 2025 SecPal
- * SPDX-FileCopyrightText: Tailwind Labs Inc.
- * SPDX-License-Identifier: AGPL-3.0-or-later
- */
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: Tailwind Labs Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/macro";
 import { ScaleIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
