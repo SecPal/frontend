@@ -8,7 +8,7 @@
     .lock-body { fill: #ffffff; }
     .lock-shackle { stroke: #ffffff; }
     .keyhole { fill: #3b82f6; }
-    
+
     @media (prefers-color-scheme: dark) {
       .bg { fill: #60a5fa; }
       .stroke { stroke: #3b82f6; }
@@ -17,24 +17,24 @@
       .keyhole { fill: #60a5fa; }
     }
   </style>
-  
+
   <!-- Shield background -->
-  <path class="bg stroke" 
-        d="M96 20 L150 40 L150 85 C150 120 130 145 96 170 C62 145 42 120 42 85 L42 40 Z" 
+  <path class="bg stroke"
+        d="M96 20 L150 40 L150 85 C150 120 130 145 96 170 C62 145 42 120 42 85 L42 40 Z"
         stroke-width="3"/>
-  
+
   <!-- Lock icon inside shield -->
   <g transform="translate(96, 95)">
     <!-- Lock body -->
     <rect class="lock-body" x="-18" y="0" width="36" height="30" rx="4"/>
-    
+
     <!-- Lock shackle -->
     <path class="lock-shackle"
-          d="M -12 0 L -12 -15 C -12 -23 -8 -27 0 -27 C 8 -27 12 -23 12 -15 L 12 0" 
-          fill="none" 
-          stroke-width="6" 
+          d="M -12 0 L -12 -15 C -12 -23 -8 -27 0 -27 C 8 -27 12 -23 12 -15 L 12 0"
+          fill="none"
+          stroke-width="6"
           stroke-linecap="round"/>
-    
+
     <!-- Keyhole -->
     <circle class="keyhole" cx="0" cy="10" r="4"/>
     <rect class="keyhole" x="-2" y="12" width="4" height="8"/>
