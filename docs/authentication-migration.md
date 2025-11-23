@@ -121,7 +121,7 @@ sequenceDiagram
 
 ```env
 # Development API endpoint
-VITE_API_URL=http://api.secpal.test
+VITE_API_URL=http://api.secpal.dev
 
 # No token-related variables needed anymore!
 # ❌ OLD: VITE_AUTH_TOKEN_KEY (removed)
@@ -425,7 +425,7 @@ SESSION_DOMAIN=localhost
 ```typescript
 // Frontend: Verify API URL matches backend domain
 console.log(import.meta.env.VITE_API_URL);
-// Should be: http://api.secpal.test (if using DDEV)
+// Should be: http://api.secpal.dev (development)
 ```
 
 ### Issue: Session Expires Too Quickly
