@@ -178,6 +178,10 @@ describe("authApi", () => {
     });
 
     it("handles non-JSON error responses gracefully", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
       // Mock CSRF token fetch
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -187,6 +191,7 @@ describe("authApi", () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
+        statusText: "Internal Server Error",
         json: async () => {
           throw new Error("Unexpected token < in JSON");
         },
@@ -194,7 +199,48 @@ describe("authApi", () => {
 
       await expect(
         login({ email: "test@example.com", password: "test" })
-      ).rejects.toThrow("Login failed");
+      ).rejects.toThrow("Login failed: 500 Internal Server Error");
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Login failed - non-JSON response:",
+        500,
+        "Internal Server Error"
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("logs API error details on JSON error response", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const errorResponse = {
+        message: "Validation failed",
+        errors: { email: ["Email is required"] },
+      };
+
+      // Mock CSRF token fetch
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      // Mock failed login with JSON error
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        json: async () => errorResponse,
+      } as Response);
+
+      try {
+        await login({ email: "", password: "test" });
+      } catch {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "Login API error:",
+          errorResponse
+        );
+      }
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

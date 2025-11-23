@@ -102,6 +102,59 @@ describe("Login", () => {
     expect(errorElement).toBeInTheDocument();
   });
 
+  it("displays generic error message for non-AuthApiError", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockLogin.mockRejectedValueOnce(new Error("Network error"));
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /log in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
+    fireEvent.click(submitButton);
+
+    const errorElement = await screen.findByText(/network error/i);
+    expect(errorElement).toBeInTheDocument();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Login error:",
+      expect.any(Error)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("displays fallback error message for unknown error types", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    mockLogin.mockRejectedValueOnce("string error");
+
+    renderLogin();
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /log in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
+    fireEvent.click(submitButton);
+
+    const errorElement = await screen.findByText(
+      /an unexpected error occurred.*check console/i
+    );
+    expect(errorElement).toBeInTheDocument();
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("disables submit button while submitting", async () => {
     const mockLogin = vi.mocked(authApi.login);
     mockLogin.mockImplementation(
