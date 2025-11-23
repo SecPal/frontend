@@ -51,11 +51,15 @@ msgstr "• Write: View + edit secret"
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
-#: src/App.tsx:31
+#: src/components/UpdatePrompt.tsx:53
+msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
+msgstr "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
+
+#: src/App.tsx:32
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:45
+#: src/App.tsx:46
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -87,7 +91,7 @@ msgstr "Are you sure you want to revoke access for {name}?"
 msgid "Attached Files"
 msgstr "Attached Files"
 
-#: src/App.tsx:56
+#: src/App.tsx:57
 msgid "Back to Home"
 msgstr "Back to Home"
 
@@ -123,6 +127,10 @@ msgstr "Critical security notifications and warnings"
 #: src/components/AttachmentList.tsx:215
 msgid "Delete"
 msgstr "Delete"
+
+#: src/components/UpdatePrompt.tsx:70
+msgid "Dismiss update notification"
+msgstr "Dismiss update notification"
 
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
@@ -229,6 +237,10 @@ msgstr "Invalid or unsafe URL"
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
+#: src/components/UpdatePrompt.tsx:72
+msgid "Later"
+msgstr "Later"
+
 #: src/components/AttachmentList.tsx:137
 msgid "Loading attachments..."
 msgstr "Loading attachments..."
@@ -263,6 +275,10 @@ msgstr "Logout"
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
+
+#: src/components/UpdatePrompt.tsx:50
+msgid "New version available"
+msgstr "New version available"
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -365,15 +381,15 @@ msgstr "Roles"
 msgid "Save to Secret"
 msgstr "Save to Secret"
 
-#: src/App.tsx:27
+#: src/App.tsx:28
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:48
+#: src/App.tsx:49
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/App.tsx:34
+#: src/App.tsx:35
 msgid "Secrets"
 msgstr "Secrets"
 
@@ -482,6 +498,14 @@ msgstr "This is a test notification from SecPal"
 msgid "Title:"
 msgstr "Title:"
 
+#: src/components/UpdatePrompt.tsx:65
+msgid "Update"
+msgstr "Update"
+
+#: src/components/UpdatePrompt.tsx:63
+msgid "Update application now"
+msgstr "Update application now"
+
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
 msgstr "Upload Queue"
@@ -501,7 +525,7 @@ msgstr "URL:"
 msgid "Users"
 msgstr "Users"
 
-#: src/App.tsx:24
+#: src/App.tsx:25
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
