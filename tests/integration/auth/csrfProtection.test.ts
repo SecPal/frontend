@@ -243,12 +243,9 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       // Should throw CsrfError with specific message
-      const error = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
-        {
-          method: "POST",
-        }
-      ).catch((e) => e);
+      const error = await fetchWithCsrf("https://api.secpal.app/v1/resource", {
+        method: "POST",
+      }).catch((e) => e);
 
       expect(error).toBeInstanceOf(CsrfError);
       expect(error.message).toContain(
@@ -369,12 +366,9 @@ describe("CSRF Protection Integration", () => {
         json: async () => ({ data: "public data" }),
       } as Response);
 
-      const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/public",
-        {
-          method: "GET",
-        }
-      );
+      const response = await fetchWithCsrf("https://api.secpal.app/v1/public", {
+        method: "GET",
+      });
 
       expect(response.ok).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith(
