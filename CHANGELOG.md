@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **PWA Update Notification** (#TBD)
+- **PWA Update Notification** (#222)
   - Changed `vite.config.ts` PWA plugin from `registerType: 'autoUpdate'` to `registerType: 'prompt'`
   - `useServiceWorkerUpdate` hook for detecting and managing PWA updates
     - `needRefresh` state indicates when new version is available
