@@ -55,7 +55,7 @@ fetch(url, {
 
 ### 3. **Secure Cookie Attributes**
 
-```
+```http
 Set-Cookie: laravel_session=...;
   HttpOnly;           // JavaScript cannot access
   Secure;             // HTTPS only (production)
@@ -531,7 +531,7 @@ FRONTEND_URL=https://secpal.app
 
 Backend should set:
 
-```
+```http
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin
