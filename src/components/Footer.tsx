@@ -24,7 +24,7 @@ export function Footer() {
             className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
           >
             <ScaleIcon className="h-4 w-4" aria-hidden="true" />
-            <span>AGPL v3+</span>
+            <Trans>AGPL v3+</Trans>
           </Link>
           <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">
             |

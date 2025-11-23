@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-22 21:06+0100\n"
+"POT-Creation-Date: 2025-11-23 20:34+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -11,15 +11,19 @@ msgstr ""
 msgid "-- Choose a Secret --"
 msgstr ""
 
-#: src/App.tsx:30
+#: src/components/Footer.tsx:27
+msgid "AGPL v3+"
+msgstr ""
+
+#: src/App.tsx:31
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:44
+#: src/App.tsx:45
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/components/ShareDialog.tsx:163
+#: src/components/ShareDialog.tsx:176
 msgid "Admin"
 msgstr ""
 
@@ -43,11 +47,11 @@ msgstr ""
 msgid "Attached Files"
 msgstr ""
 
-#: src/App.tsx:55
+#: src/App.tsx:56
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
-#: src/components/ShareDialog.tsx:213
+#: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr ""
 
@@ -114,12 +118,12 @@ msgstr ""
 msgid "Errors:"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:174
+#: src/components/ShareDialog.tsx:187
 msgid "Expires (optional):"
 msgstr ""
 
 #. placeholder {0}: formatDate(share.expires_at)
-#: src/components/SharedWithList.tsx:99
+#: src/components/SharedWithList.tsx:106
 msgid "Expires: {0}"
 msgstr ""
 
@@ -167,7 +171,7 @@ msgstr ""
 
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at)
-#: src/components/SharedWithList.tsx:92
+#: src/components/SharedWithList.tsx:99
 msgid "Granted by {0} on {1}"
 msgstr ""
 
@@ -197,7 +201,7 @@ msgstr ""
 msgid "Loading..."
 msgstr ""
 
-#: src/components/Header.tsx:43
+#: src/components/Header.tsx:53
 msgid "Logout"
 msgstr ""
 
@@ -237,12 +241,16 @@ msgstr ""
 msgid "Offline - will sync when online"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:188
+#: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:146
+#: src/components/ShareDialog.tsx:159
 msgid "Permission:"
+msgstr ""
+
+#: src/components/Footer.tsx:16
+msgid "Powered by SecPal - a guard's best friend"
 msgstr ""
 
 #: src/components/AttachmentList.tsx:186
@@ -257,7 +265,7 @@ msgstr ""
 msgid "Processing Progress"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:157
+#: src/components/ShareDialog.tsx:170
 msgid "Read"
 msgstr ""
 
@@ -277,19 +285,19 @@ msgstr ""
 msgid "Retry scheduled. Files will upload when network is available."
 msgstr ""
 
-#: src/components/SharedWithList.tsx:114
+#: src/components/SharedWithList.tsx:121
 msgid "Revoke"
 msgstr ""
 
-#: src/components/SharedWithList.tsx:109
+#: src/components/SharedWithList.tsx:116
 msgid "Revoke access for {name}"
 msgstr ""
 
-#: src/components/SharedWithList.tsx:112
+#: src/components/SharedWithList.tsx:119
 msgid "Revoking..."
 msgstr ""
 
-#: src/components/ShareDialog.tsx:130
+#: src/components/ShareDialog.tsx:143
 msgid "Roles"
 msgstr ""
 
@@ -297,15 +305,15 @@ msgstr ""
 msgid "Save to Secret"
 msgstr ""
 
-#: src/App.tsx:26
+#: src/App.tsx:27
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:47
+#: src/App.tsx:48
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/App.tsx:33
+#: src/App.tsx:34
 msgid "Secrets"
 msgstr ""
 
@@ -321,7 +329,7 @@ msgstr ""
 msgid "Select Secret to attach files:"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:122
+#: src/components/ShareDialog.tsx:135
 msgid "Select user or role..."
 msgstr ""
 
@@ -329,11 +337,11 @@ msgstr ""
 msgid "Send Test"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:216
+#: src/components/ShareDialog.tsx:229
 msgid "Share"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:102
+#: src/components/ShareDialog.tsx:108
 msgid "Share \"{secretTitle}\""
 msgstr ""
 
@@ -341,7 +349,11 @@ msgstr ""
 msgid "Share Target"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:112
+#: src/components/ShareDialog.tsx:113
+msgid "Share this secret with users or roles. Select a recipient, choose permission level, and optionally set an expiration date."
+msgstr ""
+
+#: src/components/ShareDialog.tsx:125
 msgid "Share with:"
 msgstr ""
 
@@ -350,11 +362,11 @@ msgid "Shared Content"
 msgstr ""
 
 #. placeholder {0}: shares.length
-#: src/components/SharedWithList.tsx:66
+#: src/components/SharedWithList.tsx:69
 msgid "Shared with ({0})"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:216
+#: src/components/ShareDialog.tsx:229
 msgid "Sharing..."
 msgstr ""
 
@@ -365,6 +377,10 @@ msgstr ""
 #: src/components/OfflineIndicator.tsx:29
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
+
+#: src/components/Footer.tsx:39
+msgid "Source Code"
+msgstr ""
 
 #: src/pages/ShareTarget.tsx:695
 msgid "Successfully uploaded files!"
@@ -421,15 +437,15 @@ msgstr ""
 msgid "Uploading..."
 msgstr ""
 
-#: src/components/ShareDialog.tsx:123
+#: src/components/ShareDialog.tsx:136
 msgid "Users"
 msgstr ""
 
-#: src/App.tsx:23
+#: src/App.tsx:24
 msgid "Welcome to SecPal"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:160
+#: src/components/ShareDialog.tsx:173
 msgid "Write"
 msgstr ""
 
@@ -442,34 +458,34 @@ msgid "You're offline"
 msgstr "Sie sind offline"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:74
+#: src/pages/Login.tsx:76
 msgid "login.email"
-msgstr "E-Mail"
+msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:91
+#: src/pages/Login.tsx:93
 msgid "login.password"
-msgstr "Passwort"
+msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:114
+#: src/pages/Login.tsx:117
 msgid "login.submit"
-msgstr "Anmelden"
+msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:112
+#: src/pages/Login.tsx:115
 msgid "login.submitting"
-msgstr "Anmelden läuft..."
+msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:59
+#: src/pages/Login.tsx:55
 msgid "login.subtitle"
-msgstr "Ihr digitaler Wachbegleiter"
+msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:56
+#: src/pages/Login.tsx:52
 msgid "login.title"
-msgstr "Anmelden"
+msgstr ""
 
 #. placeholder {0}: encrypted.length
 #: src/components/UploadStatus.tsx:251
@@ -484,15 +500,15 @@ msgstr ""
 msgid "{pendingOps} operation(s) pending"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:198
+#: src/components/ShareDialog.tsx:211
 msgid "• Admin: View + edit + share + delete"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:192
+#: src/components/ShareDialog.tsx:205
 msgid "• Read: View secret details"
 msgstr ""
 
-#: src/components/ShareDialog.tsx:195
+#: src/components/ShareDialog.tsx:208
 msgid "• Write: View + edit secret"
 msgstr ""
 
