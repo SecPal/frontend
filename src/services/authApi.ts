@@ -10,7 +10,6 @@ interface LoginCredentials {
 }
 
 interface LoginResponse {
-  token: string;
   user: {
     id: number;
     name: string;
@@ -42,6 +41,7 @@ export async function login(
 ): Promise<LoginResponse> {
   const response = await fetch(`${getApiBaseUrl()}/v1/auth/token`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -69,14 +69,13 @@ export async function login(
 
 /**
  * Logout - revoke current token
- * @param token - The auth token to revoke
  * @throws {AuthApiError} If logout fails
  */
-export async function logout(token: string): Promise<void> {
+export async function logout(): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout`, {
     method: "POST",
+    credentials: "include",
     headers: {
-      Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
   });
@@ -94,14 +93,13 @@ export async function logout(token: string): Promise<void> {
 
 /**
  * Logout all devices - revoke all tokens
- * @param token - The auth token
  * @throws {AuthApiError} If logout fails
  */
-export async function logoutAll(token: string): Promise<void> {
+export async function logoutAll(): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
     method: "POST",
+    credentials: "include",
     headers: {
-      Authorization: `Bearer ${token}`,
       Accept: "application/json",
     },
   });

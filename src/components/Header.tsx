@@ -10,17 +10,18 @@ import { Button } from "./button";
 
 export function Header() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    if (token) {
-      try {
-        await apiLogout(token);
-      } catch (error) {
-        console.error("Logout API call failed:", error);
-        // TODO: Add user notification (toast/alert) for better UX
-      }
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // TODO: Add user notification (toast/alert) for better UX
     }
+    // Intentionally proceed with local logout even if API call fails.
+    // This ensures the user can always log out from the UI perspective,
+    // but may leave the backend session active if the API call failed.
     logout();
     navigate("/login");
   };

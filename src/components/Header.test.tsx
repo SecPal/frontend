@@ -41,7 +41,6 @@ describe("Header", () => {
   });
 
   it("displays user name when authenticated", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "John Doe", email: "john@example.com" })
@@ -53,7 +52,6 @@ describe("Header", () => {
   });
 
   it("displays SecPal logo", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -65,7 +63,6 @@ describe("Header", () => {
   });
 
   it("displays logout button", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -80,7 +77,6 @@ describe("Header", () => {
     const mockLogout = vi.mocked(authApi.logout);
     mockLogout.mockResolvedValueOnce(undefined);
 
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -92,10 +88,9 @@ describe("Header", () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(mockLogout).toHaveBeenCalledWith("test-token");
+      expect(mockLogout).toHaveBeenCalled();
     });
 
-    expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
@@ -106,7 +101,6 @@ describe("Header", () => {
       .mockImplementation(() => {});
     mockLogout.mockRejectedValueOnce(new Error("API Error"));
 
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -125,14 +119,12 @@ describe("Header", () => {
       );
     });
 
-    expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
 
     consoleErrorSpy.mockRestore();
   });
 
   it("renders language switcher", () => {
-    localStorage.setItem("auth_token", "test-token");
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })

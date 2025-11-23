@@ -332,6 +332,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Authentication Migration to httpOnly Cookies** (#210, Part of Epic #208) - **XSS Protection Enhancement**
+  - Migrated from localStorage-based token storage to httpOnly cookies for XSS protection
+  - Removed client-side token handling from `AuthContext` and `useAuth` hook
+  - Updated `authApi.ts` to use `credentials: "include"` for cookie-based authentication
+  - Removed `token` parameter from `logout()` and `logoutAll()` API functions
+  - Updated `LoginResponse` interface - removed `token` field (authentication now handled via cookies)
+  - Deprecated token-related methods in `storage.ts` (marked for future removal)
+  - Updated all authentication tests to reflect new API (Header, Login, ProtectedRoute, useAuth)
+  - **Security Improvement**: Eliminates XSS attack vector by preventing JavaScript access to authentication tokens
+  - Backend dependencies: Laravel Sanctum SPA mode (#209), CSRF protection (#210)
+  - Part of Authentication Security Epic #208
+
 - **Preflight Script Performance**: Optimized `scripts/preflight.sh` for significantly faster local development
   - Prettier/markdownlint: Check only changed files in branch instead of all files (10-100x faster for small changes)
   - npm/pnpm/yarn: Skip dependency installation if lockfile unchanged and node_modules exists (saves minutes per push)

@@ -10,22 +10,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authStorage.getUser();
   });
 
-  const [token, setToken] = useState<string | null>(() => {
-    return authStorage.getToken();
-  });
-
   const [isLoading] = useState(false);
 
-  const login = (newToken: string, newUser: User) => {
-    authStorage.setToken(newToken);
+  const login = (newUser: User) => {
     authStorage.setUser(newUser);
-    setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
     authStorage.clear();
-    setToken(null);
     setUser(null);
   };
 
@@ -33,8 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
-        isAuthenticated: !!token,
+        isAuthenticated: !!user,
         isLoading,
         login,
         logout,

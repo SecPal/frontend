@@ -147,7 +147,6 @@ describe("Login", () => {
 
     // Second call: success
     mockLogin.mockResolvedValueOnce({
-      token: "test-token",
       user: { id: 1, name: "Test", email: "test@example.com" },
     });
 
