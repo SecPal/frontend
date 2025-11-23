@@ -63,7 +63,7 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
     offlineReady: [swOfflineReady],
     updateServiceWorker: swUpdate,
   } = useRegisterSW({
-    onRegisteredSW(swUrl, registration) {
+    onRegisteredSW(swUrl: string, registration?: ServiceWorkerRegistration) {
       console.log(`[SW] Service Worker registered: ${swUrl}`);
 
       // Check for updates every hour
@@ -77,7 +77,7 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
         ); // 60 minutes
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.error("[SW] Registration failed:", error);
     },
   });
