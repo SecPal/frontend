@@ -8,12 +8,24 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- PWA Theme Colors - Adapt to system theme -->
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
-    
+    <meta name="theme-color" content="#ffffff" />
     <title>SecPal</title>
+    <script>
+      // Adaptive theme-color for PWA
+      // Updates dynamically based on system color scheme
+      (function() {
+        const setThemeColor = (isDark) => {
+          const color = isDark ? '#000000' : '#ffffff';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+        };
+        
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        setThemeColor(mediaQuery.matches);
+        
+        // Listen for changes
+        mediaQuery.addEventListener('change', (e) => setThemeColor(e.matches));
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
