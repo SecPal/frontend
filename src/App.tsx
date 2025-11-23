@@ -7,6 +7,7 @@ import { Link } from "./components/link";
 import { Footer } from "./components/Footer";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
@@ -127,6 +128,7 @@ function App() {
           <Footer />
           <OfflineIndicator />
           <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
+          <UpdatePrompt />
         </div>
       </BrowserRouter>
     </AuthProvider>

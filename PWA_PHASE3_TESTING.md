@@ -35,9 +35,86 @@ This document describes how to test the new PWA Phase 3 features locally.
 
 ---
 
+## 🔄 Feature 0 - PWA Update Notifications
+
+### PWA Update Components
+
+- Service Worker update detection with `registerType: 'prompt'`
+- `useServiceWorkerUpdate` hook for managing updates
+- `UpdatePrompt` component with Catalyst Design System
+- Automatic hourly update checks
+- User-controlled update installation
+
+### How to Test PWA Updates
+
+#### Testing with Production Build
+
+1. **Build the app**
+
+   ```bash
+   cd /home/user/code/SecPal/frontend
+   npm run build
+   npm run preview
+   # Opens on: http://localhost:4173
+   ```
+
+2. **Open app in browser**
+   - Chrome/Edge recommended for testing
+   - Open <http://localhost:4173>
+
+3. **Simulate a code change**
+   - Make a small change in `src/App.tsx` (e.g., change a text)
+   - Rebuild: `npm run build`
+   - Preview should auto-reload with new build
+
+4. **Trigger update check**
+   - Wait for automatic check (happens every hour)
+   - OR manually trigger:
+     - DevTools → Application → Service Workers → "Update" button
+     - OR refresh the page
+
+5. **Verify Update Prompt appears**
+   - Alert appears in bottom-right corner
+   - Title: "New version available"
+   - Description: "A new version of SecPal is ready..."
+   - Two buttons: "Update" and "Later"
+
+6. **Test "Update" button**
+   - Click "Update"
+   - Page reloads automatically
+   - New version is active
+
+7. **Test "Later" button**
+   - Make another change → rebuild
+   - Trigger update check again
+   - Click "Later"
+   - Prompt disappears
+   - App continues with current version
+   - New version will be offered again on next check
+
+#### Testing in Development
+
+Note: Service Worker updates work differently in `npm run dev`:
+
+- Vite's HMR (Hot Module Replacement) takes precedence
+- Service Worker may not register in dev mode
+- Use production build (`npm run build && npm run preview`) for realistic testing
+
+### PWA Update Notifications - Success Criteria
+
+- ✅ Update prompt appears when new version is detected
+- ✅ "Update" button reloads page with new version
+- ✅ "Later" button dismisses prompt without updating
+- ✅ Prompt is accessible (ARIA attributes, keyboard navigation)
+- ✅ Automatic hourly update checks work
+- ✅ No automatic reload (user controls when to update)
+- ✅ Prompt positioned bottom-right, non-intrusive
+
+---
+
 ## 🔔 Feature 1 - Push Notifications
 
-### What It Includes
+### Push Notifications Overview
 
 - Notification Permission Management
 - Service Worker Push Notifications
