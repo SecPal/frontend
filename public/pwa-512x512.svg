@@ -2,6 +2,41 @@
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#3b82f6" rx="64"/>
-  <text x="256" y="330" font-family="Arial, sans-serif" font-size="220" font-weight="bold" fill="white" text-anchor="middle">SP</text>
+  <style>
+    .bg { fill: #3b82f6; }
+    .stroke { stroke: #2563eb; }
+    .lock-body { fill: #ffffff; }
+    .lock-shackle { stroke: #ffffff; }
+    .keyhole { fill: #3b82f6; }
+    
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #60a5fa; }
+      .stroke { stroke: #3b82f6; }
+      .lock-body { fill: #000000; }
+      .lock-shackle { stroke: #000000; }
+      .keyhole { fill: #60a5fa; }
+    }
+  </style>
+  
+  <!-- Shield background -->
+  <path class="bg stroke" 
+        d="M256 53 L400 107 L400 227 C400 320 347 387 256 453 C165 387 112 320 112 227 L112 107 Z" 
+        stroke-width="8"/>
+  
+  <!-- Lock icon inside shield -->
+  <g transform="translate(256, 253)">
+    <!-- Lock body -->
+    <rect class="lock-body" x="-48" y="0" width="96" height="80" rx="10"/>
+    
+    <!-- Lock shackle -->
+    <path class="lock-shackle"
+          d="M -32 0 L -32 -40 C -32 -61 -21 -72 0 -72 C 21 -72 32 -61 32 -40 L 32 0" 
+          fill="none" 
+          stroke-width="16" 
+          stroke-linecap="round"/>
+    
+    <!-- Keyhole -->
+    <circle class="keyhole" cx="0" cy="27" r="11"/>
+    <rect class="keyhole" x="-5" y="32" width="10" height="21"/>
+  </g>
 </svg>

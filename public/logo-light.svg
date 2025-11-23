@@ -1,0 +1,27 @@
+<!-- SPDX-FileCopyrightText: 2025 SecPal -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Shield background -->
+  <path d="M96 20 L150 40 L150 85 C150 120 130 145 96 170 C62 145 42 120 42 85 L42 40 Z" 
+        fill="#3b82f6" 
+        stroke="#2563eb" 
+        stroke-width="3"/>
+  
+  <!-- Lock icon inside shield -->
+  <g transform="translate(96, 95)">
+    <!-- Lock body -->
+    <rect x="-18" y="0" width="36" height="30" rx="4" fill="#ffffff"/>
+    
+    <!-- Lock shackle -->
+    <path d="M -12 0 L -12 -15 C -12 -23 -8 -27 0 -27 C 8 -27 12 -23 12 -15 L 12 0" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="6" 
+          stroke-linecap="round"/>
+    
+    <!-- Keyhole -->
+    <circle cx="0" cy="10" r="4" fill="#3b82f6"/>
+    <rect x="-2" y="12" width="4" height="8" fill="#3b82f6"/>
+  </g>
+</svg>
