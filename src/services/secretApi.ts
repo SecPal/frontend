@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig, getAuthHeaders } from "../config";
+import { fetchWithCsrf } from "./csrf";
 
 /**
  * Secret API Response Types
@@ -197,11 +198,10 @@ export async function uploadAttachment(
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(
+  const response = await fetchWithCsrf(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
-      credentials: "include",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
       body: formData,
     }
@@ -260,11 +260,10 @@ export async function uploadEncryptedAttachment(
   formData.append("file", encryptedBlob, "encrypted.bin");
   formData.append("metadata", JSON.stringify(metadata));
 
-  const response = await fetch(
+  const response = await fetchWithCsrf(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
-      credentials: "include",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
       body: formData,
     }
@@ -341,11 +340,10 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     throw new Error("attachmentId is required");
   }
 
-  const response = await fetch(
+  const response = await fetchWithCsrf(
     `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
-      credentials: "include",
       headers: getAuthHeaders(),
     }
   );
@@ -577,9 +575,8 @@ export async function createSecret(
     throw new Error("title is required");
   }
 
-  const response = await fetch(`${apiConfig.baseUrl}/api/v1/secrets`, {
+  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/api/v1/secrets`, {
     method: "POST",
-    credentials: "include",
     headers: {
       ...getAuthHeaders(),
       "Content-Type": "application/json",
@@ -623,11 +620,10 @@ export async function updateSecret(
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(
+  const response = await fetchWithCsrf(
     `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
     {
       method: "PATCH",
-      credentials: "include",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",

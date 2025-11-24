@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CSRF Token Integration & API Service Updates** (#224, Part of Epic #205)
+  - Updated `secretApi.ts` to use `fetchWithCsrf` for all state-changing operations
+    - POST requests (createSecret, uploadAttachment, uploadEncryptedAttachment)
+    - PATCH requests (updateSecret)
+    - DELETE requests (deleteAttachment)
+  - All API services now properly include CSRF tokens via X-XSRF-TOKEN header
+  - Automatic 419 (CSRF token mismatch) retry with fresh token refresh
+  - Verified comprehensive test coverage: 19 unit tests + 18 integration tests, all passing
+  - **Benefit:** Enhanced security against CSRF attacks with seamless token management and automatic retry on token expiration
+  - Follows Gebot #1 (Qualität vor Geschwindigkeit) - All existing tests pass, no breaking changes
+
 - **PWA Update Notification** (#222)
   - Changed `vite.config.ts` PWA plugin from `registerType: 'autoUpdate'` to `registerType: 'prompt'`
   - `useServiceWorkerUpdate` hook for detecting and managing PWA updates
