@@ -99,6 +99,33 @@ export interface FileQueueEntry {
 }
 
 /**
+ * Secret cache entry stored in IndexedDB
+ * Mirrors SecretDetail from secretApi.ts but adds offline-specific fields
+ */
+export interface SecretCacheEntry {
+  id: string;
+  title: string;
+  username?: string;
+  password?: string;
+  url?: string;
+  notes?: string;
+  tags?: string[];
+  expires_at?: string;
+  created_at: string;
+  updated_at: string;
+  attachment_count?: number;
+  is_shared?: boolean;
+  owner?: {
+    id: string;
+    name: string;
+  };
+  // Offline-specific fields
+  cachedAt: Date;
+  lastSynced: Date;
+  pendingSync?: boolean; // True if local changes haven't been synced
+}
+
+/**
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
@@ -107,6 +134,7 @@ export interface FileQueueEntry {
  * - API cache (cached responses for offline access)
  * - Analytics (offline event tracking)
  * - File queue (offline file upload queue)
+ * - Secret cache (offline secret management)
  */
 export const db = new Dexie(DB_NAME) as Dexie & {
   guards: EntityTable<Guard, "id">;
@@ -114,6 +142,7 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   apiCache: EntityTable<ApiCacheEntry, "url">;
   analytics: EntityTable<AnalyticsEvent, "id">;
   fileQueue: EntityTable<FileQueueEntry, "id">;
+  secretCache: EntityTable<SecretCacheEntry, "id">;
 };
 
 // Schema version 1
@@ -140,4 +169,14 @@ db.version(3).stores({
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: "id, uploadState, createdAt, retryCount",
+});
+
+// Schema version 4 - Add secretCache table
+db.version(4).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: "id, uploadState, createdAt, retryCount",
+  secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
 });
