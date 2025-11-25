@@ -55,12 +55,17 @@ describe("secretApi - createSecret", () => {
       expect.objectContaining({
         method: "POST",
         credentials: "include",
-        headers: expect.objectContaining({
-          "Content-Type": "application/json",
-        }),
         body: JSON.stringify(data),
       })
     );
+
+    // Verify headers (fetchWithCsrf uses Headers object)
+    const callArgs = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    if (callArgs) {
+      const requestInit = callArgs[1] as RequestInit;
+      const headers = requestInit.headers as Headers;
+      expect(headers.get("Content-Type")).toBe("application/json");
+    }
   });
 
   it("should throw error when title is missing", async () => {
@@ -169,15 +174,20 @@ describe("secretApi - updateSecret", () => {
       expect.objectContaining({
         method: "PATCH",
         credentials: "include",
-        headers: expect.objectContaining({
-          "Content-Type": "application/json",
-        }),
         body: JSON.stringify({
           title: "Updated Title",
           password: "new-password",
         }),
       })
     );
+
+    // Verify headers (fetchWithCsrf uses Headers object)
+    const callArgs = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+    if (callArgs) {
+      const requestInit = callArgs[1] as RequestInit;
+      const headers = requestInit.headers as Headers;
+      expect(headers.get("Content-Type")).toBe("application/json");
+    }
   });
 
   it("should throw error when secretId is empty", async () => {
