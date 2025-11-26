@@ -148,7 +148,7 @@ export const db = new Dexie(DB_NAME) as Dexie & {
 // Schema version 1
 db.version(1).stores({
   guards: "id, email, lastSynced",
-  syncQueue: "id, status, createdAt, attempts",
+  syncQueue: "id, entity, status, createdAt, attempts",
   apiCache: "url, expiresAt",
 });
 
@@ -157,7 +157,7 @@ db.version(1).stores({
 // when upgrading schema versions, even if they haven't changed
 db.version(2).stores({
   guards: "id, email, lastSynced",
-  syncQueue: "id, status, createdAt, attempts",
+  syncQueue: "id, entity, status, createdAt, attempts",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
 });
@@ -165,7 +165,7 @@ db.version(2).stores({
 // Schema version 3 - Add fileQueue table
 db.version(3).stores({
   guards: "id, email, lastSynced",
-  syncQueue: "id, status, createdAt, attempts",
+  syncQueue: "id, entity, status, createdAt, attempts",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: "id, uploadState, createdAt, retryCount",
@@ -174,7 +174,7 @@ db.version(3).stores({
 // Schema version 4 - Add secretCache table
 db.version(4).stores({
   guards: "id, email, lastSynced",
-  syncQueue: "id, status, createdAt, attempts",
+  syncQueue: "id, entity, status, createdAt, attempts",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: "id, uploadState, createdAt, retryCount",

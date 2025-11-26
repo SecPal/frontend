@@ -3,6 +3,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "./db";
+import type { SecretCacheEntry } from "./db";
 import {
   saveSecret,
   getSecret,
@@ -13,7 +14,6 @@ import {
   getExpiredSecrets,
   clearSecretCache,
 } from "./secretStore";
-import type { SecretCacheEntry } from "./secretStore";
 
 /**
  * Test suite for SecretStore (IndexedDB secret caching)

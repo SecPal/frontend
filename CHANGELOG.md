@@ -91,6 +91,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Part of httpOnly Cookie Authentication Migration Epic #208 (Phase 2/3)
   - Security: Protects against CSRF attacks for all state-changing requests
 
+- **Secret Management Frontend - Phase 4: Secret Sharing UI** (#202, Part of #191) - **MERGED 22.11.2025**
+  - `ShareDialog.tsx` modal component with user/role selector
+  - `SharedWithList.tsx` component for viewing and managing shares
+  - Permission management: Read, Write, Admin levels
+  - Optional expiration date for temporary shares
+  - Revoke functionality with confirmation dialog
+  - Integration in `SecretDetail.tsx`: Share button (owner-only) + shared-with list
+  - Shared indicator (👥) on `SecretCard.tsx` for shared secrets
+  - API service: `shareApi.ts` with `fetchShares()`, `createShare()`, `revokeShare()`
+  - XOR constraint handling (user OR role, not both)
+  - Accessibility: aria-labels, keyboard navigation, screen reader support
+  - Full i18n support with lingui
+  - 31 new tests (589/603 passing - 97.7%)
+  - 4-Pass review completed with all findings fixed
+  - Part of Secret Management Epic #191 (Phase 4/5)
+
 - **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#200, Part of #191) - **MERGED 22.11.2025**
   - `AttachmentUpload.tsx` component with drag-and-drop and file validation
   - `AttachmentPreview.tsx` modal for images and PDFs with zoom controls
