@@ -39,7 +39,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 registerRoute(
   ({ url }) =>
     url.origin === self.location.origin &&
-    url.pathname === "/api/v1/secrets" &&
+    url.pathname === "/v1/secrets" &&
     url.search === "",
   new NetworkFirst({
     cacheName: "secrets-list-cache",
@@ -51,7 +51,7 @@ registerRoute(
 registerRoute(
   ({ url }) =>
     url.origin === self.location.origin &&
-    url.pathname.match(/^\/api\/v1\/secrets\/[a-f0-9-]+$/),
+    url.pathname.match(/^\/v1\/secrets\/[a-f0-9-]+$/),
   new NetworkFirst({
     cacheName: "secrets-detail-cache",
     networkTimeoutSeconds: 5,
