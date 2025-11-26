@@ -105,12 +105,12 @@ export function ConflictResolutionDialog({
           <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
               <Trans>
-                <strong>{conflict.conflictingFields.length} field(s)</strong>{" "}
-                have conflicting changes:
+                <strong>{conflict.conflictFields.length} field(s)</strong> have
+                conflicting changes:
               </Trans>
             </p>
             <ul className="mt-2 list-inside list-disc text-sm text-yellow-700 dark:text-yellow-300">
-              {conflict.conflictingFields.map((field) => (
+              {conflict.conflictFields.map((field: string) => (
                 <li key={field}>{field}</li>
               ))}
             </ul>
@@ -132,15 +132,15 @@ export function ConflictResolutionDialog({
                 <Trans>Your Local Version</Trans>
               </h4>
               <dl className="space-y-2 text-sm">
-                {conflict.conflictingFields.map((field) => (
+                {conflict.conflictFields.map((field: string) => (
                   <div key={field}>
                     <dt className="font-medium text-gray-700 dark:text-gray-300">
                       {field}:
                     </dt>
                     <dd className="mt-1 text-gray-600 dark:text-gray-400">
                       {formatFieldValue(
-                        conflict.localSecret[
-                          field as keyof typeof conflict.localSecret
+                        conflict.localVersion[
+                          field as keyof typeof conflict.localVersion
                         ]
                       )}
                     </dd>
@@ -150,7 +150,7 @@ export function ConflictResolutionDialog({
               <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 <Trans>
                   Last modified:{" "}
-                  {new Date(conflict.localSecret.updated_at).toLocaleString()}
+                  {new Date(conflict.localVersion.updated_at).toLocaleString()}
                 </Trans>
               </p>
             </button>
@@ -169,15 +169,15 @@ export function ConflictResolutionDialog({
                 <Trans>Server Version</Trans>
               </h4>
               <dl className="space-y-2 text-sm">
-                {conflict.conflictingFields.map((field) => (
+                {conflict.conflictFields.map((field: string) => (
                   <div key={field}>
                     <dt className="font-medium text-gray-700 dark:text-gray-300">
                       {field}:
                     </dt>
                     <dd className="mt-1 text-gray-600 dark:text-gray-400">
                       {formatFieldValue(
-                        conflict.serverSecret[
-                          field as keyof typeof conflict.serverSecret
+                        conflict.serverVersion[
+                          field as keyof typeof conflict.serverVersion
                         ]
                       )}
                     </dd>
@@ -187,7 +187,7 @@ export function ConflictResolutionDialog({
               <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 <Trans>
                   Last modified:{" "}
-                  {new Date(conflict.serverSecret.updated_at).toLocaleString()}
+                  {new Date(conflict.serverVersion.updated_at).toLocaleString()}
                 </Trans>
               </p>
             </button>

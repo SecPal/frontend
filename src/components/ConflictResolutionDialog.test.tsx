@@ -9,16 +9,15 @@ import type { ConflictInfo } from "../lib/conflictResolution";
 
 describe("ConflictResolutionDialog", () => {
   const mockConflict: ConflictInfo = {
-    hasConflict: true,
-    conflictingFields: ["title", "notes"],
-    localSecret: {
+    conflictFields: ["title", "notes"],
+    localVersion: {
       id: "secret-1",
       title: "Local Title",
       notes: "Local notes",
       created_at: "2025-01-01T10:00:00Z",
       updated_at: "2025-01-01T12:00:00Z",
     },
-    serverSecret: {
+    serverVersion: {
       id: "secret-1",
       title: "Server Title",
       notes: "Server notes",
@@ -147,19 +146,18 @@ describe("ConflictResolutionDialog", () => {
 
   it("should format empty field values", () => {
     const conflictWithEmpty: ConflictInfo = {
-      hasConflict: true,
-      conflictingFields: ["notes"],
-      localSecret: {
+      conflictFields: ["notes"],
+      localVersion: {
         id: "secret-1",
         title: "Title",
         notes: undefined,
         created_at: "2025-01-01T10:00:00Z",
         updated_at: "2025-01-01T12:00:00Z",
       },
-      serverSecret: {
+      serverVersion: {
         id: "secret-1",
         title: "Title",
-        notes: null,
+        notes: undefined,
         created_at: "2025-01-01T10:00:00Z",
         updated_at: "2025-01-01T11:00:00Z",
       },
@@ -180,17 +178,16 @@ describe("ConflictResolutionDialog", () => {
   });
 
   it("should format array field values", () => {
-    const conflictWithArray: ConflictInfo = {
-      hasConflict: true,
-      conflictingFields: ["tags"],
-      localSecret: {
+    const conflictWithTags: ConflictInfo = {
+      conflictFields: ["tags"],
+      localVersion: {
         id: "secret-1",
         title: "Title",
-        tags: ["work", "important"],
+        tags: ["work", "email"],
         created_at: "2025-01-01T10:00:00Z",
         updated_at: "2025-01-01T12:00:00Z",
       },
-      serverSecret: {
+      serverVersion: {
         id: "secret-1",
         title: "Title",
         tags: ["personal"],
@@ -201,7 +198,7 @@ describe("ConflictResolutionDialog", () => {
 
     render(
       <ConflictResolutionDialog
-        conflict={conflictWithArray}
+        conflict={conflictWithTags}
         onKeepLocal={vi.fn()}
         onKeepServer={vi.fn()}
         onCancel={vi.fn()}
@@ -209,7 +206,7 @@ describe("ConflictResolutionDialog", () => {
       />
     );
 
-    expect(screen.getByText("work, important")).toBeInTheDocument();
+    expect(screen.getByText("work, email")).toBeInTheDocument();
     expect(screen.getByText("personal")).toBeInTheDocument();
   });
 });

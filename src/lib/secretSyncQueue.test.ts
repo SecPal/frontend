@@ -43,9 +43,9 @@ describe("Secret Sync Queue", () => {
 
       const pending = await getPendingSecretOperations();
       expect(pending).toHaveLength(1);
-      expect(pending[0].type).toBe("create");
-      expect(pending[0].data).toEqual(secretData);
-      expect(pending[0].status).toBe("pending");
+      expect(pending[0]?.type).toBe("create");
+      expect(pending[0]?.data).toEqual(secretData);
+      expect(pending[0]?.status).toBe("pending");
     });
 
     it("should add update operation to queue", async () => {
@@ -57,8 +57,8 @@ describe("Secret Sync Queue", () => {
       await addSecretOperation("update", secretData);
 
       const pending = await getPendingSecretOperations();
-      expect(pending[0].type).toBe("update");
-      expect(pending[0].data).toEqual(secretData);
+      expect(pending[0]?.type).toBe("update");
+      expect(pending[0]?.data).toEqual(secretData);
     });
 
     it("should add delete operation to queue", async () => {
@@ -67,16 +67,16 @@ describe("Secret Sync Queue", () => {
       await addSecretOperation("delete", secretData);
 
       const pending = await getPendingSecretOperations();
-      expect(pending[0].type).toBe("delete");
-      expect(pending[0].data).toEqual(secretData);
+      expect(pending[0]?.type).toBe("delete");
+      expect(pending[0]?.data).toEqual(secretData);
     });
 
     it("should initialize with zero retry attempts", async () => {
       await addSecretOperation("create", { title: "Test" });
 
       const pending = await getPendingSecretOperations();
-      expect(pending[0].attempts).toBe(0);
-      expect(pending[0].lastAttemptAt).toBeUndefined();
+      expect(pending[0]?.attempts).toBe(0);
+      expect(pending[0]?.lastAttemptAt).toBeUndefined();
     });
   });
 
@@ -91,8 +91,8 @@ describe("Secret Sync Queue", () => {
 
       const pending = await getPendingSecretOperations();
       expect(pending).toHaveLength(3);
-      expect((pending[0].data as { title: string }).title).toBe("Third");
-      expect((pending[2].data as { title: string }).title).toBe("First");
+      expect((pending[0]?.data as { title: string }).title).toBe("Third");
+      expect((pending[2]?.data as { title: string }).title).toBe("First");
     });
 
     it("should not return synced operations", async () => {
@@ -103,7 +103,7 @@ describe("Secret Sync Queue", () => {
 
       const pending = await getPendingSecretOperations();
       expect(pending).toHaveLength(1);
-      expect(pending[0].id).toBe(id1);
+      expect(pending[0]?.id).toBe(id1);
     });
 
     it("should not return failed operations", async () => {
@@ -114,7 +114,7 @@ describe("Secret Sync Queue", () => {
 
       const pending = await getPendingSecretOperations();
       expect(pending).toHaveLength(1);
-      expect(pending[0].id).toBe(id1);
+      expect(pending[0]?.id).toBe(id1);
     });
   });
 
@@ -248,8 +248,8 @@ describe("Secret Sync Queue", () => {
       expect(result.failed).toBe(1);
 
       const operation = (await db.syncQueue.toArray())[0];
-      expect(operation.status).toBe("error");
-      expect(operation.error).toContain("Network error");
+      expect(operation?.status).toBe("error");
+      expect(operation?.error).toContain("Network error");
     });
 
     it("should implement exponential backoff for retries", async () => {
@@ -334,7 +334,7 @@ describe("Secret Sync Queue", () => {
 
       const remaining = await db.syncQueue.toArray();
       expect(remaining).toHaveLength(1);
-      expect(remaining[0].id).toBe(id1);
+      expect(remaining[0]?.id).toBe(id1);
     });
 
     it("should not remove pending or failed operations", async () => {

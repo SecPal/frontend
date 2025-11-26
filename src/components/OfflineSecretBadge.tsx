@@ -6,7 +6,7 @@ import {
   DevicePhoneMobileIcon,
 } from "@heroicons/react/20/solid";
 import { Trans } from "@lingui/macro";
-import { Badge } from "../catalyst/badge";
+import { Badge } from "./badge";
 
 interface OfflineSecretBadgeProps {
   /**

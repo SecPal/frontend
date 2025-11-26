@@ -195,9 +195,9 @@ describe("SecretStore", () => {
       await saveSecret(secret3);
 
       const secrets = await listSecrets();
-      expect(secrets[0].title).toBe("Newest");
-      expect(secrets[1].title).toBe("Middle");
-      expect(secrets[2].title).toBe("Oldest");
+      expect(secrets[0]?.title).toBe("Newest");
+      expect(secrets[1]?.title).toBe("Middle");
+      expect(secrets[2]?.title).toBe("Oldest");
     });
 
     it("should return empty array when no secrets are cached", async () => {
@@ -269,19 +269,19 @@ describe("SecretStore", () => {
     it("should search by title (case-insensitive)", async () => {
       const results = await searchSecrets("gmail");
       expect(results).toHaveLength(1);
-      expect(results[0].title).toBe("Gmail Account");
+      expect(results[0]?.title).toBe("Gmail Account");
     });
 
     it("should search by username", async () => {
       const results = await searchSecrets("gmail.com");
       expect(results).toHaveLength(1);
-      expect(results[0].username).toContain("gmail.com");
+      expect(results[0]?.username).toContain("gmail.com");
     });
 
     it("should search by notes", async () => {
       const results = await searchSecrets("access token");
       expect(results).toHaveLength(1);
-      expect(results[0].notes).toContain("access token");
+      expect(results[0]?.notes).toContain("access token");
     });
 
     it("should return empty array when no matches found", async () => {
@@ -385,7 +385,7 @@ describe("SecretStore", () => {
 
       const expired = await getExpiredSecrets();
       expect(expired).toHaveLength(1);
-      expect(expired[0].id).toBe("secret-1");
+      expect(expired[0]?.id).toBe("secret-1");
     });
 
     it("should not return secrets without expiration", async () => {

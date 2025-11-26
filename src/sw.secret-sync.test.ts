@@ -8,18 +8,18 @@
  * These tests verify the SW correctly triggers secret queue processing.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 
 /**
  * Mock Service Worker Global Scope
  */
 interface MockServiceWorkerGlobalScope {
   clients: {
-    matchAll: ReturnType<typeof vi.fn>;
+    matchAll: Mock;
   };
   registration: {
     sync: {
-      register: ReturnType<typeof vi.fn>;
+      register: Mock;
     };
   };
 }
@@ -106,9 +106,9 @@ describe("Service Worker Secret Sync", () => {
         });
       }
 
-      expect(mockClients[0].postMessage).toHaveBeenCalled();
-      expect(mockClients[1].postMessage).toHaveBeenCalled();
-      expect(mockClients[2].postMessage).toHaveBeenCalled();
+      expect(mockClients[0]?.postMessage).toHaveBeenCalled();
+      expect(mockClients[1]?.postMessage).toHaveBeenCalled();
+      expect(mockClients[2]?.postMessage).toHaveBeenCalled();
     });
   });
 
@@ -118,12 +118,12 @@ describe("Service Worker Secret Sync", () => {
       mockSelf.clients.matchAll.mockResolvedValue([mockClient]);
 
       const clients = await mockSelf.clients.matchAll({ type: "window" });
-      clients[0].postMessage({
+      clients[0]?.postMessage({
         type: "PROCESS_SECRET_SYNC_QUEUE",
         count: 7,
       });
 
-      const message = mockClient.postMessage.mock.calls[0][0];
+      const message = mockClient.postMessage.mock.calls[0]?.[0];
       expect(message).toHaveProperty("type", "PROCESS_SECRET_SYNC_QUEUE");
       expect(message).toHaveProperty("count");
       expect(typeof message.count).toBe("number");
@@ -179,7 +179,7 @@ describe("Service Worker Secret Sync", () => {
 
       // Second client should work
       clients[1].postMessage({ type: "TEST" });
-      expect(mockClients[1].postMessage).toHaveBeenCalled();
+      expect(mockClients[1]?.postMessage).toHaveBeenCalled();
     });
   });
 });

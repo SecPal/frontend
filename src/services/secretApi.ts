@@ -655,7 +655,7 @@ export async function deleteSecret(secretId: string): Promise<void> {
   }
 
   const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
     {
       method: "DELETE",
       headers: getAuthHeaders(),

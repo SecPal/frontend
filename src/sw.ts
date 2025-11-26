@@ -359,10 +359,14 @@ async function syncSecretQueue(): Promise<void> {
     // Notify main thread to process queue
     const clients = await self.clients.matchAll({ type: "window" });
     for (const client of clients) {
-      client.postMessage({
-        type: "PROCESS_SECRET_SYNC_QUEUE",
-        count: pendingOps.length,
-      });
+      try {
+        client.postMessage({
+          type: "PROCESS_SECRET_SYNC_QUEUE",
+          count: pendingOps.length,
+        });
+      } catch (error) {
+        console.warn("[SW] Failed to notify client:", error);
+      }
     }
   } catch (error) {
     console.error("[SW] Error syncing secret queue:", error);

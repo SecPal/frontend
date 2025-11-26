@@ -121,8 +121,10 @@ export async function updateSecretOperationStatus(
     updates.attempts = operation.attempts + 1;
     updates.lastAttemptAt = new Date();
   } else if (status === "pending") {
-    // Clear lastAttemptAt when resetting to pending to skip backoff wait
+    // Reset lastAttemptAt and attempts when resetting to pending
+    // This allows manual retry after fixing issues, bypassing retry count and backoff
     updates.lastAttemptAt = undefined;
+    updates.attempts = 0;
   }
 
   await db.syncQueue.update(id, updates);
@@ -190,8 +192,13 @@ async function processSecretOperation(
         break;
 
       case "delete":
-        if (!("id" in data) || !data.id) {
-          throw new Error("Delete operation requires secret ID");
+        if (
+          !("id" in data) ||
+          !data.id ||
+          typeof data.id !== "string" ||
+          data.id.trim() === ""
+        ) {
+          throw new Error("Delete operation requires valid secret ID");
         }
         await deleteSecretApi(data.id);
         break;

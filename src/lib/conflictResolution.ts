@@ -13,6 +13,11 @@ export interface SecretConflict {
 }
 
 /**
+ * Alias for backward compatibility
+ */
+export type ConflictInfo = SecretConflict;
+
+/**
  * Conflict resolution strategy
  */
 export type ConflictResolution = "keep-local" | "keep-server" | "manual";
@@ -105,13 +110,13 @@ function findConflictingFields(
 
     // Compare values
     if (field === "tags") {
-      // Special handling for arrays
+      // Special handling for arrays (order-independent comparison)
       const localTags = (localValue as string[]) || [];
       const serverTags = (serverValue as string[]) || [];
 
       if (
         localTags.length !== serverTags.length ||
-        !localTags.every((tag, i) => tag === serverTags[i])
+        !localTags.every((tag) => serverTags.includes(tag))
       ) {
         conflicts.push(field);
       }
@@ -174,9 +179,15 @@ export function applyConflictResolution(
   }
 
   // Keep local changes, merge with server metadata
+  // Only merge editable fields to preserve server metadata
   return {
-    ...server, // Server version as base (includes metadata)
-    ...local, // Override with local changes
-    updated_at: server.updated_at, // Always use server timestamp for consistency
+    ...server, // Server version as base (includes metadata like owner, is_shared, attachment_count)
+    ...(local.title !== undefined && { title: local.title }),
+    ...(local.username !== undefined && { username: local.username }),
+    ...(local.password !== undefined && { password: local.password }),
+    ...(local.url !== undefined && { url: local.url }),
+    ...(local.notes !== undefined && { notes: local.notes }),
+    ...(local.tags !== undefined && { tags: local.tags }),
+    updated_at: server.updated_at, // Use server timestamp
   } as SecretDetail;
 }
