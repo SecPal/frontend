@@ -4,8 +4,18 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { ConflictResolutionDialog } from "./ConflictResolutionDialog";
 import type { ConflictInfo } from "../lib/conflictResolution";
+
+// Initialize i18n for tests
+i18n.loadAndActivate({ locale: "en", messages: {} });
+
+// Helper to wrap components with I18nProvider
+const renderWithI18n = (component: React.ReactElement) => {
+  return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+};
 
 describe("ConflictResolutionDialog", () => {
   const mockConflict: ConflictInfo = {
@@ -27,7 +37,7 @@ describe("ConflictResolutionDialog", () => {
   };
 
   it("should render conflict information", () => {
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -44,7 +54,7 @@ describe("ConflictResolutionDialog", () => {
   });
 
   it("should display local and server versions", () => {
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -64,7 +74,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onKeepLocal = vi.fn();
 
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={onKeepLocal}
@@ -89,7 +99,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onKeepServer = vi.fn();
 
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -112,7 +122,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -128,7 +138,7 @@ describe("ConflictResolutionDialog", () => {
   });
 
   it("should disable confirm button when no selection made", () => {
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -163,7 +173,7 @@ describe("ConflictResolutionDialog", () => {
       },
     };
 
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={conflictWithEmpty}
         onKeepLocal={vi.fn()}
@@ -196,7 +206,7 @@ describe("ConflictResolutionDialog", () => {
       },
     };
 
-    render(
+    renderWithI18n(
       <ConflictResolutionDialog
         conflict={conflictWithTags}
         onKeepLocal={vi.fn()}

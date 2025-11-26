@@ -266,6 +266,9 @@ describe("Secret Sync Queue", () => {
       let operation = await db.syncQueue.get(id);
       expect(operation?.attempts).toBe(1);
 
+      // Wait for backoff delay (1 second for first retry)
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
       // Second attempt - should respect backoff
       await updateSecretOperationStatus(id, "pending"); // Reset for retry
       await processSecretSyncQueue();
@@ -282,10 +285,13 @@ describe("Secret Sync Queue", () => {
 
       const id = await addSecretOperation("create", secretData);
 
-      // Simulate max retries (5 attempts)
+      // Simulate max retries (5 attempts) with backoff delays
       for (let i = 0; i < 5; i++) {
         await processSecretSyncQueue();
         if (i < 4) {
+          // Wait for exponential backoff: 1s, 2s, 4s, 8s
+          const backoffMs = 1000 * Math.pow(2, i);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs + 100));
           await updateSecretOperationStatus(id, "pending");
         }
       }
