@@ -133,15 +133,12 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached(
-          "/api/v1/secrets",
-          "api-secrets"
-        );
+        cached = await result.current.isCached("/v1/secrets", "api-secrets");
       });
 
       expect(cached).toBe(true);
       expect(mockCaches.open).toHaveBeenCalledWith("api-secrets");
-      expect(mockCache.match).toHaveBeenCalledWith("/api/v1/secrets");
+      expect(mockCache.match).toHaveBeenCalledWith("/v1/secrets");
     });
 
     it("should check if URL is cached in any cache", async () => {
@@ -151,11 +148,11 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached("/api/v1/secrets");
+        cached = await result.current.isCached("/v1/secrets");
       });
 
       expect(cached).toBe(true);
-      expect(mockCaches.match).toHaveBeenCalledWith("/api/v1/secrets");
+      expect(mockCaches.match).toHaveBeenCalledWith("/v1/secrets");
     });
 
     it("should return false if URL not cached", async () => {
@@ -165,7 +162,7 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached("/api/v1/secrets");
+        cached = await result.current.isCached("/v1/secrets");
       });
 
       expect(cached).toBe(false);

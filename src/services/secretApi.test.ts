@@ -45,7 +45,7 @@ describe("Secret API", () => {
 
       expect(secrets).toEqual(mockSecrets);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets`,
+        `${apiConfig.baseUrl}/v1/secrets`,
         expect.objectContaining({
           method: "GET",
           headers: expect.objectContaining({
@@ -127,7 +127,7 @@ describe("Secret API", () => {
 
       expect(result).toEqual(mockSecret);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1`,
         expect.objectContaining({
           method: "GET",
           headers: expect.objectContaining({
@@ -194,7 +194,7 @@ describe("Secret API", () => {
 
       expect(result).toEqual(mockAttachment);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1/attachments`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1/attachments`,
         expect.objectContaining({
           method: "POST",
           body: expect.any(FormData),
@@ -251,7 +251,7 @@ describe("Secret API", () => {
 
       expect(attachments).toEqual(mockAttachments);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1/attachments`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1/attachments`,
         expect.objectContaining({
           method: "GET",
         })
@@ -277,7 +277,7 @@ describe("Secret API", () => {
 
       await expect(deleteAttachment("att-1")).resolves.toBeUndefined();
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/attachments/att-1`,
+        `${apiConfig.baseUrl}/v1/attachments/att-1`,
         expect.objectContaining({
           method: "DELETE",
         })
@@ -396,7 +396,7 @@ describe("Secret API", () => {
       expect(masterKey.usages).toContain("decrypt");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-123`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-123`,
         expect.objectContaining({
           method: "GET",
           headers: expect.objectContaining({
@@ -558,7 +558,7 @@ describe("Secret API", () => {
 
       expect(result).toEqual(mockAttachment);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-123/attachments`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-123/attachments`,
         expect.objectContaining({
           method: "POST",
           body: expect.any(FormData),
@@ -782,7 +782,7 @@ describe("Secret API", () => {
 
       // Verify API call
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/attachments/attachment-123/download`,
+        `${apiConfig.baseUrl}/v1/attachments/attachment-123/download`,
         expect.objectContaining({
           method: "GET",
           credentials: "include",

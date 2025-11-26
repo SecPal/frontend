@@ -176,7 +176,7 @@ describe("IndexedDB Database", () => {
   describe("API Cache Table", () => {
     it("should cache API response", async () => {
       const cacheEntry: ApiCacheEntry = {
-        url: "/api/v1/guards",
+        url: "/v1/guards",
         data: [{ id: "1", name: "Cached Guard" }],
         cachedAt: new Date(),
         expiresAt: new Date(Date.now() + 86400000), // 24h
@@ -184,7 +184,7 @@ describe("IndexedDB Database", () => {
 
       await db.apiCache.put(cacheEntry);
 
-      const retrieved = await db.apiCache.get("/api/v1/guards");
+      const retrieved = await db.apiCache.get("/v1/guards");
       expect(retrieved).toBeDefined();
       expect(retrieved?.data).toEqual([{ id: "1", name: "Cached Guard" }]);
     });

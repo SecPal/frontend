@@ -13,7 +13,7 @@
  */
 export const apiConfig = {
   /**
-   * Base URL for API requests
+   * Base URL for API requests (without /api prefix - backend routes are at /v1/*)
    * Can be overridden via VITE_API_URL environment variable
    *
    * Examples:
@@ -21,6 +21,9 @@ export const apiConfig = {
    * - Demo/Testing: https://api.secpal.dev
    * - Production: https://api.secpal.app
    * - Customer On-Premise: https://api.customer.example.com
+   *
+   * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
+   * so routes are accessible at /v1/secrets NOT /api/v1/secrets
    */
   baseUrl:
     import.meta.env.VITE_API_URL ||
