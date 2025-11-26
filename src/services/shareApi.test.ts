@@ -41,7 +41,7 @@ describe("shareApi", () => {
 
       expect(shares).toEqual(mockShares);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1/shares`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1/shares`,
         expect.objectContaining({
           method: "GET",
           headers: expect.objectContaining({
@@ -114,7 +114,7 @@ describe("shareApi", () => {
 
       expect(share).toEqual(mockShare);
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1/shares`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1/shares`,
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({
@@ -213,7 +213,7 @@ describe("shareApi", () => {
       await expect(revokeShare("secret-1", "share-1")).resolves.toBeUndefined();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `${apiConfig.baseUrl}/api/v1/secrets/secret-1/shares/share-1`,
+        `${apiConfig.baseUrl}/v1/secrets/secret-1/shares/share-1`,
         expect.objectContaining({
           method: "DELETE",
           headers: expect.objectContaining({

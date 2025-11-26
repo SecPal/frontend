@@ -51,7 +51,7 @@ describe("secretApi - createSecret", () => {
 
     expect(result).toEqual(mockSecret);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/v1/secrets"),
+      expect.stringContaining("/v1/secrets"),
       expect.objectContaining({
         method: "POST",
         credentials: "include",
@@ -170,7 +170,7 @@ describe("secretApi - updateSecret", () => {
 
     expect(result).toEqual(mockSecret);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/v1/secrets/secret-123"),
+      expect.stringContaining("/v1/secrets/secret-123"),
       expect.objectContaining({
         method: "PATCH",
         credentials: "include",

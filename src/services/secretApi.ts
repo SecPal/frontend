@@ -109,7 +109,7 @@ export class ApiError extends Error {
  * ```
  */
 export async function fetchSecrets(): Promise<Secret[]> {
-  const response = await fetch(`${apiConfig.baseUrl}/api/v1/secrets`, {
+  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -147,17 +147,14 @@ export async function getSecretById(secretId: string): Promise<SecretDetail> {
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets/${secretId}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     const error: ApiErrorResponse = await response
@@ -199,7 +196,7 @@ export async function uploadAttachment(
   formData.append("file", file);
 
   const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
@@ -261,7 +258,7 @@ export async function uploadEncryptedAttachment(
   formData.append("metadata", JSON.stringify(metadata));
 
   const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
       headers: getAuthHeaders(), // Don't set Content-Type for FormData
@@ -301,7 +298,7 @@ export async function listAttachments(
   }
 
   const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/attachments`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "GET",
       credentials: "include",
@@ -341,7 +338,7 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
   }
 
   const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}`,
+    `${apiConfig.baseUrl}/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
       headers: getAuthHeaders(),
@@ -374,17 +371,14 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets/${secretId}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     const error: ApiErrorResponse = await response
@@ -454,7 +448,7 @@ export async function downloadAndDecryptAttachment(
 
   // 1. Download encrypted blob + metadata from backend
   const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/attachments/${attachmentId}/download`,
+    `${apiConfig.baseUrl}/v1/attachments/${attachmentId}/download`,
     {
       method: "GET",
       credentials: "include",
@@ -575,7 +569,7 @@ export async function createSecret(
     throw new Error("title is required");
   }
 
-  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/api/v1/secrets`, {
+  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/secrets`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -621,7 +615,7 @@ export async function updateSecret(
   }
 
   const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
     {
       method: "PATCH",
       headers: {

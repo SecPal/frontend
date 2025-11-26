@@ -24,7 +24,7 @@ describe("API Cache Utilities", () => {
 
   describe("cacheApiResponse", () => {
     it("should cache API response with TTL", async () => {
-      const url = "/api/v1/guards";
+      const url = "/v1/guards";
       const data = [{ id: "1", name: "Test Guard" }];
 
       await cacheApiResponse(url, data);
@@ -38,7 +38,7 @@ describe("API Cache Utilities", () => {
     });
 
     it("should set expiration to 24 hours by default", async () => {
-      const url = "/api/v1/test";
+      const url = "/v1/test";
       const data = { test: true };
       const beforeCache = Date.now();
 
@@ -53,7 +53,7 @@ describe("API Cache Utilities", () => {
     });
 
     it("should allow custom TTL", async () => {
-      const url = "/api/v1/custom-ttl";
+      const url = "/v1/custom-ttl";
       const data = { test: true };
       const customTtl = 60 * 60 * 1000; // 1 hour
       const beforeCache = Date.now();
@@ -70,7 +70,7 @@ describe("API Cache Utilities", () => {
 
   describe("getCachedResponse", () => {
     it("should retrieve valid cached response", async () => {
-      const url = "/api/v1/guards";
+      const url = "/v1/guards";
       const data = [{ id: "1", name: "Cached" }];
 
       await cacheApiResponse(url, data);
@@ -80,7 +80,7 @@ describe("API Cache Utilities", () => {
     });
 
     it("should return null for expired cache", async () => {
-      const url = "/api/v1/expired";
+      const url = "/v1/expired";
       const data = { test: true };
 
       // Cache with negative TTL (already expired)
@@ -96,7 +96,7 @@ describe("API Cache Utilities", () => {
     });
 
     it("should return null for non-existent cache", async () => {
-      const retrieved = await getCachedResponse("/api/v1/nonexistent");
+      const retrieved = await getCachedResponse("/v1/nonexistent");
       expect(retrieved).toBeNull();
     });
   });
