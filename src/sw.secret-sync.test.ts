@@ -160,7 +160,11 @@ describe("Service Worker Secret Sync", () => {
 
     it("should continue on postMessage failure", async () => {
       const mockClients = [
-        { postMessage: vi.fn().mockImplementation(() => { throw new Error("Message failed"); }) },
+        {
+          postMessage: vi.fn().mockImplementation(() => {
+            throw new Error("Message failed");
+          }),
+        },
         { postMessage: vi.fn() },
       ];
 
