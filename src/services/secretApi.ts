@@ -636,3 +636,36 @@ export async function updateSecret(
   const result: ApiResponse<SecretDetail> = await response.json();
   return result.data;
 }
+
+/**
+ * Delete a secret (soft delete)
+ *
+ * @param secretId - Secret ID to delete
+ * @throws ApiError if request fails (401, 403, 404)
+ *
+ * @example
+ * ```ts
+ * await deleteSecret('secret-123');
+ * console.log('Secret deleted');
+ * ```
+ */
+export async function deleteSecret(secretId: string): Promise<void> {
+  if (!secretId || secretId.trim() === "") {
+    throw new Error("secretId is required");
+  }
+
+  const response = await fetchWithCsrf(
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
+    {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    const error: ApiErrorResponse = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(error.message, response.status, error.errors);
+  }
+}

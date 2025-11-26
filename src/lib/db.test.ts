@@ -222,8 +222,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 3", () => {
-      expect(db.verno).toBe(3);
+    it("should have version 4", () => {
+      expect(db.verno).toBe(4);
     });
 
     it("should have all required tables", () => {

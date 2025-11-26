@@ -35,7 +35,30 @@ cleanupOutdatedCaches();
 // Precache all build assets (injected by Vite PWA plugin)
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Cache API requests with NetworkFirst strategy
+// Cache secrets list with NetworkFirst strategy (fresh data preferred)
+registerRoute(
+  ({ url }) =>
+    url.origin === self.location.origin &&
+    url.pathname === "/v1/secrets" &&
+    url.search === "",
+  new NetworkFirst({
+    cacheName: "secrets-list-cache",
+    networkTimeoutSeconds: 5,
+  })
+);
+
+// Cache secret details with NetworkFirst strategy
+registerRoute(
+  ({ url }) =>
+    url.origin === self.location.origin &&
+    url.pathname.match(/^\/v1\/secrets\/[a-f0-9-]+$/),
+  new NetworkFirst({
+    cacheName: "secrets-detail-cache",
+    networkTimeoutSeconds: 5,
+  })
+);
+
+// Cache other API requests with NetworkFirst strategy
 registerRoute(
   ({ url }) =>
     url.origin === self.location.origin && url.pathname.startsWith("/v1/"),
@@ -296,8 +319,59 @@ self.addEventListener("sync", ((event: SyncEvent) => {
         await syncEncryptedUploads();
       })()
     );
+  } else if (event.tag === "sync-secret-queue") {
+    event.waitUntil(
+      (async () => {
+        // Validate that at least one trusted window client exists before processing
+        const clients = await self.clients.matchAll({ type: "window" });
+        if (clients.length === 0) {
+          console.warn(
+            "[SW] Ignoring sync-secret-queue: no trusted window clients found"
+          );
+          return;
+        }
+        await syncSecretQueue();
+      })()
+    );
   }
 }) as EventListener);
+
+/**
+ * Process pending secret operations from IndexedDB syncQueue
+ *
+ * Similar to file queue sync but for secret CRUD operations.
+ * Delegates to main thread via message passing since SW cannot
+ * directly import encryption utilities.
+ */
+async function syncSecretQueue(): Promise<void> {
+  try {
+    const db = await openDB(DB_NAME, DB_VERSION);
+
+    // Get pending secret operations
+    const pendingOps = await db
+      .getAllFromIndex("syncQueue", "entity", "secret")
+      .then((ops) => ops.filter((op) => op.status === "pending"));
+
+    if (pendingOps.length === 0) {
+      return;
+    }
+
+    // Notify main thread to process queue
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) {
+      try {
+        client.postMessage({
+          type: "PROCESS_SECRET_SYNC_QUEUE",
+          count: pendingOps.length,
+        });
+      } catch (error) {
+        console.warn("[SW] Failed to notify client:", error);
+      }
+    }
+  } catch (error) {
+    console.error("[SW] Error syncing secret queue:", error);
+  }
+}
 
 /**
  * Process pending file uploads from IndexedDB queue
