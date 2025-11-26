@@ -14,9 +14,9 @@ import { apiConfig, getAuthHeaders } from "../config";
  *
  * @example
  * ```ts
- * const response = await fetch('/api/v1/guards');
+ * const response = await fetch('/v1/guards');
  * const guards = await response.json();
- * await cacheApiResponse('/api/v1/guards', guards);
+ * await cacheApiResponse('/v1/guards', guards);
  * ```
  */
 export async function cacheApiResponse(
@@ -41,7 +41,7 @@ export async function cacheApiResponse(
  *
  * @example
  * ```ts
- * const cachedGuards = await getCachedResponse('/api/v1/guards');
+ * const cachedGuards = await getCachedResponse('/v1/guards');
  * if (cachedGuards) {
  *   // Use cached data
  * } else {

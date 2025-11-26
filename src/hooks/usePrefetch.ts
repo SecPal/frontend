@@ -16,11 +16,11 @@ import { useCallback, useRef } from "react";
  *
  * // Prefetch when browser is idle
  * useEffect(() => {
- *   prefetchOnIdle('/api/v1/secrets');
+ *   prefetchOnIdle('/v1/secrets');
  * }, []);
  *
  * // Prefetch when user hovers over link
- * <Link to="/secrets/123" {...prefetchOnHover('/api/v1/secrets/123')}>
+ * <Link to="/secrets/123" {...prefetchOnHover('/v1/secrets/123')}>
  *   View Secret
  * </Link>
  * ```

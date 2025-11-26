@@ -61,7 +61,7 @@ registerRoute(
 // Cache other API requests with NetworkFirst strategy
 registerRoute(
   ({ url }) =>
-    url.origin === self.location.origin && url.pathname.startsWith("/api/"),
+    url.origin === self.location.origin && url.pathname.startsWith("/v1/"),
   new NetworkFirst({
     cacheName: "api-cache",
     networkTimeoutSeconds: 10,
@@ -497,7 +497,7 @@ async function syncFileQueue(): Promise<void> {
  *
  * WORKFLOW:
  * 1. Query fileQueue for files with uploadState='encrypted'
- * 2. For each file, call /api/v1/secrets/{secretId}/attachments
+ * 2. For each file, call /v1/secrets/{secretId}/attachments
  * 3. Update uploadState: 'encrypted' → 'uploading' → 'completed'/'failed'
  * 4. Notify clients of progress and results
  */
@@ -582,7 +582,7 @@ async function syncEncryptedUploads(): Promise<void> {
 
         // POST to backend
         const response = await fetch(
-          `${self.location.origin}/api/v1/secrets/${fileEntry.secretId}/attachments`,
+          `${self.location.origin}/v1/secrets/${fileEntry.secretId}/attachments`,
           {
             method: "POST",
             credentials: "include", // Include cookies for authentication

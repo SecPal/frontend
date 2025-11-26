@@ -32,7 +32,7 @@ export interface CreateShareRequest {
  */
 export async function fetchShares(secretId: string): Promise<SecretShare[]> {
   const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares`,
     {
       method: "GET",
       credentials: "include",
@@ -80,7 +80,7 @@ export async function createShare(
   request: CreateShareRequest
 ): Promise<SecretShare> {
   const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares`,
     {
       method: "POST",
       credentials: "include",
@@ -124,7 +124,7 @@ export async function revokeShare(
   shareId: string
 ): Promise<void> {
   const response = await fetch(
-    `${apiConfig.baseUrl}/api/v1/secrets/${secretId}/shares/${shareId}`,
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares/${shareId}`,
     {
       method: "DELETE",
       credentials: "include",
