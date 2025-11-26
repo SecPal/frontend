@@ -137,7 +137,7 @@ export async function updateSecretOperationStatus(
  * @returns Delay in milliseconds
  */
 function calculateBackoff(attempts: number): number {
-  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at MAX_BACKOFF_MS (30s)
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, capped at MAX_BACKOFF_MS (60s)
   const baseDelay = 1000; // 1 second
   const delay = baseDelay * Math.pow(2, attempts);
   return Math.min(delay, MAX_BACKOFF_MS);

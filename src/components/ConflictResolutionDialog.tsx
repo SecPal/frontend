@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import {
@@ -68,6 +68,13 @@ export function ConflictResolutionDialog({
   const [selectedResolution, setSelectedResolution] = useState<
     "local" | "server" | null
   >(null);
+
+  // Reset selection when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedResolution(null);
+    }
+  }, [isOpen]);
 
   const handleConfirm = () => {
     if (selectedResolution === "local") {
