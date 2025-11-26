@@ -13,7 +13,7 @@ export interface SecretConflict {
 }
 
 /**
- * Alias for backward compatibility
+ * Alias for backward compatibility with tests
  */
 export type ConflictInfo = SecretConflict;
 
