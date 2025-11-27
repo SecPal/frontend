@@ -25,9 +25,9 @@ export function Header() {
       // Local logout already happened above, so user can always log out from UI.
       // If API call fails, backend session may remain active until token expires.
       // TODO: Add user notification (toast/alert) for better UX
+    } finally {
+      navigate("/login");
     }
-
-    navigate("/login");
   };
 
   // Note: user is guaranteed to be non-null when Header is rendered

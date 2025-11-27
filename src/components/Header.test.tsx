@@ -74,8 +74,14 @@ describe("Header", () => {
   });
 
   it("calls logout API and clears auth on logout click", async () => {
+    let wasLocalStorageClearedBeforeApiCall = false;
+
     const mockLogout = vi.mocked(authApi.logout);
-    mockLogout.mockResolvedValueOnce(undefined);
+    mockLogout.mockImplementation(async () => {
+      // Check if localStorage is already cleared when API is called
+      wasLocalStorageClearedBeforeApiCall =
+        localStorage.getItem("auth_user") === null;
+    });
 
     localStorage.setItem(
       "auth_user",
@@ -87,13 +93,12 @@ describe("Header", () => {
     const logoutButton = screen.getByRole("button", { name: /logout/i });
     fireEvent.click(logoutButton);
 
-    // Local storage should be cleared BEFORE API call
     await waitFor(() => {
-      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(mockLogout).toHaveBeenCalled();
     });
 
-    // API call should still happen
-    expect(mockLogout).toHaveBeenCalled();
+    // Verify localStorage was cleared BEFORE API call (fixes race condition)
+    expect(wasLocalStorageClearedBeforeApiCall).toBe(true);
   });
 
   it("clears auth even if logout API fails", async () => {
