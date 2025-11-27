@@ -87,11 +87,13 @@ describe("Header", () => {
     const logoutButton = screen.getByRole("button", { name: /logout/i });
     fireEvent.click(logoutButton);
 
+    // Local storage should be cleared BEFORE API call
     await waitFor(() => {
-      expect(mockLogout).toHaveBeenCalled();
+      expect(localStorage.getItem("auth_user")).toBeNull();
     });
 
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    // API call should still happen
+    expect(mockLogout).toHaveBeenCalled();
   });
 
   it("clears auth even if logout API fails", async () => {
@@ -110,6 +112,11 @@ describe("Header", () => {
 
     const logoutButton = screen.getByRole("button", { name: /logout/i });
     fireEvent.click(logoutButton);
+
+    // Local storage cleared immediately (before API call)
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_user")).toBeNull();
+    });
 
     await waitFor(() => {
       expect(mockLogout).toHaveBeenCalled();
