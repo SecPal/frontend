@@ -13,17 +13,21 @@ export function Header() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
+    // Clear local state FIRST to prevent race conditions with components
+    // that auto-fetch data (e.g., SecretList) using the now-invalid token.
+    // This prevents 500 errors from authenticated API calls after token deletion.
+    logout();
+
     try {
       await apiLogout();
     } catch (error) {
       console.error("Logout API call failed:", error);
+      // Local logout already happened above, so user can always log out from UI.
+      // If API call fails, backend session may remain active until token expires.
       // TODO: Add user notification (toast/alert) for better UX
+    } finally {
+      navigate("/login");
     }
-    // Intentionally proceed with local logout even if API call fails.
-    // This ensures the user can always log out from the UI perspective,
-    // but may leave the backend session active if the API call failed.
-    logout();
-    navigate("/login");
   };
 
   // Note: user is guaranteed to be non-null when Header is rendered
