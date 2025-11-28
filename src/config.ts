@@ -73,19 +73,3 @@ export const appConfig = {
 export function getApiBaseUrl(): string {
   return apiConfig.baseUrl;
 }
-
-/**
- * Get authentication headers for API requests
- * Retrieves stored auth token from localStorage
- *
- * @returns Headers object with Authorization bearer token if available
- */
-export function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem("auth_token");
-  if (token) {
-    return {
-      Authorization: `Bearer ${token}`,
-    };
-  }
-  return {};
-}

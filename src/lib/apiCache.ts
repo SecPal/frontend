@@ -3,7 +3,7 @@
 
 import { db } from "./db";
 import type { SyncOperation } from "./db";
-import { apiConfig, getAuthHeaders } from "../config";
+import { apiConfig } from "../config";
 
 /**
  * Cache an API response in IndexedDB
@@ -236,16 +236,16 @@ export async function retrySyncOperation(
 
   try {
     const endpoint = `${apiBaseUrl}/${operation.entity}`;
-    const authHeaders = getAuthHeaders();
     let response: Response;
 
     switch (operation.type) {
       case "create":
         response = await fetch(endpoint, {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            ...authHeaders,
+            Accept: "application/json",
           },
           body: JSON.stringify(operation.data),
         });
@@ -254,9 +254,10 @@ export async function retrySyncOperation(
       case "update":
         response = await fetch(endpoint, {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            ...authHeaders,
+            Accept: "application/json",
           },
           body: JSON.stringify(operation.data),
         });
@@ -265,7 +266,10 @@ export async function retrySyncOperation(
       case "delete":
         response = await fetch(endpoint, {
           method: "DELETE",
-          headers: authHeaders,
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
         });
         break;
 

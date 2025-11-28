@@ -367,7 +367,11 @@ describe("API Cache Utilities", () => {
       expect(success).toBe(true);
       expect(mockFetch).toHaveBeenCalledWith("https://api.secpal.dev/guards", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify({ name: "John Doe" }),
       });
 
@@ -403,7 +407,11 @@ describe("API Cache Utilities", () => {
         "https://api.secpal.dev/guards/123",
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          credentials: "include",
           body: JSON.stringify({ name: "Updated Name" }),
         }
       );
@@ -437,7 +445,8 @@ describe("API Cache Utilities", () => {
         "https://api.secpal.dev/guards/123",
         {
           method: "DELETE",
-          headers: {}, // Auth headers (empty when no token in localStorage)
+          headers: { Accept: "application/json" },
+          credentials: "include",
         }
       );
 

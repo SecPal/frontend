@@ -725,9 +725,8 @@ describe("Secret API", () => {
       );
 
       // Import encryption functions for test
-      const { deriveFileKey, encryptFile } = await import(
-        "../lib/crypto/encryption"
-      );
+      const { deriveFileKey, encryptFile } =
+        await import("../lib/crypto/encryption");
       const { calculateChecksum } = await import("../lib/crypto/checksum");
 
       const filename = "document.pdf";
@@ -798,9 +797,8 @@ describe("Secret API", () => {
         ["encrypt", "decrypt"]
       );
 
-      const { deriveFileKey, encryptFile } = await import(
-        "../lib/crypto/encryption"
-      );
+      const { deriveFileKey, encryptFile } =
+        await import("../lib/crypto/encryption");
       const { calculateChecksum } = await import("../lib/crypto/checksum");
 
       const filename = "test.txt";
@@ -848,9 +846,8 @@ describe("Secret API", () => {
         ["encrypt", "decrypt"]
       );
 
-      const { deriveFileKey, encryptFile } = await import(
-        "../lib/crypto/encryption"
-      );
+      const { deriveFileKey, encryptFile } =
+        await import("../lib/crypto/encryption");
       const { calculateChecksum } = await import("../lib/crypto/checksum");
 
       const filename = "tampered.txt";
@@ -968,9 +965,8 @@ describe("Secret API", () => {
         ["encrypt", "decrypt"]
       );
 
-      const { deriveFileKey, encryptFile } = await import(
-        "../lib/crypto/encryption"
-      );
+      const { deriveFileKey, encryptFile } =
+        await import("../lib/crypto/encryption");
       const { calculateChecksum } = await import("../lib/crypto/checksum");
 
       const originalFilename = "secret-document.docx";

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { apiConfig, getAuthHeaders } from "../config";
+import { apiConfig } from "../config";
 import { fetchWithCsrf } from "./csrf";
 
 /**
@@ -113,8 +113,8 @@ export async function fetchSecrets(): Promise<Secret[]> {
     method: "GET",
     credentials: "include",
     headers: {
-      ...getAuthHeaders(),
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
 
@@ -151,8 +151,8 @@ export async function getSecretById(secretId: string): Promise<SecretDetail> {
     method: "GET",
     credentials: "include",
     headers: {
-      ...getAuthHeaders(),
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
 
@@ -199,7 +199,7 @@ export async function uploadAttachment(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
-      headers: getAuthHeaders(), // Don't set Content-Type for FormData
+      // Don't set Content-Type for FormData - browser sets it with boundary
       body: formData,
     }
   );
@@ -261,7 +261,7 @@ export async function uploadEncryptedAttachment(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
-      headers: getAuthHeaders(), // Don't set Content-Type for FormData
+      // Don't set Content-Type for FormData - browser sets it with boundary
       body: formData,
     }
   );
@@ -303,8 +303,8 @@ export async function listAttachments(
       method: "GET",
       credentials: "include",
       headers: {
-        ...getAuthHeaders(),
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
     }
   );
@@ -341,7 +341,9 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     `${apiConfig.baseUrl}/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
-      headers: getAuthHeaders(),
+      headers: {
+        Accept: "application/json",
+      },
     }
   );
 
@@ -375,8 +377,8 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
     method: "GET",
     credentials: "include",
     headers: {
-      ...getAuthHeaders(),
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
   });
 
@@ -452,7 +454,9 @@ export async function downloadAndDecryptAttachment(
     {
       method: "GET",
       credentials: "include",
-      headers: getAuthHeaders(),
+      headers: {
+        Accept: "application/json",
+      },
     }
   );
 
@@ -484,9 +488,8 @@ export async function downloadAndDecryptAttachment(
   const ciphertext = encryptedBytes.slice(28); // Rest is ciphertext
 
   // 4. Derive file key (same as encryption)
-  const { deriveFileKey, decryptFile } = await import(
-    "../lib/crypto/encryption"
-  );
+  const { deriveFileKey, decryptFile } =
+    await import("../lib/crypto/encryption");
   const fileKey = await deriveFileKey(secretKey, metadata.filename);
 
   // 5. Decrypt file
@@ -572,8 +575,8 @@ export async function createSecret(
   const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/secrets`, {
     method: "POST",
     headers: {
-      ...getAuthHeaders(),
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(data),
   });
@@ -619,8 +622,8 @@ export async function updateSecret(
     {
       method: "PATCH",
       headers: {
-        ...getAuthHeaders(),
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(data),
     }
@@ -658,7 +661,9 @@ export async function deleteSecret(secretId: string): Promise<void> {
     `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
     {
       method: "DELETE",
-      headers: getAuthHeaders(),
+      headers: {
+        Accept: "application/json",
+      },
     }
   );
 

@@ -8,17 +8,10 @@ import type { User } from "../contexts/auth-context";
  * Implements Single Responsibility Principle (SOLID)
  * Allows easy mocking in tests and future storage backend changes
  *
- * @deprecated Token methods (getToken, setToken, removeToken) are deprecated
- * as authentication now uses httpOnly cookies. These methods are scheduled for removal in v2.0.0.
- * See issue #208 (Epic #208) for migration details and timeline.
+ * Note: Token storage was removed in v0.x as authentication now uses
+ * httpOnly cookies (Sanctum SPA mode). See issue #246.
  */
 export interface AuthStorage {
-  /** @deprecated Use httpOnly cookies instead */
-  getToken(): string | null;
-  /** @deprecated Use httpOnly cookies instead */
-  setToken(token: string): void;
-  /** @deprecated Use httpOnly cookies instead */
-  removeToken(): void;
   getUser(): User | null;
   setUser(user: User): void;
   removeUser(): void;
@@ -29,19 +22,19 @@ export interface AuthStorage {
  * LocalStorage implementation of AuthStorage
  */
 class LocalStorageAuthStorage implements AuthStorage {
-  private readonly TOKEN_KEY = "auth_token";
   private readonly USER_KEY = "auth_user";
 
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+  /**
+   * Clean up any legacy auth_token that might exist from before migration.
+   * This is called once on init to ensure no stale tokens remain.
+   */
+  private cleanupLegacyToken(): void {
+    localStorage.removeItem("auth_token");
   }
 
-  setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
-  removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+  constructor() {
+    // Clean up any legacy token from before httpOnly cookie migration
+    this.cleanupLegacyToken();
   }
 
   getUser(): User | null {
@@ -66,10 +59,6 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   clear(): void {
-    // Note: Token methods still called for backwards compatibility
-    // but will be removed when token methods are fully removed
-    // TODO(#208): Remove token cleanup once fully migrated to httpOnly cookies
-    this.removeToken();
     this.removeUser();
   }
 }

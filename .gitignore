@@ -65,3 +65,7 @@ node_modules/.cache/
 
 # Storybook
 storybook-static/
+
+# DDEV local development
+/.ddev/*
+!/.ddev/config.yaml

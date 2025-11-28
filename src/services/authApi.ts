@@ -43,7 +43,8 @@ export async function login(
   // Fetch CSRF token before login
   await fetchCsrfToken();
 
-  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/token`, {
+  // Use SPA login endpoint (session-based, not token-based)
+  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -52,7 +53,6 @@ export async function login(
     body: JSON.stringify({
       email: credentials.email,
       password: credentials.password,
-      device_name: credentials.device_name || "secpal-frontend",
     }),
   });
 
@@ -60,14 +60,8 @@ export async function login(
     let error: ApiError | null = null;
     try {
       error = await response.json();
-      console.error("Login API error:", error);
     } catch {
       // Fallback if response is not JSON (e.g., HTML error page)
-      console.error(
-        "Login failed - non-JSON response:",
-        response.status,
-        response.statusText
-      );
       throw new AuthApiError(
         `Login failed: ${response.status} ${response.statusText}`
       );
@@ -79,16 +73,19 @@ export async function login(
 }
 
 /**
- * Logout - revoke current token
+ * Logout - end current session (for SPA cookie auth)
  * @throws {AuthApiError} If logout fails
  */
 export async function logout(): Promise<void> {
-  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/logout`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  const response = await fetchWithCsrf(
+    `${getApiBaseUrl()}/v1/auth/session/logout`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     let error: ApiError | null = null;
