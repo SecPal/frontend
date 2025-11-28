@@ -287,6 +287,10 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "src"),
       },
     },
+    server: {
+      // Allow DDEV hostnames for local development
+      allowedHosts: [".ddev.site"],
+    },
     test: {
       globals: true,
       environment: "jsdom",
