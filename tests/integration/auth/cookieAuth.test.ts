@@ -60,10 +60,10 @@ describe("Cookie-based Authentication Integration", () => {
         })
       );
 
-      // Verify login request sent credentials
+      // Verify login request sent credentials (SPA uses /v1/auth/login)
       expect(mockFetch).toHaveBeenNthCalledWith(
         2,
-        expect.stringContaining("/v1/auth/token"),
+        expect.stringContaining("/v1/auth/login"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",
@@ -209,9 +209,9 @@ describe("Cookie-based Authentication Integration", () => {
 
       await logout();
 
-      // Verify logout request was sent with credentials
+      // Verify logout request was sent with credentials (SPA uses /v1/auth/session/logout)
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/v1/auth/logout"),
+        expect.stringContaining("/v1/auth/session/logout"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",

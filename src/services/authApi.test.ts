@@ -25,7 +25,7 @@ describe("authApi", () => {
   });
 
   describe("login", () => {
-    it("sends POST request to /v1/auth/token with credentials", async () => {
+    it("sends POST request to /v1/auth/login with credentials", async () => {
       const mockResponse = {
         user: { id: 1, name: "Test User", email: "test@example.com" },
       };
@@ -56,17 +56,16 @@ describe("authApi", () => {
         })
       );
 
-      // Verify login request
+      // Verify login request (SPA uses /v1/auth/login, not /v1/auth/token)
       expect(mockFetch).toHaveBeenNthCalledWith(
         2,
-        expect.stringContaining("/v1/auth/token"),
+        expect.stringContaining("/v1/auth/login"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",
           body: JSON.stringify({
             email: "test@example.com",
             password: "password123",
-            device_name: "secpal-frontend",
           }),
         })
       );
@@ -85,7 +84,7 @@ describe("authApi", () => {
       expect(result).toEqual(mockResponse);
     });
 
-    it("uses custom device_name when provided", async () => {
+    it("sends login request with email and password only (no device_name for SPA)", async () => {
       const mockResponse = {
         user: { id: 1, name: "Test", email: "test@example.com" },
       };
@@ -105,16 +104,20 @@ describe("authApi", () => {
       await login({
         email: "test@example.com",
         password: "password123",
-        device_name: "custom-device",
       });
 
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        2,
-        expect.any(String),
-        expect.objectContaining({
-          body: expect.stringContaining("custom-device"),
-        })
-      );
+      // SPA login does not send device_name (that's for token-based auth)
+      const loginCall = mockFetch.mock.calls[1];
+      expect(loginCall).toBeDefined();
+      if (loginCall) {
+        const requestInit = loginCall[1] as RequestInit;
+        const body = JSON.parse(requestInit.body as string);
+        expect(body).toEqual({
+          email: "test@example.com",
+          password: "password123",
+        });
+        expect(body).not.toHaveProperty("device_name");
+      }
     });
 
     it("throws AuthApiError on failed login", async () => {
@@ -178,10 +181,6 @@ describe("authApi", () => {
     });
 
     it("handles non-JSON error responses gracefully", async () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
       // Mock CSRF token fetch
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -200,20 +199,9 @@ describe("authApi", () => {
       await expect(
         login({ email: "test@example.com", password: "test" })
       ).rejects.toThrow("Login failed: 500 Internal Server Error");
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Login failed - non-JSON response:",
-        500,
-        "Internal Server Error"
-      );
-
-      consoleErrorSpy.mockRestore();
     });
 
-    it("logs API error details on JSON error response", async () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+    it("throws AuthApiError with error details on JSON error response", async () => {
       const errorResponse = {
         message: "Validation failed",
         errors: { email: ["Email is required"] },
@@ -233,19 +221,19 @@ describe("authApi", () => {
 
       try {
         await login({ email: "", password: "test" });
-      } catch {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          "Login API error:",
-          errorResponse
-        );
+        expect.fail("Expected login to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).message).toBe("Validation failed");
+        expect((error as AuthApiError).errors).toEqual({
+          email: ["Email is required"],
+        });
       }
-
-      consoleErrorSpy.mockRestore();
     });
   });
 
   describe("logout", () => {
-    it("sends POST request to /v1/auth/logout with credentials", async () => {
+    it("sends POST request to /v1/auth/session/logout with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -254,7 +242,7 @@ describe("authApi", () => {
       await logout();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/v1/auth/logout"),
+        expect.stringContaining("/v1/auth/session/logout"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",
