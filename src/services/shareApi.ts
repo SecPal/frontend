@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { apiConfig, getAuthHeaders } from "../config";
+import { apiConfig } from "../config";
 import { ApiError, type SecretShare } from "./secretApi";
 
 // Re-export ApiError for test convenience
@@ -38,7 +38,7 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(),
+        Accept: "application/json",
       },
     }
   );
@@ -86,7 +86,7 @@ export async function createShare(
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(),
+        Accept: "application/json",
       },
       body: JSON.stringify(request),
     }
@@ -130,7 +130,7 @@ export async function revokeShare(
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(),
+        Accept: "application/json",
       },
     }
   );
