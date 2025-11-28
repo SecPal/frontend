@@ -290,6 +290,33 @@ export default defineConfig(({ mode }) => {
     server: {
       // Allow DDEV hostnames for local development
       allowedHosts: [".ddev.site"],
+      // Proxy API requests to DDEV backend to avoid CORS issues in local development
+      // This allows frontend on localhost:5173 to communicate with backend on secpal-api.ddev.site
+      // without cross-origin restrictions.
+      // Only active when VITE_API_URL is not explicitly set.
+      proxy: !env.VITE_API_URL
+        ? {
+            "/v1": {
+              target: "https://secpal-api.ddev.site",
+              changeOrigin: true,
+              secure: false, // Accept self-signed DDEV certificates
+              // Add headers to help Sanctum recognize the request origin
+              headers: {
+                Origin: "http://localhost:5173",
+                Referer: "http://localhost:5173/",
+              },
+            },
+            "/sanctum": {
+              target: "https://secpal-api.ddev.site",
+              changeOrigin: true,
+              secure: false,
+              headers: {
+                Origin: "http://localhost:5173",
+                Referer: "http://localhost:5173/",
+              },
+            },
+          }
+        : undefined,
     },
     test: {
       globals: true,
