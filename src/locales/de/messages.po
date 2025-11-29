@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-29 11:33+0100\n"
+"POT-Creation-Date: 2025-11-29 12:31+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,9 +20,9 @@ msgstr "-- Wählen Sie ein Geheimnis --"
 msgid "<0>{0} field(s)</0> have conflicting changes:"
 msgstr ""
 
-#: src/components/UpdatePrompt.tsx:54
-msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
-msgstr "Eine neue Version von SecPal ist verfügbar. Klicken Sie auf \"Aktualisieren\", um die neueste Version zu laden und zu verwenden."
+#: src/components/UpdatePrompt.tsx:51
+msgid "A new version of SecPal is available."
+msgstr ""
 
 #: src/components/Footer.tsx:27
 msgid "AGPL v3+"
@@ -101,10 +101,6 @@ msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
 #: src/components/AttachmentList.tsx:215
 msgid "Delete"
 msgstr "Löschen"
-
-#: src/components/UpdatePrompt.tsx:71
-msgid "Dismiss update notification"
-msgstr "Update-Benachrichtigung verwerfen"
 
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
@@ -218,10 +214,6 @@ msgstr "Zuletzt geändert: {0}"
 msgid "Last sync: {0}"
 msgstr "Letzte Synchronisation: {0}"
 
-#: src/components/UpdatePrompt.tsx:73
-msgid "Later"
-msgstr "Später"
-
 #: src/components/AttachmentList.tsx:137
 msgid "Loading attachments..."
 msgstr "Anhänge laden..."
@@ -241,10 +233,6 @@ msgstr "Abmelden"
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
 msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
-
-#: src/components/UpdatePrompt.tsx:51
-msgid "New version available"
-msgstr "Neue Version verfügbar"
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -484,13 +472,13 @@ msgstr "Titel:"
 msgid "URL:"
 msgstr "URL:"
 
-#: src/components/UpdatePrompt.tsx:66
-msgid "Update"
-msgstr "Aktualisieren"
-
-#: src/components/UpdatePrompt.tsx:64
+#: src/components/UpdatePrompt.tsx:57
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
+
+#: src/components/UpdatePrompt.tsx:59
+msgid "Update now"
+msgstr ""
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
@@ -527,47 +515,67 @@ msgid "Your Local Version"
 msgstr "Ihre lokale Version"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:189
+#: src/pages/Login.tsx:255
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:147
+#: src/pages/Login.tsx:208
 msgid "login.email"
 msgstr "E-Mail"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:124
+#: src/pages/Login.tsx:147
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:119
+#: src/pages/Login.tsx:142
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:165
+#: src/pages/Login.tsx:257
+msgid "login.lockedButton"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:226
 msgid "login.password"
 msgstr "Passwort"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:193
+#: src/pages/Login.tsx:176
+msgid "login.rateLimitLocked.message"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:171
+msgid "login.rateLimitLocked.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:197
+msgid "login.remainingAttempts"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:263
 msgid "login.submit"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:191
+#: src/pages/Login.tsx:261
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:97
+#: src/pages/Login.tsx:120
 msgid "login.subtitle"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:94
+#: src/pages/Login.tsx:117
 msgid "login.title"
 msgstr "Einloggen"
 

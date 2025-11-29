@@ -39,6 +39,11 @@ msgstr "{errorOps} operation(s) failed"
 msgid "{pendingOps} operation(s) pending"
 msgstr "{pendingOps} operation(s) pending"
 
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:197
+msgid "login.remainingAttempts"
+msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
+
 #: src/components/ShareDialog.tsx:211
 msgid "• Admin: View + edit + share + delete"
 msgstr "• Admin: View + edit + share + delete"
@@ -60,9 +65,9 @@ msgstr "<0>{0} field(s)</0> have conflicting changes:"
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
-#: src/components/UpdatePrompt.tsx:54
-msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
-msgstr "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
+#: src/components/UpdatePrompt.tsx:51
+msgid "A new version of SecPal is available."
+msgstr "A new version of SecPal is available."
 
 #: src/App.tsx:32
 msgid "About"
@@ -114,7 +119,7 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:189
+#: src/pages/Login.tsx:255
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
@@ -147,10 +152,6 @@ msgstr "Critical security notifications and warnings"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/UpdatePrompt.tsx:71
-msgid "Dismiss update notification"
-msgstr "Dismiss update notification"
-
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
 #: src/components/AttachmentPreview.tsx:215
@@ -166,7 +167,7 @@ msgid "Drag files here or click to browse"
 msgstr "Drag files here or click to browse"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:147
+#: src/pages/Login.tsx:208
 msgid "login.email"
 msgstr "Email"
 
@@ -263,10 +264,6 @@ msgstr "Last modified: {0}"
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
-#: src/components/UpdatePrompt.tsx:73
-msgid "Later"
-msgstr "Later"
-
 #: src/components/AttachmentList.tsx:137
 msgid "Loading attachments..."
 msgstr "Loading attachments..."
@@ -280,17 +277,22 @@ msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:193
+#: src/pages/Login.tsx:257
+msgid "login.lockedButton"
+msgstr "Locked ({remainingLockoutSeconds}s)"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:263
 msgid "login.submit"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:191
+#: src/pages/Login.tsx:261
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:94
+#: src/pages/Login.tsx:117
 msgid "login.title"
 msgstr "Login"
 
@@ -301,10 +303,6 @@ msgstr "Logout"
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
-
-#: src/components/UpdatePrompt.tsx:51
-msgid "New version available"
-msgstr "New version available"
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -343,7 +341,7 @@ msgid "Offline only"
 msgstr "Offline only"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:165
+#: src/pages/Login.tsx:226
 msgid "login.password"
 msgstr "Password"
 
@@ -358,6 +356,11 @@ msgstr "Permission Levels:"
 #: src/components/ShareDialog.tsx:159
 msgid "Permission:"
 msgstr "Permission:"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:176
+msgid "login.rateLimitLocked.message"
+msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
 #: src/components/Footer.tsx:16
 msgid "Powered by SecPal - a guard's best friend"
@@ -517,7 +520,7 @@ msgid "Syncing..."
 msgstr "Syncing..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:119
+#: src/pages/Login.tsx:142
 msgid "login.healthWarning.title"
 msgstr "System not ready"
 
@@ -538,7 +541,7 @@ msgid "Text:"
 msgstr "Text:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:124
+#: src/pages/Login.tsx:147
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
@@ -554,13 +557,18 @@ msgstr "This secret was modified both locally and on the server. Please choose w
 msgid "Title:"
 msgstr "Title:"
 
-#: src/components/UpdatePrompt.tsx:66
-msgid "Update"
-msgstr "Update"
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:171
+msgid "login.rateLimitLocked.title"
+msgstr "Too many failed attempts"
 
-#: src/components/UpdatePrompt.tsx:64
+#: src/components/UpdatePrompt.tsx:57
 msgid "Update application now"
 msgstr "Update application now"
+
+#: src/components/UpdatePrompt.tsx:59
+msgid "Update now"
+msgstr "Update now"
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
@@ -598,7 +606,7 @@ msgid "You're offline"
 msgstr "You're offline"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:97
+#: src/pages/Login.tsx:120
 msgid "login.subtitle"
 msgstr "Your digital guard companion"
 

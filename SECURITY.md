@@ -169,11 +169,22 @@ We compensate with:
 - **Manual security reviews** for PHP code
 - **Consider:** Psalm, Semgrep for additional PHP security scanning
 
-### API Rate Limiting
+### Login Rate Limiting
 
-- Currently: No rate limiting implemented
-- **Planned:** Rate limiting for public APIs (v0.5.0)
-- **Mitigation:** Monitor for unusual traffic patterns
+**Defense-in-depth approach implemented:**
+
+**Frontend (client-side):**
+
+- Max 5 login attempts, then 30-second lockout
+- Visual feedback with remaining attempts counter
+- Automatic reset after 15 minutes of inactivity
+- Persisted in localStorage to survive page refresh
+
+**Backend (server-side):**
+
+- Login endpoints: 5 attempts per minute per email+IP
+- Password reset: 5 requests per 60 minutes
+- Returns 429 Too Many Requests with localized message
 
 ### CORS Configuration
 
@@ -184,8 +195,8 @@ We compensate with:
 
 Planned security enhancements:
 
-- [ ] **v0.3.0:** Production-ready CORS configuration
-- [ ] **v0.5.0:** API rate limiting
+- [x] **v0.3.0:** Production-ready CORS configuration
+- [x] **v0.5.0:** Login rate limiting _(implemented)_
 - [ ] **v0.7.0:** Comprehensive audit logging
 - [ ] **v0.9.0:** Penetration testing
 - [ ] **v1.0.0:** Security certification (OWASP ASVS Level 2)
