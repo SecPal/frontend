@@ -1,17 +1,26 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-23 22:26+0100\n"
+"POT-Creation-Date: 2025-11-29 09:20+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: de\n"
 
+#: src/components/ConflictResolutionDialog.tsx:82
+msgid "(empty)"
+msgstr ""
+
 #: src/pages/ShareTarget.tsx:656
 msgid "-- Choose a Secret --"
 msgstr ""
 
-#: src/components/UpdatePrompt.tsx:53
+#. placeholder {0}: conflict.conflictFields.length
+#: src/components/ConflictResolutionDialog.tsx:107
+msgid "<0>{0} field(s)</0> have conflicting changes:"
+msgstr ""
+
+#: src/components/UpdatePrompt.tsx:54
 msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
 msgstr "Eine neue Version von SecPal ist verfügbar. Klicken Sie auf \"Aktualisieren\", um die neueste Version zu laden und zu verwenden."
 
@@ -39,6 +48,10 @@ msgstr "Alles synchronisiert"
 msgid "App updates and maintenance notifications"
 msgstr "App-Updates und Wartungsbenachrichtigungen"
 
+#: src/components/ConflictResolutionDialog.tsx:207
+msgid "Apply Selection"
+msgstr ""
+
 #: src/pages/Secrets/SecretDetail.tsx:142
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?"
@@ -55,6 +68,7 @@ msgstr "Angehängte Dateien"
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
+#: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -88,7 +102,7 @@ msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
 msgid "Delete"
 msgstr "Löschen"
 
-#: src/components/UpdatePrompt.tsx:70
+#: src/components/UpdatePrompt.tsx:71
 msgid "Dismiss update notification"
 msgstr "Update-Benachrichtigung verwerfen"
 
@@ -120,7 +134,7 @@ msgstr "Aktiviere ..."
 
 #: src/components/EncryptionProgress.tsx:47
 msgid "Encrypting files..."
-msgstr ""
+msgstr "Dateien verschlüsseln..."
 
 #: src/pages/ShareTarget.tsx:547
 msgid "Errors:"
@@ -162,7 +176,7 @@ msgstr "Vorschau konnte nicht geladen werden"
 
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
-msgstr ""
+msgstr "Zugriff widerrufen fehlgeschlagen"
 
 #: src/components/UploadStatus.tsx:90
 msgid "Failed to schedule upload retry"
@@ -170,7 +184,7 @@ msgstr "Upload-Wiederholungsversuch konnte nicht geplant werden"
 
 #: src/components/ShareDialog.tsx:91
 msgid "Failed to share secret"
-msgstr ""
+msgstr "Geheimnis teilen fehlgeschlagen"
 
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:124
@@ -186,18 +200,25 @@ msgstr "Gewährt von {0} am {1}"
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:115
 msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
-msgstr ""
+msgstr "Ungültiger Dateityp: {0}. Nur Bilder, PDFs und Dokumente sind erlaubt."
 
 #: src/pages/ShareTarget.tsx:596
 msgid "Invalid or unsafe URL"
 msgstr "Ungültige oder unsichere URL"
+
+#. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
+#. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
+#: src/components/ConflictResolutionDialog.tsx:151
+#: src/components/ConflictResolutionDialog.tsx:188
+msgid "Last modified: {0}"
+msgstr ""
 
 #. placeholder {0}: lastSyncTime.toLocaleTimeString()
 #: src/components/SyncStatusIndicator.tsx:132
 msgid "Last sync: {0}"
 msgstr "Letzte Synchronisation: {0}"
 
-#: src/components/UpdatePrompt.tsx:72
+#: src/components/UpdatePrompt.tsx:73
 msgid "Later"
 msgstr "Später"
 
@@ -213,15 +234,15 @@ msgstr "Geheimnisse laden..."
 msgid "Loading..."
 msgstr "Laden..."
 
-#: src/components/Header.tsx:53
+#: src/components/Header.tsx:57
 msgid "Logout"
 msgstr "Abmelden"
 
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
-msgstr ""
+msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 
-#: src/components/UpdatePrompt.tsx:50
+#: src/components/UpdatePrompt.tsx:51
 msgid "New version available"
 msgstr "Neue Version verfügbar"
 
@@ -256,6 +277,14 @@ msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Ein
 #: src/components/SyncStatusIndicator.tsx:158
 msgid "Offline - will sync when online"
 msgstr "Offline - wird synchronisiert, wenn online"
+
+#: src/components/OfflineSecretBadge.tsx:44
+msgid "Offline only"
+msgstr ""
+
+#: src/components/OfflineSecretBadge.tsx:53
+msgid "Pending sync"
+msgstr ""
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
@@ -353,6 +382,10 @@ msgstr "Benutzer oder Rolle auswählen..."
 msgid "Send Test"
 msgstr "Test senden"
 
+#: src/components/ConflictResolutionDialog.tsx:169
+msgid "Server Version"
+msgstr ""
+
 #: src/components/ShareDialog.tsx:229
 msgid "Share"
 msgstr "Teilen"
@@ -410,6 +443,10 @@ msgstr "Unterstützt: Bilder, PDFs, Dokumente (max. 10MB)"
 msgid "Sync"
 msgstr "Synchronisieren"
 
+#: src/components/ConflictResolutionDialog.tsx:93
+msgid "Sync Conflict Detected"
+msgstr ""
+
 #: src/components/SyncStatusIndicator.tsx:113
 msgid "Syncing..."
 msgstr "Synchronisieren..."
@@ -434,6 +471,10 @@ msgstr "Text:"
 msgid "This is a test notification from SecPal"
 msgstr ""
 
+#: src/components/ConflictResolutionDialog.tsx:96
+msgid "This secret was modified both locally and on the server. Please choose which version to keep."
+msgstr ""
+
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"
 msgstr "Titel:"
@@ -443,11 +484,11 @@ msgstr "Titel:"
 msgid "URL:"
 msgstr "URL:"
 
-#: src/components/UpdatePrompt.tsx:65
+#: src/components/UpdatePrompt.tsx:66
 msgid "Update"
 msgstr "Aktualisieren"
 
-#: src/components/UpdatePrompt.tsx:63
+#: src/components/UpdatePrompt.tsx:64
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
 
@@ -481,33 +522,52 @@ msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 msgid "You're offline"
 msgstr "Sie sind offline"
 
+#: src/components/ConflictResolutionDialog.tsx:132
+msgid "Your Local Version"
+msgstr ""
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:76
+#: src/pages/Login.tsx:189
+msgid "login.checkingSystem"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:147
 msgid "login.email"
 msgstr "E-Mail"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:93
+#: src/pages/Login.tsx:124
+msgid "login.healthWarning.message"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:119
+msgid "login.healthWarning.title"
+msgstr ""
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:165
 msgid "login.password"
 msgstr "Passwort"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:117
+#: src/pages/Login.tsx:193
 msgid "login.submit"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:115
+#: src/pages/Login.tsx:191
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:55
+#: src/pages/Login.tsx:97
 msgid "login.subtitle"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:52
+#: src/pages/Login.tsx:94
 msgid "login.title"
 msgstr "Einloggen"
 
@@ -518,15 +578,15 @@ msgstr "{ 0, plural, one {# Datei bereit zum Hochladen} other {# Dateien bereit 
 
 #: src/components/SyncStatusIndicator.tsx:121
 msgid "{errorOps} operation(s) failed"
-msgstr ""
+msgstr "{errorOps} Operation(en) fehlgeschlagen"
 
 #: src/components/SyncStatusIndicator.tsx:117
 msgid "{pendingOps} operation(s) pending"
-msgstr ""
+msgstr "{pendingOps} ausstehende(r) Vorgang(e)"
 
 #: src/components/ShareDialog.tsx:211
 msgid "• Admin: View + edit + share + delete"
-msgstr ""
+msgstr "- Admin: Anzeigen + Bearbeiten + Freigeben + Löschen"
 
 #: src/components/ShareDialog.tsx:205
 msgid "• Read: View secret details"

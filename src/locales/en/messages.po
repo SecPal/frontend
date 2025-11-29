@@ -22,6 +22,10 @@ msgstr "Failed to change language. Please try again."
 msgid "-- Choose a Secret --"
 msgstr "-- Choose a Secret --"
 
+#: src/components/ConflictResolutionDialog.tsx:82
+msgid "(empty)"
+msgstr "(empty)"
+
 #. placeholder {0}: encrypted.length
 #: src/components/UploadStatus.tsx:251
 msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
@@ -47,11 +51,16 @@ msgstr "• Read: View secret details"
 msgid "• Write: View + edit secret"
 msgstr "• Write: View + edit secret"
 
+#. placeholder {0}: conflict.conflictFields.length
+#: src/components/ConflictResolutionDialog.tsx:107
+msgid "<0>{0} field(s)</0> have conflicting changes:"
+msgstr "<0>{0} field(s)</0> have conflicting changes:"
+
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
-#: src/components/UpdatePrompt.tsx:53
+#: src/components/UpdatePrompt.tsx:54
 msgid "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
 msgstr "A new version of SecPal is ready. Click \"Update\" to reload and use the latest version."
 
@@ -79,6 +88,10 @@ msgstr "All synced"
 msgid "App updates and maintenance notifications"
 msgstr "App updates and maintenance notifications"
 
+#: src/components/ConflictResolutionDialog.tsx:207
+msgid "Apply Selection"
+msgstr "Apply Selection"
+
 #: src/pages/Secrets/SecretDetail.tsx:142
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Are you sure you want to delete this attachment?"
@@ -95,9 +108,15 @@ msgstr "Attached Files"
 msgid "Back to Home"
 msgstr "Back to Home"
 
+#: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Cancel"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:189
+msgid "login.checkingSystem"
+msgstr "Checking system..."
 
 #: src/components/NotificationPreferences.tsx:295
 msgid "Choose which notifications you want to receive"
@@ -128,7 +147,7 @@ msgstr "Critical security notifications and warnings"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/UpdatePrompt.tsx:70
+#: src/components/UpdatePrompt.tsx:71
 msgid "Dismiss update notification"
 msgstr "Dismiss update notification"
 
@@ -147,7 +166,7 @@ msgid "Drag files here or click to browse"
 msgstr "Drag files here or click to browse"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:76
+#: src/pages/Login.tsx:147
 msgid "login.email"
 msgstr "Email"
 
@@ -232,12 +251,19 @@ msgstr "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
 msgid "Invalid or unsafe URL"
 msgstr "Invalid or unsafe URL"
 
+#. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
+#. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
+#: src/components/ConflictResolutionDialog.tsx:151
+#: src/components/ConflictResolutionDialog.tsx:188
+msgid "Last modified: {0}"
+msgstr "Last modified: {0}"
+
 #. placeholder {0}: lastSyncTime.toLocaleTimeString()
 #: src/components/SyncStatusIndicator.tsx:132
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
-#: src/components/UpdatePrompt.tsx:72
+#: src/components/UpdatePrompt.tsx:73
 msgid "Later"
 msgstr "Later"
 
@@ -254,21 +280,21 @@ msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:117
+#: src/pages/Login.tsx:193
 msgid "login.submit"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:115
+#: src/pages/Login.tsx:191
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:52
+#: src/pages/Login.tsx:94
 msgid "login.title"
 msgstr "Login"
 
-#: src/components/Header.tsx:53
+#: src/components/Header.tsx:57
 msgid "Logout"
 msgstr "Logout"
 
@@ -276,7 +302,7 @@ msgstr "Logout"
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
 
-#: src/components/UpdatePrompt.tsx:50
+#: src/components/UpdatePrompt.tsx:51
 msgid "New version available"
 msgstr "New version available"
 
@@ -312,10 +338,18 @@ msgstr "Notifications have been blocked. Please enable them in your browser sett
 msgid "Offline - will sync when online"
 msgstr "Offline - will sync when online"
 
+#: src/components/OfflineSecretBadge.tsx:44
+msgid "Offline only"
+msgstr "Offline only"
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:93
+#: src/pages/Login.tsx:165
 msgid "login.password"
 msgstr "Password"
+
+#: src/components/OfflineSecretBadge.tsx:53
+msgid "Pending sync"
+msgstr "Pending sync"
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
@@ -413,6 +447,10 @@ msgstr "Select user or role..."
 msgid "Send Test"
 msgstr "Send Test"
 
+#: src/components/ConflictResolutionDialog.tsx:169
+msgid "Server Version"
+msgstr "Server Version"
+
 #: src/components/ShareDialog.tsx:229
 msgid "Share"
 msgstr "Share"
@@ -470,9 +508,18 @@ msgstr "Supported: Images, PDFs, Documents (max 10MB)"
 msgid "Sync"
 msgstr "Sync"
 
+#: src/components/ConflictResolutionDialog.tsx:93
+msgid "Sync Conflict Detected"
+msgstr "Sync Conflict Detected"
+
 #: src/components/SyncStatusIndicator.tsx:113
 msgid "Syncing..."
 msgstr "Syncing..."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:119
+msgid "login.healthWarning.title"
+msgstr "System not ready"
 
 #: src/components/NotificationPreferences.tsx:46
 msgid "System Updates"
@@ -490,19 +537,28 @@ msgstr "Test Notification"
 msgid "Text:"
 msgstr "Text:"
 
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:124
+msgid "login.healthWarning.message"
+msgstr "The system is not fully configured. Please contact your administrator."
+
 #: src/components/NotificationPreferences.tsx:226
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
+
+#: src/components/ConflictResolutionDialog.tsx:96
+msgid "This secret was modified both locally and on the server. Please choose which version to keep."
+msgstr "This secret was modified both locally and on the server. Please choose which version to keep."
 
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"
 msgstr "Title:"
 
-#: src/components/UpdatePrompt.tsx:65
+#: src/components/UpdatePrompt.tsx:66
 msgid "Update"
 msgstr "Update"
 
-#: src/components/UpdatePrompt.tsx:63
+#: src/components/UpdatePrompt.tsx:64
 msgid "Update application now"
 msgstr "Update application now"
 
@@ -542,6 +598,10 @@ msgid "You're offline"
 msgstr "You're offline"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:55
+#: src/pages/Login.tsx:97
 msgid "login.subtitle"
 msgstr "Your digital guard companion"
+
+#: src/components/ConflictResolutionDialog.tsx:132
+msgid "Your Local Version"
+msgstr "Your Local Version"
