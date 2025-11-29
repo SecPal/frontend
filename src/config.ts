@@ -17,19 +17,22 @@ export const apiConfig = {
    * Can be overridden via VITE_API_URL environment variable
    *
    * Examples:
-   * - Development: http://localhost:8000
+   * - Development with DDEV: (empty string, Vite proxy handles routing)
+   * - Development without proxy: http://localhost:8000
    * - Demo/Testing: https://api.secpal.dev
    * - Production: https://api.secpal.app
    * - Customer On-Premise: https://api.customer.example.com
    *
    * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
    * so routes are accessible at /v1/secrets NOT /api/v1/secrets
+   *
+   * Local Development:
+   * When VITE_API_URL is not set, we use empty string for same-origin requests.
+   * Vite's proxy (see vite.config.ts) forwards /v1/* and /sanctum/* to DDEV.
    */
   baseUrl:
     import.meta.env.VITE_API_URL ||
-    (import.meta.env.MODE === "production"
-      ? "https://api.secpal.app"
-      : "http://localhost:8000"),
+    (import.meta.env.MODE === "production" ? "https://api.secpal.app" : ""),
 
   /**
    * API timeout in milliseconds
