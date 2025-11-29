@@ -109,6 +109,26 @@ describe("useServiceWorkerUpdate", () => {
 
       expect(result.current.offlineReady).toBe(true);
     });
+
+    it("should always show update banner when update is available (no dismiss option)", () => {
+      const { result, rerender } = renderHook(() => useServiceWorkerUpdate());
+
+      // Update becomes available
+      mockNeedRefresh = true;
+      rerender();
+
+      // Banner should be visible
+      expect(result.current.needRefresh).toBe(true);
+
+      // Wait any amount of time - banner should still be visible
+      act(() => {
+        vi.advanceTimersByTime(24 * 60 * 60 * 1000); // 24 hours
+      });
+      rerender();
+
+      // Banner should still be visible until user updates
+      expect(result.current.needRefresh).toBe(true);
+    });
   });
 
   describe("updateServiceWorker()", () => {
@@ -143,97 +163,6 @@ describe("useServiceWorkerUpdate", () => {
     });
   });
 
-  describe("close() - Snooze Functionality", () => {
-    it("should hide prompt and set 1-hour snooze when dismissed", () => {
-      const { result, rerender } = renderHook(() => useServiceWorkerUpdate());
-
-      // Set needRefresh to true
-      mockNeedRefresh = true;
-      rerender();
-      expect(result.current.needRefresh).toBe(true);
-
-      // Close/snooze the prompt
-      act(() => {
-        result.current.close();
-      });
-
-      // Should hide prompt immediately
-      expect(result.current.needRefresh).toBe(false);
-    });
-
-    it("should log snooze time when dismissed", () => {
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-      const { result } = renderHook(() => useServiceWorkerUpdate());
-
-      act(() => {
-        result.current.close();
-      });
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("[SW] Update prompt snoozed for 1 hour")
-      );
-
-      consoleSpy.mockRestore();
-    });
-
-    it("should re-show prompt after 1-hour snooze expires if update still available", () => {
-      const { result, rerender } = renderHook(() => useServiceWorkerUpdate());
-
-      // Set needRefresh to true
-      mockNeedRefresh = true;
-      rerender();
-      expect(result.current.needRefresh).toBe(true);
-
-      // Snooze the update
-      act(() => {
-        result.current.close();
-      });
-
-      expect(result.current.needRefresh).toBe(false);
-
-      // Fast-forward 1 hour
-      act(() => {
-        vi.advanceTimersByTime(60 * 60 * 1000);
-      });
-
-      // Re-render to trigger effect
-      rerender();
-
-      // Update prompt should reappear if update still available (mockNeedRefresh is still true)
-      expect(result.current.needRefresh).toBe(true);
-    });
-
-    it("should not re-show prompt after snooze if update is no longer available", () => {
-      const { result, rerender } = renderHook(() => useServiceWorkerUpdate());
-
-      // Set needRefresh to true
-      mockNeedRefresh = true;
-      rerender();
-      expect(result.current.needRefresh).toBe(true);
-
-      // Snooze the update
-      act(() => {
-        result.current.close();
-      });
-
-      expect(result.current.needRefresh).toBe(false);
-
-      // Update becomes unavailable before snooze expires
-      mockNeedRefresh = false;
-
-      // Fast-forward 1 hour
-      act(() => {
-        vi.advanceTimersByTime(60 * 60 * 1000);
-      });
-
-      // Re-render to trigger effect
-      rerender();
-
-      // Update prompt should NOT reappear
-      expect(result.current.needRefresh).toBe(false);
-    });
-  });
-
   describe("Return Interface", () => {
     it("should return all required methods and properties", () => {
       const { result } = renderHook(() => useServiceWorkerUpdate());
@@ -241,12 +170,16 @@ describe("useServiceWorkerUpdate", () => {
       expect(result.current).toHaveProperty("needRefresh");
       expect(result.current).toHaveProperty("offlineReady");
       expect(result.current).toHaveProperty("updateServiceWorker");
-      expect(result.current).toHaveProperty("close");
 
       expect(typeof result.current.needRefresh).toBe("boolean");
       expect(typeof result.current.offlineReady).toBe("boolean");
       expect(typeof result.current.updateServiceWorker).toBe("function");
-      expect(typeof result.current.close).toBe("function");
+    });
+
+    it("should not have a close function (banner is non-dismissible)", () => {
+      const { result } = renderHook(() => useServiceWorkerUpdate());
+
+      expect(result.current).not.toHaveProperty("close");
     });
   });
 
