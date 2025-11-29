@@ -66,6 +66,12 @@ export function Login() {
   const isSystemNotReady =
     healthCheckError || healthStatus?.status === "not_ready";
 
+  // Compute aria-describedby for inputs (combines error and lockout alerts)
+  const ariaDescribedBy =
+    [error && "login-error", isLocked && "lockout-warning"]
+      .filter(Boolean)
+      .join(" ") || undefined;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -210,7 +216,7 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              aria-describedby={error ? "login-error" : undefined}
+              aria-describedby={ariaDescribedBy}
               disabled={isSystemNotReady || isLocked}
             />
           </Field>
@@ -228,7 +234,7 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              aria-describedby={error ? "login-error" : undefined}
+              aria-describedby={ariaDescribedBy}
               disabled={isSystemNotReady || isLocked}
             />
           </Field>
