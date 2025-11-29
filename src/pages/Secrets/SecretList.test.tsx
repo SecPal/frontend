@@ -165,7 +165,7 @@ describe("SecretList", () => {
     expect(screen.queryByText(/^GitHub$/)).not.toBeInTheDocument();
   });
 
-  it("should filter secrets by expiration", async () => {
+  it("should filter secrets by expiring_soon", async () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
     const user = userEvent.setup();
 
@@ -187,6 +187,69 @@ describe("SecretList", () => {
     // Should NOT show others (no expiration)
     expect(screen.queryByText(/Gmail Account/)).not.toBeInTheDocument();
     expect(screen.queryByText(/^GitHub$/)).not.toBeInTheDocument();
+  });
+
+  it("should filter secrets by expired", async () => {
+    const expiredSecret: Secret = {
+      id: "secret-expired",
+      title: "Expired Secret",
+      username: "expired@example.com",
+      tags: ["old"],
+      expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      created_at: "2025-01-01T10:00:00Z",
+      updated_at: "2025-11-15T14:30:00Z",
+      attachment_count: 0,
+      is_shared: false,
+    };
+
+    vi.mocked(secretApi.fetchSecrets).mockResolvedValue([
+      ...mockSecrets,
+      expiredSecret,
+    ]);
+    const user = userEvent.setup();
+
+    renderWithProviders(<SecretList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    });
+
+    // Filter by "expired"
+    const expirationFilter = screen.getByRole("combobox", {
+      name: /Filter by expiration/,
+    });
+    await user.selectOptions(expirationFilter, "expired");
+
+    // Should show only expired secret
+    expect(screen.getByText(/Expired Secret/)).toBeInTheDocument();
+
+    // Should NOT show non-expired secrets
+    expect(screen.queryByText(/Gmail Account/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/AWS Root/)).not.toBeInTheDocument();
+  });
+
+  it("should filter secrets by no_expiration", async () => {
+    vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
+    const user = userEvent.setup();
+
+    renderWithProviders(<SecretList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    });
+
+    // Filter by "no_expiration"
+    const expirationFilter = screen.getByRole("combobox", {
+      name: /Filter by expiration/,
+    });
+    await user.selectOptions(expirationFilter, "no_expiration");
+
+    // Should show Gmail and GitHub (no expiration)
+    expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    expect(screen.getByText(/GitHub/)).toBeInTheDocument();
+
+    // Should NOT show AWS (has expiration)
+    expect(screen.queryByText(/AWS Root/)).not.toBeInTheDocument();
   });
 
   it("should toggle between grid and list view", async () => {
