@@ -42,7 +42,7 @@ msgstr "Zugangskontrolle"
 
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
-msgstr ""
+msgstr "Fügen Sie ein neues Geheimnis zu Ihrem Tresor hinzu."
 
 #: src/components/ShareDialog.tsx:176
 msgid "Admin"
@@ -427,7 +427,7 @@ msgstr "Eigentümer"
 #. placeholder {1}: filteredSecrets.length === 1 ? "secret" : "secrets"
 #: src/pages/Secrets/SecretList.tsx:375
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
-msgstr ""
+msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
 
 #: src/pages/Secrets/SecretDetail.tsx:307
 msgid "Password"
