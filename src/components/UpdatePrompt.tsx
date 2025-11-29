@@ -13,18 +13,19 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
  * The banner is always visible when an update is available and cannot be dismissed.
  * Users can click "Update" to reload and use the latest version.
  *
- * The banner is positioned at the top of the screen as a slim, prominent notification
- * that doesn't block user interaction with the rest of the application.
+ * The banner is rendered in the normal document flow (not fixed/absolute) to avoid
+ * overlaying page content. It should be placed at the top of the app layout.
  *
  * @example
  * ```tsx
- * // In App.tsx
+ * // In App.tsx - place as first child in the layout container
  * function App() {
  *   return (
- *     <>
+ *     <div className="flex min-h-screen flex-col">
  *       <UpdatePrompt />
- *       <Router />
- *     </>
+ *       <Header />
+ *       <main>...</main>
+ *     </div>
  *   );
  * }
  * ```
@@ -40,7 +41,7 @@ export function UpdatePrompt() {
 
   return (
     <div
-      className="fixed left-0 right-0 top-0 z-50 bg-blue-600 px-4 py-2 text-white shadow-md dark:bg-blue-700"
+      className="bg-blue-600 px-4 py-2 text-white shadow-md dark:bg-blue-700"
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -51,7 +52,8 @@ export function UpdatePrompt() {
         </p>
         <Button
           onClick={updateServiceWorker}
-          className="bg-white! py-1! text-blue-600! hover:bg-blue-50! dark:bg-zinc-100! dark:text-blue-700! dark:hover:bg-zinc-200!"
+          color="white"
+          className="py-1!"
           aria-label={_(msg`Update application now`)}
         >
           <Trans>Update now</Trans>

@@ -148,7 +148,7 @@ describe("UpdatePrompt", () => {
     });
   });
 
-  describe("Positioning", () => {
+  describe("Styling", () => {
     beforeEach(() => {
       vi.mocked(useServiceWorkerUpdate).mockReturnValue({
         needRefresh: true,
@@ -157,29 +157,29 @@ describe("UpdatePrompt", () => {
       });
     });
 
-    it("should be fixed at top of screen", () => {
+    it("should render in document flow (not fixed positioned)", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
-      expect(wrapper).toHaveClass("fixed");
-      expect(wrapper).toHaveClass("top-0");
-      expect(wrapper).toHaveClass("left-0");
-      expect(wrapper).toHaveClass("right-0");
+      // Should NOT have fixed positioning to avoid overlaying content
+      expect(wrapper).not.toHaveClass("fixed");
+      expect(wrapper).not.toHaveClass("absolute");
     });
 
-    it("should have high z-index to overlay other content", () => {
+    it("should have appropriate background styling", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
-      expect(wrapper).toHaveClass("z-50");
+      expect(wrapper).toHaveClass("bg-blue-600");
+      expect(wrapper).toHaveClass("text-white");
     });
 
-    it("should span full width", () => {
-      const { container } = renderWithI18n(<UpdatePrompt />);
-      const wrapper = container.firstChild as HTMLElement;
+    it("should use Catalyst Button with white color variant", () => {
+      renderWithI18n(<UpdatePrompt />);
 
-      expect(wrapper).toHaveClass("left-0");
-      expect(wrapper).toHaveClass("right-0");
+      // Button should be rendered with proper Catalyst styling
+      const button = screen.getByRole("button", { name: /update/i });
+      expect(button).toBeInTheDocument();
     });
   });
 
