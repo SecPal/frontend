@@ -103,7 +103,7 @@ export function Login() {
           aria-label="Login form"
         >
           {/* Health Check Warning - shown when backend is not ready */}
-          {(healthCheckError || healthStatus?.status === "not_ready") && (
+          {isSystemNotReady && (
             <div
               id="health-warning"
               role="alert"

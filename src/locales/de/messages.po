@@ -529,7 +529,7 @@ msgstr ""
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:189
 msgid "login.checkingSystem"
-msgstr ""
+msgstr "System wird geprüft..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:147
@@ -539,12 +539,12 @@ msgstr "E-Mail"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:124
 msgid "login.healthWarning.message"
-msgstr ""
+msgstr "Das System ist nicht vollständig konfiguriert. Bitte kontaktieren Sie Ihren Administrator."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:119
 msgid "login.healthWarning.title"
-msgstr ""
+msgstr "System nicht bereit"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:165
