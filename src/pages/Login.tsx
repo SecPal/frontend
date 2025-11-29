@@ -5,6 +5,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
+import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { login as apiLogin, AuthApiError } from "../services/authApi";
 import { checkHealth, HealthStatus } from "../services/healthApi";
 import { AuthLayout } from "../components/auth-layout";
@@ -16,6 +17,14 @@ import { Input } from "../components/input";
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const {
+    remainingAttempts,
+    isLocked,
+    remainingLockoutSeconds,
+    canAttemptLogin,
+    recordFailedAttempt,
+    resetAttempts,
+  } = useLoginRateLimiter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,14 +69,22 @@ export function Login() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Check rate limiting
+    if (!canAttemptLogin()) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const response = await apiLogin({ email, password });
+      resetAttempts(); // Clear rate limit state on successful login
       login(response.user);
       navigate("/secrets");
     } catch (err) {
       console.error("Login error:", err);
+      recordFailedAttempt(); // Record failed attempt for rate limiting
       if (err instanceof AuthApiError) {
         setError(err.message);
       } else if (err instanceof Error) {
@@ -131,6 +148,35 @@ export function Login() {
             </div>
           )}
 
+          {/* Rate Limit Lockout Warning */}
+          {isLocked && (
+            <div
+              id="lockout-warning"
+              role="alert"
+              aria-live="assertive"
+              className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl" aria-hidden="true">
+                  🔒
+                </span>
+                <div>
+                  <p className="font-medium text-red-800 dark:text-red-200">
+                    <Trans id="login.rateLimitLocked.title">
+                      Too many failed attempts
+                    </Trans>
+                  </p>
+                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                    <Trans id="login.rateLimitLocked.message">
+                      Please wait {remainingLockoutSeconds} seconds before
+                      trying again.
+                    </Trans>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div
               id="login-error"
@@ -139,6 +185,15 @@ export function Login() {
               className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
             >
               <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+              {/* Show remaining attempts warning when running low */}
+              {!isLocked && remainingAttempts > 0 && remainingAttempts <= 3 && (
+                <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+                  <Trans id="login.remainingAttempts">
+                    {remainingAttempts} attempt(s) remaining before temporary
+                    lockout.
+                  </Trans>
+                </p>
+              )}
             </div>
           )}
 
@@ -156,7 +211,7 @@ export function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
               aria-describedby={error ? "login-error" : undefined}
-              disabled={isSystemNotReady}
+              disabled={isSystemNotReady || isLocked}
             />
           </Field>
 
@@ -174,19 +229,28 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               aria-describedby={error ? "login-error" : undefined}
-              disabled={isSystemNotReady}
+              disabled={isSystemNotReady || isLocked}
             />
           </Field>
 
           <Button
             type="submit"
-            disabled={isSubmitting || isSystemNotReady || isHealthCheckLoading}
+            disabled={
+              isSubmitting ||
+              isSystemNotReady ||
+              isHealthCheckLoading ||
+              isLocked
+            }
             className="w-full"
             aria-busy={isSubmitting}
-            aria-disabled={isSystemNotReady || isHealthCheckLoading}
+            aria-disabled={isSystemNotReady || isHealthCheckLoading || isLocked}
           >
             {isHealthCheckLoading ? (
               <Trans id="login.checkingSystem">Checking system...</Trans>
+            ) : isLocked ? (
+              <Trans id="login.lockedButton">
+                Locked ({remainingLockoutSeconds}s)
+              </Trans>
             ) : isSubmitting ? (
               <Trans id="login.submitting">Logging in...</Trans>
             ) : (

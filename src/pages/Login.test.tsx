@@ -451,4 +451,199 @@ describe("Login", () => {
       });
     });
   });
+
+  describe("login rate limiting", () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it("records failed login attempts", async () => {
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockRejectedValue(
+        new authApi.AuthApiError("Invalid credentials")
+      );
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      // First failed attempt
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(passwordInput, { target: { value: "wrong" } });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+      });
+
+      // Check localStorage has recorded the attempt
+      const stored = localStorage.getItem("login_rate_limit");
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      expect(parsed.attempts).toBe(1);
+    });
+
+    it("shows remaining attempts warning after 3 failed attempts", async () => {
+      // Pre-set 2 failed attempts in localStorage
+      const initialState = {
+        attempts: 2,
+        lockoutEndTime: null,
+        lastAttemptTime: Date.now(),
+      };
+      localStorage.setItem("login_rate_limit", JSON.stringify(initialState));
+
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockRejectedValue(
+        new authApi.AuthApiError("Invalid credentials")
+      );
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      // Third failed attempt - should show warning
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(passwordInput, { target: { value: "wrong" } });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/attempt\(s\) remaining/i)).toBeInTheDocument();
+      });
+    });
+
+    it("locks user out after 5 failed attempts", async () => {
+      // Pre-set 4 failed attempts in localStorage
+      const initialState = {
+        attempts: 4,
+        lockoutEndTime: null,
+        lastAttemptTime: Date.now(),
+      };
+      localStorage.setItem("login_rate_limit", JSON.stringify(initialState));
+
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockRejectedValue(
+        new authApi.AuthApiError("Invalid credentials")
+      );
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      // Fifth failed attempt - should trigger lockout
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(passwordInput, { target: { value: "wrong" } });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/too many failed attempts/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("disables form inputs and button during lockout", async () => {
+      // Pre-set lockout state in localStorage
+      const futureTime = Date.now() + 30000; // 30 seconds in future
+      const lockedState = {
+        attempts: 5,
+        lockoutEndTime: futureTime,
+        lastAttemptTime: Date.now(),
+      };
+      localStorage.setItem("login_rate_limit", JSON.stringify(lockedState));
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(screen.getByLabelText(/email/i)).toBeDisabled();
+      });
+
+      expect(screen.getByLabelText(/password/i)).toBeDisabled();
+      expect(screen.getByRole("button", { name: /locked/i })).toBeDisabled();
+    });
+
+    it("shows countdown timer during lockout", async () => {
+      // Pre-set lockout state in localStorage
+      const futureTime = Date.now() + 30000; // 30 seconds in future
+      const lockedState = {
+        attempts: 5,
+        lockoutEndTime: futureTime,
+        lastAttemptTime: Date.now(),
+      };
+      localStorage.setItem("login_rate_limit", JSON.stringify(lockedState));
+
+      renderLogin();
+
+      await waitFor(() => {
+        // Button should show remaining seconds
+        expect(
+          screen.getByRole("button", { name: /locked/i })
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("resets rate limit state on successful login", async () => {
+      // Pre-set some failed attempts
+      const initialState = {
+        attempts: 2,
+        lockoutEndTime: null,
+        lastAttemptTime: Date.now(),
+      };
+      localStorage.setItem("login_rate_limit", JSON.stringify(initialState));
+
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockResolvedValueOnce({
+        user: { id: 1, name: "Test", email: "test@example.com" },
+      });
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(passwordInput, { target: { value: "correct" } });
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        // After successful login, localStorage should be cleared
+        expect(localStorage.getItem("login_rate_limit")).toBeNull();
+      });
+    });
+  });
 });
