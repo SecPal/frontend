@@ -3,6 +3,7 @@
 
 import { useState, FormEvent, useMemo } from "react";
 import { Button } from "@headlessui/react";
+import { Trans } from "@lingui/macro";
 import { generatePassword, assessPasswordStrength } from "../lib/passwordUtils";
 
 export interface SecretFormData {
@@ -397,7 +398,7 @@ export function SecretForm({
           disabled={isSubmitting}
           className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
         >
-          Cancel
+          <Trans>Cancel</Trans>
         </Button>
         <Button
           type="submit"

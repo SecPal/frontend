@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-29 12:31+0100\n"
+"POT-Creation-Date: 2025-11-30 00:10+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,27 +18,43 @@ msgstr "-- Wählen Sie ein Geheimnis --"
 #. placeholder {0}: conflict.conflictFields.length
 #: src/components/ConflictResolutionDialog.tsx:107
 msgid "<0>{0} field(s)</0> have conflicting changes:"
-msgstr ""
+msgstr "<0>{0}-Feld(er)</0> haben widersprüchliche Änderungen:"
 
 #: src/components/UpdatePrompt.tsx:51
 msgid "A new version of SecPal is available."
-msgstr ""
+msgstr "Eine neue Version von SecPal ist verfügbar."
 
 #: src/components/Footer.tsx:27
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:32
+#: src/App.tsx:37
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:46
+#: src/App.tsx:48
 msgid "About SecPal"
 msgstr "Über SecPal"
+
+#: src/pages/Secrets/SecretDetail.tsx:430
+msgid "Access Control"
+msgstr "Zugangskontrolle"
+
+#: src/pages/Secrets/SecretCreate.tsx:68
+msgid "Add a new secret to your vault."
+msgstr ""
 
 #: src/components/ShareDialog.tsx:176
 msgid "Admin"
 msgstr "Admin"
+
+#: src/pages/Secrets/SecretList.tsx:214
+msgid "All"
+msgstr "Alle"
+
+#: src/pages/Secrets/SecretList.tsx:197
+msgid "All Tags"
+msgstr "Alle Tags"
 
 #: src/components/SyncStatusIndicator.tsx:125
 msgid "All synced"
@@ -52,7 +68,7 @@ msgstr "App-Updates und Wartungsbenachrichtigungen"
 msgid "Apply Selection"
 msgstr "Auswahl anwenden"
 
-#: src/pages/Secrets/SecretDetail.tsx:142
+#: src/pages/Secrets/SecretDetail.tsx:152
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?"
 
@@ -64,11 +80,21 @@ msgstr "Sind Sie sicher, dass Sie den Zugang für {name} widerrufen wollen?"
 msgid "Attached Files"
 msgstr "Angehängte Dateien"
 
-#: src/App.tsx:57
+#. placeholder {0}: secret.attachments.length
+#: src/pages/Secrets/SecretDetail.tsx:399
+msgid "Attachments ({0})"
+msgstr "Anhänge ({0})"
+
+#: src/App.tsx:59
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
+#: src/pages/Secrets/SecretDetail.tsx:243
+msgid "Back to Secrets"
+msgstr "Zurück zu Geheimnisse"
+
 #: src/components/ConflictResolutionDialog.tsx:200
+#: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -94,6 +120,23 @@ msgstr ""
 msgid "Close"
 msgstr "Schließen"
 
+#: src/pages/Secrets/SecretCreate.tsx:76
+msgid "Create"
+msgstr "Erstellen"
+
+#: src/pages/Secrets/SecretCreate.tsx:65
+#: src/pages/Secrets/SecretList.tsx:270
+msgid "Create Secret"
+msgstr "Geheimnis erstellen"
+
+#: src/pages/Secrets/SecretList.tsx:262
+msgid "Create your first secret to get started"
+msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
+
+#: src/pages/Secrets/SecretDetail.tsx:460
+msgid "Created"
+msgstr "Erstellt"
+
 #: src/components/NotificationPreferences.tsx:42
 msgid "Critical security notifications and warnings"
 msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
@@ -101,6 +144,10 @@ msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
 #: src/components/AttachmentList.tsx:215
 msgid "Delete"
 msgstr "Löschen"
+
+#: src/pages/Secrets/SecretDetail.tsx:292
+msgid "Details"
+msgstr "Details"
 
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
@@ -115,6 +162,14 @@ msgstr "Zur Ansicht herunterladen"
 #: src/components/AttachmentUpload.tsx:212
 msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
+
+#: src/pages/Secrets/SecretDetail.tsx:275
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: src/pages/Secrets/SecretEdit.tsx:134
+msgid "Edit Secret"
+msgstr "Geheimnis bearbeiten"
 
 #: src/components/NotificationPreferences.tsx:280
 msgid "Enable Notifications"
@@ -132,9 +187,28 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
+#: src/pages/Secrets/SecretDetail.tsx:236
+msgid "Error Loading Secret"
+msgstr "Fehler beim Laden des Geheimnisses"
+
+#: src/pages/Secrets/SecretList.tsx:145
+msgid "Error Loading Secrets"
+msgstr "Fehler beim Laden von Geheimnissen"
+
 #: src/pages/ShareTarget.tsx:547
 msgid "Errors:"
 msgstr "Fehler:"
+
+#: src/pages/Secrets/SecretCard.tsx:44
+#: src/pages/Secrets/SecretDetail.tsx:268
+#: src/pages/Secrets/SecretDetail.tsx:375
+#: src/pages/Secrets/SecretList.tsx:215
+msgid "Expired"
+msgstr "Abgelaufen"
+
+#: src/pages/Secrets/SecretDetail.tsx:366
+msgid "Expires"
+msgstr "Läuft ab"
 
 #: src/components/ShareDialog.tsx:187
 msgid "Expires (optional):"
@@ -145,6 +219,11 @@ msgstr "Läuft ab (optional):"
 msgid "Expires: {0}"
 msgstr "Läuft ab: {0}"
 
+#: src/pages/Secrets/SecretCard.tsx:49
+#: src/pages/Secrets/SecretList.tsx:216
+msgid "Expiring Soon"
+msgstr "Bald ablaufend"
+
 #. js-lingui-explicit-id
 #: src/components/LanguageSwitcher.tsx:18
 msgid "Failed to change language. Please try again."
@@ -154,7 +233,7 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 msgid "Failed to clear uploads"
 msgstr "Uploads konnten nicht gelöscht werden"
 
-#: src/pages/Secrets/SecretDetail.tsx:158
+#: src/pages/Secrets/SecretDetail.tsx:168
 msgid "Failed to delete attachment"
 msgstr "Anhang konnte nicht gelöscht werden"
 
@@ -162,11 +241,11 @@ msgstr "Anhang konnte nicht gelöscht werden"
 msgid "Failed to delete file"
 msgstr "Datei konnte nicht gelöscht werden"
 
-#: src/pages/Secrets/SecretDetail.tsx:131
+#: src/pages/Secrets/SecretDetail.tsx:141
 msgid "Failed to download attachment"
 msgstr "Download des Anhangs fehlgeschlagen"
 
-#: src/pages/Secrets/SecretDetail.tsx:178
+#: src/pages/Secrets/SecretDetail.tsx:188
 msgid "Failed to load preview"
 msgstr "Vorschau konnte nicht geladen werden"
 
@@ -187,11 +266,35 @@ msgstr "Geheimnis teilen fehlgeschlagen"
 msgid "File too large: {0}. Maximum size is 10MB."
 msgstr "Datei zu groß: {0}. Die maximale Größe beträgt 10MB."
 
+#: src/pages/Secrets/SecretList.tsx:212
+msgid "Filter by expiration"
+msgstr "Filter nach Gültigkeit"
+
+#: src/pages/Secrets/SecretList.tsx:195
+msgid "Filter by tag"
+msgstr "Nach Tag filtern"
+
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at)
 #: src/components/SharedWithList.tsx:99
 msgid "Granted by {0} on {1}"
 msgstr "Gewährt von {0} am {1}"
+
+#: src/pages/Secrets/SecretList.tsx:231
+msgid "Grid"
+msgstr "Raster"
+
+#: src/pages/Secrets/SecretList.tsx:229
+msgid "Grid view"
+msgstr "Gitternetz-Ansicht"
+
+#: src/pages/Secrets/SecretDetail.tsx:321
+msgid "Hide"
+msgstr "Ausblenden"
+
+#: src/components/application-layout.tsx:183
+msgid "Home"
+msgstr "Startseite"
 
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:115
@@ -214,15 +317,29 @@ msgstr "Zuletzt geändert: {0}"
 msgid "Last sync: {0}"
 msgstr "Letzte Synchronisation: {0}"
 
+#: src/pages/Secrets/SecretList.tsx:242
+msgid "List"
+msgstr "Liste"
+
+#: src/pages/Secrets/SecretList.tsx:240
+msgid "List view"
+msgstr "Listenansicht"
+
 #: src/components/AttachmentList.tsx:137
 msgid "Loading attachments..."
 msgstr "Anhänge laden..."
 
+#: src/pages/Secrets/SecretDetail.tsx:223
+msgid "Loading secret..."
+msgstr "Geheimnis laden..."
+
+#: src/pages/Secrets/SecretList.tsx:132
 #: src/pages/ShareTarget.tsx:637
 msgid "Loading secrets..."
 msgstr "Geheimnisse laden..."
 
 #: src/components/AttachmentList.tsx:142
+#: src/pages/Secrets/SecretEdit.tsx:116
 msgid "Loading..."
 msgstr "Laden..."
 
@@ -230,9 +347,29 @@ msgstr "Laden..."
 msgid "Logout"
 msgstr "Abmelden"
 
+#: src/pages/Secrets/SecretList.tsx:162
+msgid "Manage your secrets and sensitive information securely."
+msgstr "Verwalten Sie Ihre Geheimnisse und sensiblen Informationen auf sichere Weise."
+
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
 msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
+
+#: src/pages/Secrets/SecretDetail.tsx:448
+msgid "Metadata"
+msgstr "Metadaten"
+
+#: src/components/application-layout.tsx:232
+msgid "My profile"
+msgstr "Mein Profil"
+
+#: src/pages/Secrets/SecretList.tsx:168
+msgid "New Secret"
+msgstr "Neues Geheimnis"
+
+#: src/pages/Secrets/SecretList.tsx:217
+msgid "No Expiration"
+msgstr "Kein Ablaufdatum"
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -242,9 +379,21 @@ msgstr "Noch keine Anhänge"
 msgid "No content shared"
 msgstr "Keine gemeinsamen Inhalte"
 
+#: src/pages/Secrets/SecretList.tsx:257
+msgid "No secrets found"
+msgstr "Keine Geheimnisse gefunden"
+
+#: src/pages/Secrets/SecretList.tsx:255
+msgid "No secrets yet"
+msgstr "Noch keine Geheimnisse"
+
 #: src/components/SharedWithList.tsx:58
 msgid "Not shared with anyone"
 msgstr "Nicht mit anderen geteilt"
+
+#: src/pages/Secrets/SecretDetail.tsx:387
+msgid "Notes"
+msgstr "Anmerkungen"
 
 #: src/components/NotificationPreferences.tsx:292
 msgid "Notification Preferences"
@@ -269,6 +418,20 @@ msgstr "Offline - wird synchronisiert, wenn online"
 #: src/components/OfflineSecretBadge.tsx:44
 msgid "Offline only"
 msgstr "Nur offline"
+
+#: src/pages/Secrets/SecretDetail.tsx:454
+msgid "Owner"
+msgstr "Eigentümer"
+
+#. placeholder {0}: filteredSecrets.length
+#. placeholder {1}: filteredSecrets.length === 1 ? "secret" : "secrets"
+#: src/pages/Secrets/SecretList.tsx:375
+msgid "Page {currentPage} of {totalPages} ({0} {1})"
+msgstr ""
+
+#: src/pages/Secrets/SecretDetail.tsx:307
+msgid "Password"
+msgstr "Passwort"
 
 #: src/components/OfflineSecretBadge.tsx:53
 msgid "Pending sync"
@@ -338,15 +501,24 @@ msgstr "Rollen"
 msgid "Save to Secret"
 msgstr ""
 
-#: src/App.tsx:28
+#: src/pages/Secrets/SecretList.tsx:184
+msgid "Search secrets"
+msgstr "Geheimnisse durchsuchen"
+
+#: src/pages/Secrets/SecretList.tsx:178
+msgid "Search secrets..."
+msgstr "Geheimnisse durchsuchen..."
+
+#: src/App.tsx:30
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:49
+#: src/App.tsx:51
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/App.tsx:35
+#: src/components/application-layout.tsx:189
+#: src/pages/Secrets/SecretList.tsx:159
 msgid "Secrets"
 msgstr "Geheimnisse"
 
@@ -374,7 +546,13 @@ msgstr "Test senden"
 msgid "Server Version"
 msgstr "Server-Version"
 
+#: src/components/application-layout.tsx:203
+#: src/components/application-layout.tsx:238
+msgid "Settings"
+msgstr "Einstellungen"
+
 #: src/components/ShareDialog.tsx:229
+#: src/pages/Secrets/SecretDetail.tsx:279
 msgid "Share"
 msgstr "Teilen"
 
@@ -405,11 +583,19 @@ msgstr ""
 
 #: src/components/ShareDialog.tsx:229
 msgid "Sharing..."
-msgstr ""
+msgstr "Teile..."
 
 #: src/components/NotificationPreferences.tsx:51
 msgid "Shift Reminders"
-msgstr ""
+msgstr "Schicht-Erinnerungen"
+
+#: src/pages/Secrets/SecretDetail.tsx:321
+msgid "Show"
+msgstr "Anzeigen"
+
+#: src/components/application-layout.tsx:245
+msgid "Sign out"
+msgstr "Abmelden"
 
 #: src/components/OfflineIndicator.tsx:29
 msgid "Some features may be limited. Your changes will sync when you're back online."
@@ -443,6 +629,10 @@ msgstr "Synchronisieren..."
 msgid "System Updates"
 msgstr "System-Updates"
 
+#: src/pages/Secrets/SecretDetail.tsx:349
+msgid "Tags"
+msgstr "Tags"
+
 #: src/components/NotificationPreferences.tsx:56
 msgid "Team Messages"
 msgstr "Team-Nachrichten"
@@ -467,10 +657,26 @@ msgstr "Dieses Geheimnis wurde sowohl lokal als auch auf dem Server geändert. B
 msgid "Title:"
 msgstr "Titel:"
 
+#: src/pages/Secrets/SecretList.tsx:264
+msgid "Try adjusting your filters"
+msgstr "Versuchen Sie, Ihre Filter anzupassen"
+
+#: src/pages/Secrets/SecretDetail.tsx:331
+msgid "URL"
+msgstr "URL"
+
 #: src/pages/ShareTarget.tsx:593
 #: src/pages/ShareTarget.tsx:604
 msgid "URL:"
 msgstr "URL:"
+
+#: src/pages/Secrets/SecretDetail.tsx:415
+msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
+msgstr "Verschlüsselungsschlüssel für Anhänge kann nicht geladen werden. Bitte aktualisieren Sie die Seite oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
+
+#: src/pages/Secrets/SecretEdit.tsx:145
+msgid "Update"
+msgstr "Update"
 
 #: src/components/UpdatePrompt.tsx:57
 msgid "Update application now"
@@ -478,7 +684,15 @@ msgstr "Anwendung jetzt aktualisieren"
 
 #: src/components/UpdatePrompt.tsx:59
 msgid "Update now"
-msgstr ""
+msgstr "Jetzt aktualisieren"
+
+#: src/pages/Secrets/SecretEdit.tsx:137
+msgid "Update the details of your secret."
+msgstr "Aktualisieren Sie die Angaben zu Ihrem Geheimnis."
+
+#: src/pages/Secrets/SecretDetail.tsx:466
+msgid "Updated"
+msgstr "Aktualisiert"
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
@@ -490,11 +704,19 @@ msgstr "Upload-Warteschlange"
 msgid "Uploading..."
 msgstr "Hochladen..."
 
+#: src/pages/Secrets/SecretDetail.tsx:298
+msgid "Username"
+msgstr "Benutzername"
+
 #: src/components/ShareDialog.tsx:136
 msgid "Users"
 msgstr "Benutzer"
 
-#: src/App.tsx:25
+#: src/App.tsx:34
+msgid "View Secrets"
+msgstr "Geheimnisse ansehen"
+
+#: src/App.tsx:27
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
@@ -537,7 +759,7 @@ msgstr "System nicht bereit"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:257
 msgid "login.lockedButton"
-msgstr ""
+msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:226
@@ -547,17 +769,17 @@ msgstr "Passwort"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:176
 msgid "login.rateLimitLocked.message"
-msgstr ""
+msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:171
 msgid "login.rateLimitLocked.title"
-msgstr ""
+msgstr "Zu viele gescheiterte Versuche"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:197
 msgid "login.remainingAttempts"
-msgstr ""
+msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:263
@@ -603,6 +825,10 @@ msgstr "- Lesen: Geheime Details anzeigen"
 #: src/components/ShareDialog.tsx:208
 msgid "• Write: View + edit secret"
 msgstr "- Schreiben: Ansehen + Bearbeiten Geheimnis"
+
+#: src/pages/Secrets/SecretDetail.tsx:261
+msgid "← Back to Secrets"
+msgstr "← Zurück zu Geheimnissen"
 
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."

@@ -87,7 +87,7 @@ export function Login() {
       const response = await apiLogin({ email, password });
       resetAttempts(); // Clear rate limit state on successful login
       login(response.user);
-      navigate("/secrets");
+      navigate("/");
     } catch (err) {
       console.error("Login error:", err);
       recordFailedAttempt(); // Record failed attempt for rate limiting

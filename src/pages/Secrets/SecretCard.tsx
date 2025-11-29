@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
+import { Trans } from "@lingui/macro";
 import type { Secret } from "../../services/secretApi";
 
 // Expiring soon threshold (shared constant)
@@ -40,12 +41,12 @@ export function SecretCard({ secret }: SecretCardProps) {
         <div className="flex gap-1">
           {isExpired && (
             <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-900/30">
-              Expired
+              <Trans>Expired</Trans>
             </span>
           )}
           {isExpiringSoon && (
             <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-900/30">
-              Expiring Soon
+              <Trans>Expiring Soon</Trans>
             </span>
           )}
         </div>

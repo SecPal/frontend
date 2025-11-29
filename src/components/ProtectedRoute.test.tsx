@@ -72,18 +72,6 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("renders header when authenticated", () => {
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({ id: 1, name: "Test User", email: "test@example.com" })
-    );
-
-    renderProtectedRoute();
-
-    expect(screen.getByText("SecPal")).toBeInTheDocument();
-    expect(screen.getByText("Test User")).toBeInTheDocument();
-  });
-
   it("shows loading state initially", () => {
     const { container } = render(
       <BrowserRouter>

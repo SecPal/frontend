@@ -2,8 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useMemo } from "react";
+import { Trans, t } from "@lingui/macro";
 import { fetchSecrets, type Secret, ApiError } from "../../services/secretApi";
 import { SecretCard } from "./SecretCard";
+import { Heading } from "../../components/heading";
+import { Text } from "../../components/text";
+import { Button } from "../../components/button";
+import { Input } from "../../components/input";
+import { Select } from "../../components/select";
 
 // Expiring soon threshold (shared constant)
 const EXPIRING_SOON_DAYS = 7;
@@ -119,10 +125,12 @@ export function SecretList() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="text-center">
           <div className="mb-4 text-4xl">🔄</div>
-          <p className="text-zinc-600 dark:text-zinc-400">Loading secrets...</p>
+          <Text>
+            <Trans>Loading secrets...</Trans>
+          </Text>
         </div>
       </div>
     );
@@ -130,123 +138,139 @@ export function SecretList() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
           <div className="mb-4 text-4xl">❌</div>
-          <h2 className="mb-2 text-lg font-semibold text-red-900 dark:text-red-400">
-            Error Loading Secrets
-          </h2>
-          <p className="text-sm text-red-700 dark:text-red-500">{error}</p>
+          <Heading level={3} className="text-red-900 dark:text-red-400">
+            <Trans>Error Loading Secrets</Trans>
+          </Heading>
+          <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <>
       {/* Header */}
-      <div className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-              Secrets
-            </h1>
-            <div className="flex gap-2">
-              {/* View Mode Toggle */}
-              <button
-                onClick={() => handleViewModeChange("grid")}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                    : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                }`}
-                aria-label="Grid view"
-              >
-                Grid
-              </button>
-              <button
-                onClick={() => handleViewModeChange("list")}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  viewMode === "list"
-                    ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                    : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                }`}
-                aria-label="List view"
-              >
-                List
-              </button>
-            </div>
-          </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <Heading>
+            <Trans>Secrets</Trans>
+          </Heading>
+          <Text className="mt-2">
+            <Trans>
+              Manage your secrets and sensitive information securely.
+            </Trans>
+          </Text>
         </div>
+        <Button href="/secrets/new">
+          <Trans>New Secret</Trans>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div className="border-b border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-4 sm:grid-cols-3">
-            {/* Search */}
-            <input
-              type="text"
-              placeholder="🔍 Search..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
-              }}
-              className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm placeholder-zinc-500 focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-400 dark:focus:border-white dark:focus:ring-white"
-            />
+      <div className="mt-8 flex flex-wrap items-center gap-4">
+        {/* Search */}
+        <div className="min-w-[200px] flex-1">
+          <Input
+            type="text"
+            placeholder={t`Search secrets...`}
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            aria-label={t`Search secrets`}
+          />
+        </div>
 
-            {/* Tag Filter */}
-            <select
-              value={selectedTag}
-              onChange={(e) => {
-                setSelectedTag(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label="Filter by tag"
-              className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
-            >
-              <option value="all">Tags: All</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  #{tag}
-                </option>
-              ))}
-            </select>
+        {/* Tag Filter */}
+        <Select
+          value={selectedTag}
+          onChange={(e) => {
+            setSelectedTag(e.target.value);
+            setCurrentPage(1);
+          }}
+          aria-label={t`Filter by tag`}
+        >
+          <option value="all">{t`All Tags`}</option>
+          {allTags.map((tag) => (
+            <option key={tag} value={tag}>
+              #{tag}
+            </option>
+          ))}
+        </Select>
 
-            {/* Expiration Filter */}
-            <select
-              value={expirationFilter}
-              onChange={(e) => {
-                setExpirationFilter(e.target.value as ExpirationFilter);
-                setCurrentPage(1);
-              }}
-              aria-label="Filter by expiration"
-              className="w-full rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:focus:border-white dark:focus:ring-white"
-            >
-              <option value="all">Expires: All</option>
-              <option value="expired">Expired</option>
-              <option value="expiring_soon">Expiring Soon (7 days)</option>
-              <option value="no_expiration">No Expiration</option>
-            </select>
-          </div>
+        {/* Expiration Filter */}
+        <Select
+          value={expirationFilter}
+          onChange={(e) => {
+            setExpirationFilter(e.target.value as ExpirationFilter);
+            setCurrentPage(1);
+          }}
+          aria-label={t`Filter by expiration`}
+        >
+          <option value="all">{t`All`}</option>
+          <option value="expired">{t`Expired`}</option>
+          <option value="expiring_soon">{t`Expiring Soon`}</option>
+          <option value="no_expiration">{t`No Expiration`}</option>
+        </Select>
+
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-zinc-200 dark:border-zinc-700">
+          <button
+            onClick={() => handleViewModeChange("grid")}
+            className={`rounded-l-lg px-3 py-2 text-sm font-medium transition-colors ${
+              viewMode === "grid"
+                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                : "bg-white text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            }`}
+            aria-label={t`Grid view`}
+          >
+            <Trans>Grid</Trans>
+          </button>
+          <button
+            onClick={() => handleViewModeChange("list")}
+            className={`rounded-r-lg px-3 py-2 text-sm font-medium transition-colors ${
+              viewMode === "list"
+                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                : "bg-white text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            }`}
+            aria-label={t`List view`}
+          >
+            <Trans>List</Trans>
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mt-8">
         {/* Empty State */}
         {filteredSecrets.length === 0 && (
-          <div className="rounded-lg border-2 border-dashed border-zinc-300 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
+          <div className="rounded-lg border-2 border-dashed border-zinc-300 p-12 text-center dark:border-zinc-700">
             <div className="mb-4 text-6xl">🔒</div>
-            <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-white">
-              {secrets.length === 0 ? "No secrets yet" : "No secrets found"}
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {secrets.length === 0
-                ? "Create your first secret to get started"
-                : "Try adjusting your filters"}
-            </p>
+            <Heading level={3}>
+              {secrets.length === 0 ? (
+                <Trans>No secrets yet</Trans>
+              ) : (
+                <Trans>No secrets found</Trans>
+              )}
+            </Heading>
+            <Text className="mt-2">
+              {secrets.length === 0 ? (
+                <Trans>Create your first secret to get started</Trans>
+              ) : (
+                <Trans>Try adjusting your filters</Trans>
+              )}
+            </Text>
+            {secrets.length === 0 && (
+              <div className="mt-6">
+                <Button href="/secrets/new">
+                  <Trans>Create Secret</Trans>
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -268,68 +292,63 @@ export function SecretList() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-8 flex items-center justify-center gap-2">
-                <button
+                <Button
+                  outline
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                   aria-label="Previous page"
                 >
-                  &lt;
-                </button>
+                  ←
+                </Button>
 
                 {/* Pagination with ellipsis for large datasets */}
                 {(() => {
-                  const maxVisible = 7; // Show max 7 page buttons
+                  const maxVisible = 7;
                   const pages: (number | string)[] = [];
 
                   if (totalPages <= maxVisible) {
-                    // Show all pages if total is small
                     for (let i = 1; i <= totalPages; i++) pages.push(i);
                   } else {
-                    // Always show first page
                     pages.push(1);
-
-                    // Calculate range around current page
                     const leftBound = Math.max(2, currentPage - 1);
                     const rightBound = Math.min(
                       totalPages - 1,
                       currentPage + 1
                     );
-
-                    // Left ellipsis
                     if (leftBound > 2) pages.push("...");
-
-                    // Pages around current
                     for (let i = leftBound; i <= rightBound; i++) {
                       pages.push(i);
                     }
-
-                    // Right ellipsis
                     if (rightBound < totalPages - 1) pages.push("...");
-
-                    // Always show last page
                     pages.push(totalPages);
                   }
 
                   return pages.map((page, idx) =>
                     typeof page === "number" ? (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                          currentPage === page
-                            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                            : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                        }`}
-                        aria-label={`Page ${page}`}
-                        aria-current={currentPage === page ? "page" : undefined}
-                      >
-                        {page}
-                      </button>
+                      currentPage === page ? (
+                        <Button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          color="dark/zinc"
+                          aria-label={`Page ${page}`}
+                          aria-current="page"
+                        >
+                          {page}
+                        </Button>
+                      ) : (
+                        <Button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          outline
+                          aria-label={`Page ${page}`}
+                        >
+                          {page}
+                        </Button>
+                      )
                     ) : (
                       <span
                         key={`ellipsis-${idx}`}
-                        className="px-2 py-2 text-sm text-zinc-500 dark:text-zinc-500"
+                        className="px-2 py-2 text-sm text-zinc-500"
                         aria-hidden="true"
                       >
                         {page}
@@ -338,27 +357,29 @@ export function SecretList() {
                   );
                 })()}
 
-                <button
+                <Button
+                  outline
                   onClick={() =>
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                   aria-label="Next page"
                 >
-                  &gt;
-                </button>
+                  →
+                </Button>
               </div>
             )}
 
             {/* Results Count */}
-            <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-              Page {currentPage} of {totalPages} ({filteredSecrets.length}{" "}
-              {filteredSecrets.length === 1 ? "secret" : "secrets"})
-            </p>
+            <Text className="mt-4 text-center">
+              <Trans>
+                Page {currentPage} of {totalPages} ({filteredSecrets.length}{" "}
+                {filteredSecrets.length === 1 ? "secret" : "secrets"})
+              </Trans>
+            </Text>
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }
