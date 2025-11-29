@@ -14,7 +14,6 @@ vi.mock("../hooks/useServiceWorkerUpdate");
 
 describe("UpdatePrompt", () => {
   const mockUpdateServiceWorker = vi.fn();
-  const mockClose = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -28,7 +27,6 @@ describe("UpdatePrompt", () => {
       needRefresh: false,
       offlineReady: false,
       updateServiceWorker: mockUpdateServiceWorker,
-      close: mockClose,
     });
   });
 
@@ -47,12 +45,32 @@ describe("UpdatePrompt", () => {
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
 
       renderWithI18n(<UpdatePrompt />);
 
-      expect(screen.getByText("New version available")).toBeInTheDocument();
+      expect(
+        screen.getByText(/A new version of SecPal is available/i)
+      ).toBeInTheDocument();
+    });
+
+    it("should always be visible when update is available (no dismiss option)", () => {
+      vi.mocked(useServiceWorkerUpdate).mockReturnValue({
+        needRefresh: true,
+        offlineReady: false,
+        updateServiceWorker: mockUpdateServiceWorker,
+      });
+
+      renderWithI18n(<UpdatePrompt />);
+
+      // Verify banner is shown
+      expect(
+        screen.getByText(/A new version of SecPal is available/i)
+      ).toBeInTheDocument();
+
+      // Verify no dismiss/later button exists
+      expect(screen.queryByText("Later")).not.toBeInTheDocument();
+      expect(screen.queryByText("Dismiss")).not.toBeInTheDocument();
     });
   });
 
@@ -62,30 +80,24 @@ describe("UpdatePrompt", () => {
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
     });
 
-    it("should display title", () => {
-      renderWithI18n(<UpdatePrompt />);
-      expect(screen.getByText("New version available")).toBeInTheDocument();
-    });
-
-    it("should display description", () => {
+    it("should display update message", () => {
       renderWithI18n(<UpdatePrompt />);
       expect(
-        screen.getByText(/A new version of SecPal is ready/i)
+        screen.getByText(/A new version of SecPal is available/i)
       ).toBeInTheDocument();
     });
 
-    it("should display Update button", () => {
+    it("should display Update now button", () => {
       renderWithI18n(<UpdatePrompt />);
-      expect(screen.getByText("Update")).toBeInTheDocument();
+      expect(screen.getByText("Update now")).toBeInTheDocument();
     });
 
-    it("should display Later button", () => {
+    it("should not display Later button", () => {
       renderWithI18n(<UpdatePrompt />);
-      expect(screen.getByText("Later")).toBeInTheDocument();
+      expect(screen.queryByText("Later")).not.toBeInTheDocument();
     });
   });
 
@@ -95,38 +107,17 @@ describe("UpdatePrompt", () => {
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
     });
 
-    it("should call updateServiceWorker when Update button is clicked", async () => {
+    it("should call updateServiceWorker when Update now button is clicked", async () => {
       const user = userEvent.setup();
       renderWithI18n(<UpdatePrompt />);
 
-      const updateButton = screen.getByText("Update");
+      const updateButton = screen.getByText("Update now");
       await user.click(updateButton);
 
       expect(mockUpdateServiceWorker).toHaveBeenCalledTimes(1);
-    });
-
-    it("should call close when Later button is clicked", async () => {
-      const user = userEvent.setup();
-      renderWithI18n(<UpdatePrompt />);
-
-      const laterButton = screen.getByText("Later");
-      await user.click(laterButton);
-
-      expect(mockClose).toHaveBeenCalledTimes(1);
-    });
-
-    it("should not call updateServiceWorker when Later is clicked", async () => {
-      const user = userEvent.setup();
-      renderWithI18n(<UpdatePrompt />);
-
-      const laterButton = screen.getByText("Later");
-      await user.click(laterButton);
-
-      expect(mockUpdateServiceWorker).not.toHaveBeenCalled();
     });
   });
 
@@ -136,7 +127,6 @@ describe("UpdatePrompt", () => {
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
     });
 
@@ -158,37 +148,38 @@ describe("UpdatePrompt", () => {
     });
   });
 
-  describe("Positioning", () => {
+  describe("Styling", () => {
     beforeEach(() => {
       vi.mocked(useServiceWorkerUpdate).mockReturnValue({
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
     });
 
-    it("should be fixed at bottom-right corner", () => {
+    it("should render in document flow (not fixed positioned)", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
-      expect(wrapper).toHaveClass("fixed");
-      expect(wrapper).toHaveClass("bottom-4");
-      expect(wrapper).toHaveClass("right-4");
+      // Should NOT have fixed positioning to avoid overlaying content
+      expect(wrapper).not.toHaveClass("fixed");
+      expect(wrapper).not.toHaveClass("absolute");
     });
 
-    it("should have high z-index to overlay other content", () => {
+    it("should have appropriate background styling", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
-      expect(wrapper).toHaveClass("z-50");
+      expect(wrapper).toHaveClass("bg-blue-600");
+      expect(wrapper).toHaveClass("text-white");
     });
 
-    it("should have max-width constraint", () => {
-      const { container } = renderWithI18n(<UpdatePrompt />);
-      const wrapper = container.firstChild as HTMLElement;
+    it("should use Catalyst Button with white color variant", () => {
+      renderWithI18n(<UpdatePrompt />);
 
-      expect(wrapper).toHaveClass("max-w-md");
+      // Button should be rendered with proper Catalyst styling
+      const button = screen.getByRole("button", { name: /update/i });
+      expect(button).toBeInTheDocument();
     });
   });
 
@@ -201,22 +192,6 @@ describe("UpdatePrompt", () => {
         needRefresh: true,
         offlineReady: false,
         updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
-      });
-
-      rerender(
-        <I18nProvider i18n={i18n}>
-          <UpdatePrompt />
-        </I18nProvider>
-      );
-      expect(screen.getByText("New version available")).toBeInTheDocument();
-
-      // Change to hidden
-      vi.mocked(useServiceWorkerUpdate).mockReturnValue({
-        needRefresh: false,
-        offlineReady: false,
-        updateServiceWorker: mockUpdateServiceWorker,
-        close: mockClose,
       });
 
       rerender(
@@ -225,7 +200,23 @@ describe("UpdatePrompt", () => {
         </I18nProvider>
       );
       expect(
-        screen.queryByText("New version available")
+        screen.getByText(/A new version of SecPal is available/i)
+      ).toBeInTheDocument();
+
+      // Change to hidden
+      vi.mocked(useServiceWorkerUpdate).mockReturnValue({
+        needRefresh: false,
+        offlineReady: false,
+        updateServiceWorker: mockUpdateServiceWorker,
+      });
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <UpdatePrompt />
+        </I18nProvider>
+      );
+      expect(
+        screen.queryByText(/A new version of SecPal is available/i)
       ).not.toBeInTheDocument();
     });
   });

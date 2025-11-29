@@ -22,32 +22,24 @@ export interface UseServiceWorkerUpdateReturn {
    * Trigger service worker update and reload the page
    */
   updateServiceWorker: () => Promise<void>;
-
-  /**
-   * Dismiss the update prompt without updating
-   */
-  close: () => void;
 }
 
 /**
  * Hook for managing PWA service worker updates
  *
  * Detects when a new version of the app is available and provides
- * methods to update or dismiss the notification.
- *
- * When user dismisses the prompt, it will reappear after 1 hour (snooze).
- * This ensures users don't stay on outdated versions indefinitely.
+ * a method to update. The update banner is always visible when an
+ * update is available - it cannot be dismissed.
  *
  * @example
  * ```tsx
- * const { needRefresh, updateServiceWorker, close } = useServiceWorkerUpdate();
+ * const { needRefresh, updateServiceWorker } = useServiceWorkerUpdate();
  *
  * if (needRefresh) {
  *   return (
  *     <Alert>
  *       <Text>New version available!</Text>
  *       <Button onClick={updateServiceWorker}>Update</Button>
- *       <Button onClick={close}>Later</Button>
  *     </Alert>
  *   );
  * }
@@ -56,7 +48,6 @@ export interface UseServiceWorkerUpdateReturn {
 export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [offlineReady, setOfflineReady] = useState(false);
-  const [snoozedUntil, setSnoozedUntil] = useState<number | null>(null);
 
   // Track interval ID for cleanup
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -110,41 +101,6 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   }, [swOfflineReady]);
 
   /**
-   * Check if snooze period has expired and re-show prompt
-   */
-  useEffect(() => {
-    if (snoozedUntil === null) return;
-
-    const now = Date.now();
-    if (now >= snoozedUntil) {
-      // Snooze expired, re-enable prompt if update is still available
-      setSnoozedUntil(null);
-      if (swNeedRefresh) {
-        setNeedRefresh(true);
-        console.log("[SW] Snooze expired, showing update prompt again");
-      }
-      return;
-    }
-
-    // Set timeout to re-enable prompt when snooze expires
-    const timeUntilSnoozeEnd = snoozedUntil - now;
-    const timeout = setTimeout(() => {
-      setSnoozedUntil(null);
-      if (swNeedRefresh) {
-        setNeedRefresh(true);
-        console.log("[SW] Snooze expired, showing update prompt again");
-      }
-    }, timeUntilSnoozeEnd);
-
-    return () => clearTimeout(timeout);
-  }, [snoozedUntil, swNeedRefresh]);
-
-  /**
-   * Override needRefresh to hide during snooze period
-   */
-  const effectiveNeedRefresh = needRefresh && snoozedUntil === null;
-
-  /**
    * Update service worker and reload the page
    */
   const updateServiceWorker = useCallback(async () => {
@@ -156,24 +112,9 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
     }
   }, [swUpdate]);
 
-  /**
-   * Dismiss the update prompt without updating
-   * Sets a 1-hour snooze period, after which the prompt will reappear
-   */
-  const close = useCallback(() => {
-    const snoozeTime = 60 * 60 * 1000; // 1 hour
-    const snoozeUntil = Date.now() + snoozeTime;
-    setSnoozedUntil(snoozeUntil);
-    setNeedRefresh(false);
-    console.log(
-      `[SW] Update prompt snoozed for 1 hour (until ${new Date(snoozeUntil).toLocaleTimeString()})`
-    );
-  }, []);
-
   return {
-    needRefresh: effectiveNeedRefresh,
+    needRefresh,
     offlineReady,
     updateServiceWorker,
-    close,
   };
 }

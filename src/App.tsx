@@ -66,6 +66,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <div className="flex min-h-screen flex-col">
+          <UpdatePrompt />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
@@ -128,7 +129,6 @@ function App() {
           <Footer />
           <OfflineIndicator />
           <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
-          <UpdatePrompt />
         </div>
       </BrowserRouter>
     </AuthProvider>

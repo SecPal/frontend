@@ -9,29 +9,30 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 /**
  * UpdatePrompt Component
  *
- * Displays a notification when a new version of the PWA is available.
- * Users can choose to update immediately or dismiss the prompt.
+ * Displays a non-intrusive banner when a new version of the PWA is available.
+ * The banner is always visible when an update is available and cannot be dismissed.
+ * Users can click "Update" to reload and use the latest version.
  *
- * This component automatically appears when the service worker detects
- * a new version. If dismissed via the "Later" button, it will reappear
- * after 1 hour if the update is still available.
+ * The banner is rendered in the normal document flow (not fixed/absolute) to avoid
+ * overlaying page content. It should be placed at the top of the app layout.
  *
  * @example
  * ```tsx
- * // In App.tsx
+ * // In App.tsx - place as first child in the layout container
  * function App() {
  *   return (
- *     <>
+ *     <div className="flex min-h-screen flex-col">
  *       <UpdatePrompt />
- *       <Router />
- *     </>
+ *       <Header />
+ *       <main>...</main>
+ *     </div>
  *   );
  * }
  * ```
  */
 export function UpdatePrompt() {
   const { _ } = useLingui();
-  const { needRefresh, updateServiceWorker, close } = useServiceWorkerUpdate();
+  const { needRefresh, updateServiceWorker } = useServiceWorkerUpdate();
 
   // Only render when update is available
   if (!needRefresh) {
@@ -40,39 +41,23 @@ export function UpdatePrompt() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-50 max-w-md rounded-lg bg-white p-6 shadow-lg ring-1 ring-zinc-950/10 dark:bg-zinc-900 dark:ring-white/10"
+      className="bg-blue-600 px-4 py-2 text-white shadow-md dark:bg-blue-700"
       role="status"
       aria-live="polite"
       aria-atomic="true"
     >
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-            <Trans>New version available</Trans>
-          </h3>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>
-              A new version of SecPal is ready. Click "Update" to reload and use
-              the latest version.
-            </Trans>
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            onClick={updateServiceWorker}
-            color="blue"
-            aria-label={_(msg`Update application now`)}
-          >
-            <Trans>Update</Trans>
-          </Button>
-          <Button
-            onClick={close}
-            plain
-            aria-label={_(msg`Dismiss update notification`)}
-          >
-            <Trans>Later</Trans>
-          </Button>
-        </div>
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
+        <p className="text-sm font-medium">
+          <Trans>A new version of SecPal is available.</Trans>
+        </p>
+        <Button
+          onClick={updateServiceWorker}
+          color="white"
+          className="py-1!"
+          aria-label={_(msg`Update application now`)}
+        >
+          <Trans>Update now</Trans>
+        </Button>
       </div>
     </div>
   );
