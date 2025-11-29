@@ -15,7 +15,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), "");
-  const API_URL = env.VITE_API_URL || "https://api.secpal.app";
+  // Use mode-aware API URL detection:
+  // - Development: empty string (Vite proxy forwards /v1/* to DDEV backend)
+  // - Production: https://api.secpal.app
+  // This matches the logic in src/config.ts for consistent behavior
+  const API_URL =
+    env.VITE_API_URL || (mode === "production" ? "https://api.secpal.app" : "");
 
   return {
     plugins: [
