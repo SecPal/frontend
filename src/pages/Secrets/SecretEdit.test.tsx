@@ -3,7 +3,9 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router";
+import { MemoryRouter } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretEdit } from "./SecretEdit";
 import * as secretApi from "../../services/secretApi";
 
@@ -14,8 +16,8 @@ vi.mock("../../services/secretApi");
 const mockNavigate = vi.fn();
 const mockParams = { id: "test-id-123" };
 
-vi.mock("react-router", async () => {
-  const actual = await vi.importActual("react-router");
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -23,9 +25,20 @@ vi.mock("react-router", async () => {
   };
 });
 
+// Helper to render with all required providers
+const renderWithProviders = (component: React.ReactNode) => {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </I18nProvider>
+  );
+};
+
 describe("SecretEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mockParams.id to default value before each test
+    mockParams.id = "test-id-123";
   });
 
   it("should load and display existing secret", async () => {
@@ -43,11 +56,7 @@ describe("SecretEdit", () => {
       updated_at: "2025-11-22T10:00:00Z",
     });
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     // Should show loading initially
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -94,11 +103,7 @@ describe("SecretEdit", () => {
       updated_at: "2025-11-22T10:30:00Z",
     });
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     // Wait for form to load
     await waitFor(() => {
@@ -144,11 +149,7 @@ describe("SecretEdit", () => {
 
     mockUpdateSecret.mockRejectedValue(new Error("Server error"));
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     // Wait for form to load
     await waitFor(() => {
@@ -178,11 +179,7 @@ describe("SecretEdit", () => {
       updated_at: "2025-11-22T10:00:00Z",
     });
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     // Wait for form to load
     await waitFor(() => {
@@ -198,11 +195,7 @@ describe("SecretEdit", () => {
     const mockGetSecretById = vi.mocked(secretApi.getSecretById);
     mockGetSecretById.mockRejectedValue(new Error("Network error"));
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     await waitFor(() => {
       expect(screen.getByText(/failed to load secret/i)).toBeInTheDocument();
@@ -234,11 +227,7 @@ describe("SecretEdit", () => {
     });
     mockUpdateSecret.mockRejectedValue(validationError);
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     // Wait for form to load
     await waitFor(() => {
@@ -264,11 +253,7 @@ describe("SecretEdit", () => {
     // @ts-expect-error - Testing missing ID scenario
     mockParams.id = undefined;
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     expect(screen.getByText(/Secret ID is missing/i)).toBeInTheDocument();
 
@@ -292,11 +277,7 @@ describe("SecretEdit", () => {
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecret);
     vi.mocked(secretApi.updateSecret).mockResolvedValue(mockSecret);
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     await waitFor(() => {
       expect(screen.getByDisplayValue("Test Secret")).toBeInTheDocument();
@@ -342,11 +323,7 @@ describe("SecretEdit", () => {
       },
     });
 
-    render(
-      <BrowserRouter>
-        <SecretEdit />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretEdit />);
 
     await waitFor(() => {
       expect(screen.getByDisplayValue("Test Secret")).toBeInTheDocument();

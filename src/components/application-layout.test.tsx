@@ -1,0 +1,424 @@
+// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
+import { MemoryRouter } from "react-router-dom";
+import { ApplicationLayout } from "./application-layout";
+import { AuthProvider } from "../contexts/AuthContext";
+import * as authApi from "../services/authApi";
+
+vi.mock("../services/authApi");
+
+// Mock ResizeObserver for HeadlessUI Menu component
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
+
+const renderWithProviders = (
+  component: React.ReactNode,
+  { route = "/" }: { route?: string } = {}
+) => {
+  return render(
+    <MemoryRouter initialEntries={[route]}>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>{component}</AuthProvider>
+      </I18nProvider>
+    </MemoryRouter>
+  );
+};
+
+describe("ApplicationLayout", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    // Set up authenticated user
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "John Doe",
+        email: "john@example.com",
+      })
+    );
+  });
+
+  describe("rendering", () => {
+    it("renders sidebar with SecPal branding", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("SecPal")).toBeInTheDocument();
+    });
+
+    it("renders children content", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div data-testid="test-content">Test Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByTestId("test-content")).toBeInTheDocument();
+      expect(screen.getByText("Test Content")).toBeInTheDocument();
+    });
+
+    it("renders navigation links", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Home")).toBeInTheDocument();
+      expect(screen.getByText("Secrets")).toBeInTheDocument();
+      expect(screen.getByText("Settings")).toBeInTheDocument();
+    });
+
+    it("renders user information in sidebar footer", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.getByText("john@example.com")).toBeInTheDocument();
+    });
+
+    it("renders user initials in avatar", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("JD")).toBeInTheDocument();
+    });
+
+    it("renders language switcher in navbar", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.getByRole("combobox", { name: /select language/i })
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("navigation highlighting", () => {
+    it("highlights Home link when on home page", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/" }
+      );
+
+      const homeLink = screen.getByRole("link", { name: /home/i });
+      expect(homeLink).toHaveAttribute("data-current", "true");
+    });
+
+    it("highlights Secrets link when on secrets page", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/secrets" }
+      );
+
+      const secretsLink = screen.getByRole("link", { name: /secrets/i });
+      expect(secretsLink).toHaveAttribute("data-current", "true");
+    });
+
+    it("highlights Secrets link when on secrets subpage", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/secrets/new" }
+      );
+
+      const secretsLink = screen.getByRole("link", { name: /secrets/i });
+      expect(secretsLink).toHaveAttribute("data-current", "true");
+    });
+
+    it("highlights Settings link when on settings page", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/settings" }
+      );
+
+      const settingsLinks = screen.getAllByRole("link", { name: /settings/i });
+      // First is sidebar navigation, second might be in dropdown
+      expect(settingsLinks[0]).toHaveAttribute("data-current", "true");
+    });
+  });
+
+  describe("user dropdown", () => {
+    it("opens dropdown when clicking user button", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Find and click the dropdown button (user section)
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("My profile")).toBeInTheDocument();
+        expect(screen.getByText("Sign out")).toBeInTheDocument();
+      });
+    });
+
+    it("has profile link in dropdown", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        // DropdownItem with href renders as a menuitem (HeadlessUI)
+        const profileItem = screen.getByRole("menuitem", {
+          name: /my profile/i,
+        });
+        expect(profileItem).toHaveAttribute("href", "/profile");
+      });
+    });
+
+    it("has settings link in dropdown", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        // Find the settings menuitem in the dropdown
+        const settingsItem = screen.getByRole("menuitem", {
+          name: /settings/i,
+        });
+        expect(settingsItem).toHaveAttribute("href", "/settings");
+      });
+    });
+  });
+
+  describe("logout functionality", () => {
+    it("calls logout API and clears auth on sign out click", async () => {
+      const mockLogout = vi.mocked(authApi.logout);
+      mockLogout.mockResolvedValue(undefined);
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Open dropdown
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Sign out")).toBeInTheDocument();
+      });
+
+      // Click sign out
+      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
+      fireEvent.click(signOutButton);
+
+      await waitFor(() => {
+        expect(mockLogout).toHaveBeenCalled();
+      });
+
+      // User should be cleared from localStorage
+      expect(localStorage.getItem("auth_user")).toBeNull();
+    });
+
+    it("clears local state before API call (prevents race condition)", async () => {
+      let wasLocalStorageClearedBeforeApiCall = false;
+
+      const mockLogout = vi.mocked(authApi.logout);
+      mockLogout.mockImplementation(async () => {
+        wasLocalStorageClearedBeforeApiCall =
+          localStorage.getItem("auth_user") === null;
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Open dropdown
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Sign out")).toBeInTheDocument();
+      });
+
+      // Click sign out
+      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
+      fireEvent.click(signOutButton);
+
+      await waitFor(() => {
+        expect(mockLogout).toHaveBeenCalled();
+        expect(wasLocalStorageClearedBeforeApiCall).toBe(true);
+      });
+    });
+
+    it("handles logout API failure gracefully", async () => {
+      const mockLogout = vi.mocked(authApi.logout);
+      mockLogout.mockRejectedValue(new Error("Network error"));
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Open dropdown
+      const dropdownButton = screen.getByRole("button", {
+        name: /John Doe/i,
+      });
+      fireEvent.click(dropdownButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Sign out")).toBeInTheDocument();
+      });
+
+      // Click sign out
+      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
+      fireEvent.click(signOutButton);
+
+      await waitFor(() => {
+        expect(mockLogout).toHaveBeenCalled();
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "Logout API call failed:",
+          expect.any(Error)
+        );
+      });
+
+      // User should still be cleared from localStorage
+      expect(localStorage.getItem("auth_user")).toBeNull();
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe("getInitials helper", () => {
+    it("generates correct initials for two-word name", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Jane Smith",
+          email: "jane@example.com",
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("JS")).toBeInTheDocument();
+    });
+
+    it("generates correct initials for single-word name", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin",
+          email: "admin@example.com",
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("A")).toBeInTheDocument();
+    });
+
+    it("generates correct initials for three-word name (max 2)", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Paul Smith",
+          email: "john@example.com",
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("JP")).toBeInTheDocument();
+    });
+
+    it("shows fallback U when user name is missing", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          email: "user@example.com",
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("U")).toBeInTheDocument();
+    });
+  });
+});

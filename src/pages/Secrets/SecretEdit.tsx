@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router-dom";
+import { Trans, t } from "@lingui/macro";
 import { SecretForm, SecretFormData } from "../../components/SecretForm";
 import {
   getSecretById,
@@ -10,6 +11,8 @@ import {
   ApiError,
 } from "../../services/secretApi";
 import { formatValidationErrors } from "../../lib/errorUtils";
+import { Heading } from "../../components/heading";
+import { Text } from "../../components/text";
 
 /**
  * Page for editing an existing secret
@@ -108,40 +111,43 @@ export function SecretEdit() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl py-8">
-        <div className="text-center text-zinc-600 dark:text-zinc-400">
-          Loading...
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <Text>
+          <Trans>Loading...</Trans>
+        </Text>
       </div>
     );
   }
 
   if (error && !initialValues.title) {
     return (
-      <div className="mx-auto max-w-2xl py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
-          {error}
-        </div>
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
+        {error}
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl py-8">
-      <h1 className="mb-6 text-2xl font-semibold text-zinc-900 dark:text-white">
-        Edit Secret
-      </h1>
+    <>
+      <div className="mb-8">
+        <Heading>
+          <Trans>Edit Secret</Trans>
+        </Heading>
+        <Text className="mt-2">
+          <Trans>Update the details of your secret.</Trans>
+        </Text>
+      </div>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <SecretForm
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          submitLabel="Update"
+          submitLabel={t`Update`}
           initialValues={initialValues}
           isSubmitting={isSubmitting}
           error={error}
         />
       </div>
-    </div>
+    </>
   );
 }

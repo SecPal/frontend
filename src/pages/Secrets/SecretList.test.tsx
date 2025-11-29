@@ -4,7 +4,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter } from "react-router";
+import { MemoryRouter } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretList } from "./SecretList";
 import * as secretApi from "../../services/secretApi";
 import type { Secret } from "../../services/secretApi";
@@ -18,6 +20,15 @@ vi.mock("../../services/secretApi", async (importOriginal) => {
     fetchSecrets: vi.fn(),
   };
 });
+
+// Helper to render with all required providers
+const renderWithProviders = (component: React.ReactNode) => {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </I18nProvider>
+  );
+};
 
 describe("SecretList", () => {
   const mockSecrets: Secret[] = [
@@ -67,11 +78,7 @@ describe("SecretList", () => {
         })
     );
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     expect(screen.getByText("Loading secrets...")).toBeInTheDocument();
   });
@@ -79,11 +86,7 @@ describe("SecretList", () => {
   it("should load and display secrets", async () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
@@ -98,11 +101,7 @@ describe("SecretList", () => {
       new secretApi.ApiError("Unauthorized", 401)
     );
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText("Error Loading Secrets")).toBeInTheDocument();
@@ -114,11 +113,7 @@ describe("SecretList", () => {
   it("should show empty state when no secrets", async () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue([]);
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText("No secrets yet")).toBeInTheDocument();
@@ -129,18 +124,14 @@ describe("SecretList", () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
     });
 
     // Search for "gmail"
-    const searchInput = screen.getByPlaceholderText("🔍 Search...");
+    const searchInput = screen.getByPlaceholderText("Search secrets...");
     await user.clear(searchInput);
     await user.type(searchInput, "gmail");
 
@@ -156,11 +147,7 @@ describe("SecretList", () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
@@ -178,15 +165,11 @@ describe("SecretList", () => {
     expect(screen.queryByText(/^GitHub$/)).not.toBeInTheDocument();
   });
 
-  it("should filter secrets by expiration", async () => {
+  it("should filter secrets by expiring_soon", async () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
@@ -206,15 +189,74 @@ describe("SecretList", () => {
     expect(screen.queryByText(/^GitHub$/)).not.toBeInTheDocument();
   });
 
+  it("should filter secrets by expired", async () => {
+    const expiredSecret: Secret = {
+      id: "secret-expired",
+      title: "Expired Secret",
+      username: "expired@example.com",
+      tags: ["old"],
+      expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+      created_at: "2025-01-01T10:00:00Z",
+      updated_at: "2025-11-15T14:30:00Z",
+      attachment_count: 0,
+      is_shared: false,
+    };
+
+    vi.mocked(secretApi.fetchSecrets).mockResolvedValue([
+      ...mockSecrets,
+      expiredSecret,
+    ]);
+    const user = userEvent.setup();
+
+    renderWithProviders(<SecretList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    });
+
+    // Filter by "expired"
+    const expirationFilter = screen.getByRole("combobox", {
+      name: /Filter by expiration/,
+    });
+    await user.selectOptions(expirationFilter, "expired");
+
+    // Should show only expired secret
+    expect(screen.getByText(/Expired Secret/)).toBeInTheDocument();
+
+    // Should NOT show non-expired secrets
+    expect(screen.queryByText(/Gmail Account/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/AWS Root/)).not.toBeInTheDocument();
+  });
+
+  it("should filter secrets by no_expiration", async () => {
+    vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
+    const user = userEvent.setup();
+
+    renderWithProviders(<SecretList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    });
+
+    // Filter by "no_expiration"
+    const expirationFilter = screen.getByRole("combobox", {
+      name: /Filter by expiration/,
+    });
+    await user.selectOptions(expirationFilter, "no_expiration");
+
+    // Should show Gmail and GitHub (no expiration)
+    expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
+    expect(screen.getByText(/GitHub/)).toBeInTheDocument();
+
+    // Should NOT show AWS (has expiration)
+    expect(screen.queryByText(/AWS Root/)).not.toBeInTheDocument();
+  });
+
   it("should toggle between grid and list view", async () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(mockSecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
@@ -246,11 +288,7 @@ describe("SecretList", () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(manySecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Secret 0/)).toBeInTheDocument();
@@ -289,11 +327,7 @@ describe("SecretList", () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(manySecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Secret 0/)).toBeInTheDocument();
@@ -308,7 +342,7 @@ describe("SecretList", () => {
     });
 
     // Apply search filter
-    const searchInput = screen.getByPlaceholderText("🔍 Search...");
+    const searchInput = screen.getByPlaceholderText("Search secrets...");
     await user.type(searchInput, "Secret 0");
 
     // Should reset to page 1 and show filtered results
@@ -328,11 +362,7 @@ describe("SecretList", () => {
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(manySecrets);
     const user = userEvent.setup();
 
-    render(
-      <BrowserRouter>
-        <SecretList />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretList />);
 
     await waitFor(() => {
       expect(screen.getByText(/Secret 0/)).toBeInTheDocument();

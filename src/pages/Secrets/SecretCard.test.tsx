@@ -3,9 +3,24 @@
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretCard } from "./SecretCard";
 import type { Secret } from "../../services/secretApi";
+
+// Initialize i18n for tests
+i18n.load("en", {});
+i18n.activate("en");
+
+// Helper to render with all required providers
+const renderWithProviders = (component: React.ReactNode) => {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <BrowserRouter>{component}</BrowserRouter>
+    </I18nProvider>
+  );
+};
 
 describe("SecretCard", () => {
   const mockSecret: Secret = {
@@ -20,52 +35,32 @@ describe("SecretCard", () => {
   };
 
   it("should render secret title", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     expect(screen.getByText(/Gmail Account/)).toBeInTheDocument();
   });
 
   it("should render username", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     expect(screen.getByText("user@example.com")).toBeInTheDocument();
   });
 
   it("should render tags", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     expect(screen.getByText("#work")).toBeInTheDocument();
     expect(screen.getByText("#email")).toBeInTheDocument();
   });
 
   it("should render attachment count", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
   it("should show shared indicator", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     expect(screen.getByText("Shared")).toBeInTheDocument();
   });
@@ -76,11 +71,7 @@ describe("SecretCard", () => {
       expires_at: "2020-01-01T00:00:00Z", // Past date
     };
 
-    render(
-      <BrowserRouter>
-        <SecretCard secret={expiredSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={expiredSecret} />);
 
     expect(screen.getByText("Expired")).toBeInTheDocument();
   });
@@ -94,21 +85,13 @@ describe("SecretCard", () => {
       expires_at: tomorrow.toISOString(),
     };
 
-    render(
-      <BrowserRouter>
-        <SecretCard secret={expiringSoonSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={expiringSoonSecret} />);
 
     expect(screen.getByText("Expiring Soon")).toBeInTheDocument();
   });
 
   it("should link to secret detail page", () => {
-    render(
-      <BrowserRouter>
-        <SecretCard secret={mockSecret} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={mockSecret} />);
 
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "/secrets/secret-1");
@@ -120,11 +103,7 @@ describe("SecretCard", () => {
       username: undefined,
     };
 
-    render(
-      <BrowserRouter>
-        <SecretCard secret={secretWithoutUsername} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={secretWithoutUsername} />);
 
     expect(screen.queryByText("user@example.com")).not.toBeInTheDocument();
   });
@@ -135,11 +114,7 @@ describe("SecretCard", () => {
       tags: [],
     };
 
-    render(
-      <BrowserRouter>
-        <SecretCard secret={secretWithoutTags} />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCard secret={secretWithoutTags} />);
 
     expect(screen.queryByText(/#work/)).not.toBeInTheDocument();
   });

@@ -3,7 +3,9 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter } from "react-router";
+import { MemoryRouter } from "react-router-dom";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretCreate } from "./SecretCreate";
 import * as secretApi from "../../services/secretApi";
 
@@ -12,13 +14,22 @@ vi.mock("../../services/secretApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
-vi.mock("react-router", async () => {
-  const actual = await vi.importActual("react-router");
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
+
+// Helper to render with all required providers
+const renderWithProviders = (component: React.ReactNode) => {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </I18nProvider>
+  );
+};
 
 describe("SecretCreate", () => {
   beforeEach(() => {
@@ -26,11 +37,7 @@ describe("SecretCreate", () => {
   });
 
   it("should render create form", () => {
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     expect(screen.getByText(/create secret/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^title/i)).toBeInTheDocument();
@@ -52,11 +59,7 @@ describe("SecretCreate", () => {
       updated_at: "2025-11-22T10:00:00Z",
     });
 
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     // Fill in form
     fireEvent.change(screen.getByLabelText(/^title/i), {
@@ -88,11 +91,7 @@ describe("SecretCreate", () => {
     const mockCreateSecret = vi.mocked(secretApi.createSecret);
     mockCreateSecret.mockRejectedValue(new Error("Server error"));
 
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     // Fill in form
     fireEvent.change(screen.getByLabelText(/^title/i), {
@@ -120,11 +119,7 @@ describe("SecretCreate", () => {
     });
     mockCreateSecret.mockRejectedValue(validationError);
 
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     // Fill in form
     fireEvent.change(screen.getByLabelText(/^title/i), {
@@ -144,11 +139,7 @@ describe("SecretCreate", () => {
   });
 
   it("should navigate to secrets list on cancel", () => {
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
@@ -165,11 +156,7 @@ describe("SecretCreate", () => {
       },
     });
 
-    render(
-      <BrowserRouter>
-        <SecretCreate />
-      </BrowserRouter>
-    );
+    renderWithProviders(<SecretCreate />);
 
     // Fill in form
     fireEvent.change(screen.getByLabelText(/title/i), {

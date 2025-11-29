@@ -4,7 +4,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretForm } from "./SecretForm";
+
+// Initialize i18n for tests
+i18n.load("en", {});
+i18n.activate("en");
+
+// Helper to render with I18nProvider
+const renderWithI18n = (ui: React.ReactNode) => {
+  return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
+};
 
 describe("SecretForm", () => {
   const mockOnSubmit = vi.fn();
@@ -22,7 +33,7 @@ describe("SecretForm", () => {
 
   describe("Password Generator", () => {
     it("should generate password when generate button clicked", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const passwordInput = screen.getByLabelText("Password", {
         selector: "input",
@@ -39,7 +50,7 @@ describe("SecretForm", () => {
     });
 
     it("should show password strength indicator when password is entered", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const passwordInput = screen.getByLabelText("Password", {
         selector: "input",
@@ -54,7 +65,7 @@ describe("SecretForm", () => {
     });
 
     it("should update strength indicator as password improves", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const passwordInput = screen.getByLabelText("Password", {
         selector: "input",
@@ -75,7 +86,7 @@ describe("SecretForm", () => {
     });
 
     it("should toggle password visibility", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const passwordInput = screen.getByLabelText("Password", {
         selector: "input",
@@ -94,7 +105,7 @@ describe("SecretForm", () => {
 
   describe("Tag Input", () => {
     it("should add tag when Add button clicked", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const tagInput = screen.getByPlaceholderText(/enter tag name/i);
       const addButton = screen.getByRole("button", { name: /add/i });
@@ -107,7 +118,7 @@ describe("SecretForm", () => {
     });
 
     it("should add tag when Enter key pressed", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const tagInput = screen.getByPlaceholderText(/enter tag name/i);
 
@@ -118,7 +129,7 @@ describe("SecretForm", () => {
     });
 
     it("should remove tag when X button clicked", async () => {
-      render(
+      renderWithI18n(
         <SecretForm
           {...defaultProps}
           initialValues={{ tags: ["work", "email"] }}
@@ -133,7 +144,7 @@ describe("SecretForm", () => {
     });
 
     it("should remove last tag on Backspace when input empty", async () => {
-      render(
+      renderWithI18n(
         <SecretForm
           {...defaultProps}
           initialValues={{ tags: ["work", "email"] }}
@@ -152,7 +163,7 @@ describe("SecretForm", () => {
     });
 
     it("should not add duplicate tags", async () => {
-      render(
+      renderWithI18n(
         <SecretForm {...defaultProps} initialValues={{ tags: ["work"] }} />
       );
 
@@ -166,7 +177,7 @@ describe("SecretForm", () => {
     });
 
     it("should trim whitespace from tags", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const tagInput = screen.getByPlaceholderText(/enter tag name/i);
 
@@ -178,7 +189,7 @@ describe("SecretForm", () => {
 
   describe("Expiration Date Picker", () => {
     it("should set expiration date", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const dateInput = screen.getByLabelText(/expiration date/i);
 
@@ -188,7 +199,7 @@ describe("SecretForm", () => {
     });
 
     it("should submit form with expiration date in ISO format", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const titleInput = screen.getByLabelText(/title/i);
       const dateInput = screen.getByLabelText(/expiration date/i);
@@ -209,7 +220,7 @@ describe("SecretForm", () => {
     });
 
     it("should load initial expiration date", () => {
-      render(
+      renderWithI18n(
         <SecretForm
           {...defaultProps}
           initialValues={{ expires_at: "2025-12-31T23:59:59Z" }}
@@ -223,7 +234,7 @@ describe("SecretForm", () => {
     });
 
     it("should have minimum date set to today", () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const dateInput = screen.getByLabelText(
         /expiration date/i
@@ -236,7 +247,7 @@ describe("SecretForm", () => {
 
   describe("Form Submission", () => {
     it("should include all new features in submission", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const titleInput = screen.getByLabelText(/title/i);
       const passwordInput = screen.getByLabelText("Password", {
@@ -270,7 +281,7 @@ describe("SecretForm", () => {
 
   describe("Accessibility", () => {
     it("should have proper labels for new fields", () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       expect(screen.getByLabelText(/generate password/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/expiration date/i)).toBeInTheDocument();
@@ -280,7 +291,7 @@ describe("SecretForm", () => {
     });
 
     it("should have keyboard navigation for tags", async () => {
-      render(<SecretForm {...defaultProps} />);
+      renderWithI18n(<SecretForm {...defaultProps} />);
 
       const tagInput = screen.getByPlaceholderText(/enter tag name/i);
 

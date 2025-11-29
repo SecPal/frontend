@@ -3,14 +3,25 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
 import { SecretForm } from "./SecretForm";
+
+// Initialize i18n for tests
+i18n.load("en", {});
+i18n.activate("en");
+
+// Helper to render with I18nProvider
+const renderWithI18n = (ui: React.ReactNode) => {
+  return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
+};
 
 describe("SecretForm", () => {
   it("should render all form fields", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -31,7 +42,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -53,7 +64,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -91,7 +102,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -119,7 +130,7 @@ describe("SecretForm", () => {
       expires_at: "2025-12-31",
     };
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -143,7 +154,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -164,7 +175,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -181,7 +192,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -197,7 +208,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}
@@ -222,7 +233,7 @@ describe("SecretForm", () => {
     const mockOnSubmit = vi.fn();
     const mockOnCancel = vi.fn();
 
-    render(
+    renderWithI18n(
       <SecretForm
         onSubmit={mockOnSubmit}
         onCancel={mockOnCancel}

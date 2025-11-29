@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router";
-import { msg } from "@lingui/macro";
+import { useParams } from "react-router-dom";
+import { msg, Trans, t } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import {
   getSecretById,
@@ -18,6 +18,16 @@ import { AttachmentList } from "../../components/AttachmentList";
 import { AttachmentPreview } from "../../components/AttachmentPreview";
 import { ShareDialog } from "../../components/ShareDialog";
 import { SharedWithList } from "../../components/SharedWithList";
+import { Heading, Subheading } from "../../components/heading";
+import { Text } from "../../components/text";
+import { Button } from "../../components/button";
+import { Badge } from "../../components/badge";
+import {
+  DescriptionList,
+  DescriptionTerm,
+  DescriptionDetails,
+} from "../../components/description-list";
+import { Divider } from "../../components/divider";
 
 /**
  * Helper function to trigger browser download
@@ -206,10 +216,12 @@ export function SecretDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="text-center">
           <div className="mb-4 text-4xl">🔄</div>
-          <p className="text-zinc-600 dark:text-zinc-400">Loading secret...</p>
+          <Text>
+            <Trans>Loading secret...</Trans>
+          </Text>
         </div>
       </div>
     );
@@ -217,21 +229,20 @@ export function SecretDetail() {
 
   if (error || !secret) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center py-16">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
           <div className="mb-4 text-4xl">❌</div>
-          <h2 className="mb-2 text-lg font-semibold text-red-900 dark:text-red-400">
-            Error Loading Secret
-          </h2>
-          <p className="mb-4 text-sm text-red-700 dark:text-red-500">
+          <Heading level={3} className="text-red-900 dark:text-red-400">
+            <Trans>Error Loading Secret</Trans>
+          </Heading>
+          <Text className="mt-2 text-red-700 dark:text-red-500">
             {error || "Secret not found"}
-          </p>
-          <Link
-            to="/secrets"
-            className="inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
-          >
-            Back to Secrets
-          </Link>
+          </Text>
+          <div className="mt-4">
+            <Button href="/secrets" color="red">
+              <Trans>Back to Secrets</Trans>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -241,147 +252,153 @@ export function SecretDetail() {
     secret.expires_at && new Date(secret.expires_at) < new Date();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <>
       {/* Header */}
-      <div className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mb-4">
-            <Link
-              to="/secrets"
-              className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-            >
-              <span>&lt;</span> Back
-            </Link>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="mb-2">
+            <Button href="/secrets" plain>
+              <Trans>← Back to Secrets</Trans>
+            </Button>
           </div>
-          <div className="flex items-start justify-between">
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-              {secret.title}
-            </h1>
+          <div className="flex items-center gap-3">
+            <Heading>{secret.title}</Heading>
             {isExpired && (
-              <span className="inline-flex items-center rounded-md bg-red-50 px-3 py-1 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-900/30">
-                ⚠️ Expired
-              </span>
+              <Badge color="red">
+                <Trans>Expired</Trans>
+              </Badge>
             )}
           </div>
         </div>
+        <div className="flex gap-2">
+          <Button href={`/secrets/${id}/edit`} outline>
+            <Trans>Edit</Trans>
+          </Button>
+          {secret.owner != null && (
+            <Button onClick={() => setShareDialogOpen(true)}>
+              <Trans>Share</Trans>
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="grid gap-4">
-              {/* Username */}
-              {secret.username && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Username
-                  </label>
-                  <p className="mt-1 text-base text-zinc-900 dark:text-white">
-                    {secret.username}
-                  </p>
-                </div>
-              )}
+      <Divider className="my-8" />
 
-              {/* Password */}
-              {secret.password && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Password
-                  </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className="text-base text-zinc-900 dark:text-white">
+      {/* Content */}
+      <div className="space-y-8">
+        {/* Basic Information */}
+        <section>
+          <Subheading>
+            <Trans>Details</Trans>
+          </Subheading>
+          <DescriptionList className="mt-4">
+            {secret.username && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Username</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>{secret.username}</DescriptionDetails>
+              </>
+            )}
+
+            {secret.password && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Password</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  <div className="flex items-center gap-2">
+                    <code className="font-mono">
                       {showPassword ? secret.password : "••••••••••••"}
-                    </p>
-                    <button
+                    </code>
+                    <Button
+                      plain
                       onClick={() => setShowPassword(!showPassword)}
-                      className="rounded-md border border-zinc-300 bg-white px-3 py-1 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
                     >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
+                      {showPassword ? <Trans>Hide</Trans> : <Trans>Show</Trans>}
+                    </Button>
                   </div>
-                </div>
-              )}
+                </DescriptionDetails>
+              </>
+            )}
 
-              {/* URL */}
-              {secret.url && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    URL
-                  </label>
+            {secret.url && (
+              <>
+                <DescriptionTerm>
+                  <Trans>URL</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
                   <a
                     href={secret.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-1 block text-base text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
                   >
                     {secret.url}
                   </a>
-                </div>
-              )}
+                </DescriptionDetails>
+              </>
+            )}
 
-              {/* Tags */}
-              {secret.tags && secret.tags.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Tags
-                  </label>
-                  <div className="mt-1 flex flex-wrap gap-1">
+            {secret.tags && secret.tags.length > 0 && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Tags</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  <div className="flex flex-wrap gap-1">
                     {secret.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center rounded-md bg-zinc-50 px-2 py-1 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-zinc-600/20 dark:bg-zinc-800/50 dark:text-zinc-400 dark:ring-zinc-700/50"
-                      >
+                      <Badge key={tag} color="zinc">
                         #{tag}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                </DescriptionDetails>
+              </>
+            )}
 
-              {/* Expiration */}
-              {secret.expires_at && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Expires
-                  </label>
-                  <p
-                    className={`mt-1 text-base ${
-                      isExpired
-                        ? "font-semibold text-red-600 dark:text-red-400"
-                        : "text-zinc-900 dark:text-white"
-                    }`}
+            {secret.expires_at && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Expires</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  <span
+                    className={
+                      isExpired ? "text-red-600 dark:text-red-400" : ""
+                    }
                   >
                     {new Date(secret.expires_at).toLocaleString()}
-                    {isExpired && " (Expired)"}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+                    {isExpired && ` (${t`Expired`})`}
+                  </span>
+                </DescriptionDetails>
+              </>
+            )}
+          </DescriptionList>
+        </section>
 
-          {/* Notes */}
-          {secret.notes && (
-            <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-white">
-                Notes
-              </h2>
-              <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-                {secret.notes}
-              </p>
+        {/* Notes */}
+        {secret.notes && (
+          <section>
+            <Subheading>
+              <Trans>Notes</Trans>
+            </Subheading>
+            <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <Text className="whitespace-pre-wrap">{secret.notes}</Text>
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Attachments */}
-          {secret.attachments && secret.attachments.length > 0 && (
-            <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
-                Attachments ({secret.attachments.length})
-              </h2>
+        {/* Attachments */}
+        {secret.attachments && secret.attachments.length > 0 && (
+          <section>
+            <Subheading>
+              <Trans>Attachments ({secret.attachments.length})</Trans>
+            </Subheading>
+            <div className="mt-4">
               {masterKey ? (
                 <AttachmentList
                   attachments={secret.attachments}
@@ -393,59 +410,66 @@ export function SecretDetail() {
                 />
               ) : (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                  <p className="text-sm">
-                    ⚠️ Unable to load encryption key for attachments. Please
-                    refresh the page or contact support if the problem persists.
-                  </p>
+                  <Text>
+                    ⚠️{" "}
+                    <Trans>
+                      Unable to load encryption key for attachments. Please
+                      refresh the page or contact support if the problem
+                      persists.
+                    </Trans>
+                  </Text>
                 </div>
               )}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Shared With */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Access Control
-              </h2>
-              {secret.owner != null && (
-                <button
-                  onClick={() => setShareDialogOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-                >
-                  Share
-                </button>
-              )}
-            </div>
-            {id && (
+        {/* Shared With */}
+        <section>
+          <Subheading>
+            <Trans>Access Control</Trans>
+          </Subheading>
+          {id && (
+            <div className="mt-4">
               <SharedWithList
                 secretId={id}
                 shares={shares}
                 onRevoke={refreshShares}
               />
-            )}
-          </div>
-
-          {/* Metadata */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="grid gap-2 text-sm">
-              {secret.owner != null && (
-                <p className="text-zinc-600 dark:text-zinc-400">
-                  <span className="font-medium">Owner:</span>{" "}
-                  {secret.owner.name}
-                </p>
-              )}
-              <p className="text-zinc-600 dark:text-zinc-400">
-                <span className="font-medium">Created:</span>{" "}
-                {new Date(secret.created_at).toLocaleString()}
-              </p>
-              <p className="text-zinc-600 dark:text-zinc-400">
-                <span className="font-medium">Updated:</span>{" "}
-                {new Date(secret.updated_at).toLocaleString()}
-              </p>
             </div>
-          </div>
-        </div>
+          )}
+        </section>
+
+        <Divider />
+
+        {/* Metadata */}
+        <section>
+          <Subheading>
+            <Trans>Metadata</Trans>
+          </Subheading>
+          <DescriptionList className="mt-4">
+            {secret.owner != null && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Owner</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>{secret.owner.name}</DescriptionDetails>
+              </>
+            )}
+            <DescriptionTerm>
+              <Trans>Created</Trans>
+            </DescriptionTerm>
+            <DescriptionDetails>
+              {new Date(secret.created_at).toLocaleString()}
+            </DescriptionDetails>
+            <DescriptionTerm>
+              <Trans>Updated</Trans>
+            </DescriptionTerm>
+            <DescriptionDetails>
+              {new Date(secret.updated_at).toLocaleString()}
+            </DescriptionDetails>
+          </DescriptionList>
+        </section>
       </div>
 
       {/* Attachment Preview Modal */}
@@ -472,6 +496,6 @@ export function SecretDetail() {
           roles={[]}
         />
       )}
-    </div>
+    </>
   );
 }

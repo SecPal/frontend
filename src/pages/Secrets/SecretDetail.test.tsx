@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Route, Routes, MemoryRouter } from "react-router";
+import { Route, Routes, MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SecretDetail } from "./SecretDetail";
@@ -90,6 +90,8 @@ describe("SecretDetail", () => {
         <MemoryRouter initialEntries={[`/secrets/${secretId}`]}>
           <Routes>
             <Route path="/secrets/:id" element={<SecretDetail />} />
+            <Route path="/secrets/:id/edit" element={<div>Edit Page</div>} />
+            <Route path="/secrets" element={<div>Secret List</div>} />
           </Routes>
         </MemoryRouter>
       </I18nProvider>
@@ -208,10 +210,10 @@ describe("SecretDetail", () => {
       expect(screen.getByText("Gmail Account")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Owner:/)).toBeInTheDocument();
+    expect(screen.getByText("Owner")).toBeInTheDocument();
     expect(screen.getAllByText(/John Doe/)[0]).toBeInTheDocument(); // Owner appears in metadata and shares
-    expect(screen.getByText(/Created:/)).toBeInTheDocument();
-    expect(screen.getByText(/Updated:/)).toBeInTheDocument();
+    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getByText("Updated")).toBeInTheDocument();
   });
 
   it("should display error state on 404", async () => {
@@ -259,7 +261,7 @@ describe("SecretDetail", () => {
       expect(screen.getByText("Gmail Account")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/⚠️ Expired/)).toBeInTheDocument();
+    expect(screen.getByText("Expired")).toBeInTheDocument();
   });
 
   it("should handle secret without optional fields", async () => {
@@ -871,7 +873,7 @@ describe("Secret Sharing", () => {
     vi.clearAllMocks();
   });
 
-    it("should call refreshShares after revoke", async () => {
+  it("should call refreshShares after revoke", async () => {
     vi.mocked(secretApi.getSecretById).mockResolvedValue(mockSecretWithShares);
     vi.mocked(shareApi.fetchShares).mockResolvedValue([]);
     vi.mocked(shareApi.revokeShare).mockResolvedValue(undefined);
