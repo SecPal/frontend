@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **PWA Service Worker API_URL mode detection** (#249)
+  - Updated `vite.config.ts` to use mode-aware API_URL detection matching `src/config.ts`
+  - Development mode now uses empty string (Vite proxy forwards `/v1/*` to DDEV backend)
+  - Production mode uses `https://api.secpal.app` as fallback
+  - **Benefit:** Service worker cache patterns now correctly match local proxy configuration, fixing cache misses in development mode
+  - Related to: PR #248 (Vite proxy configuration for local DDEV development)
+
 ### Added
 
 - **CSRF Token Integration & API Service Updates** (#224, Part of Epic #205)
