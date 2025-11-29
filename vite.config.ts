@@ -320,6 +320,11 @@ export default defineConfig(({ mode }) => {
                 Referer: "http://localhost:5173/",
               },
             },
+            "/health": {
+              target: "https://secpal-api.ddev.site",
+              changeOrigin: true,
+              secure: false,
+            },
           }
         : undefined,
     },
