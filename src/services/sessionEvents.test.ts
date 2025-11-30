@@ -2,12 +2,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { sessionEvents } from "./sessionEvents";
+import { sessionEvents, isOnline } from "./sessionEvents";
+
+describe("isOnline", () => {
+  it("returns true when navigator.onLine is true", () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    expect(isOnline()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("returns false when navigator.onLine is false", () => {
+    vi.stubGlobal("navigator", { onLine: false });
+    expect(isOnline()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});
 
 describe("sessionEvents", () => {
   beforeEach(() => {
-    // Clear all listeners between tests by creating fresh subscriptions
-    // Note: In a real app, we'd have a reset method, but for tests this works
+    // Clear all listeners between tests
+    sessionEvents.reset();
     vi.clearAllMocks();
   });
 

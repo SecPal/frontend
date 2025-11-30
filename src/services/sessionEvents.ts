@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
+ * Check if the browser is online
+ * @returns true if online or if we can't determine (SSR)
+ */
+export function isOnline(): boolean {
+  return typeof navigator !== "undefined" ? navigator.onLine : true;
+}
+
+/**
  * Session event types for pub/sub pattern
  *
  * Using a simple event emitter to decouple session handling from components.
@@ -57,6 +65,13 @@ class SessionEventEmitter {
         }
       });
     }
+  }
+
+  /**
+   * Reset all listeners (useful for testing)
+   */
+  reset(): void {
+    this.listeners.clear();
   }
 }
 

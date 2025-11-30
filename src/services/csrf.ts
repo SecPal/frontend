@@ -2,15 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
-import { sessionEvents } from "./sessionEvents";
-
-/**
- * Check if the browser is online
- * @returns true if online or if we can't determine (SSR)
- */
-function isOnline(): boolean {
-  return typeof navigator !== "undefined" ? navigator.onLine : true;
-}
+import { sessionEvents, isOnline } from "./sessionEvents";
 
 /**
  * Custom error class for CSRF-related errors

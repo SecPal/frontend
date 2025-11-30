@@ -27,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // This handles 401 responses from API calls (when online)
   useEffect(() => {
     const unsubscribe = sessionEvents.on("session:expired", () => {
-      // Only logout if we think we're logged in
+      // Check authStorage instead of user state to avoid adding user as dependency.
+      // Adding user would cause re-subscription on every user change, which is unnecessary.
+      // authStorage and user state are always in sync via login/logout functions.
       if (authStorage.getUser()) {
         logout();
       }
