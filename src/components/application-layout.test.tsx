@@ -104,19 +104,21 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JD")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JD");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
-    it("renders language switcher in navbar", () => {
+    it("renders navbar user menu button with accessible label", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      expect(
-        screen.getByRole("combobox", { name: /select language/i })
-      ).toBeInTheDocument();
+      // The navbar should have a user menu button with aria-label for accessibility
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      expect(userMenuButton).toBeInTheDocument();
     });
   });
 
@@ -171,7 +173,83 @@ describe("ApplicationLayout", () => {
     });
   });
 
-  describe("user dropdown", () => {
+  describe("navbar user dropdown", () => {
+    it("opens navbar dropdown when clicking user menu button", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Find and click the navbar user menu button (has aria-label)
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      fireEvent.click(userMenuButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("My profile")).toBeInTheDocument();
+        expect(screen.getByText("Sign out")).toBeInTheDocument();
+      });
+    });
+
+    it("has profile link in navbar dropdown", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      fireEvent.click(userMenuButton);
+
+      await waitFor(() => {
+        const profileItem = screen.getByRole("menuitem", {
+          name: /my profile/i,
+        });
+        expect(profileItem).toHaveAttribute("href", "/profile");
+      });
+    });
+
+    it("has settings link in navbar dropdown", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      fireEvent.click(userMenuButton);
+
+      await waitFor(() => {
+        const settingsItem = screen.getByRole("menuitem", {
+          name: /settings/i,
+        });
+        expect(settingsItem).toHaveAttribute("href", "/settings");
+      });
+    });
+
+    it("triggers logout when clicking sign out in navbar dropdown", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      fireEvent.click(userMenuButton);
+
+      await waitFor(() => {
+        const signOutItem = screen.getByRole("menuitem", { name: /sign out/i });
+        fireEvent.click(signOutItem);
+      });
+
+      // Should have called the logout API
+      await waitFor(() => {
+        expect(authApi.logout).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("sidebar user dropdown", () => {
     it("opens dropdown when clicking user button", async () => {
       renderWithProviders(
         <ApplicationLayout>
@@ -362,7 +440,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JS")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JS");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("generates correct initials for single-word name", () => {
@@ -381,7 +461,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("A")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("A");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("generates correct initials for three-word name (max 2)", () => {
@@ -400,7 +482,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JP")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JP");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("shows fallback U when user name is missing", () => {
@@ -418,7 +502,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("U")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("U");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
   });
 });

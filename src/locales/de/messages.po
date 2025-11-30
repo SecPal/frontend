@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-30 16:48+0100\n"
+"POT-Creation-Date: 2025-11-30 20:52+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -60,8 +60,8 @@ msgstr "Bereich hinzufügen"
 msgid "Add Customer"
 msgstr "Kunde hinzufügen"
 
-#: src/components/ObjectManager.tsx:631
-#: src/components/ObjectManager.tsx:646
+#: src/components/ObjectManager.tsx:635
+#: src/components/ObjectManager.tsx:650
 msgid "Add Object"
 msgstr "Objekt hinzufügen"
 
@@ -111,7 +111,7 @@ msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nicht rückgängig gemacht werden."
 
 #. placeholder {0}: object.name
-#: src/components/ObjectManager.tsx:566
+#: src/components/ObjectManager.tsx:570
 msgid "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Dadurch werden auch alle Bereiche und Wachbücher gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
 
@@ -235,10 +235,10 @@ msgstr "Kundennummer"
 msgid "Customer hierarchy"
 msgstr "Kundenhierarchie"
 
-#: src/components/application-layout.tsx:244
+#: src/components/application-layout.tsx:283
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
-#: src/pages/Organization/ObjectsPage.tsx:73
+#: src/pages/Organization/ObjectsPage.tsx:72
 msgid "Customers"
 msgstr "Kunden"
 
@@ -400,7 +400,7 @@ msgstr "Datei konnte nicht gelöscht werden"
 msgid "Failed to delete guard book"
 msgstr "Wachbuch konnte nicht gelöscht werden"
 
-#: src/components/ObjectManager.tsx:581
+#: src/components/ObjectManager.tsx:585
 msgid "Failed to delete object"
 msgstr "Objekt konnte nicht gelöscht werden"
 
@@ -448,6 +448,10 @@ msgstr "Vorschau konnte nicht geladen werden"
 msgid "Failed to load reports"
 msgstr "Berichte konnten nicht geladen werden"
 
+#: src/components/ObjectManager.tsx:548
+msgid "Failed to load selected object"
+msgstr ""
+
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
 msgstr "Zugriff widerrufen fehlgeschlagen"
@@ -485,7 +489,7 @@ msgstr "Erzeugt"
 msgid "Get started by adding your first customer."
 msgstr "Fangen Sie an, indem Sie Ihren ersten Kunden hinzufügen."
 
-#: src/components/ObjectManager.tsx:627
+#: src/components/ObjectManager.tsx:631
 msgid "Get started by adding your first object."
 msgstr "Beginnen Sie mit dem Hinzufügen Ihres ersten Objekts."
 
@@ -516,7 +520,7 @@ msgstr "Raster"
 msgid "Grid view"
 msgstr "Gitternetz-Ansicht"
 
-#: src/components/application-layout.tsx:253
+#: src/components/application-layout.tsx:292
 #: src/components/GuardBookManager.tsx:645
 #: src/components/ObjectManager.tsx:253
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -529,7 +533,7 @@ msgstr "Wachbücher"
 msgid "Hide"
 msgstr "Ausblenden"
 
-#: src/components/application-layout.tsx:220
+#: src/components/application-layout.tsx:259
 msgid "Home"
 msgstr "Startseite"
 
@@ -597,7 +601,7 @@ msgstr "Verwalten Sie Kundenorganisationen und deren geschützte Objekte."
 msgid "Manage digital guard books and generate reports for this location."
 msgstr "Verwalten Sie digitale Wachbücher und erstellen Sie Berichte für diesen Standort."
 
-#: src/pages/Organization/ObjectsPage.tsx:84
+#: src/pages/Organization/ObjectsPage.tsx:83
 msgid "Manage protected objects and their areas for this customer."
 msgstr "Verwalten Sie geschützte Objekte und deren Bereiche für diesen Kunden."
 
@@ -617,7 +621,7 @@ msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 msgid "Metadata"
 msgstr "Metadaten"
 
-#: src/components/application-layout.tsx:296
+#: src/components/application-layout.tsx:175
 msgid "My profile"
 msgstr "Mein Profil"
 
@@ -645,7 +649,7 @@ msgstr "Kein Ablaufdatum"
 msgid "No Guard Books"
 msgstr "Keine Wachbücher"
 
-#: src/components/ObjectManager.tsx:624
+#: src/components/ObjectManager.tsx:628
 msgid "No Objects"
 msgstr "Keine Objekte"
 
@@ -713,14 +717,14 @@ msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Ein
 msgid "Object Areas"
 msgstr "Objektbereiche"
 
-#: src/components/ObjectManager.tsx:642
+#: src/components/ObjectManager.tsx:646
 #: src/pages/Organization/GuardBooksPage.tsx:72
 #: src/pages/Organization/ObjectsPage.tsx:28
-#: src/pages/Organization/ObjectsPage.tsx:77
+#: src/pages/Organization/ObjectsPage.tsx:76
 msgid "Objects"
 msgstr "Objekte"
 
-#: src/pages/Organization/ObjectsPage.tsx:81
+#: src/pages/Organization/ObjectsPage.tsx:80
 msgid "Objects & Areas"
 msgstr "Objekte & Bereiche"
 
@@ -732,7 +736,7 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
-#: src/components/application-layout.tsx:235
+#: src/components/application-layout.tsx:274
 msgid "Organization"
 msgstr "Organisation"
 
@@ -818,7 +822,7 @@ msgstr "Berichte"
 #: src/components/GuardBookManager.tsx:352
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
-#: src/components/ObjectManager.tsx:611
+#: src/components/ObjectManager.tsx:615
 #: src/components/OrganizationalUnitTree.tsx:472
 msgid "Retry"
 msgstr "Wiederholen"
@@ -867,7 +871,7 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/components/application-layout.tsx:226
+#: src/components/application-layout.tsx:265
 #: src/pages/Secrets/SecretList.tsx:159
 msgid "Secrets"
 msgstr "Geheimnisse"
@@ -892,7 +896,7 @@ msgstr "Wählen Sie einen Kunden aus, um Details anzuzeigen"
 msgid "Select a guard book to view reports"
 msgstr "Wählen Sie ein Wachbuch aus, um Berichte anzuzeigen"
 
-#: src/components/ObjectManager.tsx:709
+#: src/components/ObjectManager.tsx:713
 msgid "Select an object to view details"
 msgstr "Wählen Sie ein Objekt aus, um Details anzuzeigen"
 
@@ -916,8 +920,8 @@ msgstr "Separates Wachbuch"
 msgid "Server Version"
 msgstr "Server-Version"
 
-#: src/components/application-layout.tsx:267
-#: src/components/application-layout.tsx:302
+#: src/components/application-layout.tsx:181
+#: src/components/application-layout.tsx:306
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -963,7 +967,7 @@ msgstr "Schicht-Erinnerungen"
 msgid "Show"
 msgstr "Anzeigen"
 
-#: src/components/application-layout.tsx:309
+#: src/components/application-layout.tsx:188
 msgid "Sign out"
 msgstr "Abmelden"
 
