@@ -84,6 +84,38 @@ describe("authApi", () => {
       expect(result).toEqual(mockResponse);
     });
 
+    it("returns user with authorization data when provided", async () => {
+      const mockResponse = {
+        user: {
+          id: 1,
+          name: "Test User",
+          email: "test@example.com",
+          roles: ["Admin"],
+          permissions: ["users.read", "secrets.*"],
+          hasOrganizationalScopes: true,
+        },
+      };
+
+      // Mock CSRF token fetch
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+
+      // Mock login request
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await login({
+        email: "test@example.com",
+        password: "password123",
+      });
+
+      expect(result.user.roles).toEqual(["Admin"]);
+      expect(result.user.permissions).toEqual(["users.read", "secrets.*"]);
+      expect(result.user.hasOrganizationalScopes).toBe(true);
+    });
+
     it("sends login request with email and password only (no device_name for SPA)", async () => {
       const mockResponse = {
         user: { id: 1, name: "Test", email: "test@example.com" },
