@@ -193,9 +193,14 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
 }
 
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, hasOrganizationalAccess } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check if user has access to organizational features
+  const canAccessOrganization = hasOrganizationalAccess();
+  const canAccessCustomers = hasOrganizationalAccess();
+  const canAccessGuardBooks = hasOrganizationalAccess(); // Guard books require organizational context
 
   const handleLogout = async () => {
     // Clear local state FIRST to prevent race conditions
@@ -265,33 +270,39 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   <Trans>Secrets</Trans>
                 </SidebarLabel>
               </SidebarItem>
-              <SidebarItem
-                href="/organization"
-                current={isCurrentPath("/organization")}
-              >
-                <BuildingOfficeIcon />
-                <SidebarLabel>
-                  <Trans>Organization</Trans>
-                </SidebarLabel>
-              </SidebarItem>
-              <SidebarItem
-                href="/customers"
-                current={isCurrentPath("/customers")}
-              >
-                <UsersIcon />
-                <SidebarLabel>
-                  <Trans>Customers</Trans>
-                </SidebarLabel>
-              </SidebarItem>
-              <SidebarItem
-                href="/guard-books"
-                current={isCurrentPath("/guard-books")}
-              >
-                <ClipboardDocumentListIcon />
-                <SidebarLabel>
-                  <Trans>Guard Books</Trans>
-                </SidebarLabel>
-              </SidebarItem>
+              {canAccessOrganization && (
+                <SidebarItem
+                  href="/organization"
+                  current={isCurrentPath("/organization")}
+                >
+                  <BuildingOfficeIcon />
+                  <SidebarLabel>
+                    <Trans>Organization</Trans>
+                  </SidebarLabel>
+                </SidebarItem>
+              )}
+              {canAccessCustomers && (
+                <SidebarItem
+                  href="/customers"
+                  current={isCurrentPath("/customers")}
+                >
+                  <UsersIcon />
+                  <SidebarLabel>
+                    <Trans>Customers</Trans>
+                  </SidebarLabel>
+                </SidebarItem>
+              )}
+              {canAccessGuardBooks && (
+                <SidebarItem
+                  href="/guard-books"
+                  current={isCurrentPath("/guard-books")}
+                >
+                  <ClipboardDocumentListIcon />
+                  <SidebarLabel>
+                    <Trans>Guard Books</Trans>
+                  </SidebarLabel>
+                </SidebarItem>
+              )}
             </SidebarSection>
 
             <SidebarSpacer />
