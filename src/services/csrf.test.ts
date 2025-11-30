@@ -320,6 +320,60 @@ describe("csrf", () => {
         })
       );
     });
+
+    it("emits session:expired event on 401 when online", async () => {
+      // Mock navigator.onLine to return true
+      const mockOnLine = vi
+        .spyOn(navigator, "onLine", "get")
+        .mockReturnValue(true);
+
+      // Import sessionEvents to spy on it
+      const { sessionEvents } = await import("./sessionEvents");
+      const emitSpy = vi.spyOn(sessionEvents, "emit");
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      } as Response);
+
+      const response = await fetchWithCsrf("http://api.example.com/test", {
+        method: "GET",
+      });
+
+      expect(response.status).toBe(401);
+      expect(emitSpy).toHaveBeenCalledWith("session:expired");
+
+      mockOnLine.mockRestore();
+      emitSpy.mockRestore();
+    });
+
+    it("does not emit session:expired event on 401 when offline", async () => {
+      // Mock navigator.onLine to return false
+      const mockOnLine = vi
+        .spyOn(navigator, "onLine", "get")
+        .mockReturnValue(false);
+
+      // Import sessionEvents to spy on it
+      const { sessionEvents } = await import("./sessionEvents");
+      const emitSpy = vi.spyOn(sessionEvents, "emit");
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+      } as Response);
+
+      const response = await fetchWithCsrf("http://api.example.com/test", {
+        method: "GET",
+      });
+
+      expect(response.status).toBe(401);
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      mockOnLine.mockRestore();
+      emitSpy.mockRestore();
+    });
   });
 
   describe("CsrfError", () => {

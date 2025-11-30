@@ -41,6 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Session Expiry Handling for PWA** (#257)
+  - Added `sessionEvents` module: Pub/sub event system for session lifecycle events
+  - Modified `fetchWithCsrf` to emit `session:expired` event on 401 responses when online
+  - `AuthContext` now subscribes to `session:expired` events and triggers automatic logout
+  - Prevents stale UI state where user appears logged in but backend session has expired
+  - **Benefit:** Graceful handling of session expiry - user is logged out cleanly with redirect to login page
+  - **Note:** Backend now uses `remember=true` for long-lived sessions (see api#270)
+
 - **PWA Service Worker API_URL mode detection** (#249)
   - Updated `vite.config.ts` to use mode-aware API_URL detection matching `src/config.ts`
   - Development mode now uses empty string (Vite proxy forwards `/v1/*` to DDEV backend)

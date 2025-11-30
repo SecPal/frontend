@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
+import { sessionEvents, isOnline } from "./sessionEvents";
 
 /**
  * Custom error class for CSRF-related errors
@@ -77,7 +78,12 @@ export function getCsrfTokenFromCookie(): string | null {
 
 /**
  * Fetch with CSRF token handling
- * Automatically includes X-XSRF-TOKEN header and retries on 419 (CSRF token mismatch)
+ * Automatically includes X-XSRF-TOKEN header, retries on 419 (CSRF token mismatch),
+ * and emits session:expired event on 401 (when online).
+ *
+ * For PWA offline-first behavior:
+ * - 401 when online → session expired, emit event
+ * - 401 when offline → might be cached, don't trigger logout
  *
  * @param url - Request URL
  * @param options - Fetch options
@@ -100,6 +106,12 @@ export async function fetchWithCsrf(
     credentials: "include",
     headers,
   });
+
+  // Handle session expiry (401 Unauthorized)
+  // Only emit when online - offline 401s might be from stale cache
+  if (response.status === 401 && isOnline()) {
+    sessionEvents.emit("session:expired");
+  }
 
   // Retry on CSRF token mismatch
   if (response.status === 419) {
