@@ -41,6 +41,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Centralized API Wrapper with Session Expiry for All Requests** (#XXX)
+  - Created `apiFetch()` as centralized API wrapper function in `csrf.ts`
+  - Migrated all API services from direct `fetch()` calls to `apiFetch()`:
+    - `secretApi.ts`: All GET/POST/PATCH/DELETE operations
+    - `shareApi.ts`: All share management operations
+    - `customerApi.ts`: All customer CRUD + hierarchy operations
+    - `objectApi.ts`: All object and area management operations
+    - `guardBookApi.ts`: All guard book and report operations
+    - `organizationalUnitApi.ts`: All organizational unit operations
+    - `authApi.ts`: Migrated from `fetchWithCsrf` to `apiFetch`
+  - `apiFetch()` features:
+    - Automatic `credentials: "include"` for httpOnly cookie authentication
+    - CSRF token inclusion for POST/PUT/PATCH/DELETE methods
+    - Emits `session:expired` event on 401 responses (triggers automatic logout)
+    - Automatic retry on 419 (CSRF token mismatch) with fresh token
+  - `fetchWithCsrf()` retained as alias for backward compatibility
+  - **Root Cause:** GET requests (e.g., `fetchSecrets()`) used direct `fetch()` without 401 handling, so expired sessions were not detected
+  - **Benefit:** All API calls now trigger automatic logout when session expires, improving PWA reliability
+  - Updated all test files to mock `apiFetch` via `vi.mock("./csrf")`
+
 - **Session Expiry Handling for PWA** (#257)
   - Added `sessionEvents` module: Pub/sub event system for session lifecycle events
   - Modified `fetchWithCsrf` to emit `session:expired` event on 401 responses when online

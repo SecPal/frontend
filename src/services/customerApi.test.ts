@@ -17,17 +17,17 @@ import { ApiError } from "./secretApi";
 import { apiConfig } from "../config";
 import type { Customer, PaginatedResponse } from "../types/organizational";
 
-// Mock fetchWithCsrf
+// Mock apiFetch (central API wrapper)
 vi.mock("./csrf", () => ({
-  fetchWithCsrf: vi.fn(),
+  apiFetch: vi.fn(),
 }));
 
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFetchWithCsrf = apiFetch as any;
 
 describe("Customer API", () => {
-  const mockFetch = vi.fn();
-  const mockFetchWithCsrf = vi.mocked(fetchWithCsrf);
-
   const mockCustomer: Customer = {
     id: "cust-1",
     name: "Rewe Group",
@@ -43,7 +43,6 @@ describe("Customer API", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   describe("listCustomers", () => {
@@ -53,7 +52,7 @@ describe("Customer API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -61,14 +60,14 @@ describe("Customer API", () => {
       const result = await listCustomers();
 
       expect(result.data).toEqual([mockCustomer]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/customers`,
-        expect.objectContaining({ method: "GET", credentials: "include" })
+        expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should apply filters correctly", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
@@ -79,18 +78,18 @@ describe("Customer API", () => {
         per_page: 10,
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("type=regional"),
         expect.any(Object)
       );
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("managed_by=unit-1"),
         expect.any(Object)
       );
     });
 
     it("should throw ApiError on failure", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
@@ -102,7 +101,7 @@ describe("Customer API", () => {
 
   describe("getCustomer", () => {
     it("should fetch a single customer successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockCustomer }),
       });
@@ -110,14 +109,14 @@ describe("Customer API", () => {
       const result = await getCustomer("cust-1");
 
       expect(result).toEqual(mockCustomer);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/customers/cust-1`,
         expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should throw ApiError when customer not found", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: "Customer not found" }),
@@ -213,7 +212,7 @@ describe("Customer API", () => {
 
   describe("getCustomerDescendants", () => {
     it("should fetch descendants successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [mockCustomer] }),
       });
@@ -221,7 +220,7 @@ describe("Customer API", () => {
       const result = await getCustomerDescendants("cust-1");
 
       expect(result).toEqual([mockCustomer]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/customers/cust-1/descendants`,
         expect.any(Object)
       );
@@ -230,7 +229,7 @@ describe("Customer API", () => {
 
   describe("getCustomerAncestors", () => {
     it("should fetch ancestors successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [mockCustomer] }),
       });
@@ -238,7 +237,7 @@ describe("Customer API", () => {
       const result = await getCustomerAncestors("cust-1");
 
       expect(result).toEqual([mockCustomer]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/customers/cust-1/ancestors`,
         expect.any(Object)
       );

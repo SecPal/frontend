@@ -21,17 +21,17 @@ import type {
   PaginatedResponse,
 } from "../types/organizational";
 
-// Mock fetchWithCsrf
+// Mock apiFetch (central API wrapper)
 vi.mock("./csrf", () => ({
-  fetchWithCsrf: vi.fn(),
+  apiFetch: vi.fn(),
 }));
 
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFetchWithCsrf = apiFetch as any;
 
 describe("Organizational Unit API", () => {
-  const mockFetch = vi.fn();
-  const mockFetchWithCsrf = vi.mocked(fetchWithCsrf);
-
   const mockUnit: OrganizationalUnit = {
     id: "unit-1",
     type: "branch",
@@ -44,7 +44,6 @@ describe("Organizational Unit API", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   describe("listOrganizationalUnits", () => {
@@ -54,7 +53,7 @@ describe("Organizational Unit API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -62,14 +61,14 @@ describe("Organizational Unit API", () => {
       const result = await listOrganizationalUnits();
 
       expect(result.data).toEqual([mockUnit]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/organizational-units`,
-        expect.objectContaining({ method: "GET", credentials: "include" })
+        expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should apply filters correctly", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
@@ -80,22 +79,22 @@ describe("Organizational Unit API", () => {
         per_page: 10,
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("type=branch"),
         expect.any(Object)
       );
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("parent_id=parent-1"),
         expect.any(Object)
       );
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("per_page=10"),
         expect.any(Object)
       );
     });
 
     it("should throw ApiError on failure", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
@@ -108,7 +107,7 @@ describe("Organizational Unit API", () => {
 
   describe("getOrganizationalUnit", () => {
     it("should fetch a single unit successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockUnit }),
       });
@@ -116,14 +115,14 @@ describe("Organizational Unit API", () => {
       const result = await getOrganizationalUnit("unit-1");
 
       expect(result).toEqual(mockUnit);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/organizational-units/unit-1`,
         expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should throw ApiError when unit not found", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: "Not found" }),
@@ -214,7 +213,7 @@ describe("Organizational Unit API", () => {
 
   describe("getOrganizationalUnitDescendants", () => {
     it("should fetch descendants successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [mockUnit] }),
       });
@@ -222,7 +221,7 @@ describe("Organizational Unit API", () => {
       const result = await getOrganizationalUnitDescendants("unit-1");
 
       expect(result).toEqual([mockUnit]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/organizational-units/unit-1/descendants`,
         expect.any(Object)
       );
@@ -231,7 +230,7 @@ describe("Organizational Unit API", () => {
 
   describe("getOrganizationalUnitAncestors", () => {
     it("should fetch ancestors successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [mockUnit] }),
       });
@@ -239,7 +238,7 @@ describe("Organizational Unit API", () => {
       const result = await getOrganizationalUnitAncestors("unit-1");
 
       expect(result).toEqual([mockUnit]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/organizational-units/unit-1/ancestors`,
         expect.any(Object)
       );
@@ -297,7 +296,7 @@ describe("Organizational Unit API", () => {
         },
       ];
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockScopes }),
       });
@@ -305,7 +304,7 @@ describe("Organizational Unit API", () => {
       const result = await getMyOrganizationalScopes();
 
       expect(result).toEqual(mockScopes);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/me/organizational-scopes`,
         expect.any(Object)
       );

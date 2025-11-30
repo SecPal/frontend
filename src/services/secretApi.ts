@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
 
 /**
  * Secret API Response Types
@@ -109,9 +109,8 @@ export class ApiError extends Error {
  * ```
  */
 export async function fetchSecrets(): Promise<Secret[]> {
-  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`, {
     method: "GET",
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -147,14 +146,16 @@ export async function getSecretById(secretId: string): Promise<SecretDetail> {
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets/${secretId}`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     const error: ApiErrorResponse = await response
@@ -195,7 +196,7 @@ export async function uploadAttachment(
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
@@ -257,7 +258,7 @@ export async function uploadEncryptedAttachment(
   formData.append("file", encryptedBlob, "encrypted.bin");
   formData.append("metadata", JSON.stringify(metadata));
 
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "POST",
@@ -297,11 +298,10 @@ export async function listAttachments(
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/attachments`,
     {
       method: "GET",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -337,7 +337,7 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     throw new Error("attachmentId is required");
   }
 
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/attachments/${attachmentId}`,
     {
       method: "DELETE",
@@ -373,14 +373,16 @@ export async function getSecretMasterKey(secretId: string): Promise<CryptoKey> {
     throw new Error("secretId is required");
   }
 
-  const response = await fetch(`${apiConfig.baseUrl}/v1/secrets/${secretId}`, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     const error: ApiErrorResponse = await response
@@ -449,11 +451,10 @@ export async function downloadAndDecryptAttachment(
   }
 
   // 1. Download encrypted blob + metadata from backend
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/attachments/${attachmentId}/download`,
     {
       method: "GET",
-      credentials: "include",
       headers: {
         Accept: "application/json",
       },
@@ -572,7 +573,7 @@ export async function createSecret(
     throw new Error("title is required");
   }
 
-  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/secrets`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -617,7 +618,7 @@ export async function updateSecret(
     throw new Error("secretId is required");
   }
 
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
     {
       method: "PATCH",
@@ -657,7 +658,7 @@ export async function deleteSecret(secretId: string): Promise<void> {
     throw new Error("secretId is required");
   }
 
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}`,
     {
       method: "DELETE",

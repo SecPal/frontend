@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
 import type {
   Customer,
   CreateCustomerRequest,
@@ -48,13 +48,12 @@ export async function listCustomers(
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/customers${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -74,13 +73,12 @@ export async function listCustomers(
  * Get a single customer by ID
  */
 export async function getCustomer(id: string): Promise<Customer> {
-  const response = await fetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -103,13 +101,12 @@ export async function getCustomer(id: string): Promise<Customer> {
 export async function createCustomer(
   data: CreateCustomerRequest
 ): Promise<Customer> {
-  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/customers`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(data),
   });
 
@@ -135,18 +132,14 @@ export async function updateCustomer(
   id: string,
   data: UpdateCustomerRequest
 ): Promise<Customer> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/customers/${id}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response
@@ -167,17 +160,13 @@ export async function updateCustomer(
  * Delete a customer
  */
 export async function deleteCustomer(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/customers/${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 
   if (!response.ok) {
     const error = await response
@@ -194,7 +183,7 @@ export async function deleteCustomer(id: string): Promise<void> {
  * Get descendants of a customer
  */
 export async function getCustomerDescendants(id: string): Promise<Customer[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/customers/${id}/descendants`,
     {
       method: "GET",
@@ -202,7 +191,6 @@ export async function getCustomerDescendants(id: string): Promise<Customer[]> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -224,7 +212,7 @@ export async function getCustomerDescendants(id: string): Promise<Customer[]> {
  * Get ancestors of a customer
  */
 export async function getCustomerAncestors(id: string): Promise<Customer[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/customers/${id}/ancestors`,
     {
       method: "GET",
@@ -232,7 +220,6 @@ export async function getCustomerAncestors(id: string): Promise<Customer[]> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -257,7 +244,7 @@ export async function attachCustomerParent(
   id: string,
   parentId: string
 ): Promise<Customer> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/customers/${id}/parent`,
     {
       method: "POST",
@@ -265,7 +252,6 @@ export async function attachCustomerParent(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify({ parent_id: parentId }),
     }
   );
@@ -291,7 +277,7 @@ export async function detachCustomerParent(
   id: string,
   parentId: string
 ): Promise<void> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/customers/${id}/parent/${parentId}`,
     {
       method: "DELETE",
@@ -299,7 +285,6 @@ export async function detachCustomerParent(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 

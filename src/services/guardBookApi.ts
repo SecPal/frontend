@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
 import type {
   GuardBook,
   GuardBookReport,
@@ -56,13 +56,12 @@ export async function listGuardBooks(
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/guard-books${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -82,13 +81,12 @@ export async function listGuardBooks(
  * Get a single guard book by ID
  */
 export async function getGuardBook(id: string): Promise<GuardBook> {
-  const response = await fetch(`${apiConfig.baseUrl}/v1/guard-books/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/guard-books/${id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -113,13 +111,12 @@ export async function getGuardBook(id: string): Promise<GuardBook> {
 export async function createGuardBook(
   data: CreateGuardBookRequest
 ): Promise<GuardBook> {
-  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/guard-books`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/guard-books`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(data),
   });
 
@@ -145,18 +142,14 @@ export async function updateGuardBook(
   id: string,
   data: UpdateGuardBookRequest
 ): Promise<GuardBook> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/guard-books/${id}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/guard-books/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response
@@ -177,17 +170,13 @@ export async function updateGuardBook(
  * Delete (archive) a guard book
  */
 export async function deleteGuardBook(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/guard-books/${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/guard-books/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 
   if (!response.ok) {
     const error = await response
@@ -223,13 +212,12 @@ export async function getGuardBookReports(
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/guard-books/${guardBookId}/reports${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -252,7 +240,7 @@ export async function generateGuardBookReport(
   guardBookId: string,
   data: GenerateReportRequest
 ): Promise<GuardBookReport> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/guard-books/${guardBookId}/reports`,
     {
       method: "POST",
@@ -260,7 +248,6 @@ export async function generateGuardBookReport(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(data),
     }
   );
@@ -315,13 +302,12 @@ export async function listGuardBookReports(filters?: {
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/guard-book-reports${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -341,7 +327,7 @@ export async function listGuardBookReports(filters?: {
  * Get a single guard book report by ID
  */
 export async function getGuardBookReport(id: string): Promise<GuardBookReport> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/guard-book-reports/${id}`,
     {
       method: "GET",
@@ -349,7 +335,6 @@ export async function getGuardBookReport(id: string): Promise<GuardBookReport> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -373,14 +358,13 @@ export async function getGuardBookReport(id: string): Promise<GuardBookReport> {
  * Returns the PDF blob for download.
  */
 export async function exportGuardBookReport(id: string): Promise<Blob> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/guard-book-reports/${id}/export`,
     {
       method: "GET",
       headers: {
         Accept: "application/pdf",
       },
-      credentials: "include",
     }
   );
 
@@ -401,7 +385,7 @@ export async function exportGuardBookReport(id: string): Promise<Blob> {
  * Delete a guard book report
  */
 export async function deleteGuardBookReport(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/guard-book-reports/${id}`,
     {
       method: "DELETE",
@@ -409,7 +393,6 @@ export async function deleteGuardBookReport(id: string): Promise<void> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 

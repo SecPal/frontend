@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
-import { fetchCsrfToken, fetchWithCsrf } from "./csrf";
+import { fetchCsrfToken, apiFetch } from "./csrf";
 
 interface LoginCredentials {
   email: string;
@@ -44,7 +44,7 @@ export async function login(
   await fetchCsrfToken();
 
   // Use SPA login endpoint (session-based, not token-based)
-  const response = await fetchWithCsrf(`${getApiBaseUrl()}/v1/auth/login`, {
+  const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -77,15 +77,12 @@ export async function login(
  * @throws {AuthApiError} If logout fails
  */
 export async function logout(): Promise<void> {
-  const response = await fetchWithCsrf(
-    `${getApiBaseUrl()}/v1/auth/session/logout`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-    }
-  );
+  const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/session/logout`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
   if (!response.ok) {
     let error: ApiError | null = null;
@@ -103,15 +100,12 @@ export async function logout(): Promise<void> {
  * @throws {AuthApiError} If logout fails
  */
 export async function logoutAll(): Promise<void> {
-  const response = await fetchWithCsrf(
-    `${getApiBaseUrl()}/v1/auth/logout-all`,
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-    }
-  );
+  const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
   if (!response.ok) {
     let error: ApiError | null = null;

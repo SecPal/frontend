@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
 import type {
   SecPalObject,
   ObjectArea,
@@ -49,13 +49,12 @@ export async function listObjects(
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/objects${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -75,13 +74,12 @@ export async function listObjects(
  * Get a single object by ID
  */
 export async function getObject(id: string): Promise<SecPalObject> {
-  const response = await fetch(`${apiConfig.baseUrl}/v1/objects/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/objects/${id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -104,13 +102,12 @@ export async function getObject(id: string): Promise<SecPalObject> {
 export async function createObject(
   data: CreateObjectRequest
 ): Promise<SecPalObject> {
-  const response = await fetchWithCsrf(`${apiConfig.baseUrl}/v1/objects`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/objects`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(data),
   });
 
@@ -136,18 +133,14 @@ export async function updateObject(
   id: string,
   data: UpdateObjectRequest
 ): Promise<SecPalObject> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/objects/${id}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/objects/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response
@@ -168,17 +161,13 @@ export async function updateObject(
  * Delete an object
  */
 export async function deleteObject(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
-    `${apiConfig.baseUrl}/v1/objects/${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-    }
-  );
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/objects/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 
   if (!response.ok) {
     const error = await response
@@ -195,7 +184,7 @@ export async function deleteObject(id: string): Promise<void> {
  * Get areas of an object
  */
 export async function getObjectAreas(objectId: string): Promise<ObjectArea[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/objects/${objectId}/areas`,
     {
       method: "GET",
@@ -203,7 +192,6 @@ export async function getObjectAreas(objectId: string): Promise<ObjectArea[]> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -228,7 +216,7 @@ export async function createObjectArea(
   objectId: string,
   data: CreateObjectAreaRequest
 ): Promise<ObjectArea> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/objects/${objectId}/areas`,
     {
       method: "POST",
@@ -236,7 +224,6 @@ export async function createObjectArea(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(data),
     }
   );
@@ -283,13 +270,12 @@ export async function listObjectAreas(filters?: {
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/object-areas${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -309,14 +295,16 @@ export async function listObjectAreas(filters?: {
  * Get a single object area by ID
  */
 export async function getObjectArea(id: string): Promise<ObjectArea> {
-  const response = await fetch(`${apiConfig.baseUrl}/v1/object-areas/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    credentials: "include",
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/object-areas/${id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -339,7 +327,7 @@ export async function updateObjectArea(
   id: string,
   data: UpdateObjectAreaRequest
 ): Promise<ObjectArea> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/object-areas/${id}`,
     {
       method: "PATCH",
@@ -347,7 +335,6 @@ export async function updateObjectArea(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(data),
     }
   );
@@ -371,7 +358,7 @@ export async function updateObjectArea(
  * Delete an object area
  */
 export async function deleteObjectArea(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/object-areas/${id}`,
     {
       method: "DELETE",
@@ -379,7 +366,6 @@ export async function deleteObjectArea(id: string): Promise<void> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
