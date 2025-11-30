@@ -109,8 +109,8 @@ msgstr "Add Area"
 msgid "Add Customer"
 msgstr "Add Customer"
 
-#: src/components/ObjectManager.tsx:631
-#: src/components/ObjectManager.tsx:646
+#: src/components/ObjectManager.tsx:635
+#: src/components/ObjectManager.tsx:650
 msgid "Add Object"
 msgstr "Add Object"
 
@@ -160,7 +160,7 @@ msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 
 #. placeholder {0}: object.name
-#: src/components/ObjectManager.tsx:566
+#: src/components/ObjectManager.tsx:570
 msgid "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
 msgstr "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
 
@@ -293,10 +293,10 @@ msgstr "Customer Hierarchy"
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:244
+#: src/components/application-layout.tsx:283
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
-#: src/pages/Organization/ObjectsPage.tsx:73
+#: src/pages/Organization/ObjectsPage.tsx:72
 msgid "Customers"
 msgstr "Customers"
 
@@ -458,7 +458,7 @@ msgstr "Failed to delete file"
 msgid "Failed to delete guard book"
 msgstr "Failed to delete guard book"
 
-#: src/components/ObjectManager.tsx:581
+#: src/components/ObjectManager.tsx:585
 msgid "Failed to delete object"
 msgstr "Failed to delete object"
 
@@ -506,6 +506,10 @@ msgstr "Failed to load preview"
 msgid "Failed to load reports"
 msgstr "Failed to load reports"
 
+#: src/components/ObjectManager.tsx:548
+msgid "Failed to load selected object"
+msgstr "Failed to load selected object"
+
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
@@ -543,7 +547,7 @@ msgstr "Generated"
 msgid "Get started by adding your first customer."
 msgstr "Get started by adding your first customer."
 
-#: src/components/ObjectManager.tsx:627
+#: src/components/ObjectManager.tsx:631
 msgid "Get started by adding your first object."
 msgstr "Get started by adding your first object."
 
@@ -574,7 +578,7 @@ msgstr "Grid"
 msgid "Grid view"
 msgstr "Grid view"
 
-#: src/components/application-layout.tsx:253
+#: src/components/application-layout.tsx:292
 #: src/components/GuardBookManager.tsx:645
 #: src/components/ObjectManager.tsx:253
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -587,7 +591,7 @@ msgstr "Guard Books"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/components/application-layout.tsx:220
+#: src/components/application-layout.tsx:259
 msgid "Home"
 msgstr "Home"
 
@@ -675,7 +679,7 @@ msgstr "Manage customer organizations and their protected objects."
 msgid "Manage digital guard books and generate reports for this location."
 msgstr "Manage digital guard books and generate reports for this location."
 
-#: src/pages/Organization/ObjectsPage.tsx:84
+#: src/pages/Organization/ObjectsPage.tsx:83
 msgid "Manage protected objects and their areas for this customer."
 msgstr "Manage protected objects and their areas for this customer."
 
@@ -695,7 +699,7 @@ msgstr "Messages from team members and supervisors"
 msgid "Metadata"
 msgstr "Metadata"
 
-#: src/components/application-layout.tsx:296
+#: src/components/application-layout.tsx:175
 msgid "My profile"
 msgstr "My profile"
 
@@ -743,7 +747,7 @@ msgstr "No Guard Books"
 msgid "No object selected. Please navigate from the objects page."
 msgstr "No object selected. Please navigate from the objects page."
 
-#: src/components/ObjectManager.tsx:624
+#: src/components/ObjectManager.tsx:628
 msgid "No Objects"
 msgstr "No Objects"
 
@@ -795,14 +799,14 @@ msgstr "Object Areas"
 msgid "objects"
 msgstr "objects"
 
-#: src/components/ObjectManager.tsx:642
+#: src/components/ObjectManager.tsx:646
 #: src/pages/Organization/GuardBooksPage.tsx:72
 #: src/pages/Organization/ObjectsPage.tsx:28
-#: src/pages/Organization/ObjectsPage.tsx:77
+#: src/pages/Organization/ObjectsPage.tsx:76
 msgid "Objects"
 msgstr "Objects"
 
-#: src/pages/Organization/ObjectsPage.tsx:81
+#: src/pages/Organization/ObjectsPage.tsx:80
 msgid "Objects & Areas"
 msgstr "Objects & Areas"
 
@@ -814,7 +818,7 @@ msgstr "Offline - will sync when online"
 msgid "Offline only"
 msgstr "Offline only"
 
-#: src/components/application-layout.tsx:235
+#: src/components/application-layout.tsx:274
 msgid "Organization"
 msgstr "Organization"
 
@@ -910,7 +914,7 @@ msgstr "Reports"
 #: src/components/GuardBookManager.tsx:352
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
-#: src/components/ObjectManager.tsx:611
+#: src/components/ObjectManager.tsx:615
 #: src/components/OrganizationalUnitTree.tsx:472
 msgid "Retry"
 msgstr "Retry"
@@ -959,7 +963,7 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/components/application-layout.tsx:226
+#: src/components/application-layout.tsx:265
 #: src/pages/Secrets/SecretList.tsx:159
 msgid "Secrets"
 msgstr "Secrets"
@@ -976,7 +980,7 @@ msgstr "Select a customer to view details"
 msgid "Select a guard book to view reports"
 msgstr "Select a guard book to view reports"
 
-#: src/components/ObjectManager.tsx:709
+#: src/components/ObjectManager.tsx:713
 msgid "Select an object to view details"
 msgstr "Select an object to view details"
 
@@ -1008,8 +1012,8 @@ msgstr "Separate Guard Book"
 msgid "Server Version"
 msgstr "Server Version"
 
-#: src/components/application-layout.tsx:267
-#: src/components/application-layout.tsx:302
+#: src/components/application-layout.tsx:181
+#: src/components/application-layout.tsx:306
 msgid "Settings"
 msgstr "Settings"
 
@@ -1055,7 +1059,7 @@ msgstr "Shift Reminders"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/application-layout.tsx:309
+#: src/components/application-layout.tsx:188
 msgid "Sign out"
 msgstr "Sign out"
 

@@ -162,6 +162,36 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/**
+ * Shared user menu items for both navbar and sidebar dropdowns.
+ * Extracted to maintain DRY principles and ensure consistency.
+ */
+function UserMenuItems({ onLogout }: { onLogout: () => void }) {
+  return (
+    <>
+      <DropdownItem href="/profile">
+        <UserCircleIcon />
+        <DropdownLabel>
+          <Trans>My profile</Trans>
+        </DropdownLabel>
+      </DropdownItem>
+      <DropdownItem href="/settings">
+        <CogIcon />
+        <DropdownLabel>
+          <Trans>Settings</Trans>
+        </DropdownLabel>
+      </DropdownItem>
+      <DropdownDivider />
+      <DropdownItem onClick={onLogout}>
+        <ArrowRightStartOnRectangleIcon />
+        <DropdownLabel>
+          <Trans>Sign out</Trans>
+        </DropdownLabel>
+      </DropdownItem>
+    </>
+  );
+}
+
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -194,32 +224,14 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
           <NavbarSpacer />
           <NavbarSection>
             <Dropdown>
-              <DropdownButton as={NavbarItem}>
+              <DropdownButton as={NavbarItem} aria-label="User menu">
                 <Avatar
                   initials={user?.name ? getInitials(user.name) : "U"}
                   className="size-8 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
                 />
               </DropdownButton>
               <DropdownMenu className="min-w-64" anchor="bottom end">
-                <DropdownItem href="/profile">
-                  <UserCircleIcon />
-                  <DropdownLabel>
-                    <Trans>My profile</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
-                <DropdownItem href="/settings">
-                  <CogIcon />
-                  <DropdownLabel>
-                    <Trans>Settings</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
-                <DropdownDivider />
-                <DropdownItem onClick={handleLogout}>
-                  <ArrowRightStartOnRectangleIcon />
-                  <DropdownLabel>
-                    <Trans>Sign out</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
+                <UserMenuItems onLogout={handleLogout} />
               </DropdownMenu>
             </Dropdown>
           </NavbarSection>
@@ -317,25 +329,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <ChevronDownIcon />
               </DropdownButton>
               <DropdownMenu className="min-w-64" anchor="top start">
-                <DropdownItem href="/profile">
-                  <UserCircleIcon />
-                  <DropdownLabel>
-                    <Trans>My profile</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
-                <DropdownItem href="/settings">
-                  <CogIcon />
-                  <DropdownLabel>
-                    <Trans>Settings</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
-                <DropdownDivider />
-                <DropdownItem onClick={handleLogout}>
-                  <ArrowRightStartOnRectangleIcon />
-                  <DropdownLabel>
-                    <Trans>Sign out</Trans>
-                  </DropdownLabel>
-                </DropdownItem>
+                <UserMenuItems onLogout={handleLogout} />
               </DropdownMenu>
             </Dropdown>
           </SidebarFooter>
