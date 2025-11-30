@@ -73,11 +73,11 @@ msgstr "✓ Notifications are enabled. You'll receive updates based on your pref
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
-#: src/App.tsx:37
+#: src/App.tsx:43
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:48
+#: src/App.tsx:54
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -85,9 +85,42 @@ msgstr "About SecPal"
 msgid "Access Control"
 msgstr "Access Control"
 
+#: src/components/GuardBookManager.tsx:386
+#: src/components/ObjectManager.tsx:383
+msgid "Actions"
+msgstr "Actions"
+
+#: src/components/GuardBookManager.tsx:179
+#: src/components/GuardBookManager.tsx:686
+msgid "Active"
+msgstr "Active"
+
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
 msgstr "Add a new secret to your vault."
+
+#: src/components/ObjectManager.tsx:350
+#: src/components/ObjectManager.tsx:365
+msgid "Add Area"
+msgstr "Add Area"
+
+#: src/components/CustomerTree.tsx:511
+#: src/components/CustomerTree.tsx:526
+msgid "Add Customer"
+msgstr "Add Customer"
+
+#: src/components/ObjectManager.tsx:631
+#: src/components/ObjectManager.tsx:646
+msgid "Add Object"
+msgstr "Add Object"
+
+#: src/components/OrganizationalUnitTree.tsx:507
+msgid "Add Unit"
+msgstr "Add Unit"
+
+#: src/pages/Organization/CustomersPage.tsx:119
+msgid "Address"
+msgstr "Address"
 
 #: src/components/ShareDialog.tsx:176
 msgid "Admin"
@@ -117,13 +150,40 @@ msgstr "App updates and maintenance notifications"
 msgid "Apply Selection"
 msgstr "Apply Selection"
 
+#. placeholder {0}: area.name
+#. placeholder {0}: customer.name
+#. placeholder {0}: unit.name
+#: src/components/CustomerTree.tsx:455
+#: src/components/ObjectManager.tsx:304
+#: src/components/OrganizationalUnitTree.tsx:434
+msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
+msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
+
+#. placeholder {0}: object.name
+#: src/components/ObjectManager.tsx:566
+msgid "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
+msgstr "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
+
+#. placeholder {0}: guardBook.title
+#: src/components/GuardBookManager.tsx:574
+msgid "Are you sure you want to delete \"{0}\"? This will also delete all reports. This action cannot be undone."
+msgstr "Are you sure you want to delete \"{0}\"? This will also delete all reports. This action cannot be undone."
+
 #: src/pages/Secrets/SecretDetail.tsx:152
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Are you sure you want to delete this attachment?"
 
+#: src/components/GuardBookManager.tsx:319
+msgid "Are you sure you want to delete this report? This action cannot be undone."
+msgstr "Are you sure you want to delete this report? This action cannot be undone."
+
 #: src/components/SharedWithList.tsx:29
 msgid "Are you sure you want to revoke access for {name}?"
 msgstr "Are you sure you want to revoke access for {name}?"
+
+#: src/components/ObjectManager.tsx:238
+msgid "Areas"
+msgstr "Areas"
 
 #: src/pages/ShareTarget.tsx:624
 msgid "Attached Files"
@@ -134,13 +194,17 @@ msgstr "Attached Files"
 msgid "Attachments ({0})"
 msgstr "Attachments ({0})"
 
-#: src/App.tsx:59
+#: src/App.tsx:65
 msgid "Back to Home"
 msgstr "Back to Home"
 
 #: src/pages/Secrets/SecretDetail.tsx:243
 msgid "Back to Secrets"
 msgstr "Back to Secrets"
+
+#: src/components/GuardBookManager.tsx:406
+msgid "by"
+msgstr "by"
 
 #: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/SecretForm.tsx:401
@@ -174,9 +238,31 @@ msgstr "Cleared {count} completed upload(s)"
 msgid "Close"
 msgstr "Close"
 
+#: src/components/CustomerTree.tsx:221
+#: src/components/OrganizationalUnitTree.tsx:239
+msgid "Collapse"
+msgstr "Collapse"
+
+#: src/pages/Organization/CustomersPage.tsx:89
+msgid "Contact Email"
+msgstr "Contact Email"
+
+#: src/pages/Organization/CustomersPage.tsx:104
+msgid "Contact Phone"
+msgstr "Contact Phone"
+
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Create"
+
+#: src/components/GuardBookManager.tsx:634
+#: src/components/GuardBookManager.tsx:649
+msgid "Create Guard Book"
+msgstr "Create Guard Book"
+
+#: src/components/OrganizationalUnitTree.tsx:492
+msgid "Create Organizational Unit"
+msgstr "Create Organizational Unit"
 
 #: src/pages/Secrets/SecretCreate.tsx:65
 #: src/pages/Secrets/SecretList.tsx:270
@@ -195,9 +281,49 @@ msgstr "Created"
 msgid "Critical security notifications and warnings"
 msgstr "Critical security notifications and warnings"
 
+#: src/components/CustomerTree.tsx:533
+msgid "Customer hierarchy"
+msgstr "Customer hierarchy"
+
+#: src/components/CustomerTree.tsx:522
+msgid "Customer Hierarchy"
+msgstr "Customer Hierarchy"
+
+#: src/pages/Organization/CustomersPage.tsx:80
+msgid "Customer Number"
+msgstr "Customer Number"
+
+#: src/components/application-layout.tsx:244
+#: src/pages/Organization/CustomersPage.tsx:51
+#: src/pages/Organization/GuardBooksPage.tsx:65
+#: src/pages/Organization/ObjectsPage.tsx:73
+msgid "Customers"
+msgstr "Customers"
+
 #: src/components/AttachmentList.tsx:215
 msgid "Delete"
 msgstr "Delete"
+
+#. placeholder {0}: area.name
+#. placeholder {0}: customer.name
+#. placeholder {0}: guardBook.title
+#: src/components/CustomerTree.tsx:307
+#: src/components/GuardBookManager.tsx:234
+#: src/components/ObjectManager.tsx:196
+#: src/components/ObjectManager.tsx:432
+#: src/components/OrganizationalUnitTree.tsx:287
+msgid "Delete {0}"
+msgstr "Delete {0}"
+
+#. placeholder {0}: report.report_number
+#: src/components/GuardBookManager.tsx:446
+msgid "Delete report {0}"
+msgstr "Delete report {0}"
+
+#: src/components/ObjectManager.tsx:377
+#: src/pages/Organization/OrganizationPage.tsx:84
+msgid "Description"
+msgstr "Description"
 
 #: src/pages/Secrets/SecretDetail.tsx:292
 msgid "Details"
@@ -220,6 +346,17 @@ msgstr "Drag files here or click to browse"
 #: src/pages/Secrets/SecretDetail.tsx:275
 msgid "Edit"
 msgstr "Edit"
+
+#. placeholder {0}: area.name
+#. placeholder {0}: customer.name
+#. placeholder {0}: guardBook.title
+#: src/components/CustomerTree.tsx:285
+#: src/components/GuardBookManager.tsx:209
+#: src/components/ObjectManager.tsx:171
+#: src/components/ObjectManager.tsx:411
+#: src/components/OrganizationalUnitTree.tsx:265
+msgid "Edit {0}"
+msgstr "Edit {0}"
 
 #: src/pages/Secrets/SecretEdit.tsx:134
 msgid "Edit Secret"
@@ -258,6 +395,15 @@ msgstr "Error Loading Secrets"
 msgid "Errors:"
 msgstr "Errors:"
 
+#: src/components/GuardBookManager.tsx:380
+msgid "Events"
+msgstr "Events"
+
+#: src/components/CustomerTree.tsx:221
+#: src/components/OrganizationalUnitTree.tsx:239
+msgid "Expand"
+msgstr "Expand"
+
 #: src/pages/Secrets/SecretCard.tsx:44
 #: src/pages/Secrets/SecretDetail.tsx:268
 #: src/pages/Secrets/SecretDetail.tsx:375
@@ -283,25 +429,82 @@ msgstr "Expires: {0}"
 msgid "Expiring Soon"
 msgstr "Expiring Soon"
 
+#. placeholder {0}: report.report_number
+#: src/components/GuardBookManager.tsx:416
+msgid "Export report {0}"
+msgstr "Export report {0}"
+
 #: src/components/UploadStatus.tsx:119
 msgid "Failed to clear uploads"
 msgstr "Failed to clear uploads"
+
+#: src/components/ObjectManager.tsx:315
+msgid "Failed to delete area"
+msgstr "Failed to delete area"
 
 #: src/pages/Secrets/SecretDetail.tsx:168
 msgid "Failed to delete attachment"
 msgstr "Failed to delete attachment"
 
+#: src/components/CustomerTree.tsx:467
+msgid "Failed to delete customer"
+msgstr "Failed to delete customer"
+
 #: src/components/UploadStatus.tsx:151
 msgid "Failed to delete file"
 msgstr "Failed to delete file"
+
+#: src/components/GuardBookManager.tsx:589
+msgid "Failed to delete guard book"
+msgstr "Failed to delete guard book"
+
+#: src/components/ObjectManager.tsx:581
+msgid "Failed to delete object"
+msgstr "Failed to delete object"
+
+#: src/components/OrganizationalUnitTree.tsx:448
+msgid "Failed to delete organizational unit"
+msgstr "Failed to delete organizational unit"
+
+#: src/components/GuardBookManager.tsx:331
+msgid "Failed to delete report"
+msgstr "Failed to delete report"
 
 #: src/pages/Secrets/SecretDetail.tsx:141
 msgid "Failed to download attachment"
 msgstr "Failed to download attachment"
 
+#: src/components/GuardBookManager.tsx:306
+msgid "Failed to export report"
+msgstr "Failed to export report"
+
+#: src/components/ObjectManager.tsx:290
+msgid "Failed to load areas"
+msgstr "Failed to load areas"
+
+#: src/components/CustomerTree.tsx:440
+msgid "Failed to load customers"
+msgstr "Failed to load customers"
+
+#: src/components/GuardBookManager.tsx:541
+msgid "Failed to load guard books"
+msgstr "Failed to load guard books"
+
+#: src/components/ObjectManager.tsx:527
+msgid "Failed to load objects"
+msgstr "Failed to load objects"
+
+#: src/components/OrganizationalUnitTree.tsx:419
+msgid "Failed to load organizational units"
+msgstr "Failed to load organizational units"
+
 #: src/pages/Secrets/SecretDetail.tsx:188
 msgid "Failed to load preview"
 msgstr "Failed to load preview"
+
+#: src/components/GuardBookManager.tsx:280
+msgid "Failed to load reports"
+msgstr "Failed to load reports"
 
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
@@ -328,6 +531,35 @@ msgstr "Filter by expiration"
 msgid "Filter by tag"
 msgstr "Filter by tag"
 
+#: src/components/GuardBookManager.tsx:198
+msgid "Generate Report"
+msgstr "Generate Report"
+
+#: src/components/GuardBookManager.tsx:383
+msgid "Generated"
+msgstr "Generated"
+
+#: src/components/CustomerTree.tsx:507
+msgid "Get started by adding your first customer."
+msgstr "Get started by adding your first customer."
+
+#: src/components/ObjectManager.tsx:627
+msgid "Get started by adding your first object."
+msgstr "Get started by adding your first object."
+
+#: src/components/GuardBookManager.tsx:630
+msgid "Get started by creating your first guard book."
+msgstr "Get started by creating your first guard book."
+
+#: src/components/OrganizationalUnitTree.tsx:488
+msgid "Get started by creating your first organizational unit."
+msgstr "Get started by creating your first organizational unit."
+
+#: src/pages/Organization/GuardBooksPage.tsx:37
+#: src/pages/Organization/ObjectsPage.tsx:34
+msgid "Go to Customers"
+msgstr "Go to Customers"
+
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at)
 #: src/components/SharedWithList.tsx:99
@@ -342,13 +574,27 @@ msgstr "Grid"
 msgid "Grid view"
 msgstr "Grid view"
 
+#: src/components/application-layout.tsx:253
+#: src/components/GuardBookManager.tsx:645
+#: src/components/ObjectManager.tsx:253
+#: src/pages/Organization/GuardBooksPage.tsx:29
+#: src/pages/Organization/GuardBooksPage.tsx:76
+#: src/pages/Organization/GuardBooksPage.tsx:80
+msgid "Guard Books"
+msgstr "Guard Books"
+
 #: src/pages/Secrets/SecretDetail.tsx:321
 msgid "Hide"
 msgstr "Hide"
 
-#: src/components/application-layout.tsx:183
+#: src/components/application-layout.tsx:220
 msgid "Home"
 msgstr "Home"
+
+#: src/components/GuardBookManager.tsx:181
+#: src/components/GuardBookManager.tsx:688
+msgid "Inactive"
+msgstr "Inactive"
 
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:115
@@ -421,6 +667,22 @@ msgstr "Login"
 msgid "Logout"
 msgstr "Logout"
 
+#: src/pages/Organization/CustomersPage.tsx:54
+msgid "Manage customer organizations and their protected objects."
+msgstr "Manage customer organizations and their protected objects."
+
+#: src/pages/Organization/GuardBooksPage.tsx:83
+msgid "Manage digital guard books and generate reports for this location."
+msgstr "Manage digital guard books and generate reports for this location."
+
+#: src/pages/Organization/ObjectsPage.tsx:84
+msgid "Manage protected objects and their areas for this customer."
+msgstr "Manage protected objects and their areas for this customer."
+
+#: src/pages/Organization/OrganizationPage.tsx:48
+msgid "Manage your internal organizational units including departments, branches, and teams."
+msgstr "Manage your internal organizational units including departments, branches, and teams."
+
 #: src/pages/Secrets/SecretList.tsx:162
 msgid "Manage your secrets and sensitive information securely."
 msgstr "Manage your secrets and sensitive information securely."
@@ -433,13 +695,25 @@ msgstr "Messages from team members and supervisors"
 msgid "Metadata"
 msgstr "Metadata"
 
-#: src/components/application-layout.tsx:232
+#: src/components/application-layout.tsx:296
 msgid "My profile"
 msgstr "My profile"
+
+#: src/components/ObjectManager.tsx:374
+msgid "Name"
+msgstr "Name"
 
 #: src/pages/Secrets/SecretList.tsx:168
 msgid "New Secret"
 msgstr "New Secret"
+
+#: src/components/ObjectManager.tsx:401
+msgid "No"
+msgstr "No"
+
+#: src/components/ObjectManager.tsx:346
+msgid "No areas defined for this object."
+msgstr "No areas defined for this object."
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -449,9 +723,37 @@ msgstr "No attachments yet"
 msgid "No content shared"
 msgstr "No content shared"
 
+#: src/pages/Organization/ObjectsPage.tsx:31
+msgid "No customer selected. Please select a customer first."
+msgstr "No customer selected. Please select a customer first."
+
+#: src/components/CustomerTree.tsx:504
+msgid "No Customers"
+msgstr "No Customers"
+
 #: src/pages/Secrets/SecretList.tsx:217
 msgid "No Expiration"
 msgstr "No Expiration"
+
+#: src/components/GuardBookManager.tsx:627
+msgid "No Guard Books"
+msgstr "No Guard Books"
+
+#: src/pages/Organization/GuardBooksPage.tsx:32
+msgid "No object selected. Please navigate from the objects page."
+msgstr "No object selected. Please navigate from the objects page."
+
+#: src/components/ObjectManager.tsx:624
+msgid "No Objects"
+msgstr "No Objects"
+
+#: src/components/OrganizationalUnitTree.tsx:485
+msgid "No Organizational Units"
+msgstr "No Organizational Units"
+
+#: src/components/GuardBookManager.tsx:363
+msgid "No reports generated yet."
+msgstr "No reports generated yet."
 
 #: src/pages/Secrets/SecretList.tsx:257
 msgid "No secrets found"
@@ -485,6 +787,25 @@ msgstr "Notifications Enabled"
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 
+#: src/components/ObjectManager.tsx:361
+msgid "Object Areas"
+msgstr "Object Areas"
+
+#: src/components/CustomerTree.tsx:253
+msgid "objects"
+msgstr "objects"
+
+#: src/components/ObjectManager.tsx:642
+#: src/pages/Organization/GuardBooksPage.tsx:72
+#: src/pages/Organization/ObjectsPage.tsx:28
+#: src/pages/Organization/ObjectsPage.tsx:77
+msgid "Objects"
+msgstr "Objects"
+
+#: src/pages/Organization/ObjectsPage.tsx:81
+msgid "Objects & Areas"
+msgstr "Objects & Areas"
+
 #: src/components/SyncStatusIndicator.tsx:158
 msgid "Offline - will sync when online"
 msgstr "Offline - will sync when online"
@@ -492,6 +813,22 @@ msgstr "Offline - will sync when online"
 #: src/components/OfflineSecretBadge.tsx:44
 msgid "Offline only"
 msgstr "Offline only"
+
+#: src/components/application-layout.tsx:235
+msgid "Organization"
+msgstr "Organization"
+
+#: src/pages/Organization/OrganizationPage.tsx:45
+msgid "Organization Structure"
+msgstr "Organization Structure"
+
+#: src/components/OrganizationalUnitTree.tsx:514
+msgid "Organizational structure"
+msgstr "Organizational structure"
+
+#: src/components/OrganizationalUnitTree.tsx:503
+msgid "Organizational Structure"
+msgstr "Organizational Structure"
 
 #: src/pages/Secrets/SecretDetail.tsx:454
 msgid "Owner"
@@ -515,6 +852,10 @@ msgstr "Password"
 #: src/components/OfflineSecretBadge.tsx:53
 msgid "Pending sync"
 msgstr "Pending sync"
+
+#: src/components/GuardBookManager.tsx:377
+msgid "Period"
+msgstr "Period"
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
@@ -557,6 +898,23 @@ msgstr "Reminders about upcoming shifts and duties"
 msgid "Removed {filename} from queue"
 msgstr "Removed {filename} from queue"
 
+#: src/components/GuardBookManager.tsx:374
+msgid "Report #"
+msgstr "Report #"
+
+#: src/components/GuardBookManager.tsx:695
+msgid "Reports"
+msgstr "Reports"
+
+#: src/components/CustomerTree.tsx:491
+#: src/components/GuardBookManager.tsx:352
+#: src/components/GuardBookManager.tsx:614
+#: src/components/ObjectManager.tsx:335
+#: src/components/ObjectManager.tsx:611
+#: src/components/OrganizationalUnitTree.tsx:472
+msgid "Retry"
+msgstr "Retry"
+
 #: src/components/UploadStatus.tsx:320
 msgid "Retry Failed"
 msgstr "Retry Failed"
@@ -593,15 +951,15 @@ msgstr "Search secrets"
 msgid "Search secrets..."
 msgstr "Search secrets..."
 
-#: src/App.tsx:30
+#: src/App.tsx:36
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:51
+#: src/App.tsx:57
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/components/application-layout.tsx:189
+#: src/components/application-layout.tsx:226
 #: src/pages/Secrets/SecretList.tsx:159
 msgid "Secrets"
 msgstr "Secrets"
@@ -609,6 +967,22 @@ msgstr "Secrets"
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
 msgstr "Security Alerts"
+
+#: src/pages/Organization/CustomersPage.tsx:139
+msgid "Select a customer to view details"
+msgstr "Select a customer to view details"
+
+#: src/components/GuardBookManager.tsx:705
+msgid "Select a guard book to view reports"
+msgstr "Select a guard book to view reports"
+
+#: src/components/ObjectManager.tsx:709
+msgid "Select an object to view details"
+msgstr "Select an object to view details"
+
+#: src/pages/Organization/OrganizationPage.tsx:96
+msgid "Select an organizational unit to view details"
+msgstr "Select an organizational unit to view details"
 
 #: src/components/AttachmentUpload.tsx:229
 msgid "Select Files"
@@ -626,12 +1000,16 @@ msgstr "Select user or role..."
 msgid "Send Test"
 msgstr "Send Test"
 
+#: src/components/ObjectManager.tsx:380
+msgid "Separate Guard Book"
+msgstr "Separate Guard Book"
+
 #: src/components/ConflictResolutionDialog.tsx:169
 msgid "Server Version"
 msgstr "Server Version"
 
-#: src/components/application-layout.tsx:203
-#: src/components/application-layout.tsx:238
+#: src/components/application-layout.tsx:267
+#: src/components/application-layout.tsx:302
 msgid "Settings"
 msgstr "Settings"
 
@@ -677,7 +1055,7 @@ msgstr "Shift Reminders"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/application-layout.tsx:245
+#: src/components/application-layout.tsx:309
 msgid "Sign out"
 msgstr "Sign out"
 
@@ -760,6 +1138,10 @@ msgstr "Too many failed attempts"
 msgid "Try adjusting your filters"
 msgstr "Try adjusting your filters"
 
+#: src/pages/Organization/OrganizationPage.tsx:75
+msgid "Type"
+msgstr "Type"
+
 #: src/pages/Secrets/SecretDetail.tsx:415
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
@@ -811,17 +1193,30 @@ msgstr "Username"
 msgid "Users"
 msgstr "Users"
 
-#: src/App.tsx:34
+#: src/pages/Organization/CustomersPage.tsx:132
+msgid "View Objects"
+msgstr "View Objects"
+
+#. placeholder {0}: customer.name
+#: src/components/CustomerTree.tsx:263
+msgid "View objects for {0}"
+msgstr "View objects for {0}"
+
+#: src/App.tsx:40
 msgid "View Secrets"
 msgstr "View Secrets"
 
-#: src/App.tsx:27
+#: src/App.tsx:33
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
 #: src/components/ShareDialog.tsx:173
 msgid "Write"
 msgstr "Write"
+
+#: src/components/ObjectManager.tsx:397
+msgid "Yes"
+msgstr "Yes"
 
 #: src/components/NotificationPreferences.tsx:200
 msgid "You'll now receive important updates from SecPal"

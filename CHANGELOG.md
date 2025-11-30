@@ -12,6 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Organizational Hierarchy UI Components** (#241, Part of Epic #228)
+  - **API Services** - Four comprehensive API service modules with full CRUD support:
+    - `organizationalUnitApi.ts`: Manage organizational units (holding, company, region, branch, division, department, custom)
+    - `customerApi.ts`: Customer hierarchy management with parent-child relationships
+    - `objectApi.ts`: SecPal objects and object areas with geofence support
+    - `guardBookApi.ts`: Guard books and reports with status/report_type filtering
+  - **TypeScript Types** (`src/types/organizational.ts`):
+    - Complete type definitions for all organizational entities
+    - Request/response types following ADR-007 conventions
+    - Paginated response wrapper for list endpoints
+  - **React Components** - Four feature-rich tree/manager components:
+    - `OrganizationalUnitTree`: Hierarchical tree view with icons, badges, expand/collapse, and CRUD actions
+    - `CustomerTree`: Customer hierarchy with object count display and filtering
+    - `ObjectManager`: Split-panel object/area manager with detail view
+    - `GuardBookManager`: Guard book list with report generation and status badges
+  - **Features:**
+    - Hierarchical tree building from flat API responses
+    - Loading skeletons and error states
+    - Empty state with create action
+    - Type-specific icons and color-coded badges
+    - Accessible tree structure with proper ARIA roles
+    - Catalyst Design System integration (Button, Badge, Heading, Text)
+  - **Test Coverage:** 60 API tests + 49 component tests, all passing
+  - **Benefit:** Enables visual management of the organizational structure introduced in backend Epic #228
+
 ### Fixed
 
 - **PWA Service Worker API_URL mode detection** (#249)
