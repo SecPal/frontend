@@ -53,12 +53,11 @@ export function ObjectsPage() {
 
   const handleObjectCreate = () => {
     // TODO: Open create object modal
-    console.log("Create object for customer:", customerId);
   };
 
   const handleAreaCreate = (objectId: string) => {
     // TODO: Open create area modal
-    console.log("Create area for object:", objectId);
+    void objectId;
   };
 
   return (

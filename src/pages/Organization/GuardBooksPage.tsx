@@ -41,17 +41,17 @@ export function GuardBooksPage() {
   }
 
   const handleGuardBookSelect = (guardBook: GuardBook) => {
-    console.log("Selected guard book:", guardBook);
+    // TODO: Handle guard book selection (e.g., open details modal)
+    void guardBook;
   };
 
   const handleCreate = () => {
     // TODO: Open create guard book modal
-    console.log("Create guard book for object:", objectId, "area:", areaId);
   };
 
   const handleGenerateReport = (guardBook: GuardBook) => {
     // TODO: Trigger report generation
-    console.log("Generate report for guard book:", guardBook.id);
+    void guardBook;
   };
 
   return (

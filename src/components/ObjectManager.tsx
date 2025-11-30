@@ -542,7 +542,11 @@ export function ObjectManager({
           const object = await getObject(selectedId);
           setSelectedObject(object);
         } catch (err) {
-          console.error("Failed to load selected object:", err);
+          setError(
+            err instanceof Error
+              ? err.message
+              : t`Failed to load selected object`
+          );
         }
       };
       loadSelectedObject();

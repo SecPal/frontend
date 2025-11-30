@@ -25,17 +25,17 @@ export function OrganizationPage() {
 
   const handleEdit = (unit: OrganizationalUnit) => {
     // TODO: Open edit modal/dialog
-    console.log("Edit unit:", unit);
+    void unit;
   };
 
   const handleDelete = (unit: OrganizationalUnit) => {
     // TODO: Open delete confirmation dialog
-    console.log("Delete unit:", unit);
+    void unit;
   };
 
   const handleCreate = (parentId?: string) => {
     // TODO: Open create modal/dialog
-    console.log("Create unit with parent:", parentId);
+    void parentId;
   };
 
   return (

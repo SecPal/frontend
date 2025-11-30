@@ -27,17 +27,17 @@ export function CustomersPage() {
 
   const handleEdit = (customer: Customer) => {
     // TODO: Open edit modal/dialog
-    console.log("Edit customer:", customer);
+    void customer;
   };
 
   const handleDelete = (customer: Customer) => {
     // TODO: Open delete confirmation dialog
-    console.log("Delete customer:", customer);
+    void customer;
   };
 
   const handleCreate = (parentId?: string) => {
     // TODO: Open create modal/dialog
-    console.log("Create customer with parent:", parentId);
+    void parentId;
   };
 
   const handleViewObjects = (customerId: string) => {
