@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
+import { sessionEvents } from "../services/sessionEvents";
 
 describe("useAuth", () => {
   beforeEach(() => {
@@ -100,6 +101,40 @@ describe("useAuth", () => {
 
     act(() => {
       result.current.logout();
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("logs out when session:expired event is emitted", () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+
+    act(() => {
+      sessionEvents.emit("session:expired");
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("does not logout when session:expired is emitted but not logged in", () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    // This should not throw or cause issues
+    act(() => {
+      sessionEvents.emit("session:expired");
     });
 
     expect(result.current.isAuthenticated).toBe(false);
