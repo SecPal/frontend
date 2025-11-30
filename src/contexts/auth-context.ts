@@ -23,7 +23,8 @@ export interface AuthContextType {
    */
   hasRole: (role: string) => boolean;
   /**
-   * Check if user has a specific permission
+   * Check if user has a specific permission.
+   * Supports wildcard matching (e.g., "employees.*" matches "employees.read").
    */
   hasPermission: (permission: string) => boolean;
   /**
