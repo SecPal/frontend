@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
 import type {
   OrganizationalUnit,
   CreateOrganizationalUnitRequest,
@@ -46,13 +46,12 @@ export async function listOrganizationalUnits(
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/organizational-units${queryString ? `?${queryString}` : ""}`;
 
-  const response = await fetch(url, {
+  const response = await apiFetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    credentials: "include",
   });
 
   if (!response.ok) {
@@ -74,7 +73,7 @@ export async function listOrganizationalUnits(
 export async function getOrganizationalUnit(
   id: string
 ): Promise<OrganizationalUnit> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}`,
     {
       method: "GET",
@@ -82,7 +81,6 @@ export async function getOrganizationalUnit(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -106,7 +104,7 @@ export async function getOrganizationalUnit(
 export async function createOrganizationalUnit(
   data: CreateOrganizationalUnitRequest
 ): Promise<OrganizationalUnit> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units`,
     {
       method: "POST",
@@ -114,7 +112,6 @@ export async function createOrganizationalUnit(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(data),
     }
   );
@@ -141,7 +138,7 @@ export async function updateOrganizationalUnit(
   id: string,
   data: UpdateOrganizationalUnitRequest
 ): Promise<OrganizationalUnit> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}`,
     {
       method: "PATCH",
@@ -149,7 +146,6 @@ export async function updateOrganizationalUnit(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(data),
     }
   );
@@ -173,7 +169,7 @@ export async function updateOrganizationalUnit(
  * Delete an organizational unit
  */
 export async function deleteOrganizationalUnit(id: string): Promise<void> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}`,
     {
       method: "DELETE",
@@ -181,7 +177,6 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -202,7 +197,7 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
 export async function getOrganizationalUnitDescendants(
   id: string
 ): Promise<OrganizationalUnit[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}/descendants`,
     {
       method: "GET",
@@ -210,7 +205,6 @@ export async function getOrganizationalUnitDescendants(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -234,7 +228,7 @@ export async function getOrganizationalUnitDescendants(
 export async function getOrganizationalUnitAncestors(
   id: string
 ): Promise<OrganizationalUnit[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}/ancestors`,
     {
       method: "GET",
@@ -242,7 +236,6 @@ export async function getOrganizationalUnitAncestors(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -267,7 +260,7 @@ export async function attachOrganizationalUnitParent(
   id: string,
   parentId: string
 ): Promise<OrganizationalUnit> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}/parent`,
     {
       method: "POST",
@@ -275,7 +268,6 @@ export async function attachOrganizationalUnitParent(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
       body: JSON.stringify({ parent_id: parentId }),
     }
   );
@@ -301,7 +293,7 @@ export async function detachOrganizationalUnitParent(
   id: string,
   parentId: string
 ): Promise<void> {
-  const response = await fetchWithCsrf(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/organizational-units/${id}/parent/${parentId}`,
     {
       method: "DELETE",
@@ -309,7 +301,6 @@ export async function detachOrganizationalUnitParent(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 
@@ -330,7 +321,7 @@ export async function detachOrganizationalUnitParent(
 export async function getMyOrganizationalScopes(): Promise<
   UserOrganizationalScope[]
 > {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/me/organizational-scopes`,
     {
       method: "GET",
@@ -338,7 +329,6 @@ export async function getMyOrganizationalScopes(): Promise<
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      credentials: "include",
     }
   );
 

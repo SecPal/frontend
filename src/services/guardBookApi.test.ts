@@ -23,17 +23,17 @@ import type {
   PaginatedResponse,
 } from "../types/organizational";
 
-// Mock fetchWithCsrf
+// Mock apiFetch (central API wrapper)
 vi.mock("./csrf", () => ({
-  fetchWithCsrf: vi.fn(),
+  apiFetch: vi.fn(),
 }));
 
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFetchWithCsrf = apiFetch as any;
 
 describe("Guard Book API", () => {
-  const mockFetch = vi.fn();
-  const mockFetchWithCsrf = vi.mocked(fetchWithCsrf);
-
   const mockGuardBook: GuardBook = {
     id: "gb-1",
     title: "Wachbuch Terminal 1",
@@ -57,7 +57,6 @@ describe("Guard Book API", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   // ============================================================================
@@ -71,7 +70,7 @@ describe("Guard Book API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -79,56 +78,56 @@ describe("Guard Book API", () => {
       const result = await listGuardBooks();
 
       expect(result.data).toEqual([mockGuardBook]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-books`,
-        expect.objectContaining({ method: "GET", credentials: "include" })
+        expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should filter by object_id", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBooks({ object_id: "obj-1" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("object_id=obj-1"),
         expect.any(Object)
       );
     });
 
     it("should filter by object_area_id", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBooks({ object_area_id: "area-1" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("object_area_id=area-1"),
         expect.any(Object)
       );
     });
 
     it("should filter by is_active", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBooks({ is_active: true });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("is_active=true"),
         expect.any(Object)
       );
     });
 
     it("should throw ApiError on failure", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
@@ -140,7 +139,7 @@ describe("Guard Book API", () => {
 
   describe("getGuardBook", () => {
     it("should fetch a single guard book", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockGuardBook }),
       });
@@ -148,7 +147,7 @@ describe("Guard Book API", () => {
       const result = await getGuardBook("gb-1");
 
       expect(result).toEqual(mockGuardBook);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-books/gb-1`,
         expect.objectContaining({ method: "GET" })
       );
@@ -222,7 +221,7 @@ describe("Guard Book API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -230,49 +229,49 @@ describe("Guard Book API", () => {
       const result = await listGuardBookReports();
 
       expect(result.data).toEqual([mockReport]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-book-reports`,
         expect.any(Object)
       );
     });
 
     it("should filter by guard_book_id", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBookReports({ guard_book_id: "gb-1" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("guard_book_id=gb-1"),
         expect.any(Object)
       );
     });
 
     it("should filter by status", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBookReports({ status: "generated" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("status=generated"),
         expect.any(Object)
       );
     });
 
     it("should filter by report_type", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listGuardBookReports({ report_type: "monthly" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("report_type=monthly"),
         expect.any(Object)
       );
@@ -281,7 +280,7 @@ describe("Guard Book API", () => {
 
   describe("getGuardBookReport", () => {
     it("should fetch a single guard book report", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockReport }),
       });
@@ -289,7 +288,7 @@ describe("Guard Book API", () => {
       const result = await getGuardBookReport("report-1");
 
       expect(result).toEqual(mockReport);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-book-reports/report-1`,
         expect.any(Object)
       );
@@ -303,7 +302,7 @@ describe("Guard Book API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -311,7 +310,7 @@ describe("Guard Book API", () => {
       const result = await getGuardBookReports("gb-1");
 
       expect(result.data).toEqual([mockReport]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-books/gb-1/reports`,
         expect.any(Object)
       );
@@ -356,7 +355,7 @@ describe("Guard Book API", () => {
   describe("exportGuardBookReport", () => {
     it("should export a guard book report as PDF", async () => {
       const mockBlob = new Blob(["PDF content"], { type: "application/pdf" });
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         blob: async () => mockBlob,
       });
@@ -364,14 +363,14 @@ describe("Guard Book API", () => {
       const result = await exportGuardBookReport("report-1");
 
       expect(result).toEqual(mockBlob);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/guard-book-reports/report-1/export`,
         expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should throw ApiError on export failure", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: "Report not found" }),

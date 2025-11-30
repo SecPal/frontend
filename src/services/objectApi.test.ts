@@ -23,17 +23,17 @@ import type {
   PaginatedResponse,
 } from "../types/organizational";
 
-// Mock fetchWithCsrf
+// Mock apiFetch (central API wrapper)
 vi.mock("./csrf", () => ({
-  fetchWithCsrf: vi.fn(),
+  apiFetch: vi.fn(),
 }));
 
-import { fetchWithCsrf } from "./csrf";
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFetchWithCsrf = apiFetch as any;
 
 describe("Object API", () => {
-  const mockFetch = vi.fn();
-  const mockFetchWithCsrf = vi.mocked(fetchWithCsrf);
-
   const mockObject: SecPalObject = {
     id: "obj-1",
     object_number: "OBJ-001",
@@ -58,7 +58,6 @@ describe("Object API", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   // ============================================================================
@@ -72,7 +71,7 @@ describe("Object API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -80,28 +79,28 @@ describe("Object API", () => {
       const result = await listObjects();
 
       expect(result.data).toEqual([mockObject]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/objects`,
-        expect.objectContaining({ method: "GET", credentials: "include" })
+        expect.objectContaining({ method: "GET" })
       );
     });
 
     it("should apply customer_id filter", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listObjects({ customer_id: "cust-1" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("customer_id=cust-1"),
         expect.any(Object)
       );
     });
 
     it("should throw ApiError on failure", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
@@ -113,7 +112,7 @@ describe("Object API", () => {
 
   describe("getObject", () => {
     it("should fetch a single object successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockObject }),
       });
@@ -121,7 +120,7 @@ describe("Object API", () => {
       const result = await getObject("obj-1");
 
       expect(result).toEqual(mockObject);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/objects/obj-1`,
         expect.objectContaining({ method: "GET" })
       );
@@ -184,7 +183,7 @@ describe("Object API", () => {
 
   describe("getObjectAreas", () => {
     it("should fetch object areas successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [mockArea] }),
       });
@@ -192,7 +191,7 @@ describe("Object API", () => {
       const result = await getObjectAreas("obj-1");
 
       expect(result).toEqual([mockArea]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/objects/obj-1/areas`,
         expect.any(Object)
       );
@@ -230,7 +229,7 @@ describe("Object API", () => {
         meta: { current_page: 1, last_page: 1, per_page: 15, total: 1 },
       };
 
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => mockResponse,
       });
@@ -238,21 +237,21 @@ describe("Object API", () => {
       const result = await listObjectAreas();
 
       expect(result.data).toEqual([mockArea]);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/object-areas`,
         expect.any(Object)
       );
     });
 
     it("should filter by object_id", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [], meta: {} }),
       });
 
       await listObjectAreas({ object_id: "obj-1" });
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         expect.stringContaining("object_id=obj-1"),
         expect.any(Object)
       );
@@ -261,7 +260,7 @@ describe("Object API", () => {
 
   describe("getObjectArea", () => {
     it("should fetch a single object area", async () => {
-      mockFetch.mockResolvedValue({
+      mockFetchWithCsrf.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockArea }),
       });
@@ -269,7 +268,7 @@ describe("Object API", () => {
       const result = await getObjectArea("area-1");
 
       expect(result).toEqual(mockArea);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/object-areas/area-1`,
         expect.any(Object)
       );

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
+import { apiFetch } from "./csrf";
 import { ApiError, type SecretShare } from "./secretApi";
 
 // Re-export ApiError for test convenience
@@ -31,11 +32,10 @@ export interface CreateShareRequest {
  * ```
  */
 export async function fetchShares(secretId: string): Promise<SecretShare[]> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares`,
     {
       method: "GET",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -79,11 +79,10 @@ export async function createShare(
   secretId: string,
   request: CreateShareRequest
 ): Promise<SecretShare> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares`,
     {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -123,11 +122,10 @@ export async function revokeShare(
   secretId: string,
   shareId: string
 ): Promise<void> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${apiConfig.baseUrl}/v1/secrets/${secretId}/shares/${shareId}`,
     {
       method: "DELETE",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

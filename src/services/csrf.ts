@@ -77,28 +77,56 @@ export function getCsrfTokenFromCookie(): string | null {
 }
 
 /**
- * Fetch with CSRF token handling
- * Automatically includes X-XSRF-TOKEN header, retries on 419 (CSRF token mismatch),
- * and emits session:expired event on 401 (when online).
+ * HTTP methods that require CSRF protection
+ */
+const CSRF_REQUIRED_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
+
+/**
+ * Central API fetch wrapper with automatic session handling.
+ *
+ * Features:
+ * - Automatically includes `credentials: "include"` for cookie-based auth
+ * - Adds X-XSRF-TOKEN header for state-changing methods (POST, PUT, PATCH, DELETE)
+ * - Emits `session:expired` event on 401 responses (when online) for auto-logout
+ * - Retries on 419 (CSRF token mismatch) with refreshed token
  *
  * For PWA offline-first behavior:
- * - 401 when online → session expired, emit event
- * - 401 when offline → might be cached, don't trigger logout
+ * - 401 when online → session expired, emit event → auto-logout
+ * - 401 when offline → might be from stale cache, don't trigger logout
  *
  * @param url - Request URL
  * @param options - Fetch options
  * @returns Response
- * @throws {CsrfError} If CSRF token refresh fails
+ * @throws {CsrfError} If CSRF token refresh fails after 419
+ *
+ * @example
+ * ```ts
+ * // GET request (no CSRF token needed)
+ * const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`);
+ *
+ * // POST request (CSRF token added automatically)
+ * const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`, {
+ *   method: "POST",
+ *   headers: { "Content-Type": "application/json" },
+ *   body: JSON.stringify(data),
+ * });
+ * ```
  */
-export async function fetchWithCsrf(
+export async function apiFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const csrfToken = getCsrfTokenFromCookie();
+  const method = (options.method ?? "GET").toUpperCase();
+  const needsCsrf = CSRF_REQUIRED_METHODS.includes(method);
 
   const headers = new Headers(options.headers);
-  if (csrfToken) {
-    headers.set("X-XSRF-TOKEN", csrfToken);
+
+  // Only add CSRF token for state-changing methods
+  if (needsCsrf) {
+    const csrfToken = getCsrfTokenFromCookie();
+    if (csrfToken) {
+      headers.set("X-XSRF-TOKEN", csrfToken);
+    }
   }
 
   const response = await fetch(url, {
@@ -113,8 +141,8 @@ export async function fetchWithCsrf(
     sessionEvents.emit("session:expired");
   }
 
-  // Retry on CSRF token mismatch
-  if (response.status === 419) {
+  // Retry on CSRF token mismatch (only for methods that send CSRF)
+  if (response.status === 419 && needsCsrf) {
     try {
       await fetchCsrfToken();
     } catch (error) {
@@ -127,6 +155,7 @@ export async function fetchWithCsrf(
       throw error;
     }
 
+    // Retry with refreshed token
     const newCsrfToken = getCsrfTokenFromCookie();
     const newHeaders = new Headers(options.headers);
     if (newCsrfToken) {
@@ -142,3 +171,11 @@ export async function fetchWithCsrf(
 
   return response;
 }
+
+/**
+ * @deprecated Use `apiFetch()` instead. This alias is kept for backward compatibility.
+ *
+ * Fetch with CSRF token handling (legacy name).
+ * Now delegates to `apiFetch()` which handles both GET and state-changing methods.
+ */
+export const fetchWithCsrf = apiFetch;

@@ -17,12 +17,19 @@ import {
 } from "./secretApi";
 import { apiConfig } from "../config";
 
-describe("Secret API", () => {
-  const mockFetch = vi.fn();
+// Mock apiFetch (central API wrapper)
+vi.mock("./csrf", () => ({
+  apiFetch: vi.fn(),
+}));
 
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockFetch = apiFetch as any;
+
+describe("Secret API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   describe("fetchSecrets", () => {
@@ -312,13 +319,12 @@ describe("Secret API", () => {
     });
 
     it("should handle malformed JSON error responses", async () => {
-      const mockFetch = vi.fn().mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
         json: () => Promise.reject(new Error("Invalid JSON")),
       });
-      vi.stubGlobal("fetch", mockFetch);
 
       await expect(fetchSecrets()).rejects.toThrow("Internal Server Error");
     });
@@ -707,10 +713,12 @@ describe("Secret API", () => {
 
       const callArgs = mockFetch.mock.calls[0];
       if (!callArgs) throw new Error("mockFetch not called");
-      const headers = callArgs[1].headers;
+      const options = callArgs[1] as RequestInit;
 
       // Should NOT include Content-Type (FormData sets it automatically with boundary)
-      expect(headers["Content-Type"]).toBeUndefined();
+      // apiFetch does not set Content-Type for FormData requests
+      const headers = options.headers as Record<string, string> | undefined;
+      expect(headers?.["Content-Type"]).toBeUndefined();
     });
   });
 
@@ -779,12 +787,11 @@ describe("Secret API", () => {
       const decryptedBytes = new Uint8Array(decryptedBuffer);
       expect(decryptedBytes).toEqual(originalFile);
 
-      // Verify API call
+      // Verify API call - apiFetch handles credentials internally
       expect(mockFetch).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/attachments/attachment-123/download`,
         expect.objectContaining({
           method: "GET",
-          credentials: "include",
         })
       );
     });

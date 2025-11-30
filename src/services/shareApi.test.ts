@@ -12,12 +12,19 @@ import {
 import type { SecretShare } from "./secretApi";
 import { apiConfig } from "../config";
 
-describe("shareApi", () => {
-  const mockFetch = vi.fn();
+// Mock apiFetch (central API wrapper)
+vi.mock("./csrf", () => ({
+  apiFetch: vi.fn(),
+}));
 
+import { apiFetch } from "./csrf";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockApiFetch = apiFetch as any;
+
+describe("shareApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("fetch", mockFetch);
   });
 
   describe("fetchShares", () => {
@@ -32,7 +39,7 @@ describe("shareApi", () => {
     ];
 
     it("should fetch shares for a secret successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockShares }),
       });
@@ -40,7 +47,7 @@ describe("shareApi", () => {
       const shares = await fetchShares("secret-1");
 
       expect(shares).toEqual(mockShares);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockApiFetch).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/secrets/secret-1/shares`,
         expect.objectContaining({
           method: "GET",
@@ -52,7 +59,7 @@ describe("shareApi", () => {
     });
 
     it("should return empty array when no shares exist", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: [] }),
       });
@@ -63,7 +70,7 @@ describe("shareApi", () => {
     });
 
     it("should throw ApiError on 403 Forbidden", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
@@ -74,7 +81,7 @@ describe("shareApi", () => {
     });
 
     it("should throw ApiError on 404 Not Found", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: "Secret not found" }),
@@ -84,7 +91,7 @@ describe("shareApi", () => {
     });
 
     it("should throw error on network failure", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"));
+      mockApiFetch.mockRejectedValue(new Error("Network error"));
 
       await expect(fetchShares("secret-1")).rejects.toThrow("Network error");
     });
@@ -105,7 +112,7 @@ describe("shareApi", () => {
         permission: "read",
       };
 
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockShare }),
       });
@@ -113,7 +120,7 @@ describe("shareApi", () => {
       const share = await createShare("secret-1", request);
 
       expect(share).toEqual(mockShare);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockApiFetch).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/secrets/secret-1/shares`,
         expect.objectContaining({
           method: "POST",
@@ -137,7 +144,7 @@ describe("shareApi", () => {
         user: undefined,
       };
 
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: roleShare }),
       });
@@ -159,7 +166,7 @@ describe("shareApi", () => {
         expires_at: "2026-01-01T00:00:00Z",
       };
 
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ data: expiringShare }),
       });
@@ -175,7 +182,7 @@ describe("shareApi", () => {
         permission: "read",
       };
 
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 422,
         json: async () => ({ message: "User already has access" }),
@@ -193,7 +200,7 @@ describe("shareApi", () => {
         permission: "read",
       };
 
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Only owner can share" }),
@@ -205,14 +212,14 @@ describe("shareApi", () => {
 
   describe("revokeShare", () => {
     it("should revoke share successfully", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: true,
         json: async () => ({}),
       });
 
       await expect(revokeShare("secret-1", "share-1")).resolves.toBeUndefined();
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockApiFetch).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/secrets/secret-1/shares/share-1`,
         expect.objectContaining({
           method: "DELETE",
@@ -224,7 +231,7 @@ describe("shareApi", () => {
     });
 
     it("should throw ApiError on 404 Not Found", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ message: "Share not found" }),
@@ -236,7 +243,7 @@ describe("shareApi", () => {
     });
 
     it("should throw ApiError on 403 Forbidden", async () => {
-      mockFetch.mockResolvedValue({
+      mockApiFetch.mockResolvedValue({
         ok: false,
         status: 403,
         json: async () => ({ message: "Cannot revoke this share" }),
