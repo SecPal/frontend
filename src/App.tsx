@@ -15,6 +15,12 @@ import { SecretList } from "./pages/Secrets/SecretList";
 import { SecretDetail } from "./pages/Secrets/SecretDetail";
 import { SecretCreate } from "./pages/Secrets/SecretCreate";
 import { SecretEdit } from "./pages/Secrets/SecretEdit";
+import {
+  OrganizationPage,
+  CustomersPage,
+  ObjectsPage,
+  GuardBooksPage,
+} from "./pages/Organization";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
@@ -136,6 +142,67 @@ function App() {
               <ProtectedRoute>
                 <ApplicationLayout>
                   <SecretEdit />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Organization Routes */}
+          <Route
+            path="/organization"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <OrganizationPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customers"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <CustomersPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customers/:customerId/objects"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <ObjectsPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customers/:customerId/objects/:objectId/guard-books"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <GuardBooksPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customers/:customerId/objects/:objectId/areas/:areaId/guard-books"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <GuardBooksPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/guard-books"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <GuardBooksPage />
                 </ApplicationLayout>
               </ProtectedRoute>
             }
