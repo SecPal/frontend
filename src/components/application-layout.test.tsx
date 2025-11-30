@@ -507,4 +507,171 @@ describe("ApplicationLayout", () => {
       expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
   });
+
+  describe("permission-based navigation", () => {
+    it("hides Organization link when user has no organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: false,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+    });
+
+    it("hides Customers link when user has no organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: false,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.queryByText("Customers")).not.toBeInTheDocument();
+    });
+
+    it("hides Guard Books link when user has no organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: false,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.queryByText("Guard Books")).not.toBeInTheDocument();
+    });
+
+    it("shows Organization link when user has organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: true,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Organization")).toBeInTheDocument();
+    });
+
+    it("shows Customers link when user has organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: true,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Customers")).toBeInTheDocument();
+    });
+
+    it("shows Guard Books link when user has organizational scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: true,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Guard Books")).toBeInTheDocument();
+    });
+
+    it("always shows Home, Secrets, and Settings links regardless of scopes", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          hasOrganizationalScopes: false,
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Home")).toBeInTheDocument();
+      expect(screen.getByText("Secrets")).toBeInTheDocument();
+      expect(screen.getByText("Settings")).toBeInTheDocument();
+    });
+
+    it("treats undefined hasOrganizationalScopes as false", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          // hasOrganizationalScopes not set
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      // Should not show organizational menu items
+      expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+      expect(screen.queryByText("Customers")).not.toBeInTheDocument();
+      expect(screen.queryByText("Guard Books")).not.toBeInTheDocument();
+    });
+  });
 });
