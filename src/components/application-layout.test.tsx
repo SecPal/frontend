@@ -104,19 +104,21 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JD")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JD");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
-    it("renders language switcher in navbar", () => {
+    it("renders user avatar in navbar for mobile menu", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      expect(
-        screen.getByRole("combobox", { name: /select language/i })
-      ).toBeInTheDocument();
+      // There should be two avatars - one in sidebar footer, one in navbar
+      const avatars = screen.getAllByText("JD");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -362,7 +364,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JS")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JS");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("generates correct initials for single-word name", () => {
@@ -381,7 +385,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("A")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("A");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("generates correct initials for three-word name (max 2)", () => {
@@ -400,7 +406,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("JP")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("JP");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
 
     it("shows fallback U when user name is missing", () => {
@@ -418,7 +426,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("U")).toBeInTheDocument();
+      // Two avatars exist: one in navbar, one in sidebar footer
+      const avatars = screen.getAllByText("U");
+      expect(avatars.length).toBeGreaterThanOrEqual(2);
     });
   });
 });

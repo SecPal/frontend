@@ -14,7 +14,7 @@ import {
   DropdownLabel,
   DropdownMenu,
 } from "./dropdown";
-import { Navbar, NavbarSection, NavbarSpacer } from "./navbar";
+import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from "./navbar";
 import {
   Sidebar,
   SidebarBody,
@@ -26,7 +26,6 @@ import {
   SidebarSpacer,
 } from "./sidebar";
 import { SidebarLayout } from "./sidebar-layout";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -194,7 +193,35 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
         <Navbar>
           <NavbarSpacer />
           <NavbarSection>
-            <LanguageSwitcher />
+            <Dropdown>
+              <DropdownButton as={NavbarItem}>
+                <Avatar
+                  initials={user?.name ? getInitials(user.name) : "U"}
+                  className="size-8 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                />
+              </DropdownButton>
+              <DropdownMenu className="min-w-64" anchor="bottom end">
+                <DropdownItem href="/profile">
+                  <UserCircleIcon />
+                  <DropdownLabel>
+                    <Trans>My profile</Trans>
+                  </DropdownLabel>
+                </DropdownItem>
+                <DropdownItem href="/settings">
+                  <CogIcon />
+                  <DropdownLabel>
+                    <Trans>Settings</Trans>
+                  </DropdownLabel>
+                </DropdownItem>
+                <DropdownDivider />
+                <DropdownItem onClick={handleLogout}>
+                  <ArrowRightStartOnRectangleIcon />
+                  <DropdownLabel>
+                    <Trans>Sign out</Trans>
+                  </DropdownLabel>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </NavbarSection>
         </Navbar>
       }
@@ -270,7 +297,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             </SidebarSection>
           </SidebarBody>
 
-          <SidebarFooter className="max-lg:hidden">
+          <SidebarFooter>
             <Dropdown>
               <DropdownButton as={SidebarItem}>
                 <span className="flex min-w-0 items-center gap-3">
