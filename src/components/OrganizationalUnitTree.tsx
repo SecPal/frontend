@@ -256,8 +256,8 @@ function TreeNode({
         {/* Type Badge */}
         <Badge color={getTypeBadgeColor(unit.type)}>{unit.type}</Badge>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Actions - always visible on mobile, hover-only on desktop */}
+        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <Button
               plain
