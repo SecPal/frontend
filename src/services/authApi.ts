@@ -15,6 +15,9 @@ interface LoginResponse {
     id: number;
     name: string;
     email: string;
+    roles?: string[];
+    permissions?: string[];
+    hasOrganizationalScopes?: boolean;
   };
 }
 
