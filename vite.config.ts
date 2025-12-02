@@ -136,9 +136,6 @@ export default defineConfig(({ mode }) => {
               title: "title",
               text: "text",
               url: "url",
-              // Note: File handling is configured here but not yet fully implemented
-              // in useShareTarget hook. The hook currently uses GET parameters only.
-              // Full POST + file support tracked in Issue #101
               files: [
                 {
                   name: "files",
