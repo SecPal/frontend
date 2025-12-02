@@ -21,6 +21,8 @@ import {
   ObjectsPage,
   GuardBooksPage,
 } from "./pages/Organization";
+import { SettingsPage } from "./pages/Settings";
+import { ProfilePage } from "./pages/Profile";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
@@ -203,6 +205,27 @@ function App() {
               <ProtectedRoute>
                 <ApplicationLayout>
                   <GuardBooksPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          {/* User Routes */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <SettingsPage />
+                </ApplicationLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ApplicationLayout>
+                  <ProfilePage />
                 </ApplicationLayout>
               </ProtectedRoute>
             }

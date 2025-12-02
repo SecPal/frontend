@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
 import { logout as apiLogout } from "../services/authApi";
+import { getInitials } from "../lib/stringUtils";
 import { Avatar } from "./avatar";
 import {
   Dropdown,
@@ -153,15 +154,6 @@ function ClipboardDocumentListIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 /**
  * Shared user menu items for both navbar and sidebar dropdowns.
  * Extracted to maintain DRY principles and ensure consistency.
@@ -231,7 +223,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             <Dropdown>
               <DropdownButton as={NavbarItem} aria-label="User menu">
                 <Avatar
-                  initials={user?.name ? getInitials(user.name) : "U"}
+                  initials={user?.name?.trim() ? getInitials(user.name) : "U"}
                   className="size-8 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
                 />
               </DropdownButton>
@@ -325,7 +317,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
               <DropdownButton as={SidebarItem}>
                 <span className="flex min-w-0 items-center gap-3">
                   <Avatar
-                    initials={user?.name ? getInitials(user.name) : "U"}
+                    initials={user?.name?.trim() ? getInitials(user.name) : "U"}
                     className="size-10 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
                   />
                   <span className="min-w-0">
