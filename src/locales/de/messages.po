@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-11-30 20:52+0100\n"
+"POT-Creation-Date: 2025-12-02 19:49+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,11 +28,11 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:43
+#: src/App.tsx:45
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:54
+#: src/App.tsx:56
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -71,7 +71,7 @@ msgstr "Einheit hinzufügen"
 
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
-msgstr ""
+msgstr "Füge ein neues Geheimnis zu deinem Tresor hinzu."
 
 #: src/pages/Organization/CustomersPage.tsx:119
 msgid "Address"
@@ -145,7 +145,7 @@ msgstr "Angehängte Dateien"
 msgid "Attachments ({0})"
 msgstr "Anhänge ({0})"
 
-#: src/App.tsx:65
+#: src/App.tsx:67
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -163,6 +163,10 @@ msgstr "Abbrechen"
 msgid "Choose which notifications you want to receive"
 msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 
+#: src/pages/Settings/SettingsPage.tsx:37
+msgid "Choose your preferred language for the application."
+msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
+
 #: src/pages/ShareTarget.tsx:539
 msgid "Clear"
 msgstr "Löschen"
@@ -173,7 +177,7 @@ msgstr "Löschen Abgeschlossen"
 
 #: src/components/UploadStatus.tsx:107
 msgid "Cleared {count} completed upload(s)"
-msgstr ""
+msgstr "Gelöscht {count} abgeschlossene(r) Upload(s)"
 
 #: src/components/AttachmentPreview.tsx:134
 #: src/components/AttachmentPreview.tsx:211
@@ -235,7 +239,7 @@ msgstr "Kundennummer"
 msgid "Customer hierarchy"
 msgstr "Kundenhierarchie"
 
-#: src/components/application-layout.tsx:283
+#: src/components/application-layout.tsx:291
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
@@ -304,6 +308,10 @@ msgstr "Geheimnis bearbeiten"
 msgid "Edit {0}"
 msgstr "Bearbeiten {0}"
 
+#: src/pages/Profile/ProfilePage.tsx:79
+msgid "Email"
+msgstr "E-Mail"
+
 #: src/components/NotificationPreferences.tsx:280
 msgid "Enable Notifications"
 msgstr "Benachrichtigungen aktivieren"
@@ -369,10 +377,10 @@ msgstr "Bald ablaufend"
 #. placeholder {0}: report.report_number
 #: src/components/GuardBookManager.tsx:416
 msgid "Export report {0}"
-msgstr ""
+msgstr "Bericht exportieren {0}"
 
 #. js-lingui-explicit-id
-#: src/components/LanguageSwitcher.tsx:18
+#: src/components/LanguageSwitcher.tsx:21
 msgid "Failed to change language. Please try again."
 msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
@@ -450,7 +458,7 @@ msgstr "Berichte konnten nicht geladen werden"
 
 #: src/components/ObjectManager.tsx:548
 msgid "Failed to load selected object"
-msgstr ""
+msgstr "Das ausgewählte Objekt konnte nicht geladen werden"
 
 #: src/components/SharedWithList.tsx:44
 msgid "Failed to revoke access"
@@ -520,7 +528,7 @@ msgstr "Raster"
 msgid "Grid view"
 msgstr "Gitternetz-Ansicht"
 
-#: src/components/application-layout.tsx:292
+#: src/components/application-layout.tsx:302
 #: src/components/GuardBookManager.tsx:645
 #: src/components/ObjectManager.tsx:253
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -533,7 +541,7 @@ msgstr "Wachbücher"
 msgid "Hide"
 msgstr "Ausblenden"
 
-#: src/components/application-layout.tsx:259
+#: src/components/application-layout.tsx:264
 msgid "Home"
 msgstr "Startseite"
 
@@ -550,6 +558,10 @@ msgstr "Ungültiger Dateityp: {0}. Nur Bilder, PDFs und Dokumente sind erlaubt."
 #: src/pages/ShareTarget.tsx:596
 msgid "Invalid or unsafe URL"
 msgstr "Ungültige oder unsichere URL"
+
+#: src/pages/Settings/SettingsPage.tsx:34
+msgid "Language"
+msgstr "Sprache"
 
 #. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
 #. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
@@ -589,10 +601,6 @@ msgstr "Geheimnisse laden..."
 msgid "Loading..."
 msgstr "Laden..."
 
-#: src/components/Header.tsx:57
-msgid "Logout"
-msgstr "Abmelden"
-
 #: src/pages/Organization/CustomersPage.tsx:54
 msgid "Manage customer organizations and their protected objects."
 msgstr "Verwalten Sie Kundenorganisationen und deren geschützte Objekte."
@@ -604,6 +612,10 @@ msgstr "Verwalten Sie digitale Wachbücher und erstellen Sie Berichte für diese
 #: src/pages/Organization/ObjectsPage.tsx:83
 msgid "Manage protected objects and their areas for this customer."
 msgstr "Verwalten Sie geschützte Objekte und deren Bereiche für diesen Kunden."
+
+#: src/pages/Settings/SettingsPage.tsx:24
+msgid "Manage your application preferences."
+msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
 #: src/pages/Organization/OrganizationPage.tsx:48
 msgid "Manage your internal organizational units including departments, branches, and teams."
@@ -622,10 +634,12 @@ msgid "Metadata"
 msgstr "Metadaten"
 
 #: src/components/application-layout.tsx:175
+#: src/pages/Profile/ProfilePage.tsx:42
 msgid "My profile"
 msgstr "Mein Profil"
 
 #: src/components/ObjectManager.tsx:374
+#: src/pages/Profile/ProfilePage.tsx:74
 msgid "Name"
 msgstr "Name"
 
@@ -736,7 +750,7 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
-#: src/components/application-layout.tsx:274
+#: src/components/application-layout.tsx:280
 msgid "Organization"
 msgstr "Organisation"
 
@@ -853,7 +867,7 @@ msgstr "Rollen"
 
 #: src/pages/ShareTarget.tsx:717
 msgid "Save to Secret"
-msgstr ""
+msgstr "Als Geheimnis speichern"
 
 #: src/pages/Secrets/SecretList.tsx:184
 msgid "Search secrets"
@@ -863,15 +877,15 @@ msgstr "Geheimnisse durchsuchen"
 msgid "Search secrets..."
 msgstr "Geheimnisse durchsuchen..."
 
-#: src/App.tsx:36
+#: src/App.tsx:38
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:57
+#: src/App.tsx:59
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/components/application-layout.tsx:265
+#: src/components/application-layout.tsx:270
 #: src/pages/Secrets/SecretList.tsx:159
 msgid "Secrets"
 msgstr "Geheimnisse"
@@ -921,7 +935,8 @@ msgid "Server Version"
 msgstr "Server-Version"
 
 #: src/components/application-layout.tsx:181
-#: src/components/application-layout.tsx:306
+#: src/components/application-layout.tsx:317
+#: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -932,7 +947,7 @@ msgstr "Teilen"
 
 #: src/components/ShareDialog.tsx:108
 msgid "Share \"{secretTitle}\""
-msgstr ""
+msgstr "Teile \"{secretTitle}\""
 
 #: src/pages/ShareTarget.tsx:523
 msgid "Share Target"
@@ -953,7 +968,7 @@ msgstr "Gemeinsamer Inhalt"
 #. placeholder {0}: shares.length
 #: src/components/SharedWithList.tsx:69
 msgid "Shared with ({0})"
-msgstr ""
+msgstr "Gemeinsam genutzt mit ({0})"
 
 #: src/components/ShareDialog.tsx:229
 msgid "Sharing..."
@@ -1094,7 +1109,7 @@ msgstr "Benutzer"
 msgid "View Objects"
 msgstr "Objekte anzeigen"
 
-#: src/App.tsx:40
+#: src/App.tsx:42
 msgid "View Secrets"
 msgstr "Geheimnisse ansehen"
 
@@ -1103,7 +1118,11 @@ msgstr "Geheimnisse ansehen"
 msgid "View objects for {0}"
 msgstr "Objekte für {0} anzeigen"
 
-#: src/App.tsx:33
+#: src/pages/Profile/ProfilePage.tsx:45
+msgid "View your account information."
+msgstr "Zeigen Sie Ihre Kontoinformationen an."
+
+#: src/App.tsx:35
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
