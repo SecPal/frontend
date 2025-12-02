@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
 import { Select } from "./select";
-import { ErrorMessage } from "./fieldset";
 
 export function LanguageSwitcher() {
   const { i18n } = useLingui();
@@ -39,9 +38,13 @@ export function LanguageSwitcher() {
         ))}
       </Select>
       {error && (
-        <ErrorMessage role="alert" aria-live="assertive">
+        <p
+          role="alert"
+          aria-live="assertive"
+          className="mt-2 text-base/6 text-red-600 sm:text-sm/6 dark:text-red-500"
+        >
           {error}
-        </ErrorMessage>
+        </p>
       )}
     </div>
   );
