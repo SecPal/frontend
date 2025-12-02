@@ -138,15 +138,9 @@ export class CacheMonitor {
       console.log("[CacheMonitor] Metrics:", metrics);
     }
 
-    // TODO: Send to analytics service when implemented (Issue #167)
-    // analytics.track({
-    //   type: 'performance',
-    //   data: {
-    //     metric: 'cache_hit_ratio',
-    //     value: metrics.hitRatio * 100,
-    //     unit: 'percent',
-    //   },
-    // });
+    // Note: Analytics is local-only by design (privacy-first architecture).
+    // Cache metrics are logged to console in dev mode only.
+    // See Issue #167 for privacy-first design rationale.
   }
 }
 
