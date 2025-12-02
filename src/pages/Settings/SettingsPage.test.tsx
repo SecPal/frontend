@@ -94,5 +94,9 @@ describe("SettingsPage", () => {
     // Main heading should be h1 (via Heading component)
     const mainHeading = screen.getByRole("heading", { name: /settings/i });
     expect(mainHeading.tagName).toBe("H1");
+
+    // Language section heading should be h2
+    const languageHeading = screen.getByRole("heading", { name: /language/i });
+    expect(languageHeading.tagName).toBe("H2");
   });
 });

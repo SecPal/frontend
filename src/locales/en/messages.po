@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
-#: src/components/LanguageSwitcher.tsx:21
+#: src/components/LanguageSwitcher.tsx:20
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
@@ -678,10 +678,6 @@ msgstr "Logging in..."
 #: src/pages/Login.tsx:117
 msgid "login.title"
 msgstr "Login"
-
-#: src/components/Header.tsx:57
-#~ msgid "Logout"
-#~ msgstr "Logout"
 
 #: src/pages/Organization/CustomersPage.tsx:54
 msgid "Manage customer organizations and their protected objects."

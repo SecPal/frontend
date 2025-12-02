@@ -12,19 +12,7 @@ import {
   DescriptionTerm,
   DescriptionDetails,
 } from "../../components/description-list";
-
-/**
- * Get initials from a name string.
- * Returns up to 2 characters (first letter of first and last name).
- */
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { getInitials } from "../../lib/stringUtils";
 
 /**
  * Profile Page
@@ -53,7 +41,7 @@ export function ProfilePage() {
         {/* Avatar and Name */}
         <div className="flex items-center gap-4">
           <Avatar
-            initials={user?.name ? getInitials(user.name) : "U"}
+            initials={user?.name?.trim() ? getInitials(user.name) : "U"}
             className="size-16 bg-zinc-900 text-white text-xl dark:bg-white dark:text-zinc-900"
           />
           <div>

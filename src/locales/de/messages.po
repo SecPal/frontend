@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-02 19:49+0100\n"
+"POT-Creation-Date: 2025-12-02 20:02+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -380,7 +380,7 @@ msgid "Export report {0}"
 msgstr "Bericht exportieren {0}"
 
 #. js-lingui-explicit-id
-#: src/components/LanguageSwitcher.tsx:21
+#: src/components/LanguageSwitcher.tsx:20
 msgid "Failed to change language. Please try again."
 msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 

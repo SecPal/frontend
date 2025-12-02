@@ -124,5 +124,33 @@ describe("ProfilePage", () => {
     expect(
       screen.getByRole("heading", { name: /my profile/i })
     ).toBeInTheDocument();
+    // Fallback avatar initial should be displayed
+    expect(screen.getByText("U")).toBeInTheDocument();
+  });
+
+  it("handles user with empty name", () => {
+    renderWithProviders(<ProfilePage />, {
+      user: {
+        id: 3,
+        name: "",
+        email: "empty@example.com",
+      },
+    });
+
+    // Should show fallback initial for empty name
+    expect(screen.getByText("U")).toBeInTheDocument();
+  });
+
+  it("handles user with whitespace-only name", () => {
+    renderWithProviders(<ProfilePage />, {
+      user: {
+        id: 4,
+        name: "   ",
+        email: "whitespace@example.com",
+      },
+    });
+
+    // Should show fallback initial for whitespace-only name
+    expect(screen.getByText("U")).toBeInTheDocument();
   });
 });
