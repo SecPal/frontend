@@ -4,12 +4,15 @@
 import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
+import { Select } from "./select";
+import { ErrorMessage } from "./fieldset";
 
 export function LanguageSwitcher() {
   const { i18n } = useLingui();
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = async (locale: string) => {
+  const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const locale = event.target.value;
     setError(null);
     try {
       await activateLocale(locale);
@@ -24,10 +27,9 @@ export function LanguageSwitcher() {
 
   return (
     <div>
-      <select
+      <Select
         value={i18n.locale}
-        onChange={(e) => handleChange(e.target.value)}
-        className="rounded-md border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        onChange={handleChange}
         aria-label="Select language"
       >
         {Object.entries(locales).map(([code, name]) => (
@@ -35,15 +37,11 @@ export function LanguageSwitcher() {
             {name}
           </option>
         ))}
-      </select>
+      </Select>
       {error && (
-        <div
-          role="alert"
-          className="mt-2 text-sm text-red-600"
-          aria-live="assertive"
-        >
+        <ErrorMessage role="alert" aria-live="assertive">
           {error}
-        </div>
+        </ErrorMessage>
       )}
     </div>
   );
