@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **OfflineIndicator no longer blocks app interaction** (#XXX)
+  - Replaced blocking modal dialog (`Alert`) with non-blocking toast banner
+  - Banner auto-minimizes to icon after 5 seconds to reduce obstruction
+  - Users can manually minimize/expand the notification
+  - Resets to expanded state when going offline again (for context)
+  - Added comprehensive test coverage (19 tests)
+  - Improved accessibility with `role="status"`, `aria-live="polite"`
+  - Used `ChevronDownIcon` from HeroIcons instead of inline SVG (DRY)
+
 ### Added
 
 - **Organizational Hierarchy UI Components** (#241, Part of Epic #228)
