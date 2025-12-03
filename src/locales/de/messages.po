@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-02 20:02+0100\n"
+"POT-Creation-Date: 2025-12-03 21:06+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -81,11 +81,11 @@ msgstr "Adresse"
 msgid "Admin"
 msgstr "Admin"
 
-#: src/pages/Secrets/SecretList.tsx:214
+#: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "Alle"
 
-#: src/pages/Secrets/SecretList.tsx:197
+#: src/pages/Secrets/SecretList.tsx:190
 msgid "All Tags"
 msgstr "Alle Tags"
 
@@ -211,11 +211,11 @@ msgid "Create Organizational Unit"
 msgstr "Organisatorische Einheit anlegen"
 
 #: src/pages/Secrets/SecretCreate.tsx:65
-#: src/pages/Secrets/SecretList.tsx:270
+#: src/pages/Secrets/SecretList.tsx:263
 msgid "Create Secret"
 msgstr "Geheimnis erstellen"
 
-#: src/pages/Secrets/SecretList.tsx:262
+#: src/pages/Secrets/SecretList.tsx:255
 msgid "Create your first secret to get started"
 msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 
@@ -239,7 +239,7 @@ msgstr "Kundennummer"
 msgid "Customer hierarchy"
 msgstr "Kundenhierarchie"
 
-#: src/components/application-layout.tsx:291
+#: src/components/application-layout.tsx:283
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
@@ -308,7 +308,7 @@ msgstr "Geheimnis bearbeiten"
 msgid "Edit {0}"
 msgstr "Bearbeiten {0}"
 
-#: src/pages/Profile/ProfilePage.tsx:79
+#: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
 msgstr "E-Mail"
 
@@ -332,7 +332,7 @@ msgstr "Dateien verschlüsseln..."
 msgid "Error Loading Secret"
 msgstr "Fehler beim Laden des Geheimnisses"
 
-#: src/pages/Secrets/SecretList.tsx:145
+#: src/pages/Secrets/SecretList.tsx:125
 msgid "Error Loading Secrets"
 msgstr "Fehler beim Laden von Geheimnissen"
 
@@ -352,7 +352,7 @@ msgstr "Ausklappen"
 #: src/pages/Secrets/SecretCard.tsx:44
 #: src/pages/Secrets/SecretDetail.tsx:268
 #: src/pages/Secrets/SecretDetail.tsx:375
-#: src/pages/Secrets/SecretList.tsx:215
+#: src/pages/Secrets/SecretList.tsx:208
 msgid "Expired"
 msgstr "Abgelaufen"
 
@@ -370,7 +370,7 @@ msgid "Expires: {0}"
 msgstr "Läuft ab: {0}"
 
 #: src/pages/Secrets/SecretCard.tsx:49
-#: src/pages/Secrets/SecretList.tsx:216
+#: src/pages/Secrets/SecretList.tsx:209
 msgid "Expiring Soon"
 msgstr "Bald ablaufend"
 
@@ -477,11 +477,11 @@ msgstr "Geheimnis teilen fehlgeschlagen"
 msgid "File too large: {0}. Maximum size is 10MB."
 msgstr "Datei zu groß: {0}. Die maximale Größe beträgt 10MB."
 
-#: src/pages/Secrets/SecretList.tsx:212
+#: src/pages/Secrets/SecretList.tsx:205
 msgid "Filter by expiration"
 msgstr "Filter nach Gültigkeit"
 
-#: src/pages/Secrets/SecretList.tsx:195
+#: src/pages/Secrets/SecretList.tsx:188
 msgid "Filter by tag"
 msgstr "Nach Tag filtern"
 
@@ -520,15 +520,15 @@ msgstr "Zu den Kunden gehen"
 msgid "Granted by {0} on {1}"
 msgstr "Gewährt von {0} am {1}"
 
-#: src/pages/Secrets/SecretList.tsx:231
+#: src/pages/Secrets/SecretList.tsx:224
 msgid "Grid"
 msgstr "Raster"
 
-#: src/pages/Secrets/SecretList.tsx:229
+#: src/pages/Secrets/SecretList.tsx:222
 msgid "Grid view"
 msgstr "Gitternetz-Ansicht"
 
-#: src/components/application-layout.tsx:302
+#: src/components/application-layout.tsx:294
 #: src/components/GuardBookManager.tsx:645
 #: src/components/ObjectManager.tsx:253
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -541,7 +541,7 @@ msgstr "Wachbücher"
 msgid "Hide"
 msgstr "Ausblenden"
 
-#: src/components/application-layout.tsx:264
+#: src/components/application-layout.tsx:256
 msgid "Home"
 msgstr "Startseite"
 
@@ -575,11 +575,16 @@ msgstr "Zuletzt geändert: {0}"
 msgid "Last sync: {0}"
 msgstr "Letzte Synchronisation: {0}"
 
-#: src/pages/Secrets/SecretList.tsx:242
+#. placeholder {0}: formatRelativeTime(lastSynced)
+#: src/components/OfflineDataBanner.tsx:103
+msgid "Last synced: {0}"
+msgstr "Zuletzt synchronisiert: {0}"
+
+#: src/pages/Secrets/SecretList.tsx:235
 msgid "List"
 msgstr "Liste"
 
-#: src/pages/Secrets/SecretList.tsx:240
+#: src/pages/Secrets/SecretList.tsx:233
 msgid "List view"
 msgstr "Listenansicht"
 
@@ -591,7 +596,7 @@ msgstr "Anhänge laden..."
 msgid "Loading secret..."
 msgstr "Geheimnis laden..."
 
-#: src/pages/Secrets/SecretList.tsx:132
+#: src/pages/Secrets/SecretList.tsx:112
 #: src/pages/ShareTarget.tsx:637
 msgid "Loading secrets..."
 msgstr "Geheimnisse laden..."
@@ -621,7 +626,7 @@ msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
 
-#: src/pages/Secrets/SecretList.tsx:162
+#: src/pages/Secrets/SecretList.tsx:155
 msgid "Manage your secrets and sensitive information securely."
 msgstr "Verwalten Sie Ihre Geheimnisse und sensiblen Informationen auf sichere Weise."
 
@@ -633,17 +638,21 @@ msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 msgid "Metadata"
 msgstr "Metadaten"
 
-#: src/components/application-layout.tsx:175
-#: src/pages/Profile/ProfilePage.tsx:42
+#: src/components/OfflineIndicator.tsx:106
+msgid "Minimize offline notice"
+msgstr "Offline-Benachrichtigung minimieren"
+
+#: src/components/application-layout.tsx:167
+#: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
 
 #: src/components/ObjectManager.tsx:374
-#: src/pages/Profile/ProfilePage.tsx:74
+#: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
 
-#: src/pages/Secrets/SecretList.tsx:168
+#: src/pages/Secrets/SecretList.tsx:161
 msgid "New Secret"
 msgstr "Neues Geheimnis"
 
@@ -655,7 +664,7 @@ msgstr "Nein"
 msgid "No Customers"
 msgstr "Keine Kunden"
 
-#: src/pages/Secrets/SecretList.tsx:217
+#: src/pages/Secrets/SecretList.tsx:210
 msgid "No Expiration"
 msgstr "Kein Ablaufdatum"
 
@@ -695,11 +704,11 @@ msgstr "Kein Objekt ausgewählt. Bitte navigieren Sie von der Seite mit den Obje
 msgid "No reports generated yet."
 msgstr "Es wurden noch keine Berichte erstellt."
 
-#: src/pages/Secrets/SecretList.tsx:257
+#: src/pages/Secrets/SecretList.tsx:250
 msgid "No secrets found"
 msgstr "Keine Geheimnisse gefunden"
 
-#: src/pages/Secrets/SecretList.tsx:255
+#: src/pages/Secrets/SecretList.tsx:248
 msgid "No secrets yet"
 msgstr "Noch keine Geheimnisse"
 
@@ -750,7 +759,7 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
-#: src/components/application-layout.tsx:280
+#: src/components/application-layout.tsx:272
 msgid "Organization"
 msgstr "Organisation"
 
@@ -772,7 +781,7 @@ msgstr "Eigentümer"
 
 #. placeholder {0}: filteredSecrets.length
 #. placeholder {1}: filteredSecrets.length === 1 ? "secret" : "secrets"
-#: src/pages/Secrets/SecretList.tsx:375
+#: src/pages/Secrets/SecretList.tsx:368
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
 
@@ -815,6 +824,10 @@ msgstr "Fortschritt der Verarbeitung"
 #: src/components/ShareDialog.tsx:170
 msgid "Read"
 msgstr "Lesen"
+
+#: src/components/OfflineDataBanner.tsx:115
+msgid "Refresh"
+msgstr "Aktualisieren"
 
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
@@ -869,11 +882,11 @@ msgstr "Rollen"
 msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
 
-#: src/pages/Secrets/SecretList.tsx:184
+#: src/pages/Secrets/SecretList.tsx:177
 msgid "Search secrets"
 msgstr "Geheimnisse durchsuchen"
 
-#: src/pages/Secrets/SecretList.tsx:178
+#: src/pages/Secrets/SecretList.tsx:171
 msgid "Search secrets..."
 msgstr "Geheimnisse durchsuchen..."
 
@@ -885,8 +898,8 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/components/application-layout.tsx:270
-#: src/pages/Secrets/SecretList.tsx:159
+#: src/components/application-layout.tsx:262
+#: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Geheimnisse"
 
@@ -934,8 +947,8 @@ msgstr "Separates Wachbuch"
 msgid "Server Version"
 msgstr "Server-Version"
 
-#: src/components/application-layout.tsx:181
-#: src/components/application-layout.tsx:317
+#: src/components/application-layout.tsx:173
+#: src/components/application-layout.tsx:309
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Einstellungen"
@@ -982,11 +995,15 @@ msgstr "Schicht-Erinnerungen"
 msgid "Show"
 msgstr "Anzeigen"
 
-#: src/components/application-layout.tsx:188
+#: src/components/OfflineDataBanner.tsx:98
+msgid "Showing cached data"
+msgstr "Zeige zwischengespeicherte Daten"
+
+#: src/components/application-layout.tsx:180
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: src/components/OfflineIndicator.tsx:29
+#: src/components/OfflineIndicator.tsx:96
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
 
@@ -1046,7 +1063,11 @@ msgstr "Dieses Geheimnis wurde sowohl lokal als auch auf dem Server geändert. B
 msgid "Title:"
 msgstr "Titel:"
 
-#: src/pages/Secrets/SecretList.tsx:264
+#: src/pages/Secrets/SecretList.tsx:130
+msgid "Try Again"
+msgstr "Erneut versuchen"
+
+#: src/pages/Secrets/SecretList.tsx:257
 msgid "Try adjusting your filters"
 msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
@@ -1118,7 +1139,7 @@ msgstr "Geheimnisse ansehen"
 msgid "View objects for {0}"
 msgstr "Objekte für {0} anzeigen"
 
-#: src/pages/Profile/ProfilePage.tsx:45
+#: src/pages/Profile/ProfilePage.tsx:33
 msgid "View your account information."
 msgstr "Zeigen Sie Ihre Kontoinformationen an."
 
@@ -1138,9 +1159,17 @@ msgstr "Ja"
 msgid "You'll now receive important updates from SecPal"
 msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 
-#: src/components/OfflineIndicator.tsx:26
+#: src/components/OfflineIndicator.tsx:93
 msgid "You're offline"
 msgstr "Sie sind offline"
+
+#: src/components/OfflineDataBanner.tsx:96
+msgid "You're offline - showing cached data"
+msgstr "Sie sind offline - Anzeige von Daten im Cache"
+
+#: src/components/OfflineIndicator.tsx:73
+msgid "You're offline. Click for details."
+msgstr "Sie sind offline. Klicken Sie für Details."
 
 #: src/components/ConflictResolutionDialog.tsx:132
 msgid "Your Local Version"

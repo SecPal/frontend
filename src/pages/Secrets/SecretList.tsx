@@ -1,15 +1,16 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Trans, t } from "@lingui/macro";
-import { fetchSecrets, type Secret, ApiError } from "../../services/secretApi";
+import { useSecretsWithOffline } from "../../hooks/useSecretsWithOffline";
 import { SecretCard } from "./SecretCard";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
+import { OfflineDataBanner } from "../../components/OfflineDataBanner";
 
 // Expiring soon threshold (shared constant)
 const EXPIRING_SOON_DAYS = 7;
@@ -21,12 +22,13 @@ type ExpirationFilter = "all" | "expired" | "expiring_soon" | "no_expiration";
 /**
  * Secret List Page
  *
- * Displays all user's secrets with search, filter, and pagination
+ * Displays all user's secrets with search, filter, and pagination.
+ * Supports offline-first data fetching with automatic cache fallback.
  */
 export function SecretList() {
-  const [secrets, setSecrets] = useState<Secret[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Offline-first data fetching
+  const { secrets, loading, error, isOffline, isStale, lastSynced, refresh } =
+    useSecretsWithOffline();
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,28 +42,6 @@ export function SecretList() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-
-  // Load secrets
-  useEffect(() => {
-    const loadSecrets = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await fetchSecrets();
-        setSecrets(data);
-      } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err.message);
-        } else {
-          setError("Failed to load secrets");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSecrets();
-  }, []);
 
   // Extract unique tags
   const allTags = useMemo(() => {
@@ -145,6 +125,11 @@ export function SecretList() {
             <Trans>Error Loading Secrets</Trans>
           </Heading>
           <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
+          {!isOffline && (
+            <Button onClick={refresh} className="mt-4" outline>
+              <Trans>Try Again</Trans>
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -152,6 +137,14 @@ export function SecretList() {
 
   return (
     <>
+      {/* Offline/Stale Data Banner */}
+      <OfflineDataBanner
+        isOffline={isOffline}
+        isStale={isStale}
+        lastSynced={lastSynced}
+        onRefresh={refresh}
+      />
+
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

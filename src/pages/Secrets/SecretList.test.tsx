@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -9,6 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SecretList } from "./SecretList";
 import * as secretApi from "../../services/secretApi";
+import * as secretStore from "../../lib/secretStore";
 import type { Secret } from "../../services/secretApi";
 
 // Mock secret API (keep ApiError real)
@@ -20,6 +21,12 @@ vi.mock("../../services/secretApi", async (importOriginal) => {
     fetchSecrets: vi.fn(),
   };
 });
+
+// Mock secretStore for offline support
+vi.mock("../../lib/secretStore", () => ({
+  saveSecret: vi.fn(),
+  listSecrets: vi.fn().mockResolvedValue([]),
+}));
 
 // Helper to render with all required providers
 const renderWithProviders = (component: React.ReactNode) => {
@@ -65,9 +72,33 @@ describe("SecretList", () => {
     },
   ];
 
+  // Store original navigator.onLine
+  let originalOnLine: boolean;
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+
+    // Store and set online status
+    originalOnLine = navigator.onLine;
+    Object.defineProperty(navigator, "onLine", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Reset secretStore mock
+    vi.mocked(secretStore.listSecrets).mockResolvedValue([]);
+    vi.mocked(secretStore.saveSecret).mockResolvedValue();
+  });
+
+  afterEach(() => {
+    // Restore navigator.onLine
+    Object.defineProperty(navigator, "onLine", {
+      value: originalOnLine,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it("should display loading state initially", () => {
@@ -393,5 +424,101 @@ describe("SecretList", () => {
     // Should show ellipsis on both sides: 1 ... 4 5 6 ... 10
     const ellipses = screen.getAllByText("...");
     expect(ellipses).toHaveLength(2); // Left and right ellipsis
+  });
+
+  describe("offline support", () => {
+    const cachedSecrets = [
+      {
+        id: "cached-1",
+        title: "Cached Secret 1",
+        username: "cached@example.com",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-10T00:00:00Z",
+        tags: ["cached"],
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      },
+    ];
+
+    it("should show cached data when offline", async () => {
+      // Set offline
+      Object.defineProperty(navigator, "onLine", {
+        value: false,
+        writable: true,
+        configurable: true,
+      });
+
+      vi.mocked(secretStore.listSecrets).mockResolvedValue(cachedSecrets);
+
+      renderWithProviders(<SecretList />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Cached Secret 1/)).toBeInTheDocument();
+      });
+
+      // Should show offline indicator
+      expect(screen.getByText(/offline/i)).toBeInTheDocument();
+      expect(screen.getByText(/cached data/i)).toBeInTheDocument();
+
+      // Should NOT have called the API
+      expect(secretApi.fetchSecrets).not.toHaveBeenCalled();
+    });
+
+    it("should show stale data banner when API fails but cache exists", async () => {
+      vi.mocked(secretApi.fetchSecrets).mockRejectedValue(
+        new Error("Network error")
+      );
+      vi.mocked(secretStore.listSecrets).mockResolvedValue(cachedSecrets);
+
+      renderWithProviders(<SecretList />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Cached Secret 1/)).toBeInTheDocument();
+      });
+
+      // Should show stale data banner (not error)
+      expect(screen.getByText(/cached data/i)).toBeInTheDocument();
+      expect(
+        screen.queryByText(/Error Loading Secrets/i)
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show refresh button in stale data banner when online", async () => {
+      vi.mocked(secretApi.fetchSecrets).mockRejectedValue(
+        new Error("Network error")
+      );
+      vi.mocked(secretStore.listSecrets).mockResolvedValue(cachedSecrets);
+
+      renderWithProviders(<SecretList />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Cached Secret 1/)).toBeInTheDocument();
+      });
+
+      // Refresh button should be present when online (stale but not offline)
+      const refreshButton = screen.getByRole("button", { name: /refresh/i });
+      expect(refreshButton).toBeInTheDocument();
+    });
+
+    it("should NOT show refresh button when offline", async () => {
+      Object.defineProperty(navigator, "onLine", {
+        value: false,
+        writable: true,
+        configurable: true,
+      });
+
+      vi.mocked(secretStore.listSecrets).mockResolvedValue(cachedSecrets);
+
+      renderWithProviders(<SecretList />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Cached Secret 1/)).toBeInTheDocument();
+      });
+
+      // Refresh button should NOT be present when offline
+      expect(
+        screen.queryByRole("button", { name: /refresh/i })
+      ).not.toBeInTheDocument();
+    });
   });
 });
