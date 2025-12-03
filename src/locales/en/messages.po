@@ -633,8 +633,8 @@ msgstr "Last modified: {0}"
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
-#. placeholder {0}: formatRelativeTime(lastSynced)
-#: src/components/OfflineDataBanner.tsx:103
+#. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
+#: src/components/OfflineDataBanner.tsx:111
 msgid "Last synced: {0}"
 msgstr "Last synced: {0}"
 
@@ -917,9 +917,13 @@ msgstr "Processing Progress"
 msgid "Read"
 msgstr "Read"
 
-#: src/components/OfflineDataBanner.tsx:115
+#: src/components/OfflineDataBanner.tsx:125
 msgid "Refresh"
 msgstr "Refresh"
+
+#: src/components/OfflineDataBanner.tsx:122
+msgid "Refresh data"
+msgstr "Refresh data"
 
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
@@ -1087,7 +1091,7 @@ msgstr "Shift Reminders"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/OfflineDataBanner.tsx:98
+#: src/components/OfflineDataBanner.tsx:106
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
@@ -1270,7 +1274,7 @@ msgstr "You'll now receive important updates from SecPal"
 msgid "You're offline"
 msgstr "You're offline"
 
-#: src/components/OfflineDataBanner.tsx:96
+#: src/components/OfflineDataBanner.tsx:104
 msgid "You're offline - showing cached data"
 msgstr "You're offline - showing cached data"
 

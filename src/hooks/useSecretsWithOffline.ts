@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchSecrets, type Secret } from "../services/secretApi";
 import {
   saveSecret,
@@ -108,6 +108,9 @@ export function useSecretsWithOffline(): UseSecretsWithOfflineResult {
   const [isStale, setIsStale] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
+  // Track if a fetch is in progress to prevent duplicate API calls
+  const isFetchingRef = useRef(false);
+
   /**
    * Load secrets from cache
    */
@@ -149,6 +152,12 @@ export function useSecretsWithOffline(): UseSecretsWithOfflineResult {
    * Load secrets with offline fallback
    */
   const loadSecrets = useCallback(async () => {
+    // Prevent duplicate API calls
+    if (isFetchingRef.current) {
+      return;
+    }
+    isFetchingRef.current = true;
+
     setLoading(true);
     setError(null);
 
@@ -190,6 +199,7 @@ export function useSecretsWithOffline(): UseSecretsWithOfflineResult {
       setSecrets([]);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [isOnline, fetchAndCache, loadFromCache]);
 

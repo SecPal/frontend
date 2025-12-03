@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import {
   SignalSlashIcon,
   ClockIcon,
@@ -20,25 +21,30 @@ export interface OfflineDataBannerProps {
 }
 
 /**
- * Format relative time string
+ * Format relative time using browser's Intl.RelativeTimeFormat
+ * Automatically uses the user's locale for i18n
  * @param date - Date to format
- * @returns Human-readable relative time
+ * @param locale - Locale string (e.g., 'en', 'de')
+ * @returns Localized human-readable relative time
  */
-function formatRelativeTime(date: Date): string {
+function formatRelativeTime(date: Date, locale: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMinutes < 1) {
-    return "just now";
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  if (diffSeconds < 60) {
+    return rtf.format(-diffSeconds, "second");
   } else if (diffMinutes < 60) {
-    return `${diffMinutes} minute${diffMinutes === 1 ? "" : "s"} ago`;
+    return rtf.format(-diffMinutes, "minute");
   } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    return rtf.format(-diffHours, "hour");
   } else {
-    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+    return rtf.format(-diffDays, "day");
   }
 }
 
@@ -66,6 +72,8 @@ export function OfflineDataBanner({
   lastSynced,
   onRefresh,
 }: OfflineDataBannerProps) {
+  const { i18n, _ } = useLingui();
+
   // Don't show banner if online and data is fresh
   if (!isOffline && !isStale) {
     return null;
@@ -93,14 +101,16 @@ export function OfflineDataBanner({
         <div className="flex-1">
           <p className={`text-sm font-medium ${textColor}`}>
             {isOffline ? (
-              <Trans>You&apos;re offline - showing cached data</Trans>
+              <Trans>You're offline - showing cached data</Trans>
             ) : (
               <Trans>Showing cached data</Trans>
             )}
           </p>
           {lastSynced && (
             <p className={`mt-0.5 text-xs ${textColor} opacity-75`}>
-              <Trans>Last synced: {formatRelativeTime(lastSynced)}</Trans>
+              <Trans>
+                Last synced: {formatRelativeTime(lastSynced, i18n.locale)}
+              </Trans>
             </p>
           )}
         </div>
@@ -109,7 +119,7 @@ export function OfflineDataBanner({
             type="button"
             onClick={onRefresh}
             className={`flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${textColor}`}
-            aria-label="Refresh data"
+            aria-label={_(msg`Refresh data`)}
           >
             <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
             <Trans>Refresh</Trans>
