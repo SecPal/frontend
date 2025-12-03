@@ -130,7 +130,7 @@ msgstr "Admin"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/pages/Secrets/SecretList.tsx:214
+#: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "All"
 
@@ -138,7 +138,7 @@ msgstr "All"
 msgid "All synced"
 msgstr "All synced"
 
-#: src/pages/Secrets/SecretList.tsx:197
+#: src/pages/Secrets/SecretList.tsx:190
 msgid "All Tags"
 msgstr "All Tags"
 
@@ -269,11 +269,11 @@ msgid "Create Organizational Unit"
 msgstr "Create Organizational Unit"
 
 #: src/pages/Secrets/SecretCreate.tsx:65
-#: src/pages/Secrets/SecretList.tsx:270
+#: src/pages/Secrets/SecretList.tsx:263
 msgid "Create Secret"
 msgstr "Create Secret"
 
-#: src/pages/Secrets/SecretList.tsx:262
+#: src/pages/Secrets/SecretList.tsx:255
 msgid "Create your first secret to get started"
 msgstr "Create your first secret to get started"
 
@@ -297,7 +297,7 @@ msgstr "Customer Hierarchy"
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:291
+#: src/components/application-layout.tsx:283
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
@@ -371,7 +371,7 @@ msgstr "Edit Secret"
 msgid "login.email"
 msgstr "Email"
 
-#: src/pages/Profile/ProfilePage.tsx:79
+#: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
 msgstr "Email"
 
@@ -395,7 +395,7 @@ msgstr "Encrypting files..."
 msgid "Error Loading Secret"
 msgstr "Error Loading Secret"
 
-#: src/pages/Secrets/SecretList.tsx:145
+#: src/pages/Secrets/SecretList.tsx:125
 msgid "Error Loading Secrets"
 msgstr "Error Loading Secrets"
 
@@ -415,7 +415,7 @@ msgstr "Expand"
 #: src/pages/Secrets/SecretCard.tsx:44
 #: src/pages/Secrets/SecretDetail.tsx:268
 #: src/pages/Secrets/SecretDetail.tsx:375
-#: src/pages/Secrets/SecretList.tsx:215
+#: src/pages/Secrets/SecretList.tsx:208
 msgid "Expired"
 msgstr "Expired"
 
@@ -433,7 +433,7 @@ msgid "Expires: {0}"
 msgstr "Expires: {0}"
 
 #: src/pages/Secrets/SecretCard.tsx:49
-#: src/pages/Secrets/SecretList.tsx:216
+#: src/pages/Secrets/SecretList.tsx:209
 msgid "Expiring Soon"
 msgstr "Expiring Soon"
 
@@ -535,11 +535,11 @@ msgstr "Failed to share secret"
 msgid "File too large: {0}. Maximum size is 10MB."
 msgstr "File too large: {0}. Maximum size is 10MB."
 
-#: src/pages/Secrets/SecretList.tsx:212
+#: src/pages/Secrets/SecretList.tsx:205
 msgid "Filter by expiration"
 msgstr "Filter by expiration"
 
-#: src/pages/Secrets/SecretList.tsx:195
+#: src/pages/Secrets/SecretList.tsx:188
 msgid "Filter by tag"
 msgstr "Filter by tag"
 
@@ -578,15 +578,15 @@ msgstr "Go to Customers"
 msgid "Granted by {0} on {1}"
 msgstr "Granted by {0} on {1}"
 
-#: src/pages/Secrets/SecretList.tsx:231
+#: src/pages/Secrets/SecretList.tsx:224
 msgid "Grid"
 msgstr "Grid"
 
-#: src/pages/Secrets/SecretList.tsx:229
+#: src/pages/Secrets/SecretList.tsx:222
 msgid "Grid view"
 msgstr "Grid view"
 
-#: src/components/application-layout.tsx:302
+#: src/components/application-layout.tsx:294
 #: src/components/GuardBookManager.tsx:645
 #: src/components/ObjectManager.tsx:253
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -599,7 +599,7 @@ msgstr "Guard Books"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/components/application-layout.tsx:264
+#: src/components/application-layout.tsx:256
 msgid "Home"
 msgstr "Home"
 
@@ -633,11 +633,16 @@ msgstr "Last modified: {0}"
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
-#: src/pages/Secrets/SecretList.tsx:242
+#. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
+#: src/components/OfflineDataBanner.tsx:111
+msgid "Last synced: {0}"
+msgstr "Last synced: {0}"
+
+#: src/pages/Secrets/SecretList.tsx:235
 msgid "List"
 msgstr "List"
 
-#: src/pages/Secrets/SecretList.tsx:240
+#: src/pages/Secrets/SecretList.tsx:233
 msgid "List view"
 msgstr "List view"
 
@@ -649,7 +654,7 @@ msgstr "Loading attachments..."
 msgid "Loading secret..."
 msgstr "Loading secret..."
 
-#: src/pages/Secrets/SecretList.tsx:132
+#: src/pages/Secrets/SecretList.tsx:112
 #: src/pages/ShareTarget.tsx:637
 msgid "Loading secrets..."
 msgstr "Loading secrets..."
@@ -699,7 +704,7 @@ msgstr "Manage your application preferences."
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Manage your internal organizational units including departments, branches, and teams."
 
-#: src/pages/Secrets/SecretList.tsx:162
+#: src/pages/Secrets/SecretList.tsx:155
 msgid "Manage your secrets and sensitive information securely."
 msgstr "Manage your secrets and sensitive information securely."
 
@@ -711,17 +716,21 @@ msgstr "Messages from team members and supervisors"
 msgid "Metadata"
 msgstr "Metadata"
 
-#: src/components/application-layout.tsx:175
-#: src/pages/Profile/ProfilePage.tsx:42
+#: src/components/OfflineIndicator.tsx:106
+msgid "Minimize offline notice"
+msgstr "Minimize offline notice"
+
+#: src/components/application-layout.tsx:167
+#: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
 
 #: src/components/ObjectManager.tsx:374
-#: src/pages/Profile/ProfilePage.tsx:74
+#: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
 
-#: src/pages/Secrets/SecretList.tsx:168
+#: src/pages/Secrets/SecretList.tsx:161
 msgid "New Secret"
 msgstr "New Secret"
 
@@ -749,7 +758,7 @@ msgstr "No customer selected. Please select a customer first."
 msgid "No Customers"
 msgstr "No Customers"
 
-#: src/pages/Secrets/SecretList.tsx:217
+#: src/pages/Secrets/SecretList.tsx:210
 msgid "No Expiration"
 msgstr "No Expiration"
 
@@ -773,11 +782,11 @@ msgstr "No Organizational Units"
 msgid "No reports generated yet."
 msgstr "No reports generated yet."
 
-#: src/pages/Secrets/SecretList.tsx:257
+#: src/pages/Secrets/SecretList.tsx:250
 msgid "No secrets found"
 msgstr "No secrets found"
 
-#: src/pages/Secrets/SecretList.tsx:255
+#: src/pages/Secrets/SecretList.tsx:248
 msgid "No secrets yet"
 msgstr "No secrets yet"
 
@@ -832,7 +841,7 @@ msgstr "Offline - will sync when online"
 msgid "Offline only"
 msgstr "Offline only"
 
-#: src/components/application-layout.tsx:280
+#: src/components/application-layout.tsx:272
 msgid "Organization"
 msgstr "Organization"
 
@@ -854,7 +863,7 @@ msgstr "Owner"
 
 #. placeholder {0}: filteredSecrets.length
 #. placeholder {1}: filteredSecrets.length === 1 ? "secret" : "secrets"
-#: src/pages/Secrets/SecretList.tsx:375
+#: src/pages/Secrets/SecretList.tsx:368
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Page {currentPage} of {totalPages} ({0} {1})"
 
@@ -907,6 +916,14 @@ msgstr "Processing Progress"
 #: src/components/ShareDialog.tsx:170
 msgid "Read"
 msgstr "Read"
+
+#: src/components/OfflineDataBanner.tsx:125
+msgid "Refresh"
+msgstr "Refresh"
+
+#: src/components/OfflineDataBanner.tsx:122
+msgid "Refresh data"
+msgstr "Refresh data"
 
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
@@ -961,11 +978,11 @@ msgstr "Roles"
 msgid "Save to Secret"
 msgstr "Save to Secret"
 
-#: src/pages/Secrets/SecretList.tsx:184
+#: src/pages/Secrets/SecretList.tsx:177
 msgid "Search secrets"
 msgstr "Search secrets"
 
-#: src/pages/Secrets/SecretList.tsx:178
+#: src/pages/Secrets/SecretList.tsx:171
 msgid "Search secrets..."
 msgstr "Search secrets..."
 
@@ -977,8 +994,8 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/components/application-layout.tsx:270
-#: src/pages/Secrets/SecretList.tsx:159
+#: src/components/application-layout.tsx:262
+#: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Secrets"
 
@@ -1026,8 +1043,8 @@ msgstr "Separate Guard Book"
 msgid "Server Version"
 msgstr "Server Version"
 
-#: src/components/application-layout.tsx:181
-#: src/components/application-layout.tsx:317
+#: src/components/application-layout.tsx:173
+#: src/components/application-layout.tsx:309
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Settings"
@@ -1074,11 +1091,15 @@ msgstr "Shift Reminders"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/application-layout.tsx:188
+#: src/components/OfflineDataBanner.tsx:106
+msgid "Showing cached data"
+msgstr "Showing cached data"
+
+#: src/components/application-layout.tsx:180
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/components/OfflineIndicator.tsx:29
+#: src/components/OfflineIndicator.tsx:96
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Some features may be limited. Your changes will sync when you're back online."
 
@@ -1153,9 +1174,13 @@ msgstr "Title:"
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 
-#: src/pages/Secrets/SecretList.tsx:264
+#: src/pages/Secrets/SecretList.tsx:257
 msgid "Try adjusting your filters"
 msgstr "Try adjusting your filters"
+
+#: src/pages/Secrets/SecretList.tsx:130
+msgid "Try Again"
+msgstr "Try Again"
 
 #: src/pages/Organization/OrganizationPage.tsx:75
 msgid "Type"
@@ -1225,7 +1250,7 @@ msgstr "View objects for {0}"
 msgid "View Secrets"
 msgstr "View Secrets"
 
-#: src/pages/Profile/ProfilePage.tsx:45
+#: src/pages/Profile/ProfilePage.tsx:33
 msgid "View your account information."
 msgstr "View your account information."
 
@@ -1245,9 +1270,17 @@ msgstr "Yes"
 msgid "You'll now receive important updates from SecPal"
 msgstr "You'll now receive important updates from SecPal"
 
-#: src/components/OfflineIndicator.tsx:26
+#: src/components/OfflineIndicator.tsx:93
 msgid "You're offline"
 msgstr "You're offline"
+
+#: src/components/OfflineDataBanner.tsx:104
+msgid "You're offline - showing cached data"
+msgstr "You're offline - showing cached data"
+
+#: src/components/OfflineIndicator.tsx:73
+msgid "You're offline. Click for details."
+msgstr "You're offline. Click for details."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:120
