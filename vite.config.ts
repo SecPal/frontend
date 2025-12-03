@@ -289,6 +289,18 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "src"),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks for large dependencies
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+            "vendor-lingui": ["@lingui/core", "@lingui/react"],
+          },
+        },
+      },
+    },
     server: {
       // Allow DDEV hostnames for local development
       allowedHosts: [".ddev.site"],
