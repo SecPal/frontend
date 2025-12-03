@@ -3,6 +3,8 @@
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
+import { deriveFileKey, decryptFile } from "../lib/crypto/encryption";
+import { calculateChecksum } from "../lib/crypto/checksum";
 
 /**
  * Secret API Response Types
@@ -489,15 +491,12 @@ export async function downloadAndDecryptAttachment(
   const ciphertext = encryptedBytes.slice(28); // Rest is ciphertext
 
   // 4. Derive file key (same as encryption)
-  const { deriveFileKey, decryptFile } =
-    await import("../lib/crypto/encryption");
   const fileKey = await deriveFileKey(secretKey, metadata.filename);
 
   // 5. Decrypt file
   const decryptedData = await decryptFile(ciphertext, fileKey, iv, authTag);
 
   // 6. Verify checksum (integrity check)
-  const { calculateChecksum } = await import("../lib/crypto/checksum");
   const actualChecksum = await calculateChecksum(decryptedData);
 
   if (actualChecksum !== metadata.checksum) {
