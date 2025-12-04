@@ -28,20 +28,22 @@ import {
 import { ApiError } from "../services/secretApi";
 
 /**
- * Type options for organizational units
+ * Get translated type options for organizational units
  */
-const UNIT_TYPE_OPTIONS: Array<{
+function getUnitTypeOptions(): Array<{
   value: OrganizationalUnitType;
   label: string;
-}> = [
-  { value: "holding", label: "Holding" },
-  { value: "company", label: "Unternehmen" },
-  { value: "region", label: "Region" },
-  { value: "branch", label: "Niederlassung" },
-  { value: "division", label: "Abteilung" },
-  { value: "department", label: "Bereich" },
-  { value: "custom", label: "Benutzerdefiniert" },
-];
+}> {
+  return [
+    { value: "holding", label: t`Holding` },
+    { value: "company", label: t`Company` },
+    { value: "region", label: t`Region` },
+    { value: "branch", label: t`Branch` },
+    { value: "division", label: t`Division` },
+    { value: "department", label: t`Department` },
+    { value: "custom", label: t`Custom` },
+  ];
+}
 
 export interface OrganizationalUnitFormDialogProps {
   /** Dialog open state */
@@ -294,7 +296,7 @@ export function OrganizationalUnitFormDialog({
                 disabled={isSubmitting}
                 data-invalid={errors.type ? true : undefined}
               >
-                {UNIT_TYPE_OPTIONS.map((option) => (
+                {getUnitTypeOptions().map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

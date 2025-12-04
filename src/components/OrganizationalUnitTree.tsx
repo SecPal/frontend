@@ -17,17 +17,28 @@ import {
 } from "../services/organizationalUnitApi";
 
 /**
- * Type labels for organizational unit types (German)
+ * Get translated type label for organizational unit type
  */
-const TYPE_LABELS: Record<OrganizationalUnitType, string> = {
-  holding: "Holding",
-  company: "Unternehmen",
-  region: "Region",
-  branch: "Niederlassung",
-  division: "Abteilung",
-  department: "Bereich",
-  custom: "Benutzerdefiniert",
-};
+function getTypeLabel(type: OrganizationalUnitType): string {
+  switch (type) {
+    case "holding":
+      return t`Holding`;
+    case "company":
+      return t`Company`;
+    case "region":
+      return t`Region`;
+    case "branch":
+      return t`Branch`;
+    case "division":
+      return t`Division`;
+    case "department":
+      return t`Department`;
+    case "custom":
+      return t`Custom`;
+    default:
+      return type;
+  }
+}
 
 /**
  * Icon components for tree visualization
@@ -278,7 +289,7 @@ function TreeNode({
 
         {/* Type Badge */}
         <Badge color={getTypeBadgeColor(unit.type)}>
-          {TYPE_LABELS[unit.type] || unit.type}
+          {getTypeLabel(unit.type)}
         </Badge>
 
         {/* Actions - always visible on mobile, hover-only on desktop */}

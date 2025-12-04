@@ -12,17 +12,28 @@ import { OrganizationalUnitFormDialog } from "../../components/OrganizationalUni
 import type { OrganizationalUnit } from "../../types";
 
 /**
- * Type label mapping for display
+ * Get translated type label for display
  */
-const TYPE_LABELS: Record<string, string> = {
-  holding: "Holding",
-  company: "Unternehmen",
-  region: "Region",
-  branch: "Niederlassung",
-  division: "Abteilung",
-  department: "Bereich",
-  custom: "Benutzerdefiniert",
-};
+function getTypeLabel(type: string): string {
+  switch (type) {
+    case "holding":
+      return t`Holding`;
+    case "company":
+      return t`Company`;
+    case "region":
+      return t`Region`;
+    case "branch":
+      return t`Branch`;
+    case "division":
+      return t`Division`;
+    case "department":
+      return t`Department`;
+    case "custom":
+      return t`Custom`;
+    default:
+      return type;
+  }
+}
 
 /**
  * Organization Page
@@ -86,14 +97,13 @@ export function OrganizationPage() {
     setDialogOpen(true);
   }, []);
 
-  const handleCreateChild = useCallback(() => {
-    if (!selectedUnit) return;
+  const handleCreateChild = useCallback((unit: OrganizationalUnit) => {
     setDialogMode("create");
     setEditingUnit(null);
-    setDialogParentId(selectedUnit.id);
-    setDialogParentName(selectedUnit.name);
+    setDialogParentId(unit.id);
+    setDialogParentName(unit.name);
     setDialogOpen(true);
-  }, [selectedUnit]);
+  }, []);
 
   const handleDialogClose = useCallback(() => {
     setDialogOpen(false);
@@ -163,9 +173,7 @@ export function OrganizationPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <Heading level={3}>{selectedUnit.name}</Heading>
-                <Badge color="blue">
-                  {TYPE_LABELS[selectedUnit.type] || selectedUnit.type}
-                </Badge>
+                <Badge color="blue">{getTypeLabel(selectedUnit.type)}</Badge>
               </div>
 
               <dl className="space-y-3 text-sm">
@@ -174,7 +182,7 @@ export function OrganizationPage() {
                     <Trans>Type</Trans>
                   </dt>
                   <dd className="text-zinc-900 dark:text-white">
-                    {TYPE_LABELS[selectedUnit.type] || selectedUnit.type}
+                    {getTypeLabel(selectedUnit.type)}
                   </dd>
                 </div>
                 {selectedUnit.description && (
@@ -212,7 +220,7 @@ export function OrganizationPage() {
                 <Button onClick={() => handleEdit(selectedUnit)}>
                   <Trans>Edit</Trans>
                 </Button>
-                <Button outline onClick={handleCreateChild}>
+                <Button outline onClick={() => handleCreateChild(selectedUnit)}>
                   <Trans>Add Child Unit</Trans>
                 </Button>
               </div>
