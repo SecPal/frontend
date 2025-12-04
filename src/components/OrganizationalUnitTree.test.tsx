@@ -70,11 +70,16 @@ describe("OrganizationalUnitTree", () => {
     vi.mocked(listOrganizationalUnits).mockResolvedValue(mockResponse);
   });
 
-  it("renders loading state initially", () => {
+  it("renders loading state initially", async () => {
     renderWithI18n(<OrganizationalUnitTree />);
 
     // Loading skeleton should be visible
     expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+    // Wait for async operations to complete to prevent act() warnings
+    await waitFor(() => {
+      expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+    });
   });
 
   it("renders organizational units after loading", async () => {

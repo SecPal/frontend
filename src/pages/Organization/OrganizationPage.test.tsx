@@ -57,6 +57,11 @@ describe("OrganizationPage", () => {
     renderWithProviders(<OrganizationPage />);
 
     expect(screen.getByText("Organization Structure")).toBeInTheDocument();
+
+    // Wait for OrganizationalUnitTree to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
   });
 
   it("renders page description", async () => {
@@ -65,6 +70,11 @@ describe("OrganizationPage", () => {
     expect(
       screen.getByText(/Manage your internal organizational units/)
     ).toBeInTheDocument();
+
+    // Wait for OrganizationalUnitTree to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
   });
 
   it("shows placeholder when no unit is selected", async () => {

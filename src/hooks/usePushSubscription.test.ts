@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { usePushSubscription } from "./usePushSubscription";
 
 const TEST_VAPID_KEY = "BNxpMrN9pqQe9bKs0123456789abcdefghijklmnopqrstuvwxyz";
@@ -58,7 +58,7 @@ describe("usePushSubscription", () => {
   });
 
   describe("initialization", () => {
-    it("should initialize with correct default values", () => {
+    it("should initialize with correct default values", async () => {
       const { result } = renderHook(() =>
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
@@ -68,9 +68,14 @@ describe("usePushSubscription", () => {
       expect(result.current.isSupported).toBe(true);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
+
+      // Wait for async operations to complete to prevent act() warnings
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
     });
 
-    it("should detect unsupported browsers (no serviceWorker)", () => {
+    it("should detect unsupported browsers (no serviceWorker)", async () => {
       // Remove serviceWorker from navigator
       const originalSW = Object.getOwnPropertyDescriptor(
         navigator,
@@ -87,6 +92,11 @@ describe("usePushSubscription", () => {
 
       expect(result.current.isSupported).toBe(false);
 
+      // Wait for any potential async operations
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
       // Restore
       if (originalSW) {
         Object.defineProperty(navigator, "serviceWorker", originalSW);
@@ -100,7 +110,7 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.subscription).toBe(mockSubscription);
         expect(result.current.isSubscribed).toBe(true);
       });
@@ -149,7 +159,7 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isSubscribed).toBe(true);
       });
 
@@ -215,7 +225,7 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isSubscribed).toBe(true);
       });
 
@@ -248,7 +258,7 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isSubscribed).toBe(true);
       });
 
@@ -270,7 +280,7 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isSubscribed).toBe(true);
       });
 
@@ -285,10 +295,18 @@ describe("usePushSubscription", () => {
       });
     });
 
-    it("should return null if not subscribed", () => {
+    it("should return null if not subscribed", async () => {
+      // Clear the mock to ensure no subscription
+      mockPushManager.getSubscription.mockResolvedValue(null);
+
       const { result } = renderHook(() =>
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
+
+      // Wait for initial async operations to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
 
       const data = result.current.getSubscriptionData();
 

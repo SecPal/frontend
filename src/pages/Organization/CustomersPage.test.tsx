@@ -70,6 +70,11 @@ describe("CustomersPage", () => {
     renderWithProviders(<CustomersPage />);
 
     expect(screen.getByText("Customers")).toBeInTheDocument();
+
+    // Wait for CustomerTree to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    });
   });
 
   it("renders page description", async () => {
@@ -78,6 +83,11 @@ describe("CustomersPage", () => {
     expect(
       screen.getByText(/Manage customer organizations/)
     ).toBeInTheDocument();
+
+    // Wait for CustomerTree to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    });
   });
 
   it("shows placeholder when no customer is selected", async () => {

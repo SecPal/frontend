@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { AttachmentPreview } from "./AttachmentPreview";
+import { renderWithTransitions } from "../../tests/utils/renderWithDialog";
 
 describe("AttachmentPreview", () => {
   const mockOnClose = vi.fn();
@@ -15,13 +16,13 @@ describe("AttachmentPreview", () => {
     vi.clearAllMocks();
   });
 
-  it("should render image preview", () => {
+  it("should render image preview", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -37,13 +38,13 @@ describe("AttachmentPreview", () => {
     expect(screen.getByText("photo.jpg")).toBeInTheDocument();
   });
 
-  it("should render PDF preview", () => {
+  it("should render PDF preview", async () => {
     const pdfFile = new File(["pdf data"], "document.pdf", {
       type: "application/pdf",
     });
     const pdfUrl = URL.createObjectURL(pdfFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={pdfFile}
@@ -58,13 +59,13 @@ describe("AttachmentPreview", () => {
     expect(screen.getByText("document.pdf")).toBeInTheDocument();
   });
 
-  it("should show unsupported preview message for other types", () => {
+  it("should show unsupported preview message for other types", async () => {
     const textFile = new File(["text data"], "document.txt", {
       type: "text/plain",
     });
     const textUrl = URL.createObjectURL(textFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={textFile}
@@ -78,13 +79,13 @@ describe("AttachmentPreview", () => {
     expect(screen.getByText(/preview not available/i)).toBeInTheDocument();
   });
 
-  it("should close modal when close button clicked", () => {
+  it("should close modal when close button clicked", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -101,13 +102,13 @@ describe("AttachmentPreview", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  it("should close modal when ESC key pressed", () => {
+  it("should close modal when ESC key pressed", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -123,13 +124,13 @@ describe("AttachmentPreview", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
-  it("should trigger download when download button clicked", () => {
+  it("should trigger download when download button clicked", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -148,13 +149,13 @@ describe("AttachmentPreview", () => {
     expect(mockOnDownload).toHaveBeenCalledTimes(1);
   });
 
-  it("should support zoom controls for images", () => {
+  it("should support zoom controls for images", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -172,13 +173,13 @@ describe("AttachmentPreview", () => {
     expect(zoomOutButton).toBeInTheDocument();
   });
 
-  it("should display file size", () => {
+  it("should display file size", async () => {
     const imageFile = new File(["x".repeat(2048)], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}
@@ -192,13 +193,13 @@ describe("AttachmentPreview", () => {
     expect(screen.getByText(/2\.0 KB/i)).toBeInTheDocument();
   });
 
-  it("should be keyboard accessible", () => {
+  it("should be keyboard accessible", async () => {
     const imageFile = new File(["image data"], "photo.jpg", {
       type: "image/jpeg",
     });
     const imageUrl = URL.createObjectURL(imageFile);
 
-    render(
+    await renderWithTransitions(
       <I18nProvider i18n={i18n}>
         <AttachmentPreview
           file={imageFile}

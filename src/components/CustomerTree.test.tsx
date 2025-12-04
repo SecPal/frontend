@@ -122,9 +122,14 @@ describe("CustomerTree", () => {
     vi.mocked(listCustomers).mockResolvedValue(mockResponse);
   });
 
-  it("renders loading state initially", () => {
+  it("renders loading state initially", async () => {
     renderWithI18n(<CustomerTree />);
     expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+    // Wait for async operations to complete to prevent act() warnings
+    await waitFor(() => {
+      expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+    });
   });
 
   it("renders customers after loading", async () => {

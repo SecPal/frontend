@@ -64,9 +64,14 @@ describe("ObjectManager", () => {
     vi.mocked(getObjectAreas).mockResolvedValue([]);
   });
 
-  it("renders loading state initially", () => {
+  it("renders loading state initially", async () => {
     renderWithI18n(<ObjectManager customerId="cust-1" />);
     expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+    // Wait for async operations to complete to prevent act() warnings
+    await waitFor(() => {
+      expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+    });
   });
 
   it("renders objects after loading", async () => {
@@ -129,12 +134,14 @@ describe("ObjectManager", () => {
 
     fireEvent.click(screen.getByText("Main Building"));
 
-    expect(onSelect).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: "obj-1",
-        name: "Main Building",
-      })
-    );
+    await waitFor(() => {
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "obj-1",
+          name: "Main Building",
+        })
+      );
+    });
   });
 
   it("shows create button when onCreate is provided", async () => {

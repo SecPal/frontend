@@ -614,7 +614,9 @@ describe("useShareTarget", () => {
       } as Location;
 
       const popstateEvent = new PopStateEvent("popstate");
-      window.dispatchEvent(popstateEvent);
+      await act(async () => {
+        window.dispatchEvent(popstateEvent);
+      });
 
       await waitFor(() => {
         expect(result.current.sharedData).toEqual({

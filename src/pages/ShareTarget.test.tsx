@@ -49,21 +49,24 @@ describe("ShareTarget Component", () => {
     setLocationSearch("");
   });
 
-  const renderComponent = () => {
-    return render(
+  const renderComponent = async () => {
+    const result = render(
       <I18nProvider i18n={i18n}>
         <BrowserRouter>
           <ShareTarget />
         </BrowserRouter>
       </I18nProvider>
     );
+    // Wait for initial async operations to complete
+    await waitFor(() => {});
+    return result;
   };
 
   describe("GET method - Text sharing (existing functionality)", () => {
     it("should handle shared text via URL parameters", async () => {
       setLocationSearch("?title=Test&text=Hello&url=https://example.com");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Test/)).toBeInTheDocument();
@@ -72,10 +75,10 @@ describe("ShareTarget Component", () => {
       });
     });
 
-    it("should handle empty URL parameters gracefully", () => {
+    it("should handle empty URL parameters gracefully", async () => {
       setLocationSearch("?title=&text=&url=");
 
-      renderComponent();
+      await renderComponent();
 
       expect(screen.getByText(/No content shared/i)).toBeInTheDocument();
     });
@@ -101,7 +104,7 @@ describe("ShareTarget Component", () => {
         )
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test\.pdf/)).toBeInTheDocument();
@@ -109,10 +112,10 @@ describe("ShareTarget Component", () => {
       });
     });
 
-    it("should handle invalid JSON in sessionStorage gracefully", () => {
+    it("should handle invalid JSON in sessionStorage gracefully", async () => {
       sessionStorage.setItem("share-target-files", "not valid json{");
 
-      renderComponent();
+      await renderComponent();
 
       // Component should still render without crashing, showing an error
       expect(
@@ -120,19 +123,19 @@ describe("ShareTarget Component", () => {
       ).toBeInTheDocument();
     });
 
-    it("should handle non-array JSON in sessionStorage", () => {
+    it("should handle non-array JSON in sessionStorage", async () => {
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify({ notAnArray: true })
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Should show error message
       expect(screen.getByText(/Invalid files format/i)).toBeInTheDocument();
     });
 
-    it("should filter out files with missing required properties", () => {
+    it("should filter out files with missing required properties", async () => {
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify([
@@ -143,7 +146,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Only valid file should be displayed
       expect(screen.getByText(/valid\.pdf/)).toBeInTheDocument();
@@ -151,7 +154,7 @@ describe("ShareTarget Component", () => {
       expect(screen.queryByText(/missing-size\.pdf/)).not.toBeInTheDocument();
     });
 
-    it("should validate dataUrl property if present", () => {
+    it("should validate dataUrl property if present", async () => {
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify([
@@ -170,14 +173,14 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Only file with valid dataUrl should be shown
       expect(screen.getByText(/valid\.jpg/)).toBeInTheDocument();
       expect(screen.queryByText(/invalid\.jpg/)).not.toBeInTheDocument();
     });
 
-    it("should show error for invalid file data structure", () => {
+    it("should show error for invalid file data structure", async () => {
       sessionStorage.setItem(
         "share-target-files",
         JSON.stringify([
@@ -187,7 +190,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      await renderComponent();
 
       // Should show error for invalid structure (appears twice - once for string, once for null)
       const errors = screen.getAllByText(/Invalid file data structure/i);
@@ -216,7 +219,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         // Valid file should be displayed
@@ -242,7 +245,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify([oversizedFile])
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/File too large/i)).toBeInTheDocument();
@@ -260,7 +263,7 @@ describe("ShareTarget Component", () => {
 
       sessionStorage.setItem("share-target-files", JSON.stringify([imageFile]));
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         const img = screen.getByAltText(/photo\.jpg/i);
@@ -278,7 +281,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Report/)).toBeInTheDocument();
@@ -298,7 +301,7 @@ describe("ShareTarget Component", () => {
         ])
       );
 
-      const { unmount } = renderComponent();
+      const { unmount } = await renderComponent();
 
       const user = (
         await import("@testing-library/user-event")
@@ -330,7 +333,7 @@ describe("ShareTarget Component", () => {
 
       setLocationSearch("?title=Test&text=Hello");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Test/)).toBeInTheDocument();
@@ -354,7 +357,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify([maliciousFile])
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         // Image should NOT be rendered
@@ -376,7 +379,7 @@ describe("ShareTarget Component", () => {
 
       sessionStorage.setItem("share-target-files", JSON.stringify([xssFile]));
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.queryByAltText(/xss\.jpg/i)).not.toBeInTheDocument();
@@ -388,7 +391,7 @@ describe("ShareTarget Component", () => {
     it("should reject URLs with credentials", async () => {
       setLocationSearch("?text=test&url=https://user:pass@evil.com");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test/)).toBeInTheDocument();
@@ -399,7 +402,7 @@ describe("ShareTarget Component", () => {
     it("should reject javascript: protocol URLs", async () => {
       setLocationSearch("?text=test&url=javascript:alert('xss')");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test/)).toBeInTheDocument();
@@ -412,7 +415,7 @@ describe("ShareTarget Component", () => {
         "?text=test&url=data:text/html,<script>alert('xss')</script>"
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test/)).toBeInTheDocument();
@@ -423,7 +426,7 @@ describe("ShareTarget Component", () => {
     it("should accept valid http and https URLs", async () => {
       setLocationSearch("?text=test&url=https://example.com/path?query=1");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/test/)).toBeInTheDocument();
@@ -451,7 +454,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify([oversizedFile])
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Errors:/i)).toBeInTheDocument();
@@ -466,7 +469,7 @@ describe("ShareTarget Component", () => {
     it("should handle JSON parse errors in sessionStorage", async () => {
       sessionStorage.setItem("share-target-files", "invalid-json{");
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Errors:/i)).toBeInTheDocument();
@@ -482,7 +485,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify({ not: "array" })
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Errors:/i)).toBeInTheDocument();
@@ -500,7 +503,7 @@ describe("ShareTarget Component", () => {
         JSON.stringify(invalidFiles)
       );
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText(/Errors:/i)).toBeInTheDocument();
@@ -512,7 +515,7 @@ describe("ShareTarget Component", () => {
   });
 
   describe("URL Cleanup", () => {
-    it("should clean up URL parameters after mounting", () => {
+    it("should clean up URL parameters after mounting", async () => {
       setLocationSearch("?title=Test&text=Hello");
 
       const replaceStateSpy = vi.fn();
@@ -522,7 +525,7 @@ describe("ShareTarget Component", () => {
         configurable: true,
       });
 
-      renderComponent();
+      await renderComponent();
 
       // useEffect runs synchronously in tests
       expect(replaceStateSpy).toHaveBeenCalledWith({}, "", "/");
@@ -546,6 +549,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should handle SHARE_TARGET_FILES message from Service Worker", async () => {
+      const { act } = await import("@testing-library/react");
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (type: string, listener: EventListenerOrEventListenerObject) => {
@@ -554,7 +558,7 @@ describe("ShareTarget Component", () => {
         }
       );
 
-      renderComponent();
+      await renderComponent();
 
       const mockFiles = [
         { name: "sw-file.pdf", type: "application/pdf", size: 1000 },
@@ -568,8 +572,10 @@ describe("ShareTarget Component", () => {
         },
       } as MessageEvent;
 
-      // Trigger all registered message listeners
-      listeners.forEach((listener) => listener(messageEvent));
+      // Trigger all registered message listeners inside act()
+      await act(async () => {
+        listeners.forEach((listener) => listener(messageEvent));
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/sw-file\.pdf/i)).toBeInTheDocument();
@@ -587,7 +593,7 @@ describe("ShareTarget Component", () => {
         }
       );
 
-      renderComponent();
+      await renderComponent();
       const mockFiles = [
         { name: "ignored.pdf", type: "application/pdf", size: 1000 },
       ];
@@ -609,6 +615,7 @@ describe("ShareTarget Component", () => {
     });
 
     it("should handle SHARE_TARGET_ERROR message from Service Worker", async () => {
+      const { act } = await import("@testing-library/react");
       const listeners: ((event: MessageEvent) => void)[] = [];
       vi.spyOn(navigator.serviceWorker!, "addEventListener").mockImplementation(
         (type: string, listener: EventListenerOrEventListenerObject) => {
@@ -617,7 +624,7 @@ describe("ShareTarget Component", () => {
         }
       );
 
-      renderComponent();
+      await renderComponent();
 
       const errorEvent = {
         data: {
@@ -626,7 +633,10 @@ describe("ShareTarget Component", () => {
         },
       } as MessageEvent;
 
-      listeners.forEach((listener) => listener(errorEvent));
+      // Trigger listeners inside act()
+      await act(async () => {
+        listeners.forEach((listener) => listener(errorEvent));
+      });
 
       await waitFor(() => {
         expect(
@@ -645,7 +655,7 @@ describe("ShareTarget Component", () => {
 
       sessionStorage.setItem("share-target-files", JSON.stringify(files));
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText("PDF")).toBeInTheDocument();
@@ -660,7 +670,7 @@ describe("ShareTarget Component", () => {
 
       sessionStorage.setItem("share-target-files", JSON.stringify(files));
 
-      renderComponent();
+      await renderComponent();
 
       await waitFor(() => {
         expect(screen.getByText("FILE")).toBeInTheDocument();
@@ -681,7 +691,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     setErrorsSpy = vi.fn();
   });
 
-  it("should handle SHARE_TARGET_FILES message", () => {
+  it("should handle SHARE_TARGET_FILES message", async () => {
     const mockFiles = [
       { name: "test.pdf", type: "application/pdf", size: 1000 },
     ];
@@ -704,7 +714,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 
-  it("should ignore SHARE_TARGET_FILES with mismatched shareId", () => {
+  it("should ignore SHARE_TARGET_FILES with mismatched shareId", async () => {
     const mockFiles = [
       { name: "test.pdf", type: "application/pdf", size: 1000 },
     ];
@@ -726,7 +736,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 
-  it("should accept SHARE_TARGET_FILES with matching shareId", () => {
+  it("should accept SHARE_TARGET_FILES with matching shareId", async () => {
     const mockFiles = [
       { name: "test.pdf", type: "application/pdf", size: 1000 },
     ];
@@ -748,7 +758,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(loadSharedDataSpy).toHaveBeenCalledOnce();
   });
 
-  it("should handle SHARE_TARGET_ERROR message", () => {
+  it("should handle SHARE_TARGET_ERROR message", async () => {
     const event = {
       data: {
         type: "SHARE_TARGET_ERROR",
@@ -768,7 +778,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     }
   });
 
-  it("should handle SHARE_TARGET_ERROR with matching shareId", () => {
+  it("should handle SHARE_TARGET_ERROR with matching shareId", async () => {
     const event = {
       data: {
         type: "SHARE_TARGET_ERROR",
@@ -782,7 +792,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).toHaveBeenCalledOnce();
   });
 
-  it("should ignore SHARE_TARGET_ERROR with mismatched shareId", () => {
+  it("should ignore SHARE_TARGET_ERROR with mismatched shareId", async () => {
     const event = {
       data: {
         type: "SHARE_TARGET_ERROR",
@@ -797,7 +807,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 
-  it("should use default error message if none provided", () => {
+  it("should use default error message if none provided", async () => {
     const event = {
       data: {
         type: "SHARE_TARGET_ERROR",
@@ -815,7 +825,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     }
   });
 
-  it("should ignore messages without data", () => {
+  it("should ignore messages without data", async () => {
     const event = {} as MessageEvent;
 
     handleShareTargetMessage(event, null, loadSharedDataSpy, setErrorsSpy);
@@ -824,7 +834,7 @@ describe("handleShareTargetMessage (unit tests)", () => {
     expect(setErrorsSpy).not.toHaveBeenCalled();
   });
 
-  it("should ignore messages with unknown type", () => {
+  it("should ignore messages with unknown type", async () => {
     const event = {
       data: {
         type: "UNKNOWN_TYPE",
@@ -1212,7 +1222,7 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
     });
   });
 
-  it("should handle file parsing errors gracefully", () => {
+  it("should handle file parsing errors gracefully", async () => {
     // Set invalid JSON in sessionStorage
     sessionStorage.setItem("share-target-files", "{invalid json");
 
