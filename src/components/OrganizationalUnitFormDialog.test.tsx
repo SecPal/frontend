@@ -383,5 +383,150 @@ describe("OrganizationalUnitFormDialog", () => {
       expect(optionValues).toContain("department");
       expect(optionValues).toContain("custom");
     });
+
+    it("allows changing type selection", async () => {
+      const user = userEvent.setup();
+      const newUnit: OrganizationalUnit = {
+        ...mockUnit,
+        id: "new-unit",
+        type: "department",
+      };
+
+      vi.mocked(createOrganizationalUnit).mockResolvedValue(newUnit);
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // Fill name
+      const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+      await user.type(nameInput, "HR Department");
+
+      // Change type
+      const typeSelect = screen.getByRole("combobox");
+      await user.selectOptions(typeSelect, "department");
+
+      // Submit
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      await waitFor(() => {
+        expect(createOrganizationalUnit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "department",
+          })
+        );
+      });
+    });
+  });
+
+  describe("Description field", () => {
+    it("allows entering description", async () => {
+      const user = userEvent.setup();
+      const newUnit: OrganizationalUnit = {
+        ...mockUnit,
+        id: "new-unit",
+        description: "Test description",
+      };
+
+      vi.mocked(createOrganizationalUnit).mockResolvedValue(newUnit);
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // Fill name
+      const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+      await user.type(nameInput, "Test Unit");
+
+      // Fill description
+      const descInput = screen.getByPlaceholderText(/optional description/i);
+      await user.type(descInput, "Test description");
+
+      // Submit
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      await waitFor(() => {
+        expect(createOrganizationalUnit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            description: "Test description",
+          })
+        );
+      });
+    });
+
+    it("sends null for empty description", async () => {
+      const user = userEvent.setup();
+      const newUnit: OrganizationalUnit = {
+        ...mockUnit,
+        id: "new-unit",
+        description: null,
+      };
+
+      vi.mocked(createOrganizationalUnit).mockResolvedValue(newUnit);
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // Fill only name, leave description empty
+      const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+      await user.type(nameInput, "Test Unit");
+
+      // Submit
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      await waitFor(() => {
+        expect(createOrganizationalUnit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            description: null,
+          })
+        );
+      });
+    });
+  });
+
+  describe("Error clearing", () => {
+    it("clears field error when user starts typing", async () => {
+      const user = userEvent.setup();
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      // Try to submit without name to trigger error
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      // Error should be shown
+      expect(screen.getByText("Name is required")).toBeInTheDocument();
+
+      // Start typing
+      const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+      await user.type(nameInput, "A");
+
+      // Error should be cleared
+      await waitFor(() => {
+        expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
+      });
+    });
   });
 });

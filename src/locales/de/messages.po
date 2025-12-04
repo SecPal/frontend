@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-04 23:15+0100\n"
+"POT-Creation-Date: 2025-12-04 23:23+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -223,7 +223,7 @@ msgstr "Zusammenklappen"
 #: src/components/OrganizationalUnitTree.tsx:27
 #: src/pages/Organization/OrganizationPage.tsx:22
 msgid "Company"
-msgstr "Unternehmen"
+msgstr "Firma"
 
 #: src/pages/Organization/CustomersPage.tsx:89
 msgid "Contact Email"

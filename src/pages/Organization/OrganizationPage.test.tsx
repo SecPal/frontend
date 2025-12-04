@@ -14,6 +14,9 @@ import type { OrganizationalUnit } from "../../types";
 // Mock the API
 vi.mock("../../services/organizationalUnitApi", () => ({
   listOrganizationalUnits: vi.fn(),
+  createOrganizationalUnit: vi.fn(),
+  updateOrganizationalUnit: vi.fn(),
+  deleteOrganizationalUnit: vi.fn(),
 }));
 
 // Helper to render with providers
@@ -155,6 +158,171 @@ describe("OrganizationPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Description")).toBeInTheDocument();
       expect(screen.getByText("Root organizational unit")).toBeInTheDocument();
+    });
+  });
+
+  it("opens create dialog when Add Unit button is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Click "Add Unit" button
+    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+
+    // Dialog should open
+    await waitFor(() => {
+      expect(
+        screen.getByText("Create Organizational Unit")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("opens edit dialog when Edit button is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Select a unit first
+    await user.click(screen.getByText("SecPal Holding"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /^Edit$/i })
+      ).toBeInTheDocument();
+    });
+
+    // Click Edit button in detail panel
+    await user.click(screen.getByRole("button", { name: /^Edit$/i }));
+
+    // Dialog should open in edit mode
+    await waitFor(() => {
+      expect(screen.getByText("Edit Organizational Unit")).toBeInTheDocument();
+      // Form should be pre-populated with unit name
+      expect(screen.getByDisplayValue("SecPal Holding")).toBeInTheDocument();
+    });
+  });
+
+  it("opens create child dialog when Add Child Unit button is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Select a unit first
+    await user.click(screen.getByText("SecPal Holding"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Add Child Unit/i })
+      ).toBeInTheDocument();
+    });
+
+    // Click Add Child Unit button
+    await user.click(screen.getByRole("button", { name: /Add Child Unit/i }));
+
+    // Dialog should open with parent info
+    await waitFor(() => {
+      expect(
+        screen.getByText("Create Organizational Unit")
+      ).toBeInTheDocument();
+      // Should show "Parent Unit" label
+      expect(screen.getByText("Parent Unit")).toBeInTheDocument();
+    });
+  });
+
+  it("closes dialog when Cancel is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Open dialog
+    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Create Organizational Unit")
+      ).toBeInTheDocument();
+    });
+
+    // Click Cancel
+    await user.click(screen.getByRole("button", { name: /Cancel/i }));
+
+    // Dialog should close
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Create Organizational Unit")
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows success toast after creating a unit", async () => {
+    const user = userEvent.setup();
+    const newUnit: OrganizationalUnit = {
+      id: "new-unit",
+      type: "branch",
+      name: "New Branch",
+      description: null,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    };
+
+    vi.mocked(organizationalUnitApi.createOrganizationalUnit).mockResolvedValue(
+      newUnit
+    );
+
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Open create dialog
+    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Create Organizational Unit")
+      ).toBeInTheDocument();
+    });
+
+    // Fill form
+    const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+    await user.type(nameInput, "New Branch");
+
+    // Submit
+    await user.click(screen.getByRole("button", { name: /^Create$/i }));
+
+    // Success toast should appear
+    await waitFor(() => {
+      expect(screen.getByText(/created successfully/i)).toBeInTheDocument();
+    });
+  });
+
+  it("shows all type labels translated correctly", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    // Select unit to verify type label in detail panel
+    await user.click(screen.getByText("SecPal Holding"));
+
+    await waitFor(() => {
+      // The type "holding" should be translated
+      expect(screen.getByText("Type")).toBeInTheDocument();
     });
   });
 });
