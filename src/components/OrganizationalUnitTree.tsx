@@ -17,6 +17,19 @@ import {
 } from "../services/organizationalUnitApi";
 
 /**
+ * Type labels for organizational unit types (German)
+ */
+const TYPE_LABELS: Record<OrganizationalUnitType, string> = {
+  holding: "Holding",
+  company: "Unternehmen",
+  region: "Region",
+  branch: "Niederlassung",
+  division: "Abteilung",
+  department: "Bereich",
+  custom: "Benutzerdefiniert",
+};
+
+/**
  * Icon components for tree visualization
  */
 function ChevronRightIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -264,7 +277,9 @@ function TreeNode({
         </span>
 
         {/* Type Badge */}
-        <Badge color={getTypeBadgeColor(unit.type)}>{unit.type}</Badge>
+        <Badge color={getTypeBadgeColor(unit.type)}>
+          {TYPE_LABELS[unit.type] || unit.type}
+        </Badge>
 
         {/* Actions - always visible on mobile, hover-only on desktop */}
         <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
