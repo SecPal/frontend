@@ -8,7 +8,7 @@ import type {
   CreateOrganizationalUnitRequest,
   UpdateOrganizationalUnitRequest,
   OrganizationalUnitFilters,
-  PaginatedResponse,
+  OrganizationalUnitPaginatedResponse,
   UserOrganizationalScope,
 } from "../types/organizational";
 import { ApiError } from "./secretApi";
@@ -19,15 +19,23 @@ import { ApiError } from "./secretApi";
  * Provides CRUD operations and hierarchy management for internal
  * organizational units (holdings, companies, regions, branches, etc.).
  *
+ * The list endpoint returns permission-filtered results based on the
+ * user's organizational scopes (Need-to-Know principle). The response
+ * includes `root_unit_ids` for building tree views.
+ *
  * @see ADR-007: Organizational Structure Hierarchy
  */
 
 /**
  * List organizational units with optional filters
+ *
+ * Returns ONLY units the authenticated user has access to (Need-to-Know principle).
+ * The response includes `root_unit_ids` in metadata for building permission-filtered
+ * tree views where the user's highest accessible units are displayed as roots.
  */
 export async function listOrganizationalUnits(
   filters?: OrganizationalUnitFilters
-): Promise<PaginatedResponse<OrganizationalUnit>> {
+): Promise<OrganizationalUnitPaginatedResponse> {
   const params = new URLSearchParams();
 
   if (filters?.type) {
