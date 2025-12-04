@@ -245,6 +245,27 @@ export interface PaginationMeta {
 }
 
 /**
+ * Extended pagination metadata for organizational units
+ * Includes root_unit_ids for permission-filtered tree views
+ */
+export interface OrganizationalUnitPaginationMeta extends PaginationMeta {
+  /**
+   * IDs of units that should be displayed as tree roots.
+   * These are the user's highest accessible units (units without accessible parents).
+   * Used to build permission-filtered tree views.
+   */
+  root_unit_ids: string[];
+}
+
+/**
+ * Paginated response specifically for organizational units
+ */
+export interface OrganizationalUnitPaginatedResponse {
+  data: OrganizationalUnit[];
+  meta: OrganizationalUnitPaginationMeta;
+}
+
+/**
  * Create organizational unit request
  */
 export interface CreateOrganizationalUnitRequest {

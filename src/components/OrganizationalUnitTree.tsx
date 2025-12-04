@@ -342,18 +342,24 @@ export interface OrganizationalUnitTreeProps {
   flatView?: boolean;
   /** CSS class name */
   className?: string;
+  /** Custom title for the tree view (defaults to i18n "My Organization") */
+  title?: string;
 }
 
 /**
  * Tree view component for displaying organizational hierarchy
  *
  * Features:
+ * - Permission-filtered view: Users only see units they have access to
+ * - Root units determined by API's `root_unit_ids` metadata
  * - Hierarchical tree view with expand/collapse
  * - Icons for different unit types
  * - Selection support
  * - Edit/Delete actions
  * - Loading and error states
  * - Empty state
+ *
+ * @see ADR-007: Organizational Structure Hierarchy
  */
 export function OrganizationalUnitTree({
   onSelect,
@@ -364,6 +370,7 @@ export function OrganizationalUnitTree({
   typeFilter,
   flatView = false,
   className = "",
+  title,
 }: OrganizationalUnitTreeProps) {
   const [units, setUnits] = useState<OrganizationalUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -374,7 +381,7 @@ export function OrganizationalUnitTree({
     setError(null);
 
     try {
-      // Load all units - the API returns hierarchical data when include=children is supported
+      // Load accessible units - API returns permission-filtered results with root_unit_ids
       const response = await listOrganizationalUnits({
         type: typeFilter,
         per_page: 100,
@@ -383,34 +390,40 @@ export function OrganizationalUnitTree({
       if (flatView) {
         setUnits(response.data);
       } else {
-        // Build tree from flat list
+        // Build tree using root_unit_ids from API response
         const buildTree = (
-          items: OrganizationalUnit[]
+          items: OrganizationalUnit[],
+          rootUnitIds: string[]
         ): OrganizationalUnit[] => {
           const itemMap = new Map<string, OrganizationalUnit>();
-          const rootItems: OrganizationalUnit[] = [];
 
-          // First pass: create map
+          // First pass: create map with empty children arrays
           items.forEach((item) => {
             itemMap.set(item.id, { ...item, children: [] });
           });
 
-          // Second pass: build tree
+          // Second pass: build tree structure
+          const rootItems: OrganizationalUnit[] = [];
           items.forEach((item) => {
             const node = itemMap.get(item.id)!;
             if (item.parent?.id && itemMap.has(item.parent.id)) {
+              // Has accessible parent - add as child
               const parent = itemMap.get(item.parent.id)!;
               parent.children = parent.children || [];
               parent.children.push(node);
-            } else {
+            } else if (rootUnitIds.includes(item.id)) {
+              // Either no parent (true root) or parent inaccessible (designated root)
               rootItems.push(node);
             }
+            // Units with parents that aren't accessible and aren't in rootUnitIds are ignored
           });
 
           return rootItems;
         };
 
-        setUnits(buildTree(response.data));
+        // Use root_unit_ids from API response (defaults to empty array for safety)
+        const rootUnitIds = response.meta.root_unit_ids || [];
+        setUnits(buildTree(response.data, rootUnitIds));
       }
     } catch (err) {
       setError(
@@ -499,9 +512,7 @@ export function OrganizationalUnitTree({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
-        <Heading level={3}>
-          <Trans>Organizational Structure</Trans>
-        </Heading>
+        <Heading level={3}>{title || <Trans>My Organization</Trans>}</Heading>
         {onCreate && (
           <Button onClick={onCreate}>
             <Trans>Add Unit</Trans>
