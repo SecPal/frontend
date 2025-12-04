@@ -49,7 +49,13 @@ describe("OrganizationPage", () => {
     vi.clearAllMocks();
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
       data: mockUnits,
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 2 },
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 100,
+        total: 2,
+        root_unit_ids: ["unit-1"],
+      },
     });
   });
 
