@@ -412,13 +412,10 @@ export function OrganizationalUnitTree({
               parent.children = parent.children || [];
               parent.children.push(node);
             } else if (rootUnitIds.includes(item.id)) {
-              // No accessible parent and is a designated root - add to root items
-              rootItems.push(node);
-            } else if (!item.parent?.id) {
-              // No parent at all (true root) - add to root items
+              // Either no parent (true root) or parent inaccessible (designated root)
               rootItems.push(node);
             }
-            // Units with inaccessible parents that aren't in rootUnitIds are ignored
+            // Units with parents that aren't accessible and aren't in rootUnitIds are ignored
           });
 
           return rootItems;
