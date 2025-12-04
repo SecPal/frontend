@@ -84,6 +84,11 @@ describe("ObjectsPage", () => {
     renderWithRoute("cust-1");
 
     expect(screen.getByText("Objects & Areas")).toBeInTheDocument();
+
+    // Wait for ObjectManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Headquarters Building")).toBeInTheDocument();
+    });
   });
 
   it("renders page description", async () => {
@@ -92,6 +97,11 @@ describe("ObjectsPage", () => {
     expect(
       screen.getByText(/Manage protected objects and their areas/)
     ).toBeInTheDocument();
+
+    // Wait for ObjectManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Headquarters Building")).toBeInTheDocument();
+    });
   });
 
   it("shows breadcrumb navigation", async () => {
@@ -99,8 +109,12 @@ describe("ObjectsPage", () => {
 
     expect(screen.getByText("Customers")).toBeInTheDocument();
     expect(screen.getByText("Objects")).toBeInTheDocument();
-  });
 
+    // Wait for ObjectManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Headquarters Building")).toBeInTheDocument();
+    });
+  });
   it("loads objects for customer", async () => {
     renderWithRoute("cust-1");
 

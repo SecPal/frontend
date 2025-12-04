@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
-import { screen, waitFor } from "@testing-library/dom";
+import { render, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -16,8 +16,11 @@ const mockUseNotifications = vi.spyOn(
   "useNotifications"
 );
 
-const renderWithI18n = (component: React.ReactElement) => {
-  return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+const renderWithI18n = async (component: React.ReactElement) => {
+  const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+  // Wait for HeadlessUI Switch transitions to settle
+  await waitFor(() => {});
+  return result;
 };
 
 describe("NotificationPreferences", () => {
@@ -39,7 +42,7 @@ describe("NotificationPreferences", () => {
   });
 
   describe("browser support", () => {
-    it("should show warning when notifications not supported", () => {
+    it("should show warning when notifications not supported", async () => {
       mockUseNotifications.mockReturnValue({
         permission: "default",
         isSupported: false,
@@ -49,7 +52,7 @@ describe("NotificationPreferences", () => {
         error: null,
       });
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
 
       expect(
         screen.getByText(/not supported in your browser/i)
@@ -58,7 +61,7 @@ describe("NotificationPreferences", () => {
   });
 
   describe("permission states", () => {
-    it("should show enable button when permission is default", () => {
+    it("should show enable button when permission is default", async () => {
       mockUseNotifications.mockReturnValue({
         permission: "default",
         isSupported: true,
@@ -68,14 +71,14 @@ describe("NotificationPreferences", () => {
         error: null,
       });
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
 
       expect(
         screen.getByRole("button", { name: /enable notifications/i })
       ).toBeInTheDocument();
     });
 
-    it("should show blocked message when permission is denied", () => {
+    it("should show blocked message when permission is denied", async () => {
       mockUseNotifications.mockReturnValue({
         permission: "denied",
         isSupported: true,
@@ -85,15 +88,15 @@ describe("NotificationPreferences", () => {
         error: null,
       });
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
 
       expect(
         screen.getByText(/notifications have been blocked/i)
       ).toBeInTheDocument();
     });
 
-    it("should show preferences when permission is granted", () => {
-      renderWithI18n(<NotificationPreferences />);
+    it("should show preferences when permission is granted", async () => {
+      await renderWithI18n(<NotificationPreferences />);
 
       expect(screen.getByText(/notification preferences/i)).toBeInTheDocument();
       expect(screen.getByText(/security alerts/i)).toBeInTheDocument();
@@ -117,7 +120,7 @@ describe("NotificationPreferences", () => {
       mockRequestPermission.mockResolvedValue("granted");
       mockShowNotification.mockResolvedValue(undefined);
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const enableButton = screen.getByRole("button", {
@@ -143,7 +146,7 @@ describe("NotificationPreferences", () => {
       mockRequestPermission.mockResolvedValue("granted");
       mockShowNotification.mockResolvedValue(undefined);
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const enableButton = screen.getByRole("button", {
@@ -177,7 +180,7 @@ describe("NotificationPreferences", () => {
         .mockImplementation(() => {});
       mockRequestPermission.mockRejectedValue(new Error("Permission denied"));
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const enableButton = screen.getByRole("button", {
@@ -198,7 +201,7 @@ describe("NotificationPreferences", () => {
 
   describe("preference toggles", () => {
     it("should toggle preference when switch clicked", async () => {
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const alertsSwitch = screen.getByRole("switch", {
@@ -218,7 +221,7 @@ describe("NotificationPreferences", () => {
     });
 
     it("should save preferences to localStorage", async () => {
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const alertsSwitch = screen.getByRole("switch", {
@@ -240,7 +243,7 @@ describe("NotificationPreferences", () => {
       });
     });
 
-    it("should load preferences from localStorage", () => {
+    it("should load preferences from localStorage", async () => {
       const storedPreferences = [
         { category: "alerts", enabled: false },
         { category: "updates", enabled: false },
@@ -253,7 +256,7 @@ describe("NotificationPreferences", () => {
         JSON.stringify(storedPreferences)
       );
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
 
       const alertsSwitch = screen.getByRole("switch", {
         name: /security alerts/i,
@@ -271,7 +274,7 @@ describe("NotificationPreferences", () => {
     it("should send test notification when button clicked", async () => {
       mockShowNotification.mockResolvedValue(undefined);
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const testButton = screen.getByRole("button", { name: /send test/i });
@@ -299,7 +302,7 @@ describe("NotificationPreferences", () => {
         error: null,
       });
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
 
       // Should not have test button when permission is default
       expect(
@@ -315,7 +318,7 @@ describe("NotificationPreferences", () => {
         new Error("Failed to show notification")
       );
 
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       const testButton = screen.getByRole("button", { name: /send test/i });
@@ -333,8 +336,8 @@ describe("NotificationPreferences", () => {
   });
 
   describe("accessibility", () => {
-    it("should have proper ARIA labels", () => {
-      renderWithI18n(<NotificationPreferences />);
+    it("should have proper ARIA labels", async () => {
+      await renderWithI18n(<NotificationPreferences />);
 
       const switches = screen.getAllByRole("switch");
       switches.forEach((switchElement) => {
@@ -348,14 +351,15 @@ describe("NotificationPreferences", () => {
     });
 
     it("should be keyboard navigable", async () => {
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
+      const user = userEvent.setup();
 
       const alertsSwitch = screen.getByRole("switch", {
         name: /security alerts/i,
       });
 
-      // Focus the switch
-      alertsSwitch.focus();
+      // Focus the switch using userEvent to properly trigger React state updates
+      await user.click(alertsSwitch);
       expect(alertsSwitch).toHaveFocus();
     });
   });
@@ -375,6 +379,8 @@ describe("NotificationPreferences", () => {
           <NotificationPreferences />
         </I18nProvider>
       );
+      // Wait for HeadlessUI Switch transitions to settle
+      await waitFor(() => {});
 
       const initialRenderCount = renderCount;
 
@@ -393,6 +399,8 @@ describe("NotificationPreferences", () => {
           <NotificationPreferences />
         </I18nProvider>
       );
+      // Wait for HeadlessUI Switch transitions to settle
+      await waitFor(() => {});
 
       // Wait a bit to allow any cascading re-renders
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -407,7 +415,7 @@ describe("NotificationPreferences", () => {
     });
 
     it("should preserve enabled state when translations update", async () => {
-      renderWithI18n(<NotificationPreferences />);
+      await renderWithI18n(<NotificationPreferences />);
       const user = userEvent.setup();
 
       // Toggle alerts off

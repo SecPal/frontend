@@ -91,6 +91,11 @@ describe("GuardBooksPage", () => {
     expect(
       screen.getByRole("heading", { name: "Guard Books" })
     ).toBeInTheDocument();
+
+    // Wait for GuardBookManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Main Entrance Guard Book")).toBeInTheDocument();
+    });
   });
 
   it("renders page description", async () => {
@@ -99,6 +104,11 @@ describe("GuardBooksPage", () => {
     expect(
       screen.getByText(/Manage digital guard books and generate reports/)
     ).toBeInTheDocument();
+
+    // Wait for GuardBookManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Main Entrance Guard Book")).toBeInTheDocument();
+    });
   });
 
   it("shows breadcrumb navigation", async () => {
@@ -109,6 +119,23 @@ describe("GuardBooksPage", () => {
     // Guard Books appears in both breadcrumb and heading
     const guardBooksElements = screen.getAllByText("Guard Books");
     expect(guardBooksElements.length).toBeGreaterThanOrEqual(2);
+
+    // Wait for GuardBookManager to finish loading
+    await waitFor(() => {
+      expect(screen.getByText("Main Entrance Guard Book")).toBeInTheDocument();
+    });
+  });
+
+  it("shows breadcrumb link to objects page", async () => {
+    renderWithRoute("cust-1", "obj-1");
+
+    // Wait for GuardBookManager to finish loading first
+    await waitFor(() => {
+      expect(screen.getByText("Main Entrance Guard Book")).toBeInTheDocument();
+    });
+
+    const objectsLink = screen.getByRole("link", { name: "Objects" });
+    expect(objectsLink).toHaveAttribute("href", "/customers/cust-1/objects");
   });
 
   it("loads guard books for object", async () => {
@@ -156,12 +183,5 @@ describe("GuardBooksPage", () => {
 
     const link = screen.getByRole("link", { name: "Go to Customers" });
     expect(link).toHaveAttribute("href", "/customers");
-  });
-
-  it("shows breadcrumb link to objects page", async () => {
-    renderWithRoute("cust-1", "obj-1");
-
-    const objectsLink = screen.getByRole("link", { name: "Objects" });
-    expect(objectsLink).toHaveAttribute("href", "/customers/cust-1/objects");
   });
 });

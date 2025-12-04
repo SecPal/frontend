@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { ConflictResolutionDialog } from "./ConflictResolutionDialog";
 import type { ConflictInfo } from "../lib/conflictResolution";
+import { renderWithTransitions } from "../../tests/utils/renderWithDialog";
 
 // Initialize i18n for tests
 i18n.loadAndActivate({ locale: "en", messages: {} });
 
-// Helper to wrap components with I18nProvider
-const renderWithI18n = (component: React.ReactElement) => {
-  return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+// Helper to wrap components with I18nProvider and handle transitions
+const renderWithI18n = async (component: React.ReactElement) => {
+  return renderWithTransitions(
+    <I18nProvider i18n={i18n}>{component}</I18nProvider>
+  );
 };
 
 describe("ConflictResolutionDialog", () => {
@@ -36,8 +39,8 @@ describe("ConflictResolutionDialog", () => {
     },
   };
 
-  it("should render conflict information", () => {
-    renderWithI18n(
+  it("should render conflict information", async () => {
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -53,8 +56,8 @@ describe("ConflictResolutionDialog", () => {
     expect(screen.getByText("notes")).toBeInTheDocument();
   });
 
-  it("should display local and server versions", () => {
-    renderWithI18n(
+  it("should display local and server versions", async () => {
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -74,7 +77,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onKeepLocal = vi.fn();
 
-    renderWithI18n(
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={onKeepLocal}
@@ -99,7 +102,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onKeepServer = vi.fn();
 
-    renderWithI18n(
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -122,7 +125,7 @@ describe("ConflictResolutionDialog", () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
 
-    renderWithI18n(
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -137,8 +140,8 @@ describe("ConflictResolutionDialog", () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it("should disable confirm button when no selection made", () => {
-    renderWithI18n(
+  it("should disable confirm button when no selection made", async () => {
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={mockConflict}
         onKeepLocal={vi.fn()}
@@ -154,7 +157,7 @@ describe("ConflictResolutionDialog", () => {
     expect(confirmButton).toBeDisabled();
   });
 
-  it("should format empty field values", () => {
+  it("should format empty field values", async () => {
     const conflictWithEmpty: ConflictInfo = {
       conflictFields: ["notes"],
       localVersion: {
@@ -173,7 +176,7 @@ describe("ConflictResolutionDialog", () => {
       },
     };
 
-    renderWithI18n(
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={conflictWithEmpty}
         onKeepLocal={vi.fn()}
@@ -187,7 +190,7 @@ describe("ConflictResolutionDialog", () => {
     expect(emptyValues).toHaveLength(2); // Both local and server have empty notes
   });
 
-  it("should format array field values", () => {
+  it("should format array field values", async () => {
     const conflictWithTags: ConflictInfo = {
       conflictFields: ["tags"],
       localVersion: {
@@ -206,7 +209,7 @@ describe("ConflictResolutionDialog", () => {
       },
     };
 
-    renderWithI18n(
+    await renderWithI18n(
       <ConflictResolutionDialog
         conflict={conflictWithTags}
         onKeepLocal={vi.fn()}

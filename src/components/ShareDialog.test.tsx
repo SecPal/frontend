@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { ShareDialog } from "./ShareDialog";
 import * as shareApi from "../services/shareApi";
 import type { SecretShare } from "../services/secretApi";
+import { renderWithTransitions } from "../../tests/utils/renderWithDialog";
 
 // Mock shareApi functions but keep ApiError
 vi.mock("../services/shareApi", async () => {
@@ -45,8 +46,8 @@ describe("ShareDialog", () => {
   });
 
   describe("rendering", () => {
-    it("should render dialog with title", () => {
-      render(
+    it("should render dialog with title", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -65,8 +66,8 @@ describe("ShareDialog", () => {
       ).toBeInTheDocument();
     });
 
-    it("should not render when isOpen is false", () => {
-      const { container } = render(
+    it("should not render when isOpen is false", async () => {
+      const { container } = await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -83,8 +84,8 @@ describe("ShareDialog", () => {
       expect(container).toBeEmptyDOMElement();
     });
 
-    it("should render user/role selector", () => {
-      render(
+    it("should render user/role selector", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -101,8 +102,8 @@ describe("ShareDialog", () => {
       expect(screen.getByLabelText(/share with/i)).toBeInTheDocument();
     });
 
-    it("should render permission dropdown", () => {
-      render(
+    it("should render permission dropdown", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -119,8 +120,8 @@ describe("ShareDialog", () => {
       expect(screen.getByLabelText(/permission/i)).toBeInTheDocument();
     });
 
-    it("should render expiration date input", () => {
-      render(
+    it("should render expiration date input", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -139,8 +140,8 @@ describe("ShareDialog", () => {
       ).toBeInTheDocument();
     });
 
-    it("should render share and cancel buttons", () => {
-      render(
+    it("should render share and cancel buttons", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -162,8 +163,8 @@ describe("ShareDialog", () => {
       ).toBeInTheDocument();
     });
 
-    it("should render permission level descriptions", () => {
-      render(
+    it("should render permission level descriptions", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -193,7 +194,7 @@ describe("ShareDialog", () => {
     it("should select a user", async () => {
       const user = userEvent.setup();
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -216,7 +217,7 @@ describe("ShareDialog", () => {
     it("should select a role", async () => {
       const user = userEvent.setup();
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -239,7 +240,7 @@ describe("ShareDialog", () => {
     it("should select permission level", async () => {
       const user = userEvent.setup();
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -262,7 +263,7 @@ describe("ShareDialog", () => {
     it("should set expiration date", async () => {
       const user = userEvent.setup();
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -285,7 +286,7 @@ describe("ShareDialog", () => {
     it("should call onClose when cancel button is clicked", async () => {
       const user = userEvent.setup();
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -318,7 +319,7 @@ describe("ShareDialog", () => {
 
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -358,7 +359,7 @@ describe("ShareDialog", () => {
 
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -399,7 +400,7 @@ describe("ShareDialog", () => {
 
       vi.mocked(shareApi.createShare).mockResolvedValueOnce(mockShare);
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -431,8 +432,8 @@ describe("ShareDialog", () => {
       });
     });
 
-    it("should disable share button when no user/role selected", () => {
-      render(
+    it("should disable share button when no user/role selected", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -455,7 +456,7 @@ describe("ShareDialog", () => {
         () => new Promise((resolve) => setTimeout(resolve, 100))
       );
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -482,7 +483,7 @@ describe("ShareDialog", () => {
       const apiError = new shareApi.ApiError("User already has access", 422);
       vi.mocked(shareApi.createShare).mockRejectedValueOnce(apiError);
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -510,7 +511,7 @@ describe("ShareDialog", () => {
         new Error("Network error")
       );
 
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -534,8 +535,8 @@ describe("ShareDialog", () => {
   });
 
   describe("accessibility", () => {
-    it("should have aria-label on dialog", () => {
-      render(
+    it("should have aria-label on dialog", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -555,8 +556,8 @@ describe("ShareDialog", () => {
       );
     });
 
-    it("should have role=dialog on dialog element", () => {
-      render(
+    it("should have role=dialog on dialog element", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -573,8 +574,8 @@ describe("ShareDialog", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
-    it("should have aria-labelledby linking to dialog title", () => {
-      render(
+    it("should have aria-labelledby linking to dialog title", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -598,8 +599,8 @@ describe("ShareDialog", () => {
       }
     });
 
-    it("should have aria-describedby linking to dialog description", () => {
-      render(
+    it("should have aria-describedby linking to dialog description", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -624,7 +625,7 @@ describe("ShareDialog", () => {
     });
 
     it("should focus first input on open", async () => {
-      render(
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
@@ -643,8 +644,8 @@ describe("ShareDialog", () => {
       });
     });
 
-    it("all interactive elements should be keyboard accessible", () => {
-      render(
+    it("all interactive elements should be keyboard accessible", async () => {
+      await renderWithTransitions(
         <I18nProvider i18n={i18n}>
           <ShareDialog
             secretId={mockSecretId}
