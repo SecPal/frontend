@@ -15,6 +15,7 @@ import {
   listOrganizationalUnits,
   deleteOrganizationalUnit,
 } from "../services/organizationalUnitApi";
+import { getTypeLabel } from "../lib/organizationalUnitUtils";
 
 /**
  * Icon components for tree visualization
@@ -160,6 +161,7 @@ interface TreeNodeProps {
   onSelect?: (unit: OrganizationalUnit) => void;
   onEdit?: (unit: OrganizationalUnit) => void;
   onDelete?: (unit: OrganizationalUnit) => void;
+  onCreateChild?: (unit: OrganizationalUnit) => void;
   selectedId?: string | null;
 }
 
@@ -172,6 +174,7 @@ function TreeNode({
   onSelect,
   onEdit,
   onDelete,
+  onCreateChild,
   selectedId,
 }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 2);
@@ -204,6 +207,14 @@ function TreeNode({
       onDelete?.(unit);
     },
     [onDelete, unit]
+  );
+
+  const handleCreateChild = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onCreateChild?.(unit);
+    },
+    [onCreateChild, unit]
   );
 
   return (
@@ -254,10 +265,34 @@ function TreeNode({
         </span>
 
         {/* Type Badge */}
-        <Badge color={getTypeBadgeColor(unit.type)}>{unit.type}</Badge>
+        <Badge color={getTypeBadgeColor(unit.type)}>
+          {getTypeLabel(unit.type)}
+        </Badge>
 
         {/* Actions - always visible on mobile, hover-only on desktop */}
         <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {onCreateChild && (
+            <Button
+              plain
+              onClick={handleCreateChild}
+              aria-label={t`Add child to ${unit.name}`}
+              className="p-1"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+            </Button>
+          )}
           {onEdit && (
             <Button
               plain
@@ -316,6 +351,7 @@ function TreeNode({
               onSelect={onSelect}
               onEdit={onEdit}
               onDelete={onDelete}
+              onCreateChild={onCreateChild}
               selectedId={selectedId}
             />
           ))}
@@ -332,7 +368,9 @@ export interface OrganizationalUnitTreeProps {
   onEdit?: (unit: OrganizationalUnit) => void;
   /** Callback when delete action is triggered */
   onDelete?: (unit: OrganizationalUnit) => void;
-  /** Callback when create action is triggered */
+  /** Callback when create child action is triggered on a unit */
+  onCreateChild?: (unit: OrganizationalUnit) => void;
+  /** Callback when create action is triggered (root level) */
   onCreate?: () => void;
   /** Currently selected unit ID */
   selectedId?: string | null;
@@ -365,6 +403,7 @@ export function OrganizationalUnitTree({
   onSelect,
   onEdit,
   onDelete,
+  onCreateChild,
   onCreate,
   selectedId,
   typeFilter,
@@ -533,6 +572,7 @@ export function OrganizationalUnitTree({
               onSelect={onSelect}
               onEdit={onEdit}
               onDelete={handleDelete}
+              onCreateChild={onCreateChild}
               selectedId={selectedId}
             />
           </div>
