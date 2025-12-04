@@ -26,24 +26,7 @@ import {
   updateOrganizationalUnit,
 } from "../services/organizationalUnitApi";
 import { ApiError } from "../services/secretApi";
-
-/**
- * Get translated type options for organizational units
- */
-function getUnitTypeOptions(): Array<{
-  value: OrganizationalUnitType;
-  label: string;
-}> {
-  return [
-    { value: "holding", label: t`Holding` },
-    { value: "company", label: t`Company` },
-    { value: "region", label: t`Region` },
-    { value: "branch", label: t`Branch` },
-    { value: "division", label: t`Division` },
-    { value: "department", label: t`Department` },
-    { value: "custom", label: t`Custom` },
-  ];
-}
+import { getUnitTypeOptions } from "../lib/organizationalUnitUtils";
 
 export interface OrganizationalUnitFormDialogProps {
   /** Dialog open state */
@@ -129,9 +112,10 @@ export function OrganizationalUnitFormDialog({
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name.trim()) {
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
       newErrors.name = t`Name is required`;
-    } else if (formData.name.length > 255) {
+    } else if (trimmedName.length > 255) {
       newErrors.name = t`Name must be at most 255 characters`;
     }
 
@@ -139,7 +123,8 @@ export function OrganizationalUnitFormDialog({
       newErrors.type = t`Type is required`;
     }
 
-    if (formData.description && formData.description.length > 1000) {
+    const trimmedDescription = formData.description?.trim() || "";
+    if (trimmedDescription.length > 1000) {
       newErrors.description = t`Description must be at most 1000 characters`;
     }
 

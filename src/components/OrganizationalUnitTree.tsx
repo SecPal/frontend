@@ -15,30 +15,7 @@ import {
   listOrganizationalUnits,
   deleteOrganizationalUnit,
 } from "../services/organizationalUnitApi";
-
-/**
- * Get translated type label for organizational unit type
- */
-function getTypeLabel(type: OrganizationalUnitType): string {
-  switch (type) {
-    case "holding":
-      return t`Holding`;
-    case "company":
-      return t`Company`;
-    case "region":
-      return t`Region`;
-    case "branch":
-      return t`Branch`;
-    case "division":
-      return t`Division`;
-    case "department":
-      return t`Department`;
-    case "custom":
-      return t`Custom`;
-    default:
-      return type;
-  }
-}
+import { getTypeLabel } from "../lib/organizationalUnitUtils";
 
 /**
  * Icon components for tree visualization

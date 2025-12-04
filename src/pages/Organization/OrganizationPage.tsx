@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
@@ -9,31 +9,8 @@ import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
 import { OrganizationalUnitFormDialog } from "../../components/OrganizationalUnitFormDialog";
+import { getTypeLabel } from "../../lib/organizationalUnitUtils";
 import type { OrganizationalUnit } from "../../types";
-
-/**
- * Get translated type label for display
- */
-function getTypeLabel(type: string): string {
-  switch (type) {
-    case "holding":
-      return t`Holding`;
-    case "company":
-      return t`Company`;
-    case "region":
-      return t`Region`;
-    case "branch":
-      return t`Branch`;
-    case "division":
-      return t`Division`;
-    case "department":
-      return t`Department`;
-    case "custom":
-      return t`Custom`;
-    default:
-      return type;
-  }
-}
 
 /**
  * Organization Page
@@ -63,7 +40,17 @@ export function OrganizationPage() {
 
   // Ref to trigger tree refresh
   const treeRefreshKey = useRef(0);
-  const [, setRefreshTrigger] = useState(0);
+  // Ref for timeout cleanup
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSelect = useCallback((unit: OrganizationalUnit) => {
     setSelectedUnit(unit);
@@ -112,9 +99,10 @@ export function OrganizationPage() {
 
   const handleDialogSuccess = useCallback(
     (unit: OrganizationalUnit) => {
-      // Refresh tree
+      // Refresh tree by incrementing the key
       treeRefreshKey.current += 1;
-      setRefreshTrigger((prev) => prev + 1);
+      // Force re-render by updating selected unit state
+      setSelectedUnit((prev) => (prev?.id === unit.id ? unit : prev));
 
       // Show success message
       const message =
@@ -122,7 +110,15 @@ export function OrganizationPage() {
           ? t`"${unit.name}" created successfully`
           : t`"${unit.name}" updated successfully`;
       setSuccessMessage(message);
-      setTimeout(() => setSuccessMessage(null), 3000);
+
+      // Clear any existing timeout before setting a new one
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      successTimeoutRef.current = setTimeout(() => {
+        setSuccessMessage(null);
+        successTimeoutRef.current = null;
+      }, 3000);
 
       // Update selected unit if editing
       if (dialogMode === "edit") {
