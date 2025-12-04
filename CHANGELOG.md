@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Permission-Filtered Organizational Unit Tree View** (#291, Part of Epic SecPal/api#280)
+  - Tree component now uses `root_unit_ids` from API response to determine tree roots
+  - Users see only organizational units they have access to (Need-to-Know principle)
+  - Changed header from "Organizational Structure" to "My Organization" (user-centric)
+  - Added `title` prop for customization when needed
+  - Updated types: `OrganizationalUnitPaginationMeta` and `OrganizationalUnitPaginatedResponse`
+  - 6 new test cases for permission filtering scenarios
+  - Implements ADR-007 Need-to-Know pattern
+
 ### Fixed
 
 - **OfflineIndicator no longer blocks app interaction** (#XXX)
