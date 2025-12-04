@@ -1,11 +1,21 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-04 07:05+0100\n"
+"POT-Creation-Date: 2025-12-04 22:43+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: de\n"
+
+#. placeholder {0}: unit.name
+#: src/pages/Organization/OrganizationPage.tsx:112
+msgid "\"{0}\" created successfully"
+msgstr "\"{0}\" erfolgreich erstellt"
+
+#. placeholder {0}: unit.name
+#: src/pages/Organization/OrganizationPage.tsx:113
+msgid "\"{0}\" updated successfully"
+msgstr "\"{0}\" erfolgreich aktualisiert"
 
 #: src/components/ConflictResolutionDialog.tsx:82
 msgid "(empty)"
@@ -55,6 +65,10 @@ msgstr "Aktiv"
 msgid "Add Area"
 msgstr "Bereich hinzufügen"
 
+#: src/pages/Organization/OrganizationPage.tsx:216
+msgid "Add Child Unit"
+msgstr ""
+
 #: src/components/CustomerTree.tsx:511
 #: src/components/CustomerTree.tsx:526
 msgid "Add Customer"
@@ -65,13 +79,18 @@ msgstr "Kunde hinzufügen"
 msgid "Add Object"
 msgstr "Objekt hinzufügen"
 
-#: src/components/OrganizationalUnitTree.tsx:507
+#: src/components/OrganizationalUnitTree.tsx:554
 msgid "Add Unit"
 msgstr "Einheit hinzufügen"
 
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
 msgstr "Füge ein neues Geheimnis zu deinem Tresor hinzu."
+
+#. placeholder {0}: unit.name
+#: src/components/OrganizationalUnitTree.tsx:275
+msgid "Add child to {0}"
+msgstr ""
 
 #: src/pages/Organization/CustomersPage.tsx:119
 msgid "Address"
@@ -93,6 +112,10 @@ msgstr "Alle Tags"
 msgid "All synced"
 msgstr "Alles synchronisiert"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:207
+msgid "An unexpected error occurred"
+msgstr "Ein unerwarteter Fehler ist aufgetreten"
+
 #: src/components/NotificationPreferences.tsx:47
 msgid "App updates and maintenance notifications"
 msgstr "App-Updates und Wartungsbenachrichtigungen"
@@ -106,7 +129,7 @@ msgstr "Auswahl anwenden"
 #. placeholder {0}: unit.name
 #: src/components/CustomerTree.tsx:455
 #: src/components/ObjectManager.tsx:304
-#: src/components/OrganizationalUnitTree.tsx:434
+#: src/components/OrganizationalUnitTree.tsx:483
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nicht rückgängig gemacht werden."
 
@@ -154,6 +177,7 @@ msgid "Back to Secrets"
 msgstr "Zurück zu Geheimnisse"
 
 #: src/components/ConflictResolutionDialog.tsx:200
+#: src/components/OrganizationalUnitFormDialog.tsx:348
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
@@ -185,7 +209,7 @@ msgid "Close"
 msgstr "Schließen"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:239
+#: src/components/OrganizationalUnitTree.tsx:249
 msgid "Collapse"
 msgstr "Zusammenklappen"
 
@@ -197,6 +221,7 @@ msgstr "Kontakt E-Mail"
 msgid "Contact Phone"
 msgstr "Kontakt Telefon"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:354
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Erstellen"
@@ -206,7 +231,8 @@ msgstr "Erstellen"
 msgid "Create Guard Book"
 msgstr "Wachbuch erstellen"
 
-#: src/components/OrganizationalUnitTree.tsx:492
+#: src/components/OrganizationalUnitFormDialog.tsx:229
+#: src/components/OrganizationalUnitTree.tsx:541
 msgid "Create Organizational Unit"
 msgstr "Organisatorische Einheit anlegen"
 
@@ -215,10 +241,19 @@ msgstr "Organisatorische Einheit anlegen"
 msgid "Create Secret"
 msgstr "Geheimnis erstellen"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:237
+msgid "Create a new organizational unit under \"{parentName}\"."
+msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:239
+msgid "Create a new root organizational unit."
+msgstr "Legen Sie eine neue Stammorganisationseinheit an."
+
 #: src/pages/Secrets/SecretList.tsx:255
 msgid "Create your first secret to get started"
 msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 
+#: src/pages/Organization/OrganizationPage.tsx:202
 #: src/pages/Secrets/SecretDetail.tsx:460
 msgid "Created"
 msgstr "Erstellt"
@@ -262,14 +297,19 @@ msgstr "Bericht löschen {0}"
 #: src/components/GuardBookManager.tsx:234
 #: src/components/ObjectManager.tsx:196
 #: src/components/ObjectManager.tsx:432
-#: src/components/OrganizationalUnitTree.tsx:287
+#: src/components/OrganizationalUnitTree.tsx:319
 msgid "Delete {0}"
 msgstr "Löschen {0}"
 
 #: src/components/ObjectManager.tsx:377
-#: src/pages/Organization/OrganizationPage.tsx:84
+#: src/components/OrganizationalUnitFormDialog.tsx:309
+#: src/pages/Organization/OrganizationPage.tsx:183
 msgid "Description"
 msgstr "Beschreibung"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:141
+msgid "Description must be at most 1000 characters"
+msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
 #: src/pages/Secrets/SecretDetail.tsx:292
 msgid "Details"
@@ -289,9 +329,14 @@ msgstr "Zur Ansicht herunterladen"
 msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
+#: src/pages/Organization/OrganizationPage.tsx:213
 #: src/pages/Secrets/SecretDetail.tsx:275
 msgid "Edit"
 msgstr "Bearbeiten"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:231
+msgid "Edit Organizational Unit"
+msgstr "Organisatorische Einheit bearbeiten"
 
 #: src/pages/Secrets/SecretEdit.tsx:134
 msgid "Edit Secret"
@@ -304,7 +349,7 @@ msgstr "Geheimnis bearbeiten"
 #: src/components/GuardBookManager.tsx:209
 #: src/components/ObjectManager.tsx:171
 #: src/components/ObjectManager.tsx:411
-#: src/components/OrganizationalUnitTree.tsx:265
+#: src/components/OrganizationalUnitTree.tsx:297
 msgid "Edit {0}"
 msgstr "Bearbeiten {0}"
 
@@ -345,7 +390,7 @@ msgid "Events"
 msgstr "Ereignisse"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:239
+#: src/components/OrganizationalUnitTree.tsx:249
 msgid "Expand"
 msgstr "Ausklappen"
 
@@ -412,7 +457,7 @@ msgstr "Wachbuch konnte nicht gelöscht werden"
 msgid "Failed to delete object"
 msgstr "Objekt konnte nicht gelöscht werden"
 
-#: src/components/OrganizationalUnitTree.tsx:448
+#: src/components/OrganizationalUnitTree.tsx:497
 msgid "Failed to delete organizational unit"
 msgstr "Organisationseinheit konnte nicht gelöscht werden"
 
@@ -444,7 +489,7 @@ msgstr "Wachbücher konnten nicht geladen werden"
 msgid "Failed to load objects"
 msgstr "Objekte konnten nicht geladen werden"
 
-#: src/components/OrganizationalUnitTree.tsx:419
+#: src/components/OrganizationalUnitTree.tsx:468
 msgid "Failed to load organizational units"
 msgstr "Organisationseinheiten konnten nicht geladen werden"
 
@@ -505,7 +550,7 @@ msgstr "Beginnen Sie mit dem Hinzufügen Ihres ersten Objekts."
 msgid "Get started by creating your first guard book."
 msgstr "Beginnen Sie mit der Erstellung Ihres ersten Wachbuchs."
 
-#: src/components/OrganizationalUnitTree.tsx:488
+#: src/components/OrganizationalUnitTree.tsx:537
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
@@ -622,7 +667,7 @@ msgstr "Verwalten Sie geschützte Objekte und deren Bereiche für diesen Kunden.
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
-#: src/pages/Organization/OrganizationPage.tsx:48
+#: src/pages/Organization/OrganizationPage.tsx:132
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
 
@@ -642,15 +687,28 @@ msgstr "Metadaten"
 msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
 
+#: src/components/OrganizationalUnitTree.tsx:551
+msgid "My Organization"
+msgstr "Meine Organisation"
+
 #: src/components/application-layout.tsx:167
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
 
 #: src/components/ObjectManager.tsx:374
+#: src/components/OrganizationalUnitFormDialog.tsx:263
 #: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:131
+msgid "Name is required"
+msgstr "Name ist erforderlich"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:133
+msgid "Name must be at most 255 characters"
+msgstr "Der Name darf maximal 255 Zeichen lang sein"
 
 #: src/pages/Secrets/SecretList.tsx:161
 msgid "New Secret"
@@ -676,7 +734,7 @@ msgstr "Keine Wachbücher"
 msgid "No Objects"
 msgstr "Keine Objekte"
 
-#: src/components/OrganizationalUnitTree.tsx:485
+#: src/components/OrganizationalUnitTree.tsx:534
 msgid "No Organizational Units"
 msgstr "Keine organisatorischen Einheiten"
 
@@ -759,19 +817,23 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:312
+msgid "Optional description for this unit."
+msgstr "Optionale Beschreibung für diese Einheit."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:319
+msgid "Optional description..."
+msgstr "Optionale Beschreibung..."
+
 #: src/components/application-layout.tsx:272
 msgid "Organization"
 msgstr "Organisation"
 
-#: src/pages/Organization/OrganizationPage.tsx:45
+#: src/pages/Organization/OrganizationPage.tsx:129
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
 
-#: src/components/OrganizationalUnitTree.tsx:503
-msgid "Organizational Structure"
-msgstr "Organisatorische Struktur"
-
-#: src/components/OrganizationalUnitTree.tsx:514
+#: src/components/OrganizationalUnitTree.tsx:561
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
@@ -784,6 +846,14 @@ msgstr "Eigentümer"
 #: src/pages/Secrets/SecretList.tsx:368
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
+
+#: src/pages/Organization/OrganizationPage.tsx:193
+msgid "Parent"
+msgstr ""
+
+#: src/components/OrganizationalUnitFormDialog.tsx:333
+msgid "Parent Unit"
+msgstr "Übergeordnete Einheit"
 
 #: src/pages/Secrets/SecretDetail.tsx:307
 msgid "Password"
@@ -854,7 +924,7 @@ msgstr "Berichte"
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
 #: src/components/ObjectManager.tsx:615
-#: src/components/OrganizationalUnitTree.tsx:472
+#: src/components/OrganizationalUnitTree.tsx:521
 msgid "Retry"
 msgstr "Wiederholen"
 
@@ -882,9 +952,17 @@ msgstr "Widerrufen..."
 msgid "Roles"
 msgstr "Rollen"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:356
+msgid "Save Changes"
+msgstr "Änderungen speichern"
+
 #: src/pages/ShareTarget.tsx:717
 msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:352
+msgid "Saving..."
+msgstr "Speichern..."
 
 #: src/pages/Secrets/SecretList.tsx:177
 msgid "Search secrets"
@@ -931,7 +1009,7 @@ msgstr "Wählen Sie ein Wachbuch aus, um Berichte anzuzeigen"
 msgid "Select an object to view details"
 msgstr "Wählen Sie ein Objekt aus, um Details anzuzeigen"
 
-#: src/pages/Organization/OrganizationPage.tsx:96
+#: src/pages/Organization/OrganizationPage.tsx:223
 msgid "Select an organizational unit to view details"
 msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 
@@ -1055,6 +1133,14 @@ msgstr "Test-Benachrichtigung"
 msgid "Text:"
 msgstr "Text:"
 
+#: src/components/OrganizationalUnitFormDialog.tsx:339
+msgid "The new unit will be created under this parent."
+msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:285
+msgid "The type determines the unit's role in the hierarchy."
+msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
+
 #: src/components/NotificationPreferences.tsx:226
 msgid "This is a test notification from SecPal"
 msgstr "Dies ist eine Testbenachrichtigung von SecPal"
@@ -1075,9 +1161,14 @@ msgstr "Erneut versuchen"
 msgid "Try adjusting your filters"
 msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
-#: src/pages/Organization/OrganizationPage.tsx:75
+#: src/components/OrganizationalUnitFormDialog.tsx:282
+#: src/pages/Organization/OrganizationPage.tsx:174
 msgid "Type"
 msgstr "Typ"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:137
+msgid "Type is required"
+msgstr "Typ ist erforderlich"
 
 #: src/pages/Secrets/SecretDetail.tsx:331
 msgid "URL"
@@ -1107,6 +1198,10 @@ msgstr "Jetzt aktualisieren"
 #: src/pages/Secrets/SecretEdit.tsx:137
 msgid "Update the details of your secret."
 msgstr "Aktualisieren Sie die Angaben zu Ihrem Geheimnis."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:242
+msgid "Update the organizational unit details."
+msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Updated"
@@ -1182,6 +1277,10 @@ msgstr "Ihre lokale Version"
 #: src/components/GuardBookManager.tsx:406
 msgid "by"
 msgstr "von"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:271
+msgid "e.g., Berlin Branch"
+msgstr "z.B. Niederlassung Berlin"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:255

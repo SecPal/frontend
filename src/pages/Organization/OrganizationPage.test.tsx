@@ -136,8 +136,8 @@ describe("OrganizationPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Type")).toBeInTheDocument();
-      // "holding" appears twice: once in tree badge, once in detail panel
-      expect(screen.getAllByText("holding")).toHaveLength(2);
+      // "Holding" appears twice: once in tree badge (translated), once in detail panel
+      expect(screen.getAllByText("Holding")).toHaveLength(2);
     });
   });
 
