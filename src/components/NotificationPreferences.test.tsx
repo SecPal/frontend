@@ -358,7 +358,7 @@ describe("NotificationPreferences", () => {
         name: /security alerts/i,
       });
 
-      // Focus the switch using userEvent to properly trigger React state updates
+      // Click the switch to focus it (clicking both toggles and focuses the element)
       await user.click(alertsSwitch);
       expect(alertsSwitch).toHaveFocus();
     });

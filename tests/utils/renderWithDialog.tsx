@@ -37,9 +37,12 @@ export async function renderWithTransitions(
   const result = render(ui);
 
   // Wait for any pending state updates from HeadlessUI transitions
-  // The empty callback ensures we wait for the next tick where React
-  // has flushed all pending updates
-  await waitFor(() => {});
+  // by verifying the container exists after React flushes updates
+  await waitFor(() => {
+    if (!result.container) {
+      throw new Error("Container not mounted");
+    }
+  });
 
   return result;
 }

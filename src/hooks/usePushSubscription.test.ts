@@ -70,7 +70,7 @@ describe("usePushSubscription", () => {
       expect(result.current.error).toBeNull();
 
       // Wait for async operations to complete to prevent act() warnings
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
     });
@@ -93,7 +93,7 @@ describe("usePushSubscription", () => {
       expect(result.current.isSupported).toBe(false);
 
       // Wait for any potential async operations
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
@@ -304,7 +304,7 @@ describe("usePushSubscription", () => {
       );
 
       // Wait for initial async operations to complete
-      await vi.waitFor(() => {
+      await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
