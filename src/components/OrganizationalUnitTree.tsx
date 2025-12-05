@@ -8,6 +8,7 @@ import { Badge } from "./badge";
 import { Heading, Subheading } from "./heading";
 import { Text } from "./text";
 import { DeleteOrganizationalUnitDialog } from "./DeleteOrganizationalUnitDialog";
+import { MoveOrganizationalUnitDialog } from "./MoveOrganizationalUnitDialog";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -144,6 +145,7 @@ interface TreeNodeProps {
   onSelect?: (unit: OrganizationalUnit) => void;
   onEdit?: (unit: OrganizationalUnit) => void;
   onDelete?: (unit: OrganizationalUnit) => void;
+  onMove?: (unit: OrganizationalUnit) => void;
   onCreateChild?: (unit: OrganizationalUnit) => void;
   selectedId?: string | null;
 }
@@ -157,6 +159,7 @@ function TreeNode({
   onSelect,
   onEdit,
   onDelete,
+  onMove,
   onCreateChild,
   selectedId,
 }: TreeNodeProps) {
@@ -198,6 +201,14 @@ function TreeNode({
       onCreateChild?.(unit);
     },
     [onCreateChild, unit]
+  );
+
+  const handleMove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onMove?.(unit);
+    },
+    [onMove, unit]
   );
 
   return (
@@ -298,6 +309,28 @@ function TreeNode({
               </svg>
             </Button>
           )}
+          {onMove && (
+            <Button
+              plain
+              onClick={handleMove}
+              aria-label={t`Move ${unit.name}`}
+              className="p-1"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                />
+              </svg>
+            </Button>
+          )}
           {onDelete && (
             <Button
               plain
@@ -334,6 +367,7 @@ function TreeNode({
               onSelect={onSelect}
               onEdit={onEdit}
               onDelete={onDelete}
+              onMove={onMove}
               onCreateChild={onCreateChild}
               selectedId={selectedId}
             />
@@ -351,6 +385,8 @@ export interface OrganizationalUnitTreeProps {
   onEdit?: (unit: OrganizationalUnit) => void;
   /** Callback when delete action is triggered */
   onDelete?: (unit: OrganizationalUnit) => void;
+  /** Callback when move action is triggered */
+  onMove?: (unit: OrganizationalUnit) => void;
   /** Callback when create child action is triggered on a unit */
   onCreateChild?: (unit: OrganizationalUnit) => void;
   /** Callback when create action is triggered (root level) */
@@ -386,6 +422,7 @@ export function OrganizationalUnitTree({
   onSelect,
   onEdit,
   onDelete,
+  onMove,
   onCreateChild,
   onCreate,
   selectedId,
@@ -401,6 +438,8 @@ export function OrganizationalUnitTree({
   const [unitToDelete, setUnitToDelete] = useState<OrganizationalUnit | null>(
     null
   );
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [unitToMove, setUnitToMove] = useState<OrganizationalUnit | null>(null);
 
   const loadUnits = useCallback(async () => {
     setIsLoading(true);
@@ -485,6 +524,25 @@ export function OrganizationalUnitTree({
     // The unit will be overwritten when a new delete is triggered.
   }, []);
 
+  const handleMoveClick = useCallback((unit: OrganizationalUnit) => {
+    setUnitToMove(unit);
+    setMoveDialogOpen(true);
+  }, []);
+
+  const handleMoveSuccess = useCallback(async () => {
+    await loadUnits();
+    if (unitToMove) {
+      onMove?.(unitToMove);
+    }
+  }, [loadUnits, onMove, unitToMove]);
+
+  const handleMoveDialogClose = useCallback(() => {
+    setMoveDialogOpen(false);
+    // Note: We intentionally don't reset unitToMove here to prevent
+    // content flickering during the dialog's close animation.
+    // The unit will be overwritten when a new move is triggered.
+  }, []);
+
   if (isLoading) {
     return (
       <div className={`${className} animate-pulse`}>
@@ -553,6 +611,7 @@ export function OrganizationalUnitTree({
               onSelect={onSelect}
               onEdit={onEdit}
               onDelete={handleDeleteClick}
+              onMove={onMove ? handleMoveClick : undefined}
               onCreateChild={onCreateChild}
               selectedId={selectedId}
             />
@@ -566,6 +625,14 @@ export function OrganizationalUnitTree({
         unit={unitToDelete}
         onClose={handleDeleteDialogClose}
         onSuccess={handleDeleteSuccess}
+      />
+
+      {/* Move/Reparent Dialog */}
+      <MoveOrganizationalUnitDialog
+        open={moveDialogOpen}
+        unit={unitToMove}
+        onClose={handleMoveDialogClose}
+        onSuccess={handleMoveSuccess}
       />
     </div>
   );
