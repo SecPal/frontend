@@ -62,8 +62,9 @@ module.exports = {
         // Best Practices (includes JS error detection)
         "categories:best-practices": ["warn", { minScore: 0.9 }],
 
-        // JavaScript errors - warn for now, will enforce after fixing existing issues
-        // See issue for console error investigation
+        // JavaScript errors - temporarily warn level while investigating remaining errors
+        // Goal: Upgrade to error level once all console.error calls are addressed
+        // See #311 for tracking
         "errors-in-console": ["warn", { minScore: 1 }],
 
         // Resource optimization - use minScore for these audits

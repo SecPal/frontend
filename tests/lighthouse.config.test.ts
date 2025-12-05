@@ -65,11 +65,11 @@ describe("Lighthouse CI Configuration", () => {
     const jsErrorAssertion = config.ci.assert.assertions["errors-in-console"];
 
     expect(jsErrorAssertion).toBeDefined();
-    // Currently warn level - reports issues but doesn't block CI
-    // Will be upgraded to error after fixing existing console errors (see #311)
+    // Warn level - reports issues but doesn't block CI yet
+    // Will be upgraded to error after all console.error calls are addressed
+    // See #311 for tracking
     expect(jsErrorAssertion[0]).toBe("warn");
     // minScore: 1 means audit requires perfect score (no console errors)
-    // Combined with warn level: issues are reported but don't fail the build
     expect(jsErrorAssertion[1].minScore).toBe(1);
   });
 

@@ -60,9 +60,8 @@ export function initWebVitals(): void {
     // Time to First Byte (server response time)
     // Good: < 800ms, Needs Improvement: 800-1800ms, Poor: > 1800ms
     onTTFB(reportWebVital);
-
-    console.log("Web Vitals tracking initialized");
   } catch (error) {
-    console.error("Failed to initialize Web Vitals:", error);
+    // Non-critical: App works without Web Vitals tracking
+    console.warn("Failed to initialize Web Vitals:", error);
   }
 }
