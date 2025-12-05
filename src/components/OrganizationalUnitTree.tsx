@@ -5,6 +5,12 @@ import { useState, useCallback, useEffect } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
 import { Badge } from "./badge";
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownMenu,
+  DropdownItem,
+} from "./dropdown";
 import { Heading, Subheading } from "./heading";
 import { Text } from "./text";
 import { DeleteOrganizationalUnitDialog } from "./DeleteOrganizationalUnitDialog";
@@ -214,12 +220,12 @@ function TreeNode({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors ${
+        className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
           isSelected
             ? "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
             : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
         }`}
-        style={{ paddingLeft: `${level * 24 + 12}px` }}
+        style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
         onClick={handleSelect}
         role="treeitem"
         aria-expanded={hasChildren ? isExpanded : undefined}
@@ -235,7 +241,7 @@ function TreeNode({
         {/* Expand/Collapse Button */}
         <button
           type="button"
-          className={`p-0.5 rounded transition-colors ${
+          className={`shrink-0 p-0.5 rounded transition-colors ${
             hasChildren
               ? "hover:bg-gray-200 dark:hover:bg-gray-700"
               : "invisible"
@@ -251,29 +257,31 @@ function TreeNode({
         </button>
 
         {/* Icon */}
-        {getUnitIcon(unit.type)}
+        <span className="shrink-0">{getUnitIcon(unit.type)}</span>
 
         {/* Name */}
-        <span className="flex-1 font-medium text-gray-900 dark:text-gray-100 truncate">
+        <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 truncate">
           {unit.name}
         </span>
 
-        {/* Type Badge */}
-        <Badge color={getTypeBadgeColor(unit.type)}>
-          {getTypeLabel(unit.type)}
-        </Badge>
+        {/* Type Badge - hidden on small screens */}
+        <span className="hidden sm:inline-flex shrink-0">
+          <Badge color={getTypeBadgeColor(unit.type)}>
+            {getTypeLabel(unit.type)}
+          </Badge>
+        </span>
 
-        {/* Actions - always visible on mobile, hover-only on desktop */}
-        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-          {onCreateChild && (
-            <Button
+        {/* Actions Menu */}
+        {(onEdit || onDelete || onMove || onCreateChild) && (
+          <Dropdown>
+            <DropdownButton
               plain
-              onClick={handleCreateChild}
-              aria-label={t`Add child to ${unit.name}`}
-              className="p-1"
+              aria-label={t`Actions for ${unit.name}`}
+              className="shrink-0 p-1"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               <svg
-                className="h-4 w-4"
+                className="h-5 w-5 text-gray-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
@@ -282,78 +290,92 @@ function TreeNode({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
+                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
                 />
               </svg>
-            </Button>
-          )}
-          {onEdit && (
-            <Button
-              plain
-              onClick={handleEdit}
-              aria-label={t`Edit ${unit.name}`}
-              className="p-1"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                />
-              </svg>
-            </Button>
-          )}
-          {onMove && (
-            <Button
-              plain
-              onClick={handleMove}
-              aria-label={t`Move ${unit.name}`}
-              className="p-1"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                />
-              </svg>
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              plain
-              onClick={handleDelete}
-              aria-label={t`Delete ${unit.name}`}
-              className="p-1 text-red-600 hover:text-red-700"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                />
-              </svg>
-            </Button>
-          )}
-        </div>
+            </DropdownButton>
+            <DropdownMenu anchor="bottom end">
+              {onCreateChild && (
+                <DropdownItem onClick={handleCreateChild}>
+                  <svg
+                    data-slot="icon"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                  <Trans>Add child</Trans>
+                </DropdownItem>
+              )}
+              {onEdit && (
+                <DropdownItem onClick={handleEdit}>
+                  <svg
+                    data-slot="icon"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                    />
+                  </svg>
+                  <Trans>Edit</Trans>
+                </DropdownItem>
+              )}
+              {onMove && (
+                <DropdownItem onClick={handleMove}>
+                  <svg
+                    data-slot="icon"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                    />
+                  </svg>
+                  <Trans>Move</Trans>
+                </DropdownItem>
+              )}
+              {onDelete && (
+                <DropdownItem onClick={handleDelete}>
+                  <svg
+                    data-slot="icon"
+                    className="h-4 w-4 text-red-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                    />
+                  </svg>
+                  <span className="text-red-600 dark:text-red-400">
+                    <Trans>Delete</Trans>
+                  </span>
+                </DropdownItem>
+              )}
+            </DropdownMenu>
+          </Dropdown>
+        )}
       </div>
 
       {/* Children */}
@@ -783,18 +805,17 @@ export function OrganizationalUnitTree({
         className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800"
       >
         {units.map((unit) => (
-          <div key={unit.id} className="group">
-            <TreeNode
-              unit={unit}
-              level={0}
-              onSelect={onSelect}
-              onEdit={onEdit}
-              onDelete={handleDeleteClick}
-              onMove={onMove ? handleMoveClick : undefined}
-              onCreateChild={onCreateChild}
-              selectedId={selectedId}
-            />
-          </div>
+          <TreeNode
+            key={unit.id}
+            unit={unit}
+            level={0}
+            onSelect={onSelect}
+            onEdit={onEdit}
+            onDelete={handleDeleteClick}
+            onMove={onMove ? handleMoveClick : undefined}
+            onCreateChild={onCreateChild}
+            selectedId={selectedId}
+          />
         ))}
       </div>
 

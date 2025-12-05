@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Mobile-friendly action menu for organization tree** (Part of Epic #283)
+  - Replaced individual action buttons (Add Child, Edit, Move, Delete) with a compact dropdown menu (three dots icon)
+  - Actions are now accessible via a single button that expands to show all available options
+  - Saves horizontal space on mobile devices where action buttons previously overflowed
+  - Uses Catalyst Dropdown, DropdownButton, DropdownMenu, and DropdownItem components
+
 - **Detail panel close functionality** (#306, Part of Epic #283)
   - Close button (×) in detail panel header for explicit panel closing
   - ESC key support to close detail panel
@@ -34,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 6 test cases for optimistic UI behavior (delete, create, update)
 
 ### Fixed
+
+- **Move dialog UX improvements** (Part of Epic #283)
+  - Type labels (Company, Holding, etc.) are now translated in the Move dialog dropdown
+  - Options are now sorted hierarchically (matching tree order) with indentation based on depth
+  - Added type-specific icons in the dropdown options for better visual clarity
+  - Replaced native Select with Catalyst Listbox for consistent UI and accessibility
+  - Added `getTypeLabel()` and `flattenTree()` utility functions for hierarchical sorting
 
 - **Inconsistent badge colors between tree and detail view** (#304, Part of Epic #283)
   - Detail panel now uses type-specific badge colors matching the tree view

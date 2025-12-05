@@ -32,6 +32,36 @@ function renderWithI18n(component: React.ReactElement) {
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
 }
 
+/**
+ * Helper to open the actions dropdown for a specific unit and click an action
+ * @param unitName - The name of the unit to find
+ * @param actionName - The action to click (e.g., "Delete", "Edit", "Move")
+ */
+async function clickActionForUnit(unitName: string, actionName: string) {
+  // Find the tree item containing the unit
+  const treeItems = screen.getAllByRole("treeitem");
+  const targetTreeItem = treeItems.find((item) =>
+    item.textContent?.includes(unitName)
+  );
+  expect(targetTreeItem).toBeDefined();
+
+  // Find and click the actions menu button (three dots icon)
+  const actionsButton = targetTreeItem!.querySelector(
+    'button[aria-label*="Actions"]'
+  );
+  expect(actionsButton).toBeInTheDocument();
+  fireEvent.click(actionsButton!);
+
+  // Wait for the dropdown menu to appear and click the action
+  await waitFor(() => {
+    const menuItem = screen.getByRole("menuitem", {
+      name: new RegExp(actionName, "i"),
+    });
+    expect(menuItem).toBeInTheDocument();
+    fireEvent.click(menuItem);
+  });
+}
+
 describe("OrganizationalUnitTree", () => {
   const mockUnits: OrganizationalUnit[] = [
     {
@@ -209,16 +239,8 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("North Region")).toBeInTheDocument();
       });
 
-      // Click delete button on North Region
-      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
-      // Find the delete button for North Region (it's the second root unit)
-      const northRegionDeleteBtn = deleteButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("North Region");
-      });
-
-      expect(northRegionDeleteBtn).toBeInTheDocument();
-      fireEvent.click(northRegionDeleteBtn!);
+      // Open actions menu and click Delete for North Region
+      await clickActionForUnit("North Region", "Delete");
 
       // Confirm delete in dialog
       await waitFor(() => {
@@ -258,15 +280,8 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("IT Department")).toBeInTheDocument();
       });
 
-      // Click delete button on IT Department (child of Test Company)
-      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
-      const itDeptDeleteBtn = deleteButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("IT Department");
-      });
-
-      expect(itDeptDeleteBtn).toBeInTheDocument();
-      fireEvent.click(itDeptDeleteBtn!);
+      // Open actions menu and click Delete for IT Department (child of Test Company)
+      await clickActionForUnit("IT Department", "Delete");
 
       // Confirm delete in dialog
       await waitFor(() => {
@@ -306,14 +321,8 @@ describe("OrganizationalUnitTree", () => {
         .closest('[role="treeitem"]');
       expect(northRegionItem).toHaveAttribute("aria-selected", "true");
 
-      // Delete North Region
-      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
-      const northRegionDeleteBtn = deleteButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("North Region");
-      });
-
-      fireEvent.click(northRegionDeleteBtn!);
+      // Delete North Region via actions menu
+      await clickActionForUnit("North Region", "Delete");
 
       await waitFor(() => {
         expect(screen.getByText('Delete "North Region"?')).toBeInTheDocument();
@@ -420,14 +429,8 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("North Region")).toBeInTheDocument();
       });
 
-      // Click move on "North Region" (which is a root unit)
-      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
-      const northRegionMoveBtn = moveButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("North Region");
-      });
-
-      fireEvent.click(northRegionMoveBtn!);
+      // Open actions menu and click Move for "North Region" (which is a root unit)
+      await clickActionForUnit("North Region", "Move");
 
       // Wait for move dialog to load (it fetches available parents)
       await waitFor(() => {
@@ -438,9 +441,32 @@ describe("OrganizationalUnitTree", () => {
       const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
         .length;
 
-      // Select "Test Company" as new parent
-      const parentSelect = screen.getByRole("combobox");
-      fireEvent.change(parentSelect, { target: { value: "unit-1" } });
+      // Wait for listbox button to be ready and click it
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
+      });
+
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      fireEvent.click(listboxButton);
+
+      // Select "Test Company" as new parent from the listbox options
+      await waitFor(() => {
+        // Get all options in the listbox
+        const options = screen.getAllByRole("option");
+        expect(options.length).toBeGreaterThan(0);
+      });
+
+      // Find and click the Test Company option
+      const options = screen.getAllByRole("option");
+      const testCompanyOption = options.find((opt) =>
+        opt.textContent?.includes("Test Company")
+      );
+      expect(testCompanyOption).toBeDefined();
+      fireEvent.click(testCompanyOption!);
 
       // Click Move button
       const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
@@ -466,14 +492,8 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("IT Department")).toBeInTheDocument();
       });
 
-      // IT Department is a child of Test Company, move it to root
-      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
-      const itDeptMoveBtn = moveButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("IT Department");
-      });
-
-      fireEvent.click(itDeptMoveBtn!);
+      // IT Department is a child of Test Company, move it to root via actions menu
+      await clickActionForUnit("IT Department", "Move");
 
       await waitFor(() => {
         expect(screen.getByText(/Move "IT Department"/)).toBeInTheDocument();
@@ -483,9 +503,23 @@ describe("OrganizationalUnitTree", () => {
       const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
         .length;
 
-      // Select root level (empty value)
-      const parentSelect = screen.getByRole("combobox");
-      fireEvent.change(parentSelect, { target: { value: "" } });
+      // Wait for listbox button to be ready and click it
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
+      });
+
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      fireEvent.click(listboxButton);
+
+      // Select root level ("Make root unit" option)
+      await waitFor(() => {
+        expect(screen.getByText(/Make root unit/i)).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText(/Make root unit/i));
 
       // Click Move button
       const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
@@ -680,22 +714,39 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("Target Company")).toBeInTheDocument();
       });
 
-      // Move "Sales Department" (which has "Sales Team A" as child) to "Target Company"
-      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
-      const salesDeptMoveBtn = moveButtons.find((btn) => {
-        const treeItem = btn.closest('[role="treeitem"]');
-        return treeItem?.textContent?.includes("Sales Department");
-      });
-
-      fireEvent.click(salesDeptMoveBtn!);
+      // Move "Sales Department" (which has "Sales Team A" as child) to "Target Company" via actions menu
+      await clickActionForUnit("Sales Department", "Move");
 
       await waitFor(() => {
         expect(screen.getByText(/Move "Sales Department"/)).toBeInTheDocument();
       });
 
-      // Select "Target Company" as new parent
-      const parentSelect = screen.getByRole("combobox");
-      fireEvent.change(parentSelect, { target: { value: "parent-2" } });
+      // Wait for listbox button to be ready and click it
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
+      });
+
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      fireEvent.click(listboxButton);
+
+      // Select "Target Company" as new parent from the listbox options
+      await waitFor(() => {
+        // Get all options in the listbox
+        const options = screen.getAllByRole("option");
+        expect(options.length).toBeGreaterThan(0);
+      });
+
+      // Find and click the Target Company option
+      const options = screen.getAllByRole("option");
+      const targetCompanyOption = options.find((opt) =>
+        opt.textContent?.includes("Target Company")
+      );
+      expect(targetCompanyOption).toBeDefined();
+      fireEvent.click(targetCompanyOption!);
 
       const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
       fireEvent.click(confirmMoveBtn);
@@ -771,7 +822,7 @@ describe("OrganizationalUnitTree", () => {
   });
 
   describe("Move functionality", () => {
-    it("renders move button when onMove callback is provided", async () => {
+    it("renders move option in dropdown when onMove callback is provided", async () => {
       const onMove = vi.fn();
       renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
 
@@ -779,25 +830,50 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("Test Company")).toBeInTheDocument();
       });
 
-      // Move button should be present (with accessible label)
-      const moveButtons = screen.getAllByRole("button", {
-        name: /Move/i,
+      // Find actions menu button for Test Company and open it
+      const treeItems = screen.getAllByRole("treeitem");
+      const testCompanyItem = treeItems.find((item) =>
+        item.textContent?.includes("Test Company")
+      );
+      const actionsButton = testCompanyItem!.querySelector(
+        'button[aria-label*="Actions"]'
+      );
+      expect(actionsButton).toBeInTheDocument();
+      fireEvent.click(actionsButton!);
+
+      // Move option should be present in the dropdown menu
+      await waitFor(() => {
+        expect(
+          screen.getByRole("menuitem", { name: /Move/i })
+        ).toBeInTheDocument();
       });
-      expect(moveButtons.length).toBeGreaterThan(0);
     });
 
-    it("does not render move button when onMove callback is not provided", async () => {
+    it("does not render move option when onMove callback is not provided", async () => {
       renderWithI18n(<OrganizationalUnitTree />);
 
       await waitFor(() => {
         expect(screen.getByText("Test Company")).toBeInTheDocument();
       });
 
-      // Move button should not be present
-      const moveButtons = screen.queryAllByRole("button", {
-        name: /Move/i,
+      // Find actions menu button for Test Company and open it
+      const treeItems = screen.getAllByRole("treeitem");
+      const testCompanyItem = treeItems.find((item) =>
+        item.textContent?.includes("Test Company")
+      );
+      const actionsButton = testCompanyItem!.querySelector(
+        'button[aria-label*="Actions"]'
+      );
+      expect(actionsButton).toBeInTheDocument();
+      fireEvent.click(actionsButton!);
+
+      // Move option should NOT be present in the dropdown menu
+      await waitFor(() => {
+        const menuItems = screen.queryAllByRole("menuitem");
+        expect(
+          menuItems.some((item) => /Move/i.test(item.textContent || ""))
+        ).toBe(false);
       });
-      expect(moveButtons).toHaveLength(0);
     });
   });
 });
