@@ -102,11 +102,26 @@ export function MoveOrganizationalUnitDialog({
     setLoadError(null);
 
     try {
-      const response = await listOrganizationalUnits({ per_page: 100 });
+      // Fetch all units with pagination to avoid missing parent options for large orgs
+      let allUnits: OrganizationalUnit[] = [];
+      let page = 1;
+      let hasMore = true;
+      const perPage = 100;
+
+      while (hasMore) {
+        const response = await listOrganizationalUnits({
+          per_page: perPage,
+          page,
+        });
+        allUnits = allUnits.concat(response.data);
+        // If fewer than perPage returned, we've reached the last page
+        hasMore = response.data.length === perPage;
+        page += 1;
+      }
 
       // Filter out the unit itself (can't be its own parent)
-      // Also filter out descendants to prevent circular references
-      const filtered = response.data.filter((u) => u.id !== unit.id);
+      // Note: Backend API will prevent circular references with 409 Conflict
+      const filtered = allUnits.filter((u) => u.id !== unit.id);
 
       setAvailableUnits(filtered);
     } catch (err) {
