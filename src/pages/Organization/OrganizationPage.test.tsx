@@ -415,5 +415,61 @@ describe("OrganizationPage", () => {
         ).toBeInTheDocument();
       });
     });
+
+    it("closes detail panel when clicking outside tree and detail panel", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Click outside (on the page heading area which is outside the grid)
+      const pageHeading = screen.getByText("Organization Structure");
+      await user.click(pageHeading);
+
+      // Detail panel should show placeholder
+      await waitFor(() => {
+        expect(
+          screen.getByText("Select an organizational unit to view details")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("does not close detail panel when clicking inside the grid area", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Click on the detail panel (but not on a button)
+      const typeLabel = screen.getByText("Type");
+      await user.click(typeLabel);
+
+      // Detail panel should still be visible
+      expect(
+        screen.getByRole("button", { name: /^Edit$/i })
+      ).toBeInTheDocument();
+    });
   });
 });
