@@ -4,12 +4,12 @@
 import { useState } from "react";
 import { Trans, t } from "@lingui/macro";
 import {
-  Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogActions,
-} from "./dialog";
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  AlertBody,
+  AlertActions,
+} from "./alert";
 import { Button } from "./button";
 import { Text } from "./text";
 import type { OrganizationalUnit } from "../types/organizational";
@@ -30,7 +30,7 @@ export interface DeleteOrganizationalUnitDialogProps {
 }
 
 /**
- * Warning icon for the dialog
+ * Warning icon component
  */
 function ExclamationTriangleIcon({
   className = "h-6 w-6",
@@ -57,6 +57,7 @@ function ExclamationTriangleIcon({
 /**
  * Delete confirmation dialog for organizational units
  *
+ * Uses Catalyst Alert component for proper confirmation dialog semantics.
  * Shows different content based on whether the unit has children:
  * - Without children: Standard delete confirmation with Delete/Cancel buttons
  * - With children: Warning that unit cannot be deleted, with OK button only
@@ -75,14 +76,10 @@ export function DeleteOrganizationalUnitDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate derived state - use defaults when unit is null
+  // Calculate derived state - unit is kept stable by parent during close animation
   const hasChildren = unit?.children && unit.children.length > 0;
   const childCount = unit?.children?.length ?? 0;
   const unitName = unit?.name ?? "";
-
-  // Dialog should only be open when both open=true AND unit is provided
-  // This prevents flickering when switching between units
-  const isOpen = open && unit !== null;
 
   const handleDelete = async () => {
     if (!unit) return;
@@ -110,84 +107,88 @@ export function DeleteOrganizationalUnitDialog({
     onClose();
   };
 
-  // Render blocked state (unit has children)
-  if (hasChildren) {
-    return (
-      <Dialog open={isOpen} onClose={handleClose} size="md">
-        <div className="flex items-start gap-4">
-          <div className="shrink-0 rounded-full bg-amber-100 p-2 dark:bg-amber-900/50">
-            <ExclamationTriangleIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-          </div>
-          <div className="flex-1">
-            <DialogTitle>
-              <Trans>Cannot Delete "{unitName}"</Trans>
-            </DialogTitle>
-            <DialogDescription>
-              <Trans>
-                This unit has {childCount} child units. Please delete or move
-                the child units before deleting this unit.
-              </Trans>
-            </DialogDescription>
-          </div>
-        </div>
-
-        <DialogBody>
-          <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
-            <Text className="text-amber-800 dark:text-amber-200">
-              <Trans>
-                Child units must be deleted or reassigned to a different parent
-                before this organizational unit can be removed.
-              </Trans>
-            </Text>
-          </div>
-        </DialogBody>
-
-        <DialogActions>
-          <Button onClick={handleClose}>
-            <Trans>OK</Trans>
-          </Button>
-        </DialogActions>
-      </Dialog>
-    );
-  }
-
-  // Render delete confirmation (unit has no children)
+  // Single Alert with conditional content - prevents flickering
   return (
-    <Dialog open={isOpen} onClose={handleClose} size="md">
-      <div className="flex items-start gap-4">
-        <div className="shrink-0 rounded-full bg-red-100 p-2 dark:bg-red-900/50">
-          <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+    <Alert open={open} onClose={handleClose} size="md">
+      <div className="flex items-center gap-4">
+        <div
+          className={`shrink-0 rounded-full p-2 ${
+            hasChildren
+              ? "bg-amber-100 dark:bg-amber-900/50"
+              : "bg-red-100 dark:bg-red-900/50"
+          }`}
+        >
+          <ExclamationTriangleIcon
+            className={`h-6 w-6 ${
+              hasChildren
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          />
         </div>
         <div className="flex-1">
-          <DialogTitle>
-            <Trans>Delete "{unitName}"?</Trans>
-          </DialogTitle>
-          <DialogDescription>
+          {hasChildren ? (
+            <AlertTitle>
+              <Trans>Cannot Delete "{unitName}"</Trans>
+            </AlertTitle>
+          ) : (
+            <AlertTitle>
+              <Trans>Delete "{unitName}"?</Trans>
+            </AlertTitle>
+          )}
+        </div>
+      </div>
+
+      {hasChildren ? (
+        <>
+          <AlertDescription>
+            <Trans>
+              This unit has {childCount} child unit(s). Please delete or move
+              the child units before deleting this unit.
+            </Trans>
+          </AlertDescription>
+          <AlertBody>
+            <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+              <Text className="text-amber-800 dark:text-amber-200">
+                <Trans>
+                  Child units must be deleted or reassigned to a different
+                  parent before this organizational unit can be removed.
+                </Trans>
+              </Text>
+            </div>
+          </AlertBody>
+          <AlertActions>
+            <Button onClick={handleClose}>
+              <Trans>OK</Trans>
+            </Button>
+          </AlertActions>
+        </>
+      ) : (
+        <>
+          <AlertDescription>
             <Trans>
               This action cannot be undone. The organizational unit will be
               permanently removed.
             </Trans>
-          </DialogDescription>
-        </div>
-      </div>
-
-      {error && (
-        <DialogBody>
-          <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-            <Text className="text-red-800 dark:text-red-200">{error}</Text>
-          </div>
-        </DialogBody>
+          </AlertDescription>
+          {error && (
+            <AlertBody>
+              <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                <Text className="text-red-800 dark:text-red-200">{error}</Text>
+              </div>
+            </AlertBody>
+          )}
+          <AlertActions>
+            <Button plain onClick={handleClose} disabled={isDeleting}>
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button color="red" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+            </Button>
+          </AlertActions>
+        </>
       )}
-
-      <DialogActions>
-        <Button plain onClick={handleClose} disabled={isDeleting}>
-          <Trans>Cancel</Trans>
-        </Button>
-        <Button color="red" onClick={handleDelete} disabled={isDeleting}>
-          {isDeleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    </Alert>
   );
 }
 

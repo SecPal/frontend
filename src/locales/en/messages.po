@@ -233,24 +233,23 @@ msgid "by"
 msgstr "by"
 
 #: src/components/ConflictResolutionDialog.tsx:200
-#: src/components/DeleteOrganizationalUnitDialog.tsx:181
+#: src/components/DeleteOrganizationalUnitDialog.tsx:186
 #: src/components/OrganizationalUnitFormDialog.tsx:335
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Cancel"
 
-#. placeholder {0}: unit.name
-#: src/components/DeleteOrganizationalUnitDialog.tsx:120
-msgid "Cannot Delete \"{0}\""
-msgstr "Cannot Delete \"{0}\""
+#: src/components/DeleteOrganizationalUnitDialog.tsx:135
+msgid "Cannot Delete \"{unitName}\""
+msgstr "Cannot Delete \"{unitName}\""
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:255
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:134
+#: src/components/DeleteOrganizationalUnitDialog.tsx:156
 msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 msgstr "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 
@@ -363,14 +362,13 @@ msgid "Customers"
 msgstr "Customers"
 
 #: src/components/AttachmentList.tsx:215
-#: src/components/DeleteOrganizationalUnitDialog.tsx:184
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
 msgid "Delete"
 msgstr "Delete"
 
-#. placeholder {0}: unit.name
-#: src/components/DeleteOrganizationalUnitDialog.tsx:160
-msgid "Delete \"{0}\"?"
-msgstr "Delete \"{0}\"?"
+#: src/components/DeleteOrganizationalUnitDialog.tsx:139
+msgid "Delete \"{unitName}\"?"
+msgstr "Delete \"{unitName}\"?"
 
 #. placeholder {0}: area.name
 #. placeholder {0}: customer.name
@@ -388,7 +386,7 @@ msgstr "Delete {0}"
 msgid "Delete report {0}"
 msgstr "Delete report {0}"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:184
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
 msgid "Deleting..."
 msgstr "Deleting..."
 
@@ -562,7 +560,7 @@ msgstr "Failed to delete guard book"
 msgid "Failed to delete object"
 msgstr "Failed to delete object"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:98
+#: src/components/DeleteOrganizationalUnitDialog.tsx:101
 msgid "Failed to delete organizational unit"
 msgstr "Failed to delete organizational unit"
 
@@ -951,7 +949,7 @@ msgstr "Offline - will sync when online"
 msgid "Offline only"
 msgstr "Offline only"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:144
+#: src/components/DeleteOrganizationalUnitDialog.tsx:165
 msgid "OK"
 msgstr "OK"
 
@@ -1304,7 +1302,7 @@ msgstr "The system is not fully configured. Please contact your administrator."
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:163
+#: src/components/DeleteOrganizationalUnitDialog.tsx:172
 msgid "This action cannot be undone. The organizational unit will be permanently removed."
 msgstr "This action cannot be undone. The organizational unit will be permanently removed."
 
@@ -1316,9 +1314,9 @@ msgstr "This is a test notification from SecPal"
 msgid "This secret was modified both locally and on the server. Please choose which version to keep."
 msgstr "This secret was modified both locally and on the server. Please choose which version to keep."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:123
-msgid "This unit has {childCount} child units. Please delete or move the child units before deleting this unit."
-msgstr "This unit has {childCount} child units. Please delete or move the child units before deleting this unit."
+#: src/components/DeleteOrganizationalUnitDialog.tsx:148
+msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
+msgstr "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
 
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"

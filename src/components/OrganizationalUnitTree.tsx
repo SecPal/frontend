@@ -495,7 +495,9 @@ export function OrganizationalUnitTree({
 
   const handleDeleteDialogClose = useCallback(() => {
     setDeleteDialogOpen(false);
-    setUnitToDelete(null);
+    // Note: We intentionally don't reset unitToDelete here to prevent
+    // content flickering during the dialog's close animation.
+    // The unit will be overwritten when a new delete is triggered.
   }, []);
 
   if (isLoading) {

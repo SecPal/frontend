@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-05 07:39+0100\n"
+"POT-Creation-Date: 2025-12-05 07:54+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -180,19 +180,18 @@ msgid "Branch"
 msgstr "Niederlassung"
 
 #: src/components/ConflictResolutionDialog.tsx:200
-#: src/components/DeleteOrganizationalUnitDialog.tsx:181
+#: src/components/DeleteOrganizationalUnitDialog.tsx:186
 #: src/components/OrganizationalUnitFormDialog.tsx:335
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#. placeholder {0}: unit.name
-#: src/components/DeleteOrganizationalUnitDialog.tsx:120
-msgid "Cannot Delete \"{0}\""
-msgstr "Löschen von \"{0}\" nicht möglich"
+#: src/components/DeleteOrganizationalUnitDialog.tsx:135
+msgid "Cannot Delete \"{unitName}\""
+msgstr "Löschen von \"{unitName}\" nicht möglich"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:134
+#: src/components/DeleteOrganizationalUnitDialog.tsx:156
 msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen übergeordneten Einheit neu zugeordnet werden, bevor diese Organisationseinheit entfernt werden kann."
 
@@ -305,14 +304,13 @@ msgid "Customers"
 msgstr "Kunden"
 
 #: src/components/AttachmentList.tsx:215
-#: src/components/DeleteOrganizationalUnitDialog.tsx:184
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
 msgid "Delete"
 msgstr "Löschen"
 
-#. placeholder {0}: unit.name
-#: src/components/DeleteOrganizationalUnitDialog.tsx:160
-msgid "Delete \"{0}\"?"
-msgstr "\"{0}\" löschen?"
+#: src/components/DeleteOrganizationalUnitDialog.tsx:139
+msgid "Delete \"{unitName}\"?"
+msgstr "\"{unitName}\" löschen?"
 
 #. placeholder {0}: report.report_number
 #: src/components/GuardBookManager.tsx:446
@@ -330,7 +328,7 @@ msgstr "Bericht löschen {0}"
 msgid "Delete {0}"
 msgstr "Löschen {0}"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:184
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
 msgid "Deleting..."
 msgstr "Löschen..."
 
@@ -500,7 +498,7 @@ msgstr "Wachbuch konnte nicht gelöscht werden"
 msgid "Failed to delete object"
 msgstr "Objekt konnte nicht gelöscht werden"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:98
+#: src/components/DeleteOrganizationalUnitDialog.tsx:101
 msgid "Failed to delete organizational unit"
 msgstr "Organisationseinheit konnte nicht gelöscht werden"
 
@@ -842,7 +840,7 @@ msgstr "Benachrichtigungen werden von Ihrem Browser nicht unterstützt. Bitte ve
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:144
+#: src/components/DeleteOrganizationalUnitDialog.tsx:165
 msgid "OK"
 msgstr "OK"
 
@@ -1198,7 +1196,7 @@ msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:163
+#: src/components/DeleteOrganizationalUnitDialog.tsx:172
 msgid "This action cannot be undone. The organizational unit will be permanently removed."
 msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
 
@@ -1210,9 +1208,9 @@ msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 msgid "This secret was modified both locally and on the server. Please choose which version to keep."
 msgstr "Dieses Geheimnis wurde sowohl lokal als auch auf dem Server geändert. Bitte wählen Sie, welche Version Sie behalten möchten."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:123
-msgid "This unit has {childCount} child units. Please delete or move the child units before deleting this unit."
-msgstr "Diese Einheit hat {childCount} untergeordnete Einheiten. Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
+#: src/components/DeleteOrganizationalUnitDialog.tsx:148
+msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
+msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
 
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"
