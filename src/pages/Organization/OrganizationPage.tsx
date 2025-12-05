@@ -9,7 +9,10 @@ import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
 import { OrganizationalUnitFormDialog } from "../../components/OrganizationalUnitFormDialog";
-import { getTypeLabel } from "../../lib/organizationalUnitUtils";
+import {
+  getTypeLabel,
+  getTypeBadgeColor,
+} from "../../lib/organizationalUnitUtils";
 import type { OrganizationalUnit } from "../../types";
 
 /**
@@ -169,7 +172,9 @@ export function OrganizationPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <Heading level={3}>{selectedUnit.name}</Heading>
-                <Badge color="blue">{getTypeLabel(selectedUnit.type)}</Badge>
+                <Badge color={getTypeBadgeColor(selectedUnit.type)}>
+                  {getTypeLabel(selectedUnit.type)}
+                </Badge>
               </div>
 
               <dl className="space-y-3 text-sm">
