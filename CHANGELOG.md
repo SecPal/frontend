@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Detail panel close functionality** (#306, Part of Epic #283)
+  - Close button (×) in detail panel header for explicit panel closing
+  - ESC key support to close detail panel
+  - Toggle selection: clicking the same unit again deselects it
+  - Improved UX for organizational structure management
+
 ### Fixed
 
 - **Inconsistent badge colors between tree and detail view** (#304, Part of Epic #283)

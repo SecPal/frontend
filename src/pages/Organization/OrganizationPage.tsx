@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Trans, t } from "@lingui/macro";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { Button } from "../../components/button";
@@ -23,6 +24,7 @@ import type { OrganizationalUnit } from "../../types";
  *
  * Part of Epic #228 - Organizational Structure Hierarchy.
  * @see Issue #294: Frontend: Organizational unit Create/Edit forms
+ * @see Issue #306: Detail panel close functionality (close button, ESC key, toggle selection)
  */
 export function OrganizationPage() {
   const [selectedUnit, setSelectedUnit] = useState<OrganizationalUnit | null>(
@@ -55,8 +57,33 @@ export function OrganizationPage() {
     };
   }, []);
 
-  const handleSelect = useCallback((unit: OrganizationalUnit) => {
-    setSelectedUnit(unit);
+  // ESC key handler to close detail panel
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && selectedUnit) {
+        setSelectedUnit(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedUnit]);
+
+  // Toggle selection: clicking the same unit deselects it
+  const handleSelect = useCallback(
+    (unit: OrganizationalUnit) => {
+      if (selectedUnit?.id === unit.id) {
+        setSelectedUnit(null);
+      } else {
+        setSelectedUnit(unit);
+      }
+    },
+    [selectedUnit?.id]
+  );
+
+  // Close detail panel handler
+  const handleCloseDetail = useCallback(() => {
+    setSelectedUnit(null);
   }, []);
 
   const handleEdit = useCallback((unit: OrganizationalUnit) => {
@@ -170,11 +197,21 @@ export function OrganizationPage() {
         <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
           {selectedUnit ? (
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-2">
                 <Heading level={3}>{selectedUnit.name}</Heading>
-                <Badge color={getTypeBadgeColor(selectedUnit.type)}>
-                  {getTypeLabel(selectedUnit.type)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge color={getTypeBadgeColor(selectedUnit.type)}>
+                    {getTypeLabel(selectedUnit.type)}
+                  </Badge>
+                  <button
+                    type="button"
+                    onClick={handleCloseDetail}
+                    className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                    aria-label={t`Close detail panel`}
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <dl className="space-y-3 text-sm">

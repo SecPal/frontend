@@ -325,4 +325,95 @@ describe("OrganizationPage", () => {
       expect(screen.getByText("Type")).toBeInTheDocument();
     });
   });
+
+  describe("Detail Panel Close Behavior", () => {
+    it("closes detail panel when close button is clicked", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Click close button
+      await user.click(
+        screen.getByRole("button", { name: /Close detail panel/i })
+      );
+
+      // Detail panel should show placeholder
+      await waitFor(() => {
+        expect(
+          screen.getByText("Select an organizational unit to view details")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("closes detail panel when ESC key is pressed", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Press ESC
+      await user.keyboard("{Escape}");
+
+      // Detail panel should show placeholder
+      await waitFor(() => {
+        expect(
+          screen.getByText("Select an organizational unit to view details")
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("deselects unit when clicking on same unit again (toggle)", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit - click on the tree item
+      const tree = screen.getByRole("tree");
+      const treeItem = tree.querySelector('[role="treeitem"]');
+      expect(treeItem).toBeInTheDocument();
+      await user.click(treeItem!);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Click the same tree item again to deselect
+      await user.click(treeItem!);
+
+      // Detail panel should show placeholder
+      await waitFor(() => {
+        expect(
+          screen.getByText("Select an organizational unit to view details")
+        ).toBeInTheDocument();
+      });
+    });
+  });
 });
