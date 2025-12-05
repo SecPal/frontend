@@ -84,24 +84,26 @@ jobs:
               return `${emoji} ${pct}`;
             };
 
-            const comment = `## ⚡ Lighthouse Report
-
-            | Category | Score |
-            | --- | --- |
-            | Performance | ${formatScore(summary.performance)} |
-            | Accessibility | ${formatScore(summary.accessibility)} |
-            | Best Practices | ${formatScore(summary['best-practices'])} |
-
-            [View full report](${result.htmlPath || 'See artifacts'})
-
-            <details>
-            <summary>Core Web Vitals</summary>
-
-            - **LCP** (Largest Contentful Paint): Target < 2.5s
-            - **CLS** (Cumulative Layout Shift): Target < 0.1
-            - **TBT** (Total Blocking Time): Target < 200ms
-
-            </details>`;
+            const comment = [
+              '## ⚡ Lighthouse Report',
+              '',
+              '| Category | Score |',
+              '| --- | --- |',
+              `| Performance | ${formatScore(summary.performance)} |`,
+              `| Accessibility | ${formatScore(summary.accessibility)} |`,
+              `| Best Practices | ${formatScore(summary['best-practices'])} |`,
+              '',
+              `[View full report](${result.htmlPath || 'See artifacts'})`,
+              '',
+              '<details>',
+              '<summary>Core Web Vitals</summary>',
+              '',
+              '- **LCP** (Largest Contentful Paint): Target < 2.5s',
+              '- **CLS** (Cumulative Layout Shift): Target < 0.1',
+              '- **TBT** (Total Blocking Time): Target < 200ms',
+              '',
+              '</details>',
+            ].join('\n');
 
             core.setOutput('comment', comment);
 

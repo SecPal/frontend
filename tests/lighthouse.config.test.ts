@@ -16,7 +16,7 @@ describe("Lighthouse CI Configuration", () => {
     config = require(configPath);
   });
 
-  it("should have valid lighthouserc.js file", () => {
+  it("should have valid lighthouserc.cjs file", () => {
     expect(existsSync(configPath)).toBe(true);
     expect(config).toBeDefined();
     expect(config.ci).toBeDefined();
@@ -25,7 +25,11 @@ describe("Lighthouse CI Configuration", () => {
   it("should configure collect settings", () => {
     expect(config.ci.collect).toBeDefined();
     expect(config.ci.collect.staticDistDir).toBe("./dist");
-    expect(config.ci.collect.numberOfRuns).toBeGreaterThanOrEqual(1);
+  });
+
+  it("should run multiple times for median stability", () => {
+    // Multiple runs ensure stable median values and reduce flakiness
+    expect(config.ci.collect.numberOfRuns).toBeGreaterThanOrEqual(3);
   });
 
   it("should configure performance assertions", () => {
@@ -61,9 +65,11 @@ describe("Lighthouse CI Configuration", () => {
     const jsErrorAssertion = config.ci.assert.assertions["errors-in-console"];
 
     expect(jsErrorAssertion).toBeDefined();
-    // Currently warn level - will be upgraded to error after fixing existing console errors
+    // Currently warn level - reports issues but doesn't block CI
+    // Will be upgraded to error after fixing existing console errors (see #311)
     expect(jsErrorAssertion[0]).toBe("warn");
-    // Score of 1 means no errors (using minScore assertion)
+    // minScore: 1 means audit requires perfect score (no console errors)
+    // Combined with warn level: issues are reported but don't fail the build
     expect(jsErrorAssertion[1].minScore).toBe(1);
   });
 
