@@ -143,6 +143,13 @@ export function OrganizationPage() {
     setDialogOpen(true);
   }, []);
 
+  const handleMove = useCallback(() => {
+    // Refresh tree after move operation
+    treeRefreshKey.current += 1;
+    // Force re-render
+    setSelectedUnit(null);
+  }, []);
+
   const handleDialogClose = useCallback(() => {
     setDialogOpen(false);
     setEditingUnit(null);
@@ -213,6 +220,7 @@ export function OrganizationPage() {
             onDelete={handleDelete}
             onCreateChild={handleCreateChild}
             onCreate={handleCreate}
+            onMove={handleMove}
             selectedId={selectedUnit?.id}
           />
         </div>
