@@ -43,3 +43,10 @@ if (typeof Blob.prototype.arrayBuffer === "undefined") {
     });
   };
 }
+
+// Mock ResizeObserver for HeadlessUI components (used by Listbox)
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

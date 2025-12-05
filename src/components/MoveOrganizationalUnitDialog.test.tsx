@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -214,6 +214,8 @@ describe("MoveOrganizationalUnitDialog", () => {
     });
 
     it("excludes current unit from available parents", async () => {
+      const user = userEvent.setup();
+
       // Include the unit itself in the API response
       vi.mocked(listOrganizationalUnits).mockResolvedValue({
         data: [...mockAvailableUnits, mockUnit],
@@ -235,19 +237,27 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete and find the listbox button
       await waitFor(() => {
-        // The unit itself should not be selectable as a parent
-        const select = screen.getByRole("combobox");
-        expect(select).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
+      // Open the listbox dropdown
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
       // Check that "Berlin Mitte" is not in the dropdown options
-      const select = screen.getByRole("combobox");
-      const options = within(select).queryAllByRole("option");
-      const unitOption = options.find((opt) =>
-        opt.textContent?.includes("Berlin Mitte")
-      );
-      expect(unitOption).toBeUndefined();
+      await waitFor(() => {
+        const options = screen.getAllByRole("option");
+        const unitOption = options.find((opt) =>
+          opt.textContent?.includes("Berlin Mitte")
+        );
+        expect(unitOption).toBeUndefined();
+      });
     });
 
     it("shows 'Make root unit' option in parent selection", async () => {
@@ -260,14 +270,30 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
-      await waitFor(() => {
-        const select = screen.getByRole("combobox");
-        expect(select).toBeInTheDocument();
+      // Wait for loading to complete
+      await waitFor(
+        () => {
+          expect(
+            screen.getByRole("button", { name: /Select new parent/i })
+          ).toBeInTheDocument();
+        },
+        { timeout: 5000 }
+      );
+
+      // Open the listbox dropdown using fireEvent (more reliable than userEvent for HeadlessUI)
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
       });
+      fireEvent.click(listboxButton);
 
       // Should have a "Make root unit" option
-      expect(screen.getByText(/Make root unit/i)).toBeInTheDocument();
-    });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/Make root unit/i)).toBeInTheDocument();
+        },
+        { timeout: 5000 }
+      );
+    }, 15000);
 
     it("allows selecting a new parent from the list", async () => {
       const user = userEvent.setup();
@@ -281,14 +307,29 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "available-1");
+      // Open the listbox dropdown
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
 
-      expect(select).toHaveValue("available-1");
+      // Select Region Hamburg
+      await waitFor(() => {
+        expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
+      });
+      await user.click(screen.getByText("Region Hamburg"));
+
+      // Verify the selection is shown in the button
+      await waitFor(() => {
+        expect(listboxButton).toHaveTextContent("Region Hamburg");
+      });
     });
   });
 
@@ -350,13 +391,23 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      // Select a new parent
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "available-1");
+      // Open the listbox dropdown and select a new parent
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
+      });
+      await user.click(screen.getByText("Region Hamburg"));
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -385,13 +436,23 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      // Select "Make root unit" option (empty value)
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "");
+      // Open the listbox dropdown and select "Make root unit" option
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Make root unit/i)).toBeInTheDocument();
+      });
+      await user.click(screen.getByText(/Make root unit/i));
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -417,8 +478,11 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
       // Move button should be disabled when selected parent is the same as current
@@ -442,13 +506,23 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      // Select a new parent
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "available-1");
+      // Open the listbox dropdown and select a new parent
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
+      });
+      await user.click(screen.getByText("Region Hamburg"));
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -476,13 +550,23 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      // Select a new parent
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "available-1");
+      // Open the listbox dropdown and select a new parent
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
+      });
+      await user.click(screen.getByText("Region Hamburg"));
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -529,13 +613,23 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Wait for loading to complete
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
 
-      // Select a new parent
-      const select = screen.getByRole("combobox");
-      await user.selectOptions(select, "available-1");
+      // Open the listbox dropdown and select a new parent
+      const listboxButton = screen.getByRole("button", {
+        name: /Select new parent/i,
+      });
+      await user.click(listboxButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
+      });
+      await user.click(screen.getByText("Region Hamburg"));
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -562,7 +656,7 @@ describe("MoveOrganizationalUnitDialog", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
-    it("has accessible combobox for parent selection", async () => {
+    it("has accessible listbox button for parent selection", async () => {
       renderWithI18n(
         <MoveOrganizationalUnitDialog
           open={true}
@@ -573,7 +667,9 @@ describe("MoveOrganizationalUnitDialog", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole("combobox")).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
     });
   });
