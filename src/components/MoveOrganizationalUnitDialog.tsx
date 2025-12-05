@@ -31,8 +31,8 @@ export interface MoveOrganizationalUnitDialogProps {
   unit: OrganizationalUnit | null;
   /** Callback when dialog should close */
   onClose: () => void;
-  /** Callback on successful move */
-  onSuccess: () => void;
+  /** Callback on successful move, receives new parent ID (empty string = root) */
+  onSuccess: (newParentId: string) => void;
 }
 
 /**
@@ -160,7 +160,7 @@ export function MoveOrganizationalUnitDialog({
         await attachOrganizationalUnitParent(unit.id, selectedParentId);
       }
 
-      onSuccess();
+      onSuccess(selectedParentId);
       onClose();
     } catch (err) {
       setError(

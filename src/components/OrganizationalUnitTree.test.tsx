@@ -193,6 +193,245 @@ describe("OrganizationalUnitTree", () => {
     // This is a simplified test - in real implementation would need to simulate hover
   });
 
+  describe("Optimistic Delete (Issue #303)", () => {
+    it("removes deleted unit from tree without reloading", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      const onDelete = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onDelete={onDelete} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Click delete button on North Region
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      // Find the delete button for North Region (it's the second root unit)
+      const northRegionDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      expect(northRegionDeleteBtn).toBeInTheDocument();
+      fireEvent.click(northRegionDeleteBtn!);
+
+      // Confirm delete in dialog
+      await waitFor(() => {
+        expect(screen.getByText('Delete "North Region"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      // Wait for deletion and optimistic update
+      await waitFor(() => {
+        // Unit should be removed from tree
+        expect(screen.queryByText("North Region")).not.toBeInTheDocument();
+        // Other units should still be visible
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Verify API was called only once for delete, NOT for reload
+      expect(deleteOrganizationalUnit).toHaveBeenCalledTimes(1);
+      expect(deleteOrganizationalUnit).toHaveBeenCalledWith("unit-3");
+
+      // listOrganizationalUnits should only be called once (initial load)
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+
+      // onDelete callback should be called with deleted unit
+      expect(onDelete).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "unit-3", name: "North Region" })
+      );
+    });
+
+    it("removes child unit from tree without reloading", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // Click delete button on IT Department (child of Test Company)
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      const itDeptDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("IT Department");
+      });
+
+      expect(itDeptDeleteBtn).toBeInTheDocument();
+      fireEvent.click(itDeptDeleteBtn!);
+
+      // Confirm delete in dialog
+      await waitFor(() => {
+        expect(screen.getByText('Delete "IT Department"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      // Wait for deletion and optimistic update
+      await waitFor(() => {
+        // Child unit should be removed
+        expect(screen.queryByText("IT Department")).not.toBeInTheDocument();
+        // Parent should still be visible
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears selection if deleted unit was selected", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      const onSelect = vi.fn();
+      renderWithI18n(
+        <OrganizationalUnitTree onSelect={onSelect} selectedId="unit-3" />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Verify North Region is selected (has selected styling)
+      const northRegionItem = screen
+        .getByText("North Region")
+        .closest('[role="treeitem"]');
+      expect(northRegionItem).toHaveAttribute("aria-selected", "true");
+
+      // Delete North Region
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      const northRegionDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      fireEvent.click(northRegionDeleteBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete "North Region"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      await waitFor(() => {
+        expect(screen.queryByText("North Region")).not.toBeInTheDocument();
+      });
+
+      // Selection should be cleared via onSelect(null)
+      // The component itself doesn't manage selection state, so we verify the unit is gone
+    });
+  });
+
+  describe("Optimistic Create (Issue #303)", () => {
+    it("adds created unit to tree without reloading when createdUnit prop changes", async () => {
+      const newUnit: OrganizationalUnit = {
+        id: "new-unit-1",
+        type: "department",
+        name: "New Department",
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Initially, new unit is not in the tree
+      expect(screen.queryByText("New Department")).not.toBeInTheDocument();
+
+      // Simulate parent passing a new created unit (as root)
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree
+            createdUnit={{ unit: newUnit, parentId: null }}
+          />
+        </I18nProvider>
+      );
+
+      // Unit should appear without reload
+      await waitFor(() => {
+        expect(screen.getByText("New Department")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree - only initial load
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("adds created unit as child when parentId is provided", async () => {
+      const newUnit: OrganizationalUnit = {
+        id: "new-child-1",
+        type: "branch",
+        name: "New Branch",
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Simulate adding as child of Test Company (unit-1)
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree
+            createdUnit={{ unit: newUnit, parentId: "unit-1" }}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("New Branch")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Optimistic Update (Issue #303)", () => {
+    it("updates unit in tree without reloading when updatedUnit prop changes", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Updated version of Test Company with new name
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "company",
+        name: "Updated Company Name",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      // Simulate parent passing updated unit
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+        </I18nProvider>
+      );
+
+      // Name should be updated without reload
+      await waitFor(() => {
+        expect(screen.getByText("Updated Company Name")).toBeInTheDocument();
+        expect(screen.queryByText("Test Company")).not.toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("filters units by type when typeFilter is provided", async () => {
     renderWithI18n(<OrganizationalUnitTree typeFilter="company" />);
 

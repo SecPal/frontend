@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Toggle selection: clicking the same unit again deselects it
   - Improved UX for organizational structure management
 
+### Changed
+
+- **Optimistic UI for organizational unit CRUD operations** (SecPal/api#303, Part of Epic #283)
+  - After creating a unit, it's immediately added to the tree without reload
+  - After updating a unit, changes appear instantly in the tree
+  - After moving/reparenting a unit, the tree structure updates immediately
+  - After deleting a unit, only the affected row is removed from the tree
+  - No full tree reload for any CRUD operation, improving perceived performance and UX
+  - Maintains tree state (expanded/collapsed nodes) after all operations
+  - New `createdUnit` and `updatedUnit` props for optimistic updates from parent
+  - Updated `MoveOrganizationalUnitDialog` to pass new parent ID on success
+  - 6 test cases for optimistic UI behavior (delete, create, update)
+
 ### Fixed
 
 - **Inconsistent badge colors between tree and detail view** (#304, Part of Epic #283)

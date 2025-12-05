@@ -368,7 +368,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         );
       });
 
-      expect(mockOnSuccess).toHaveBeenCalled();
+      expect(mockOnSuccess).toHaveBeenCalledWith("available-1");
       expect(mockOnClose).toHaveBeenCalled();
     });
 
@@ -403,7 +403,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         );
       });
 
-      expect(mockOnSuccess).toHaveBeenCalled();
+      expect(mockOnSuccess).toHaveBeenCalledWith("");
       expect(mockOnClose).toHaveBeenCalled();
     });
 
