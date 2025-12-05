@@ -322,8 +322,8 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.queryByText("North Region")).not.toBeInTheDocument();
       });
 
-      // Selection should be cleared via onSelect(null)
-      // The component itself doesn't manage selection state, so we verify the unit is gone
+      // Note: Selection clearing is handled by the parent component (OrganizationPage)
+      // via onDelete callback. This test verifies the unit is removed from the DOM.
     });
   });
 

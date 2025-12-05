@@ -185,6 +185,16 @@ export function OrganizationPage() {
         setSelectedUnit(unit);
       }
 
+      // Reset optimistic state after tree has processed the update
+      // This prevents duplicate additions on re-renders and allows
+      // subsequent operations on the same unit to trigger updates
+      setTimeout(() => {
+        setOptimisticUpdate({
+          createdUnit: null,
+          updatedUnit: null,
+        });
+      }, 0);
+
       // Show success message
       const message =
         dialogMode === "create"

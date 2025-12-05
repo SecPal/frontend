@@ -465,10 +465,12 @@ function updateUnitInTree(
 ): OrganizationalUnit[] {
   return units.map((unit) => {
     if (unit.id === updatedUnit.id) {
+      // Destructure to exclude children from updatedUnit, preserving tree structure
+      const { children: _, ...updates } = updatedUnit;
       return {
         ...unit,
-        ...updatedUnit,
-        children: unit.children, // Preserve children
+        ...updates,
+        children: unit.children, // Preserve existing children
       };
     }
     if (unit.children && unit.children.length > 0) {
@@ -495,13 +497,16 @@ export interface OrganizationalUnitTreeProps {
   /** Callback when create action is triggered (root level) */
   onCreate?: () => void;
   /**
-   * Optimistic UI: Call this to add a newly created unit to the tree
-   * without reloading. Pass the created unit and its parent ID (null for root).
+   * Optimistic UI: When provided, adds the newly created unit to the tree
+   * without reloading. Should contain the created unit and its parent ID (null for root).
+   * The parent component should set this after a successful create operation,
+   * then reset it to null after processing.
    */
   createdUnit?: { unit: OrganizationalUnit; parentId: string | null } | null;
   /**
-   * Optimistic UI: Call this to update a unit in the tree after editing
-   * without reloading.
+   * Optimistic UI: When provided, updates the unit in the tree after editing
+   * without reloading. The parent component should set this after a successful
+   * update operation, then reset it to null after processing.
    */
   updatedUnit?: OrganizationalUnit | null;
   /** Currently selected unit ID */
