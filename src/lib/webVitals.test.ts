@@ -165,5 +165,25 @@ describe("Web Vitals Integration", () => {
       // This is a defensive test to ensure no runtime errors occur
       expect(() => initWebVitals()).not.toThrow();
     });
+
+    it("should handle initialization errors gracefully", async () => {
+      const consoleWarn = vi.spyOn(console, "warn");
+      const { onCLS } = await import("web-vitals");
+
+      // Make onCLS throw an error
+      vi.mocked(onCLS).mockImplementationOnce(() => {
+        throw new Error("Web Vitals not supported");
+      });
+
+      // Re-import to get fresh module with mocked implementation
+      const { initWebVitals: freshInit } = await import("./webVitals");
+
+      // Should not throw, but should warn
+      expect(() => freshInit()).not.toThrow();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        "Failed to initialize Web Vitals:",
+        expect.any(Error)
+      );
+    });
   });
 });
