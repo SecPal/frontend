@@ -62,9 +62,9 @@ module.exports = {
         // Best Practices (includes JS error detection)
         "categories:best-practices": ["warn", { minScore: 0.9 }],
 
-        // JavaScript errors - warn for now, will enforce after fixing existing issues
-        // See issue for console error investigation
-        "errors-in-console": ["warn", { minScore: 1 }],
+        // JavaScript errors - zero tolerance for console.error
+        // Fixed in #311: Changed non-critical errors to console.warn
+        "errors-in-console": ["error", { minScore: 1 }],
 
         // Resource optimization - use minScore for these audits
         "uses-responsive-images": "off",

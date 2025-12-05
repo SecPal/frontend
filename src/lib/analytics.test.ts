@@ -105,13 +105,13 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should handle tracking errors gracefully", async () => {
-      const consoleError = vi.spyOn(console, "error");
+      const consoleWarn = vi.spyOn(console, "warn");
       const error = new Error("Database error");
       vi.mocked(db.analytics!.add).mockRejectedValueOnce(error);
 
       await analytics!.track("page_view", "test", "test");
 
-      expect(consoleError).toHaveBeenCalledWith(
+      expect(consoleWarn).toHaveBeenCalledWith(
         "Failed to track analytics event:",
         error
       );
@@ -292,7 +292,7 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should handle sync errors gracefully", async () => {
-      const consoleError = vi.spyOn(console, "error");
+      const consoleWarn = vi.spyOn(console, "warn");
       const error = new Error("Sync failed");
       vi.mocked(db.analytics!.where).mockImplementation(() => {
         throw error;
@@ -300,7 +300,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.syncEvents();
 
-      expect(consoleError).toHaveBeenCalledWith(
+      expect(consoleWarn).toHaveBeenCalledWith(
         "Failed to sync analytics events:",
         error
       );

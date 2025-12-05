@@ -12,9 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Console errors detected by Lighthouse CI** (#311)
+  - Changed non-critical `console.error` to `console.warn` for graceful degradation:
+    - Analytics singleton initialization (browsers without IndexedDB support)
+    - Analytics event tracking and sync failures
+    - Web Vitals initialization failures
+  - Web Vitals initialization log now only appears in development mode
+  - Upgraded Lighthouse `errors-in-console` assertion from `warn` to `error`
+  - Zero tolerance policy: CI now fails on any `console.error`
+
 ### Added
 
-- **Lighthouse CI for automated performance testing** (#TBD)
+- **Lighthouse CI for automated performance testing** (#308)
   - GitHub Actions workflow runs Lighthouse audits on every PR and push to main
   - Performance budgets based on Core Web Vitals thresholds:
     - LCP (Largest Contentful Paint): < 2.5s (error threshold)

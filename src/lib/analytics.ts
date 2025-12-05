@@ -109,7 +109,8 @@ class OfflineAnalytics {
         this.debouncedSync();
       }
     } catch (error) {
-      console.error("Failed to track analytics event:", error);
+      // Non-critical: App works without analytics
+      console.warn("Failed to track analytics event:", error);
     }
   }
 
@@ -337,7 +338,8 @@ class OfflineAnalytics {
 
       console.log(`Successfully synced ${eventsWithId.length} events`);
     } catch (error) {
-      console.error("Failed to sync analytics events:", error);
+      // Non-critical: Sync will be retried automatically
+      console.warn("Failed to sync analytics events:", error);
     } finally {
       this.isSyncing = false;
     }
@@ -415,8 +417,10 @@ let analyticsInstance: OfflineAnalytics | null = null;
 try {
   analyticsInstance = new OfflineAnalytics();
 } catch (error) {
-  console.error(
-    "Failed to initialize analytics singleton. This browser may not support required PWA features:",
+  // Expected in some browsers (e.g., private browsing mode)
+  // App works without analytics - graceful degradation
+  console.warn(
+    "Analytics not available. This browser may not support required PWA features:",
     error
   );
 }
