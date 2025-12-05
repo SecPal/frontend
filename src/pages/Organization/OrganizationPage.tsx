@@ -48,6 +48,9 @@ export function OrganizationPage() {
   // Ref for timeout cleanup
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Ref for click-outside detection
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -68,6 +71,24 @@ export function OrganizationPage() {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [selectedUnit]);
+
+  // Click-outside handler to close detail panel
+  // Note: Skip when dialog is open, as dialogs are rendered via Portal outside the grid
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        selectedUnit &&
+        !dialogOpen &&
+        gridContainerRef.current &&
+        !gridContainerRef.current.contains(event.target as Node)
+      ) {
+        setSelectedUnit(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [selectedUnit, dialogOpen]);
 
   // Toggle selection: clicking the same unit deselects it
   const handleSelect = useCallback(
@@ -179,7 +200,10 @@ export function OrganizationPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div
+        ref={gridContainerRef}
+        className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+      >
         {/* Tree View */}
         <div className="lg:col-span-2">
           <OrganizationalUnitTree
