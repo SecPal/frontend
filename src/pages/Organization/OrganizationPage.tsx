@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Trans, t } from "@lingui/macro";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { Button } from "../../components/button";
@@ -16,28 +17,6 @@ import {
 import type { OrganizationalUnit } from "../../types";
 
 /**
- * Close button icon (X)
- */
-function XMarkIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6 18L18 6M6 6l12 12"
-      />
-    </svg>
-  );
-}
-
-/**
  * Organization Page
  *
  * Displays the internal organizational structure (departments, branches, teams).
@@ -45,7 +24,7 @@ function XMarkIcon({ className = "h-5 w-5" }: { className?: string }) {
  *
  * Part of Epic #228 - Organizational Structure Hierarchy.
  * @see Issue #294: Frontend: Organizational unit Create/Edit forms
- * @see Issue #306: Allow closing detail panel by clicking outside
+ * @see Issue #306: Detail panel close functionality (close button, ESC key, toggle selection)
  */
 export function OrganizationPage() {
   const [selectedUnit, setSelectedUnit] = useState<OrganizationalUnit | null>(
