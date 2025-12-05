@@ -45,8 +45,9 @@ if (typeof Blob.prototype.arrayBuffer === "undefined") {
 }
 
 // Mock ResizeObserver for HeadlessUI components (used by Listbox)
-global.ResizeObserver = class ResizeObserver {
+class MockResizeObserver implements ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
-};
+}
+global.ResizeObserver = MockResizeObserver;
