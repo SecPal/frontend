@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Lighthouse CI for automated performance testing** (#TBD)
+  - GitHub Actions workflow runs Lighthouse audits on every PR and push to main
+  - Performance budgets based on Core Web Vitals thresholds:
+    - LCP (Largest Contentful Paint): < 2.5s (error threshold)
+    - CLS (Cumulative Layout Shift): < 0.1 (error threshold)
+    - TBT (Total Blocking Time): < 200ms (warning threshold)
+  - JavaScript console error detection (zero tolerance - fails on any JS error)
+  - Accessibility and Best Practices audits with 90% minimum score
+  - PR comments with Lighthouse scores and report links
+  - Temporary public storage for report sharing
+  - Tests for configuration validation
+
 - **Mobile-friendly action menu for organization tree** (Part of Epic #283)
   - Replaced individual action buttons (Add Child, Edit, Move, Delete) with a compact dropdown menu (three dots icon)
   - Actions are now accessible via a single button that expands to show all available options
