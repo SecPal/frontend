@@ -251,6 +251,37 @@ describe("OrganizationalUnitTree", () => {
       expect(screen.getByText("Custom Title")).toBeInTheDocument();
     });
   });
+
+  describe("Move functionality", () => {
+    it("renders move button when onMove callback is provided", async () => {
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Move button should be present (with accessible label)
+      const moveButtons = screen.getAllByRole("button", {
+        name: /Move/i,
+      });
+      expect(moveButtons.length).toBeGreaterThan(0);
+    });
+
+    it("does not render move button when onMove callback is not provided", async () => {
+      renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Move button should not be present
+      const moveButtons = screen.queryAllByRole("button", {
+        name: /Move/i,
+      });
+      expect(moveButtons).toHaveLength(0);
+    });
+  });
 });
 
 describe("OrganizationalUnitTree - Permission Filtered", () => {
