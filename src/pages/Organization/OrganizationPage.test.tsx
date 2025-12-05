@@ -471,5 +471,42 @@ describe("OrganizationPage", () => {
         screen.getByRole("button", { name: /^Edit$/i })
       ).toBeInTheDocument();
     });
+
+    it("does not close detail panel when dialog is open and clicking outside", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      // Select a unit
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      // Open the edit dialog
+      await user.click(screen.getByRole("button", { name: /^Edit$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Edit Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      // Click on the dialog (which is rendered via Portal, outside gridContainerRef)
+      // The detail panel should remain selected because dialogOpen is true
+      const dialogHeading = screen.getByText("Edit Organizational Unit");
+      await user.click(dialogHeading);
+
+      // Dialog should still be open and unit should still be selected
+      expect(screen.getByText("Edit Organizational Unit")).toBeInTheDocument();
+      // The form should still show the unit name
+      expect(screen.getByDisplayValue("SecPal Holding")).toBeInTheDocument();
+    });
   });
 });

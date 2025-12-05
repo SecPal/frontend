@@ -73,10 +73,12 @@ export function OrganizationPage() {
   }, [selectedUnit]);
 
   // Click-outside handler to close detail panel
+  // Note: Skip when dialog is open, as dialogs are rendered via Portal outside the grid
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         selectedUnit &&
+        !dialogOpen &&
         gridContainerRef.current &&
         !gridContainerRef.current.contains(event.target as Node)
       ) {
@@ -86,7 +88,7 @@ export function OrganizationPage() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedUnit]);
+  }, [selectedUnit, dialogOpen]);
 
   // Toggle selection: clicking the same unit deselects it
   const handleSelect = useCallback(
