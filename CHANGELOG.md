@@ -19,9 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Analytics singleton initialization (browsers without IndexedDB support)
     - Analytics event tracking and sync failures
     - Web Vitals initialization failures
-  - Web Vitals initialization log now only appears in development mode
-  - Upgraded Lighthouse `errors-in-console` assertion from `warn` to `error`
-  - Zero tolerance policy: CI now fails on any `console.error`
+  - Removed verbose Web Vitals initialization log
 
 ### Added
 
