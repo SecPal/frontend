@@ -528,6 +528,174 @@ describe("OrganizationalUnitTree", () => {
       // Should NOT reload tree
       expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
     });
+
+    it("updates unit type in tree without reloading", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Verify original type badge is "Company"
+      const companyBadges = screen.getAllByText("Company");
+      expect(companyBadges.length).toBeGreaterThan(0);
+
+      // Updated version with different type
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding", // Changed from "company" to "holding"
+        name: "Test Company",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+        </I18nProvider>
+      );
+
+      // Type badge should change to "Holding"
+      await waitFor(() => {
+        expect(screen.getByText("Holding")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("preserves children when updating parent unit", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // Update Test Company (which has IT Department as child)
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "company",
+        name: "Renamed Company",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Renamed Company")).toBeInTheDocument();
+        // Child should still be visible
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Optimistic Move with Children (Issue #303 Edge Cases)", () => {
+    it("preserves children when moving unit with subtree", async () => {
+      // Create mock data with nested children
+      const nestedMockUnits: OrganizationalUnit[] = [
+        {
+          id: "parent-1",
+          type: "company",
+          name: "Parent Company",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "dept-1",
+          type: "department",
+          name: "Sales Department",
+          parent: {
+            id: "parent-1",
+            type: "company",
+            name: "Parent Company",
+            created_at: "",
+            updated_at: "",
+          },
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "team-1",
+          type: "division",
+          name: "Sales Team A",
+          parent: {
+            id: "dept-1",
+            type: "department",
+            name: "Sales Department",
+            created_at: "",
+            updated_at: "",
+          },
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "parent-2",
+          type: "company",
+          name: "Target Company",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+      ];
+
+      const nestedMockResponse: OrganizationalUnitPaginatedResponse = {
+        data: nestedMockUnits,
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 100,
+          total: 4,
+          root_unit_ids: ["parent-1", "parent-2"],
+        },
+      };
+
+      vi.mocked(listOrganizationalUnits).mockResolvedValue(nestedMockResponse);
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue(undefined);
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Parent Company")).toBeInTheDocument();
+        expect(screen.getByText("Sales Department")).toBeInTheDocument();
+        expect(screen.getByText("Sales Team A")).toBeInTheDocument();
+        expect(screen.getByText("Target Company")).toBeInTheDocument();
+      });
+
+      // Move "Sales Department" (which has "Sales Team A" as child) to "Target Company"
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const salesDeptMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("Sales Department");
+      });
+
+      fireEvent.click(salesDeptMoveBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Move "Sales Department"/)).toBeInTheDocument();
+      });
+
+      // Select "Target Company" as new parent
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "parent-2" } });
+
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // After move, Sales Team A should still be visible (child preserved)
+      expect(screen.getByText("Sales Team A")).toBeInTheDocument();
+      // Sales Department should still be visible
+      expect(screen.getByText("Sales Department")).toBeInTheDocument();
+    });
   });
 
   it("filters units by type when typeFilter is provided", async () => {

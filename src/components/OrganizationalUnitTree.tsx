@@ -391,8 +391,8 @@ function addUnitToTree(
   parentId: string | null
 ): OrganizationalUnit[] {
   if (!parentId) {
-    // Add as root unit
-    return [...units, { ...newUnit, children: [] }];
+    // Add as root unit, preserving existing children if any (for move operations)
+    return [...units, { ...newUnit, children: newUnit.children || [] }];
   }
 
   // Add as child of parent
@@ -400,7 +400,10 @@ function addUnitToTree(
     if (unit.id === parentId) {
       return {
         ...unit,
-        children: [...(unit.children || []), { ...newUnit, children: [] }],
+        children: [
+          ...(unit.children || []),
+          { ...newUnit, children: newUnit.children || [] },
+        ],
       };
     }
     if (unit.children && unit.children.length > 0) {
@@ -425,14 +428,18 @@ function moveUnitInTree(
   unitId: string,
   newParentId: string | null
 ): OrganizationalUnit[] {
-  // Step 1: Find and extract the unit to move
+  // Step 1: Find and extract the unit to move (preserving its children!)
   let unitToMove: OrganizationalUnit | null = null;
 
   const extractUnit = (items: OrganizationalUnit[]): OrganizationalUnit[] => {
     return items
       .filter((item) => {
         if (item.id === unitId) {
-          unitToMove = { ...item };
+          // Deep copy including children to preserve the subtree
+          unitToMove = {
+            ...item,
+            children: item.children ? [...item.children] : undefined,
+          };
           return false;
         }
         return true;
@@ -449,7 +456,7 @@ function moveUnitInTree(
     return units; // Unit not found, return unchanged
   }
 
-  // Step 2: Insert the unit at the new location
+  // Step 2: Insert the unit (with its children) at the new location
   return addUnitToTree(treeWithoutUnit, unitToMove, newParentId);
 }
 
