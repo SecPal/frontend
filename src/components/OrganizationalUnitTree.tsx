@@ -7,14 +7,12 @@ import { Button } from "./button";
 import { Badge } from "./badge";
 import { Heading, Subheading } from "./heading";
 import { Text } from "./text";
+import { DeleteOrganizationalUnitDialog } from "./DeleteOrganizationalUnitDialog";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
 } from "../types/organizational";
-import {
-  listOrganizationalUnits,
-  deleteOrganizationalUnit,
-} from "../services/organizationalUnitApi";
+import { listOrganizationalUnits } from "../services/organizationalUnitApi";
 import { getTypeLabel } from "../lib/organizationalUnitUtils";
 
 /**
@@ -414,6 +412,10 @@ export function OrganizationalUnitTree({
   const [units, setUnits] = useState<OrganizationalUnit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<OrganizationalUnit | null>(
+    null
+  );
 
   const loadUnits = useCallback(async () => {
     setIsLoading(true);
@@ -479,30 +481,24 @@ export function OrganizationalUnitTree({
     loadUnits();
   }, [loadUnits]);
 
-  const handleDelete = useCallback(
-    async (unit: OrganizationalUnit) => {
-      if (
-        !window.confirm(
-          t`Are you sure you want to delete "${unit.name}"? This action cannot be undone.`
-        )
-      ) {
-        return;
-      }
+  const handleDeleteClick = useCallback((unit: OrganizationalUnit) => {
+    setUnitToDelete(unit);
+    setDeleteDialogOpen(true);
+  }, []);
 
-      try {
-        await deleteOrganizationalUnit(unit.id);
-        await loadUnits();
-        onDelete?.(unit);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : t`Failed to delete organizational unit`
-        );
-      }
-    },
-    [loadUnits, onDelete]
-  );
+  const handleDeleteSuccess = useCallback(async () => {
+    await loadUnits();
+    if (unitToDelete) {
+      onDelete?.(unitToDelete);
+    }
+  }, [loadUnits, onDelete, unitToDelete]);
+
+  const handleDeleteDialogClose = useCallback(() => {
+    setDeleteDialogOpen(false);
+    // Note: We intentionally don't reset unitToDelete here to prevent
+    // content flickering during the dialog's close animation.
+    // The unit will be overwritten when a new delete is triggered.
+  }, []);
 
   if (isLoading) {
     return (
@@ -571,13 +567,21 @@ export function OrganizationalUnitTree({
               level={0}
               onSelect={onSelect}
               onEdit={onEdit}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
               onCreateChild={onCreateChild}
               selectedId={selectedId}
             />
           </div>
         ))}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteOrganizationalUnitDialog
+        open={deleteDialogOpen}
+        unit={unitToDelete}
+        onClose={handleDeleteDialogClose}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

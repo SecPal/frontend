@@ -115,7 +115,7 @@ msgid "Add Area"
 msgstr "Add Area"
 
 #. placeholder {0}: unit.name
-#: src/components/OrganizationalUnitTree.tsx:278
+#: src/components/OrganizationalUnitTree.tsx:276
 msgid "Add child to {0}"
 msgstr "Add child to {0}"
 
@@ -133,7 +133,7 @@ msgstr "Add Customer"
 msgid "Add Object"
 msgstr "Add Object"
 
-#: src/components/OrganizationalUnitTree.tsx:557
+#: src/components/OrganizationalUnitTree.tsx:551
 msgid "Add Unit"
 msgstr "Add Unit"
 
@@ -175,10 +175,8 @@ msgstr "Apply Selection"
 
 #. placeholder {0}: area.name
 #. placeholder {0}: customer.name
-#. placeholder {0}: unit.name
 #: src/components/CustomerTree.tsx:455
 #: src/components/ObjectManager.tsx:304
-#: src/components/OrganizationalUnitTree.tsx:486
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 
@@ -235,16 +233,25 @@ msgid "by"
 msgstr "by"
 
 #: src/components/ConflictResolutionDialog.tsx:200
+#: src/components/DeleteOrganizationalUnitDialog.tsx:186
 #: src/components/OrganizationalUnitFormDialog.tsx:335
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
 msgstr "Cancel"
 
+#: src/components/DeleteOrganizationalUnitDialog.tsx:135
+msgid "Cannot Delete \"{unitName}\""
+msgstr "Cannot Delete \"{unitName}\""
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:255
 msgid "login.checkingSystem"
 msgstr "Checking system..."
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:156
+msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
+msgstr "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 
 #: src/components/NotificationPreferences.tsx:295
 msgid "Choose which notifications you want to receive"
@@ -272,7 +279,7 @@ msgid "Close"
 msgstr "Close"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:250
+#: src/components/OrganizationalUnitTree.tsx:248
 msgid "Collapse"
 msgstr "Collapse"
 
@@ -308,7 +315,7 @@ msgid "Create Guard Book"
 msgstr "Create Guard Book"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:216
-#: src/components/OrganizationalUnitTree.tsx:544
+#: src/components/OrganizationalUnitTree.tsx:538
 msgid "Create Organizational Unit"
 msgstr "Create Organizational Unit"
 
@@ -355,8 +362,13 @@ msgid "Customers"
 msgstr "Customers"
 
 #: src/components/AttachmentList.tsx:215
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
 msgid "Delete"
 msgstr "Delete"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:139
+msgid "Delete \"{unitName}\"?"
+msgstr "Delete \"{unitName}\"?"
 
 #. placeholder {0}: area.name
 #. placeholder {0}: customer.name
@@ -365,7 +377,7 @@ msgstr "Delete"
 #: src/components/GuardBookManager.tsx:234
 #: src/components/ObjectManager.tsx:196
 #: src/components/ObjectManager.tsx:432
-#: src/components/OrganizationalUnitTree.tsx:322
+#: src/components/OrganizationalUnitTree.tsx:320
 msgid "Delete {0}"
 msgstr "Delete {0}"
 
@@ -373,6 +385,10 @@ msgstr "Delete {0}"
 #: src/components/GuardBookManager.tsx:446
 msgid "Delete report {0}"
 msgstr "Delete report {0}"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:189
+msgid "Deleting..."
+msgstr "Deleting..."
 
 #: src/lib/organizationalUnitUtils.ts:29
 #: src/lib/organizationalUnitUtils.ts:55
@@ -428,7 +444,7 @@ msgstr "Edit"
 #: src/components/GuardBookManager.tsx:209
 #: src/components/ObjectManager.tsx:171
 #: src/components/ObjectManager.tsx:411
-#: src/components/OrganizationalUnitTree.tsx:300
+#: src/components/OrganizationalUnitTree.tsx:298
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
@@ -482,7 +498,7 @@ msgid "Events"
 msgstr "Events"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:250
+#: src/components/OrganizationalUnitTree.tsx:248
 msgid "Expand"
 msgstr "Expand"
 
@@ -544,7 +560,7 @@ msgstr "Failed to delete guard book"
 msgid "Failed to delete object"
 msgstr "Failed to delete object"
 
-#: src/components/OrganizationalUnitTree.tsx:500
+#: src/components/DeleteOrganizationalUnitDialog.tsx:101
 msgid "Failed to delete organizational unit"
 msgstr "Failed to delete organizational unit"
 
@@ -576,7 +592,7 @@ msgstr "Failed to load guard books"
 msgid "Failed to load objects"
 msgstr "Failed to load objects"
 
-#: src/components/OrganizationalUnitTree.tsx:471
+#: src/components/OrganizationalUnitTree.tsx:473
 msgid "Failed to load organizational units"
 msgstr "Failed to load organizational units"
 
@@ -637,7 +653,7 @@ msgstr "Get started by adding your first object."
 msgid "Get started by creating your first guard book."
 msgstr "Get started by creating your first guard book."
 
-#: src/components/OrganizationalUnitTree.tsx:540
+#: src/components/OrganizationalUnitTree.tsx:534
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
@@ -799,7 +815,7 @@ msgstr "Metadata"
 msgid "Minimize offline notice"
 msgstr "Minimize offline notice"
 
-#: src/components/OrganizationalUnitTree.tsx:554
+#: src/components/OrganizationalUnitTree.tsx:548
 msgid "My Organization"
 msgstr "My Organization"
 
@@ -866,7 +882,7 @@ msgstr "No object selected. Please navigate from the objects page."
 msgid "No Objects"
 msgstr "No Objects"
 
-#: src/components/OrganizationalUnitTree.tsx:537
+#: src/components/OrganizationalUnitTree.tsx:531
 msgid "No Organizational Units"
 msgstr "No Organizational Units"
 
@@ -933,6 +949,10 @@ msgstr "Offline - will sync when online"
 msgid "Offline only"
 msgstr "Offline only"
 
+#: src/components/DeleteOrganizationalUnitDialog.tsx:165
+msgid "OK"
+msgstr "OK"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:299
 msgid "Optional description for this unit."
 msgstr "Optional description for this unit."
@@ -949,7 +969,7 @@ msgstr "Organization"
 msgid "Organization Structure"
 msgstr "Organization Structure"
 
-#: src/components/OrganizationalUnitTree.tsx:564
+#: src/components/OrganizationalUnitTree.tsx:558
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
@@ -1055,7 +1075,7 @@ msgstr "Reports"
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
 #: src/components/ObjectManager.tsx:615
-#: src/components/OrganizationalUnitTree.tsx:524
+#: src/components/OrganizationalUnitTree.tsx:518
 msgid "Retry"
 msgstr "Retry"
 
@@ -1282,6 +1302,10 @@ msgstr "The system is not fully configured. Please contact your administrator."
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
+#: src/components/DeleteOrganizationalUnitDialog.tsx:172
+msgid "This action cannot be undone. The organizational unit will be permanently removed."
+msgstr "This action cannot be undone. The organizational unit will be permanently removed."
+
 #: src/components/NotificationPreferences.tsx:226
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
@@ -1289,6 +1313,10 @@ msgstr "This is a test notification from SecPal"
 #: src/components/ConflictResolutionDialog.tsx:96
 msgid "This secret was modified both locally and on the server. Please choose which version to keep."
 msgstr "This secret was modified both locally and on the server. Please choose which version to keep."
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:148
+msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
+msgstr "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
 
 #: src/pages/ShareTarget.tsx:569
 msgid "Title:"
