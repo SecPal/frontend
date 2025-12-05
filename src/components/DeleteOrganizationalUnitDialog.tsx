@@ -75,15 +75,18 @@ export function DeleteOrganizationalUnitDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Don't render if unit is null or dialog is closed
-  if (!unit || !open) {
-    return null;
-  }
+  // Calculate derived state - use defaults when unit is null
+  const hasChildren = unit?.children && unit.children.length > 0;
+  const childCount = unit?.children?.length ?? 0;
+  const unitName = unit?.name ?? "";
 
-  const hasChildren = unit.children && unit.children.length > 0;
-  const childCount = unit.children?.length ?? 0;
+  // Dialog should only be open when both open=true AND unit is provided
+  // This prevents flickering when switching between units
+  const isOpen = open && unit !== null;
 
   const handleDelete = async () => {
+    if (!unit) return;
+
     setError(null);
     setIsDeleting(true);
 
@@ -110,14 +113,14 @@ export function DeleteOrganizationalUnitDialog({
   // Render blocked state (unit has children)
   if (hasChildren) {
     return (
-      <Dialog open={open} onClose={handleClose} size="md">
+      <Dialog open={isOpen} onClose={handleClose} size="md">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 rounded-full bg-amber-100 p-2 dark:bg-amber-900/50">
+          <div className="shrink-0 rounded-full bg-amber-100 p-2 dark:bg-amber-900/50">
             <ExclamationTriangleIcon className="h-6 w-6 text-amber-600 dark:text-amber-400" />
           </div>
           <div className="flex-1">
             <DialogTitle>
-              <Trans>Cannot Delete "{unit.name}"</Trans>
+              <Trans>Cannot Delete "{unitName}"</Trans>
             </DialogTitle>
             <DialogDescription>
               <Trans>
@@ -150,14 +153,14 @@ export function DeleteOrganizationalUnitDialog({
 
   // Render delete confirmation (unit has no children)
   return (
-    <Dialog open={open} onClose={handleClose} size="md">
+    <Dialog open={isOpen} onClose={handleClose} size="md">
       <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 rounded-full bg-red-100 p-2 dark:bg-red-900/50">
+        <div className="shrink-0 rounded-full bg-red-100 p-2 dark:bg-red-900/50">
           <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
         </div>
         <div className="flex-1">
           <DialogTitle>
-            <Trans>Delete "{unit.name}"?</Trans>
+            <Trans>Delete "{unitName}"?</Trans>
           </DialogTitle>
           <DialogDescription>
             <Trans>
