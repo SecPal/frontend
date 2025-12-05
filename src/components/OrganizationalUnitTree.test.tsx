@@ -354,7 +354,7 @@ describe("OrganizationalUnitTree", () => {
       rerender(
         <I18nProvider i18n={i18n}>
           <OrganizationalUnitTree
-            createdUnit={{ unit: newUnit, parentId: null }}
+            createdUnit={{ unit: newUnit, parentId: null, key: 1 }}
           />
         </I18nProvider>
       );
@@ -387,7 +387,7 @@ describe("OrganizationalUnitTree", () => {
       rerender(
         <I18nProvider i18n={i18n}>
           <OrganizationalUnitTree
-            createdUnit={{ unit: newUnit, parentId: "unit-1" }}
+            createdUnit={{ unit: newUnit, parentId: "unit-1", key: 1 }}
           />
         </I18nProvider>
       );
@@ -403,8 +403,14 @@ describe("OrganizationalUnitTree", () => {
 
   describe("Optimistic Move (Issue #303)", () => {
     it("moves unit to new parent without reloading when move dialog succeeds", async () => {
-      // Mock the move API calls
-      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue(undefined);
+      // Mock the move API calls - returns the moved unit
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue({
+        id: "unit-3",
+        type: "region",
+        name: "North Region",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
 
       const onMove = vi.fn();
       renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
@@ -515,7 +521,7 @@ describe("OrganizationalUnitTree", () => {
       // Simulate parent passing updated unit
       rerender(
         <I18nProvider i18n={i18n}>
-          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
         </I18nProvider>
       );
 
@@ -551,7 +557,7 @@ describe("OrganizationalUnitTree", () => {
 
       rerender(
         <I18nProvider i18n={i18n}>
-          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
         </I18nProvider>
       );
 
@@ -583,7 +589,7 @@ describe("OrganizationalUnitTree", () => {
 
       rerender(
         <I18nProvider i18n={i18n}>
-          <OrganizationalUnitTree updatedUnit={updatedUnit} />
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
         </I18nProvider>
       );
 
@@ -655,7 +661,14 @@ describe("OrganizationalUnitTree", () => {
       };
 
       vi.mocked(listOrganizationalUnits).mockResolvedValue(nestedMockResponse);
-      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue(undefined);
+      // Mock returns the moved unit
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue({
+        id: "dept-1",
+        type: "department",
+        name: "Sales Department",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
 
       const onMove = vi.fn();
       renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);

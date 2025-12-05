@@ -506,17 +506,19 @@ export interface OrganizationalUnitTreeProps {
   onCreate?: () => void;
   /**
    * Optimistic UI: When provided, adds the newly created unit to the tree
-   * without reloading. Should contain the created unit and its parent ID (null for root).
-   * The parent component should set this after a successful create operation,
-   * then reset it to null after processing.
+   * without reloading. Should contain the created unit, its parent ID (null for root),
+   * and a unique key to trigger updates.
    */
-  createdUnit?: { unit: OrganizationalUnit; parentId: string | null } | null;
+  createdUnit?: {
+    unit: OrganizationalUnit;
+    parentId: string | null;
+    key: number;
+  } | null;
   /**
    * Optimistic UI: When provided, updates the unit in the tree after editing
-   * without reloading. The parent component should set this after a successful
-   * update operation, then reset it to null after processing.
+   * without reloading. Should contain the updated unit and a unique key.
    */
-  updatedUnit?: OrganizationalUnit | null;
+  updatedUnit?: { unit: OrganizationalUnit; key: number } | null;
   /** Currently selected unit ID */
   selectedId?: string | null;
   /** Filter by unit type */
@@ -634,20 +636,24 @@ export function OrganizationalUnitTree({
   }, [loadUnits]);
 
   // Optimistic UI: Handle newly created unit from parent component
+  // Uses key property to ensure each create triggers the effect
   useEffect(() => {
     if (createdUnit) {
       setUnits((prevUnits) =>
         addUnitToTree(prevUnits, createdUnit.unit, createdUnit.parentId)
       );
     }
-  }, [createdUnit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createdUnit?.key]);
 
   // Optimistic UI: Handle updated unit from parent component
+  // Uses key property to ensure each update triggers the effect
   useEffect(() => {
     if (updatedUnit) {
-      setUnits((prevUnits) => updateUnitInTree(prevUnits, updatedUnit));
+      setUnits((prevUnits) => updateUnitInTree(prevUnits, updatedUnit.unit));
     }
-  }, [updatedUnit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updatedUnit?.key]);
 
   const handleDeleteClick = useCallback((unit: OrganizationalUnit) => {
     setUnitToDelete(unit);

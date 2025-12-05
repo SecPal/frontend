@@ -19,10 +19,15 @@ import type { OrganizationalUnit } from "../../types";
 /**
  * Optimistic UI state for tree updates without reloading
  * @see Issue #303: UX improvement - avoid full tree reload
+ * Each update has a unique key to ensure React triggers the useEffect
  */
 interface OptimisticTreeUpdate {
-  createdUnit: { unit: OrganizationalUnit; parentId: string | null } | null;
-  updatedUnit: OrganizationalUnit | null;
+  createdUnit: {
+    unit: OrganizationalUnit;
+    parentId: string | null;
+    key: number;
+  } | null;
+  updatedUnit: { unit: OrganizationalUnit; key: number } | null;
 }
 
 /**
@@ -171,29 +176,20 @@ export function OrganizationPage() {
   const handleDialogSuccess = useCallback(
     (unit: OrganizationalUnit) => {
       // Optimistic UI update (Issue #303) - update tree without reload
+      // Use Date.now() as key to ensure each update triggers useEffect
       if (dialogMode === "create") {
         setOptimisticUpdate({
-          createdUnit: { unit, parentId: dialogParentId },
+          createdUnit: { unit, parentId: dialogParentId, key: Date.now() },
           updatedUnit: null,
         });
       } else {
         setOptimisticUpdate({
           createdUnit: null,
-          updatedUnit: unit,
+          updatedUnit: { unit, key: Date.now() },
         });
         // Update selected unit if editing
         setSelectedUnit(unit);
       }
-
-      // Reset optimistic state after tree has processed the update
-      // This prevents duplicate additions on re-renders and allows
-      // subsequent operations on the same unit to trigger updates
-      setTimeout(() => {
-        setOptimisticUpdate({
-          createdUnit: null,
-          updatedUnit: null,
-        });
-      }, 0);
 
       // Show success message
       const message =
