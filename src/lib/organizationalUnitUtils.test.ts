@@ -3,13 +3,51 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { i18n } from "@lingui/core";
-import { getTypeLabel, getUnitTypeOptions } from "./organizationalUnitUtils";
+import {
+  getTypeLabel,
+  getUnitTypeOptions,
+  getTypeBadgeColor,
+} from "./organizationalUnitUtils";
 
 describe("organizationalUnitUtils", () => {
   beforeEach(() => {
     // Activate i18n for tests with empty messages (uses source strings)
     i18n.load("en", {});
     i18n.activate("en");
+  });
+
+  describe("getTypeBadgeColor", () => {
+    it("returns blue for holding type", () => {
+      expect(getTypeBadgeColor("holding")).toBe("blue");
+    });
+
+    it("returns blue for company type", () => {
+      expect(getTypeBadgeColor("company")).toBe("blue");
+    });
+
+    it("returns green for department type", () => {
+      expect(getTypeBadgeColor("department")).toBe("green");
+    });
+
+    it("returns green for division type", () => {
+      expect(getTypeBadgeColor("division")).toBe("green");
+    });
+
+    it("returns purple for branch type", () => {
+      expect(getTypeBadgeColor("branch")).toBe("purple");
+    });
+
+    it("returns orange for region type", () => {
+      expect(getTypeBadgeColor("region")).toBe("orange");
+    });
+
+    it("returns zinc for custom type", () => {
+      expect(getTypeBadgeColor("custom")).toBe("zinc");
+    });
+
+    it("returns zinc for unknown types", () => {
+      expect(getTypeBadgeColor("unknown-type")).toBe("zinc");
+    });
   });
 
   describe("getTypeLabel", () => {

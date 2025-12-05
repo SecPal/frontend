@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Inconsistent badge colors between tree and detail view** (#304, Part of Epic #283)
+  - Detail panel now uses type-specific badge colors matching the tree view
+  - Extracted `getTypeBadgeColor()` to `organizationalUnitUtils.ts` (DRY principle)
+  - Added `BadgeColor` type for type-safe color values
+  - Color mapping: blue (holding/company), green (department/division), purple (branch), orange (region), zinc (custom/unknown)
+  - Added unit tests for `getTypeBadgeColor()`
+
 ### Changed
 
 - **Permission-Filtered Organizational Unit Tree View** (#291, Part of Epic SecPal/api#280)

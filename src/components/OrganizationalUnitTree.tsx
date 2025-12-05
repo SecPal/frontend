@@ -13,7 +13,10 @@ import type {
   OrganizationalUnitType,
 } from "../types/organizational";
 import { listOrganizationalUnits } from "../services/organizationalUnitApi";
-import { getTypeLabel } from "../lib/organizationalUnitUtils";
+import {
+  getTypeLabel,
+  getTypeBadgeColor,
+} from "../lib/organizationalUnitUtils";
 
 /**
  * Icon components for tree visualization
@@ -133,25 +136,7 @@ function getUnitIcon(type: OrganizationalUnitType) {
   }
 }
 
-/**
- * Get badge color for organizational unit type
- */
-function getTypeBadgeColor(type: OrganizationalUnitType) {
-  switch (type) {
-    case "holding":
-    case "company":
-      return "blue";
-    case "department":
-    case "division":
-      return "green";
-    case "branch":
-      return "purple";
-    case "region":
-      return "orange";
-    default:
-      return "zinc";
-  }
-}
+// Badge color is now provided by getTypeBadgeColor from organizationalUnitUtils
 
 interface TreeNodeProps {
   unit: OrganizationalUnit;
