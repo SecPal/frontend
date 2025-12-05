@@ -15,11 +15,15 @@ import type {
 vi.mock("../services/organizationalUnitApi", () => ({
   listOrganizationalUnits: vi.fn(),
   deleteOrganizationalUnit: vi.fn(),
+  attachOrganizationalUnitParent: vi.fn(),
+  detachOrganizationalUnitParent: vi.fn(),
 }));
 
 import {
   listOrganizationalUnits,
   deleteOrganizationalUnit,
+  attachOrganizationalUnitParent,
+  detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
 
 function renderWithI18n(component: React.ReactElement) {
@@ -394,6 +398,100 @@ describe("OrganizationalUnitTree", () => {
 
       // Should NOT reload tree
       expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Optimistic Move (Issue #303)", () => {
+    it("moves unit to new parent without reloading when move dialog succeeds", async () => {
+      // Mock the move API calls
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue(undefined);
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Click move on "North Region" (which is a root unit)
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const northRegionMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      fireEvent.click(northRegionMoveBtn!);
+
+      // Wait for move dialog to load (it fetches available parents)
+      await waitFor(() => {
+        expect(screen.getByText(/Move "North Region"/)).toBeInTheDocument();
+      });
+
+      // Record call count after dialog loads (dialog fetches available units)
+      const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
+        .length;
+
+      // Select "Test Company" as new parent
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "unit-1" } });
+
+      // Click Move button
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      // Wait for move to complete and verify callback was called
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // Should NOT reload tree after move - optimistic update
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(callsBeforeMove);
+    });
+
+    it("moves unit to root level without reloading", async () => {
+      // Mock the detach API call
+      vi.mocked(detachOrganizationalUnitParent).mockResolvedValue(undefined);
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // IT Department is a child of Test Company, move it to root
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const itDeptMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("IT Department");
+      });
+
+      fireEvent.click(itDeptMoveBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Move "IT Department"/)).toBeInTheDocument();
+      });
+
+      // Record call count after dialog loads
+      const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
+        .length;
+
+      // Select root level (empty value)
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "" } });
+
+      // Click Move button
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      // Wait for move to complete
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // Should NOT reload tree after move - optimistic update
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(callsBeforeMove);
     });
   });
 

@@ -466,7 +466,8 @@ function updateUnitInTree(
   return units.map((unit) => {
     if (unit.id === updatedUnit.id) {
       // Destructure to exclude children from updatedUnit, preserving tree structure
-      const { children: _, ...updates } = updatedUnit;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { children: _unusedChildren, ...updates } = updatedUnit;
       return {
         ...unit,
         ...updates,
