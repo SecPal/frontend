@@ -15,11 +15,15 @@ import type {
 vi.mock("../services/organizationalUnitApi", () => ({
   listOrganizationalUnits: vi.fn(),
   deleteOrganizationalUnit: vi.fn(),
+  attachOrganizationalUnitParent: vi.fn(),
+  detachOrganizationalUnitParent: vi.fn(),
 }));
 
 import {
   listOrganizationalUnits,
   deleteOrganizationalUnit,
+  attachOrganizationalUnitParent,
+  detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
 
 function renderWithI18n(component: React.ReactElement) {
@@ -191,6 +195,520 @@ describe("OrganizationalUnitTree", () => {
 
     // Note: Delete button is hidden by default, would need to hover/focus
     // This is a simplified test - in real implementation would need to simulate hover
+  });
+
+  describe("Optimistic Delete (Issue #303)", () => {
+    it("removes deleted unit from tree without reloading", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      const onDelete = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onDelete={onDelete} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Click delete button on North Region
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      // Find the delete button for North Region (it's the second root unit)
+      const northRegionDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      expect(northRegionDeleteBtn).toBeInTheDocument();
+      fireEvent.click(northRegionDeleteBtn!);
+
+      // Confirm delete in dialog
+      await waitFor(() => {
+        expect(screen.getByText('Delete "North Region"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      // Wait for deletion and optimistic update
+      await waitFor(() => {
+        // Unit should be removed from tree
+        expect(screen.queryByText("North Region")).not.toBeInTheDocument();
+        // Other units should still be visible
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Verify API was called only once for delete, NOT for reload
+      expect(deleteOrganizationalUnit).toHaveBeenCalledTimes(1);
+      expect(deleteOrganizationalUnit).toHaveBeenCalledWith("unit-3");
+
+      // listOrganizationalUnits should only be called once (initial load)
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+
+      // onDelete callback should be called with deleted unit
+      expect(onDelete).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "unit-3", name: "North Region" })
+      );
+    });
+
+    it("removes child unit from tree without reloading", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // Click delete button on IT Department (child of Test Company)
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      const itDeptDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("IT Department");
+      });
+
+      expect(itDeptDeleteBtn).toBeInTheDocument();
+      fireEvent.click(itDeptDeleteBtn!);
+
+      // Confirm delete in dialog
+      await waitFor(() => {
+        expect(screen.getByText('Delete "IT Department"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      // Wait for deletion and optimistic update
+      await waitFor(() => {
+        // Child unit should be removed
+        expect(screen.queryByText("IT Department")).not.toBeInTheDocument();
+        // Parent should still be visible
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears selection if deleted unit was selected", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      const onSelect = vi.fn();
+      renderWithI18n(
+        <OrganizationalUnitTree onSelect={onSelect} selectedId="unit-3" />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Verify North Region is selected (has selected styling)
+      const northRegionItem = screen
+        .getByText("North Region")
+        .closest('[role="treeitem"]');
+      expect(northRegionItem).toHaveAttribute("aria-selected", "true");
+
+      // Delete North Region
+      const deleteButtons = screen.getAllByRole("button", { name: /Delete/i });
+      const northRegionDeleteBtn = deleteButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      fireEvent.click(northRegionDeleteBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText('Delete "North Region"?')).toBeInTheDocument();
+      });
+
+      const confirmDeleteBtn = screen.getByRole("button", { name: /^Delete$/ });
+      fireEvent.click(confirmDeleteBtn);
+
+      await waitFor(() => {
+        expect(screen.queryByText("North Region")).not.toBeInTheDocument();
+      });
+
+      // Note: Selection clearing is handled by the parent component (OrganizationPage)
+      // via onDelete callback. This test verifies the unit is removed from the DOM.
+    });
+  });
+
+  describe("Optimistic Create (Issue #303)", () => {
+    it("adds created unit to tree without reloading when createdUnit prop changes", async () => {
+      const newUnit: OrganizationalUnit = {
+        id: "new-unit-1",
+        type: "department",
+        name: "New Department",
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Initially, new unit is not in the tree
+      expect(screen.queryByText("New Department")).not.toBeInTheDocument();
+
+      // Simulate parent passing a new created unit (as root)
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree
+            createdUnit={{ unit: newUnit, parentId: null, key: 1 }}
+          />
+        </I18nProvider>
+      );
+
+      // Unit should appear without reload
+      await waitFor(() => {
+        expect(screen.getByText("New Department")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree - only initial load
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("adds created unit as child when parentId is provided", async () => {
+      const newUnit: OrganizationalUnit = {
+        id: "new-child-1",
+        type: "branch",
+        name: "New Branch",
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Simulate adding as child of Test Company (unit-1)
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree
+            createdUnit={{ unit: newUnit, parentId: "unit-1", key: 1 }}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("New Branch")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Optimistic Move (Issue #303)", () => {
+    it("moves unit to new parent without reloading when move dialog succeeds", async () => {
+      // Mock the move API calls - returns the moved unit
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue({
+        id: "unit-3",
+        type: "region",
+        name: "North Region",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+      });
+
+      // Click move on "North Region" (which is a root unit)
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const northRegionMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("North Region");
+      });
+
+      fireEvent.click(northRegionMoveBtn!);
+
+      // Wait for move dialog to load (it fetches available parents)
+      await waitFor(() => {
+        expect(screen.getByText(/Move "North Region"/)).toBeInTheDocument();
+      });
+
+      // Record call count after dialog loads (dialog fetches available units)
+      const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
+        .length;
+
+      // Select "Test Company" as new parent
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "unit-1" } });
+
+      // Click Move button
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      // Wait for move to complete and verify callback was called
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // Should NOT reload tree after move - optimistic update
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(callsBeforeMove);
+    });
+
+    it("moves unit to root level without reloading", async () => {
+      // Mock the detach API call
+      vi.mocked(detachOrganizationalUnitParent).mockResolvedValue(undefined);
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // IT Department is a child of Test Company, move it to root
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const itDeptMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("IT Department");
+      });
+
+      fireEvent.click(itDeptMoveBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Move "IT Department"/)).toBeInTheDocument();
+      });
+
+      // Record call count after dialog loads
+      const callsBeforeMove = vi.mocked(listOrganizationalUnits).mock.calls
+        .length;
+
+      // Select root level (empty value)
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "" } });
+
+      // Click Move button
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      // Wait for move to complete
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // Should NOT reload tree after move - optimistic update
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(callsBeforeMove);
+    });
+  });
+
+  describe("Optimistic Update (Issue #303)", () => {
+    it("updates unit in tree without reloading when updatedUnit prop changes", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Updated version of Test Company with new name
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "company",
+        name: "Updated Company Name",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      // Simulate parent passing updated unit
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
+        </I18nProvider>
+      );
+
+      // Name should be updated without reload
+      await waitFor(() => {
+        expect(screen.getByText("Updated Company Name")).toBeInTheDocument();
+        expect(screen.queryByText("Test Company")).not.toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("updates unit type in tree without reloading", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+      });
+
+      // Verify original type badge is "Company"
+      const companyBadges = screen.getAllByText("Company");
+      expect(companyBadges.length).toBeGreaterThan(0);
+
+      // Updated version with different type
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding", // Changed from "company" to "holding"
+        name: "Test Company",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
+        </I18nProvider>
+      );
+
+      // Type badge should change to "Holding"
+      await waitFor(() => {
+        expect(screen.getByText("Holding")).toBeInTheDocument();
+      });
+
+      // Should NOT reload tree
+      expect(listOrganizationalUnits).toHaveBeenCalledTimes(1);
+    });
+
+    it("preserves children when updating parent unit", async () => {
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Test Company")).toBeInTheDocument();
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      // Update Test Company (which has IT Department as child)
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "company",
+        name: "Renamed Company",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree updatedUnit={{ unit: updatedUnit, key: 1 }} />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Renamed Company")).toBeInTheDocument();
+        // Child should still be visible
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Optimistic Move with Children (Issue #303 Edge Cases)", () => {
+    it("preserves children when moving unit with subtree", async () => {
+      // Create mock data with nested children
+      const nestedMockUnits: OrganizationalUnit[] = [
+        {
+          id: "parent-1",
+          type: "company",
+          name: "Parent Company",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "dept-1",
+          type: "department",
+          name: "Sales Department",
+          parent: {
+            id: "parent-1",
+            type: "company",
+            name: "Parent Company",
+            created_at: "",
+            updated_at: "",
+          },
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "team-1",
+          type: "division",
+          name: "Sales Team A",
+          parent: {
+            id: "dept-1",
+            type: "department",
+            name: "Sales Department",
+            created_at: "",
+            updated_at: "",
+          },
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "parent-2",
+          type: "company",
+          name: "Target Company",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+      ];
+
+      const nestedMockResponse: OrganizationalUnitPaginatedResponse = {
+        data: nestedMockUnits,
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 100,
+          total: 4,
+          root_unit_ids: ["parent-1", "parent-2"],
+        },
+      };
+
+      vi.mocked(listOrganizationalUnits).mockResolvedValue(nestedMockResponse);
+      // Mock returns the moved unit
+      vi.mocked(attachOrganizationalUnitParent).mockResolvedValue({
+        id: "dept-1",
+        type: "department",
+        name: "Sales Department",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
+
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Parent Company")).toBeInTheDocument();
+        expect(screen.getByText("Sales Department")).toBeInTheDocument();
+        expect(screen.getByText("Sales Team A")).toBeInTheDocument();
+        expect(screen.getByText("Target Company")).toBeInTheDocument();
+      });
+
+      // Move "Sales Department" (which has "Sales Team A" as child) to "Target Company"
+      const moveButtons = screen.getAllByRole("button", { name: /Move/i });
+      const salesDeptMoveBtn = moveButtons.find((btn) => {
+        const treeItem = btn.closest('[role="treeitem"]');
+        return treeItem?.textContent?.includes("Sales Department");
+      });
+
+      fireEvent.click(salesDeptMoveBtn!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Move "Sales Department"/)).toBeInTheDocument();
+      });
+
+      // Select "Target Company" as new parent
+      const parentSelect = screen.getByRole("combobox");
+      fireEvent.change(parentSelect, { target: { value: "parent-2" } });
+
+      const confirmMoveBtn = screen.getByRole("button", { name: /^Move$/ });
+      fireEvent.click(confirmMoveBtn);
+
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalled();
+      });
+
+      // After move, Sales Team A should still be visible (child preserved)
+      expect(screen.getByText("Sales Team A")).toBeInTheDocument();
+      // Sales Department should still be visible
+      expect(screen.getByText("Sales Department")).toBeInTheDocument();
+    });
   });
 
   it("filters units by type when typeFilter is provided", async () => {

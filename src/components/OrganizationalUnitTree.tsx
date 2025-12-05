@@ -378,6 +378,119 @@ function TreeNode({
   );
 }
 
+/**
+ * Optimistic UI helper: Add a new unit to the tree
+ * @param units - Current tree structure
+ * @param newUnit - Unit to add
+ * @param parentId - Parent ID (null for root units)
+ * @returns Updated tree with new unit inserted
+ */
+function addUnitToTree(
+  units: OrganizationalUnit[],
+  newUnit: OrganizationalUnit,
+  parentId: string | null
+): OrganizationalUnit[] {
+  if (!parentId) {
+    // Add as root unit, preserving existing children if any (for move operations)
+    return [...units, { ...newUnit, children: newUnit.children || [] }];
+  }
+
+  // Add as child of parent
+  return units.map((unit) => {
+    if (unit.id === parentId) {
+      return {
+        ...unit,
+        children: [
+          ...(unit.children || []),
+          { ...newUnit, children: newUnit.children || [] },
+        ],
+      };
+    }
+    if (unit.children && unit.children.length > 0) {
+      return {
+        ...unit,
+        children: addUnitToTree(unit.children, newUnit, parentId),
+      };
+    }
+    return unit;
+  });
+}
+
+/**
+ * Optimistic UI helper: Move a unit to a new parent in the tree
+ * @param units - Current tree structure
+ * @param unitId - ID of unit to move
+ * @param newParentId - New parent ID (null for root)
+ * @returns Updated tree with unit moved
+ */
+function moveUnitInTree(
+  units: OrganizationalUnit[],
+  unitId: string,
+  newParentId: string | null
+): OrganizationalUnit[] {
+  // Step 1: Find and extract the unit to move (preserving its children!)
+  let unitToMove: OrganizationalUnit | null = null;
+
+  const extractUnit = (items: OrganizationalUnit[]): OrganizationalUnit[] => {
+    return items
+      .filter((item) => {
+        if (item.id === unitId) {
+          // Deep copy including children to preserve the subtree
+          unitToMove = {
+            ...item,
+            children: item.children ? [...item.children] : undefined,
+          };
+          return false;
+        }
+        return true;
+      })
+      .map((item) => ({
+        ...item,
+        children: item.children ? extractUnit(item.children) : undefined,
+      }));
+  };
+
+  const treeWithoutUnit = extractUnit(units);
+
+  if (!unitToMove) {
+    return units; // Unit not found, return unchanged
+  }
+
+  // Step 2: Insert the unit (with its children) at the new location
+  return addUnitToTree(treeWithoutUnit, unitToMove, newParentId);
+}
+
+/**
+ * Optimistic UI helper: Update a unit's properties in the tree
+ * @param units - Current tree structure
+ * @param updatedUnit - Unit with updated properties
+ * @returns Updated tree with unit modified
+ */
+function updateUnitInTree(
+  units: OrganizationalUnit[],
+  updatedUnit: OrganizationalUnit
+): OrganizationalUnit[] {
+  return units.map((unit) => {
+    if (unit.id === updatedUnit.id) {
+      // Destructure to exclude children from updatedUnit, preserving tree structure
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { children: _unusedChildren, ...updates } = updatedUnit;
+      return {
+        ...unit,
+        ...updates,
+        children: unit.children, // Preserve existing children
+      };
+    }
+    if (unit.children && unit.children.length > 0) {
+      return {
+        ...unit,
+        children: updateUnitInTree(unit.children, updatedUnit),
+      };
+    }
+    return unit;
+  });
+}
+
 export interface OrganizationalUnitTreeProps {
   /** Callback when a unit is selected */
   onSelect?: (unit: OrganizationalUnit) => void;
@@ -391,6 +504,21 @@ export interface OrganizationalUnitTreeProps {
   onCreateChild?: (unit: OrganizationalUnit) => void;
   /** Callback when create action is triggered (root level) */
   onCreate?: () => void;
+  /**
+   * Optimistic UI: When provided, adds the newly created unit to the tree
+   * without reloading. Should contain the created unit, its parent ID (null for root),
+   * and a unique key to trigger updates.
+   */
+  createdUnit?: {
+    unit: OrganizationalUnit;
+    parentId: string | null;
+    key: number;
+  } | null;
+  /**
+   * Optimistic UI: When provided, updates the unit in the tree after editing
+   * without reloading. Should contain the updated unit and a unique key.
+   */
+  updatedUnit?: { unit: OrganizationalUnit; key: number } | null;
   /** Currently selected unit ID */
   selectedId?: string | null;
   /** Filter by unit type */
@@ -425,6 +553,8 @@ export function OrganizationalUnitTree({
   onMove,
   onCreateChild,
   onCreate,
+  createdUnit,
+  updatedUnit,
   selectedId,
   typeFilter,
   flatView = false,
@@ -505,17 +635,53 @@ export function OrganizationalUnitTree({
     loadUnits();
   }, [loadUnits]);
 
+  // Optimistic UI: Handle newly created unit from parent component
+  // Uses key property to ensure each create triggers the effect
+  useEffect(() => {
+    if (createdUnit) {
+      setUnits((prevUnits) =>
+        addUnitToTree(prevUnits, createdUnit.unit, createdUnit.parentId)
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createdUnit?.key]);
+
+  // Optimistic UI: Handle updated unit from parent component
+  // Uses key property to ensure each update triggers the effect
+  useEffect(() => {
+    if (updatedUnit) {
+      setUnits((prevUnits) => updateUnitInTree(prevUnits, updatedUnit.unit));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updatedUnit?.key]);
+
   const handleDeleteClick = useCallback((unit: OrganizationalUnit) => {
     setUnitToDelete(unit);
     setDeleteDialogOpen(true);
   }, []);
 
-  const handleDeleteSuccess = useCallback(async () => {
-    await loadUnits();
-    if (unitToDelete) {
-      onDelete?.(unitToDelete);
-    }
-  }, [loadUnits, onDelete, unitToDelete]);
+  const handleDeleteSuccess = useCallback(() => {
+    if (!unitToDelete) return;
+
+    // Optimistic UI update: Remove the deleted unit from local state
+    // This avoids reloading the entire tree (Issue #303)
+    setUnits((prevUnits) => {
+      const removeUnit = (
+        units: OrganizationalUnit[]
+      ): OrganizationalUnit[] => {
+        return units
+          .filter((unit) => unit.id !== unitToDelete.id)
+          .map((unit) => ({
+            ...unit,
+            children: unit.children ? removeUnit(unit.children) : undefined,
+          }));
+      };
+      return removeUnit(prevUnits);
+    });
+
+    // Notify parent component
+    onDelete?.(unitToDelete);
+  }, [onDelete, unitToDelete]);
 
   const handleDeleteDialogClose = useCallback(() => {
     setDeleteDialogOpen(false);
@@ -529,12 +695,25 @@ export function OrganizationalUnitTree({
     setMoveDialogOpen(true);
   }, []);
 
-  const handleMoveSuccess = useCallback(async () => {
-    await loadUnits();
-    if (unitToMove) {
+  const handleMoveSuccess = useCallback(
+    (newParentId: string) => {
+      if (!unitToMove) return;
+
+      // Optimistic UI update: Move the unit in local state
+      // This avoids reloading the entire tree (Issue #303)
+      setUnits((prevUnits) =>
+        moveUnitInTree(
+          prevUnits,
+          unitToMove.id,
+          newParentId === "" ? null : newParentId
+        )
+      );
+
+      // Notify parent component
       onMove?.(unitToMove);
-    }
-  }, [loadUnits, onMove, unitToMove]);
+    },
+    [onMove, unitToMove]
+  );
 
   const handleMoveDialogClose = useCallback(() => {
     setMoveDialogOpen(false);

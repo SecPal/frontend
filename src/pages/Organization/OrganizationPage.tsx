@@ -17,6 +17,20 @@ import {
 import type { OrganizationalUnit } from "../../types";
 
 /**
+ * Optimistic UI state for tree updates without reloading
+ * @see Issue #303: UX improvement - avoid full tree reload
+ * Each update has a unique key to ensure React triggers the useEffect
+ */
+interface OptimisticTreeUpdate {
+  createdUnit: {
+    unit: OrganizationalUnit;
+    parentId: string | null;
+    key: number;
+  } | null;
+  updatedUnit: { unit: OrganizationalUnit; key: number } | null;
+}
+
+/**
  * Organization Page
  *
  * Displays the internal organizational structure (departments, branches, teams).
@@ -43,8 +57,13 @@ export function OrganizationPage() {
   // Success toast state
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Ref to trigger tree refresh
-  const treeRefreshKey = useRef(0);
+  // Optimistic UI state for tree updates (Issue #303)
+  const [optimisticUpdate, setOptimisticUpdate] =
+    useState<OptimisticTreeUpdate>({
+      createdUnit: null,
+      updatedUnit: null,
+    });
+
   // Ref for timeout cleanup
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -144,9 +163,8 @@ export function OrganizationPage() {
   }, []);
 
   const handleMove = useCallback(() => {
-    // Refresh tree after move operation
-    treeRefreshKey.current += 1;
-    // Force re-render
+    // Move is handled with optimistic UI in OrganizationalUnitTree
+    // This callback is for post-move actions
     setSelectedUnit(null);
   }, []);
 
@@ -157,10 +175,21 @@ export function OrganizationPage() {
 
   const handleDialogSuccess = useCallback(
     (unit: OrganizationalUnit) => {
-      // Refresh tree by incrementing the key
-      treeRefreshKey.current += 1;
-      // Force re-render by updating selected unit state
-      setSelectedUnit((prev) => (prev?.id === unit.id ? unit : prev));
+      // Optimistic UI update (Issue #303) - update tree without reload
+      // Use Date.now() as key to ensure each update triggers useEffect
+      if (dialogMode === "create") {
+        setOptimisticUpdate({
+          createdUnit: { unit, parentId: dialogParentId, key: Date.now() },
+          updatedUnit: null,
+        });
+      } else {
+        setOptimisticUpdate({
+          createdUnit: null,
+          updatedUnit: { unit, key: Date.now() },
+        });
+        // Update selected unit if editing
+        setSelectedUnit(unit);
+      }
 
       // Show success message
       const message =
@@ -177,13 +206,8 @@ export function OrganizationPage() {
         setSuccessMessage(null);
         successTimeoutRef.current = null;
       }, 3000);
-
-      // Update selected unit if editing
-      if (dialogMode === "edit") {
-        setSelectedUnit(unit);
-      }
     },
-    [dialogMode]
+    [dialogMode, dialogParentId]
   );
 
   return (
@@ -214,13 +238,14 @@ export function OrganizationPage() {
         {/* Tree View */}
         <div className="lg:col-span-2">
           <OrganizationalUnitTree
-            key={treeRefreshKey.current}
             onSelect={handleSelect}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onCreateChild={handleCreateChild}
             onCreate={handleCreate}
             onMove={handleMove}
+            createdUnit={optimisticUpdate.createdUnit}
+            updatedUnit={optimisticUpdate.updatedUnit}
             selectedId={selectedUnit?.id}
           />
         </div>
