@@ -62,7 +62,8 @@ describe("Lighthouse CI Configuration", () => {
 
     expect(jsErrorAssertion).toBeDefined();
     expect(jsErrorAssertion[0]).toBe("error"); // Must fail on JS errors
-    expect(jsErrorAssertion[1].maxNumericValue).toBe(0); // Zero tolerance
+    // Score of 1 means no errors (using minScore assertion)
+    expect(jsErrorAssertion[1].minScore).toBe(1);
   });
 
   it("should configure upload to temporary storage", () => {

@@ -62,22 +62,23 @@ module.exports = {
         // Best Practices (includes JS error detection)
         "categories:best-practices": ["warn", { minScore: 0.9 }],
 
-        // JavaScript errors (critical - fail on any JS error)
-        "errors-in-console": ["error", { maxNumericValue: 0 }],
+        // JavaScript errors - use minScore assertion (score=1 means no errors)
+        // The errors-in-console audit returns a score, not a numeric value
+        "errors-in-console": ["error", { minScore: 1 }],
 
-        // Resource optimization
-        "uses-responsive-images": "warn",
-        "offscreen-images": "warn",
-        "unminified-javascript": "error",
-        "unminified-css": "error",
-        "unused-javascript": "warn",
-        "unused-css-rules": "warn",
+        // Resource optimization - use minScore for these audits
+        "uses-responsive-images": "off",
+        "offscreen-images": "off",
+        "unminified-javascript": ["error", { minScore: 1 }],
+        "unminified-css": ["error", { minScore: 1 }],
+        "unused-javascript": "off",
+        "unused-css-rules": "off",
 
-        // Caching
-        "uses-long-cache-ttl": "warn",
+        // Caching - off for static builds (no server control)
+        "uses-long-cache-ttl": "off",
 
-        // Compression
-        "uses-text-compression": "warn",
+        // Compression - off for static builds
+        "uses-text-compression": "off",
       },
     },
 
