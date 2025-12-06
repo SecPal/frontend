@@ -384,6 +384,96 @@ describe("OrganizationalUnitFormDialog", () => {
       expect(optionValues).toContain("custom");
     });
 
+    it("filters type options based on parent hierarchy (branch parent)", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          parentId="parent-1"
+          parentName="Berlin Branch"
+          parentType="branch"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const options = screen.getAllByRole("option");
+
+      // Branch has rank 4, so only types with rank >= 4 should be available
+      // Expected: branch (4), division (5), department (6), custom (7)
+      expect(options.length).toBe(4);
+
+      const optionValues = options.map((opt) => opt.getAttribute("value"));
+      expect(optionValues).not.toContain("holding");
+      expect(optionValues).not.toContain("company");
+      expect(optionValues).not.toContain("region");
+      expect(optionValues).toContain("branch");
+      expect(optionValues).toContain("division");
+      expect(optionValues).toContain("department");
+      expect(optionValues).toContain("custom");
+    });
+
+    it("filters type options based on parent hierarchy (company parent)", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          parentId="parent-1"
+          parentName="Acme Corp"
+          parentType="company"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const options = screen.getAllByRole("option");
+
+      // Company has rank 2, so only types with rank >= 2 should be available
+      // Expected: company (2), region (3), branch (4), division (5), department (6), custom (7)
+      expect(options.length).toBe(6);
+
+      const optionValues = options.map((opt) => opt.getAttribute("value"));
+      expect(optionValues).not.toContain("holding");
+      expect(optionValues).toContain("company");
+      expect(optionValues).toContain("region");
+      expect(optionValues).toContain("branch");
+      expect(optionValues).toContain("division");
+      expect(optionValues).toContain("department");
+      expect(optionValues).toContain("custom");
+    });
+
+    it("shows all types when creating root unit (no parent)", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const options = screen.getAllByRole("option");
+      expect(options.length).toBe(7); // All types available
+    });
+
+    it("shows all types in edit mode regardless of parent", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="edit"
+          unit={mockUnit}
+          parentId="parent-1"
+          parentName="Berlin Branch"
+          parentType="branch"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const options = screen.getAllByRole("option");
+      expect(options.length).toBe(7); // All types available in edit mode
+    });
+
     it("allows changing type selection", async () => {
       const user = userEvent.setup();
       const newUnit: OrganizationalUnit = {
