@@ -23,7 +23,7 @@ import {
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
-import { getTypeLabel } from "../lib/organizationalUnitUtils";
+import { getTypeLabel, TYPE_HIERARCHY } from "../lib/organizationalUnitUtils";
 
 /**
  * Props for MoveOrganizationalUnitDialog
@@ -312,9 +312,19 @@ export function MoveOrganizationalUnitDialog({
         page += 1;
       }
 
-      // Filter out the unit itself (can't be its own parent)
-      // Note: Backend API will prevent circular references with 409 Conflict
-      const filtered = allUnits.filter((u) => u.id !== unit.id);
+      // Filter out invalid parent options:
+      // 1. The unit itself (can't be its own parent)
+      // 2. Units that would violate hierarchy rules (parent must be higher rank)
+      // Note: Backend API will also prevent circular references with 409 Conflict
+      const unitRank = TYPE_HIERARCHY[unit.type];
+      const filtered = allUnits.filter((u) => {
+        // Can't be its own parent
+        if (u.id === unit.id) return false;
+
+        // Parent must be higher in hierarchy (lower rank number) than the unit being moved
+        const parentRank = TYPE_HIERARCHY[u.type];
+        return parentRank < unitRank;
+      });
 
       setAvailableUnits(filtered);
     } catch (err) {

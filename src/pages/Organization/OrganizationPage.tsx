@@ -63,6 +63,9 @@ export function OrganizationPage() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [dialogParentId, setDialogParentId] = useState<string | null>(null);
   const [dialogParentName, setDialogParentName] = useState<string | null>(null);
+  const [dialogParentType, setDialogParentType] = useState<
+    OrganizationalUnit["type"] | null
+  >(null);
   const [editingUnit, setEditingUnit] = useState<OrganizationalUnit | null>(
     null
   );
@@ -144,6 +147,7 @@ export function OrganizationPage() {
     setEditingUnit(unit);
     setDialogParentId(null);
     setDialogParentName(null);
+    setDialogParentType(null);
     setDialogOpen(true);
   }, []);
 
@@ -164,6 +168,7 @@ export function OrganizationPage() {
     setEditingUnit(null);
     setDialogParentId(null);
     setDialogParentName(null);
+    setDialogParentType(null);
     setDialogOpen(true);
   }, []);
 
@@ -172,6 +177,7 @@ export function OrganizationPage() {
     setEditingUnit(null);
     setDialogParentId(unit.id);
     setDialogParentName(unit.name);
+    setDialogParentType(unit.type);
     setDialogOpen(true);
   }, []);
 
@@ -352,6 +358,7 @@ export function OrganizationPage() {
             mode={dialogMode}
             parentId={dialogParentId}
             parentName={dialogParentName}
+            parentType={dialogParentType}
             unit={editingUnit}
             onSuccess={handleDialogSuccess}
           />

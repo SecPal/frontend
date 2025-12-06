@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-06 13:14+0100\n"
+"POT-Creation-Date: 2025-12-06 19:48+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -56,7 +56,7 @@ msgid "Actions"
 msgstr "Aktionen"
 
 #. placeholder {0}: unit.name
-#: src/components/OrganizationalUnitTree.tsx:289
+#: src/components/OrganizationalUnitTree.tsx:292
 msgid "Actions for {0}"
 msgstr "Aktionen für {0}"
 
@@ -84,15 +84,15 @@ msgstr "Kunde hinzufügen"
 msgid "Add Object"
 msgstr "Objekt hinzufügen"
 
-#: src/components/OrganizationalUnitTree.tsx:807
-msgid "Add Unit"
-msgstr "Einheit hinzufügen"
+#: src/components/OrganizationalUnitTree.tsx:825
+msgid "Add Root Unit"
+msgstr "Stammeinheit hinzufügen"
 
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
 msgstr "Füge ein neues Geheimnis zu deinem Tresor hinzu."
 
-#: src/components/OrganizationalUnitTree.tsx:324
+#: src/components/OrganizationalUnitTree.tsx:327
 msgid "Add child"
 msgstr "Untergeordnete Einheit hinzufügen"
 
@@ -235,7 +235,7 @@ msgid "Close detail panel"
 msgstr "Detailfenster schließen"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:260
+#: src/components/OrganizationalUnitTree.tsx:263
 msgid "Collapse"
 msgstr "Zusammenklappen"
 
@@ -263,7 +263,7 @@ msgid "Create Guard Book"
 msgstr "Wachbuch erstellen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:216
-#: src/components/OrganizationalUnitTree.tsx:794
+#: src/components/OrganizationalUnitTree.tsx:812
 msgid "Create Organizational Unit"
 msgstr "Organisatorische Einheit anlegen"
 
@@ -323,7 +323,7 @@ msgstr "Kunden"
 
 #: src/components/AttachmentList.tsx:215
 #: src/components/DeleteOrganizationalUnitDialog.tsx:186
-#: src/components/OrganizationalUnitTree.tsx:382
+#: src/components/OrganizationalUnitTree.tsx:385
 msgid "Delete"
 msgstr "Löschen"
 
@@ -388,7 +388,7 @@ msgstr "Zur Ansicht herunterladen"
 msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
-#: src/components/OrganizationalUnitTree.tsx:343
+#: src/components/OrganizationalUnitTree.tsx:346
 #: src/pages/Organization/OrganizationPage.tsx:329
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
@@ -449,11 +449,11 @@ msgid "Events"
 msgstr "Ereignisse"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:260
+#: src/components/OrganizationalUnitTree.tsx:263
 msgid "Expand"
 msgstr "Ausklappen"
 
-#: src/pages/Secrets/SecretCard.tsx:44
+#: src/pages/Secrets/SecretCard.tsx:51
 #: src/pages/Secrets/SecretDetail.tsx:274
 #: src/pages/Secrets/SecretDetail.tsx:381
 #: src/pages/Secrets/SecretList.tsx:208
@@ -473,7 +473,7 @@ msgstr "Läuft ab (optional):"
 msgid "Expires: {0}"
 msgstr "Läuft ab: {0}"
 
-#: src/pages/Secrets/SecretCard.tsx:49
+#: src/pages/Secrets/SecretCard.tsx:56
 #: src/pages/Secrets/SecretList.tsx:209
 msgid "Expiring Soon"
 msgstr "Bald ablaufend"
@@ -548,7 +548,7 @@ msgstr "Wachbücher konnten nicht geladen werden"
 msgid "Failed to load objects"
 msgstr "Objekte konnten nicht geladen werden"
 
-#: src/components/OrganizationalUnitTree.tsx:659
+#: src/components/OrganizationalUnitTree.tsx:677
 msgid "Failed to load organizational units"
 msgstr "Organisationseinheiten konnten nicht geladen werden"
 
@@ -617,7 +617,7 @@ msgstr "Beginnen Sie mit dem Hinzufügen Ihres ersten Objekts."
 msgid "Get started by creating your first guard book."
 msgstr "Beginnen Sie mit der Erstellung Ihres ersten Wachbuchs."
 
-#: src/components/OrganizationalUnitTree.tsx:790
+#: src/components/OrganizationalUnitTree.tsx:808
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
@@ -764,7 +764,7 @@ msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:484
-#: src/components/OrganizationalUnitTree.tsx:362
+#: src/components/OrganizationalUnitTree.tsx:365
 msgid "Move"
 msgstr "Verschieben"
 
@@ -777,7 +777,7 @@ msgstr "Verschieben \"{0}\""
 msgid "Moving..."
 msgstr "Verschiebe..."
 
-#: src/components/OrganizationalUnitTree.tsx:804
+#: src/components/OrganizationalUnitTree.tsx:822
 msgid "My Organization"
 msgstr "Meine Organisation"
 
@@ -828,7 +828,7 @@ msgstr "Keine Wachbücher"
 msgid "No Objects"
 msgstr "Keine Objekte"
 
-#: src/components/OrganizationalUnitTree.tsx:787
+#: src/components/OrganizationalUnitTree.tsx:805
 msgid "No Organizational Units"
 msgstr "Keine organisatorischen Einheiten"
 
@@ -939,7 +939,7 @@ msgstr "Organisation"
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
 
-#: src/components/OrganizationalUnitTree.tsx:814
+#: src/components/OrganizationalUnitTree.tsx:832
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
@@ -1035,7 +1035,7 @@ msgstr "Berichte"
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
 #: src/components/ObjectManager.tsx:615
-#: src/components/OrganizationalUnitTree.tsx:774
+#: src/components/OrganizationalUnitTree.tsx:792
 msgid "Retry"
 msgstr "Wiederholen"
 

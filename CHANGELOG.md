@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
+  - Renamed "Add Unit" button to "Add Root Unit" for clarity
+  - Makes it explicit that the button creates a root-level organizational unit
+  - Reduces confusion about where new units will be created
+  - Empty state button remains as "Create Organizational Unit" for first-time users
+  - **Enhanced with hierarchy-based type filtering**: When creating a child unit, the type dropdown now only shows valid child types based on the parent's hierarchy rank. Child units must be **lower** in the hierarchy than their parent (e.g., Division under Branch is valid, but Branch under Branch is not allowed). This prevents users from selecting invalid types upfront, improving UX by avoiding validation errors after submission.
+
 ### Added
 
 - **Web Vitals monitoring with thresholds & development warnings** (#310)
