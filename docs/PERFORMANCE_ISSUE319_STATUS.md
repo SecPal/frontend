@@ -104,7 +104,7 @@ SPDX-License-Identifier: CC0-1.0
 
 ### Implementation Plan
 
-**Step 1: Profiling Session**
+#### Step 1: Profiling Session
 
 **Tools:**
 
@@ -182,7 +182,7 @@ npm run test:e2e:staging -- tests/e2e/performance.spec.ts
 
 ## Decision Tree
 
-```
+```text
 Phase 1 TBT Result:
 ├─ <200ms → ✅ Close issue #319
 ├─ 200-250ms → Consider Phase 2 optimizations
