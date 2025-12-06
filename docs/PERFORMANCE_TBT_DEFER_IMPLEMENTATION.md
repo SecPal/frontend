@@ -8,7 +8,7 @@ SPDX-License-Identifier: CC0-1.0
 **Date:** 2025-12-06
 **Issue:** #319
 **Branch:** `perf/tbt-defer-non-critical`
-**Status:** Implementation Complete
+**Status:** Implementation Complete - Closed due to performance regression (see PR #320)
 
 ---
 

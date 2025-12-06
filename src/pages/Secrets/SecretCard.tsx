@@ -26,14 +26,12 @@ export const SecretCard = memo(function SecretCard({
 }: SecretCardProps) {
   // Memoize date calculations to prevent recalculation on every render
   const expirationStatus = useMemo(() => {
-    const now = new Date();
-    const expires = secret.expires_at ? new Date(secret.expires_at) : null;
+    if (!secret.expires_at) return { isExpired: false, isExpiringSoon: false };
 
-    const isExpired = expires && expires < now;
-    const isExpiringSoon =
-      !isExpired &&
-      expires &&
-      expires < new Date(now.getTime() + EXPIRING_SOON_MS);
+    const now = Date.now();
+    const expires = new Date(secret.expires_at).getTime();
+    const isExpired = expires < now;
+    const isExpiringSoon = !isExpired && expires < now + EXPIRING_SOON_MS;
 
     return { isExpired, isExpiringSoon };
   }, [secret.expires_at]);
