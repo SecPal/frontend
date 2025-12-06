@@ -71,19 +71,12 @@ import "@fontsource/inter/700.css";
 ### File: `src/index.css`
 
 ```css
-/* Add at TOP */
-@import url("@fontsource/inter/400.css") layer(fonts);
-@import url("@fontsource/inter/500.css") layer(fonts);
-@import url("@fontsource/inter/600.css") layer(fonts);
-@import url("@fontsource/inter/700.css") layer(fonts);
-
-/* Configure font-display */
-@layer fonts {
-  @font-face {
-    font-family: "Inter";
-    font-display: swap; /* Prevents FOIT */
-  }
-}
+/* Add at TOP - Reduces main JS bundle size */
+/* Note: @import is synchronous but @fontsource includes font-display: swap */
+@import url("@fontsource/inter/400.css");
+@import url("@fontsource/inter/500.css");
+@import url("@fontsource/inter/600.css");
+@import url("@fontsource/inter/700.css");
 ```
 
 **Test:**

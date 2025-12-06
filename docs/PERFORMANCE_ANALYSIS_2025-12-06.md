@@ -82,23 +82,19 @@ const Organization = lazy(() => import("./pages/Organization"));
 ##### B. Font Loading Optimization
 
 ```typescript
-// src/main.tsx - BEFORE (synchronous)
+// src/main.tsx - BEFORE (loaded in JavaScript bundle)
 import "@fontsource/inter";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 
-// AFTER - Asynchronous with font-display: swap
-// In index.css instead:
-@import url('@fontsource/inter/400.css') layer(fonts);
-@import url('@fontsource/inter/500.css') layer(fonts);
-/* ... */
-
-@layer fonts {
-  @font-face {
-    font-display: swap; /* Prevents FOIT (Flash of Invisible Text) */
-  }
-}
+// AFTER - Loaded via CSS @import (reduces main bundle size)
+// In index.css:
+@import url("@fontsource/inter/400.css");
+@import url("@fontsource/inter/500.css");
+@import url("@fontsource/inter/600.css");
+@import url("@fontsource/inter/700.css");
+// Note: @fontsource packages include font-display: swap by default
 ```
 
 ##### C. Large Dependencies Lazy Loading
