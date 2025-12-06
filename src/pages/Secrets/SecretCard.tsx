@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import type { Secret } from "../../services/secretApi";
@@ -24,19 +24,16 @@ export interface SecretCardProps {
 export const SecretCard = memo(function SecretCard({
   secret,
 }: SecretCardProps) {
-  // Memoize date calculations to prevent recalculation on every render
-  const expirationStatus = useMemo(() => {
-    if (!secret.expires_at) return { isExpired: false, isExpiringSoon: false };
-
-    const now = Date.now();
-    const expires = new Date(secret.expires_at).getTime();
-    const isExpired = expires < now;
-    const isExpiringSoon = !isExpired && expires < now + EXPIRING_SOON_MS;
-
-    return { isExpired, isExpiringSoon };
-  }, [secret.expires_at]);
-
-  const { isExpired, isExpiringSoon } = expirationStatus;
+  // Calculate expiration status
+  // Note: We intentionally recalculate on every render to show real-time expiration status.
+  // The memo wrapper prevents re-renders when parent state changes, which is the main optimization.
+  const now = new Date();
+  const expires = secret.expires_at ? new Date(secret.expires_at) : null;
+  const isExpired = expires && expires < now;
+  const isExpiringSoon =
+    !isExpired &&
+    expires &&
+    expires < new Date(now.getTime() + EXPIRING_SOON_MS);
 
   return (
     <Link
