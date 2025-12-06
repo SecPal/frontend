@@ -81,3 +81,5 @@ export function SecretCreate() {
     </>
   );
 }
+
+export default SecretCreate;

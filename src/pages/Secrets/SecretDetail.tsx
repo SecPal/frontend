@@ -499,3 +499,5 @@ export function SecretDetail() {
     </>
   );
 }
+
+export default SecretDetail;

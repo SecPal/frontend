@@ -376,3 +376,5 @@ export function SecretList() {
     </>
   );
 }
+
+export default SecretList;

@@ -764,3 +764,5 @@ export function ShareTarget() {
     </div>
   );
 }
+
+export default ShareTarget;
