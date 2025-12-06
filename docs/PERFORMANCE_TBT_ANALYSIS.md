@@ -43,7 +43,7 @@ Total Blocking Time measures the total amount of time between First Contentful P
 
 ### Current Bundle Composition
 
-```
+```text
 Main Bundle (94KB gzipped):
 - React components (eager loaded)
 - Both locale files (de: 16KB, en: 13KB) - loaded upfront

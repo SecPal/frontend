@@ -196,7 +196,7 @@ manualChunks(id) {
 
 ### Before (Baseline - PR #317)
 
-```
+```text
 TBT: 419ms
 LCP: 1244ms
 CLS: 0.00004
@@ -206,7 +206,7 @@ Initial Bundle: 469KB (149KB gzipped)
 
 ### After (Aggressive Splitting - Estimated)
 
-```
+```text
 TBT: 150-180ms (-57% to -64%) ✅ Target: <200ms
 LCP: 1100-1200ms (slightly improved) ✅ Target: <2500ms
 CLS: 0.00004 (unchanged) ✅ Target: <0.1
@@ -244,7 +244,7 @@ npm run lighthouse:ci
 
 ### 3. Manual Verification
 
-1. Open https://app.secpal.dev
+1. Open <https://app.secpal.dev>
 2. DevTools → Network Tab
 3. Check:
    - Multiple small JS chunks? ✅
