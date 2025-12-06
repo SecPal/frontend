@@ -301,11 +301,23 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
+          // Object-based manual chunks (proven to work with Heroicons)
+          // Using explicit package names ensures proper module resolution
           manualChunks: {
-            // Vendor chunks for large dependencies
+            // React ecosystem (largest vendor chunk)
             "vendor-react": ["react", "react-dom", "react-router-dom"],
+            // UI Component libraries (must stay together for proper exports)
             "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+            // Internationalization
             "vendor-lingui": ["@lingui/core", "@lingui/react"],
+            // Database libraries
+            "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
+            // Animation library
+            "vendor-animation": ["motion"],
+            // Web Vitals monitoring
+            "vendor-monitoring": ["web-vitals"],
+            // Utilities
+            "vendor-utils": ["clsx"],
           },
         },
       },

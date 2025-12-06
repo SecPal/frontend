@@ -108,7 +108,9 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
     try {
       console.log("[SW Hook] Calling swUpdate(true)...");
       await swUpdate(true); // true = reload page after update
-      console.log("[SW Hook] swUpdate completed, reloading...");
+      console.log("[SW Hook] swUpdate completed, forcing reload...");
+      // Force reload to ensure page refreshes even if swUpdate doesn't trigger it
+      window.location.reload();
     } catch (error) {
       console.error("[SW Hook] Update failed:", error);
       // Force reload as fallback

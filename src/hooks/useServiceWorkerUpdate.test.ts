@@ -132,6 +132,23 @@ describe("useServiceWorkerUpdate", () => {
   });
 
   describe("updateServiceWorker()", () => {
+    // Mock window.location.reload before each test
+    let reloadMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      // Mock window.location.reload
+      reloadMock = vi.fn();
+      Object.defineProperty(window, "location", {
+        configurable: true,
+        value: { reload: reloadMock },
+      });
+    });
+
+    afterEach(() => {
+      // Clean up mock
+      reloadMock.mockRestore();
+    });
+
     it("should call service worker update function with reload=true", async () => {
       const { result } = renderHook(() => useServiceWorkerUpdate());
 
@@ -142,7 +159,19 @@ describe("useServiceWorkerUpdate", () => {
       expect(mockUpdateSW).toHaveBeenCalledWith(true);
     });
 
-    it("should handle update errors gracefully", async () => {
+    it("should force reload after successful service worker update", async () => {
+      mockUpdateSW.mockResolvedValueOnce(undefined);
+      const { result } = renderHook(() => useServiceWorkerUpdate());
+
+      await act(async () => {
+        await result.current.updateServiceWorker();
+      });
+
+      expect(mockUpdateSW).toHaveBeenCalledWith(true);
+      expect(reloadMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should force reload when service worker update fails", async () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -158,6 +187,7 @@ describe("useServiceWorkerUpdate", () => {
         "[SW Hook] Update failed:",
         expect.any(Error)
       );
+      expect(reloadMock).toHaveBeenCalledTimes(1);
 
       consoleErrorSpy.mockRestore();
     });
