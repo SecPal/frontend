@@ -8,6 +8,7 @@ import {
   getUnitTypeOptions,
   getTypeBadgeColor,
   getValidChildTypeOptions,
+  getDefaultChildType,
   TYPE_HIERARCHY,
 } from "./organizationalUnitUtils";
 
@@ -192,6 +193,40 @@ describe("organizationalUnitUtils", () => {
       expect(options[0]?.label).toBe("Division");
       expect(options[1]?.label).toBe("Department");
       expect(options[2]?.label).toBe("Custom");
+    });
+  });
+
+  describe("getDefaultChildType", () => {
+    it("returns 'holding' for root units (undefined parent)", () => {
+      expect(getDefaultChildType(undefined)).toBe("holding");
+    });
+
+    it("returns 'company' for holding parent", () => {
+      expect(getDefaultChildType("holding")).toBe("company");
+    });
+
+    it("returns 'region' for company parent", () => {
+      expect(getDefaultChildType("company")).toBe("region");
+    });
+
+    it("returns 'branch' for region parent", () => {
+      expect(getDefaultChildType("region")).toBe("branch");
+    });
+
+    it("returns 'division' for branch parent", () => {
+      expect(getDefaultChildType("branch")).toBe("division");
+    });
+
+    it("returns 'department' for division parent", () => {
+      expect(getDefaultChildType("division")).toBe("department");
+    });
+
+    it("returns 'custom' for department parent", () => {
+      expect(getDefaultChildType("department")).toBe("custom");
+    });
+
+    it("returns undefined for custom parent (no lower level)", () => {
+      expect(getDefaultChildType("custom")).toBeUndefined();
     });
   });
 });

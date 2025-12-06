@@ -140,3 +140,32 @@ export function getValidChildTypeOptions(
     return childRank > parentRank;
   });
 }
+
+/**
+ * Get the default child type for a given parent type
+ * Returns the next level down in the hierarchy (parent rank + 1)
+ * If no next level exists, returns undefined
+ *
+ * @param parentType - The parent's organizational unit type, or undefined for root units
+ * @returns The default child type, or undefined if no valid child type exists
+ *
+ * @example
+ * getDefaultChildType('holding') // returns 'company'
+ * getDefaultChildType('branch')  // returns 'division'
+ * getDefaultChildType('custom')  // returns undefined (no lower level)
+ * getDefaultChildType(undefined) // returns 'holding' (for root units)
+ */
+export function getDefaultChildType(
+  parentType: OrganizationalUnitType | undefined
+): OrganizationalUnitType | undefined {
+  // For root units, default to 'holding'
+  if (!parentType) {
+    return "holding";
+  }
+
+  const parentRank = TYPE_HIERARCHY[parentType];
+  const allTypes = Object.keys(TYPE_HIERARCHY) as OrganizationalUnitType[];
+
+  // Find the type with rank = parentRank + 1
+  return allTypes.find((type) => TYPE_HIERARCHY[type] === parentRank + 1);
+}

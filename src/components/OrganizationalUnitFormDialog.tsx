@@ -29,6 +29,7 @@ import { ApiError } from "../services/secretApi";
 import {
   getUnitTypeOptions,
   getValidChildTypeOptions,
+  getDefaultChildType,
 } from "../lib/organizationalUnitUtils";
 
 export interface OrganizationalUnitFormDialogProps {
@@ -106,15 +107,17 @@ export function OrganizationalUnitFormDialog({
           description: unit.description || "",
         });
       } else {
+        // Create mode: set default type based on parent
+        const defaultType = getDefaultChildType(parentType || undefined);
         setFormData({
           name: "",
-          type: "branch",
+          type: defaultType || "branch",
           description: "",
         });
       }
       setErrors({});
     }
-  }, [open, mode, unit]);
+  }, [open, mode, unit, parentType]);
 
   // Validate form
   const validate = useCallback((): boolean => {
