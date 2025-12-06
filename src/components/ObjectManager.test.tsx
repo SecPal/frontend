@@ -66,11 +66,11 @@ describe("ObjectManager", () => {
 
   it("renders loading state initially", async () => {
     renderWithI18n(<ObjectManager customerId="cust-1" />);
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    expect(document.querySelector(".animate-spin")).toBeInTheDocument();
 
     // Wait for async operations to complete to prevent act() warnings
     await waitFor(() => {
-      expect(document.querySelector(".animate-pulse")).not.toBeInTheDocument();
+      expect(document.querySelector(".animate-spin")).not.toBeInTheDocument();
     });
   });
 

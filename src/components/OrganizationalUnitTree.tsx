@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect, lazy, Suspense, memo } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
+import { SpinnerContainer } from "./spinner";
 import { Badge } from "./badge";
 import {
   Dropdown,
@@ -773,13 +774,7 @@ export function OrganizationalUnitTree({
   }, []);
 
   if (isLoading) {
-    return (
-      <div className={`${className} animate-pulse`}>
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2" />
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-      </div>
-    );
+    return <SpinnerContainer className={`${className} py-12`} />;
   }
 
   if (error) {
@@ -848,28 +843,24 @@ export function OrganizationalUnitTree({
       </div>
 
       {/* Delete Confirmation Dialog - Lazy loaded */}
-      {deleteDialogOpen && (
-        <Suspense fallback={<div />}>
-          <DeleteOrganizationalUnitDialog
-            open={deleteDialogOpen}
-            unit={unitToDelete}
-            onClose={handleDeleteDialogClose}
-            onSuccess={handleDeleteSuccess}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={<div />}>
+        <DeleteOrganizationalUnitDialog
+          open={deleteDialogOpen}
+          unit={unitToDelete}
+          onClose={handleDeleteDialogClose}
+          onSuccess={handleDeleteSuccess}
+        />
+      </Suspense>
 
       {/* Move/Reparent Dialog - Lazy loaded */}
-      {moveDialogOpen && (
-        <Suspense fallback={<div />}>
-          <MoveOrganizationalUnitDialog
-            open={moveDialogOpen}
-            unit={unitToMove}
-            onClose={handleMoveDialogClose}
-            onSuccess={handleMoveSuccess}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={<div />}>
+        <MoveOrganizationalUnitDialog
+          open={moveDialogOpen}
+          unit={unitToMove}
+          onClose={handleMoveDialogClose}
+          onSuccess={handleMoveSuccess}
+        />
+      </Suspense>
     </div>
   );
 }

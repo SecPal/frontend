@@ -16,6 +16,7 @@ import { Text } from "../../components/text";
 import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
+import { SpinnerContainer } from "../../components/spinner";
 
 // Lazy load dialog for better performance
 const OrganizationalUnitFormDialog = lazy(() =>
@@ -350,20 +351,22 @@ export function OrganizationPage() {
       </div>
 
       {/* Create/Edit Dialog - Lazy loaded for better performance */}
-      {dialogOpen && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <OrganizationalUnitFormDialog
-            open={dialogOpen}
-            onClose={handleDialogClose}
-            mode={dialogMode}
-            parentId={dialogParentId}
-            parentName={dialogParentName}
-            parentType={dialogParentType}
-            unit={editingUnit}
-            onSuccess={handleDialogSuccess}
-          />
-        </Suspense>
-      )}
+      <Suspense
+        fallback={
+          <SpinnerContainer className="fixed inset-0 bg-zinc-950/25 dark:bg-zinc-950/50" />
+        }
+      >
+        <OrganizationalUnitFormDialog
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          mode={dialogMode}
+          parentId={dialogParentId}
+          parentName={dialogParentName}
+          parentType={dialogParentType}
+          unit={editingUnit}
+          onSuccess={handleDialogSuccess}
+        />
+      </Suspense>
     </div>
   );
 }
