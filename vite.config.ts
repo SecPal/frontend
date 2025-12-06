@@ -301,11 +301,81 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            // Vendor chunks for large dependencies
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
-            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
-            "vendor-lingui": ["@lingui/core", "@lingui/react"],
+          // Function-based manual chunks for fine-grained control
+          // This enables dynamic splitting based on module paths
+          manualChunks(id) {
+            // Split node_modules by category for better caching
+            if (id.includes("node_modules")) {
+              // React ecosystem (largest vendor chunk)
+              if (
+                id.includes("react") ||
+                id.includes("react-dom") ||
+                id.includes("react-router")
+              ) {
+                return "vendor-react";
+              }
+
+              // Database libraries (Dexie + IDB)
+              if (id.includes("dexie") || id.includes("idb")) {
+                return "vendor-db";
+              }
+
+              // Animation library (Motion.js)
+              if (id.includes("motion")) {
+                return "vendor-animation";
+              }
+
+              // Internationalization (Lingui)
+              if (id.includes("@lingui")) {
+                return "vendor-i18n";
+              }
+
+              // UI Component libraries
+              if (id.includes("@headlessui") || id.includes("@heroicons")) {
+                return "vendor-ui";
+              }
+
+              // Web Vitals
+              if (id.includes("web-vitals")) {
+                return "vendor-monitoring";
+              }
+
+              // Utility libraries
+              if (id.includes("clsx")) {
+                return "vendor-utils";
+              }
+
+              // All other node_modules
+              return "vendor-misc";
+            }
+
+            // Split application code by feature
+            if (id.includes("/src/")) {
+              // Services (API layer)
+              if (id.includes("/src/services/")) {
+                return "app-services";
+              }
+
+              // Library utilities
+              if (id.includes("/src/lib/")) {
+                return "app-lib";
+              }
+
+              // Locale files (split by language for lazy loading)
+              if (id.includes("/src/locales/")) {
+                // Extract language code from path (e.g., locales/de/messages.ts)
+                const languageMatch = id.match(/\/locales\/([a-z]{2})\//);
+                if (languageMatch) {
+                  return `locale-${languageMatch[1]}`;
+                }
+              }
+
+              // Types (usually small, can be in main bundle)
+              // No explicit chunk - will be included where imported
+            }
+
+            // Default: Let Vite decide
+            return undefined;
           },
         },
       },
