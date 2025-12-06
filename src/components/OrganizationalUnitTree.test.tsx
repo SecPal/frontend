@@ -31,8 +31,7 @@ import {
   deleteOrganizationalUnit,
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
-  // @ts-expect-error - listOrganizationalUnits temporarily mocked above, will be removed in Issue #325
-  listOrganizationalUnits,
+  listOrganizationalUnits, // Temporarily mocked above, will be removed in Issue #325
 } from "../services/organizationalUnitApi";
 
 // Temporary type alias - TODO: Import from correct location in refactor (Issue #325)
