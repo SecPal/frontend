@@ -60,6 +60,51 @@ if (typeof window !== "undefined" && !isTest) {
     </StrictMode>
   );
 
-  // Initialize Web Vitals tracking
-  initWebVitals();
+  // Defer Service Worker registration by 3 seconds to reduce TBT
+  // This allows the initial page load to complete before registering SW
+  setTimeout(() => {
+    if ("serviceWorker" in navigator) {
+      // Import and register the service worker
+      import("virtual:pwa-register")
+        .then(({ registerSW }) => {
+          registerSW({
+            immediate: true,
+            onRegistered(registration) {
+              console.log(
+                "[SW] Service Worker registered with deferred timing"
+              );
+              if (registration) {
+                // Check for updates every hour
+                setInterval(
+                  () => {
+                    console.log("[SW] Checking for updates...");
+                    registration.update();
+                  },
+                  60 * 60 * 1000
+                );
+              }
+            },
+            onRegisterError(error) {
+              console.error("[SW] Registration failed:", error);
+            },
+          });
+        })
+        .catch((error) => {
+          console.error("[SW] Failed to import PWA register:", error);
+        });
+    }
+  }, 3000);
+
+  // Defer Web Vitals initialization to reduce TBT
+  // Use requestIdleCallback to wait until main thread is idle
+  // Falls back to setTimeout if requestIdleCallback is not supported
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(() => {
+      initWebVitals();
+    });
+  } else {
+    setTimeout(() => {
+      initWebVitals();
+    }, 1000);
+  }
 }

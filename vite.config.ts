@@ -45,7 +45,9 @@ export default defineConfig(({ mode }) => {
         strategies: "injectManifest",
         srcDir: "src",
         filename: "sw.ts",
-        injectRegister: "auto",
+        // Defer Service Worker registration by 3 seconds to reduce TBT
+        // This allows the initial page load to complete before registering SW
+        injectRegister: false, // Manual registration with delay in main.tsx
         includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
         manifest: {
           name: "SecPal",
