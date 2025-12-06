@@ -6,21 +6,22 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationalUnitTree } from "./OrganizationalUnitTree";
-import type {
-  OrganizationalUnit,
-  OrganizationalUnitPaginatedResponse,
-} from "../types/organizational";
+import type { OrganizationalUnit } from "../types/organizational";
+
+// Mock the offline hook
+vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
+  useOrganizationalUnitsWithOffline: vi.fn(),
+}));
 
 // Mock the API module
 vi.mock("../services/organizationalUnitApi", () => ({
-  listOrganizationalUnits: vi.fn(),
   deleteOrganizationalUnit: vi.fn(),
   attachOrganizationalUnitParent: vi.fn(),
   detachOrganizationalUnitParent: vi.fn(),
 }));
 
+import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 import {
-  listOrganizationalUnits,
   deleteOrganizationalUnit,
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
@@ -94,23 +95,29 @@ describe("OrganizationalUnitTree", () => {
     },
   ];
 
-  const mockResponse: OrganizationalUnitPaginatedResponse = {
-    data: mockUnits,
-    meta: {
-      current_page: 1,
-      last_page: 1,
-      per_page: 100,
-      total: 3,
-      root_unit_ids: ["unit-1", "unit-3"],
-    },
+  const mockHookResponse = {
+    units: mockUnits,
+    loading: false,
+    error: null,
+    isOffline: false,
+    isStale: false,
+    rootUnitIds: ["unit-1", "unit-3"],
+    refresh: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(listOrganizationalUnits).mockResolvedValue(mockResponse);
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue(
+      mockHookResponse
+    );
   });
 
   it("renders loading state initially", async () => {
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      loading: true,
+    });
+
     renderWithI18n(<OrganizationalUnitTree />);
 
     // Loading spinner should be visible
@@ -133,15 +140,10 @@ describe("OrganizationalUnitTree", () => {
   });
 
   it("renders empty state when no units", async () => {
-    vi.mocked(listOrganizationalUnits).mockResolvedValue({
-      data: [],
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 0,
-        root_unit_ids: [],
-      },
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: [],
+      rootUnitIds: [],
     });
 
     renderWithI18n(<OrganizationalUnitTree />);
@@ -152,9 +154,10 @@ describe("OrganizationalUnitTree", () => {
   });
 
   it("shows error state on API failure", async () => {
-    vi.mocked(listOrganizationalUnits).mockRejectedValue(
-      new Error("Network error")
-    );
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      error: "Network error",
+    });
 
     renderWithI18n(<OrganizationalUnitTree />);
 

@@ -18,11 +18,11 @@ import type {
   OrganizationalUnit,
   OrganizationalUnitType,
 } from "../types/organizational";
-import { listOrganizationalUnits } from "../services/organizationalUnitApi";
 import {
   getTypeLabel,
   getTypeBadgeColor,
 } from "../lib/organizationalUnitUtils";
+import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 
 // Lazy load heavy dialogs for better initial performance
 const DeleteOrganizationalUnitDialog = lazy(() =>
@@ -612,9 +612,6 @@ export function OrganizationalUnitTree({
   className = "",
   title,
 }: OrganizationalUnitTreeProps) {
-  const [units, setUnits] = useState<OrganizationalUnit[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<OrganizationalUnit | null>(
     null
@@ -622,69 +619,82 @@ export function OrganizationalUnitTree({
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [unitToMove, setUnitToMove] = useState<OrganizationalUnit | null>(null);
 
-  const loadUnits = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  // Use offline-first hook for organizational units
+  const {
+    units: rawUnits,
+    loading: isLoading,
+    error: hookError,
+    rootUnitIds: apiRootUnitIds,
+    refresh,
+  } = useOrganizationalUnitsWithOffline();
 
-    try {
-      // Load accessible units - API returns permission-filtered results with root_unit_ids
-      const response = await listOrganizationalUnits({
-        type: typeFilter,
-        per_page: 100,
-      });
+  // Local state for tree structure
+  const [units, setUnits] = useState<OrganizationalUnit[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-      if (flatView) {
-        setUnits(response.data);
-      } else {
-        // Build tree using root_unit_ids from API response
-        const buildTree = (
-          items: OrganizationalUnit[],
-          rootUnitIds: string[]
-        ): OrganizationalUnit[] => {
-          const itemMap = new Map<string, OrganizationalUnit>();
-
-          // First pass: create map with empty children arrays
-          items.forEach((item) => {
-            itemMap.set(item.id, { ...item, children: [] });
-          });
-
-          // Second pass: build tree structure
-          const rootItems: OrganizationalUnit[] = [];
-          items.forEach((item) => {
-            const node = itemMap.get(item.id)!;
-            if (item.parent?.id && itemMap.has(item.parent.id)) {
-              // Has accessible parent - add as child
-              const parent = itemMap.get(item.parent.id)!;
-              parent.children = parent.children || [];
-              parent.children.push(node);
-            } else if (rootUnitIds.includes(item.id)) {
-              // Either no parent (true root) or parent inaccessible (designated root)
-              rootItems.push(node);
-            }
-            // Units with parents that aren't accessible and aren't in rootUnitIds are ignored
-          });
-
-          return rootItems;
-        };
-
-        // Use root_unit_ids from API response (defaults to empty array for safety)
-        const rootUnitIds = response.meta.root_unit_ids || [];
-        setUnits(buildTree(response.data, rootUnitIds));
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : t`Failed to load organizational units`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [flatView, typeFilter]);
-
+  // Update error from hook
   useEffect(() => {
-    loadUnits();
-  }, [loadUnits]);
+    setError(hookError);
+  }, [hookError]);
+
+  // Build tree structure when rawUnits or dependencies change
+  useEffect(() => {
+    if (rawUnits.length === 0) {
+      setUnits([]);
+      return;
+    }
+
+    if (flatView) {
+      // Flat view: Filter by type if needed
+      const filtered = typeFilter
+        ? rawUnits.filter((unit) => unit.type === typeFilter)
+        : rawUnits;
+      setUnits(filtered);
+    } else {
+      // Tree view: Build hierarchy
+      const buildTree = (
+        items: OrganizationalUnit[],
+        rootUnitIds: string[]
+      ): OrganizationalUnit[] => {
+        const itemMap = new Map<string, OrganizationalUnit>();
+
+        // Filter by type first if needed
+        const filteredItems = typeFilter
+          ? items.filter((item) => item.type === typeFilter)
+          : items;
+
+        // First pass: create map with empty children arrays
+        filteredItems.forEach((item) => {
+          itemMap.set(item.id, { ...item, children: [] });
+        });
+
+        // Second pass: build tree structure
+        const rootItems: OrganizationalUnit[] = [];
+        filteredItems.forEach((item) => {
+          const node = itemMap.get(item.id)!;
+          if (item.parent?.id && itemMap.has(item.parent.id)) {
+            // Has accessible parent - add as child
+            const parent = itemMap.get(item.parent.id)!;
+            parent.children = parent.children || [];
+            parent.children.push(node);
+          } else if (
+            rootUnitIds.length === 0 ||
+            rootUnitIds.includes(item.id)
+          ) {
+            // Either no parent (true root), parent inaccessible (designated root),
+            // or offline mode (no rootUnitIds available - show all without parents)
+            rootItems.push(node);
+          }
+          // Units with parents that aren't accessible and aren't in rootUnitIds are ignored
+        });
+
+        return rootItems;
+      };
+
+      // Use apiRootUnitIds from hook (empty array when offline)
+      setUnits(buildTree(rawUnits, apiRootUnitIds));
+    }
+  }, [rawUnits, apiRootUnitIds, flatView, typeFilter]);
 
   // Optimistic UI: Handle newly created unit from parent component
   // Uses key property to ensure each create triggers the effect
@@ -783,7 +793,7 @@ export function OrganizationalUnitTree({
         className={`${className} text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg`}
       >
         <Text>{error}</Text>
-        <Button plain onClick={loadUnits} className="mt-2">
+        <Button plain onClick={refresh} className="mt-2">
           <Trans>Retry</Trans>
         </Button>
       </div>

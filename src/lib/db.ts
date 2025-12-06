@@ -126,6 +126,38 @@ export interface SecretCacheEntry {
 }
 
 /**
+ * Organizational unit cache entry stored in IndexedDB
+ * Mirrors OrganizationalUnit from types/organizational.ts but adds offline-specific fields
+ */
+export interface OrganizationalUnitCacheEntry {
+  id: string;
+  type:
+    | "holding"
+    | "company"
+    | "region"
+    | "branch"
+    | "division"
+    | "department"
+    | "custom";
+  name: string;
+  custom_type_name?: string;
+  description?: string;
+  metadata?: Record<string, unknown> | null;
+  parent_id?: string | null;
+  parent?: {
+    id: string;
+    type: string;
+    name: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+  // Offline-specific fields
+  cachedAt: Date;
+  lastSynced: Date;
+  pendingSync?: boolean; // True if local changes haven't been synced
+}
+
+/**
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
@@ -135,6 +167,7 @@ export interface SecretCacheEntry {
  * - Analytics (offline event tracking)
  * - File queue (offline file upload queue)
  * - Secret cache (offline secret management)
+ * - Organizational unit cache (offline organizational structure)
  */
 export const db = new Dexie(DB_NAME) as Dexie & {
   guards: EntityTable<Guard, "id">;
@@ -143,6 +176,7 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   analytics: EntityTable<AnalyticsEvent, "id">;
   fileQueue: EntityTable<FileQueueEntry, "id">;
   secretCache: EntityTable<SecretCacheEntry, "id">;
+  organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
 // Schema version 1
@@ -179,4 +213,16 @@ db.version(4).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: "id, uploadState, createdAt, retryCount",
   secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
+});
+
+// Schema version 5 - Add organizationalUnitCache table
+db.version(5).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, entity, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: "id, uploadState, createdAt, retryCount",
+  secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
+  organizationalUnitCache:
+    "id, type, parent_id, updated_at, cachedAt, pendingSync",
 });
