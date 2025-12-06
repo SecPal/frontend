@@ -2,7 +2,12 @@
 # SPDX-FileCopyrightText: 2025 SecPal
 # SPDX-License-Identifier: CC0-1.0
 
-# Deploy Performance Optimizations to app.secpal.dev
+#!/usr/bin/env bash
+
+# Deploy performance optimization branch to app.secpal.dev for testing
+# This script should be run from the frontend directory
+
+set -euo pipefail
 # Branch: perf/aggressive-code-splitting
 
 set -e

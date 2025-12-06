@@ -3,7 +3,57 @@ SPDX-FileCopyrightText: 2025 SecPal Contributors
 SPDX-License-Identifier: CC0-1.0
 -->
 
-# Performance Optimization - Aggressive Code Splitting Results
+# ⚠️ ARCHIVED: Performance Optimization - Aggressive Code Splitting Results
+
+**IMPORTANT:** This document describes a function-based `manualChunks` implementation that was **REVERTED** due to Heroicons module resolution errors causing runtime failures.
+
+**For actual deployed results, see:**
+
+- `PERFORMANCE_DEPLOYMENT_STATUS.md` - Current implementation details
+- `PERFORMANCE_TBT_ANALYSIS.md` - Analysis and next steps
+
+---
+
+## Why This Approach Was Abandoned
+
+**Problem:** Function-based `manualChunks` with path matching (`id.includes()`) broke Heroicons named exports:
+
+```text
+Error: Cannot set properties of undefined (setting 'Activity')
+```
+
+**Root Cause:** Heroicons' complex export structure requires staying together with @headlessui/react in a single vendor chunk. Dynamic path-based splitting disrupted this relationship.
+
+**Solution:** Reverted to object-based `manualChunks` with explicit package names (proven stable configuration from PR #317).
+
+---
+
+## Actual Results (Object-Based Configuration)
+
+**Bundle Size:**
+
+- Before: 149KB gzipped
+- After: 94.28KB gzipped
+- **Improvement: -37%** ✅
+
+**Performance:**
+
+- TBT: 419ms → 384ms (-8%)
+- Performance Score: 94/100 ✅
+- LCP: 1216ms ✅
+- CLS: 0.00004 ✅
+
+**Status:** Bundle optimization successful, but TBT target (<200ms) not achieved. Further JavaScript execution optimizations needed (see Issue #319).
+
+---
+
+# Original Document (Function-Based Approach - REVERTED)
+
+_The content below describes the abandoned implementation and is kept for historical reference only._
+
+---
+
+# Performance Optimization - Aggressive Code Splitting Results (ARCHIVED)
 
 **Date:** 2025-12-06
 **Branch:** `perf/aggressive-code-splitting`
