@@ -14,36 +14,23 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Application Smoke Tests", () => {
   test.describe("Page Loading", () => {
-    test("should load the home page without JavaScript errors", async ({
-      page,
-    }) => {
-      // Collect console errors during navigation
-      // Ignore network errors (external resources not available in test env)
-      const consoleErrors: string[] = [];
+    test("should not have JavaScript errors on home page", async ({ page }) => {
+      const jsErrors: string[] = [];
+      // Set up console listener BEFORE navigation to catch all errors
       page.on("console", (msg) => {
         if (msg.type() === "error") {
-          const text = msg.text();
-          // Ignore network-related errors (external APIs, analytics, etc.)
-          if (
-            !text.includes("net::ERR_") &&
-            !text.includes("Failed to load resource")
-          ) {
-            consoleErrors.push(text);
-          }
+          jsErrors.push(msg.text());
         }
       });
 
-      // Navigate to home page
       await page.goto("/");
-
-      // Wait for the page to be fully loaded
       await page.waitForLoadState("networkidle");
 
       // Verify page loaded successfully
       await expect(page).toHaveTitle(/SecPal/);
 
-      // No JavaScript errors should occur (network errors excluded)
-      expect(consoleErrors).toHaveLength(0);
+      // No JavaScript errors should occur
+      expect(jsErrors).toHaveLength(0);
     });
 
     test("should display login page for unauthenticated users", async ({
@@ -155,12 +142,12 @@ test.describe("Application Smoke Tests", () => {
           });
           observer.observe({ type: "layout-shift", buffered: true });
 
-          // Wait a bit for shifts to occur
+          // Wait for layout shifts to occur (3s captures initial load)
           setTimeout(() => {
             observer.disconnect();
             (window as unknown as { __clsValue: number }).__clsValue = clsValue;
             resolve();
-          }, 2000);
+          }, 3000);
         });
       });
 

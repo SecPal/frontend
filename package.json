@@ -97,6 +97,7 @@
     "globals": "^16.5.0",
     "jsdom": "^27.2.0",
     "jsdom-testing-mocks": "^1.16.0",
+    "lighthouse": "^13.0.1",
     "playwright-lighthouse": "^4.0.0",
     "prettier": "^3.7.4",
     "tailwindcss": "^4.1.17",

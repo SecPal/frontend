@@ -58,6 +58,7 @@ test.describe("Organization Management", () => {
       authenticatedPage: page,
     }) => {
       const jsErrors: string[] = [];
+      // Set up console listener BEFORE navigation to catch all errors
       page.on("console", (msg) => {
         if (msg.type() === "error") {
           const text = msg.text();
@@ -75,11 +76,11 @@ test.describe("Organization Management", () => {
 
       for (const path of pages) {
         await page.goto(path);
-        await page.waitForLoadState("domcontentloaded");
+        await page.waitForLoadState("networkidle");
       }
 
-      // Wait a bit for any async errors
-      await page.waitForTimeout(500);
+      // Wait for any pending async operations
+      await page.waitForLoadState("networkidle");
 
       expect(jsErrors).toHaveLength(0);
     });
