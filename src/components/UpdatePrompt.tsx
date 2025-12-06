@@ -39,6 +39,18 @@ export function UpdatePrompt() {
     return null;
   }
 
+  const handleUpdate = async () => {
+    console.log("[UpdatePrompt] Update button clicked");
+    try {
+      await updateServiceWorker();
+      console.log("[UpdatePrompt] Update successful, page should reload");
+    } catch (error) {
+      console.error("[UpdatePrompt] Update failed:", error);
+      // Fallback: force reload if update fails
+      window.location.reload();
+    }
+  };
+
   return (
     <div
       className="bg-blue-600 px-4 py-2 text-white shadow-md dark:bg-blue-700"
@@ -51,7 +63,7 @@ export function UpdatePrompt() {
           <Trans>A new version of SecPal is available.</Trans>
         </p>
         <Button
-          onClick={updateServiceWorker}
+          onClick={handleUpdate}
           color="white"
           className="py-1!"
           aria-label={_(msg`Update application now`)}

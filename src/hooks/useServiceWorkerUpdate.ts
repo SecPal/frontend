@@ -104,11 +104,16 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
    * Update service worker and reload the page
    */
   const updateServiceWorker = useCallback(async () => {
+    console.log("[SW Hook] updateServiceWorker called");
     try {
+      console.log("[SW Hook] Calling swUpdate(true)...");
       await swUpdate(true); // true = reload page after update
-      console.log("[SW] Service Worker updated and reloading...");
+      console.log("[SW Hook] swUpdate completed, reloading...");
     } catch (error) {
-      console.error("[SW] Update failed:", error);
+      console.error("[SW Hook] Update failed:", error);
+      // Force reload as fallback
+      console.log("[SW Hook] Forcing page reload as fallback");
+      window.location.reload();
     }
   }, [swUpdate]);
 
