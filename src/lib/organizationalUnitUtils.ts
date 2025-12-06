@@ -115,13 +115,15 @@ export function getUnitTypeOptions(): Array<{
 
 /**
  * Get valid child type options for a given parent type
- * Filters types based on hierarchy rules: child rank must be >= parent rank
+ * Filters types based on hierarchy rules: child rank must be > parent rank
+ * (i.e., child must be lower in hierarchy than parent)
  *
  * @param parentType - The parent's organizational unit type
  * @returns Array of valid child type options with value and translated label
  *
  * @example
- * // For a branch parent (rank 4), returns: branch, division, department, custom
+ * // For a branch parent (rank 4), returns: division, department, custom
+ * // (not branch itself, as same-level nesting is invalid)
  * getValidChildTypeOptions('branch')
  */
 export function getValidChildTypeOptions(
@@ -135,6 +137,6 @@ export function getValidChildTypeOptions(
 
   return allOptions.filter((option) => {
     const childRank = TYPE_HIERARCHY[option.value];
-    return childRank >= parentRank;
+    return childRank > parentRank;
   });
 }

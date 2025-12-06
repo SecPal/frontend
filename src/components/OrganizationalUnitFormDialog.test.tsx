@@ -399,15 +399,16 @@ describe("OrganizationalUnitFormDialog", () => {
 
       const options = screen.getAllByRole("option");
 
-      // Branch has rank 4, so only types with rank >= 4 should be available
-      // Expected: branch (4), division (5), department (6), custom (7)
-      expect(options.length).toBe(4);
+      // Branch has rank 4, so only types with rank > 4 should be available
+      // Expected: division (5), department (6), custom (7)
+      // NOT branch itself (same-level nesting is invalid)
+      expect(options.length).toBe(3);
 
       const optionValues = options.map((opt) => opt.getAttribute("value"));
       expect(optionValues).not.toContain("holding");
       expect(optionValues).not.toContain("company");
       expect(optionValues).not.toContain("region");
-      expect(optionValues).toContain("branch");
+      expect(optionValues).not.toContain("branch"); // Changed: no same-level nesting
       expect(optionValues).toContain("division");
       expect(optionValues).toContain("department");
       expect(optionValues).toContain("custom");
@@ -428,13 +429,14 @@ describe("OrganizationalUnitFormDialog", () => {
 
       const options = screen.getAllByRole("option");
 
-      // Company has rank 2, so only types with rank >= 2 should be available
-      // Expected: company (2), region (3), branch (4), division (5), department (6), custom (7)
-      expect(options.length).toBe(6);
+      // Company has rank 2, so only types with rank > 2 should be available
+      // Expected: region (3), branch (4), division (5), department (6), custom (7)
+      // NOT company itself (same-level nesting is invalid)
+      expect(options.length).toBe(5);
 
       const optionValues = options.map((opt) => opt.getAttribute("value"));
       expect(optionValues).not.toContain("holding");
-      expect(optionValues).toContain("company");
+      expect(optionValues).not.toContain("company"); // Changed: no same-level nesting
       expect(optionValues).toContain("region");
       expect(optionValues).toContain("branch");
       expect(optionValues).toContain("division");
