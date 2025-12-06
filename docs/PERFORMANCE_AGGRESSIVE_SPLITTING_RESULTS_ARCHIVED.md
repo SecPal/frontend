@@ -47,13 +47,11 @@ Error: Cannot set properties of undefined (setting 'Activity')
 
 ---
 
-# Original Document (Function-Based Approach - REVERTED)
+## Original Document (Function-Based Approach - REVERTED)
 
 _The content below describes the abandoned implementation and is kept for historical reference only._
 
 ---
-
-# Performance Optimization - Aggressive Code Splitting Results (ARCHIVED)
 
 **Date:** 2025-12-06
 **Branch:** `perf/aggressive-code-splitting`
