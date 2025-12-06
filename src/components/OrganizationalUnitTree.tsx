@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
 import { Badge } from "./badge";
@@ -13,8 +13,6 @@ import {
 } from "./dropdown";
 import { Heading, Subheading } from "./heading";
 import { Text } from "./text";
-import { DeleteOrganizationalUnitDialog } from "./DeleteOrganizationalUnitDialog";
-import { MoveOrganizationalUnitDialog } from "./MoveOrganizationalUnitDialog";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -24,6 +22,18 @@ import {
   getTypeLabel,
   getTypeBadgeColor,
 } from "../lib/organizationalUnitUtils";
+
+// Lazy load heavy dialogs for better initial performance
+const DeleteOrganizationalUnitDialog = lazy(() =>
+  import("./DeleteOrganizationalUnitDialog").then((m) => ({
+    default: m.DeleteOrganizationalUnitDialog,
+  }))
+);
+const MoveOrganizationalUnitDialog = lazy(() =>
+  import("./MoveOrganizationalUnitDialog").then((m) => ({
+    default: m.MoveOrganizationalUnitDialog,
+  }))
+);
 
 /**
  * Icon components for tree visualization
@@ -819,21 +829,29 @@ export function OrganizationalUnitTree({
         ))}
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteOrganizationalUnitDialog
-        open={deleteDialogOpen}
-        unit={unitToDelete}
-        onClose={handleDeleteDialogClose}
-        onSuccess={handleDeleteSuccess}
-      />
+      {/* Delete Confirmation Dialog - Lazy loaded */}
+      {deleteDialogOpen && (
+        <Suspense fallback={<div />}>
+          <DeleteOrganizationalUnitDialog
+            open={deleteDialogOpen}
+            unit={unitToDelete}
+            onClose={handleDeleteDialogClose}
+            onSuccess={handleDeleteSuccess}
+          />
+        </Suspense>
+      )}
 
-      {/* Move/Reparent Dialog */}
-      <MoveOrganizationalUnitDialog
-        open={moveDialogOpen}
-        unit={unitToMove}
-        onClose={handleMoveDialogClose}
-        onSuccess={handleMoveSuccess}
-      />
+      {/* Move/Reparent Dialog - Lazy loaded */}
+      {moveDialogOpen && (
+        <Suspense fallback={<div />}>
+          <MoveOrganizationalUnitDialog
+            open={moveDialogOpen}
+            unit={unitToMove}
+            onClose={handleMoveDialogClose}
+            onSuccess={handleMoveSuccess}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
