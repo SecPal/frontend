@@ -1,11 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 SecPal */
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-/* Load fonts asynchronously with font-display: swap to prevent FOIT */
-@import url("@fontsource/inter/400.css") layer(fonts);
-@import url("@fontsource/inter/500.css") layer(fonts);
-@import url("@fontsource/inter/600.css") layer(fonts);
-@import url("@fontsource/inter/700.css") layer(fonts);
+/* Fonts loaded via Google Fonts CDN in index.html for optimal performance */
 
 @import "tailwindcss";
 
