@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
+import { SpinnerContainer } from "./spinner";
 import { Badge } from "./badge";
 import { Heading, Subheading } from "./heading";
 import { Text } from "./text";
@@ -594,15 +595,7 @@ export function ObjectManager({
   }, []);
 
   if (isLoading) {
-    return (
-      <div className={`${className} animate-pulse`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-        </div>
-      </div>
-    );
+    return <SpinnerContainer className={`${className} py-12`} />;
   }
 
   if (error) {
