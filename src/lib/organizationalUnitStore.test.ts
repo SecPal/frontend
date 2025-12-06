@@ -148,9 +148,9 @@ describe("OrganizationalUnitStore", () => {
       const retrieved = await listOrganizationalUnits();
       expect(retrieved).toHaveLength(3);
       // Should be sorted by name alphabetically
-      expect(retrieved[0].name).toBe("Alpha Company");
-      expect(retrieved[1].name).toBe("Beta Region");
-      expect(retrieved[2].name).toBe("Zebra Branch");
+      expect(retrieved[0]!.name).toBe("Alpha Company");
+      expect(retrieved[1]!.name).toBe("Beta Region");
+      expect(retrieved[2]!.name).toBe("Zebra Branch");
     });
 
     it("should return empty array when no units cached", async () => {
@@ -223,12 +223,12 @@ describe("OrganizationalUnitStore", () => {
 
       const branches = await getOrganizationalUnitsByType("branch");
       expect(branches).toHaveLength(2);
-      expect(branches[0].name).toBe("Berlin Branch");
-      expect(branches[1].name).toBe("Hamburg Branch");
+      expect(branches[0]!.name).toBe("Berlin Branch");
+      expect(branches[1]!.name).toBe("Hamburg Branch");
 
       const companies = await getOrganizationalUnitsByType("company");
       expect(companies).toHaveLength(1);
-      expect(companies[0].name).toBe("SecPal GmbH");
+      expect(companies[0]!.name).toBe("SecPal GmbH");
     });
 
     it("should return empty array when no units match type", async () => {
@@ -278,8 +278,8 @@ describe("OrganizationalUnitStore", () => {
 
       const children = await getOrganizationalUnitsByParent("company-1");
       expect(children).toHaveLength(2);
-      expect(children[0].name).toBe("Berlin Branch");
-      expect(children[1].name).toBe("Hamburg Branch");
+      expect(children[0]!.name).toBe("Berlin Branch");
+      expect(children[1]!.name).toBe("Hamburg Branch");
     });
 
     it("should return root units when parentId is null", async () => {
@@ -312,7 +312,7 @@ describe("OrganizationalUnitStore", () => {
 
       const rootUnits = await getOrganizationalUnitsByParent(null);
       expect(rootUnits).toHaveLength(1);
-      expect(rootUnits[0].name).toBe("Root Holding");
+      expect(rootUnits[0]!.name).toBe("Root Holding");
     });
   });
 
@@ -354,8 +354,8 @@ describe("OrganizationalUnitStore", () => {
 
       const results = await searchOrganizationalUnits("berlin");
       expect(results).toHaveLength(2);
-      expect(results[0].name).toBe("Berlin Branch");
-      expect(results[1].name).toBe("Berlin Company");
+      expect(results[0]!.name).toBe("Berlin Branch");
+      expect(results[1]!.name).toBe("Berlin Company");
 
       const upperResults = await searchOrganizationalUnits("BRANCH");
       expect(upperResults).toHaveLength(2);
@@ -441,8 +441,8 @@ describe("OrganizationalUnitStore", () => {
 
       const pending = await getPendingSyncUnits();
       expect(pending).toHaveLength(2);
-      expect(pending[0].name).toBe("Berlin Branch");
-      expect(pending[1].name).toBe("Hamburg Branch");
+      expect(pending[0]!.name).toBe("Berlin Branch");
+      expect(pending[1]!.name).toBe("Hamburg Branch");
     });
 
     it("should return empty array when no pending units", async () => {

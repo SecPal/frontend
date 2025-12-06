@@ -49,7 +49,7 @@ SPDX-License-Identifier: CC0-1.0
 
 Follows the exact proven pattern from `/secrets`:
 
-```
+```text
 OrganizationPage
     ↓ uses
 OrganizationalUnitTree

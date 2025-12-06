@@ -151,7 +151,7 @@ describe("useOrganizationalUnitsWithOffline", () => {
       });
 
       expect(result.current.units).toHaveLength(1);
-      expect(result.current.units[0].name).toBe("Berlin Branch (cached)");
+      expect(result.current.units[0]!.name).toBe("Berlin Branch (cached)");
       expect(result.current.isStale).toBe(true);
       expect(result.current.isOffline).toBe(false);
       expect(result.current.error).toBeNull(); // No error - we have cache
@@ -195,7 +195,7 @@ describe("useOrganizationalUnitsWithOffline", () => {
       });
 
       expect(result.current.units).toHaveLength(1);
-      expect(result.current.units[0].name).toBe("Berlin Branch (cached)");
+      expect(result.current.units[0]!.name).toBe("Berlin Branch (cached)");
       expect(result.current.isStale).toBe(true);
       expect(result.current.isOffline).toBe(true);
       expect(result.current.error).toBeNull();
