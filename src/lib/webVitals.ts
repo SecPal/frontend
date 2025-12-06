@@ -34,9 +34,18 @@ export const PERFORMANCE_THRESHOLDS = {
 const collectedMetrics: Metric[] = [];
 
 /**
+ * Get display unit for metric value
+ */
+function getMetricUnit(metricName: string): string {
+  return ["LCP", "INP", "FCP", "TTFB"].includes(metricName) ? "ms" : "";
+}
+
+/**
  * Get current severity level for a metric based on rating
  */
-function getSeverity(rating: string): "good" | "needs-improvement" | "poor" {
+function getSeverity(
+  rating: Metric["rating"]
+): "good" | "needs-improvement" | "poor" {
   if (rating === "good") return "good";
   if (rating === "needs-improvement") return "needs-improvement";
   return "poor";
@@ -51,23 +60,23 @@ function checkThreshold(metric: Metric): void {
   // Only log warnings in development mode
   if (import.meta.env.DEV && rating !== "good") {
     const severity = getSeverity(rating);
-    const unit = ["LCP", "INP", "FCP", "TTFB"].includes(metric.name)
-      ? "ms"
-      : "";
+    const unit = getMetricUnit(metric.name);
 
     const message =
       severity === "poor"
         ? `⚠️ Performance Warning: ${metric.name} (${metric.value}${unit}) exceeds threshold`
         : `⚠️ Performance Warning: ${metric.name} (${metric.value}${unit}) needs improvement`;
 
+    const threshold =
+      PERFORMANCE_THRESHOLDS[
+        metric.name as keyof typeof PERFORMANCE_THRESHOLDS
+      ];
+
     console.warn(message, {
       metric: metric.name,
       value: metric.value,
       rating: metric.rating,
-      threshold:
-        PERFORMANCE_THRESHOLDS[
-          metric.name as keyof typeof PERFORMANCE_THRESHOLDS
-        ],
+      threshold,
     });
   }
 }
