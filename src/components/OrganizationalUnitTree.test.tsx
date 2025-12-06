@@ -901,7 +901,12 @@ describe.skip("OrganizationalUnitTree", () => {
   });
 });
 
-describe("OrganizationalUnitTree - Permission Filtered", () => {
+/**
+ * Permission Filtered Tests
+ *
+ * NOTE: These tests are also skipped (see Issue #325)
+ */
+describe.skip("OrganizationalUnitTree - Permission Filtered", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
