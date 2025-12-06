@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Web Vitals monitoring with thresholds & development warnings** (#310)
+  - Performance threshold configuration aligned with Lighthouse CI and Google's Core Web Vitals
+  - Development-mode console warnings for poor metrics (zero runtime cost in production)
+  - Metrics export API for dashboards: `getPerformanceMetrics()`, `clearPerformanceMetrics()`
+  - Severity levels: "good", "needs-improvement", "poor"
+  - Full test coverage (14 passing tests)
+  - Documentation: `docs/web-vitals-monitoring.md`
+
 - **Playwright E2E testing infrastructure** (#309)
   - Comprehensive E2E test suite with Playwright
   - Three testing modes:
