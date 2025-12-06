@@ -71,7 +71,7 @@ cd /home/user/code/SecPal/frontend
 ssh secpal@triangulum.uberspace.de
 
 # 2. Navigate to frontend directory
-cd /var/www/virtual/$USER/secpal-frontend
+cd /var/www/virtual/secpal/frontend
 
 # 3. Checkout and update branch
 git fetch origin
@@ -228,17 +228,17 @@ npm run build:analyze
 
 ### User Experience
 
-- ✅ Seite lädt schnell (gefühlt < 2 Sekunden)
-- ✅ Keine sichtbaren Layout-Shifts
-- ✅ Interaktionen reagieren sofort
-- ✅ Keine JavaScript-Fehler in Console
+- ✅ Page loads fast (perceived < 2 seconds)
+- ✅ No visible layout shifts
+- ✅ Interactions respond immediately
+- ✅ No JavaScript errors in console
 
 ### Deployment
 
-- ✅ Build erfolgreich
-- ✅ Alle Tests grün
-- ✅ Keine TypeScript-Fehler
-- ✅ Keine ESLint-Warnings
+- ✅ Build successful
+- ✅ All tests passing
+- ✅ No TypeScript errors
+- ✅ No ESLint warnings
 
 ---
 
