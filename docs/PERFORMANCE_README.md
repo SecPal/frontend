@@ -134,15 +134,15 @@ npm run lighthouse:ci
 
 ### Later (Next Week)
 
-4. LazyImage Audit
-5. Service Worker Optimierung
-6. Third-Party Scripts Review
+1. LazyImage Audit
+2. Service Worker Optimierung
+3. Third-Party Scripts Review
 
 ### Optional (Backlog)
 
-7. RUM (Real User Monitoring) Setup
-8. Performance Dashboard
-9. Automated Performance Budgets
+1. RUM (Real User Monitoring) Setup
+2. Performance Dashboard
+3. Automated Performance Budgets
 
 ---
 

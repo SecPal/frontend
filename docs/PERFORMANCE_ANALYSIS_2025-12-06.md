@@ -6,7 +6,7 @@ SPDX-License-Identifier: CC0-1.0
 # Performance Analysis - app.secpal.dev
 
 **Date:** 2025-12-06
-**Test Target:** https://app.secpal.dev
+**Test Target:** <https://app.secpal.dev>
 **Tool:** Playwright + Lighthouse CI
 
 ---
@@ -65,7 +65,7 @@ SPDX-License-Identifier: CC0-1.0
 
 #### Actions
 
-**A. Route-Based Code Splitting**
+##### A. Route-Based Code Splitting
 
 ```typescript
 // src/App.tsx - BEFORE
@@ -79,7 +79,7 @@ const SecretDetail = lazy(() => import("./pages/Secrets/SecretDetail"));
 const Organization = lazy(() => import("./pages/Organization"));
 ```
 
-**B. Font Loading Optimization**
+##### B. Font Loading Optimization
 
 ```typescript
 // src/main.tsx - BEFORE (synchronous)
@@ -101,7 +101,7 @@ import "@fontsource/inter/700.css";
 }
 ```
 
-**C. Large Dependencies Lazy Loading**
+##### C. Large Dependencies Lazy Loading
 
 ```typescript
 // Example: Markdown Renderer, PDF Viewer, etc.
@@ -241,14 +241,14 @@ registerRoute(
 
 ### Next Week
 
-4. Font Loading optimization
-5. Tree Shaking improvements
-6. LazyImage Audit
+1. Font Loading optimization
+2. Tree Shaking improvements
+3. LazyImage Audit
 
 ### Later
 
-7. Service Worker Optimization
-8. RUM Setup
+1. Service Worker Optimization
+2. RUM Setup
 
 ---
 
@@ -307,7 +307,7 @@ npm install --save-dev rollup-plugin-analyzer
 | ---------- | ----- | ------ | ----- | ------------------------------- |
 | 2025-12-06 | 419ms | 1244ms | 90%   | Baseline - before optimizations |
 
-_(Update this table after each optimization)_
+**Note:** Update this table after each optimization
 
 ---
 

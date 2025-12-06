@@ -95,7 +95,7 @@ npm run build
 
 ### 1. Manual Browser Tests
 
-```
+```plaintext
 1. Open https://app.secpal.dev
 2. DevTools → Network → Disable Cache
 3. Hard Reload (Cmd+Shift+R / Ctrl+Shift+F5)
@@ -107,7 +107,7 @@ npm run build
 
 ### 2. Lighthouse Audit
 
-```
+```plaintext
 1. Chrome DevTools → Lighthouse Tab
 2. Mode: "Navigation"
 3. Device: "Desktop"
@@ -119,7 +119,9 @@ npm run build
    - Performance Score > 90%? ✅
 ```
 
-### 3. Automated Tests (local against .dev)```bash
+### 3. Automated Tests (local against .dev)
+
+```bash
 
 cd /home/user/code/SecPal/frontend
 
@@ -139,8 +141,7 @@ npm run lighthouse:ci
 
 ### Before (Baseline from 2025-12-06)
 
-```
-
+```plaintext
 TBT: 419ms
 LCP: 1244ms
 CLS: 0.00004
@@ -151,15 +152,14 @@ Initial Bundle: 469KB (149KB gzipped)
 
 ### After (to be measured on .dev)
 
-```
-
-TBT: **_ ms (Target: <200ms)
+```plaintext
+TBT: ___ ms (Target: <200ms)
 LCP: _** ms (Target: <2500ms)
 CLS: **\_** (Target: <0.1)
 Performance Score: **_% (Target: >90%)
 Initial Bundle: _** KB (\_\_\_ KB gzipped)
 
-````
+```
 
 ### Bundle Analysis
 

@@ -130,7 +130,7 @@ manualChunks(id) {
 
 ### New Chunk Structure
 
-```
+```plaintext
 dist/assets/
 ├── index-DSTfYJvQ.js              57KB (14.72KB gzipped)  ← Main app code
 ├── vendor-react-7ClMPAzN.js      350KB (109.61KB gzipped) ← React ecosystem
@@ -192,14 +192,14 @@ Based on the 88% reduction in main bundle size:
 
 **Before:**
 
-```
+```plaintext
 [======== index.js 469KB ========] ← Sequential, blocking
          (863ms parse time)
 ```
 
 **After:**
 
-```
+```plaintext
 [index 57KB]
 [vendor-react 350KB] ← Parallel, cached
 [vendor-db 96KB]     ← Parallel, cached
@@ -238,13 +238,13 @@ npm run build:analyze
 # Opens dist/stats.html with visual bundle breakdown
 ```
 
-2. **Network Tab:**
+1. **Network Tab:**
 
-- Open https://app.secpal.dev
+- Open <https://app.secpal.dev>
 - DevTools → Network → Disable Cache
 - Verify multiple smaller chunks load instead of one large bundle
 
-3. **Performance Tab:**
+1. **Performance Tab:**
 
 - DevTools → Performance → Record page load
 - Check "Evaluate Script" times are significantly lower
@@ -290,24 +290,24 @@ npm run test:e2e:staging -- performance.spec.ts --project=chromium
 
 #### Medium Priority
 
-4. **Tree Shaking Audit**
+1. **Tree Shaking Audit**
    - Check for unused exports in services/
    - Verify all component imports are tree-shakable
    - Remove dead code
 
-5. **Third-Party Scripts**
+2. **Third-Party Scripts**
    - Defer non-critical scripts
    - Consider self-hosting external dependencies
    - Minimize analytics payload
 
 #### Low Priority
 
-6. **CSS Optimization**
+1. **CSS Optimization**
    - Split critical CSS inline
    - Defer non-critical CSS
    - Remove unused Tailwind classes (PurgeCSS already active)
 
-7. **Preloading Strategy**
+2. **Preloading Strategy**
    - `<link rel="preload">` for critical chunks
    - `<link rel="prefetch">` for likely next routes
    - HTTP/2 push for initial bundles
