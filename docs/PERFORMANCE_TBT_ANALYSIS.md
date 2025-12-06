@@ -5,8 +5,8 @@ SPDX-License-Identifier: CC0-1.0
 
 # Total Blocking Time (TBT) Analysis & Optimization Strategy
 
-**Date:** 2025-12-06  
-**Context:** PR #318 Performance Optimization  
+**Date:** 2025-12-06
+**Context:** PR #318 Performance Optimization
 **Current TBT:** 384ms (Target: <200ms, Gap: +184ms)
 
 ---
@@ -16,13 +16,14 @@ SPDX-License-Identifier: CC0-1.0
 Bundle size reduction (-37%) yielded only minimal TBT improvement (-8%). Root cause: **TBT is dominated by JavaScript parse/execution time**, not transfer size.
 
 ### Key Metrics
-| Metric | Before (PR #317) | After (PR #318) | Change | Target | Status |
-|--------|------------------|-----------------|--------|--------|--------|
-| Bundle Size (gzipped) | 149KB | 94KB | -37% | - | ✅ |
-| TBT | 419ms | 384ms | -8% (-35ms) | <200ms | ❌ |
-| Performance Score | ~90 | 94/100 | +4% | >90 | ✅ |
-| LCP | ~1200ms | 1216ms | 0% | <2500ms | ✅ |
-| CLS | ~0.00004 | 0.00004 | 0% | <0.1 | ✅ |
+
+| Metric                | Before (PR #317) | After (PR #318) | Change      | Target  | Status |
+| --------------------- | ---------------- | --------------- | ----------- | ------- | ------ |
+| Bundle Size (gzipped) | 149KB            | 94KB            | -37%        | -       | ✅     |
+| TBT                   | 419ms            | 384ms           | -8% (-35ms) | <200ms  | ❌     |
+| Performance Score     | ~90              | 94/100          | +4%         | >90     | ✅     |
+| LCP                   | ~1200ms          | 1216ms          | 0%          | <2500ms | ✅     |
+| CLS                   | ~0.00004         | 0.00004         | 0%          | <0.1    | ✅     |
 
 **Conclusion:** Bundle splitting alone is insufficient. Need JavaScript execution optimizations.
 
@@ -31,14 +32,17 @@ Bundle size reduction (-37%) yielded only minimal TBT improvement (-8%). Root ca
 ## Root Cause Analysis
 
 ### What is TBT?
+
 Total Blocking Time measures the total amount of time between First Contentful Paint (FCP) and Time to Interactive (TTI) where the main thread was blocked for long enough to prevent input responsiveness.
 
 ### Why Bundle Size ≠ TBT Improvement?
+
 1. **Parse Time:** Modern browsers parse JavaScript very fast (~1-2ms per 100KB)
 2. **Execution Time:** The bottleneck is **running** the code (React mounting, component initialization, etc.)
 3. **Main Thread Blocking:** Large component trees, heavy computations, synchronous operations
 
 ### Current Bundle Composition
+
 ```
 Main Bundle (94KB gzipped):
 - React components (eager loaded)
@@ -49,7 +53,7 @@ Main Bundle (94KB gzipped):
 
 Vendor Chunks (loaded in parallel):
 - vendor-ui: 128KB (41KB gzipped) - Headless UI + Heroicons
-- vendor-db: 97KB (32KB gzipped) - Dexie + IDB  
+- vendor-db: 97KB (32KB gzipped) - Dexie + IDB
 - vendor-animation: 56KB (20KB gzipped) - Motion.js
 - vendor-react: 45KB (16KB gzipped) - React + ReactDOM
 ```
@@ -63,12 +67,13 @@ Vendor Chunks (loaded in parallel):
 **Goal:** Reduce initial parse/execute workload by deferring non-critical features
 
 **Implementation:**
+
 ```typescript
 // Defer heavy components until after initial render
-const HeavyComponent = lazy(() => import('./HeavyComponent'));
+const HeavyComponent = lazy(() => import("./HeavyComponent"));
 
 // Use requestIdleCallback for non-critical initialization
-if ('requestIdleCallback' in window) {
+if ("requestIdleCallback" in window) {
   requestIdleCallback(() => {
     // Initialize analytics, monitoring, etc.
   });
@@ -76,6 +81,7 @@ if ('requestIdleCallback' in window) {
 ```
 
 **Candidates for Deferral:**
+
 - ✅ Route components (already lazy loaded)
 - ⏳ Dialog components (lazy load on-demand)
 - ⏳ Animation library (Motion.js) - only load when needed
@@ -89,10 +95,11 @@ if ('requestIdleCallback' in window) {
 **Problem:** Both locale files (de + en = ~30KB) are loaded upfront, but only one is used
 
 **Solution:** Dynamic import based on user's language preference
+
 ```typescript
 // Current (eager): Both locales bundled
-import deMessages from './locales/de/messages.mjs';
-import enMessages from './locales/en/messages.mjs';
+import deMessages from "./locales/de/messages.mjs";
+import enMessages from "./locales/en/messages.mjs";
 
 // Optimized (lazy): Only load selected locale
 const messages = await import(`./locales/${locale}/messages.mjs`);
@@ -100,7 +107,7 @@ const messages = await import(`./locales/${locale}/messages.mjs`);
 
 **Expected Impact:** -15-20ms TBT, -15KB initial download
 
-**Status:** Attempted but caused build hang with function-based `manualChunks`. 
+**Status:** Attempted but caused build hang with function-based `manualChunks`.
 Need alternative approach using Vite's `dynamicImportVarsOptions`.
 
 ### 3. ⚡ MEDIUM IMPACT: Code Splitting for Heavy Dialogs
@@ -108,12 +115,14 @@ Need alternative approach using Vite's `dynamicImportVarsOptions`.
 **Problem:** All dialogs eagerly loaded even if never opened
 
 **Candidates:**
+
 - `ShareDialog` (4KB)
 - `DeleteOrganizationalUnitDialog` (4.3KB)
 - `MoveOrganizationalUnitDialog` (11.5KB)
 - `OrganizationalUnitFormDialog` (5.4KB)
 
 **Implementation:**
+
 ```typescript
 // Instead of: import { ShareDialog } from './components/ShareDialog';
 const ShareDialog = lazy(() => import('./components/ShareDialog'));
@@ -129,11 +138,13 @@ const ShareDialog = lazy(() => import('./components/ShareDialog'));
 ### 4. 🔍 LOW IMPACT: Tree Shaking & Dead Code Elimination
 
 **Analysis Needed:**
+
 - Unused exports from vendor libraries
 - Unused Heroicons (currently imports entire library)
 - Unused Lingui features
 
 **Tools:**
+
 - `npx vite-bundle-visualizer` - identify large modules
 - Webpack Bundle Analyzer alternative for Vite
 - Chrome DevTools Coverage tab
@@ -147,6 +158,7 @@ const ShareDialog = lazy(() => import('./components/ShareDialog'));
 **Problem:** Font loading can block rendering
 
 **Solutions:**
+
 - Subset fonts to only include used glyphs
 - Use `font-display: swap` (already implemented via Fontsource)
 - Preload critical fonts
@@ -159,18 +171,21 @@ const ShareDialog = lazy(() => import('./components/ShareDialog'));
 ## Immediate Next Steps (For PR #318)
 
 ### Option A: Ship Current Improvements ✅
+
 - Bundle size: -37% improvement ✅
 - Performance Score: 94/100 ✅
 - TBT: 384ms (improved from 419ms, but still over target)
 - Document findings and plan follow-up PR for remaining optimizations
 
 ### Option B: Implement Quick Wins Before Merge ⏳
+
 1. Defer Service Worker registration (+2-3s delay)
 2. Defer Web Vitals initialization (requestIdleCallback)
 3. Lazy load ShareDialog and Move/DeleteOUDialog
 4. Expected total impact: -50-80ms TBT → ~300-330ms (still over target)
 
 ### Option C: Deep Dive (Separate Epic) 🎯
+
 - React Profiler analysis to identify slow components
 - Implement React Concurrent Features (Suspense, Transitions)
 - Virtual scrolling for long lists
@@ -182,16 +197,19 @@ const ShareDialog = lazy(() => import('./components/ShareDialog'));
 ## Measurement & Validation
 
 **Test Command:**
+
 ```bash
 npm run test:e2e:staging -- tests/e2e/performance.spec.ts
 ```
 
 **Lighthouse CI:**
+
 ```bash
 npm run lighthouse:ci
 ```
 
 **Manual Testing:**
+
 1. Chrome DevTools → Performance Tab
 2. Record page load
 3. Identify long tasks (>50ms)
@@ -211,6 +229,7 @@ npm run lighthouse:ci
 ## Conclusion
 
 Bundle size optimization was successful (-37%) but insufficient for TBT target. The remaining 184ms gap requires:
+
 1. Deferred initialization of non-critical features
 2. Lazy loading of heavy components
 3. Potential React rendering optimizations
