@@ -23,12 +23,12 @@ msgid "-- Choose a Secret --"
 msgstr "-- Choose a Secret --"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:210
+#: src/pages/Organization/OrganizationPage.tsx:216
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" created successfully"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:211
+#: src/pages/Organization/OrganizationPage.tsx:217
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" updated successfully"
 
@@ -101,7 +101,7 @@ msgid "Actions"
 msgstr "Actions"
 
 #. placeholder {0}: unit.name
-#: src/components/OrganizationalUnitTree.tsx:289
+#: src/components/OrganizationalUnitTree.tsx:292
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
@@ -119,11 +119,11 @@ msgstr "Add a new secret to your vault."
 msgid "Add Area"
 msgstr "Add Area"
 
-#: src/components/OrganizationalUnitTree.tsx:324
+#: src/components/OrganizationalUnitTree.tsx:327
 msgid "Add child"
 msgstr "Add child"
 
-#: src/pages/Organization/OrganizationPage.tsx:332
+#: src/pages/Organization/OrganizationPage.tsx:338
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
 
@@ -137,9 +137,9 @@ msgstr "Add Customer"
 msgid "Add Object"
 msgstr "Add Object"
 
-#: src/components/OrganizationalUnitTree.tsx:807
-msgid "Add Unit"
-msgstr "Add Unit"
+#: src/components/OrganizationalUnitTree.tsx:825
+msgid "Add Root Unit"
+msgstr "Add Root Unit"
 
 #: src/pages/Organization/CustomersPage.tsx:119
 msgid "Address"
@@ -165,7 +165,7 @@ msgstr "All synced"
 msgid "All Tags"
 msgstr "All Tags"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:194
+#: src/components/OrganizationalUnitFormDialog.tsx:202
 msgid "An unexpected error occurred"
 msgstr "An unexpected error occurred"
 
@@ -227,8 +227,8 @@ msgstr "Back to Home"
 msgid "Back to Secrets"
 msgstr "Back to Secrets"
 
-#: src/lib/organizationalUnitUtils.ts:63
-#: src/lib/organizationalUnitUtils.ts:91
+#: src/lib/organizationalUnitUtils.ts:81
+#: src/lib/organizationalUnitUtils.ts:109
 msgid "Branch"
 msgstr "Branch"
 
@@ -238,8 +238,8 @@ msgstr "by"
 
 #: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/DeleteOrganizationalUnitDialog.tsx:183
-#: src/components/MoveOrganizationalUnitDialog.tsx:481
-#: src/components/OrganizationalUnitFormDialog.tsx:335
+#: src/components/MoveOrganizationalUnitDialog.tsx:491
+#: src/components/OrganizationalUnitFormDialog.tsx:346
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
@@ -258,7 +258,7 @@ msgstr "Checking system..."
 msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 msgstr "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:438
+#: src/components/MoveOrganizationalUnitDialog.tsx:448
 msgid "Choose a new parent unit or make this a root unit."
 msgstr "Choose a new parent unit or make this a root unit."
 
@@ -284,21 +284,21 @@ msgstr "Cleared {count} completed upload(s)"
 
 #: src/components/AttachmentPreview.tsx:134
 #: src/components/AttachmentPreview.tsx:211
-#: src/components/MoveOrganizationalUnitDialog.tsx:385
+#: src/components/MoveOrganizationalUnitDialog.tsx:395
 msgid "Close"
 msgstr "Close"
 
-#: src/pages/Organization/OrganizationPage.tsx:280
+#: src/pages/Organization/OrganizationPage.tsx:286
 msgid "Close detail panel"
 msgstr "Close detail panel"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:260
+#: src/components/OrganizationalUnitTree.tsx:263
 msgid "Collapse"
 msgstr "Collapse"
 
-#: src/lib/organizationalUnitUtils.ts:59
-#: src/lib/organizationalUnitUtils.ts:89
+#: src/lib/organizationalUnitUtils.ts:77
+#: src/lib/organizationalUnitUtils.ts:107
 msgid "Company"
 msgstr "Company"
 
@@ -310,16 +310,16 @@ msgstr "Contact Email"
 msgid "Contact Phone"
 msgstr "Contact Phone"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:341
+#: src/components/OrganizationalUnitFormDialog.tsx:352
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Create"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:224
+#: src/components/OrganizationalUnitFormDialog.tsx:232
 msgid "Create a new organizational unit under \"{parentName}\"."
 msgstr "Create a new organizational unit under \"{parentName}\"."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:226
+#: src/components/OrganizationalUnitFormDialog.tsx:234
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
@@ -328,8 +328,8 @@ msgstr "Create a new root organizational unit."
 msgid "Create Guard Book"
 msgstr "Create Guard Book"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:216
-#: src/components/OrganizationalUnitTree.tsx:794
+#: src/components/OrganizationalUnitFormDialog.tsx:224
+#: src/components/OrganizationalUnitTree.tsx:812
 msgid "Create Organizational Unit"
 msgstr "Create Organizational Unit"
 
@@ -342,7 +342,7 @@ msgstr "Create Secret"
 msgid "Create your first secret to get started"
 msgstr "Create your first secret to get started"
 
-#: src/pages/Organization/OrganizationPage.tsx:318
+#: src/pages/Organization/OrganizationPage.tsx:324
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Created"
@@ -351,12 +351,12 @@ msgstr "Created"
 msgid "Critical security notifications and warnings"
 msgstr "Critical security notifications and warnings"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:413
+#: src/components/MoveOrganizationalUnitDialog.tsx:423
 msgid "Current parent:"
 msgstr "Current parent:"
 
-#: src/lib/organizationalUnitUtils.ts:69
-#: src/lib/organizationalUnitUtils.ts:94
+#: src/lib/organizationalUnitUtils.ts:87
+#: src/lib/organizationalUnitUtils.ts:112
 msgid "Custom"
 msgstr "Custom"
 
@@ -381,7 +381,7 @@ msgstr "Customers"
 
 #: src/components/AttachmentList.tsx:215
 #: src/components/DeleteOrganizationalUnitDialog.tsx:186
-#: src/components/OrganizationalUnitTree.tsx:382
+#: src/components/OrganizationalUnitTree.tsx:385
 msgid "Delete"
 msgstr "Delete"
 
@@ -408,18 +408,18 @@ msgstr "Delete report {0}"
 msgid "Deleting..."
 msgstr "Deleting..."
 
-#: src/lib/organizationalUnitUtils.ts:67
-#: src/lib/organizationalUnitUtils.ts:93
+#: src/lib/organizationalUnitUtils.ts:85
+#: src/lib/organizationalUnitUtils.ts:111
 msgid "Department"
 msgstr "Department"
 
 #: src/components/ObjectManager.tsx:377
-#: src/components/OrganizationalUnitFormDialog.tsx:296
-#: src/pages/Organization/OrganizationPage.tsx:299
+#: src/components/OrganizationalUnitFormDialog.tsx:307
+#: src/pages/Organization/OrganizationPage.tsx:305
 msgid "Description"
 msgstr "Description"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:128
+#: src/components/OrganizationalUnitFormDialog.tsx:136
 msgid "Description must be at most 1000 characters"
 msgstr "Description must be at most 1000 characters"
 
@@ -427,8 +427,8 @@ msgstr "Description must be at most 1000 characters"
 msgid "Details"
 msgstr "Details"
 
-#: src/lib/organizationalUnitUtils.ts:65
-#: src/lib/organizationalUnitUtils.ts:92
+#: src/lib/organizationalUnitUtils.ts:83
+#: src/lib/organizationalUnitUtils.ts:110
 msgid "Division"
 msgstr "Division"
 
@@ -446,12 +446,12 @@ msgstr "Download to view"
 msgid "Drag files here or click to browse"
 msgstr "Drag files here or click to browse"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:258
+#: src/components/OrganizationalUnitFormDialog.tsx:266
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
-#: src/components/OrganizationalUnitTree.tsx:343
-#: src/pages/Organization/OrganizationPage.tsx:329
+#: src/components/OrganizationalUnitTree.tsx:346
+#: src/pages/Organization/OrganizationPage.tsx:335
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Edit"
@@ -466,7 +466,7 @@ msgstr "Edit"
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:218
+#: src/components/OrganizationalUnitFormDialog.tsx:226
 msgid "Edit Organizational Unit"
 msgstr "Edit Organizational Unit"
 
@@ -516,11 +516,11 @@ msgid "Events"
 msgstr "Events"
 
 #: src/components/CustomerTree.tsx:221
-#: src/components/OrganizationalUnitTree.tsx:260
+#: src/components/OrganizationalUnitTree.tsx:263
 msgid "Expand"
 msgstr "Expand"
 
-#: src/pages/Secrets/SecretCard.tsx:44
+#: src/pages/Secrets/SecretCard.tsx:51
 #: src/pages/Secrets/SecretDetail.tsx:274
 #: src/pages/Secrets/SecretDetail.tsx:381
 #: src/pages/Secrets/SecretList.tsx:208
@@ -540,7 +540,7 @@ msgstr "Expires (optional):"
 msgid "Expires: {0}"
 msgstr "Expires: {0}"
 
-#: src/pages/Secrets/SecretCard.tsx:49
+#: src/pages/Secrets/SecretCard.tsx:56
 #: src/pages/Secrets/SecretList.tsx:209
 msgid "Expiring Soon"
 msgstr "Expiring Soon"
@@ -610,7 +610,7 @@ msgstr "Failed to load guard books"
 msgid "Failed to load objects"
 msgstr "Failed to load objects"
 
-#: src/components/OrganizationalUnitTree.tsx:659
+#: src/components/OrganizationalUnitTree.tsx:677
 msgid "Failed to load organizational units"
 msgstr "Failed to load organizational units"
 
@@ -626,11 +626,11 @@ msgstr "Failed to load reports"
 msgid "Failed to load selected object"
 msgstr "Failed to load selected object"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:322
+#: src/components/MoveOrganizationalUnitDialog.tsx:332
 msgid "Failed to load units"
 msgstr "Failed to load units"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:362
+#: src/components/MoveOrganizationalUnitDialog.tsx:372
 msgid "Failed to move organizational unit"
 msgstr "Failed to move organizational unit"
 
@@ -679,7 +679,7 @@ msgstr "Get started by adding your first object."
 msgid "Get started by creating your first guard book."
 msgstr "Get started by creating your first guard book."
 
-#: src/components/OrganizationalUnitTree.tsx:790
+#: src/components/OrganizationalUnitTree.tsx:808
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
@@ -715,8 +715,8 @@ msgstr "Guard Books"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/lib/organizationalUnitUtils.ts:57
-#: src/lib/organizationalUnitUtils.ts:88
+#: src/lib/organizationalUnitUtils.ts:75
+#: src/lib/organizationalUnitUtils.ts:106
 msgid "Holding"
 msgstr "Holding"
 
@@ -805,7 +805,7 @@ msgstr "Logging in..."
 msgid "login.title"
 msgstr "Login"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:449
+#: src/components/MoveOrganizationalUnitDialog.tsx:459
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
 
@@ -825,7 +825,7 @@ msgstr "Manage protected objects and their areas for this customer."
 msgid "Manage your application preferences."
 msgstr "Manage your application preferences."
 
-#: src/pages/Organization/OrganizationPage.tsx:233
+#: src/pages/Organization/OrganizationPage.tsx:239
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Manage your internal organizational units including departments, branches, and teams."
 
@@ -845,21 +845,21 @@ msgstr "Metadata"
 msgid "Minimize offline notice"
 msgstr "Minimize offline notice"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:484
-#: src/components/OrganizationalUnitTree.tsx:362
+#: src/components/MoveOrganizationalUnitDialog.tsx:494
+#: src/components/OrganizationalUnitTree.tsx:365
 msgid "Move"
 msgstr "Move"
 
 #. placeholder {0}: unit.name
-#: src/components/MoveOrganizationalUnitDialog.tsx:400
+#: src/components/MoveOrganizationalUnitDialog.tsx:410
 msgid "Move \"{0}\""
 msgstr "Move \"{0}\""
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:484
+#: src/components/MoveOrganizationalUnitDialog.tsx:494
 msgid "Moving..."
 msgstr "Moving..."
 
-#: src/components/OrganizationalUnitTree.tsx:804
+#: src/components/OrganizationalUnitTree.tsx:822
 msgid "My Organization"
 msgstr "My Organization"
 
@@ -869,20 +869,20 @@ msgid "My profile"
 msgstr "My profile"
 
 #: src/components/ObjectManager.tsx:374
-#: src/components/OrganizationalUnitFormDialog.tsx:250
+#: src/components/OrganizationalUnitFormDialog.tsx:258
 #: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:117
+#: src/components/OrganizationalUnitFormDialog.tsx:125
 msgid "Name is required"
 msgstr "Name is required"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:119
+#: src/components/OrganizationalUnitFormDialog.tsx:127
 msgid "Name must be at most 255 characters"
 msgstr "Name must be at most 255 characters"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:435
+#: src/components/MoveOrganizationalUnitDialog.tsx:445
 msgid "New parent"
 msgstr "New parent"
 
@@ -930,11 +930,11 @@ msgstr "No object selected. Please navigate from the objects page."
 msgid "No Objects"
 msgstr "No Objects"
 
-#: src/components/OrganizationalUnitTree.tsx:787
+#: src/components/OrganizationalUnitTree.tsx:805
 msgid "No Organizational Units"
 msgstr "No Organizational Units"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:419
+#: src/components/MoveOrganizationalUnitDialog.tsx:429
 msgid "No parent (root unit)"
 msgstr "No parent (root unit)"
 
@@ -950,7 +950,7 @@ msgstr "No secrets found"
 msgid "No secrets yet"
 msgstr "No secrets yet"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:380
+#: src/components/MoveOrganizationalUnitDialog.tsx:390
 msgid "No unit selected"
 msgstr "No unit selected"
 
@@ -1009,11 +1009,11 @@ msgstr "Offline only"
 msgid "OK"
 msgstr "OK"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:299
+#: src/components/OrganizationalUnitFormDialog.tsx:310
 msgid "Optional description for this unit."
 msgstr "Optional description for this unit."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:306
+#: src/components/OrganizationalUnitFormDialog.tsx:317
 msgid "Optional description..."
 msgstr "Optional description..."
 
@@ -1021,11 +1021,11 @@ msgstr "Optional description..."
 msgid "Organization"
 msgstr "Organization"
 
-#: src/pages/Organization/OrganizationPage.tsx:230
+#: src/pages/Organization/OrganizationPage.tsx:236
 msgid "Organization Structure"
 msgstr "Organization Structure"
 
-#: src/components/OrganizationalUnitTree.tsx:814
+#: src/components/OrganizationalUnitTree.tsx:832
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
@@ -1039,11 +1039,11 @@ msgstr "Owner"
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Page {currentPage} of {totalPages} ({0} {1})"
 
-#: src/pages/Organization/OrganizationPage.tsx:309
+#: src/pages/Organization/OrganizationPage.tsx:315
 msgid "Parent"
 msgstr "Parent"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:320
+#: src/components/OrganizationalUnitFormDialog.tsx:331
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
@@ -1105,8 +1105,8 @@ msgstr "Refresh"
 msgid "Refresh data"
 msgstr "Refresh data"
 
-#: src/lib/organizationalUnitUtils.ts:61
-#: src/lib/organizationalUnitUtils.ts:90
+#: src/lib/organizationalUnitUtils.ts:79
+#: src/lib/organizationalUnitUtils.ts:108
 msgid "Region"
 msgstr "Region"
 
@@ -1131,7 +1131,7 @@ msgstr "Reports"
 #: src/components/GuardBookManager.tsx:614
 #: src/components/ObjectManager.tsx:335
 #: src/components/ObjectManager.tsx:615
-#: src/components/OrganizationalUnitTree.tsx:774
+#: src/components/OrganizationalUnitTree.tsx:792
 msgid "Retry"
 msgstr "Retry"
 
@@ -1159,7 +1159,7 @@ msgstr "Revoking..."
 msgid "Roles"
 msgstr "Roles"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:343
+#: src/components/OrganizationalUnitFormDialog.tsx:354
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1167,7 +1167,7 @@ msgstr "Save Changes"
 msgid "Save to Secret"
 msgstr "Save to Secret"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:339
+#: src/components/OrganizationalUnitFormDialog.tsx:350
 msgid "Saving..."
 msgstr "Saving..."
 
@@ -1204,7 +1204,7 @@ msgstr "Select a customer to view details"
 msgid "Select a guard book to view reports"
 msgstr "Select a guard book to view reports"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:406
+#: src/components/MoveOrganizationalUnitDialog.tsx:416
 msgid "Select a new parent for this organizational unit."
 msgstr "Select a new parent for this organizational unit."
 
@@ -1212,7 +1212,7 @@ msgstr "Select a new parent for this organizational unit."
 msgid "Select an object to view details"
 msgstr "Select an object to view details"
 
-#: src/pages/Organization/OrganizationPage.tsx:339
+#: src/pages/Organization/OrganizationPage.tsx:345
 msgid "Select an organizational unit to view details"
 msgstr "Select an organizational unit to view details"
 
@@ -1220,7 +1220,7 @@ msgstr "Select an organizational unit to view details"
 msgid "Select Files"
 msgstr "Select Files"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:444
+#: src/components/MoveOrganizationalUnitDialog.tsx:454
 msgid "Select new parent"
 msgstr "Select new parent"
 
@@ -1353,7 +1353,7 @@ msgstr "Test Notification"
 msgid "Text:"
 msgstr "Text:"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:326
+#: src/components/OrganizationalUnitFormDialog.tsx:337
 msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
@@ -1362,7 +1362,7 @@ msgstr "The new unit will be created under this parent."
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:272
+#: src/components/OrganizationalUnitFormDialog.tsx:280
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
@@ -1399,12 +1399,12 @@ msgstr "Try adjusting your filters"
 msgid "Try Again"
 msgstr "Try Again"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:269
-#: src/pages/Organization/OrganizationPage.tsx:290
+#: src/components/OrganizationalUnitFormDialog.tsx:277
+#: src/pages/Organization/OrganizationPage.tsx:296
 msgid "Type"
 msgstr "Type"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:123
+#: src/components/OrganizationalUnitFormDialog.tsx:131
 msgid "Type is required"
 msgstr "Type is required"
 
@@ -1428,7 +1428,7 @@ msgstr "Update now"
 msgid "Update the details of your secret."
 msgstr "Update the details of your secret."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:229
+#: src/components/OrganizationalUnitFormDialog.tsx:237
 msgid "Update the organizational unit details."
 msgstr "Update the organizational unit details."
 

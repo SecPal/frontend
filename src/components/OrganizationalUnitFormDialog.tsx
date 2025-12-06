@@ -26,7 +26,11 @@ import {
   updateOrganizationalUnit,
 } from "../services/organizationalUnitApi";
 import { ApiError } from "../services/secretApi";
-import { getUnitTypeOptions } from "../lib/organizationalUnitUtils";
+import {
+  getUnitTypeOptions,
+  getValidChildTypeOptions,
+  getDefaultChildType,
+} from "../lib/organizationalUnitUtils";
 
 export interface OrganizationalUnitFormDialogProps {
   /** Dialog open state */
@@ -39,6 +43,8 @@ export interface OrganizationalUnitFormDialogProps {
   parentId?: string | null;
   /** Parent unit name (for display in create mode) */
   parentName?: string | null;
+  /** Parent unit type (for hierarchy filtering in create mode) */
+  parentType?: OrganizationalUnitType | null;
   /** Existing unit to edit (required for edit mode) */
   unit?: OrganizationalUnit | null;
   /** Callback on successful save */
@@ -67,8 +73,10 @@ interface FormErrors {
  * - Form validation
  * - API error handling
  * - Loading state during submission
+ * - Hierarchy-based type filtering (Issue #300)
  *
  * @see Issue #294: Frontend: Organizational unit Create/Edit forms
+ * @see Issue #300: UX improvement - filter type dropdown based on parent hierarchy
  */
 export function OrganizationalUnitFormDialog({
   open,
@@ -76,6 +84,7 @@ export function OrganizationalUnitFormDialog({
   mode,
   parentId,
   parentName,
+  parentType,
   unit,
   onSuccess,
 }: OrganizationalUnitFormDialogProps) {
@@ -98,15 +107,17 @@ export function OrganizationalUnitFormDialog({
           description: unit.description || "",
         });
       } else {
+        // Create mode: set default type based on parent
+        const defaultType = getDefaultChildType(parentType || undefined);
         setFormData({
           name: "",
-          type: "branch",
+          type: defaultType || "branch",
           description: "",
         });
       }
       setErrors({});
     }
-  }, [open, mode, unit]);
+  }, [open, mode, unit, parentType]);
 
   // Validate form
   const validate = useCallback((): boolean => {
@@ -281,7 +292,10 @@ export function OrganizationalUnitFormDialog({
                 disabled={isSubmitting}
                 data-invalid={errors.type ? true : undefined}
               >
-                {getUnitTypeOptions().map((option) => (
+                {(mode === "create" && parentType
+                  ? getValidChildTypeOptions(parentType)
+                  : getUnitTypeOptions()
+                ).map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

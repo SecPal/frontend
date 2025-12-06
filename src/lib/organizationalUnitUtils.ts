@@ -11,6 +11,24 @@ import type { OrganizationalUnitType } from "../types/organizational";
 export type BadgeColor = "blue" | "green" | "purple" | "orange" | "zinc";
 
 /**
+ * Hierarchy ranking for organizational unit types
+ * Lower numbers = higher in hierarchy (more senior)
+ * Child units must have rank >= parent rank
+ *
+ * This mirrors the backend validation in StoreOrganizationalUnitRequest
+ * @see Issue #301: Backend validation for organizational unit hierarchy
+ */
+export const TYPE_HIERARCHY: Record<OrganizationalUnitType, number> = {
+  holding: 1,
+  company: 2,
+  region: 3,
+  branch: 4,
+  division: 5,
+  department: 6,
+  custom: 7,
+};
+
+/**
  * Get badge color for organizational unit type
  *
  * Color mapping:
@@ -93,4 +111,61 @@ export function getUnitTypeOptions(): Array<{
     { value: "department", label: t`Department` },
     { value: "custom", label: t`Custom` },
   ];
+}
+
+/**
+ * Get valid child type options for a given parent type
+ * Filters types based on hierarchy rules: child rank must be > parent rank
+ * (i.e., child must be lower in hierarchy than parent)
+ *
+ * @param parentType - The parent's organizational unit type
+ * @returns Array of valid child type options with value and translated label
+ *
+ * @example
+ * // For a branch parent (rank 4), returns: division, department, custom
+ * // (not branch itself, as same-level nesting is invalid)
+ * getValidChildTypeOptions('branch')
+ */
+export function getValidChildTypeOptions(
+  parentType: OrganizationalUnitType
+): Array<{
+  value: OrganizationalUnitType;
+  label: string;
+}> {
+  const parentRank = TYPE_HIERARCHY[parentType];
+  const allOptions = getUnitTypeOptions();
+
+  return allOptions.filter((option) => {
+    const childRank = TYPE_HIERARCHY[option.value];
+    return childRank > parentRank;
+  });
+}
+
+/**
+ * Get the default child type for a given parent type
+ * Returns the next level down in the hierarchy (parent rank + 1)
+ * If no next level exists, returns undefined
+ *
+ * @param parentType - The parent's organizational unit type, or undefined for root units
+ * @returns The default child type, or undefined if no valid child type exists
+ *
+ * @example
+ * getDefaultChildType('holding') // returns 'company'
+ * getDefaultChildType('branch')  // returns 'division'
+ * getDefaultChildType('custom')  // returns undefined (no lower level)
+ * getDefaultChildType(undefined) // returns 'holding' (for root units)
+ */
+export function getDefaultChildType(
+  parentType: OrganizationalUnitType | undefined
+): OrganizationalUnitType | undefined {
+  // For root units, default to 'holding'
+  if (!parentType) {
+    return "holding";
+  }
+
+  const parentRank = TYPE_HIERARCHY[parentType];
+  const allTypes = Object.keys(TYPE_HIERARCHY) as OrganizationalUnitType[];
+
+  // Find the type with rank = parentRank + 1
+  return allTypes.find((type) => TYPE_HIERARCHY[type] === parentRank + 1);
 }

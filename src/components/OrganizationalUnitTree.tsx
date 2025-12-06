@@ -822,7 +822,7 @@ export function OrganizationalUnitTree({
         <Heading level={3}>{title || <Trans>My Organization</Trans>}</Heading>
         {onCreate && (
           <Button onClick={onCreate}>
-            <Trans>Add Unit</Trans>
+            <Trans>Add Root Unit</Trans>
           </Button>
         )}
       </div>

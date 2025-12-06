@@ -186,7 +186,7 @@ describe("OrganizationalUnitTree", () => {
     renderWithI18n(<OrganizationalUnitTree onCreate={onCreate} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Add Unit")).toBeInTheDocument();
+      expect(screen.getByText("Add Root Unit")).toBeInTheDocument();
     });
   });
 
