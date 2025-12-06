@@ -8,10 +8,6 @@ import { i18n } from "@lingui/core";
 import App from "./App";
 import { activateLocale, detectLocale } from "./i18n";
 import { initWebVitals } from "./lib/webVitals";
-import "@fontsource/inter";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
 import "./index.css";
 
 export function AppWithI18n() {

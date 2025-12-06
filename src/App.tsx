@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { ApplicationLayout } from "./components/application-layout";
@@ -9,24 +10,32 @@ import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Login } from "./pages/Login";
-import { ShareTarget } from "./pages/ShareTarget";
-import { SecretList } from "./pages/Secrets/SecretList";
-import { SecretDetail } from "./pages/Secrets/SecretDetail";
-import { SecretCreate } from "./pages/Secrets/SecretCreate";
-import { SecretEdit } from "./pages/Secrets/SecretEdit";
-import {
-  OrganizationPage,
-  CustomersPage,
-  ObjectsPage,
-  GuardBooksPage,
-} from "./pages/Organization";
-import { SettingsPage } from "./pages/Settings";
-import { ProfilePage } from "./pages/Profile";
+import { RouteLoader } from "./components/RouteLoader";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
 import { getApiBaseUrl } from "./config";
+
+// Lazy load route components for better performance
+// Login page is eagerly loaded as it's the first page users see
+import { Login } from "./pages/Login";
+
+// All other routes are lazy loaded to reduce initial bundle size
+const ShareTarget = lazy(() => import("./pages/ShareTarget"));
+const SecretList = lazy(() => import("./pages/Secrets/SecretList"));
+const SecretDetail = lazy(() => import("./pages/Secrets/SecretDetail"));
+const SecretCreate = lazy(() => import("./pages/Secrets/SecretCreate"));
+const SecretEdit = lazy(() => import("./pages/Secrets/SecretEdit"));
+const OrganizationPage = lazy(
+  () => import("./pages/Organization/OrganizationPage")
+);
+const CustomersPage = lazy(() => import("./pages/Organization/CustomersPage"));
+const ObjectsPage = lazy(() => import("./pages/Organization/ObjectsPage"));
+const GuardBooksPage = lazy(
+  () => import("./pages/Organization/GuardBooksPage")
+);
+const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
+const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
 
 function Home() {
   return (
@@ -76,161 +85,163 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <UpdatePrompt />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <Home />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <About />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/share"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <ShareTarget />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secrets"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <SecretList />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secrets/new"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <SecretCreate />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secrets/:id"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <SecretDetail />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secrets/:id/edit"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <SecretEdit />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          {/* Organization Routes */}
-          <Route
-            path="/organization"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <OrganizationPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <CustomersPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/:customerId/objects"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <ObjectsPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/:customerId/objects/:objectId/guard-books"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <GuardBooksPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers/:customerId/objects/:objectId/areas/:areaId/guard-books"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <GuardBooksPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/guard-books"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <GuardBooksPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          {/* User Routes */}
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <SettingsPage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ApplicationLayout>
-                  <ProfilePage />
-                </ApplicationLayout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <Home />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <About />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/share"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <ShareTarget />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/secrets"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <SecretList />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/secrets/new"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <SecretCreate />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/secrets/:id"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <SecretDetail />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/secrets/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <SecretEdit />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Organization Routes */}
+            <Route
+              path="/organization"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <OrganizationPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <CustomersPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers/:customerId/objects"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <ObjectsPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers/:customerId/objects/:objectId/guard-books"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <GuardBooksPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers/:customerId/objects/:objectId/areas/:areaId/guard-books"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <GuardBooksPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/guard-books"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <GuardBooksPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* User Routes */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <SettingsPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <ProfilePage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Suspense>
         <OfflineIndicator />
         <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
       </BrowserRouter>

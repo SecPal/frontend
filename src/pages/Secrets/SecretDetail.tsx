@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import { msg, Trans, t } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -16,8 +16,14 @@ import {
 import { fetchShares } from "../../services/shareApi";
 import { AttachmentList } from "../../components/AttachmentList";
 import { AttachmentPreview } from "../../components/AttachmentPreview";
-import { ShareDialog } from "../../components/ShareDialog";
 import { SharedWithList } from "../../components/SharedWithList";
+
+// Lazy load ShareDialog for better performance
+const ShareDialog = lazy(() =>
+  import("../../components/ShareDialog").then((m) => ({
+    default: m.ShareDialog,
+  }))
+);
 import { Heading, Subheading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { Button } from "../../components/button";
@@ -484,18 +490,22 @@ export function SecretDetail() {
         />
       )}
 
-      {/* Share Dialog */}
-      {secret && (
-        <ShareDialog
-          secretId={id!}
-          secretTitle={secret.title}
-          isOpen={shareDialogOpen}
-          onClose={() => setShareDialogOpen(false)}
-          onSuccess={refreshShares}
-          users={[]}
-          roles={[]}
-        />
+      {/* Share Dialog - Lazy loaded for better performance */}
+      {secret && shareDialogOpen && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <ShareDialog
+            secretId={id!}
+            secretTitle={secret.title}
+            isOpen={shareDialogOpen}
+            onClose={() => setShareDialogOpen(false)}
+            onSuccess={refreshShares}
+            users={[]}
+            roles={[]}
+          />
+        </Suspense>
       )}
     </>
   );
 }
+
+export default SecretDetail;

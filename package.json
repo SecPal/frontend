@@ -30,6 +30,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:analyze": "tsc && vite build --mode analyze",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
     "typecheck": "tsc --noEmit",
@@ -100,6 +101,7 @@
     "lighthouse": "^13.0.1",
     "playwright-lighthouse": "^4.0.0",
     "prettier": "^3.7.4",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.48.1",

@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -283,7 +284,15 @@ export default defineConfig(({ mode }) => {
           ],
         },
       }),
-    ],
+      // Bundle size visualizer (only in analyze mode)
+      mode === "analyze" &&
+        visualizer({
+          open: true,
+          gzipSize: true,
+          brotliSize: true,
+          filename: "dist/stats.html",
+        }),
+    ].filter(Boolean),
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),
@@ -300,6 +309,8 @@ export default defineConfig(({ mode }) => {
           },
         },
       },
+      // Set chunk size warning limit
+      chunkSizeWarningLimit: 500, // Warn if any chunk exceeds 500KB
     },
     server: {
       // Allow DDEV hostnames for local development
