@@ -5,9 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # Performance Optimization - Aggressive Code Splitting Results
 
-**Date:** 2025-12-06  
-**Branch:** `perf/aggressive-code-splitting`  
-**Goal:** Reduce Total Blocking Time from 419ms to <200ms  
+**Date:** 2025-12-06
+**Branch:** `perf/aggressive-code-splitting`
+**Goal:** Reduce Total Blocking Time from 419ms to <200ms
 **Status:** ✅ **MAJOR SUCCESS** - 88% reduction in main bundle size!
 
 ---
@@ -277,7 +277,7 @@ After deployment, document actual metrics in PR:
 
 ### Priority 1: UI Component Library Splitting
 
-Currently `@headlessui/react` and `@heroicons/react` are in `vendor-misc` (27.77KB).  
+Currently `@headlessui/react` and `@heroicons/react` are in `vendor-misc` (27.77KB).
 Could be split into:
 
 - `vendor-headless`: ~15KB (Headless UI components)
@@ -304,7 +304,7 @@ Additional dialogs that could be lazy loaded:
 
 ### Priority 4: Font Subsetting
 
-Currently loading full Inter font family (all weights, all languages).  
+Currently loading full Inter font family (all weights, all languages).
 Could subset to:
 
 - Only Latin + Latin-Ext (for German/English)
@@ -357,12 +357,12 @@ build: {
 
 ### 1. Function-Based manualChunks is Powerful
 
-Object-based approach only works for explicit imports.  
+Object-based approach only works for explicit imports.
 Function-based approach works for **any module** based on path patterns.
 
 ### 2. Locale Splitting is Critical
 
-Each locale adds ~14-16KB.  
+Each locale adds ~14-16KB.
 Splitting by language = only load active language.
 
 ### 3. Dialog Lazy Loading Works Great
@@ -399,8 +399,8 @@ Splitting vendors by category enables:
 
 ---
 
-**Status:** 🟢 Ready for staging deployment and testing  
-**Priority:** 🚨 HIGH  
+**Status:** 🟢 Ready for staging deployment and testing
+**Priority:** 🚨 HIGH
 **Risk:** 🟢 LOW (lazy loading with fallbacks, tested locally)
 
 **Next Action:** Deploy to app.secpal.dev and measure real performance impact
