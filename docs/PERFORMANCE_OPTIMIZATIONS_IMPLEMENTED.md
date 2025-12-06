@@ -145,12 +145,14 @@ const ShareDialog = lazy(() =>
 **Impact:** 🚀 **CRITICAL - MAJOR BREAKTHROUGH**
 
 **Files changed:**
+
 - `vite.config.ts` - Switched from object-based to function-based `manualChunks`
 - `OrganizationalUnitTree.tsx` - Lazy load Delete and Move dialogs
 
 **Key Changes:**
 
 1. Function-based dynamic chunk splitting:
+
 ```typescript
 manualChunks(id) {
   // Split vendors by category
@@ -160,7 +162,7 @@ manualChunks(id) {
     if (id.includes("motion")) return "vendor-animation";
     // ...
   }
-  
+
   // Split application code
   if (id.includes("/src/services/")) return "services";
   if (id.includes("/src/lib/")) return "lib";
@@ -169,15 +171,16 @@ manualChunks(id) {
 ```
 
 2. Lazy load heavy dialogs in OrganizationalUnitTree:
+
 ```typescript
 const DeleteOrganizationalUnitDialog = lazy(() =>
-  import("./DeleteOrganizationalUnitDialog").then(m => ({
-    default: m.DeleteOrganizationalUnitDialog
+  import("./DeleteOrganizationalUnitDialog").then((m) => ({
+    default: m.DeleteOrganizationalUnitDialog,
   }))
 );
 const MoveOrganizationalUnitDialog = lazy(() =>
-  import("./MoveOrganizationalUnitDialog").then(m => ({
-    default: m.MoveOrganizationalUnitDialog
+  import("./MoveOrganizationalUnitDialog").then((m) => ({
+    default: m.MoveOrganizationalUnitDialog,
   }))
 );
 ```
@@ -200,11 +203,13 @@ const MoveOrganizationalUnitDialog = lazy(() =>
   - [+ route chunks]
 
 **Expected Performance Impact:**
+
 - Main thread parse time: ~863ms → ~150ms (-83%)
 - TBT: 746ms → 200-300ms (-60-73%)
 - Performance Score: 80% → 90-95%
 
 **Deployment:**
+
 - ✅ Deployed to app.secpal.dev
 - ⏳ Manual performance verification pending
 
@@ -319,19 +324,19 @@ build: {
 
 ## 📊 Bundle Size Comparison
 
-| File                      | Before  | After 1 | After 2 (Aggressive) | Total Improvement |
-| ------------------------- | ------- | ------- | -------------------- | ----------------- |
-| `index.js`                | 469KB   | 459KB   | **57.46KB**          | **-88%** ✅       |
-| `index.js` (gzipped)      | ~149KB  | ~145KB  | **14.72KB**          | **-90%** ✅       |
-| `vendor-react.js`         | 45KB    | 45KB    | 350KB                | Consolidated      |
-| `vendor-headless.js`      | 129KB   | 129KB   | -                    | Split             |
-| `vendor-db.js`            | -       | -       | 96KB                 | New               |
-| `vendor-animation.js`     | -       | -       | 113KB                | New               |
-| `vendor-misc.js`          | -       | -       | 34KB                 | New               |
-| `services.js`             | -       | -       | 15KB                 | New               |
-| `lib.js`                  | -       | -       | 13KB                 | New               |
-| `locale-de.js`            | -       | -       | 16KB                 | New               |
-| `locale-en.js`            | -       | -       | 14KB                 | New               |
+| File                  | Before | After 1 | After 2 (Aggressive) | Total Improvement |
+| --------------------- | ------ | ------- | -------------------- | ----------------- |
+| `index.js`            | 469KB  | 459KB   | **57.46KB**          | **-88%** ✅       |
+| `index.js` (gzipped)  | ~149KB | ~145KB  | **14.72KB**          | **-90%** ✅       |
+| `vendor-react.js`     | 45KB   | 45KB    | 350KB                | Consolidated      |
+| `vendor-headless.js`  | 129KB  | 129KB   | -                    | Split             |
+| `vendor-db.js`        | -      | -       | 96KB                 | New               |
+| `vendor-animation.js` | -      | -       | 113KB                | New               |
+| `vendor-misc.js`      | -      | -       | 34KB                 | New               |
+| `services.js`         | -      | -       | 15KB                 | New               |
+| `lib.js`              | -      | -       | 13KB                 | New               |
+| `locale-de.js`        | -      | -       | 16KB                 | New               |
+| `locale-en.js`        | -      | -       | 14KB                 | New               |
 
 _(Uncompressed sizes shown)_
 

@@ -12,6 +12,7 @@ Reduce Total Blocking Time (TBT) from 746ms to <200ms through aggressive bundle 
 ## 📊 Previous State (After Initial Code Splitting)
 
 **Baseline from Lighthouse test on app.secpal.dev:**
+
 - Performance Score: 80%
 - TBT: **746ms** ❌ (Target: <200ms)
 - LCP: 2133ms ✅
@@ -21,6 +22,7 @@ Reduce Total Blocking Time (TBT) from 746ms to <200ms through aggressive bundle 
 ### Problem Analysis
 
 The initial code splitting (lazy loading routes) helped, but the **main bundle remained too large** because:
+
 1. All eagerly-loaded components were bundled together
 2. Vendor libraries were split, but app code wasn't
 3. Heavy dialog components (DeleteOrganizationalUnitDialog, MoveOrganizationalUnitDialog) were eagerly loaded in OrganizationalUnitTree
@@ -58,6 +60,7 @@ const MoveOrganizationalUnitDialog = lazy(() =>
 ```
 
 **Impact:**
+
 - DeleteOrganizationalUnitDialog: 4.18KB chunk (1.72KB gzipped)
 - MoveOrganizationalUnitDialog: 11.41KB chunk (3.76KB gzipped)
 - These are only loaded when user opens the respective dialog
@@ -89,7 +92,7 @@ manualChunks(id) {
     if (id.includes("motion")) return "vendor-animation";
     return "vendor-misc";
   }
-  
+
   // Split application code
   if (id.includes("/src/services/")) return "services";
   if (id.includes("/src/lib/")) return "lib";
@@ -101,6 +104,7 @@ manualChunks(id) {
 ```
 
 **Benefits:**
+
 - Better tree-shaking (dynamic analysis)
 - More granular caching (change one vendor, others stay cached)
 - Parallel loading of independent chunks
@@ -110,19 +114,19 @@ manualChunks(id) {
 
 ### Bundle Size Comparison
 
-| Chunk | Before | After | Reduction |
-|-------|--------|-------|-----------|
-| **index.js** | **469KB** | **57.46KB** | **-88%** ✅ |
-| **index.js (gzipped)** | **149KB** | **14.72KB** | **-90%** ✅ |
-| vendor-react | 45KB | 350KB | +678% (consolidated) |
-| vendor-headless | 129KB | - | Moved |
-| vendor-db | - | 96KB | New |
-| vendor-animation | - | 113KB | New |
-| vendor-misc | - | 34KB | New |
-| services | - | 15KB | New |
-| lib | - | 13KB | New |
-| locale-de | - | 16KB | New |
-| locale-en | - | 14KB | New |
+| Chunk                  | Before    | After       | Reduction            |
+| ---------------------- | --------- | ----------- | -------------------- |
+| **index.js**           | **469KB** | **57.46KB** | **-88%** ✅          |
+| **index.js (gzipped)** | **149KB** | **14.72KB** | **-90%** ✅          |
+| vendor-react           | 45KB      | 350KB       | +678% (consolidated) |
+| vendor-headless        | 129KB     | -           | Moved                |
+| vendor-db              | -         | 96KB        | New                  |
+| vendor-animation       | -         | 113KB       | New                  |
+| vendor-misc            | -         | 34KB        | New                  |
+| services               | -         | 15KB        | New                  |
+| lib                    | -         | 13KB        | New                  |
+| locale-de              | -         | 16KB        | New                  |
+| locale-en              | -         | 14KB        | New                  |
 
 ### New Chunk Structure
 
@@ -144,23 +148,25 @@ dist/assets/
 
 Based on the 88% reduction in main bundle size:
 
-| Metric | Before | Expected After | Status |
-|--------|--------|----------------|--------|
-| Initial JS | ~800KB | ~450KB | ✅ (-44%) |
-| Main Bundle Parse | ~863ms | ~150ms | 🎯 (-83%) |
-| TBT | 746ms | ~200-300ms | 🎯 (-60-73%) |
-| Performance Score | 80% | 90-95% | 🎯 |
+| Metric            | Before | Expected After | Status       |
+| ----------------- | ------ | -------------- | ------------ |
+| Initial JS        | ~800KB | ~450KB         | ✅ (-44%)    |
+| Main Bundle Parse | ~863ms | ~150ms         | 🎯 (-83%)    |
+| TBT               | 746ms  | ~200-300ms     | 🎯 (-60-73%) |
+| Performance Score | 80%    | 90-95%         | 🎯           |
 
 ## 🔍 Why This Works
 
 ### 1. Reduced Main Thread Blocking
 
 **Before:**
+
 - Browser had to parse/compile 469KB of JavaScript
 - Blocked main thread for ~863ms during initial load
 - User couldn't interact during this time
 
 **After:**
+
 - Browser only parses 57KB initially
 - Expected parse time: ~150ms
 - Rest loads in parallel or on-demand
@@ -168,10 +174,12 @@ Based on the 88% reduction in main bundle size:
 ### 2. Better Caching Strategy
 
 **Before:**
+
 - One large vendor chunk (129KB)
 - Any vendor update invalidated entire chunk
 
 **After:**
+
 - Separate chunks by update frequency:
   - vendor-react: Rarely updates
   - vendor-animation: Rarely updates
@@ -183,12 +191,14 @@ Based on the 88% reduction in main bundle size:
 ### 3. Parallel Loading
 
 **Before:**
+
 ```
 [======== index.js 469KB ========] ← Sequential, blocking
          (863ms parse time)
 ```
 
 **After:**
+
 ```
 [index 57KB]
 [vendor-react 350KB] ← Parallel, cached
@@ -222,17 +232,20 @@ npm run build
 ### Manual Verification
 
 1. **Bundle Analysis:**
+
 ```bash
 npm run build:analyze
 # Opens dist/stats.html with visual bundle breakdown
 ```
 
 2. **Network Tab:**
+
 - Open https://app.secpal.dev
 - DevTools → Network → Disable Cache
 - Verify multiple smaller chunks load instead of one large bundle
 
 3. **Performance Tab:**
+
 - DevTools → Performance → Record page load
 - Check "Evaluate Script" times are significantly lower
 
@@ -330,7 +343,7 @@ npm run test:e2e:staging -- performance.spec.ts --project=chromium
 
 ---
 
-**Author:** GitHub Copilot  
-**Review:** Performance improvements confirmed via bundle analysis  
-**Status:** ✅ Deployed to staging (app.secpal.dev)  
+**Author:** GitHub Copilot
+**Review:** Performance improvements confirmed via bundle analysis
+**Status:** ✅ Deployed to staging (app.secpal.dev)
 **Next:** Manual performance verification required
