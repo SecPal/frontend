@@ -170,7 +170,7 @@ manualChunks(id) {
 }
 ```
 
-2. Lazy load heavy dialogs in OrganizationalUnitTree:
+1. Lazy load heavy dialogs in OrganizationalUnitTree:
 
 ```typescript
 const DeleteOrganizationalUnitDialog = lazy(() =>

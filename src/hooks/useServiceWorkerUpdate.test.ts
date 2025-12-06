@@ -155,7 +155,7 @@ describe("useServiceWorkerUpdate", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[SW] Update failed:",
+        "[SW Hook] Update failed:",
         expect.any(Error)
       );
 
