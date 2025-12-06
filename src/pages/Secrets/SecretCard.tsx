@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import type { Secret } from "../../services/secretApi";
@@ -17,11 +18,17 @@ export interface SecretCardProps {
  * Card component displaying secret summary in list view
  *
  * Shows title, username, tags, expiration status, attachment count, and share indicator
+ *
+ * Performance: Memoized to prevent re-renders when parent state changes
  */
-export function SecretCard({ secret }: SecretCardProps) {
+export const SecretCard = memo(function SecretCard({
+  secret,
+}: SecretCardProps) {
+  // Calculate expiration status
+  // Note: We intentionally recalculate on every render to show real-time expiration status.
+  // The memo wrapper prevents re-renders when parent state changes, which is the main optimization.
   const now = new Date();
   const expires = secret.expires_at ? new Date(secret.expires_at) : null;
-
   const isExpired = expires && expires < now;
   const isExpiringSoon =
     !isExpired &&
@@ -88,4 +95,4 @@ export function SecretCard({ secret }: SecretCardProps) {
       </div>
     </Link>
   );
-}
+});

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense, memo } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
 import { Badge } from "./badge";
@@ -168,247 +168,265 @@ interface TreeNodeProps {
 
 /**
  * Single tree node component
+ *
+ * Performance: Memoized to prevent re-renders when unrelated tree nodes change
  */
-function TreeNode({
-  unit,
-  level,
-  onSelect,
-  onEdit,
-  onDelete,
-  onMove,
-  onCreateChild,
-  selectedId,
-}: TreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(level < 2);
-  const hasChildren = unit.children && unit.children.length > 0;
-  const isSelected = selectedId === unit.id;
+const TreeNode = memo(
+  function TreeNode({
+    unit,
+    level,
+    onSelect,
+    onEdit,
+    onDelete,
+    onMove,
+    onCreateChild,
+    selectedId,
+  }: TreeNodeProps) {
+    const [isExpanded, setIsExpanded] = useState(level < 2);
+    const hasChildren = unit.children && unit.children.length > 0;
+    const isSelected = selectedId === unit.id;
 
-  const handleToggle = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setIsExpanded(!isExpanded);
-    },
-    [isExpanded]
-  );
+    const handleToggle = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsExpanded(!isExpanded);
+      },
+      [isExpanded]
+    );
 
-  const handleSelect = useCallback(() => {
-    onSelect?.(unit);
-  }, [onSelect, unit]);
+    const handleSelect = useCallback(() => {
+      onSelect?.(unit);
+    }, [onSelect, unit]);
 
-  const handleEdit = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onEdit?.(unit);
-    },
-    [onEdit, unit]
-  );
+    const handleEdit = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onEdit?.(unit);
+      },
+      [onEdit, unit]
+    );
 
-  const handleDelete = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onDelete?.(unit);
-    },
-    [onDelete, unit]
-  );
+    const handleDelete = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDelete?.(unit);
+      },
+      [onDelete, unit]
+    );
 
-  const handleCreateChild = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onCreateChild?.(unit);
-    },
-    [onCreateChild, unit]
-  );
+    const handleCreateChild = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onCreateChild?.(unit);
+      },
+      [onCreateChild, unit]
+    );
 
-  const handleMove = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onMove?.(unit);
-    },
-    [onMove, unit]
-  );
+    const handleMove = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onMove?.(unit);
+      },
+      [onMove, unit]
+    );
 
-  return (
-    <div className="select-none">
-      <div
-        className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
-          isSelected
-            ? "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
-            : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-        }`}
-        style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
-        onClick={handleSelect}
-        role="treeitem"
-        aria-expanded={hasChildren ? isExpanded : undefined}
-        aria-selected={isSelected}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleSelect();
-          }
-        }}
-      >
-        {/* Expand/Collapse Button */}
-        <button
-          type="button"
-          className={`shrink-0 p-0.5 rounded transition-colors ${
-            hasChildren
-              ? "hover:bg-gray-200 dark:hover:bg-gray-700"
-              : "invisible"
+    return (
+      <div className="select-none">
+        <div
+          className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
+            isSelected
+              ? "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
+              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
           }`}
-          onClick={handleToggle}
-          aria-label={isExpanded ? t`Collapse` : t`Expand`}
+          style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
+          onClick={handleSelect}
+          role="treeitem"
+          aria-expanded={hasChildren ? isExpanded : undefined}
+          aria-selected={isSelected}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleSelect();
+            }
+          }}
         >
-          {isExpanded ? (
-            <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-          ) : (
-            <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-          )}
-        </button>
+          {/* Expand/Collapse Button */}
+          <button
+            type="button"
+            className={`shrink-0 p-0.5 rounded transition-colors ${
+              hasChildren
+                ? "hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "invisible"
+            }`}
+            onClick={handleToggle}
+            aria-label={isExpanded ? t`Collapse` : t`Expand`}
+          >
+            {isExpanded ? (
+              <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+            )}
+          </button>
 
-        {/* Icon */}
-        <span className="shrink-0">{getUnitIcon(unit.type)}</span>
+          {/* Icon */}
+          <span className="shrink-0">{getUnitIcon(unit.type)}</span>
 
-        {/* Name */}
-        <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 truncate">
-          {unit.name}
-        </span>
+          {/* Name */}
+          <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 truncate">
+            {unit.name}
+          </span>
 
-        {/* Type Badge - hidden on small screens */}
-        <span className="hidden sm:inline-flex shrink-0">
-          <Badge color={getTypeBadgeColor(unit.type)}>
-            {getTypeLabel(unit.type)}
-          </Badge>
-        </span>
+          {/* Type Badge - hidden on small screens */}
+          <span className="hidden sm:inline-flex shrink-0">
+            <Badge color={getTypeBadgeColor(unit.type)}>
+              {getTypeLabel(unit.type)}
+            </Badge>
+          </span>
 
-        {/* Actions Menu */}
-        {(onEdit || onDelete || onMove || onCreateChild) && (
-          <Dropdown>
-            <DropdownButton
-              plain
-              aria-label={t`Actions for ${unit.name}`}
-              className="shrink-0 p-1"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              <svg
-                className="h-5 w-5 text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
+          {/* Actions Menu */}
+          {(onEdit || onDelete || onMove || onCreateChild) && (
+            <Dropdown>
+              <DropdownButton
+                plain
+                aria-label={t`Actions for ${unit.name}`}
+                className="shrink-0 p-1"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                />
-              </svg>
-            </DropdownButton>
-            <DropdownMenu anchor="bottom end">
-              {onCreateChild && (
-                <DropdownItem onClick={handleCreateChild}>
-                  <svg
-                    data-slot="icon"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
-                  <Trans>Add child</Trans>
-                </DropdownItem>
-              )}
-              {onEdit && (
-                <DropdownItem onClick={handleEdit}>
-                  <svg
-                    data-slot="icon"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                    />
-                  </svg>
-                  <Trans>Edit</Trans>
-                </DropdownItem>
-              )}
-              {onMove && (
-                <DropdownItem onClick={handleMove}>
-                  <svg
-                    data-slot="icon"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                    />
-                  </svg>
-                  <Trans>Move</Trans>
-                </DropdownItem>
-              )}
-              {onDelete && (
-                <DropdownItem onClick={handleDelete}>
-                  <svg
-                    data-slot="icon"
-                    className="h-4 w-4 text-red-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                    />
-                  </svg>
-                  <span className="text-red-600 dark:text-red-400">
-                    <Trans>Delete</Trans>
-                  </span>
-                </DropdownItem>
-              )}
-            </DropdownMenu>
-          </Dropdown>
+                <svg
+                  className="h-5 w-5 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                  />
+                </svg>
+              </DropdownButton>
+              <DropdownMenu anchor="bottom end">
+                {onCreateChild && (
+                  <DropdownItem onClick={handleCreateChild}>
+                    <svg
+                      data-slot="icon"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    </svg>
+                    <Trans>Add child</Trans>
+                  </DropdownItem>
+                )}
+                {onEdit && (
+                  <DropdownItem onClick={handleEdit}>
+                    <svg
+                      data-slot="icon"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                      />
+                    </svg>
+                    <Trans>Edit</Trans>
+                  </DropdownItem>
+                )}
+                {onMove && (
+                  <DropdownItem onClick={handleMove}>
+                    <svg
+                      data-slot="icon"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                      />
+                    </svg>
+                    <Trans>Move</Trans>
+                  </DropdownItem>
+                )}
+                {onDelete && (
+                  <DropdownItem onClick={handleDelete}>
+                    <svg
+                      data-slot="icon"
+                      className="h-4 w-4 text-red-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      />
+                    </svg>
+                    <span className="text-red-600 dark:text-red-400">
+                      <Trans>Delete</Trans>
+                    </span>
+                  </DropdownItem>
+                )}
+              </DropdownMenu>
+            </Dropdown>
+          )}
+        </div>
+
+        {/* Children */}
+        {hasChildren && isExpanded && (
+          <div role="group">
+            {unit.children!.map((child) => (
+              <TreeNode
+                key={child.id}
+                unit={child}
+                level={level + 1}
+                onSelect={onSelect}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onMove={onMove}
+                onCreateChild={onCreateChild}
+                selectedId={selectedId}
+              />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Children */}
-      {hasChildren && isExpanded && (
-        <div role="group">
-          {unit.children!.map((child) => (
-            <TreeNode
-              key={child.id}
-              unit={child}
-              level={level + 1}
-              onSelect={onSelect}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onMove={onMove}
-              onCreateChild={onCreateChild}
-              selectedId={selectedId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison: only re-render if unit, selection, or callbacks change
+    // This prevents cascading re-renders when sibling nodes update
+    return (
+      prevProps.unit === nextProps.unit &&
+      prevProps.selectedId === nextProps.selectedId &&
+      prevProps.level === nextProps.level &&
+      prevProps.onSelect === nextProps.onSelect &&
+      prevProps.onEdit === nextProps.onEdit &&
+      prevProps.onDelete === nextProps.onDelete &&
+      prevProps.onMove === nextProps.onMove &&
+      prevProps.onCreateChild === nextProps.onCreateChild
+    );
+  }
+);
 
 /**
  * Optimistic UI helper: Add a new unit to the tree
