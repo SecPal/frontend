@@ -331,6 +331,7 @@ export default defineConfig(({ mode }) => {
               }
 
               // UI Component libraries
+              // Keep together to preserve module resolution and exports
               if (id.includes("@headlessui") || id.includes("@heroicons")) {
                 return "vendor-ui";
               }
