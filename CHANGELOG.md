@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Playwright E2E testing infrastructure** (#309)
+  - Comprehensive E2E test suite with Playwright
+  - Three testing modes:
+    - Local development (localhost:5173 with DDEV backend proxy)
+    - Staging/performance tests (app.secpal.dev)
+    - CI smoke tests (localhost:4173 preview build)
+  - Test categories:
+    - Authentication flow tests (login, logout, session persistence)
+    - Smoke tests (page loading, navigation, accessibility basics)
+    - Secrets management integration tests
+    - Organization management integration tests
+    - Lighthouse performance audits (Core Web Vitals)
+  - Global setup with session reuse to prevent rate-limiting
+  - Configurable test credentials via environment variables
+  - npm scripts: `test:e2e`, `test:e2e:staging`, `test:e2e:ci`, `test:e2e:ui`, `test:e2e:headed`
+
 ### Fixed
 
 - **Console errors detected by Lighthouse CI** (#311)
