@@ -11,6 +11,24 @@ import type { OrganizationalUnitType } from "../types/organizational";
 export type BadgeColor = "blue" | "green" | "purple" | "orange" | "zinc";
 
 /**
+ * Hierarchy ranking for organizational unit types
+ * Lower numbers = higher in hierarchy (more senior)
+ * Child units must have rank >= parent rank
+ *
+ * This mirrors the backend validation in StoreOrganizationalUnitRequest
+ * @see Issue #301: Backend validation for organizational unit hierarchy
+ */
+export const TYPE_HIERARCHY: Record<OrganizationalUnitType, number> = {
+  holding: 1,
+  company: 2,
+  region: 3,
+  branch: 4,
+  division: 5,
+  department: 6,
+  custom: 7,
+};
+
+/**
  * Get badge color for organizational unit type
  *
  * Color mapping:
@@ -93,4 +111,30 @@ export function getUnitTypeOptions(): Array<{
     { value: "department", label: t`Department` },
     { value: "custom", label: t`Custom` },
   ];
+}
+
+/**
+ * Get valid child type options for a given parent type
+ * Filters types based on hierarchy rules: child rank must be >= parent rank
+ *
+ * @param parentType - The parent's organizational unit type
+ * @returns Array of valid child type options with value and translated label
+ *
+ * @example
+ * // For a branch parent (rank 4), returns: branch, division, department, custom
+ * getValidChildTypeOptions('branch')
+ */
+export function getValidChildTypeOptions(
+  parentType: OrganizationalUnitType
+): Array<{
+  value: OrganizationalUnitType;
+  label: string;
+}> {
+  const parentRank = TYPE_HIERARCHY[parentType];
+  const allOptions = getUnitTypeOptions();
+
+  return allOptions.filter((option) => {
+    const childRank = TYPE_HIERARCHY[option.value];
+    return childRank >= parentRank;
+  });
 }

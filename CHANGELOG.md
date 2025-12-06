@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Makes it explicit that the button creates a root-level organizational unit
   - Reduces confusion about where new units will be created
   - Empty state button remains as "Create Organizational Unit" for first-time users
+  - **Enhanced with hierarchy-based type filtering**: When creating a child unit, the type dropdown now only shows valid child types based on the parent's hierarchy rank. For example, when adding a child to a Branch (rank 4), only Branch, Division, Department, and Custom types are available. This prevents users from selecting invalid types upfront, improving UX by avoiding validation errors after submission.
 
 ### Added
 
