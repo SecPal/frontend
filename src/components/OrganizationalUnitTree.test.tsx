@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// @ts-nocheck - TODO: Fix tests to use useOrganizationalUnitsWithOffline mock
+// TODO: Fix tests to use useOrganizationalUnitsWithOffline mock
 // See Issue #325: Update OrganizationalUnitTree tests for offline hook
 // These tests need to be updated after implementing offline capability
+// Temporarily using ts-expect-error for each failing line until refactored
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
@@ -17,8 +18,9 @@ vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
   useOrganizationalUnitsWithOffline: vi.fn(),
 }));
 
-// Mock the API module
+// Mock the API module - TODO: Remove these when refactoring to use offline hook (Issue #325)
 vi.mock("../services/organizationalUnitApi", () => ({
+  listOrganizationalUnits: vi.fn(), // Deprecated - will be removed in refactor
   deleteOrganizationalUnit: vi.fn(),
   attachOrganizationalUnitParent: vi.fn(),
   detachOrganizationalUnitParent: vi.fn(),
@@ -29,7 +31,13 @@ import {
   deleteOrganizationalUnit,
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
+  // @ts-expect-error - listOrganizationalUnits temporarily mocked above, will be removed in Issue #325
+  listOrganizationalUnits,
 } from "../services/organizationalUnitApi";
+
+// Temporary type alias - TODO: Import from correct location in refactor (Issue #325)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type OrganizationalUnitPaginatedResponse = any;
 
 function renderWithI18n(component: React.ReactElement) {
   i18n.load("en", {});
