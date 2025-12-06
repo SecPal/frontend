@@ -292,45 +292,11 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
+          manualChunks: {
             // Vendor chunks for large dependencies
-            if (id.includes("node_modules")) {
-              if (
-                id.includes("react") ||
-                id.includes("react-dom") ||
-                id.includes("react-router")
-              ) {
-                return "vendor-react";
-              }
-              if (id.includes("@headlessui") || id.includes("@heroicons")) {
-                return "vendor-ui";
-              }
-              if (id.includes("@lingui")) {
-                return "vendor-lingui";
-              }
-              if (id.includes("dexie") || id.includes("idb")) {
-                return "vendor-db";
-              }
-              if (id.includes("workbox")) {
-                return "vendor-workbox";
-              }
-              // All other node_modules go into vendor-libs
-              return "vendor-libs";
-            }
-
-            // Split large application modules
-            if (id.includes("/components/application-layout")) {
-              return "app-layout";
-            }
-            if (id.includes("/lib/db.ts") || id.includes("/lib/apiCache")) {
-              return "app-db";
-            }
-            if (
-              id.includes("/lib/secretSync") ||
-              id.includes("/lib/secretApi")
-            ) {
-              return "app-sync";
-            }
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+            "vendor-lingui": ["@lingui/core", "@lingui/react"],
           },
         },
       },
