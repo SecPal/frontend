@@ -343,6 +343,8 @@ export default defineConfig(({ mode }) => {
       setupFiles: "./tests/setup.ts",
       testTimeout: 10000, // 10 seconds per test (default is 5s)
       hookTimeout: 10000, // 10 seconds for beforeEach/afterEach hooks
+      // Exclude Playwright E2E tests (run separately via npm run test:e2e)
+      exclude: ["**/node_modules/**", "**/dist/**", "**/tests/e2e/**"],
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html", "lcov", "clover"],

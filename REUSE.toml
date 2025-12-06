@@ -81,3 +81,11 @@ SPDX-License-Identifier = "CC0-1.0"
 path = "scripts/**"
 SPDX-FileCopyrightText = "2025 SecPal Contributors"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "playwright.config.ts"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "tests/**"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
