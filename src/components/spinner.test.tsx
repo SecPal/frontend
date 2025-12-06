@@ -22,7 +22,7 @@ describe("Spinner", () => {
   it("renders with large size", () => {
     const { container } = render(<Spinner size="lg" />);
     const spinner = container.querySelector(".animate-spin");
-    expect(spinner).toHaveClass("h-12", "w-12", "border-b-2");
+    expect(spinner).toHaveClass("h-12", "w-12", "border-2");
   });
 
   it("has proper accessibility attributes", () => {
