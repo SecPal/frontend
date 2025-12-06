@@ -47,10 +47,10 @@ function cacheEntryToOrganizationalUnit(
     parent: entry.parent
       ? {
           id: entry.parent.id,
-          type: entry.parent.type as OrganizationalUnit['type'],
+          type: entry.parent.type as OrganizationalUnit["type"],
           name: entry.parent.name,
-          created_at: '',
-          updated_at: '',
+          created_at: "",
+          updated_at: "",
         }
       : undefined,
     created_at: entry.created_at,
