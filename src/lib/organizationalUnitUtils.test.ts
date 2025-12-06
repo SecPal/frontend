@@ -7,6 +7,8 @@ import {
   getTypeLabel,
   getUnitTypeOptions,
   getTypeBadgeColor,
+  getValidChildTypeOptions,
+  TYPE_HIERARCHY,
 } from "./organizationalUnitUtils";
 
 describe("organizationalUnitUtils", () => {
@@ -116,6 +118,79 @@ describe("organizationalUnitUtils", () => {
         "Department",
         "Custom",
       ]);
+    });
+  });
+
+  describe("TYPE_HIERARCHY", () => {
+    it("defines correct hierarchy ranks", () => {
+      expect(TYPE_HIERARCHY.holding).toBe(1);
+      expect(TYPE_HIERARCHY.company).toBe(2);
+      expect(TYPE_HIERARCHY.region).toBe(3);
+      expect(TYPE_HIERARCHY.branch).toBe(4);
+      expect(TYPE_HIERARCHY.division).toBe(5);
+      expect(TYPE_HIERARCHY.department).toBe(6);
+      expect(TYPE_HIERARCHY.custom).toBe(7);
+    });
+  });
+
+  describe("getValidChildTypeOptions", () => {
+    it("returns only lower-hierarchy types for branch parent", () => {
+      const options = getValidChildTypeOptions("branch");
+      const values = options.map((o) => o.value);
+      
+      // Branch has rank 4, so only types with rank > 4 should be returned
+      expect(values).toEqual(["division", "department", "custom"]);
+      expect(values).not.toContain("branch"); // Same-level nesting forbidden
+      expect(values).not.toContain("holding");
+      expect(values).not.toContain("company");
+      expect(values).not.toContain("region");
+    });
+
+    it("returns only lower-hierarchy types for company parent", () => {
+      const options = getValidChildTypeOptions("company");
+      const values = options.map((o) => o.value);
+      
+      // Company has rank 2, so only types with rank > 2 should be returned
+      expect(values).toEqual([
+        "region",
+        "branch",
+        "division",
+        "department",
+        "custom",
+      ]);
+      expect(values).not.toContain("company"); // Same-level nesting forbidden
+      expect(values).not.toContain("holding");
+    });
+
+    it("returns only lower-hierarchy types for holding parent", () => {
+      const options = getValidChildTypeOptions("holding");
+      const values = options.map((o) => o.value);
+      
+      // Holding has rank 1 (highest), so all other types are valid children
+      expect(values).toEqual([
+        "company",
+        "region",
+        "branch",
+        "division",
+        "department",
+        "custom",
+      ]);
+      expect(values).not.toContain("holding"); // Same-level nesting forbidden
+    });
+
+    it("returns no options for custom type (lowest hierarchy)", () => {
+      const options = getValidChildTypeOptions("custom");
+      
+      // Custom has rank 7 (lowest), so no type can be its child
+      expect(options).toHaveLength(0);
+    });
+
+    it("returns options with translated labels", () => {
+      const options = getValidChildTypeOptions("branch");
+      
+      expect(options[0].label).toBe("Division");
+      expect(options[1].label).toBe("Department");
+      expect(options[2].label).toBe("Custom");
     });
   });
 });
