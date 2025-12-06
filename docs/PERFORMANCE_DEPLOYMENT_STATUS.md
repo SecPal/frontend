@@ -18,20 +18,40 @@ SPDX-License-Identifier: CC0-1.0
 
 - **Server:** app.secpal.dev
 - **Branch:** perf/aggressive-code-splitting
-- **Build Time:** 21.12s
-- **Deployed File:** `assets/index-Dck4NFuj.js`
-- **Bundle Size:** 57.62KB / 14.68KB gzipped ✅
+- **Build Time:** 30.38s
+- **Deployed File:** `assets/index-CjW3EPzu.js`
+- **Bundle Size:** 310.11KB / 94.28KB gzipped ✅
+- **Fix Applied:** Reverted to object-based manualChunks ✅
+
+### Critical Fix Applied
+
+**Problem:** Function-based `manualChunks` caused Heroicons module resolution errors
+**Error:** `Cannot set properties of undefined (setting 'Activity')`
+**Solution:** Reverted to object-based config with explicit package names
+**Status:** ✅ **FIXED** - PWA loads without errors
+
+### Vendor Chunks Deployed
+
+```bash
+vendor-react:      45.12KB / 16.22KB gzipped (React ecosystem)
+vendor-ui:        128.63KB / 41.90KB gzipped (Headless UI + Heroicons) ← Fixed
+vendor-lingui:      8.07KB /  3.34KB gzipped (i18n)
+vendor-db:         97.08KB / 32.43KB gzipped (Dexie + IDB)
+vendor-animation:  56.22KB / 20.17KB gzipped (Motion.js)
+vendor-monitoring:  5.73KB /  2.33KB gzipped (web-vitals)
+vendor-utils:       0.37KB /  0.24KB gzipped (clsx)
+```
 
 ### Bundle Verification
 
 ```bash
-# Main bundle deployed
-curl -s https://app.secpal.dev/ | grep -o 'assets/index-[^"]*\.js'
-# Output: assets/index-Dck4NFuj.js ✅
+# Verify vendor-ui deployed correctly
+curl -s https://app.secpal.dev/ | grep -o 'vendor-ui[^"]*\.js'
+# Output: vendor-ui-9RpWKF-5.js ✅
 
 # Compare with local build
-npm run build | grep "index-"
-# Output: dist/assets/index-Dck4NFuj.js  57.62 kB │ gzip:  14.68 kB ✅
+npm run build | grep "vendor-ui"
+# Output: dist/assets/vendor-ui-9RpWKF-5.js  128.63 kB ✅
 ```
 
 **Match confirmed:** Server deployment matches local build
@@ -86,12 +106,27 @@ npm run lighthouse:ci
 
 ## 📊 Expected vs Baseline
 
-| Metric             | Baseline (PR #317) | Expected (Aggressive) | Target | Change  |
-| ------------------ | ------------------ | --------------------- | ------ | ------- |
-| TBT                | 419ms              | 150-180ms             | <200ms | -57-64% |
-| Main Bundle (gzip) | 149KB              | 14.68KB               | <150KB | -90%    |
-| Performance Score  | 90-95%             | 95-98%                | >95%   | +5-8%   |
-| Initial Parse Time | ~863ms             | ~200-250ms            | -      | -70-75% |
+| Metric             | Baseline (PR #317) | Current (Deployed) | Target | Status |
+| ------------------ | ------------------ | ------------------ | ------ | ------ |
+| TBT                | 419ms              | TBD (test needed)  | <200ms | ⏳     |
+| Main Bundle (gzip) | 149KB              | 94.28KB            | <150KB | ✅     |
+| Vendor Chunks      | 3                  | 7                  | -      | ✅     |
+| PWA Functional     | ✅                 | ✅ (Fixed)         | ✅     | ✅     |
+| Console Errors     | Some               | None               | None   | ✅     |
+
+### Trade-offs
+
+**Original aggressive splitting (broken):**
+
+- Main bundle: 14.68KB gzipped ⚠️ Too aggressive
+- Problem: Heroicons exports broken
+- Status: Reverted
+
+**Current object-based splitting (working):**
+
+- Main bundle: 94.28KB gzipped ✅ Still 37% smaller than baseline!
+- Benefit: All vendor libraries properly split
+- Status: Deployed and functional
 
 ---
 
