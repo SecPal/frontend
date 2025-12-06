@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # Deploy Performance Optimizations to app.secpal.dev
-# 
+#
 # This script connects to the Uberspace server and updates the frontend
 # with the latest performance optimizations from the GitHub branch
 
@@ -22,7 +22,7 @@ echo "1. Connect to Uberspace:"
 echo "   ssh secpal@triangulum.uberspace.de"
 echo ""
 echo "2. Navigate to frontend directory:"
-echo "   cd ~/frontend"
+echo "   cd /var/www/virtual/\$USER/secpal-frontend"
 echo ""
 echo "3. Pull latest changes:"
 echo "   git fetch origin"

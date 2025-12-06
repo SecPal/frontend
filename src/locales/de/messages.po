@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-05 20:14+0100\n"
+"POT-Creation-Date: 2025-12-06 10:53+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -8,12 +8,12 @@ msgstr ""
 "Language: de\n"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:197
+#: src/pages/Organization/OrganizationPage.tsx:210
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" erfolgreich erstellt"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:198
+#: src/pages/Organization/OrganizationPage.tsx:211
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" erfolgreich aktualisiert"
 
@@ -38,15 +38,15 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:45
+#: src/App.tsx:54
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:56
+#: src/App.tsx:65
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/pages/Secrets/SecretDetail.tsx:430
+#: src/pages/Secrets/SecretDetail.tsx:436
 msgid "Access Control"
 msgstr "Zugangskontrolle"
 
@@ -70,7 +70,7 @@ msgstr "Aktiv"
 msgid "Add Area"
 msgstr "Bereich hinzufügen"
 
-#: src/pages/Organization/OrganizationPage.tsx:319
+#: src/pages/Organization/OrganizationPage.tsx:332
 msgid "Add Child Unit"
 msgstr "Untergeordnete Einheit hinzufügen"
 
@@ -145,7 +145,7 @@ msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Dadurch werden auch a
 msgid "Are you sure you want to delete \"{0}\"? This will also delete all reports. This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Dadurch werden auch alle Berichte gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: src/pages/Secrets/SecretDetail.tsx:152
+#: src/pages/Secrets/SecretDetail.tsx:158
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?"
 
@@ -166,15 +166,15 @@ msgid "Attached Files"
 msgstr "Angehängte Dateien"
 
 #. placeholder {0}: secret.attachments.length
-#: src/pages/Secrets/SecretDetail.tsx:399
+#: src/pages/Secrets/SecretDetail.tsx:405
 msgid "Attachments ({0})"
 msgstr "Anhänge ({0})"
 
-#: src/App.tsx:67
+#: src/App.tsx:76
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
-#: src/pages/Secrets/SecretDetail.tsx:243
+#: src/pages/Secrets/SecretDetail.tsx:249
 msgid "Back to Secrets"
 msgstr "Zurück zu Geheimnisse"
 
@@ -230,7 +230,7 @@ msgstr "Gelöscht {count} abgeschlossene(r) Upload(s)"
 msgid "Close"
 msgstr "Schließen"
 
-#: src/pages/Organization/OrganizationPage.tsx:267
+#: src/pages/Organization/OrganizationPage.tsx:280
 msgid "Close detail panel"
 msgstr "Detailfenster schließen"
 
@@ -284,8 +284,8 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 msgid "Create your first secret to get started"
 msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 
-#: src/pages/Organization/OrganizationPage.tsx:305
-#: src/pages/Secrets/SecretDetail.tsx:460
+#: src/pages/Organization/OrganizationPage.tsx:318
+#: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Erstellt"
 
@@ -357,7 +357,7 @@ msgstr "Bereich"
 
 #: src/components/ObjectManager.tsx:377
 #: src/components/OrganizationalUnitFormDialog.tsx:296
-#: src/pages/Organization/OrganizationPage.tsx:286
+#: src/pages/Organization/OrganizationPage.tsx:299
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -365,7 +365,7 @@ msgstr "Beschreibung"
 msgid "Description must be at most 1000 characters"
 msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
-#: src/pages/Secrets/SecretDetail.tsx:292
+#: src/pages/Secrets/SecretDetail.tsx:298
 msgid "Details"
 msgstr "Details"
 
@@ -389,8 +389,8 @@ msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
 #: src/components/OrganizationalUnitTree.tsx:333
-#: src/pages/Organization/OrganizationPage.tsx:316
-#: src/pages/Secrets/SecretDetail.tsx:275
+#: src/pages/Organization/OrganizationPage.tsx:329
+#: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -432,7 +432,7 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/pages/Secrets/SecretDetail.tsx:236
+#: src/pages/Secrets/SecretDetail.tsx:242
 msgid "Error Loading Secret"
 msgstr "Fehler beim Laden des Geheimnisses"
 
@@ -454,13 +454,13 @@ msgid "Expand"
 msgstr "Ausklappen"
 
 #: src/pages/Secrets/SecretCard.tsx:44
-#: src/pages/Secrets/SecretDetail.tsx:268
-#: src/pages/Secrets/SecretDetail.tsx:375
+#: src/pages/Secrets/SecretDetail.tsx:274
+#: src/pages/Secrets/SecretDetail.tsx:381
 #: src/pages/Secrets/SecretList.tsx:208
 msgid "Expired"
 msgstr "Abgelaufen"
 
-#: src/pages/Secrets/SecretDetail.tsx:366
+#: src/pages/Secrets/SecretDetail.tsx:372
 msgid "Expires"
 msgstr "Läuft ab"
 
@@ -496,7 +496,7 @@ msgstr "Uploads konnten nicht gelöscht werden"
 msgid "Failed to delete area"
 msgstr "Bereich konnte nicht gelöscht werden"
 
-#: src/pages/Secrets/SecretDetail.tsx:168
+#: src/pages/Secrets/SecretDetail.tsx:174
 msgid "Failed to delete attachment"
 msgstr "Anhang konnte nicht gelöscht werden"
 
@@ -524,7 +524,7 @@ msgstr "Organisationseinheit konnte nicht gelöscht werden"
 msgid "Failed to delete report"
 msgstr "Bericht konnte nicht gelöscht werden"
 
-#: src/pages/Secrets/SecretDetail.tsx:141
+#: src/pages/Secrets/SecretDetail.tsx:147
 msgid "Failed to download attachment"
 msgstr "Download des Anhangs fehlgeschlagen"
 
@@ -552,7 +552,7 @@ msgstr "Objekte konnten nicht geladen werden"
 msgid "Failed to load organizational units"
 msgstr "Organisationseinheiten konnten nicht geladen werden"
 
-#: src/pages/Secrets/SecretDetail.tsx:188
+#: src/pages/Secrets/SecretDetail.tsx:194
 msgid "Failed to load preview"
 msgstr "Vorschau konnte nicht geladen werden"
 
@@ -649,7 +649,7 @@ msgstr "Gitternetz-Ansicht"
 msgid "Guard Books"
 msgstr "Wachbücher"
 
-#: src/pages/Secrets/SecretDetail.tsx:321
+#: src/pages/Secrets/SecretDetail.tsx:327
 msgid "Hide"
 msgstr "Ausblenden"
 
@@ -709,7 +709,7 @@ msgstr "Listenansicht"
 msgid "Loading attachments..."
 msgstr "Anhänge laden..."
 
-#: src/pages/Secrets/SecretDetail.tsx:223
+#: src/pages/Secrets/SecretDetail.tsx:229
 msgid "Loading secret..."
 msgstr "Geheimnis laden..."
 
@@ -743,7 +743,7 @@ msgstr "Verwalten Sie geschützte Objekte und deren Bereiche für diesen Kunden.
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
-#: src/pages/Organization/OrganizationPage.tsx:220
+#: src/pages/Organization/OrganizationPage.tsx:233
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
 
@@ -755,7 +755,7 @@ msgstr "Verwalten Sie Ihre Geheimnisse und sensiblen Informationen auf sichere W
 msgid "Messages from team members and supervisors"
 msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 
-#: src/pages/Secrets/SecretDetail.tsx:448
+#: src/pages/Secrets/SecretDetail.tsx:454
 msgid "Metadata"
 msgstr "Metadaten"
 
@@ -876,7 +876,7 @@ msgstr "Keine Einheit ausgewählt"
 msgid "Not shared with anyone"
 msgstr "Nicht mit anderen geteilt"
 
-#: src/pages/Secrets/SecretDetail.tsx:387
+#: src/pages/Secrets/SecretDetail.tsx:393
 msgid "Notes"
 msgstr "Anmerkungen"
 
@@ -935,7 +935,7 @@ msgstr "Optionale Beschreibung..."
 msgid "Organization"
 msgstr "Organisation"
 
-#: src/pages/Organization/OrganizationPage.tsx:217
+#: src/pages/Organization/OrganizationPage.tsx:230
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
 
@@ -943,7 +943,7 @@ msgstr "Organisationsstruktur"
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
-#: src/pages/Secrets/SecretDetail.tsx:454
+#: src/pages/Secrets/SecretDetail.tsx:460
 msgid "Owner"
 msgstr "Eigentümer"
 
@@ -953,7 +953,7 @@ msgstr "Eigentümer"
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
 
-#: src/pages/Organization/OrganizationPage.tsx:296
+#: src/pages/Organization/OrganizationPage.tsx:309
 msgid "Parent"
 msgstr "Übergeordnete Einheit"
 
@@ -961,7 +961,7 @@ msgstr "Übergeordnete Einheit"
 msgid "Parent Unit"
 msgstr "Übergeordnete Einheit"
 
-#: src/pages/Secrets/SecretDetail.tsx:307
+#: src/pages/Secrets/SecretDetail.tsx:313
 msgid "Password"
 msgstr "Passwort"
 
@@ -1083,11 +1083,11 @@ msgstr "Geheimnisse durchsuchen"
 msgid "Search secrets..."
 msgstr "Geheimnisse durchsuchen..."
 
-#: src/App.tsx:38
+#: src/App.tsx:47
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:59
+#: src/App.tsx:68
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
@@ -1124,7 +1124,7 @@ msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinh
 msgid "Select an object to view details"
 msgstr "Wählen Sie ein Objekt aus, um Details anzuzeigen"
 
-#: src/pages/Organization/OrganizationPage.tsx:326
+#: src/pages/Organization/OrganizationPage.tsx:339
 msgid "Select an organizational unit to view details"
 msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 
@@ -1155,7 +1155,7 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 #: src/components/ShareDialog.tsx:229
-#: src/pages/Secrets/SecretDetail.tsx:279
+#: src/pages/Secrets/SecretDetail.tsx:285
 msgid "Share"
 msgstr "Teilen"
 
@@ -1192,7 +1192,7 @@ msgstr "Teile..."
 msgid "Shift Reminders"
 msgstr "Schicht-Erinnerungen"
 
-#: src/pages/Secrets/SecretDetail.tsx:321
+#: src/pages/Secrets/SecretDetail.tsx:327
 msgid "Show"
 msgstr "Anzeigen"
 
@@ -1236,7 +1236,7 @@ msgstr "Synchronisieren..."
 msgid "System Updates"
 msgstr "System-Updates"
 
-#: src/pages/Secrets/SecretDetail.tsx:349
+#: src/pages/Secrets/SecretDetail.tsx:355
 msgid "Tags"
 msgstr "Tags"
 
@@ -1289,7 +1289,7 @@ msgid "Try adjusting your filters"
 msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:269
-#: src/pages/Organization/OrganizationPage.tsx:277
+#: src/pages/Organization/OrganizationPage.tsx:290
 msgid "Type"
 msgstr "Typ"
 
@@ -1297,7 +1297,7 @@ msgstr "Typ"
 msgid "Type is required"
 msgstr "Typ ist erforderlich"
 
-#: src/pages/Secrets/SecretDetail.tsx:331
+#: src/pages/Secrets/SecretDetail.tsx:337
 msgid "URL"
 msgstr "URL"
 
@@ -1306,7 +1306,7 @@ msgstr "URL"
 msgid "URL:"
 msgstr "URL:"
 
-#: src/pages/Secrets/SecretDetail.tsx:415
+#: src/pages/Secrets/SecretDetail.tsx:421
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Verschlüsselungsschlüssel für Anhänge kann nicht geladen werden. Bitte aktualisieren Sie die Seite oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
 
@@ -1330,7 +1330,7 @@ msgstr "Aktualisieren Sie die Angaben zu Ihrem Geheimnis."
 msgid "Update the organizational unit details."
 msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 
-#: src/pages/Secrets/SecretDetail.tsx:466
+#: src/pages/Secrets/SecretDetail.tsx:472
 msgid "Updated"
 msgstr "Aktualisiert"
 
@@ -1344,7 +1344,7 @@ msgstr "Upload-Warteschlange"
 msgid "Uploading..."
 msgstr "Hochladen..."
 
-#: src/pages/Secrets/SecretDetail.tsx:298
+#: src/pages/Secrets/SecretDetail.tsx:304
 msgid "Username"
 msgstr "Benutzername"
 
@@ -1356,7 +1356,7 @@ msgstr "Benutzer"
 msgid "View Objects"
 msgstr "Objekte anzeigen"
 
-#: src/App.tsx:42
+#: src/App.tsx:51
 msgid "View Secrets"
 msgstr "Geheimnisse ansehen"
 
@@ -1369,7 +1369,7 @@ msgstr "Objekte für {0} anzeigen"
 msgid "View your account information."
 msgstr "Zeigen Sie Ihre Kontoinformationen an."
 
-#: src/App.tsx:35
+#: src/App.tsx:44
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
@@ -1503,7 +1503,7 @@ msgstr "- Lesen: Geheime Details anzeigen"
 msgid "• Write: View + edit secret"
 msgstr "- Schreiben: Ansehen + Bearbeiten Geheimnis"
 
-#: src/pages/Secrets/SecretDetail.tsx:261
+#: src/pages/Secrets/SecretDetail.tsx:267
 msgid "← Back to Secrets"
 msgstr "← Zurück zu Geheimnissen"
 
