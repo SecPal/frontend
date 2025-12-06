@@ -169,8 +169,8 @@ describe("OrganizationPage", () => {
       expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
     });
 
-    // Click "Add Unit" button
-    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+    // Click "Add Root Unit" button
+    await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
 
     // Dialog should open
     await waitFor(() => {
@@ -247,7 +247,7 @@ describe("OrganizationPage", () => {
     });
 
     // Open dialog
-    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+    await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
 
     await waitFor(() => {
       expect(
@@ -288,7 +288,7 @@ describe("OrganizationPage", () => {
     });
 
     // Open create dialog
-    await user.click(screen.getByRole("button", { name: /Add Unit/i }));
+    await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
 
     await waitFor(() => {
       expect(
