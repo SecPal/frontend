@@ -14,11 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Removed redundant "Add Unit" button from Organizational Unit Tree** (#300, Part of Epic #283)
-  - Removed "Add Unit" button from tree header as it was confusing and redundant
-  - Empty state button ("Create Organizational Unit") remains for first-time users
-  - Users can create child units using the "+" action on existing units
-  - Improves UX by removing ambiguous button that created root units invisible to users (Need-to-Know principle)
+- **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
+  - Renamed "Add Unit" button to "Add Root Unit" for clarity
+  - Makes it explicit that the button creates a root-level organizational unit
+  - Reduces confusion about where new units will be created
+  - Empty state button remains as "Create Organizational Unit" for first-time users
 
 ### Added
 
