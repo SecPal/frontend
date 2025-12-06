@@ -172,7 +172,7 @@ npm run build:analyze
 - Which modules are largest?
 - Are there duplicates?
 - Are all optimizations applied?
-````
+```
 
 ---
 

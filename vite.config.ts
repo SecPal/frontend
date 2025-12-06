@@ -301,51 +301,11 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          manualChunks: {
             // Vendor chunks for large dependencies
-            if (id.includes("node_modules")) {
-              if (
-                id.includes("react") ||
-                id.includes("react-dom") ||
-                id.includes("react-router")
-              ) {
-                return "vendor-react";
-              }
-              if (id.includes("@headlessui")) {
-                return "vendor-headless";
-              }
-              if (id.includes("@heroicons")) {
-                return "vendor-icons";
-              }
-              if (id.includes("@lingui")) {
-                return "vendor-lingui";
-              }
-              if (id.includes("dexie") || id.includes("idb")) {
-                return "vendor-db";
-              }
-              if (id.includes("motion")) {
-                return "vendor-animation";
-              }
-              // Other node_modules go to vendor-misc
-              return "vendor-misc";
-            }
-
-            // Split out large components/services
-            if (id.includes("/src/services/")) {
-              return "services";
-            }
-            if (
-              id.includes("/src/lib/") &&
-              !id.includes("/src/lib/webVitals")
-            ) {
-              return "lib";
-            }
-            if (id.includes("/src/locales/")) {
-              const match = id.match(/locales\/(\w+)\//);
-              if (match) {
-                return `locale-${match[1]}`;
-              }
-            }
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+            "vendor-lingui": ["@lingui/core", "@lingui/react"],
           },
         },
       },

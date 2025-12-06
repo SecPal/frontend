@@ -170,7 +170,7 @@ manualChunks(id) {
 }
 ```
 
-1. Lazy load heavy dialogs in OrganizationalUnitTree:
+2. Lazy load heavy dialogs in OrganizationalUnitTree:
 
 ```typescript
 const DeleteOrganizationalUnitDialog = lazy(() =>
@@ -338,7 +338,7 @@ build: {
 | `locale-de.js`        | -      | -       | 16KB                 | New               |
 | `locale-en.js`        | -      | -       | 14KB                 | New               |
 
-_(Uncompressed sizes shown)_
+**Note:** Uncompressed sizes shown
 
 **Key Achievement:** Main bundle reduced from 469KB to 57KB (-88%)!
 
