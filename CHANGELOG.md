@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Removed redundant "Add Unit" button from Organizational Unit Tree** (#300, Part of Epic #283)
+  - Removed "Add Unit" button from tree header as it was confusing and redundant
+  - Empty state button ("Create Organizational Unit") remains for first-time users
+  - Users can create child units using the "+" action on existing units
+  - Improves UX by removing ambiguous button that created root units invisible to users (Need-to-Know principle)
+
 ### Added
 
 - **Web Vitals monitoring with thresholds & development warnings** (#310)

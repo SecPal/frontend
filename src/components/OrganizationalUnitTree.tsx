@@ -820,11 +820,6 @@ export function OrganizationalUnitTree({
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
         <Heading level={3}>{title || <Trans>My Organization</Trans>}</Heading>
-        {onCreate && (
-          <Button onClick={onCreate}>
-            <Trans>Add Unit</Trans>
-          </Button>
-        )}
       </div>
 
       <div
