@@ -1,7 +1,14 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  lazy,
+  Suspense,
+} from "react";
 import { Trans, t } from "@lingui/macro";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Heading } from "../../components/heading";
@@ -9,7 +16,13 @@ import { Text } from "../../components/text";
 import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
-import { OrganizationalUnitFormDialog } from "../../components/OrganizationalUnitFormDialog";
+
+// Lazy load dialog for better performance
+const OrganizationalUnitFormDialog = lazy(() =>
+  import("../../components/OrganizationalUnitFormDialog").then((m) => ({
+    default: m.OrganizationalUnitFormDialog,
+  }))
+);
 import {
   getTypeLabel,
   getTypeBadgeColor,
@@ -330,16 +343,20 @@ export function OrganizationPage() {
         </div>
       </div>
 
-      {/* Create/Edit Dialog */}
-      <OrganizationalUnitFormDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        mode={dialogMode}
-        parentId={dialogParentId}
-        parentName={dialogParentName}
-        unit={editingUnit}
-        onSuccess={handleDialogSuccess}
-      />
+      {/* Create/Edit Dialog - Lazy loaded for better performance */}
+      {dialogOpen && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <OrganizationalUnitFormDialog
+            open={dialogOpen}
+            onClose={handleDialogClose}
+            mode={dialogMode}
+            parentId={dialogParentId}
+            parentName={dialogParentName}
+            unit={editingUnit}
+            onSuccess={handleDialogSuccess}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
