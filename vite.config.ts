@@ -304,11 +304,14 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             // Vendor chunks for large dependencies
             "vendor-react": ["react", "react-dom", "react-router-dom"],
-            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+            "vendor-headless": ["@headlessui/react"],
+            "vendor-icons": ["@heroicons/react"],
             "vendor-lingui": ["@lingui/core", "@lingui/react"],
           },
         },
       },
+      // Set chunk size warning limit
+      chunkSizeWarningLimit: 500, // Warn if any chunk exceeds 500KB
     },
     server: {
       // Allow DDEV hostnames for local development
