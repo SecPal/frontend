@@ -99,6 +99,23 @@ describe("UpdatePrompt", () => {
       renderWithI18n(<UpdatePrompt />);
       expect(screen.queryByText("Later")).not.toBeInTheDocument();
     });
+
+    it("should display spinner with correct size and styling", async () => {
+      const user = userEvent.setup();
+      mockUpdateServiceWorker.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      renderWithI18n(<UpdatePrompt />);
+
+      const updateButton = screen.getByText("Update now");
+      await user.click(updateButton);
+
+      const spinner = document.querySelector(".animate-spin");
+      expect(spinner).toBeInTheDocument();
+      expect(spinner).toHaveClass("h-4", "w-4"); // size="sm"
+      expect(spinner).toHaveClass("border-t-white"); // white color
+    });
   });
 
   describe("User Interactions", () => {
@@ -118,6 +135,43 @@ describe("UpdatePrompt", () => {
       await user.click(updateButton);
 
       expect(mockUpdateServiceWorker).toHaveBeenCalledTimes(1);
+    });
+
+    it("should show loading state when update is triggered", async () => {
+      const user = userEvent.setup();
+      mockUpdateServiceWorker.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      renderWithI18n(<UpdatePrompt />);
+
+      const updateButton = screen.getByText("Update now");
+      await user.click(updateButton);
+
+      // Should show "Updating..." message
+      expect(screen.getByText("Updating...")).toBeInTheDocument();
+
+      // Should show spinner
+      const spinner = document.querySelector(".animate-spin");
+      expect(spinner).toBeInTheDocument();
+
+      // Update button should no longer be visible
+      expect(screen.queryByText("Update now")).not.toBeInTheDocument();
+    });
+
+    it("should not show update button during loading state", async () => {
+      const user = userEvent.setup();
+      mockUpdateServiceWorker.mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      renderWithI18n(<UpdatePrompt />);
+
+      const updateButton = screen.getByText("Update now");
+      await user.click(updateButton);
+
+      // Button should disappear
+      expect(screen.queryByText("Update now")).not.toBeInTheDocument();
     });
   });
 
