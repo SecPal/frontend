@@ -148,10 +148,9 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-          // Precache navigation routes for offline use
+          // Enable navigation fallback for SPA offline support
           navigateFallback: "/index.html",
-          navigateFallbackAllowlist: [/^\/(?!api)/], // Allow all non-API routes
-          navigateFallbackDenylist: [/^\/api\//], // Block API routes from fallback
+          navigateFallbackAllowlist: [/^(?!\/__).*/], // Allow all except Vite internal
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             // API: Secrets List (NetworkFirst + 5min TTL)
