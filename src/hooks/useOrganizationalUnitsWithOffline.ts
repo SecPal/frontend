@@ -129,6 +129,9 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
   // Prevent duplicate fetches with ref
   const isFetchingRef = useRef(false);
 
+  // Track previous online state to detect transitions
+  const prevOnlineRef = useRef(isOnline);
+
   /**
    * Load organizational units from IndexedDB cache
    */
@@ -234,6 +237,19 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
       fetchUnits();
     }
   }, [isOnline, isStale, fetchUnits]);
+
+  // Detect offline→online transition and mark data as stale
+  useEffect(() => {
+    const wasOffline = !prevOnlineRef.current;
+    const isNowOnline = isOnline;
+
+    if (wasOffline && isNowOnline) {
+      // Coming back online - mark data as potentially stale
+      setIsStale(true);
+    }
+
+    prevOnlineRef.current = isOnline;
+  }, [isOnline]);
 
   return {
     units,
