@@ -305,7 +305,6 @@ test.describe("Offline Functionality", () => {
 
           // Step 4: Check if new unit appears in offline cache
           // If cache was updated correctly, the new unit should be visible offline
-          const pageContent = await page.content();
           // This is a soft assertion - the test passes even if unit isn't found
           // since we might have permission issues or other constraints
         }
@@ -389,17 +388,8 @@ test.describe("Offline Functionality", () => {
         }
       }
 
-      // Should not have attempted any API mutations
-      const apiMutationRequests = failedRequests.filter(
-        (url) =>
-          url.includes("/api/") &&
-          (url.includes("POST") ||
-            url.includes("PATCH") ||
-            url.includes("DELETE"))
-      );
-
-      // Note: This might show failed GET requests for data fetching, which is OK
-      // We're checking that no mutation requests were attempted
+      // Note: We tracked failed requests but don't assert on them
+      // The important thing is that the UI prevents mutation attempts
 
       // Go back online
       await page.context().setOffline(false);
