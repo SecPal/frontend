@@ -159,7 +159,7 @@ describe("useServiceWorkerUpdate", () => {
       expect(mockUpdateSW).toHaveBeenCalledWith(true);
     });
 
-    it("should force reload after successful service worker update", async () => {
+    it("should NOT force reload after successful service worker update (swUpdate handles it)", async () => {
       mockUpdateSW.mockResolvedValueOnce(undefined);
       const { result } = renderHook(() => useServiceWorkerUpdate());
 
@@ -168,7 +168,8 @@ describe("useServiceWorkerUpdate", () => {
       });
 
       expect(mockUpdateSW).toHaveBeenCalledWith(true);
-      expect(reloadMock).toHaveBeenCalledTimes(1);
+      // swUpdate(true) handles the reload - we should NOT call window.location.reload()
+      expect(reloadMock).not.toHaveBeenCalled();
     });
 
     it("should force reload when service worker update fails", async () => {

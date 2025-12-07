@@ -49,6 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PWA Update: Fixed double page reload issue**
+  - **Problem:** When clicking "Update now" for a PWA update, the page reloaded twice, causing a jarring user experience
+  - **Root Cause:** `swUpdate(true)` already triggers a reload via `vite-plugin-pwa`, but we were also explicitly calling `window.location.reload()` immediately after
+  - **Solution:** Removed redundant `window.location.reload()` call from success path in `useServiceWorkerUpdate.ts`
+  - **Impact:** Page now reloads once instead of twice, providing a smoother update experience
+  - **Files Changed:**
+    - `src/hooks/useServiceWorkerUpdate.ts` - Removed duplicate reload, kept as fallback for error cases only
+    - `src/components/UpdatePrompt.tsx` - Simplified error handling
+    - `src/hooks/useServiceWorkerUpdate.test.ts` - Updated test expectations
+  - **Quality:** All tests pass (27/27), no linting or type errors
+  - **Documentation:** `docs/PWA_UPDATE_DOUBLE_RELOAD_FIX.md`
+
 - **Console errors detected by Lighthouse CI** (#311)
   - Changed non-critical `console.error` to `console.warn` for graceful degradation:
     - Analytics singleton initialization (browsers without IndexedDB support)

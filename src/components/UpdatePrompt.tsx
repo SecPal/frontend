@@ -41,14 +41,8 @@ export function UpdatePrompt() {
 
   const handleUpdate = async () => {
     console.log("[UpdatePrompt] Update button clicked");
-    try {
-      await updateServiceWorker();
-      console.log("[UpdatePrompt] Update successful, page should reload");
-    } catch (error) {
-      console.error("[UpdatePrompt] Update failed:", error);
-      // Fallback: force reload if update fails
-      window.location.reload();
-    }
+    await updateServiceWorker();
+    console.log("[UpdatePrompt] Update triggered, page will reload");
   };
 
   return (

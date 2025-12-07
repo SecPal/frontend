@@ -102,18 +102,19 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
 
   /**
    * Update service worker and reload the page
+   *
+   * Note: swUpdate(true) triggers the reload automatically via vite-plugin-pwa.
+   * We only force reload manually as a fallback if swUpdate fails.
    */
   const updateServiceWorker = useCallback(async () => {
     console.log("[SW Hook] updateServiceWorker called");
     try {
       console.log("[SW Hook] Calling swUpdate(true)...");
-      await swUpdate(true); // true = reload page after update
-      console.log("[SW Hook] swUpdate completed, forcing reload...");
-      // Force reload to ensure page refreshes even if swUpdate doesn't trigger it
-      window.location.reload();
+      await swUpdate(true); // true = reload page after update (handled by vite-plugin-pwa)
+      console.log("[SW Hook] swUpdate completed successfully");
     } catch (error) {
       console.error("[SW Hook] Update failed:", error);
-      // Force reload as fallback
+      // Force reload as fallback only on error
       console.log("[SW Hook] Forcing page reload as fallback");
       window.location.reload();
     }
