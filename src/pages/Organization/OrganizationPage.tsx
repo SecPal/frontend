@@ -59,7 +59,7 @@ interface OptimisticTreeUpdate {
  */
 export function OrganizationPage() {
   // Offline-first organizational units hook
-  const { isOffline, isStale } = useOrganizationalUnitsWithOffline();
+  const { isOffline, isStale, refresh } = useOrganizationalUnitsWithOffline();
   const [selectedUnit, setSelectedUnit] = useState<OrganizationalUnit | null>(
     null
   );
@@ -159,13 +159,16 @@ export function OrganizationPage() {
 
   const handleDelete = useCallback(
     (unit: OrganizationalUnit) => {
+      // Refresh data from cache after delete
+      refresh();
+
       // Delete is handled by OrganizationalUnitTree internally
       // This callback is for post-delete actions
       if (unit.id === selectedUnit?.id) {
         setSelectedUnit(null);
       }
     },
-    [selectedUnit?.id]
+    [selectedUnit?.id, refresh]
   );
 
   const handleCreate = useCallback(() => {
@@ -188,10 +191,13 @@ export function OrganizationPage() {
   }, []);
 
   const handleMove = useCallback(() => {
+    // Refresh data from cache after move
+    refresh();
+
     // Move is handled with optimistic UI in OrganizationalUnitTree
     // This callback is for post-move actions
     setSelectedUnit(null);
-  }, []);
+  }, [refresh]);
 
   const handleDialogClose = useCallback(() => {
     setDialogOpen(false);
@@ -200,6 +206,9 @@ export function OrganizationPage() {
 
   const handleDialogSuccess = useCallback(
     (unit: OrganizationalUnit) => {
+      // Refresh data from cache to ensure consistency
+      refresh();
+
       // Optimistic UI update (Issue #303) - update tree without reload
       // Use Date.now() as key to ensure each update triggers useEffect
       if (dialogMode === "create") {
@@ -232,7 +241,7 @@ export function OrganizationPage() {
         successTimeoutRef.current = null;
       }, 3000);
     },
-    [dialogMode, dialogParentId]
+    [dialogMode, dialogParentId, refresh]
   );
 
   return (
