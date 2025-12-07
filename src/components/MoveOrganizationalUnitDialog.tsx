@@ -391,11 +391,15 @@ export function MoveOrganizationalUnitDialog({
       </DialogDescription>
 
       <DialogBody>
-        {/* Offline indicator banner */}
+        {/* Offline warning banner - mutations not possible */}
         {isOffline && (
-          <div className="mb-4 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+          <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+            <div className="font-semibold mb-1">
+              <Trans>You're offline</Trans>
+            </div>
             <Trans>
-              You're offline. Viewing cached organizational units.
+              Moving organizational units is not possible while offline. Please
+              reconnect to make changes.
             </Trans>
           </div>
         )}
@@ -403,9 +407,7 @@ export function MoveOrganizationalUnitDialog({
         {/* Stale data indicator banner */}
         {!isOffline && isStale && (
           <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-            <Trans>
-              Viewing cached data. Some units may be outdated.
-            </Trans>
+            <Trans>Viewing cached data. Some units may be outdated.</Trans>
           </div>
         )}
 
@@ -482,7 +484,11 @@ export function MoveOrganizationalUnitDialog({
         <Button plain onClick={handleClose} disabled={isMoving}>
           <Trans>Cancel</Trans>
         </Button>
-        <Button color="blue" onClick={handleMove} disabled={isMoveDisabled}>
+        <Button
+          color="blue"
+          onClick={handleMove}
+          disabled={isMoveDisabled || isOffline}
+        >
           {isMoving ? <Trans>Moving...</Trans> : <Trans>Move</Trans>}
         </Button>
       </DialogActions>

@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Trans, t } from "@lingui/macro";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Dialog,
   DialogTitle,
@@ -88,6 +89,8 @@ export function OrganizationalUnitFormDialog({
   unit,
   onSuccess,
 }: OrganizationalUnitFormDialogProps) {
+  const isOnline = useOnlineStatus();
+
   // Form state
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -348,7 +351,7 @@ export function OrganizationalUnitFormDialog({
           <Button plain onClick={onClose} disabled={isSubmitting} type="button">
             <Trans>Cancel</Trans>
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !isOnline}>
             {isSubmitting ? (
               <Trans>Saving...</Trans>
             ) : mode === "create" ? (
