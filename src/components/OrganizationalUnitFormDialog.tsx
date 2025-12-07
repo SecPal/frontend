@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Trans, t } from "@lingui/macro";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Dialog,
   DialogTitle,
@@ -88,6 +89,8 @@ export function OrganizationalUnitFormDialog({
   unit,
   onSuccess,
 }: OrganizationalUnitFormDialogProps) {
+  const isOnline = useOnlineStatus();
+
   // Form state
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -247,6 +250,26 @@ export function OrganizationalUnitFormDialog({
 
       <form onSubmit={handleSubmit}>
         <DialogBody>
+          {/* Offline warning banner - mutations not possible */}
+          {!isOnline && (
+            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+              <div className="font-semibold mb-1">
+                <Trans>You're offline</Trans>
+              </div>
+              {mode === "create" ? (
+                <Trans>
+                  Creating organizational units is not possible while offline.
+                  Please reconnect to make changes.
+                </Trans>
+              ) : (
+                <Trans>
+                  Editing organizational units is not possible while offline.
+                  Please reconnect to make changes.
+                </Trans>
+              )}
+            </div>
+          )}
+
           {/* General error message */}
           {errors.general && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
@@ -348,7 +371,7 @@ export function OrganizationalUnitFormDialog({
           <Button plain onClick={onClose} disabled={isSubmitting} type="button">
             <Trans>Cancel</Trans>
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !isOnline}>
             {isSubmitting ? (
               <Trans>Saving...</Trans>
             ) : mode === "create" ? (

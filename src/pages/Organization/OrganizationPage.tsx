@@ -17,6 +17,7 @@ import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
 import { SpinnerContainer } from "../../components/spinner";
+import { OfflineDataBanner } from "../../components/OfflineDataBanner";
 
 // Lazy load dialog for better performance
 const OrganizationalUnitFormDialog = lazy(() =>
@@ -59,7 +60,8 @@ interface OptimisticTreeUpdate {
  */
 export function OrganizationPage() {
   // Offline-first organizational units hook
-  const { isOffline, isStale } = useOrganizationalUnitsWithOffline();
+  const { isOffline, isStale, lastSynced, refresh } =
+    useOrganizationalUnitsWithOffline();
   const [selectedUnit, setSelectedUnit] = useState<OrganizationalUnit | null>(
     null
   );
@@ -159,13 +161,16 @@ export function OrganizationPage() {
 
   const handleDelete = useCallback(
     (unit: OrganizationalUnit) => {
+      // Refresh data from cache after delete
+      refresh();
+
       // Delete is handled by OrganizationalUnitTree internally
       // This callback is for post-delete actions
       if (unit.id === selectedUnit?.id) {
         setSelectedUnit(null);
       }
     },
-    [selectedUnit?.id]
+    [selectedUnit?.id, refresh]
   );
 
   const handleCreate = useCallback(() => {
@@ -188,10 +193,13 @@ export function OrganizationPage() {
   }, []);
 
   const handleMove = useCallback(() => {
+    // Refresh data from cache after move
+    refresh();
+
     // Move is handled with optimistic UI in OrganizationalUnitTree
     // This callback is for post-move actions
     setSelectedUnit(null);
-  }, []);
+  }, [refresh]);
 
   const handleDialogClose = useCallback(() => {
     setDialogOpen(false);
@@ -200,6 +208,9 @@ export function OrganizationPage() {
 
   const handleDialogSuccess = useCallback(
     (unit: OrganizationalUnit) => {
+      // Refresh data from cache to ensure consistency
+      refresh();
+
       // Optimistic UI update (Issue #303) - update tree without reload
       // Use Date.now() as key to ensure each update triggers useEffect
       if (dialogMode === "create") {
@@ -232,7 +243,7 @@ export function OrganizationPage() {
         successTimeoutRef.current = null;
       }, 3000);
     },
-    [dialogMode, dialogParentId]
+    [dialogMode, dialogParentId, refresh]
   );
 
   return (
@@ -249,24 +260,13 @@ export function OrganizationPage() {
         </Text>
       </div>
 
-      {/* Offline indicator banner */}
-      {isOffline && (
-        <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-          <Trans>
-            You're offline. Viewing cached organizational units. Changes will be
-            synced when you're back online.
-          </Trans>
-        </div>
-      )}
-
-      {/* Stale data indicator banner */}
-      {!isOffline && isStale && (
-        <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-          <Trans>
-            Viewing cached data. Some organizational units may be outdated.
-          </Trans>
-        </div>
-      )}
+      {/* Offline/Stale data banner */}
+      <OfflineDataBanner
+        isOffline={isOffline}
+        isStale={isStale}
+        lastSynced={lastSynced}
+        onRefresh={refresh}
+      />
 
       {/* Success toast */}
       {successMessage && (

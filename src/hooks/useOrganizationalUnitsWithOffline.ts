@@ -7,6 +7,7 @@ import type { OrganizationalUnit } from "../types/organizational";
 import {
   saveOrganizationalUnit,
   listOrganizationalUnits as listCachedOrganizationalUnits,
+  clearOrganizationalUnitCache,
 } from "../lib/organizationalUnitStore";
 import type { OrganizationalUnitCacheEntry } from "../lib/db";
 import { useOnlineStatus } from "./useOnlineStatus";
@@ -21,13 +22,15 @@ export interface UseOrganizationalUnitsWithOfflineResult {
   loading: boolean;
   /** Error message if fetch failed */
   error: string | null;
-  /** True if browser is offline */
+  /** True if device is offline */
   isOffline: boolean;
-  /** True if showing cached data (either offline or API failed) */
+  /** True if displaying stale cached data */
   isStale: boolean;
-  /** Root unit IDs from API metadata (for tree building) */
+  /** Root unit IDs for tree rendering (permission-filtered roots) */
   rootUnitIds: string[];
-  /** Manually refresh data */
+  /** Timestamp of last successful sync */
+  lastSynced: Date | null;
+  /** Manually trigger a refresh */
   refresh: () => Promise<void>;
 }
 
@@ -123,16 +126,31 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
   const [error, setError] = useState<string | null>(null);
   const [isStale, setIsStale] = useState(false);
   const [rootUnitIds, setRootUnitIds] = useState<string[]>([]);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const isOnline = useOnlineStatus();
 
   // Prevent duplicate fetches with ref
   const isFetchingRef = useRef(false);
+
+  // Track previous online state to detect transitions
+  const prevOnlineRef = useRef(isOnline);
 
   /**
    * Load organizational units from IndexedDB cache
    */
   const loadFromCache = useCallback(async (): Promise<OrganizationalUnit[]> => {
     const cached = await listCachedOrganizationalUnits();
+
+    // Find most recent sync time from cached entries
+    if (cached.length > 0) {
+      const latestSync = Math.max(
+        ...cached.map((entry) => entry.lastSynced?.getTime() ?? 0)
+      );
+      if (latestSync > 0) {
+        setLastSynced(new Date(latestSync));
+      }
+    }
+
     return cached.map(cacheEntryToOrganizationalUnit);
   }, []);
 
@@ -145,6 +163,9 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
   }> => {
     const response = await fetchOrganizationalUnits({ per_page: 100 });
 
+    // Clear cache first to remove units that no longer exist
+    await clearOrganizationalUnitCache();
+
     // Cache all units for offline access
     await Promise.all(
       response.data.map((unit) =>
@@ -152,8 +173,13 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
       )
     );
 
+    // Sort by name to match cache sorting (consistent online/offline)
+    const sortedUnits = [...response.data].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
     return {
-      units: response.data,
+      units: sortedUnits,
       rootUnitIds: response.meta.root_unit_ids || [],
     };
   }, []);
@@ -173,7 +199,10 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     setError(null);
 
     try {
-      if (!isOnline) {
+      // Use isOnline from hook for consistent online status
+      const currentlyOnline = isOnline;
+
+      if (!currentlyOnline) {
         // Offline: use cache only
         const cached = await loadFromCache();
         setUnits(cached);
@@ -223,6 +252,19 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     }
   }, [isOnline, isStale, fetchUnits]);
 
+  // Detect offline→online transition and mark data as stale
+  useEffect(() => {
+    const wasOffline = !prevOnlineRef.current;
+    const isNowOnline = isOnline;
+
+    if (wasOffline && isNowOnline) {
+      // Coming back online - mark data as potentially stale
+      setIsStale(true);
+    }
+
+    prevOnlineRef.current = isOnline;
+  }, [isOnline]);
+
   return {
     units,
     loading,
@@ -230,6 +272,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     isOffline: !isOnline,
     isStale,
     rootUnitIds,
+    lastSynced,
     refresh: fetchUnits,
   };
 }

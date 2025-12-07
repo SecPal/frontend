@@ -3,6 +3,11 @@
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
+import { ApiError } from "./secretApi";
+import {
+  saveOrganizationalUnit as saveToCache,
+  deleteOrganizationalUnit as deleteFromCache,
+} from "../lib/organizationalUnitStore";
 import type {
   OrganizationalUnit,
   CreateOrganizationalUnitRequest,
@@ -11,7 +16,6 @@ import type {
   OrganizationalUnitPaginatedResponse,
   UserOrganizationalScope,
 } from "../types/organizational";
-import { ApiError } from "./secretApi";
 
 /**
  * Organizational Unit API Service
@@ -136,7 +140,32 @@ export async function createOrganizationalUnit(
   }
 
   const result = await response.json();
-  return result.data;
+  const unit = result.data;
+
+  // Update cache immediately
+  const now = new Date();
+  await saveToCache({
+    id: unit.id,
+    type: unit.type,
+    name: unit.name,
+    custom_type_name: unit.custom_type_name ?? undefined,
+    description: unit.description ?? undefined,
+    metadata: unit.metadata,
+    parent_id: unit.parent?.id ?? null,
+    parent: unit.parent
+      ? {
+          id: unit.parent.id,
+          type: unit.parent.type,
+          name: unit.parent.name,
+        }
+      : null,
+    created_at: unit.created_at,
+    updated_at: unit.updated_at,
+    cachedAt: now,
+    lastSynced: now,
+  });
+
+  return unit;
 }
 
 /**
@@ -170,7 +199,32 @@ export async function updateOrganizationalUnit(
   }
 
   const result = await response.json();
-  return result.data;
+  const unit = result.data;
+
+  // Update cache immediately
+  const now = new Date();
+  await saveToCache({
+    id: unit.id,
+    type: unit.type,
+    name: unit.name,
+    custom_type_name: unit.custom_type_name ?? undefined,
+    description: unit.description ?? undefined,
+    metadata: unit.metadata,
+    parent_id: unit.parent?.id ?? null,
+    parent: unit.parent
+      ? {
+          id: unit.parent.id,
+          type: unit.parent.type,
+          name: unit.parent.name,
+        }
+      : null,
+    created_at: unit.created_at,
+    updated_at: unit.updated_at,
+    cachedAt: now,
+    lastSynced: now,
+  });
+
+  return unit;
 }
 
 /**
@@ -197,6 +251,9 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
       response.status
     );
   }
+
+  // Delete from cache immediately
+  await deleteFromCache(id);
 }
 
 /**
@@ -291,7 +348,32 @@ export async function attachOrganizationalUnitParent(
   }
 
   const result = await response.json();
-  return result.data;
+  const unit = result.data;
+
+  // Update cache immediately
+  const now = new Date();
+  await saveToCache({
+    id: unit.id,
+    type: unit.type,
+    name: unit.name,
+    custom_type_name: unit.custom_type_name ?? undefined,
+    description: unit.description ?? undefined,
+    metadata: unit.metadata,
+    parent_id: unit.parent?.id ?? null,
+    parent: unit.parent
+      ? {
+          id: unit.parent.id,
+          type: unit.parent.type,
+          name: unit.parent.name,
+        }
+      : null,
+    created_at: unit.created_at,
+    updated_at: unit.updated_at,
+    cachedAt: now,
+    lastSynced: now,
+  });
+
+  return unit;
 }
 
 /**
@@ -321,6 +403,30 @@ export async function detachOrganizationalUnitParent(
       response.status
     );
   }
+
+  // Fetch updated unit and update cache
+  const unit = await getOrganizationalUnit(id);
+  const now = new Date();
+  await saveToCache({
+    id: unit.id,
+    type: unit.type,
+    name: unit.name,
+    custom_type_name: unit.custom_type_name ?? undefined,
+    description: unit.description ?? undefined,
+    metadata: unit.metadata,
+    parent_id: unit.parent?.id ?? null,
+    parent: unit.parent
+      ? {
+          id: unit.parent.id,
+          type: unit.parent.type,
+          name: unit.parent.name,
+        }
+      : null,
+    created_at: unit.created_at,
+    updated_at: unit.updated_at,
+    cachedAt: now,
+    lastSynced: now,
+  });
 }
 
 /**

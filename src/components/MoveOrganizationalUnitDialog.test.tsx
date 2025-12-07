@@ -9,9 +9,13 @@ import { i18n } from "@lingui/core";
 import { MoveOrganizationalUnitDialog } from "./MoveOrganizationalUnitDialog";
 import type { OrganizationalUnit } from "../types/organizational";
 
-// Mock the API module
+// Mock the offline hook
+vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
+  useOrganizationalUnitsWithOffline: vi.fn(),
+}));
+
+// Mock the API module (only mutation operations)
 vi.mock("../services/organizationalUnitApi", () => ({
-  listOrganizationalUnits: vi.fn(),
   attachOrganizationalUnitParent: vi.fn(),
   detachOrganizationalUnitParent: vi.fn(),
 }));
@@ -34,8 +38,8 @@ vi.mock("../services/secretApi", () => ({
   },
 }));
 
+import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 import {
-  listOrganizationalUnits,
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
@@ -106,19 +110,23 @@ describe("MoveOrganizationalUnitDialog", () => {
   const mockOnClose = vi.fn();
   const mockOnSuccess = vi.fn();
 
+  const mockHookResponse = {
+    units: mockAvailableUnits,
+    loading: false,
+    error: null,
+    isOffline: false,
+    isStale: false,
+    rootUnitIds: [],
+    lastSynced: null,
+    refresh: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock for listOrganizationalUnits
-    vi.mocked(listOrganizationalUnits).mockResolvedValue({
-      data: mockAvailableUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: mockAvailableUnits.length,
-        root_unit_ids: [],
-      },
-    });
+    // Default mock for hook
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue(
+      mockHookResponse
+    );
   });
 
   describe("Rendering", () => {
@@ -174,7 +182,11 @@ describe("MoveOrganizationalUnitDialog", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Region Berlin")).toBeInTheDocument();
+        // Check for current parent label AND text together
+        expect(screen.getByText("Current parent:")).toBeInTheDocument();
+        // Use getAllByText since parent name appears in dropdown too
+        const regionTexts = screen.getAllByText("Region Berlin");
+        expect(regionTexts.length).toBeGreaterThan(0);
       });
     });
 
@@ -208,24 +220,21 @@ describe("MoveOrganizationalUnitDialog", () => {
         />
       );
 
+      // Hook should provide units automatically
       await waitFor(() => {
-        expect(listOrganizationalUnits).toHaveBeenCalled();
+        expect(
+          screen.getByRole("button", { name: /Select new parent/i })
+        ).toBeInTheDocument();
       });
     });
 
     it("excludes current unit from available parents", async () => {
       const user = userEvent.setup();
 
-      // Include the unit itself in the API response
-      vi.mocked(listOrganizationalUnits).mockResolvedValue({
-        data: [...mockAvailableUnits, mockUnit],
-        meta: {
-          current_page: 1,
-          last_page: 1,
-          per_page: 100,
-          total: mockAvailableUnits.length + 1,
-          root_unit_ids: [],
-        },
+      // Include the unit itself in the hook response
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        units: [...mockAvailableUnits, mockUnit],
       });
 
       renderWithI18n(
@@ -580,9 +589,10 @@ describe("MoveOrganizationalUnitDialog", () => {
     });
 
     it("shows error message when loading units fails", async () => {
-      vi.mocked(listOrganizationalUnits).mockRejectedValue(
-        new Error("Failed to load units")
-      );
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        error: "Failed to load units",
+      });
 
       renderWithI18n(
         <MoveOrganizationalUnitDialog

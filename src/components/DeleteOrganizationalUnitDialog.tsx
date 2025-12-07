@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { Trans, t } from "@lingui/macro";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
   AlertTitle,
@@ -73,6 +74,7 @@ export function DeleteOrganizationalUnitDialog({
   onClose,
   onSuccess,
 }: DeleteOrganizationalUnitDialogProps) {
+  const isOnline = useOnlineStatus();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,6 +141,19 @@ export function DeleteOrganizationalUnitDialog({
         </div>
       </div>
 
+      {/* Offline warning banner - mutations not possible */}
+      {!isOnline && (
+        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+          <div className="font-semibold mb-1">
+            <Trans>You're offline</Trans>
+          </div>
+          <Trans>
+            Deleting organizational units is not possible while offline. Please
+            reconnect to make changes.
+          </Trans>
+        </div>
+      )}
+
       {hasChildren ? (
         <>
           <AlertDescription>
@@ -182,7 +197,11 @@ export function DeleteOrganizationalUnitDialog({
             <Button plain onClick={handleClose} disabled={isDeleting}>
               <Trans>Cancel</Trans>
             </Button>
-            <Button color="red" onClick={handleDelete} disabled={isDeleting}>
+            <Button
+              color="red"
+              onClick={handleDelete}
+              disabled={isDeleting || !isOnline}
+            >
               {isDeleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
             </Button>
           </AlertActions>

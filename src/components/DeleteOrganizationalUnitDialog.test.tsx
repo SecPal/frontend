@@ -26,8 +26,14 @@ vi.mock("../services/secretApi", () => ({
   },
 }));
 
+// Mock useOnlineStatus hook
+vi.mock("../hooks/useOnlineStatus", () => ({
+  useOnlineStatus: vi.fn(),
+}));
+
 import { deleteOrganizationalUnit } from "../services/organizationalUnitApi";
 import { ApiError } from "../services/secretApi";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 function renderWithI18n(component: React.ReactElement) {
   i18n.load("en", {});
@@ -87,6 +93,8 @@ describe("DeleteOrganizationalUnitDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default to online
+    vi.mocked(useOnlineStatus).mockReturnValue(true);
   });
 
   describe("Unit without children", () => {
@@ -326,6 +334,63 @@ describe("DeleteOrganizationalUnitDialog", () => {
       // The title would show "Delete ""?" which still contains "Delete"
       // But without a unit, delete button should not function
       expect(screen.queryByText(/Berlin Mitte/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Offline behavior", () => {
+    beforeEach(() => {
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+    });
+
+    it("shows offline warning when offline", () => {
+      renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithoutChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByText(/You're offline/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Deleting organizational units is not possible while offline/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("disables delete button when offline", () => {
+      renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithoutChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const deleteButton = screen.getByRole("button", { name: /Delete/i });
+      expect(deleteButton).toBeDisabled();
+    });
+
+    it("does not call deleteOrganizationalUnit when offline", async () => {
+      vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
+
+      renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithoutChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const deleteButton = screen.getByRole("button", { name: /Delete/i });
+
+      // Button is disabled, so click should not trigger deletion
+      expect(deleteButton).toBeDisabled();
+      expect(deleteOrganizationalUnit).not.toHaveBeenCalled();
     });
   });
 });
