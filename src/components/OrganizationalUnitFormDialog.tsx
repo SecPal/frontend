@@ -256,11 +256,17 @@ export function OrganizationalUnitFormDialog({
               <div className="font-semibold mb-1">
                 <Trans>You're offline</Trans>
               </div>
-              <Trans>
-                {mode === "create"
-                  ? "Creating organizational units is not possible while offline. Please reconnect to make changes."
-                  : "Editing organizational units is not possible while offline. Please reconnect to make changes."}
-              </Trans>
+              {mode === "create" ? (
+                <Trans>
+                  Creating organizational units is not possible while offline.
+                  Please reconnect to make changes.
+                </Trans>
+              ) : (
+                <Trans>
+                  Editing organizational units is not possible while offline.
+                  Please reconnect to make changes.
+                </Trans>
+              )}
             </div>
           )}
 

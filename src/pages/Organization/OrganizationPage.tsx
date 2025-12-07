@@ -259,7 +259,9 @@ export function OrganizationPage() {
       {/* Stale data indicator banner */}
       {!isOffline && isStale && (
         <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-          <Trans>Viewing cached data. Some organizational units may be outdated.</Trans>
+          <Trans>
+            Viewing cached data. Some organizational units may be outdated.
+          </Trans>
         </div>
       )}
 
