@@ -4,8 +4,8 @@
 /// <reference lib="webworker" />
 
 import { clientsClaim } from "workbox-core";
-import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
-import { registerRoute } from "workbox-routing";
+import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from "workbox-precaching";
+import { registerRoute, NavigationRoute } from "workbox-routing";
 import { NetworkFirst, CacheFirst } from "workbox-strategies";
 import { openDB } from "idb";
 import {
@@ -79,6 +79,17 @@ registerRoute(
     cacheName: "static-assets",
   })
 );
+
+/**
+ * Navigation fallback: serve cached index.html for SPA navigation
+ * This enables offline navigation and page reloads
+ */
+const navigationHandler = createHandlerBoundToURL("/index.html");
+const navigationRoute = new NavigationRoute(navigationHandler, {
+  // Exclude API routes and special paths
+  denylist: [/^\/v1\//, /^\/__/],
+});
+registerRoute(navigationRoute);
 
 /**
  * Handle Share Target API POST requests with file uploads
