@@ -250,6 +250,20 @@ export function OrganizationalUnitFormDialog({
 
       <form onSubmit={handleSubmit}>
         <DialogBody>
+          {/* Offline warning banner - mutations not possible */}
+          {!isOnline && (
+            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+              <div className="font-semibold mb-1">
+                <Trans>You're offline</Trans>
+              </div>
+              <Trans>
+                {mode === "create"
+                  ? "Creating organizational units is not possible while offline. Please reconnect to make changes."
+                  : "Editing organizational units is not possible while offline. Please reconnect to make changes."}
+              </Trans>
+            </div>
+          )}
+
           {/* General error message */}
           {errors.general && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">

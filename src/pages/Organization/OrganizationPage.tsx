@@ -252,19 +252,14 @@ export function OrganizationPage() {
       {/* Offline indicator banner */}
       {isOffline && (
         <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-          <Trans>
-            You're offline. Viewing cached organizational units. Changes will be
-            synced when you're back online.
-          </Trans>
+          <Trans>You're offline. Viewing cached organizational units.</Trans>
         </div>
       )}
 
       {/* Stale data indicator banner */}
       {!isOffline && isStale && (
         <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-          <Trans>
-            Viewing cached data. Some organizational units may be outdated.
-          </Trans>
+          <Trans>Viewing cached data. Some organizational units may be outdated.</Trans>
         </div>
       )}
 
