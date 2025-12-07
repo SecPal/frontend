@@ -127,6 +127,7 @@ describe("OrganizationalUnitTree", () => {
     isOffline: false,
     isStale: false,
     rootUnitIds: ["unit-1", "unit-3"],
+    lastSynced: null,
     refresh: vi.fn(),
   };
 
@@ -164,6 +165,7 @@ describe("OrganizationalUnitTree", () => {
       ...mockHookResponse,
       units: [],
       rootUnitIds: [],
+      lastSynced: null,
     });
 
     renderWithI18n(<OrganizationalUnitTree />);
@@ -218,6 +220,7 @@ describe("OrganizationalUnitTree", () => {
       ...mockHookResponse,
       units: [],
       rootUnitIds: [],
+      lastSynced: null,
     });
 
     const onCreate = vi.fn();
@@ -609,6 +612,7 @@ describe("OrganizationalUnitTree", () => {
         ...mockHookResponse,
         units: nestedMockUnits,
         rootUnitIds: ["parent-1", "parent-2"],
+        lastSynced: null,
       });
 
       const onMove = vi.fn();
@@ -762,6 +766,7 @@ describe("OrganizationalUnitTree - Permission Filtered", () => {
     isOffline: false,
     isStale: false,
     rootUnitIds: [],
+    lastSynced: null,
     refresh: vi.fn(),
   };
 
@@ -806,6 +811,7 @@ describe("OrganizationalUnitTree - Permission Filtered", () => {
       ...mockHookResponse,
       units: [regionUnit, branchUnit],
       rootUnitIds: ["region-1"], // Region is root because parent is inaccessible
+      lastSynced: null,
     });
 
     renderWithI18n(<OrganizationalUnitTree />);
@@ -842,6 +848,7 @@ describe("OrganizationalUnitTree - Permission Filtered", () => {
       ...mockHookResponse,
       units: [singleBranch],
       rootUnitIds: ["branch-berlin"],
+      lastSynced: null,
     });
 
     renderWithI18n(<OrganizationalUnitTree />);
@@ -898,6 +905,7 @@ describe("OrganizationalUnitTree - Permission Filtered", () => {
       ...mockHookResponse,
       units: [regionUnit, branch1, branch2],
       rootUnitIds: ["region-1"],
+      lastSynced: null,
     });
 
     renderWithI18n(<OrganizationalUnitTree />);
@@ -935,6 +943,7 @@ describe("OrganizationalUnitTree - Permission Filtered", () => {
       ...mockHookResponse,
       units: [region1, region2],
       rootUnitIds: ["region-1", "region-2"], // Both regions are roots
+      lastSynced: null,
     });
 
     renderWithI18n(<OrganizationalUnitTree />);

@@ -17,6 +17,7 @@ import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
 import { SpinnerContainer } from "../../components/spinner";
+import { OfflineDataBanner } from "../../components/OfflineDataBanner";
 
 // Lazy load dialog for better performance
 const OrganizationalUnitFormDialog = lazy(() =>
@@ -59,7 +60,8 @@ interface OptimisticTreeUpdate {
  */
 export function OrganizationPage() {
   // Offline-first organizational units hook
-  const { isOffline, isStale, refresh } = useOrganizationalUnitsWithOffline();
+  const { isOffline, isStale, lastSynced, refresh } =
+    useOrganizationalUnitsWithOffline();
   const [selectedUnit, setSelectedUnit] = useState<OrganizationalUnit | null>(
     null
   );
@@ -258,21 +260,13 @@ export function OrganizationPage() {
         </Text>
       </div>
 
-      {/* Offline indicator banner */}
-      {isOffline && (
-        <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-          <Trans>You're offline. Viewing cached organizational units.</Trans>
-        </div>
-      )}
-
-      {/* Stale data indicator banner */}
-      {!isOffline && isStale && (
-        <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-          <Trans>
-            Viewing cached data. Some organizational units may be outdated.
-          </Trans>
-        </div>
-      )}
+      {/* Offline/Stale data banner */}
+      <OfflineDataBanner
+        isOffline={isOffline}
+        isStale={isStale}
+        lastSynced={lastSynced}
+        onRefresh={refresh}
+      />
 
       {/* Success toast */}
       {successMessage && (

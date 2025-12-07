@@ -117,6 +117,7 @@ describe("MoveOrganizationalUnitDialog", () => {
     isOffline: false,
     isStale: false,
     rootUnitIds: [],
+    lastSynced: null,
     refresh: vi.fn(),
   };
 

@@ -22,13 +22,15 @@ export interface UseOrganizationalUnitsWithOfflineResult {
   loading: boolean;
   /** Error message if fetch failed */
   error: string | null;
-  /** True if browser is offline */
+  /** True if device is offline */
   isOffline: boolean;
-  /** True if showing cached data (either offline or API failed) */
+  /** True if displaying stale cached data */
   isStale: boolean;
-  /** Root unit IDs from API metadata (for tree building) */
+  /** Root unit IDs for tree rendering (permission-filtered roots) */
   rootUnitIds: string[];
-  /** Manually refresh data */
+  /** Timestamp of last successful sync */
+  lastSynced: Date | null;
+  /** Manually trigger a refresh */
   refresh: () => Promise<void>;
 }
 
@@ -124,6 +126,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
   const [error, setError] = useState<string | null>(null);
   const [isStale, setIsStale] = useState(false);
   const [rootUnitIds, setRootUnitIds] = useState<string[]>([]);
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
   const isOnline = useOnlineStatus();
 
   // Prevent duplicate fetches with ref
@@ -137,6 +140,17 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
    */
   const loadFromCache = useCallback(async (): Promise<OrganizationalUnit[]> => {
     const cached = await listCachedOrganizationalUnits();
+
+    // Find most recent sync time from cached entries
+    if (cached.length > 0) {
+      const latestSync = Math.max(
+        ...cached.map((entry) => entry.lastSynced?.getTime() ?? 0)
+      );
+      if (latestSync > 0) {
+        setLastSynced(new Date(latestSync));
+      }
+    }
+
     return cached.map(cacheEntryToOrganizationalUnit);
   }, []);
 
@@ -258,6 +272,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     isOffline: !isOnline,
     isStale,
     rootUnitIds,
+    lastSynced,
     refresh: fetchUnits,
   };
 }
