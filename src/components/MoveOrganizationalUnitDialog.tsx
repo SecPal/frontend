@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Trans, t } from "@lingui/macro";
 import {
   Dialog,
@@ -19,11 +19,11 @@ import type {
   OrganizationalUnitType,
 } from "../types/organizational";
 import {
-  listOrganizationalUnits,
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
 import { getTypeLabel, TYPE_HIERARCHY } from "../lib/organizationalUnitUtils";
+import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 
 /**
  * Props for MoveOrganizationalUnitDialog
@@ -220,21 +220,45 @@ export function MoveOrganizationalUnitDialog({
   onClose,
   onSuccess,
 }: MoveOrganizationalUnitDialogProps) {
-  const [availableUnits, setAvailableUnits] = useState<OrganizationalUnit[]>(
-    []
-  );
+  // Use offline-first hook for fetching available parent units
+  const {
+    units: allUnits,
+    loading: isLoadingUnits,
+    error: loadError,
+    isOffline,
+    isStale,
+  } = useOrganizationalUnitsWithOffline();
+
   const [selectedParentId, setSelectedParentId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Current parent ID for comparison
   const currentParentId = unit?.parent?.id || "";
 
   // Determine if the move button should be disabled
   const isMoveDisabled =
-    isMoving || selectedParentId === currentParentId || isLoading;
+    isMoving || selectedParentId === currentParentId || isLoadingUnits;
+
+  /**
+   * Filter available units based on move constraints
+   * Excludes:
+   * 1. The unit itself (can't be its own parent)
+   * 2. Units that would violate hierarchy rules (parent must be higher rank)
+   */
+  const availableUnits = useMemo(() => {
+    if (!unit) return [];
+
+    const unitRank = TYPE_HIERARCHY[unit.type];
+    return allUnits.filter((u) => {
+      // Can't be its own parent
+      if (u.id === unit.id) return false;
+
+      // Parent must be higher in hierarchy (lower rank number)
+      const parentRank = TYPE_HIERARCHY[u.type];
+      return parentRank < unitRank;
+    });
+  }, [allUnits, unit]);
 
   /**
    * Build a hierarchically sorted list of units for display in the dropdown.
@@ -287,63 +311,13 @@ export function MoveOrganizationalUnitDialog({
     return result;
   }, [availableUnits]);
 
-  // Load available units when dialog opens
-  const loadUnits = useCallback(async () => {
-    if (!unit) return;
-
-    setIsLoading(true);
-    setLoadError(null);
-
-    try {
-      // Fetch all units with pagination to avoid missing parent options for large orgs
-      let allUnits: OrganizationalUnit[] = [];
-      let page = 1;
-      let hasMore = true;
-      const perPage = 100;
-
-      while (hasMore) {
-        const response = await listOrganizationalUnits({
-          per_page: perPage,
-          page,
-        });
-        allUnits = allUnits.concat(response.data);
-        // If fewer than perPage returned, we've reached the last page
-        hasMore = response.data.length === perPage;
-        page += 1;
-      }
-
-      // Filter out invalid parent options:
-      // 1. The unit itself (can't be its own parent)
-      // 2. Units that would violate hierarchy rules (parent must be higher rank)
-      // Note: Backend API will also prevent circular references with 409 Conflict
-      const unitRank = TYPE_HIERARCHY[unit.type];
-      const filtered = allUnits.filter((u) => {
-        // Can't be its own parent
-        if (u.id === unit.id) return false;
-
-        // Parent must be higher in hierarchy (lower rank number) than the unit being moved
-        const parentRank = TYPE_HIERARCHY[u.type];
-        return parentRank < unitRank;
-      });
-
-      setAvailableUnits(filtered);
-    } catch (err) {
-      setLoadError(
-        err instanceof Error ? err.message : t`Failed to load units`
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [unit]);
-
   // Reset state when dialog opens/closes or unit changes
   useEffect(() => {
     if (open && unit) {
       setSelectedParentId(unit.parent?.id || "");
       setError(null);
-      loadUnits();
     }
-  }, [open, unit, loadUnits]);
+  }, [open, unit]);
 
   // Handle move action
   const handleMove = async () => {
@@ -417,6 +391,24 @@ export function MoveOrganizationalUnitDialog({
       </DialogDescription>
 
       <DialogBody>
+        {/* Offline indicator banner */}
+        {isOffline && (
+          <div className="mb-4 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+            <Trans>
+              You're offline. Viewing cached organizational units.
+            </Trans>
+          </div>
+        )}
+
+        {/* Stale data indicator banner */}
+        {!isOffline && isStale && (
+          <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+            <Trans>
+              Viewing cached data. Some units may be outdated.
+            </Trans>
+          </div>
+        )}
+
         {/* Current parent info */}
         <div className="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
           <Text className="text-sm text-gray-500 dark:text-gray-400">
@@ -450,7 +442,7 @@ export function MoveOrganizationalUnitDialog({
             <Listbox
               value={selectedParentId}
               onChange={setSelectedParentId}
-              disabled={isLoading || isMoving}
+              disabled={isLoadingUnits || isMoving}
               aria-label={t`Select new parent`}
             >
               {/* Root option */}
