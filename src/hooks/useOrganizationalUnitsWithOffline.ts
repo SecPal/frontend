@@ -156,8 +156,13 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
       )
     );
 
+    // Sort by name to match cache sorting (consistent online/offline)
+    const sortedUnits = [...response.data].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
     return {
-      units: response.data,
+      units: sortedUnits,
       rootUnitIds: response.meta.root_unit_ids || [],
     };
   }, []);
@@ -177,7 +182,10 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     setError(null);
 
     try {
-      if (!isOnline) {
+      // Use ref to get current online status without adding to dependencies
+      const currentlyOnline = navigator.onLine;
+
+      if (!currentlyOnline) {
         // Offline: use cache only
         const cached = await loadFromCache();
         setUnits(cached);
@@ -213,7 +221,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [isOnline, loadFromCache, fetchAndCache]);
+  }, [loadFromCache, fetchAndCache]);
 
   // Initial fetch
   useEffect(() => {
