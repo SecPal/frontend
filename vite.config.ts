@@ -147,12 +147,11 @@ export default defineConfig(({ mode }) => {
           },
         },
         workbox: {
-          globPatterns: [
-            "**/*.{js,css,html,ico,png,svg,woff,woff2}",
-            "**/*.{jsx,ts,tsx}", // Include lazy-loaded chunks
-          ],
-          // Precache all route chunks for offline navigation
-          navigateFallback: null, // Don't use SPA fallback, let React Router handle it
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+          // Precache navigation routes for offline use
+          navigateFallback: "/index.html",
+          navigateFallbackAllowlist: [/^\/(?!api)/], // Allow all non-API routes
+          navigateFallbackDenylist: [/^\/api\//], // Block API routes from fallback
           cleanupOutdatedCaches: true,
           runtimeCaching: [
             // API: Secrets List (NetworkFirst + 5min TTL)

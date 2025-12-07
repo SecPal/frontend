@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-07 14:44+0100\n"
+"POT-Creation-Date: 2025-12-07 14:47+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -186,7 +186,7 @@ msgstr "Niederlassung"
 #: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
-#: src/components/OrganizationalUnitFormDialog.tsx:366
+#: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
@@ -252,7 +252,7 @@ msgstr "Kontakt E-Mail"
 msgid "Contact Phone"
 msgstr "Kontakt Telefon"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:372
+#: src/components/OrganizationalUnitFormDialog.tsx:378
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Erstellen"
@@ -288,6 +288,10 @@ msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Erstellt"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:260
+msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
+msgstr ""
 
 #: src/components/NotificationPreferences.tsx:42
 msgid "Critical security notifications and warnings"
@@ -360,7 +364,7 @@ msgid "Department"
 msgstr "Bereich"
 
 #: src/components/ObjectManager.tsx:378
-#: src/components/OrganizationalUnitFormDialog.tsx:327
+#: src/components/OrganizationalUnitFormDialog.tsx:333
 #: src/pages/Organization/OrganizationPage.tsx:327
 msgid "Description"
 msgstr "Beschreibung"
@@ -415,6 +419,10 @@ msgstr "Geheimnis bearbeiten"
 #: src/components/ObjectManager.tsx:412
 msgid "Edit {0}"
 msgstr "Bearbeiten {0}"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:265
+msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
+msgstr ""
 
 #: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
@@ -787,7 +795,7 @@ msgid "My profile"
 msgstr "Mein Profil"
 
 #: src/components/ObjectManager.tsx:375
-#: src/components/OrganizationalUnitFormDialog.tsx:278
+#: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
@@ -923,11 +931,11 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:330
+#: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
 msgstr "Optionale Beschreibung für diese Einheit."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:337
+#: src/components/OrganizationalUnitFormDialog.tsx:343
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
@@ -957,7 +965,7 @@ msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
 msgid "Parent"
 msgstr "Übergeordnete Einheit"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:351
+#: src/components/OrganizationalUnitFormDialog.tsx:357
 msgid "Parent Unit"
 msgstr "Übergeordnete Einheit"
 
@@ -1063,7 +1071,7 @@ msgstr "Widerrufen..."
 msgid "Roles"
 msgstr "Rollen"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:374
+#: src/components/OrganizationalUnitFormDialog.tsx:380
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
@@ -1071,7 +1079,7 @@ msgstr "Änderungen speichern"
 msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:370
+#: src/components/OrganizationalUnitFormDialog.tsx:376
 msgid "Saving..."
 msgstr "Speichern..."
 
@@ -1252,11 +1260,11 @@ msgstr "Test-Benachrichtigung"
 msgid "Text:"
 msgstr "Text:"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:357
+#: src/components/OrganizationalUnitFormDialog.tsx:363
 msgid "The new unit will be created under this parent."
 msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:300
+#: src/components/OrganizationalUnitFormDialog.tsx:306
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
 
@@ -1288,7 +1296,7 @@ msgstr "Erneut versuchen"
 msgid "Try adjusting your filters"
 msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:297
+#: src/components/OrganizationalUnitFormDialog.tsx:303
 #: src/pages/Organization/OrganizationPage.tsx:318
 msgid "Type"
 msgstr "Typ"
@@ -1420,7 +1428,7 @@ msgstr "Ihre lokale Version"
 msgid "by"
 msgstr "von"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:286
+#: src/components/OrganizationalUnitFormDialog.tsx:292
 msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
@@ -1497,11 +1505,6 @@ msgstr "Objekte"
 #: src/components/UploadStatus.tsx:251
 msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
 msgstr "{ 0, plural, one {# Datei bereit zum Hochladen} other {# Dateien bereit zum Hochladen} }"
-
-#. placeholder {0}: mode === "create" ? "Creating organizational units is not possible while offline. Please reconnect to make changes." : "Editing organizational units is not possible while offline. Please reconnect to make changes."
-#: src/components/OrganizationalUnitFormDialog.tsx:259
-msgid "{0}"
-msgstr ""
 
 #: src/components/SyncStatusIndicator.tsx:121
 msgid "{errorOps} operation(s) failed"

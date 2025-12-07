@@ -41,11 +41,6 @@ msgstr "(empty)"
 msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
 msgstr "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
 
-#. placeholder {0}: mode === "create" ? "Creating organizational units is not possible while offline. Please reconnect to make changes." : "Editing organizational units is not possible while offline. Please reconnect to make changes."
-#: src/components/OrganizationalUnitFormDialog.tsx:259
-msgid "{0}"
-msgstr "{0}"
-
 #: src/components/SyncStatusIndicator.tsx:121
 msgid "{errorOps} operation(s) failed"
 msgstr "{errorOps} operation(s) failed"
@@ -244,7 +239,7 @@ msgstr "by"
 #: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
-#: src/components/OrganizationalUnitFormDialog.tsx:366
+#: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
 msgid "Cancel"
@@ -315,7 +310,7 @@ msgstr "Contact Email"
 msgid "Contact Phone"
 msgstr "Contact Phone"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:372
+#: src/components/OrganizationalUnitFormDialog.tsx:378
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Create"
@@ -351,6 +346,10 @@ msgstr "Create your first secret to get started"
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Created"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:260
+msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
 #: src/components/NotificationPreferences.tsx:42
 msgid "Critical security notifications and warnings"
@@ -423,7 +422,7 @@ msgid "Department"
 msgstr "Department"
 
 #: src/components/ObjectManager.tsx:378
-#: src/components/OrganizationalUnitFormDialog.tsx:327
+#: src/components/OrganizationalUnitFormDialog.tsx:333
 #: src/pages/Organization/OrganizationPage.tsx:327
 msgid "Description"
 msgstr "Description"
@@ -455,7 +454,7 @@ msgstr "Download to view"
 msgid "Drag files here or click to browse"
 msgstr "Drag files here or click to browse"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:286
+#: src/components/OrganizationalUnitFormDialog.tsx:292
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
@@ -482,6 +481,10 @@ msgstr "Edit Organizational Unit"
 #: src/pages/Secrets/SecretEdit.tsx:134
 msgid "Edit Secret"
 msgstr "Edit Secret"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:265
+msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Editing organizational units is not possible while offline. Please reconnect to make changes."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:208
@@ -874,7 +877,7 @@ msgid "My profile"
 msgstr "My profile"
 
 #: src/components/ObjectManager.tsx:375
-#: src/components/OrganizationalUnitFormDialog.tsx:278
+#: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Profile/ProfilePage.tsx:62
 msgid "Name"
 msgstr "Name"
@@ -1014,11 +1017,11 @@ msgstr "Offline only"
 msgid "OK"
 msgstr "OK"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:330
+#: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
 msgstr "Optional description for this unit."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:337
+#: src/components/OrganizationalUnitFormDialog.tsx:343
 msgid "Optional description..."
 msgstr "Optional description..."
 
@@ -1048,7 +1051,7 @@ msgstr "Page {currentPage} of {totalPages} ({0} {1})"
 msgid "Parent"
 msgstr "Parent"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:351
+#: src/components/OrganizationalUnitFormDialog.tsx:357
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
@@ -1164,7 +1167,7 @@ msgstr "Revoking..."
 msgid "Roles"
 msgstr "Roles"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:374
+#: src/components/OrganizationalUnitFormDialog.tsx:380
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1172,7 +1175,7 @@ msgstr "Save Changes"
 msgid "Save to Secret"
 msgstr "Save to Secret"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:370
+#: src/components/OrganizationalUnitFormDialog.tsx:376
 msgid "Saving..."
 msgstr "Saving..."
 
@@ -1358,7 +1361,7 @@ msgstr "Test Notification"
 msgid "Text:"
 msgstr "Text:"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:357
+#: src/components/OrganizationalUnitFormDialog.tsx:363
 msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
@@ -1367,7 +1370,7 @@ msgstr "The new unit will be created under this parent."
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:300
+#: src/components/OrganizationalUnitFormDialog.tsx:306
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
@@ -1404,7 +1407,7 @@ msgstr "Try adjusting your filters"
 msgid "Try Again"
 msgstr "Try Again"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:297
+#: src/components/OrganizationalUnitFormDialog.tsx:303
 #: src/pages/Organization/OrganizationPage.tsx:318
 msgid "Type"
 msgstr "Type"
