@@ -712,9 +712,10 @@ describe("Login", () => {
       renderLogin();
 
       await waitFor(() => {
-        const warning = screen.getByRole("alert");
+        const warning = document.getElementById("offline-warning");
+        expect(warning).toBeInTheDocument();
+        expect(warning).toHaveAttribute("role", "alert");
         expect(warning).toHaveAttribute("aria-live", "polite");
-        expect(warning).toHaveAttribute("id", "offline-warning");
       });
     });
 

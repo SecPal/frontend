@@ -138,19 +138,19 @@ export function Login() {
               id="offline-warning"
               role="alert"
               aria-live="polite"
-              className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+              className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
             >
               <div className="flex items-start gap-3">
                 <span className="text-xl" aria-hidden="true">
                   🌐
                 </span>
                 <div>
-                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                  <p className="font-medium text-red-800 dark:text-red-200">
                     <Trans id="login.offlineWarning.title">
                       No internet connection
                     </Trans>
                   </p>
-                  <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                  <p className="mt-1 text-sm text-red-800 dark:text-red-200">
                     <Trans id="login.offlineWarning.message">
                       Login requires an internet connection. Please check your
                       connection and try again.
