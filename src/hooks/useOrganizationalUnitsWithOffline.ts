@@ -199,8 +199,8 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     setError(null);
 
     try {
-      // Use ref to get current online status without adding to dependencies
-      const currentlyOnline = navigator.onLine;
+      // Use isOnline from hook for consistent online status
+      const currentlyOnline = isOnline;
 
       if (!currentlyOnline) {
         // Offline: use cache only
@@ -238,7 +238,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [loadFromCache, fetchAndCache]);
+  }, [isOnline, loadFromCache, fetchAndCache]);
 
   // Initial fetch
   useEffect(() => {

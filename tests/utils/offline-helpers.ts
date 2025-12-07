@@ -57,11 +57,19 @@ export async function clearAllCaches(page: Page): Promise<void> {
     // Clear IndexedDB
     if ("indexedDB" in window) {
       const databases = await indexedDB.databases();
-      databases.forEach((db) => {
-        if (db.name) {
-          indexedDB.deleteDatabase(db.name);
-        }
-      });
+      await Promise.all(
+        databases
+          .filter((db) => db.name)
+          .map(
+            (db) =>
+              new Promise<void>((resolve, reject) => {
+                const request = indexedDB.deleteDatabase(db.name!);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+                request.onblocked = () => resolve(); // treat blocked as resolved for test cleanup
+              })
+          )
+      );
     }
 
     // Clear localStorage

@@ -404,9 +404,8 @@ export async function detachOrganizationalUnitParent(
     );
   }
 
-  // Fetch updated unit and update cache (delete first to avoid duplicates)
+  // Fetch updated unit and update cache
   const unit = await getOrganizationalUnit(id);
-  await deleteFromCache(unit.id);
   const now = new Date();
   await saveToCache({
     id: unit.id,
