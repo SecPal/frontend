@@ -7,6 +7,7 @@ import type { OrganizationalUnit } from "../types/organizational";
 import {
   saveOrganizationalUnit,
   listOrganizationalUnits as listCachedOrganizationalUnits,
+  clearOrganizationalUnitCache,
 } from "../lib/organizationalUnitStore";
 import type { OrganizationalUnitCacheEntry } from "../lib/db";
 import { useOnlineStatus } from "./useOnlineStatus";
@@ -144,6 +145,9 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     rootUnitIds: string[];
   }> => {
     const response = await fetchOrganizationalUnits({ per_page: 100 });
+
+    // Clear cache first to remove units that no longer exist
+    await clearOrganizationalUnitCache();
 
     // Cache all units for offline access
     await Promise.all(
