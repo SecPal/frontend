@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useState } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { Button } from "./button";
+import { Spinner } from "./spinner";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 
 /**
@@ -33,6 +35,7 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 export function UpdatePrompt() {
   const { _ } = useLingui();
   const { needRefresh, updateServiceWorker } = useServiceWorkerUpdate();
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Only render when update is available
   if (!needRefresh) {
@@ -41,8 +44,10 @@ export function UpdatePrompt() {
 
   const handleUpdate = async () => {
     console.log("[UpdatePrompt] Update button clicked");
+    setIsUpdating(true);
     await updateServiceWorker();
     console.log("[UpdatePrompt] Update triggered, page will reload");
+    // No need to reset isUpdating - page will reload
   };
 
   return (
@@ -53,17 +58,28 @@ export function UpdatePrompt() {
       aria-atomic="true"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
-        <p className="text-sm font-medium">
-          <Trans>A new version of SecPal is available.</Trans>
-        </p>
-        <Button
-          onClick={handleUpdate}
-          color="white"
-          className="py-1!"
-          aria-label={_(msg`Update application now`)}
-        >
-          <Trans>Update now</Trans>
-        </Button>
+        {isUpdating ? (
+          <>
+            <Spinner size="sm" className="border-t-white" />
+            <p className="text-sm font-medium">
+              <Trans>Updating...</Trans>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium">
+              <Trans>A new version of SecPal is available.</Trans>
+            </p>
+            <Button
+              onClick={handleUpdate}
+              color="white"
+              className="py-1!"
+              aria-label={_(msg`Update application now`)}
+            >
+              <Trans>Update now</Trans>
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

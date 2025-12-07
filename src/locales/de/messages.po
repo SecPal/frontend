@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-07 21:56+0100\n"
+"POT-Creation-Date: 2025-12-07 22:40+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -30,7 +30,7 @@ msgstr "-- Wählen Sie ein Geheimnis --"
 msgid "<0>{0} field(s)</0> have conflicting changes:"
 msgstr "<0>{0}-Feld(er)</0> haben widersprüchliche Änderungen:"
 
-#: src/components/UpdatePrompt.tsx:57
+#: src/components/UpdatePrompt.tsx:71
 msgid "A new version of SecPal is available."
 msgstr "Eine neue Version von SecPal ist verfügbar."
 
@@ -1322,11 +1322,11 @@ msgstr "Verschlüsselungsschlüssel für Anhänge kann nicht geladen werden. Bit
 msgid "Update"
 msgstr "Update"
 
-#: src/components/UpdatePrompt.tsx:63
+#: src/components/UpdatePrompt.tsx:77
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
 
-#: src/components/UpdatePrompt.tsx:65
+#: src/components/UpdatePrompt.tsx:79
 msgid "Update now"
 msgstr "Jetzt aktualisieren"
 
@@ -1341,6 +1341,10 @@ msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 #: src/pages/Secrets/SecretDetail.tsx:472
 msgid "Updated"
 msgstr "Aktualisiert"
+
+#: src/components/UpdatePrompt.tsx:65
+msgid "Updating..."
+msgstr "Aktualisiere ..."
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"

@@ -79,7 +79,7 @@ msgstr "<0>{0} field(s)</0> have conflicting changes:"
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
-#: src/components/UpdatePrompt.tsx:57
+#: src/components/UpdatePrompt.tsx:71
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
@@ -1434,11 +1434,11 @@ msgstr "Unable to load encryption key for attachments. Please refresh the page o
 msgid "Update"
 msgstr "Update"
 
-#: src/components/UpdatePrompt.tsx:63
+#: src/components/UpdatePrompt.tsx:77
 msgid "Update application now"
 msgstr "Update application now"
 
-#: src/components/UpdatePrompt.tsx:65
+#: src/components/UpdatePrompt.tsx:79
 msgid "Update now"
 msgstr "Update now"
 
@@ -1453,6 +1453,10 @@ msgstr "Update the organizational unit details."
 #: src/pages/Secrets/SecretDetail.tsx:472
 msgid "Updated"
 msgstr "Updated"
+
+#: src/components/UpdatePrompt.tsx:65
+msgid "Updating..."
+msgstr "Updating..."
 
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
