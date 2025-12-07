@@ -10,6 +10,7 @@ import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 // Mock only the API functions, not AuthApiError class
 vi.mock("../services/authApi", async () => {
@@ -30,6 +31,11 @@ vi.mock("../services/healthApi", async () => {
     checkHealth: vi.fn(),
   };
 });
+
+// Mock useOnlineStatus hook
+vi.mock("../hooks/useOnlineStatus", () => ({
+  useOnlineStatus: vi.fn(),
+}));
 
 const renderLogin = () => {
   return render(
@@ -73,6 +79,8 @@ describe("Login", () => {
     i18n.activate("en");
     // Default: health check passes
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
+    // Default: user is online
+    vi.mocked(useOnlineStatus).mockReturnValue(true);
   });
 
   it("renders login form", async () => {
@@ -644,6 +652,153 @@ describe("Login", () => {
         // After successful login, localStorage should be cleared
         expect(localStorage.getItem("login_rate_limit")).toBeNull();
       });
+    });
+  });
+
+  describe("Offline Behavior", () => {
+    beforeEach(() => {
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+    });
+
+    it("shows offline warning when user is offline", async () => {
+      renderLogin();
+
+      // Wait for component to render
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByText(/login requires an internet connection/i)
+      ).toBeInTheDocument();
+    });
+
+    it("disables login form fields when offline", async () => {
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      expect(emailInput).toBeDisabled();
+      expect(passwordInput).toBeDisabled();
+      expect(submitButton).toBeDisabled();
+    });
+
+    it("does not show system not ready warning when offline", async () => {
+      // Even if health check would fail, we should only show offline warning
+      vi.mocked(healthApi.checkHealth).mockRejectedValue(
+        new healthApi.HealthCheckError("Network error")
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      // System not ready warning should NOT appear
+      expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
+    });
+
+    it("has accessible offline warning with proper ARIA attributes", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        const warning = screen.getByRole("alert");
+        expect(warning).toHaveAttribute("aria-live", "polite");
+        expect(warning).toHaveAttribute("id", "offline-warning");
+      });
+    });
+
+    it("prevents login when offline", async () => {
+      const mockLogin = vi.mocked(authApi.login);
+
+      renderLogin();
+
+      // Wait for health check to complete
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+
+      // Submit button should be disabled
+      expect(submitButton).toBeDisabled();
+
+      // Even if we try to click it, login should not be called
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockLogin).not.toHaveBeenCalled();
+      });
+    });
+
+    it("shows offline warning even when system health check is loading", async () => {
+      // Create a never-resolving promise to simulate slow health check
+      vi.mocked(healthApi.checkHealth).mockReturnValue(
+        new Promise(() => {}) // Never resolves
+      );
+
+      renderLogin();
+
+      // Offline warning should appear immediately
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      // Even though health check is loading, form should be disabled
+      // The button will show "Checking system..." but it should still be disabled
+      const submitButton = screen.getByRole("button", {
+        name: /checking system/i,
+      });
+      expect(submitButton).toBeDisabled();
+    });
+
+    it("switches from system not ready to offline warning when going offline", async () => {
+      // Start online with unhealthy system
+      vi.mocked(useOnlineStatus).mockReturnValue(true);
+      vi.mocked(healthApi.checkHealth).mockResolvedValue(
+        createUnhealthyResponse()
+      );
+
+      const { rerender } = renderLogin();
+
+      // Wait for system not ready warning
+      await waitFor(() => {
+        expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
+      });
+
+      // Now go offline
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+
+      // Re-render
+      rerender(
+        <MemoryRouter initialEntries={["/login"]}>
+          <I18nProvider i18n={i18n}>
+            <AuthProvider>
+              <Login />
+            </AuthProvider>
+          </I18nProvider>
+        </MemoryRouter>
+      );
+
+      // Should now show offline warning instead
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      // System not ready warning should be gone
+      expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
     });
   });
 });

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { login as apiLogin, AuthApiError } from "../services/authApi";
 import { checkHealth, HealthStatus } from "../services/healthApi";
 import { AuthLayout } from "../components/auth-layout";
@@ -25,6 +26,7 @@ export function Login() {
     recordFailedAttempt,
     resetAttempts,
   } = useLoginRateLimiter();
+  const isOnline = useOnlineStatus();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,12 +65,17 @@ export function Login() {
   }, []);
 
   // Determine if system is not ready (health check failed or backend reported not_ready)
+  // Only check health status when online; offline is handled separately
   const isSystemNotReady =
-    healthCheckError || healthStatus?.status === "not_ready";
+    isOnline && (healthCheckError || healthStatus?.status === "not_ready");
 
-  // Compute aria-describedby for inputs (combines error and lockout alerts)
+  // Compute aria-describedby for inputs (combines error, lockout, and offline alerts)
   const ariaDescribedBy =
-    [error && "login-error", isLocked && "lockout-warning"]
+    [
+      error && "login-error",
+      isLocked && "lockout-warning",
+      !isOnline && "offline-warning",
+    ]
       .filter(Boolean)
       .join(" ") || undefined;
 
@@ -125,6 +132,35 @@ export function Login() {
           className="mt-10 space-y-8"
           aria-label="Login form"
         >
+          {/* Offline Warning - shown when user has no internet connection */}
+          {!isOnline && (
+            <div
+              id="offline-warning"
+              role="alert"
+              aria-live="polite"
+              className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl" aria-hidden="true">
+                  🌐
+                </span>
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    <Trans id="login.offlineWarning.title">
+                      No internet connection
+                    </Trans>
+                  </p>
+                  <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                    <Trans id="login.offlineWarning.message">
+                      Login requires an internet connection. Please check your
+                      connection and try again.
+                    </Trans>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Health Check Warning - shown when backend is not ready */}
           {isSystemNotReady && (
             <div
@@ -215,9 +251,9 @@ export function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@example.com"
+              placeholder="you@example.com"
               aria-describedby={ariaDescribedBy}
-              disabled={isSystemNotReady || isLocked}
+              disabled={!isOnline || isSystemNotReady || isLocked}
             />
           </Field>
 
@@ -235,13 +271,14 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               aria-describedby={ariaDescribedBy}
-              disabled={isSystemNotReady || isLocked}
+              disabled={!isOnline || isSystemNotReady || isLocked}
             />
           </Field>
 
           <Button
             type="submit"
             disabled={
+              !isOnline ||
               isSubmitting ||
               isSystemNotReady ||
               isHealthCheckLoading ||
@@ -249,7 +286,9 @@ export function Login() {
             }
             className="w-full"
             aria-busy={isSubmitting}
-            aria-disabled={isSystemNotReady || isHealthCheckLoading || isLocked}
+            aria-disabled={
+              !isOnline || isSystemNotReady || isHealthCheckLoading || isLocked
+            }
           >
             {isHealthCheckLoading ? (
               <Trans id="login.checkingSystem">Checking system...</Trans>

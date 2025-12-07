@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-07 17:09+0100\n"
+"POT-Creation-Date: 2025-12-07 21:56+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1425,67 +1425,77 @@ msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:255
+#: src/pages/Login.tsx:294
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:208
+#: src/pages/Login.tsx:244
 msgid "login.email"
 msgstr "E-Mail"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:147
+#: src/pages/Login.tsx:183
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:142
+#: src/pages/Login.tsx:178
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:257
+#: src/pages/Login.tsx:296
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:226
+#: src/pages/Login.tsx:154
+msgid "login.offlineWarning.message"
+msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:149
+msgid "login.offlineWarning.title"
+msgstr "Keine Internetverbindung"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:262
 msgid "login.password"
 msgstr "Passwort"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:176
+#: src/pages/Login.tsx:212
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:171
+#: src/pages/Login.tsx:207
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:197
+#: src/pages/Login.tsx:233
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:263
+#: src/pages/Login.tsx:302
 msgid "login.submit"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:261
+#: src/pages/Login.tsx:300
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:120
+#: src/pages/Login.tsx:127
 msgid "login.subtitle"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:117
+#: src/pages/Login.tsx:124
 msgid "login.title"
 msgstr "Einloggen"
 
