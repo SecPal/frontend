@@ -33,11 +33,17 @@ vi.mock("../services/secretApi", () => ({
   },
 }));
 
+// Mock useOnlineStatus hook
+vi.mock("../hooks/useOnlineStatus", () => ({
+  useOnlineStatus: vi.fn(),
+}));
+
 import {
   createOrganizationalUnit,
   updateOrganizationalUnit,
 } from "../services/organizationalUnitApi";
 import { ApiError } from "../services/secretApi";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 function renderWithI18n(component: React.ReactElement) {
   i18n.load("en", {});
@@ -61,6 +67,8 @@ describe("OrganizationalUnitFormDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default to online
+    vi.mocked(useOnlineStatus).mockReturnValue(true);
   });
 
   describe("Create mode", () => {
@@ -619,6 +627,99 @@ describe("OrganizationalUnitFormDialog", () => {
       await waitFor(() => {
         expect(screen.queryByText("Name is required")).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe("Offline behavior", () => {
+    beforeEach(() => {
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+    });
+
+    it("shows offline warning in create mode", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByText(/You're offline/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Creating organizational units is not possible while offline/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("shows offline warning in edit mode", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="edit"
+          unit={mockUnit}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByText(/You're offline/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Editing organizational units is not possible while offline/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("disables create button when offline", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const createButton = screen.getByRole("button", { name: /Create/i });
+      expect(createButton).toBeDisabled();
+    });
+
+    it("disables save button when offline", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="edit"
+          unit={mockUnit}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const saveButton = screen.getByRole("button", { name: /Save/i });
+      expect(saveButton).toBeDisabled();
+    });
+
+    it("does not call createOrganizationalUnit when offline", async () => {
+      vi.mocked(createOrganizationalUnit).mockResolvedValue(
+        {} as OrganizationalUnit
+      );
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const createButton = screen.getByRole("button", { name: /Create/i });
+
+      // Button is disabled, so API should not be called
+      expect(createButton).toBeDisabled();
+      expect(createOrganizationalUnit).not.toHaveBeenCalled();
     });
   });
 });
