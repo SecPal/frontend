@@ -23,12 +23,12 @@ msgid "-- Choose a Secret --"
 msgstr "-- Choose a Secret --"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:222
+#: src/pages/Organization/OrganizationPage.tsx:233
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" created successfully"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:223
+#: src/pages/Organization/OrganizationPage.tsx:234
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" updated successfully"
 
@@ -123,7 +123,7 @@ msgstr "Add Area"
 msgid "Add child"
 msgstr "Add child"
 
-#: src/pages/Organization/OrganizationPage.tsx:360
+#: src/pages/Organization/OrganizationPage.tsx:363
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
 
@@ -288,7 +288,7 @@ msgstr "Cleared {count} completed upload(s)"
 msgid "Close"
 msgstr "Close"
 
-#: src/pages/Organization/OrganizationPage.tsx:308
+#: src/pages/Organization/OrganizationPage.tsx:311
 msgid "Close detail panel"
 msgstr "Close detail panel"
 
@@ -342,7 +342,7 @@ msgstr "Create Secret"
 msgid "Create your first secret to get started"
 msgstr "Create your first secret to get started"
 
-#: src/pages/Organization/OrganizationPage.tsx:346
+#: src/pages/Organization/OrganizationPage.tsx:349
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Created"
@@ -423,7 +423,7 @@ msgstr "Department"
 
 #: src/components/ObjectManager.tsx:378
 #: src/components/OrganizationalUnitFormDialog.tsx:333
-#: src/pages/Organization/OrganizationPage.tsx:327
+#: src/pages/Organization/OrganizationPage.tsx:330
 msgid "Description"
 msgstr "Description"
 
@@ -459,7 +459,7 @@ msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
 #: src/components/OrganizationalUnitTree.tsx:347
-#: src/pages/Organization/OrganizationPage.tsx:357
+#: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Edit"
@@ -829,7 +829,7 @@ msgstr "Manage protected objects and their areas for this customer."
 msgid "Manage your application preferences."
 msgstr "Manage your application preferences."
 
-#: src/pages/Organization/OrganizationPage.tsx:245
+#: src/pages/Organization/OrganizationPage.tsx:256
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Manage your internal organizational units including departments, branches, and teams."
 
@@ -1029,7 +1029,7 @@ msgstr "Optional description..."
 msgid "Organization"
 msgstr "Organization"
 
-#: src/pages/Organization/OrganizationPage.tsx:242
+#: src/pages/Organization/OrganizationPage.tsx:253
 msgid "Organization Structure"
 msgstr "Organization Structure"
 
@@ -1047,7 +1047,7 @@ msgstr "Owner"
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Page {currentPage} of {totalPages} ({0} {1})"
 
-#: src/pages/Organization/OrganizationPage.tsx:337
+#: src/pages/Organization/OrganizationPage.tsx:340
 msgid "Parent"
 msgstr "Parent"
 
@@ -1220,7 +1220,7 @@ msgstr "Select a new parent for this organizational unit."
 msgid "Select an object to view details"
 msgstr "Select an object to view details"
 
-#: src/pages/Organization/OrganizationPage.tsx:367
+#: src/pages/Organization/OrganizationPage.tsx:370
 msgid "Select an organizational unit to view details"
 msgstr "Select an organizational unit to view details"
 
@@ -1408,7 +1408,7 @@ msgid "Try Again"
 msgstr "Try Again"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:303
-#: src/pages/Organization/OrganizationPage.tsx:318
+#: src/pages/Organization/OrganizationPage.tsx:321
 msgid "Type"
 msgstr "Type"
 
@@ -1488,10 +1488,6 @@ msgstr "View Secrets"
 msgid "View your account information."
 msgstr "View your account information."
 
-#: src/pages/Organization/OrganizationPage.tsx:262
-msgid "Viewing cached data. Some organizational units may be outdated."
-msgstr "Viewing cached data. Some organizational units may be outdated."
-
 #: src/components/MoveOrganizationalUnitDialog.tsx:410
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Viewing cached data. Some units may be outdated."
@@ -1526,10 +1522,6 @@ msgstr "You're offline - showing cached data"
 #: src/components/OfflineIndicator.tsx:73
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
-
-#: src/pages/Organization/OrganizationPage.tsx:255
-msgid "You're offline. Viewing cached organizational units."
-msgstr "You're offline. Viewing cached organizational units."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:120

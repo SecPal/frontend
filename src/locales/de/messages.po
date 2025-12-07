@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-07 16:00+0100\n"
+"POT-Creation-Date: 2025-12-07 17:09+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -8,12 +8,12 @@ msgstr ""
 "Language: de\n"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:222
+#: src/pages/Organization/OrganizationPage.tsx:233
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" erfolgreich erstellt"
 
 #. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:223
+#: src/pages/Organization/OrganizationPage.tsx:234
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" erfolgreich aktualisiert"
 
@@ -70,7 +70,7 @@ msgstr "Aktiv"
 msgid "Add Area"
 msgstr "Bereich hinzufügen"
 
-#: src/pages/Organization/OrganizationPage.tsx:360
+#: src/pages/Organization/OrganizationPage.tsx:363
 msgid "Add Child Unit"
 msgstr "Untergeordnete Einheit hinzufügen"
 
@@ -230,7 +230,7 @@ msgstr "Gelöscht {count} abgeschlossene(r) Upload(s)"
 msgid "Close"
 msgstr "Schließen"
 
-#: src/pages/Organization/OrganizationPage.tsx:308
+#: src/pages/Organization/OrganizationPage.tsx:311
 msgid "Close detail panel"
 msgstr "Detailfenster schließen"
 
@@ -284,7 +284,7 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 msgid "Create your first secret to get started"
 msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 
-#: src/pages/Organization/OrganizationPage.tsx:346
+#: src/pages/Organization/OrganizationPage.tsx:349
 #: src/pages/Secrets/SecretDetail.tsx:466
 msgid "Created"
 msgstr "Erstellt"
@@ -365,7 +365,7 @@ msgstr "Bereich"
 
 #: src/components/ObjectManager.tsx:378
 #: src/components/OrganizationalUnitFormDialog.tsx:333
-#: src/pages/Organization/OrganizationPage.tsx:327
+#: src/pages/Organization/OrganizationPage.tsx:330
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -397,7 +397,7 @@ msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
 #: src/components/OrganizationalUnitTree.tsx:347
-#: src/pages/Organization/OrganizationPage.tsx:357
+#: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -747,7 +747,7 @@ msgstr "Verwalten Sie geschützte Objekte und deren Bereiche für diesen Kunden.
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
-#: src/pages/Organization/OrganizationPage.tsx:245
+#: src/pages/Organization/OrganizationPage.tsx:256
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
 
@@ -943,7 +943,7 @@ msgstr "Optionale Beschreibung..."
 msgid "Organization"
 msgstr "Organisation"
 
-#: src/pages/Organization/OrganizationPage.tsx:242
+#: src/pages/Organization/OrganizationPage.tsx:253
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
 
@@ -961,7 +961,7 @@ msgstr "Eigentümer"
 msgid "Page {currentPage} of {totalPages} ({0} {1})"
 msgstr "Seite {currentPage} von {totalPages} ({0} {1})"
 
-#: src/pages/Organization/OrganizationPage.tsx:337
+#: src/pages/Organization/OrganizationPage.tsx:340
 msgid "Parent"
 msgstr "Übergeordnete Einheit"
 
@@ -1132,7 +1132,7 @@ msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinh
 msgid "Select an object to view details"
 msgstr "Wählen Sie ein Objekt aus, um Details anzuzeigen"
 
-#: src/pages/Organization/OrganizationPage.tsx:367
+#: src/pages/Organization/OrganizationPage.tsx:370
 msgid "Select an organizational unit to view details"
 msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 
@@ -1297,7 +1297,7 @@ msgid "Try adjusting your filters"
 msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:303
-#: src/pages/Organization/OrganizationPage.tsx:318
+#: src/pages/Organization/OrganizationPage.tsx:321
 msgid "Type"
 msgstr "Typ"
 
@@ -1377,10 +1377,6 @@ msgstr "Objekte für {0} anzeigen"
 msgid "View your account information."
 msgstr "Zeigen Sie Ihre Kontoinformationen an."
 
-#: src/pages/Organization/OrganizationPage.tsx:262
-msgid "Viewing cached data. Some organizational units may be outdated."
-msgstr "Anzeigen von zwischengespeicherten Daten. Einige Organisationseinheiten können veraltet sein."
-
 #: src/components/MoveOrganizationalUnitDialog.tsx:410
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
@@ -1415,10 +1411,6 @@ msgstr "Sie sind offline - Anzeige von Daten im Cache"
 #: src/components/OfflineIndicator.tsx:73
 msgid "You're offline. Click for details."
 msgstr "Sie sind offline. Klicken Sie für Details."
-
-#: src/pages/Organization/OrganizationPage.tsx:255
-msgid "You're offline. Viewing cached organizational units."
-msgstr "Sie sind offline. Es werden zwischengespeicherte Organisationseinheiten angezeigt."
 
 #: src/components/ConflictResolutionDialog.tsx:132
 msgid "Your Local Version"

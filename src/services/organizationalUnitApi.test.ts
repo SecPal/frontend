@@ -267,17 +267,41 @@ describe("Organizational Unit API", () => {
 
   describe("detachOrganizationalUnitParent", () => {
     it("should detach parent successfully", async () => {
-      mockFetchWithCsrf.mockResolvedValue({
+      // Mock DELETE response
+      mockFetchWithCsrf.mockResolvedValueOnce({
         ok: true,
         json: async () => ({}),
+      } as Response);
+
+      // Mock subsequent GET to fetch updated unit
+      mockFetchWithCsrf.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: "unit-1",
+            type: "branch",
+            name: "Test Unit",
+            metadata: {},
+            parent: null,
+            created_at: "2025-01-01T00:00:00Z",
+            updated_at: "2025-01-01T00:00:00Z",
+          },
+        }),
       } as Response);
 
       await expect(
         detachOrganizationalUnitParent("unit-1", "parent-1")
       ).resolves.toBeUndefined();
+
       expect(mockFetchWithCsrf).toHaveBeenCalledWith(
         `${apiConfig.baseUrl}/v1/organizational-units/unit-1/parent/parent-1`,
         expect.objectContaining({ method: "DELETE" })
+      );
+
+      // Should fetch updated unit after detach
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/organizational-units/unit-1`,
+        expect.objectContaining({ method: "GET" })
       );
     });
   });
