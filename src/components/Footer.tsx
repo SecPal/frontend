@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="py-4">
       <div className="mx-auto max-w-6xl px-6 text-center text-xs">
-        <Text className="mb-2">
+        <Text className="mb-2 text-xs">
           <Strong>
             <Trans>Powered by SecPal - a guard's best friend</Trans>
           </Strong>
