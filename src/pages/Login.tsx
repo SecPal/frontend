@@ -36,11 +36,25 @@ export function Login() {
   const [isHealthCheckLoading, setIsHealthCheckLoading] = useState(true);
   const [healthCheckError, setHealthCheckError] = useState(false);
 
-  // Check backend health on component mount
+  // Check backend health on component mount and when online status changes
   useEffect(() => {
     let isMounted = true;
 
     async function performHealthCheck() {
+      // Don't perform health check when offline
+      if (!isOnline) {
+        if (isMounted) {
+          setIsHealthCheckLoading(false);
+          setHealthCheckError(false);
+        }
+        return;
+      }
+
+      // Reset loading state when checking
+      if (isMounted) {
+        setIsHealthCheckLoading(true);
+      }
+
       try {
         const status = await checkHealth();
         if (isMounted) {
@@ -63,7 +77,7 @@ export function Login() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isOnline]); // Re-run when online status changes
 
   // Determine if system is not ready (health check failed or backend reported not_ready)
   // Only check health status when online; offline is handled separately

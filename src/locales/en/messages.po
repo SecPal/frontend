@@ -50,7 +50,7 @@ msgid "{pendingOps} operation(s) pending"
 msgstr "{pendingOps} operation(s) pending"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:233
+#: src/pages/Login.tsx:231
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
@@ -149,7 +149,7 @@ msgstr "Address"
 msgid "Admin"
 msgstr "Admin"
 
-#: src/components/Footer.tsx:27
+#: src/components/Footer.tsx:31
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
@@ -250,7 +250,7 @@ msgid "Cannot Delete \"{unitName}\""
 msgstr "Cannot Delete \"{unitName}\""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:294
+#: src/pages/Login.tsx:292
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
@@ -376,7 +376,8 @@ msgstr "Customer Hierarchy"
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:283
+#: src/components/application-layout.tsx:232
+#: src/components/application-layout.tsx:306
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
@@ -487,7 +488,7 @@ msgid "Editing organizational units is not possible while offline. Please reconn
 msgstr "Editing organizational units is not possible while offline. Please reconnect to make changes."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:244
+#: src/pages/Login.tsx:242
 msgid "login.email"
 msgstr "Email"
 
@@ -706,7 +707,8 @@ msgstr "Grid"
 msgid "Grid view"
 msgstr "Grid view"
 
-#: src/components/application-layout.tsx:294
+#: src/components/application-layout.tsx:240
+#: src/components/application-layout.tsx:317
 #: src/components/GuardBookManager.tsx:634
 #: src/components/ObjectManager.tsx:254
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -724,7 +726,8 @@ msgstr "Hide"
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:256
+#: src/components/application-layout.tsx:214
+#: src/components/application-layout.tsx:279
 msgid "Home"
 msgstr "Home"
 
@@ -790,17 +793,17 @@ msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:296
+#: src/pages/Login.tsx:294
 msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:302
+#: src/pages/Login.tsx:300
 msgid "login.submit"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:300
+#: src/pages/Login.tsx:298
 msgid "login.submitting"
 msgstr "Logging in..."
 
@@ -876,7 +879,7 @@ msgstr "Moving..."
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/components/application-layout.tsx:167
+#: src/components/application-layout.tsx:154
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
@@ -1035,7 +1038,8 @@ msgstr "Optional description for this unit."
 msgid "Optional description..."
 msgstr "Optional description..."
 
-#: src/components/application-layout.tsx:272
+#: src/components/application-layout.tsx:224
+#: src/components/application-layout.tsx:295
 msgid "Organization"
 msgstr "Organization"
 
@@ -1066,7 +1070,7 @@ msgid "Parent Unit"
 msgstr "Parent Unit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:262
+#: src/pages/Login.tsx:260
 msgid "login.password"
 msgstr "Password"
 
@@ -1091,11 +1095,11 @@ msgid "Permission:"
 msgstr "Permission:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:212
+#: src/pages/Login.tsx:210
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
-#: src/components/Footer.tsx:16
+#: src/components/Footer.tsx:20
 msgid "Powered by SecPal - a guard's best friend"
 msgstr "Powered by SecPal - a guard's best friend"
 
@@ -1205,7 +1209,8 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/components/application-layout.tsx:262
+#: src/components/application-layout.tsx:217
+#: src/components/application-layout.tsx:285
 #: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Secrets"
@@ -1262,8 +1267,8 @@ msgstr "Separate Guard Book"
 msgid "Server Version"
 msgstr "Server Version"
 
-#: src/components/application-layout.tsx:173
-#: src/components/application-layout.tsx:309
+#: src/components/application-layout.tsx:160
+#: src/components/application-layout.tsx:332
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Settings"
@@ -1314,7 +1319,7 @@ msgstr "Show"
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
-#: src/components/application-layout.tsx:180
+#: src/components/application-layout.tsx:167
 msgid "Sign out"
 msgstr "Sign out"
 
@@ -1322,7 +1327,7 @@ msgstr "Sign out"
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Some features may be limited. Your changes will sync when you're back online."
 
-#: src/components/Footer.tsx:39
+#: src/components/Footer.tsx:43
 msgid "Source Code"
 msgstr "Source Code"
 
@@ -1376,7 +1381,7 @@ msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:183
+#: src/pages/Login.tsx:181
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
@@ -1405,7 +1410,7 @@ msgid "Title:"
 msgstr "Title:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:207
+#: src/pages/Login.tsx:205
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 

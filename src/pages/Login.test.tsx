@@ -744,11 +744,11 @@ describe("Login", () => {
       });
     });
 
-    it("shows offline warning even when system health check is loading", async () => {
-      // Create a never-resolving promise to simulate slow health check
-      vi.mocked(healthApi.checkHealth).mockReturnValue(
-        new Promise(() => {}) // Never resolves
-      );
+    it("shows offline warning immediately when offline", async () => {
+      // Start offline - health check should not run
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+      const mockCheckHealth = vi.mocked(healthApi.checkHealth);
+      mockCheckHealth.mockResolvedValue(createHealthyResponse());
 
       renderLogin();
 
@@ -757,10 +757,12 @@ describe("Login", () => {
         expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
       });
 
-      // Even though health check is loading, form should be disabled
-      // The button will show "Checking system..." but it should still be disabled
+      // Health check should NOT have been called
+      expect(mockCheckHealth).not.toHaveBeenCalled();
+
+      // Form should be disabled and button should say "Log in" (not "Checking system...")
       const submitButton = screen.getByRole("button", {
-        name: /checking system/i,
+        name: /log in/i,
       });
       expect(submitButton).toBeDisabled();
     });
@@ -800,6 +802,99 @@ describe("Login", () => {
 
       // System not ready warning should be gone
       expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
+    });
+
+    it("retries health check when coming back online", async () => {
+      // Start offline
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+      const mockCheckHealth = vi.mocked(healthApi.checkHealth);
+      mockCheckHealth.mockResolvedValue(createHealthyResponse());
+
+      const { rerender } = renderLogin();
+
+      // Should show offline warning
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      // Health check should NOT have been called when offline
+      expect(mockCheckHealth).not.toHaveBeenCalled();
+
+      // Now go online
+      vi.mocked(useOnlineStatus).mockReturnValue(true);
+
+      // Re-render to trigger online status change
+      rerender(
+        <MemoryRouter initialEntries={["/login"]}>
+          <I18nProvider i18n={i18n}>
+            <AuthProvider>
+              <Login />
+            </AuthProvider>
+          </I18nProvider>
+        </MemoryRouter>
+      );
+
+      // Should retry health check now that we're online
+      await waitFor(() => {
+        expect(mockCheckHealth).toHaveBeenCalled();
+      });
+
+      // Should show ready state (no warnings)
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/no internet connection/i)
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
+      });
+
+      // Login button should be enabled
+      const submitButton = screen.getByRole("button", { name: /log in/i });
+      expect(submitButton).not.toBeDisabled();
+    });
+
+    it("shows system not ready warning if health check fails after coming online", async () => {
+      // Start offline
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+      const mockCheckHealth = vi.mocked(healthApi.checkHealth);
+
+      const { rerender } = renderLogin();
+
+      // Should show offline warning
+      await waitFor(() => {
+        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
+      });
+
+      // Now go online but health check fails
+      vi.mocked(useOnlineStatus).mockReturnValue(true);
+      mockCheckHealth.mockRejectedValue(
+        new healthApi.HealthCheckError("Network error")
+      );
+
+      // Re-render to trigger online status change
+      rerender(
+        <MemoryRouter initialEntries={["/login"]}>
+          <I18nProvider i18n={i18n}>
+            <AuthProvider>
+              <Login />
+            </AuthProvider>
+          </I18nProvider>
+        </MemoryRouter>
+      );
+
+      // Should perform health check
+      await waitFor(() => {
+        expect(mockCheckHealth).toHaveBeenCalled();
+      });
+
+      // Should now show system not ready warning
+      await waitFor(() => {
+        expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
+      });
+
+      // Offline warning should be gone
+      expect(
+        screen.queryByText(/no internet connection/i)
+      ).not.toBeInTheDocument();
     });
   });
 

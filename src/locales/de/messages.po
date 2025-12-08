@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-07 22:40+0100\n"
+"POT-Creation-Date: 2025-12-08 18:42+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -34,7 +34,7 @@ msgstr "<0>{0}-Feld(er)</0> haben widersprüchliche Änderungen:"
 msgid "A new version of SecPal is available."
 msgstr "Eine neue Version von SecPal ist verfügbar."
 
-#: src/components/Footer.tsx:27
+#: src/components/Footer.tsx:31
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
@@ -318,7 +318,8 @@ msgstr "Kundennummer"
 msgid "Customer hierarchy"
 msgstr "Kundenhierarchie"
 
-#: src/components/application-layout.tsx:283
+#: src/components/application-layout.tsx:232
+#: src/components/application-layout.tsx:306
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
@@ -644,7 +645,8 @@ msgstr "Raster"
 msgid "Grid view"
 msgstr "Gitternetz-Ansicht"
 
-#: src/components/application-layout.tsx:294
+#: src/components/application-layout.tsx:240
+#: src/components/application-layout.tsx:317
 #: src/components/GuardBookManager.tsx:634
 #: src/components/ObjectManager.tsx:254
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -662,7 +664,8 @@ msgstr "Ausblenden"
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:256
+#: src/components/application-layout.tsx:214
+#: src/components/application-layout.tsx:279
 msgid "Home"
 msgstr "Startseite"
 
@@ -789,7 +792,7 @@ msgstr "Verschiebe..."
 msgid "My Organization"
 msgstr "Meine Organisation"
 
-#: src/components/application-layout.tsx:167
+#: src/components/application-layout.tsx:154
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
@@ -939,7 +942,8 @@ msgstr "Optionale Beschreibung für diese Einheit."
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
-#: src/components/application-layout.tsx:272
+#: src/components/application-layout.tsx:224
+#: src/components/application-layout.tsx:295
 msgid "Organization"
 msgstr "Organisation"
 
@@ -989,7 +993,7 @@ msgstr "Erlaubnisstufen:"
 msgid "Permission:"
 msgstr "Erlaubnis:"
 
-#: src/components/Footer.tsx:16
+#: src/components/Footer.tsx:20
 msgid "Powered by SecPal - a guard's best friend"
 msgstr "Powered by SecPal - a guard's best friend"
 
@@ -1099,7 +1103,8 @@ msgstr "SecPal - a guard's best friend"
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/components/application-layout.tsx:262
+#: src/components/application-layout.tsx:217
+#: src/components/application-layout.tsx:285
 #: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Geheimnisse"
@@ -1156,8 +1161,8 @@ msgstr "Separates Wachbuch"
 msgid "Server Version"
 msgstr "Server-Version"
 
-#: src/components/application-layout.tsx:173
-#: src/components/application-layout.tsx:309
+#: src/components/application-layout.tsx:160
+#: src/components/application-layout.tsx:332
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Einstellungen"
@@ -1208,7 +1213,7 @@ msgstr "Anzeigen"
 msgid "Showing cached data"
 msgstr "Zeige zwischengespeicherte Daten"
 
-#: src/components/application-layout.tsx:180
+#: src/components/application-layout.tsx:167
 msgid "Sign out"
 msgstr "Abmelden"
 
@@ -1216,7 +1221,7 @@ msgstr "Abmelden"
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
 
-#: src/components/Footer.tsx:39
+#: src/components/Footer.tsx:43
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -1429,17 +1434,17 @@ msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:294
+#: src/pages/Login.tsx:292
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:244
+#: src/pages/Login.tsx:242
 msgid "login.email"
 msgstr "E-Mail"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:183
+#: src/pages/Login.tsx:181
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
@@ -1449,7 +1454,7 @@ msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:296
+#: src/pages/Login.tsx:294
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
@@ -1464,32 +1469,32 @@ msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:262
+#: src/pages/Login.tsx:260
 msgid "login.password"
 msgstr "Passwort"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:212
+#: src/pages/Login.tsx:210
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:207
+#: src/pages/Login.tsx:205
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:233
+#: src/pages/Login.tsx:231
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:302
+#: src/pages/Login.tsx:300
 msgid "login.submit"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:300
+#: src/pages/Login.tsx:298
 msgid "login.submitting"
 msgstr "Einloggen..."
 
