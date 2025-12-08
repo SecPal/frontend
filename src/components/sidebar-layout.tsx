@@ -5,9 +5,8 @@
 
 import * as Headless from "@headlessui/react";
 import React, { useState } from "react";
-import { ScaleIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
 import { NavbarItem } from "./navbar";
-import { Link } from "./link";
+import { Footer } from "./Footer";
 
 function OpenMenuIcon() {
   return (
@@ -95,38 +94,7 @@ export function SidebarLayout({
 
           <div className="flex-1" />
 
-          {/* Footer */}
-          <div className="mx-auto max-w-6xl w-full px-6 py-4 text-center">
-            <div className="mb-2 text-xs font-semibold text-zinc-950 dark:text-white">
-              Powered by SecPal - a guard's best friend
-            </div>
-            <div className="flex items-center justify-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-              <Link
-                href="https://www.gnu.org/licenses/agpl-3.0.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white transition-colors"
-              >
-                <ScaleIcon className="h-4 w-4" aria-hidden="true" />
-                AGPL v3+
-              </Link>
-              <span
-                className="text-zinc-300 dark:text-zinc-600"
-                aria-hidden="true"
-              >
-                |
-              </span>
-              <Link
-                href="https://github.com/SecPal"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white transition-colors"
-              >
-                <CodeBracketIcon className="h-4 w-4" aria-hidden="true" />
-                Source Code
-              </Link>
-            </div>
-          </div>
+          <Footer />
         </div>
       </main>
     </div>
