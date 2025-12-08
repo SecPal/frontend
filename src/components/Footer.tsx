@@ -9,7 +9,7 @@ import { Link } from "./link";
 
 export function Footer() {
   return (
-    <footer className="mt-auto py-4">
+    <footer className="py-4">
       <div className="mx-auto max-w-6xl px-6 text-center">
         <Text className="mb-2 text-xs">
           <Strong>

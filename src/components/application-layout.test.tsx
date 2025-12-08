@@ -674,4 +674,49 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Guard Books")).not.toBeInTheDocument();
     });
   });
+
+  describe("footer", () => {
+    it("renders license link in main content footer", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const licenseLink = screen.getByRole("link", { name: /agpl v3\+/i });
+      expect(licenseLink).toBeInTheDocument();
+      expect(licenseLink).toHaveAttribute(
+        "href",
+        "https://www.gnu.org/licenses/agpl-3.0.html"
+      );
+      expect(licenseLink).toHaveAttribute("target", "_blank");
+      expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
+    });
+
+    it("renders source code link in main content footer", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const sourceLink = screen.getByRole("link", { name: /source code/i });
+      expect(sourceLink).toBeInTheDocument();
+      expect(sourceLink).toHaveAttribute("href", "https://github.com/SecPal");
+      expect(sourceLink).toHaveAttribute("target", "_blank");
+      expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
+    });
+
+    it("renders SecPal slogan in footer", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.getByText(/powered by secpal - a guard's best friend/i)
+      ).toBeInTheDocument();
+    });
+  });
 });
