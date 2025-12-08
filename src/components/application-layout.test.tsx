@@ -53,14 +53,16 @@ describe("ApplicationLayout", () => {
   });
 
   describe("rendering", () => {
-    it("renders sidebar with SecPal branding", () => {
+    it("renders navigation with Shield icon (branding)", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("SecPal")).toBeInTheDocument();
+      // In stacked layout, SecPal branding is represented by Shield icon in navbar
+      // The text "SecPal" only appears in mobile sidebar
+      expect(screen.getByText("Home")).toBeInTheDocument();
     });
 
     it("renders children content", () => {
@@ -83,18 +85,18 @@ describe("ApplicationLayout", () => {
 
       expect(screen.getByText("Home")).toBeInTheDocument();
       expect(screen.getByText("Secrets")).toBeInTheDocument();
-      expect(screen.getByText("Settings")).toBeInTheDocument();
     });
 
-    it("renders user information in sidebar footer", () => {
+    it("renders user information in navbar avatar", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("John Doe")).toBeInTheDocument();
-      expect(screen.getByText("john@example.com")).toBeInTheDocument();
+      // In stacked layout, user info is accessible via avatar and dropdown menu
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      expect(userMenuButton).toBeInTheDocument();
     });
 
     it("renders user initials in avatar", () => {
@@ -104,21 +106,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Two avatars exist: one in navbar, one in sidebar footer
+      // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("JD");
-      expect(avatars.length).toBeGreaterThanOrEqual(2);
-    });
-
-    it("renders navbar user menu button with accessible label", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      // The navbar should have a user menu button with aria-label for accessibility
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      expect(userMenuButton).toBeInTheDocument();
+      expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -157,19 +147,6 @@ describe("ApplicationLayout", () => {
 
       const secretsLink = screen.getByRole("link", { name: /secrets/i });
       expect(secretsLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("highlights Settings link when on settings page", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/settings" }
-      );
-
-      const settingsLinks = screen.getAllByRole("link", { name: /settings/i });
-      // First is sidebar navigation, second might be in dropdown
-      expect(settingsLinks[0]).toHaveAttribute("data-current", "true");
     });
   });
 
@@ -249,68 +226,7 @@ describe("ApplicationLayout", () => {
     });
   });
 
-  describe("sidebar user dropdown", () => {
-    it("opens dropdown when clicking user button", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      // Find and click the dropdown button (user section)
-      const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        expect(screen.getByText("My profile")).toBeInTheDocument();
-        expect(screen.getByText("Sign out")).toBeInTheDocument();
-      });
-    });
-
-    it("has profile link in dropdown", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        // DropdownItem with href renders as a menuitem (HeadlessUI)
-        const profileItem = screen.getByRole("menuitem", {
-          name: /my profile/i,
-        });
-        expect(profileItem).toHaveAttribute("href", "/profile");
-      });
-    });
-
-    it("has settings link in dropdown", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        // Find the settings menuitem in the dropdown
-        const settingsItem = screen.getByRole("menuitem", {
-          name: /settings/i,
-        });
-        expect(settingsItem).toHaveAttribute("href", "/settings");
-      });
-    });
-  });
+  // Note: Sidebar footer with user info was removed - all user menu functionality is in the navbar.
 
   describe("logout functionality", () => {
     it("calls logout API and clears auth on sign out click", async () => {
@@ -323,9 +239,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown
+      // Open dropdown (navbar user menu)
       const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
+        name: /user menu/i,
       });
       fireEvent.click(dropdownButton);
 
@@ -360,9 +276,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown
+      // Open dropdown (navbar user menu)
       const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
+        name: /user menu/i,
       });
       fireEvent.click(dropdownButton);
 
@@ -394,9 +310,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown
+      // Open dropdown (navbar user menu)
       const dropdownButton = screen.getByRole("button", {
-        name: /John Doe/i,
+        name: /user menu/i,
       });
       fireEvent.click(dropdownButton);
 
@@ -440,9 +356,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Two avatars exist: one in navbar, one in sidebar footer
+      // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("JS");
-      expect(avatars.length).toBeGreaterThanOrEqual(2);
+      expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
     it("generates correct initials for single-word name", () => {
@@ -461,9 +377,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Two avatars exist: one in navbar, one in sidebar footer
+      // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("A");
-      expect(avatars.length).toBeGreaterThanOrEqual(2);
+      expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
     it("generates correct initials for three-word name (max 2)", () => {
@@ -482,9 +398,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Two avatars exist: one in navbar, one in sidebar footer
+      // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("JP");
-      expect(avatars.length).toBeGreaterThanOrEqual(2);
+      expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
     it("shows fallback U when user name is missing", () => {
@@ -502,9 +418,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Two avatars exist: one in navbar, one in sidebar footer
+      // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("U");
-      expect(avatars.length).toBeGreaterThanOrEqual(2);
+      expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -629,7 +545,7 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Guard Books")).toBeInTheDocument();
     });
 
-    it("always shows Home, Secrets, and Settings links regardless of scopes", () => {
+    it("always shows Home and Secrets links regardless of scopes", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
@@ -648,7 +564,6 @@ describe("ApplicationLayout", () => {
 
       expect(screen.getByText("Home")).toBeInTheDocument();
       expect(screen.getByText("Secrets")).toBeInTheDocument();
-      expect(screen.getByText("Settings")).toBeInTheDocument();
     });
 
     it("treats undefined hasOrganizationalScopes as false", () => {
