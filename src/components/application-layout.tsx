@@ -19,7 +19,6 @@ import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from "./navbar";
 import {
   Sidebar,
   SidebarBody,
-  SidebarFooter,
   SidebarHeader,
   SidebarItem,
   SidebarLabel,
@@ -58,18 +57,6 @@ function CogIcon(props: React.SVGProps<SVGSVGElement>) {
       <path
         fillRule="evenodd"
         d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
-function ChevronDownIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg data-slot="icon" viewBox="0 0 16 16" fill="currentColor" {...props}>
-      <path
-        fillRule="evenodd"
-        d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
         clipRule="evenodd"
       />
     </svg>
@@ -190,9 +177,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   // Check if user has access to organizational features
-  const canAccessOrganization = hasOrganizationalAccess();
-  const canAccessCustomers = hasOrganizationalAccess();
-  const canAccessGuardBooks = hasOrganizationalAccess(); // Guard books require organizational context
+  const hasOrgAccess = hasOrganizationalAccess();
 
   const handleLogout = async () => {
     // Clear local state FIRST to prevent race conditions
@@ -231,7 +216,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             <NavbarItem href="/secrets" current={isCurrentPath("/secrets")}>
               <Trans>Secrets</Trans>
             </NavbarItem>
-            {canAccessOrganization && (
+            {hasOrgAccess && (
               <NavbarItem
                 href="/organization"
                 current={isCurrentPath("/organization")}
@@ -239,7 +224,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Organization</Trans>
               </NavbarItem>
             )}
-            {canAccessCustomers && (
+            {hasOrgAccess && (
               <NavbarItem
                 href="/customers"
                 current={isCurrentPath("/customers")}
@@ -247,7 +232,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Customers</Trans>
               </NavbarItem>
             )}
-            {canAccessGuardBooks && (
+            {hasOrgAccess && (
               <NavbarItem
                 href="/guard-books"
                 current={isCurrentPath("/guard-books")}
@@ -256,15 +241,8 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
               </NavbarItem>
             )}
           </NavbarSection>
-          <NavbarSpacer className="max-lg:hidden" />
+          <NavbarSpacer />
           <NavbarSection>
-            <NavbarItem
-              href="/settings"
-              current={isCurrentPath("/settings")}
-              className="max-lg:hidden"
-            >
-              <Trans>Settings</Trans>
-            </NavbarItem>
             <Dropdown>
               <DropdownButton as={NavbarItem} aria-label="User menu">
                 <Avatar
@@ -307,7 +285,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   <Trans>Secrets</Trans>
                 </SidebarLabel>
               </SidebarItem>
-              {canAccessOrganization && (
+              {hasOrgAccess && (
                 <SidebarItem
                   href="/organization"
                   current={isCurrentPath("/organization")}
@@ -318,7 +296,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   </SidebarLabel>
                 </SidebarItem>
               )}
-              {canAccessCustomers && (
+              {hasOrgAccess && (
                 <SidebarItem
                   href="/customers"
                   current={isCurrentPath("/customers")}
@@ -329,7 +307,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   </SidebarLabel>
                 </SidebarItem>
               )}
-              {canAccessGuardBooks && (
+              {hasOrgAccess && (
                 <SidebarItem
                   href="/guard-books"
                   current={isCurrentPath("/guard-books")}
@@ -356,31 +334,6 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
               </SidebarItem>
             </SidebarSection>
           </SidebarBody>
-
-          <SidebarFooter>
-            <Dropdown>
-              <DropdownButton as={SidebarItem}>
-                <span className="flex min-w-0 items-center gap-3">
-                  <Avatar
-                    initials={user?.name?.trim() ? getInitials(user.name) : "U"}
-                    className="size-10 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                  />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm/5 font-medium text-zinc-950 dark:text-white">
-                      {user?.name}
-                    </span>
-                    <span className="block truncate text-xs/5 font-normal text-zinc-500 dark:text-zinc-400">
-                      {user?.email}
-                    </span>
-                  </span>
-                </span>
-                <ChevronDownIcon />
-              </DropdownButton>
-              <DropdownMenu className="min-w-64" anchor="top start">
-                <UserMenuItems onLogout={handleLogout} />
-              </DropdownMenu>
-            </Dropdown>
-          </SidebarFooter>
         </Sidebar>
       }
     >

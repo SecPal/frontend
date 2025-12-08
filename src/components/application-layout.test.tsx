@@ -85,7 +85,6 @@ describe("ApplicationLayout", () => {
 
       expect(screen.getByText("Home")).toBeInTheDocument();
       expect(screen.getByText("Secrets")).toBeInTheDocument();
-      expect(screen.getByText("Settings")).toBeInTheDocument();
     });
 
     it("renders user information in navbar avatar", () => {
@@ -95,8 +94,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // In stacked layout, user info is only visible via avatar and dropdown menu
-      // User name and email are in the mobile sidebar footer (not visible in desktop view)
+      // In stacked layout, user info is accessible via avatar and dropdown menu
       const userMenuButton = screen.getByRole("button", { name: /user menu/i });
       expect(userMenuButton).toBeInTheDocument();
     });
@@ -111,18 +109,6 @@ describe("ApplicationLayout", () => {
       // Avatar in navbar (stacked layout has avatar only in navbar)
       const avatars = screen.getAllByText("JD");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it("renders navbar user menu button with accessible label", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      // The navbar should have a user menu button with aria-label for accessibility
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      expect(userMenuButton).toBeInTheDocument();
     });
   });
 
@@ -161,19 +147,6 @@ describe("ApplicationLayout", () => {
 
       const secretsLink = screen.getByRole("link", { name: /secrets/i });
       expect(secretsLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("highlights Settings link when on settings page", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/settings" }
-      );
-
-      const settingsLinks = screen.getAllByRole("link", { name: /settings/i });
-      // First is sidebar navigation, second might be in dropdown
-      expect(settingsLinks[0]).toHaveAttribute("data-current", "true");
     });
   });
 
@@ -253,8 +226,7 @@ describe("ApplicationLayout", () => {
     });
   });
 
-  // Note: In stacked layout, there is no sidebar footer dropdown anymore.
-  // All user menu functionality is now in the navbar user menu.
+  // Note: Sidebar footer with user info was removed - all user menu functionality is in the navbar.
 
   describe("logout functionality", () => {
     it("calls logout API and clears auth on sign out click", async () => {
@@ -573,7 +545,7 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Guard Books")).toBeInTheDocument();
     });
 
-    it("always shows Home, Secrets, and Settings links regardless of scopes", () => {
+    it("always shows Home and Secrets links regardless of scopes", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
@@ -592,7 +564,6 @@ describe("ApplicationLayout", () => {
 
       expect(screen.getByText("Home")).toBeInTheDocument();
       expect(screen.getByText("Secrets")).toBeInTheDocument();
-      expect(screen.getByText("Settings")).toBeInTheDocument();
     });
 
     it("treats undefined hasOrganizationalScopes as false", () => {
