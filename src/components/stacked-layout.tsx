@@ -79,7 +79,7 @@ export function StackedLayout({
             <OpenMenuIcon />
           </NavbarItem>
         </div>
-        <div className="min-w-0 flex-1">{navbar}</div>
+        <div className="min-w-0 flex-1 max-lg:hidden">{navbar}</div>
       </header>
 
       {/* Content */}
