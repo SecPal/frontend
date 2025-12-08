@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Login page: Health check retry on offline→online transition**
+  - Fixed false "System not ready" error when login page is opened offline and then comes online
+  - Health check is now skipped when offline (shows offline warning instead)
+  - Health check automatically retries when device comes back online
+  - Eliminates need for manual page reload after network reconnection
+  - Added test coverage for offline→online transitions
+
 ### Changed
 
 - **Migrated to Stacked Layout design** (#TBD)
