@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Migrated to Stacked Layout design** (#TBD)
+  - Switched from sidebar navigation to horizontal navbar (stacked layout)
+  - Navigation items now displayed in top navbar on desktop
+  - Mobile experience unchanged (sidebar drawer)
+  - Improved space utilization with horizontal navigation
+  - All Catalyst components and patterns maintained
+  - Footer integration preserved across both layouts
 - **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
   - Renamed "Add Unit" button to "Add Root Unit" for clarity
   - Makes it explicit that the button creates a root-level organizational unit

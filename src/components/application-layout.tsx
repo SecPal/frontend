@@ -26,7 +26,7 @@ import {
   SidebarSection,
   SidebarSpacer,
 } from "./sidebar";
-import { SidebarLayout } from "./sidebar-layout";
+import { StackedLayout } from "./stacked-layout";
 
 function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -215,11 +215,52 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <SidebarLayout
+    <StackedLayout
       navbar={
         <Navbar>
+          <NavbarSection>
+            <NavbarItem href="/">
+              <ShieldCheckIcon />
+            </NavbarItem>
+            <NavbarItem
+              href="/"
+              current={isCurrentPath("/") && location.pathname === "/"}
+            >
+              <Trans>Home</Trans>
+            </NavbarItem>
+            <NavbarItem href="/secrets" current={isCurrentPath("/secrets")}>
+              <Trans>Secrets</Trans>
+            </NavbarItem>
+            {canAccessOrganization && (
+              <NavbarItem
+                href="/organization"
+                current={isCurrentPath("/organization")}
+              >
+                <Trans>Organization</Trans>
+              </NavbarItem>
+            )}
+            {canAccessCustomers && (
+              <NavbarItem
+                href="/customers"
+                current={isCurrentPath("/customers")}
+              >
+                <Trans>Customers</Trans>
+              </NavbarItem>
+            )}
+            {canAccessGuardBooks && (
+              <NavbarItem
+                href="/guard-books"
+                current={isCurrentPath("/guard-books")}
+              >
+                <Trans>Guard Books</Trans>
+              </NavbarItem>
+            )}
+          </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
+            <NavbarItem href="/settings" current={isCurrentPath("/settings")}>
+              <Trans>Settings</Trans>
+            </NavbarItem>
             <Dropdown>
               <DropdownButton as={NavbarItem} aria-label="User menu">
                 <Avatar
@@ -340,6 +381,6 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
       }
     >
       {children}
-    </SidebarLayout>
+    </StackedLayout>
   );
 }
