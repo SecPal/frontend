@@ -802,4 +802,42 @@ describe("Login", () => {
       expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
     });
   });
+
+  describe("footer", () => {
+    it("renders footer with license and source code links", async () => {
+      renderLogin();
+
+      // Wait for initial render
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      // Check for license link
+      const licenseLink = screen.getByRole("link", { name: /agpl v3\+/i });
+      expect(licenseLink).toBeInTheDocument();
+      expect(licenseLink).toHaveAttribute(
+        "href",
+        "https://www.gnu.org/licenses/agpl-3.0.html"
+      );
+      expect(licenseLink).toHaveAttribute("target", "_blank");
+
+      // Check for source code link
+      const sourceLink = screen.getByRole("link", { name: /source code/i });
+      expect(sourceLink).toBeInTheDocument();
+      expect(sourceLink).toHaveAttribute("href", "https://github.com/SecPal");
+      expect(sourceLink).toHaveAttribute("target", "_blank");
+    });
+
+    it("renders footer with SecPal slogan", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/powered by secpal - a guard's best friend/i)
+        ).toBeInTheDocument();
+      });
+    });
+  });
 });
