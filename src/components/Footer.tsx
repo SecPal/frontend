@@ -4,18 +4,22 @@
 
 import { Trans } from "@lingui/macro";
 import { ScaleIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
-import { Text, Strong } from "./text";
 import { Link } from "./link";
 
 export function Footer() {
   return (
-    <footer className="py-4">
-      <div className="mx-auto max-w-6xl px-6 text-center text-xs">
-        <Text className="mb-2 text-xs">
-          <Strong>
+    <footer className="py-4 text-[11px]">
+      <div className="mx-auto max-w-6xl px-6 text-center">
+        <div className="mb-2">
+          <Link
+            href="https://secpal.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+          >
             <Trans>Powered by SecPal - a guard's best friend</Trans>
-          </Strong>
-        </Text>
+          </Link>
+        </div>
         <div className="flex items-center justify-center gap-3">
           <Link
             href="https://www.gnu.org/licenses/agpl-3.0.html"
