@@ -218,7 +218,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     <StackedLayout
       navbar={
         <Navbar>
-          <NavbarSection>
+          <NavbarSection className="max-lg:hidden">
             <NavbarItem href="/">
               <ShieldCheckIcon />
             </NavbarItem>
@@ -256,9 +256,13 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
               </NavbarItem>
             )}
           </NavbarSection>
-          <NavbarSpacer />
+          <NavbarSpacer className="max-lg:hidden" />
           <NavbarSection>
-            <NavbarItem href="/settings" current={isCurrentPath("/settings")}>
+            <NavbarItem
+              href="/settings"
+              current={isCurrentPath("/settings")}
+              className="max-lg:hidden"
+            >
               <Trans>Settings</Trans>
             </NavbarItem>
             <Dropdown>
