@@ -10,13 +10,13 @@ import { Link } from "./link";
 export function Footer() {
   return (
     <footer className="py-4">
-      <div className="mx-auto max-w-6xl px-6 text-center">
-        <Text className="mb-2 text-xs">
+      <div className="mx-auto max-w-6xl px-6 text-center text-xs">
+        <Text className="mb-2">
           <Strong>
             <Trans>Powered by SecPal - a guard's best friend</Trans>
           </Strong>
         </Text>
-        <div className="flex items-center justify-center gap-3 text-xs">
+        <div className="flex items-center justify-center gap-3">
           <Link
             href="https://www.gnu.org/licenses/agpl-3.0.html"
             target="_blank"
