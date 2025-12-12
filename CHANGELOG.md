@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
+  - Employee API service layer (CRUD operations, activate, terminate)
+  - Qualification API service (system/custom qualifications, employee assignments)
+  - Onboarding API service (multi-step wizard, file upload, HR approval workflow)
+  - Employee Document API service (8 document types, policy-based visibility)
+  - Employee List page with search, status filters, and pagination
+  - Employee Detail page with tabbed interface (Profile, Qualifications, Documents)
+  - Employee Create form with validation
+  - Pre-contract Onboarding Wizard (8-step process with progress indicator)
+  - Routing integration for /employees/\*, /onboarding paths
+
 ### Fixed
 
 - **Login page: Health check retry on offline→online transition**

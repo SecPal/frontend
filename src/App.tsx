@@ -36,6 +36,12 @@ const GuardBooksPage = lazy(
 );
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
+const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
+const EmployeeDetail = lazy(() => import("./pages/Employees/EmployeeDetail"));
+const EmployeeCreate = lazy(() => import("./pages/Employees/EmployeeCreate"));
+const OnboardingWizard = lazy(
+  () => import("./pages/Onboarding/OnboardingWizard")
+);
 
 function Home() {
   return (
@@ -215,6 +221,48 @@ function App() {
                 <ProtectedRoute>
                   <ApplicationLayout>
                     <GuardBooksPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Employee Management Routes */}
+            <Route
+              path="/employees"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <EmployeeList />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/create"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <EmployeeCreate />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/:id"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <EmployeeDetail />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Onboarding Route */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <OnboardingWizard />
                   </ApplicationLayout>
                 </ProtectedRoute>
               }
