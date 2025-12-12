@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -61,11 +61,7 @@ export function EmployeeList() {
     total: 0,
   });
 
-  useEffect(() => {
-    loadEmployees();
-  }, [filters]);
-
-  async function loadEmployees() {
+  const loadEmployees = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -77,7 +73,11 @@ export function EmployeeList() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filters]);
+
+  useEffect(() => {
+    loadEmployees();
+  }, [loadEmployees]);
 
   function handleStatusFilter(status: EmployeeStatus | undefined) {
     setFilters({ ...filters, status, page: 1 });

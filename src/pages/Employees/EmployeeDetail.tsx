@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import {
@@ -169,11 +169,7 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadQualifications();
-  }, [employeeId]);
-
-  async function loadQualifications() {
+  const loadQualifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchEmployeeQualifications(employeeId);
@@ -183,7 +179,11 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [employeeId]);
+
+  useEffect(() => {
+    loadQualifications();
+  }, [loadQualifications]);
 
   if (loading) {
     return (
@@ -236,11 +236,7 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDocuments();
-  }, [employeeId]);
-
-  async function loadDocuments() {
+  const loadDocuments = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchEmployeeDocuments(employeeId);
@@ -250,7 +246,11 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [employeeId]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   if (loading) {
     return (
@@ -303,13 +303,7 @@ export function EmployeeDetail() {
   const [activeTab, setActiveTab] = useState("profile");
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadEmployee();
-    }
-  }, [id]);
-
-  async function loadEmployee() {
+  const loadEmployee = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -322,7 +316,13 @@ export function EmployeeDetail() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadEmployee();
+    }
+  }, [id, loadEmployee]);
 
   async function handleActivate() {
     if (!id || !confirm("Activate this employee?")) return;

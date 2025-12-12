@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Trans } from "@lingui/macro";
 import {
   fetchOnboardingSteps,
@@ -168,17 +168,7 @@ export function OnboardingWizard() {
     Record<string, { id: string; filename: string }>
   >({});
 
-  useEffect(() => {
-    loadOnboardingSteps();
-  }, []);
-
-  useEffect(() => {
-    if (steps.length > 0) {
-      loadCurrentTemplate();
-    }
-  }, [currentStepIndex, steps]);
-
-  async function loadOnboardingSteps() {
+  const loadOnboardingSteps = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -191,9 +181,9 @@ export function OnboardingWizard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function loadCurrentTemplate() {
+  const loadCurrentTemplate = useCallback(async () => {
     if (!steps[currentStepIndex]) return;
 
     try {
@@ -209,7 +199,17 @@ export function OnboardingWizard() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [steps, currentStepIndex]);
+
+  useEffect(() => {
+    loadOnboardingSteps();
+  }, [loadOnboardingSteps]);
+
+  useEffect(() => {
+    if (steps.length > 0) {
+      loadCurrentTemplate();
+    }
+  }, [loadCurrentTemplate, steps.length]);
 
   async function handleSaveDraft() {
     if (!template) return;
