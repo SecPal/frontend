@@ -64,8 +64,8 @@
     "dexie-react-hooks": "^4.2.0",
     "idb": "^8.0.2",
     "motion": "^12.23.26",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-router-dom": "^7.10.1",
     "web-vitals": "^5.1.0"
   },
