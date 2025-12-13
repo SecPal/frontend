@@ -15,15 +15,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
-  - Employee API service layer (CRUD operations, activate, terminate)
-  - Qualification API service (system/custom qualifications, employee assignments)
-  - Onboarding API service (multi-step wizard, file upload, HR approval workflow)
-  - Employee Document API service (8 document types, policy-based visibility)
-  - Employee List page with search, status filters, and pagination
-  - Employee Detail page with tabbed interface (Profile, Qualifications, Documents)
-  - Employee Create form with validation
-  - Pre-contract Onboarding Wizard (8-step process with progress indicator)
-  - Routing integration for /employees/\*, /onboarding paths
+  - **API Service Layers:**
+    - Employee API service layer (CRUD operations, activate, terminate)
+    - Qualification API service (system/custom qualifications, employee assignments)
+    - Onboarding API service (multi-step wizard, file upload, HR approval workflow)
+    - Employee Document API service (8 document types, policy-based visibility)
+  - **UI Components (Catalyst Framework):**
+    - Employee List page with Catalyst Table, Field, Input, Select components
+    - Employee Detail page with Catalyst Badge, DescriptionList, tabs with proper dark mode support
+    - Employee Create form using Catalyst Fieldset, Legend, FieldGroup, Field, Label, Input
+    - Employee Edit form (pre-populated data editing with Catalyst components)
+    - Pre-contract Onboarding Wizard (8-step process with Catalyst Button, Heading, Text)
+  - **Navigation & Access Control:**
+    - UserGroupIcon added to component library
+    - "Employees" navigation item in navbar and sidebar (conditional on organizational access)
+    - OrganizationalRoute wrapper component for RBAC enforcement
+    - All employee routes protected with `hasOrganizationalAccess()` permission checks
+  - **Routing Integration:**
+    - `/employees` - Employee list view
+    - `/employees/create` - Create new employee
+    - `/employees/:id` - Employee detail view
+    - `/employees/:id/edit` - Edit existing employee
+    - `/onboarding` - Pre-contract onboarding wizard
+  - **Internationalization:**
+    - Full i18n support with `<Trans>` and `msg` from @lingui/macro
+    - All UI text translatable (German/English)
 
 ### Fixed
 

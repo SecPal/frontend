@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import {
@@ -14,17 +13,29 @@ import {
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
+import { Input } from "../../components/input";
+import { Select } from "../../components/select";
+import { Field, Label } from "../../components/fieldset";
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableHeader,
+  TableCell,
+} from "../../components/table";
+import { Badge } from "../../components/badge";
 
 /**
- * Status badge component
+ * Status badge component using Catalyst Badge
  */
 function StatusBadge({ status }: { status: EmployeeStatus }) {
   const colors = {
-    pre_contract: "bg-yellow-100 text-yellow-800",
-    active: "bg-green-100 text-green-800",
-    on_leave: "bg-blue-100 text-blue-800",
-    terminated: "bg-gray-100 text-gray-800",
-  };
+    pre_contract: "yellow",
+    active: "lime",
+    on_leave: "sky",
+    terminated: "zinc",
+  } as const;
 
   const labels = {
     pre_contract: <Trans>Pre-Contract</Trans>,
@@ -33,13 +44,7 @@ function StatusBadge({ status }: { status: EmployeeStatus }) {
     terminated: <Trans>Terminated</Trans>,
   };
 
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[status]}`}
-    >
-      {labels[status]}
-    </span>
-  );
+  return <Badge color={colors[status]}>{labels[status]}</Badge>;
 }
 
 /**
@@ -115,35 +120,27 @@ export function EmployeeList() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
+      <div className="bg-white shadow-sm rounded-lg p-4 mb-6 dark:bg-zinc-900">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700"
-            >
+          <Field>
+            <Label>
               <Trans>Search</Trans>
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
-              id="search"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              name="search"
               placeholder={_(msg`Search by name or email...`)}
               value={filters.search || ""}
               onChange={(e) => handleSearch(e.target.value)}
             />
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
+          <Field>
+            <Label>
               <Trans>Status</Trans>
-            </label>
-            <select
-              id="status"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            </Label>
+            <Select
+              name="status"
               value={filters.status || ""}
               onChange={(e) =>
                 handleStatusFilter(
@@ -168,8 +165,8 @@ export function EmployeeList() {
               <option value="terminated">
                 <Trans>Terminated</Trans>
               </option>
-            </select>
-          </div>
+            </Select>
+          </Field>
         </div>
       </div>
 
@@ -181,87 +178,63 @@ export function EmployeeList() {
       )}
 
       {/* Employee Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <Trans>Employee</Trans>
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <Trans>Employee #</Trans>
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <Trans>Position</Trans>
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <Trans>Status</Trans>
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <Trans>Unit</Trans>
-              </th>
-              <th scope="col" className="relative px-6 py-3">
-                <span className="sr-only">
-                  <Trans>Actions</Trans>
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {employee.full_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {employee.email}
-                      </div>
-                    </div>
+      <Table className="[--gutter:--spacing(6)] lg:[--gutter:--spacing(10)]">
+        <TableHead>
+          <TableRow>
+            <TableHeader>
+              <Trans>Employee</Trans>
+            </TableHeader>
+            <TableHeader>
+              <Trans>Employee #</Trans>
+            </TableHeader>
+            <TableHeader>
+              <Trans>Position</Trans>
+            </TableHeader>
+            <TableHeader>
+              <Trans>Status</Trans>
+            </TableHeader>
+            <TableHeader>
+              <Trans>Unit</Trans>
+            </TableHeader>
+            <TableHeader>
+              <span className="sr-only">
+                <Trans>Actions</Trans>
+              </span>
+            </TableHeader>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {employees.map((employee) => (
+            <TableRow key={employee.id} href={`/employees/${employee.id}`}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{employee.full_name}</div>
+                  <div className="text-zinc-500 dark:text-zinc-400">
+                    {employee.email}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {employee.employee_number}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {employee.position}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={employee.status} />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {employee.organizational_unit.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    to={`/employees/${employee.id}`}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
+                </div>
+              </TableCell>
+              <TableCell className="text-zinc-500">
+                {employee.employee_number}
+              </TableCell>
+              <TableCell>{employee.position}</TableCell>
+              <TableCell>
+                <StatusBadge status={employee.status} />
+              </TableCell>
+              <TableCell className="text-zinc-500">
+                {employee.organizational_unit.name}
+              </TableCell>
+              <TableCell>
+                <div className="-mx-3 -my-1.5 sm:-mx-2.5">
+                  <Button outline href={`/employees/${employee.id}`}>
                     <Trans>View</Trans>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
       {pagination.last_page > 1 && (

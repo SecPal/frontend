@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import {
   fetchEmployee,
@@ -21,142 +21,93 @@ import {
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
+import { Badge } from "../../components/badge";
+import {
+  DescriptionList,
+  DescriptionTerm,
+  DescriptionDetails,
+} from "../../components/description-list";
 
 /**
- * Status badge component
+ * Status badge component using Catalyst Badge
  */
 function StatusBadge({ status }: { status: string }) {
   const colors = {
-    pre_contract: "bg-yellow-100 text-yellow-800",
-    active: "bg-green-100 text-green-800",
-    on_leave: "bg-blue-100 text-blue-800",
-    terminated: "bg-gray-100 text-gray-800",
+    pre_contract: "yellow",
+    active: "lime",
+    on_leave: "sky",
+    terminated: "zinc",
+  } as const;
+
+  const labels = {
+    pre_contract: <Trans>Pre-Contract</Trans>,
+    active: <Trans>Active</Trans>,
+    on_leave: <Trans>On Leave</Trans>,
+    terminated: <Trans>Terminated</Trans>,
   };
 
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[status as keyof typeof colors]}`}
-    >
-      {status}
-    </span>
+    <Badge color={colors[status as keyof typeof colors]}>
+      {labels[status as keyof typeof labels] || status}
+    </Badge>
   );
 }
 
 /**
- * Tab navigation
- */
-function TabNav({
-  activeTab,
-  onChange,
-}: {
-  activeTab: string;
-  onChange: (tab: string) => void;
-}) {
-  const tabs = [
-    { id: "profile", label: <Trans>Profile</Trans> },
-    { id: "qualifications", label: <Trans>Qualifications</Trans> },
-    { id: "documents", label: <Trans>Documents</Trans> },
-  ];
-
-  return (
-    <div className="border-b border-gray-200 mb-6">
-      <nav className="-mb-px flex space-x-8">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onChange(tab.id)}
-            className={`
-              whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-              ${
-                activeTab === tab.id
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }
-            `}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-    </div>
-  );
-}
-
-/**
- * Profile Tab
+ * Profile Tab using Catalyst DescriptionList
  */
 function ProfileTab({ employee }: { employee: Employee }) {
   return (
-    <div className="space-y-6">
-      <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Employee Number</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">
-            {employee.employee_number}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Full Name</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">{employee.full_name}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Email</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">{employee.email}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Phone</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">
-            {employee.phone || "-"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Position</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">{employee.position}</dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Status</Trans>
-          </dt>
-          <dd className="mt-1">
-            <StatusBadge status={employee.status} />
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Date of Birth</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">
-            {employee.date_of_birth}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Contract Start Date</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">
-            {employee.contract_start_date}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-sm font-medium text-gray-500">
-            <Trans>Organizational Unit</Trans>
-          </dt>
-          <dd className="mt-1 text-sm text-gray-900">
-            {employee.organizational_unit.name}
-          </dd>
-        </div>
-      </dl>
-    </div>
+    <DescriptionList>
+      <DescriptionTerm>
+        <Trans>Employee Number</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.employee_number}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Full Name</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.full_name}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Email</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.email}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Phone</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.phone || "-"}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Position</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.position}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Status</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        <StatusBadge status={employee.status} />
+      </DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Date of Birth</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.date_of_birth}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Contract Start Date</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.contract_start_date}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Organizational Unit</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {employee.organizational_unit.name}
+      </DescriptionDetails>
+    </DescriptionList>
   );
 }
 
@@ -204,23 +155,24 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
   return (
     <div className="space-y-4">
       {qualifications.map((eq) => (
-        <div key={eq.id} className="border border-gray-200 rounded-lg p-4">
+        <div
+          key={eq.id}
+          className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
+        >
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900">
-                {eq.qualification.name}
-              </h4>
+              <Text className="font-medium">{eq.qualification.name}</Text>
               {eq.certificate_number && (
-                <Text className="text-sm text-gray-500">
-                  Certificate: {eq.certificate_number}
+                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <Trans>Certificate:</Trans> {eq.certificate_number}
                 </Text>
               )}
             </div>
             <StatusBadge status={eq.status} />
           </div>
           {eq.expiry_date && (
-            <Text className="text-sm text-gray-500 mt-2">
-              Expires: {eq.expiry_date}
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+              <Trans>Expires:</Trans> {eq.expiry_date}
             </Text>
           )}
         </div>
@@ -271,13 +223,16 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
   return (
     <div className="space-y-4">
       {documents.map((doc) => (
-        <div key={doc.id} className="border border-gray-200 rounded-lg p-4">
+        <div
+          key={doc.id}
+          className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-gray-900">
-                {doc.filename}
-              </h4>
-              <Text className="text-sm text-gray-500">{doc.document_type}</Text>
+              <Text className="font-medium">{doc.filename}</Text>
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                {doc.document_type}
+              </Text>
             </div>
             <Button
               href={`/employees/${employeeId}/documents/${doc.id}/download`}
@@ -377,41 +332,91 @@ export function EmployeeDetail() {
   return (
     <div>
       <div className="mb-6">
-        <Link to="/employees" className="text-indigo-600 hover:text-indigo-800">
+        <Button href="/employees" plain>
           <Trans>← Back to Employees</Trans>
-        </Link>
+        </Button>
       </div>
 
-      <div className="bg-white shadow-sm rounded-lg p-6">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <Heading>{employee.full_name}</Heading>
-            <Text className="text-gray-500">{employee.employee_number}</Text>
-          </div>
-          <div className="flex gap-2">
-            {employee.status === "pre_contract" && (
-              <Button onClick={handleActivate} disabled={actionLoading}>
-                <Trans>Activate</Trans>
+      <div className="rounded-lg bg-white shadow-sm ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
+        <div className="border-b border-zinc-950/5 p-6 dark:border-white/5">
+          <div className="flex items-start justify-between">
+            <div>
+              <Heading>{employee.full_name}</Heading>
+              <Text className="text-zinc-500 dark:text-zinc-400">
+                {employee.employee_number}
+              </Text>
+            </div>
+            <div className="flex gap-2">
+              {employee.status === "pre_contract" && (
+                <Button onClick={handleActivate} disabled={actionLoading}>
+                  <Trans>Activate</Trans>
+                </Button>
+              )}
+              {employee.status === "active" && (
+                <Button onClick={handleTerminate} disabled={actionLoading}>
+                  <Trans>Terminate</Trans>
+                </Button>
+              )}
+              <Button href={`/employees/${id}/edit`} outline>
+                <Trans>Edit</Trans>
               </Button>
-            )}
-            {employee.status === "active" && (
-              <Button onClick={handleTerminate} disabled={actionLoading}>
-                <Trans>Terminate</Trans>
-              </Button>
-            )}
-            <Button href={`/employees/${id}/edit`} outline>
-              <Trans>Edit</Trans>
-            </Button>
+            </div>
           </div>
         </div>
 
-        <TabNav activeTab={activeTab} onChange={setActiveTab} />
+        <div className="border-b border-zinc-950/5 dark:border-white/5">
+          <nav className="flex gap-6 px-6" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`
+                border-b-2 py-4 text-sm font-medium
+                ${
+                  activeTab === "profile"
+                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
+                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                }
+              `}
+            >
+              <Trans>Profile</Trans>
+            </button>
+            <button
+              onClick={() => setActiveTab("qualifications")}
+              className={`
+                border-b-2 py-4 text-sm font-medium
+                ${
+                  activeTab === "qualifications"
+                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
+                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                }
+              `}
+            >
+              <Trans>Qualifications</Trans>
+            </button>
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`
+                border-b-2 py-4 text-sm font-medium
+                ${
+                  activeTab === "documents"
+                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
+                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                }
+              `}
+            >
+              <Trans>Documents</Trans>
+            </button>
+          </nav>
+        </div>
 
-        {activeTab === "profile" && <ProfileTab employee={employee} />}
-        {activeTab === "qualifications" && (
-          <QualificationsTab employeeId={employee.id} />
-        )}
-        {activeTab === "documents" && <DocumentsTab employeeId={employee.id} />}
+        <div className="p-6">
+          {activeTab === "profile" && <ProfileTab employee={employee} />}
+          {activeTab === "qualifications" && (
+            <QualificationsTab employeeId={employee.id} />
+          )}
+          {activeTab === "documents" && (
+            <DocumentsTab employeeId={employee.id} />
+          )}
+        </div>
       </div>
     </div>
   );

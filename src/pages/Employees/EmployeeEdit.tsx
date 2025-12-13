@@ -1,12 +1,14 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import {
-  createEmployee,
+  fetchEmployee,
+  updateEmployee,
+  type Employee,
   type EmployeeFormData,
 } from "../../services/employeeApi";
 import { Heading } from "../../components/heading";
@@ -22,12 +24,14 @@ import {
 import { Input } from "../../components/input";
 
 /**
- * Employee Create Form
+ * Employee Edit Form
  */
-export function EmployeeCreate() {
+export function EmployeeEdit() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { _ } = useLingui();
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
@@ -40,17 +44,48 @@ export function EmployeeCreate() {
     organizational_unit_id: "",
   });
 
+  const loadEmployee = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      setFetchLoading(true);
+      setError(null);
+      const employee: Employee = await fetchEmployee(id);
+
+      // Populate form with existing data
+      setFormData({
+        first_name: employee.first_name || "",
+        last_name: employee.last_name || "",
+        email: employee.email,
+        phone: employee.phone || "",
+        date_of_birth: employee.date_of_birth,
+        position: employee.position,
+        contract_start_date: employee.contract_start_date,
+        organizational_unit_id: employee.organizational_unit.id,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load employee");
+    } finally {
+      setFetchLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadEmployee();
+  }, [loadEmployee]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!id) return;
 
     try {
       setLoading(true);
       setError(null);
-      const employee = await createEmployee(formData);
-      navigate(`/employees/${employee.id}`);
+      await updateEmployee(id, formData);
+      navigate(`/employees/${id}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create employee"
+        err instanceof Error ? err.message : "Failed to update employee"
       );
     } finally {
       setLoading(false);
@@ -58,25 +93,43 @@ export function EmployeeCreate() {
   }
 
   function handleChange(field: keyof EmployeeFormData, value: string) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: EmployeeFormData) => ({ ...prev, [field]: value }));
+  }
+
+  if (fetchLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Text>
+          <Trans>Loading employee...</Trans>
+        </Text>
+      </div>
+    );
+  }
+
+  if (error && fetchLoading) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <Text className="text-red-800">{error}</Text>
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="mb-6">
-        <Button plain onClick={() => navigate("/employees")}>
-          <Trans>← Back to Employees</Trans>
+        <Button plain onClick={() => navigate(`/employees/${id}`)}>
+          <Trans>← Back to Employee</Trans>
         </Button>
       </div>
 
       <div className="rounded-lg bg-white shadow-sm ring-1 ring-zinc-950/5 p-6 dark:bg-zinc-900 dark:ring-white/10">
         <Heading className="mb-6">
-          <Trans>Create New Employee</Trans>
+          <Trans>Edit Employee</Trans>
         </Heading>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <Text className="text-red-800">{error}</Text>
+        {error && !fetchLoading && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/10 dark:border-red-900">
+            <Text className="text-red-800 dark:text-red-400">{error}</Text>
           </div>
         )}
 
@@ -215,16 +268,12 @@ export function EmployeeCreate() {
             <Button
               type="button"
               outline
-              onClick={() => navigate("/employees")}
+              onClick={() => navigate(`/employees/${id}`)}
             >
               <Trans>Cancel</Trans>
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <Trans>Creating...</Trans>
-              ) : (
-                <Trans>Create Employee</Trans>
-              )}
+              {loading ? <Trans>Saving...</Trans> : <Trans>Save Changes</Trans>}
             </Button>
           </div>
         </form>
@@ -233,4 +282,4 @@ export function EmployeeCreate() {
   );
 }
 
-export default EmployeeCreate;
+export default EmployeeEdit;
