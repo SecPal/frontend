@@ -3,14 +3,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Trans, msg } from "@lingui/macro";
-import { useLingui } from "@lingui/react";
+import { Trans } from "@lingui/macro";
 import {
   fetchEmployee,
   updateEmployee,
   type Employee,
   type EmployeeFormData,
 } from "../../services/employeeApi";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -22,6 +23,7 @@ import {
   Label,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
+import { Select } from "../../components/select";
 
 /**
  * Employee Edit Form
@@ -29,10 +31,13 @@ import { Input } from "../../components/input";
 export function EmployeeEdit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { _ } = useLingui();
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [organizationalUnits, setOrganizationalUnits] = useState<
+    OrganizationalUnit[]
+  >([]);
+  const [unitsLoading, setUnitsLoading] = useState(true);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -43,6 +48,20 @@ export function EmployeeEdit() {
     contract_start_date: "",
     organizational_unit_id: "",
   });
+
+  useEffect(() => {
+    async function loadOrganizationalUnits() {
+      try {
+        const response = await listOrganizationalUnits();
+        setOrganizationalUnits(response.data);
+      } catch (err) {
+        console.error("Failed to load organizational units:", err);
+      } finally {
+        setUnitsLoading(false);
+      }
+    }
+    loadOrganizationalUnits();
+  }, []);
 
   const loadEmployee = useCallback(async () => {
     if (!id) return;
@@ -280,16 +299,28 @@ export function EmployeeEdit() {
                   <Label>
                     <Trans>Organizational Unit</Trans> *
                   </Label>
-                  <Input
-                    type="text"
+                  <Select
                     name="organizational_unit_id"
                     required
-                    placeholder={_(msg`Enter organization unit ID`)}
                     value={formData.organizational_unit_id}
                     onChange={(e) =>
                       handleChange("organizational_unit_id", e.target.value)
                     }
-                  />
+                    disabled={unitsLoading}
+                  >
+                    <option value="">
+                      {unitsLoading ? (
+                        <Trans>Loading...</Trans>
+                      ) : (
+                        <Trans>Select organizational unit</Trans>
+                      )}
+                    </option>
+                    {organizationalUnits.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name}
+                      </option>
+                    ))}
+                  </Select>
                 </Field>
               </div>
             </FieldGroup>

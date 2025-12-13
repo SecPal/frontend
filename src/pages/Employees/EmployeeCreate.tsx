@@ -1,14 +1,15 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trans, msg } from "@lingui/macro";
-import { useLingui } from "@lingui/react";
+import { Trans } from "@lingui/macro";
 import {
   createEmployee,
   type EmployeeFormData,
 } from "../../services/employeeApi";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -20,15 +21,19 @@ import {
   Label,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
+import { Select } from "../../components/select";
 
 /**
  * Employee Create Form
  */
 export function EmployeeCreate() {
   const navigate = useNavigate();
-  const { _ } = useLingui();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [organizationalUnits, setOrganizationalUnits] = useState<
+    OrganizationalUnit[]
+  >([]);
+  const [unitsLoading, setUnitsLoading] = useState(true);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -39,6 +44,20 @@ export function EmployeeCreate() {
     contract_start_date: "",
     organizational_unit_id: "",
   });
+
+  useEffect(() => {
+    async function loadOrganizationalUnits() {
+      try {
+        const response = await listOrganizationalUnits();
+        setOrganizationalUnits(response.data);
+      } catch (err) {
+        console.error("Failed to load organizational units:", err);
+      } finally {
+        setUnitsLoading(false);
+      }
+    }
+    loadOrganizationalUnits();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -207,16 +226,28 @@ export function EmployeeCreate() {
                   <Label>
                     <Trans>Organizational Unit</Trans> *
                   </Label>
-                  <Input
-                    type="text"
+                  <Select
                     name="organizational_unit_id"
                     required
-                    placeholder={_(msg`Enter organization unit ID`)}
                     value={formData.organizational_unit_id}
                     onChange={(e) =>
                       handleChange("organizational_unit_id", e.target.value)
                     }
-                  />
+                    disabled={unitsLoading}
+                  >
+                    <option value="">
+                      {unitsLoading ? (
+                        <Trans>Loading...</Trans>
+                      ) : (
+                        <Trans>Select organizational unit</Trans>
+                      )}
+                    </option>
+                    {organizationalUnits.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.name}
+                      </option>
+                    ))}
+                  </Select>
                 </Field>
               </div>
             </FieldGroup>
