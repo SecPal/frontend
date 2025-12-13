@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-08 18:42+0100\n"
+"POT-Creation-Date: 2025-12-13 17:30+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -38,11 +38,11 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:54
+#: src/App.tsx:62
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:65
+#: src/App.tsx:73
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -50,8 +50,13 @@ msgstr "Über SecPal"
 msgid "Access Control"
 msgstr "Zugangskontrolle"
 
+#: src/components/OrganizationalRoute.tsx:43
+msgid "Access Denied"
+msgstr "Zugang verweigert"
+
 #: src/components/GuardBookManager.tsx:382
 #: src/components/ObjectManager.tsx:384
+#: src/pages/Employees/EmployeeList.tsx:215
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -60,8 +65,16 @@ msgstr "Aktionen"
 msgid "Actions for {0}"
 msgstr "Aktionen für {0}"
 
+#: src/pages/Employees/EmployeeDetail.tsx:388
+msgid "Activate"
+msgstr "Aktivieren"
+
 #: src/components/GuardBookManager.tsx:180
 #: src/components/GuardBookManager.tsx:675
+#: src/pages/Employees/EmployeeCreate.tsx:269
+#: src/pages/Employees/EmployeeDetail.tsx:44
+#: src/pages/Employees/EmployeeList.tsx:42
+#: src/pages/Employees/EmployeeList.tsx:170
 msgid "Active"
 msgstr "Aktiv"
 
@@ -78,6 +91,10 @@ msgstr "Untergeordnete Einheit hinzufügen"
 #: src/components/CustomerTree.tsx:521
 msgid "Add Customer"
 msgstr "Kunde hinzufügen"
+
+#: src/pages/Employees/EmployeeList.tsx:127
+msgid "Add Employee"
+msgstr "Mitarbeiter hinzufügen"
 
 #: src/components/ObjectManager.tsx:628
 #: src/components/ObjectManager.tsx:643
@@ -104,6 +121,7 @@ msgstr "Adresse"
 msgid "Admin"
 msgstr "Admin"
 
+#: src/pages/Employees/EmployeeList.tsx:164
 #: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "Alle"
@@ -170,7 +188,12 @@ msgstr "Angehängte Dateien"
 msgid "Attachments ({0})"
 msgstr "Anhänge ({0})"
 
-#: src/App.tsx:76
+#: src/pages/Employees/EmployeeDetail.tsx:360
+#: src/pages/Employees/EmployeeEdit.tsx:159
+msgid "Back to Employees"
+msgstr "Zurück zu Mitarbeitern"
+
+#: src/App.tsx:84
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -189,12 +212,18 @@ msgstr "Niederlassung"
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
+#: src/pages/Employees/EmployeeCreate.tsx:316
+#: src/pages/Employees/EmployeeEdit.tsx:339
 msgid "Cancel"
 msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134
 msgid "Cannot Delete \"{unitName}\""
 msgstr "Löschen von \"{unitName}\" nicht möglich"
+
+#: src/pages/Employees/EmployeeDetail.tsx:167
+msgid "Certificate:"
+msgstr "Zertifikat:"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:168
 msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
@@ -252,15 +281,33 @@ msgstr "Kontakt E-Mail"
 msgid "Contact Phone"
 msgstr "Kontakt Telefon"
 
+#: src/pages/Employees/EmployeeCreate.tsx:214
+#: src/pages/Employees/EmployeeDetail.tsx:100
+#: src/pages/Employees/EmployeeEdit.tsx:289
+msgid "Contract Start Date"
+msgstr "Datum des Vertragsbeginns"
+
+#: src/pages/Employees/EmployeeCreate.tsx:282
+msgid "Contract Type"
+msgstr "Vertragsart"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:378
 #: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Erstellen"
 
+#: src/pages/Employees/EmployeeCreate.tsx:322
+msgid "Create Employee"
+msgstr "Mitarbeiter anlegen"
+
 #: src/components/GuardBookManager.tsx:623
 #: src/components/GuardBookManager.tsx:638
 msgid "Create Guard Book"
 msgstr "Wachbuch erstellen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:102
+msgid "Create New Employee"
+msgstr "Neuen Mitarbeiter anlegen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:230
 #: src/components/OrganizationalUnitTree.tsx:817
@@ -293,6 +340,10 @@ msgstr "Erstellt"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
+#: src/pages/Employees/EmployeeCreate.tsx:320
+msgid "Creating..."
+msgstr "Erstellen..."
+
 #: src/components/NotificationPreferences.tsx:42
 msgid "Critical security notifications and warnings"
 msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
@@ -318,13 +369,19 @@ msgstr "Kundennummer"
 msgid "Customer hierarchy"
 msgstr "Kundenhierarchie"
 
-#: src/components/application-layout.tsx:232
-#: src/components/application-layout.tsx:306
+#: src/components/application-layout.tsx:240
+#: src/components/application-layout.tsx:322
 #: src/pages/Organization/CustomersPage.tsx:51
 #: src/pages/Organization/GuardBooksPage.tsx:65
 #: src/pages/Organization/ObjectsPage.tsx:72
 msgid "Customers"
 msgstr "Kunden"
+
+#: src/pages/Employees/EmployeeCreate.tsx:151
+#: src/pages/Employees/EmployeeDetail.tsx:95
+#: src/pages/Employees/EmployeeEdit.tsx:226
+msgid "Date of Birth"
+msgstr "Geburtsdatum"
 
 #: src/components/AttachmentList.tsx:215
 #: src/components/DeleteOrganizationalUnitDialog.tsx:205
@@ -383,9 +440,14 @@ msgstr "Details"
 msgid "Division"
 msgstr "Abteilung"
 
+#: src/pages/Employees/EmployeeDetail.tsx:442
+msgid "Documents"
+msgstr "Dokumente"
+
 #: src/components/AttachmentList.tsx:201
 #: src/components/AttachmentPreview.tsx:125
 #: src/components/AttachmentPreview.tsx:215
+#: src/pages/Employees/EmployeeDetail.tsx:241
 msgid "Download"
 msgstr "Herunterladen"
 
@@ -398,10 +460,15 @@ msgid "Drag files here or click to browse"
 msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 
 #: src/components/OrganizationalUnitTree.tsx:347
+#: src/pages/Employees/EmployeeDetail.tsx:397
 #: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Bearbeiten"
+
+#: src/pages/Employees/EmployeeEdit.tsx:177
+msgid "Edit Employee"
+msgstr "Mitarbeiter bearbeiten"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:232
 msgid "Edit Organizational Unit"
@@ -425,9 +492,38 @@ msgstr "Bearbeiten {0}"
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
+#: src/pages/Employees/EmployeeCreate.tsx:166
+#: src/pages/Employees/EmployeeDetail.tsx:73
+#: src/pages/Employees/EmployeeEdit.tsx:241
 #: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
 msgstr "E-Mail"
+
+#: src/pages/Employees/EmployeeList.tsx:199
+msgid "Employee"
+msgstr "Mitarbeiter"
+
+#: src/pages/Employees/EmployeeList.tsx:202
+msgid "Employee #"
+msgstr "Mitarbeiter #"
+
+#: src/pages/Employees/EmployeeList.tsx:123
+msgid "Employee Management"
+msgstr "Mitarbeiter-Management"
+
+#: src/pages/Employees/EmployeeDetail.tsx:63
+msgid "Employee Number"
+msgstr "Mitarbeiter Nummer"
+
+#: src/components/application-layout.tsx:256
+#: src/components/application-layout.tsx:344
+msgid "Employees"
+msgstr "Mitarbeiter"
+
+#: src/pages/Employees/EmployeeCreate.tsx:195
+#: src/pages/Employees/EmployeeEdit.tsx:270
+msgid "Employment Details"
+msgstr "Details zur Beschäftigung"
 
 #: src/components/NotificationPreferences.tsx:280
 msgid "Enable Notifications"
@@ -444,6 +540,20 @@ msgstr "Aktiviere ..."
 #: src/components/EncryptionProgress.tsx:47
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:109
+#: src/pages/Employees/EmployeeEdit.tsx:184
+msgid "Error"
+msgstr "Fehler"
+
+#: src/pages/Employees/EmployeeDetail.tsx:353
+#: src/pages/Employees/EmployeeEdit.tsx:154
+msgid "Error Loading Employee"
+msgstr "Fehler beim Laden eines Mitarbeiters"
+
+#: src/pages/Employees/EmployeeList.tsx:188
+msgid "Error Loading Employees"
+msgstr "Fehler beim Laden von Mitarbeitern"
 
 #: src/pages/Secrets/SecretDetail.tsx:242
 msgid "Error Loading Secret"
@@ -480,6 +590,10 @@ msgstr "Läuft ab"
 #: src/components/ShareDialog.tsx:187
 msgid "Expires (optional):"
 msgstr "Läuft ab (optional):"
+
+#: src/pages/Employees/EmployeeDetail.tsx:175
+msgid "Expires:"
+msgstr "Läuft ab:"
 
 #. placeholder {0}: formatDate(share.expires_at)
 #: src/components/SharedWithList.tsx:106
@@ -602,6 +716,27 @@ msgstr "Filter nach Gültigkeit"
 msgid "Filter by tag"
 msgstr "Nach Tag filtern"
 
+#: src/pages/Employees/EmployeeCreate.tsx:125
+#: src/pages/Employees/EmployeeEdit.tsx:200
+msgid "First Name"
+msgstr "Vorname"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:382
+msgid "Form fields will be rendered based on schema"
+msgstr "Formularfelder werden basierend auf dem Schema gerendert"
+
+#: src/pages/Employees/EmployeeCreate.tsx:302
+msgid "Freelance"
+msgstr "Freiberuflich"
+
+#: src/pages/Employees/EmployeeDetail.tsx:68
+msgid "Full Name"
+msgstr "Vollständiger Name"
+
+#: src/pages/Employees/EmployeeCreate.tsx:293
+msgid "Full Time"
+msgstr "Vollzeit"
+
 #: src/components/GuardBookManager.tsx:199
 msgid "Generate Report"
 msgstr "Bericht generieren"
@@ -645,8 +780,8 @@ msgstr "Raster"
 msgid "Grid view"
 msgstr "Gitternetz-Ansicht"
 
-#: src/components/application-layout.tsx:240
-#: src/components/application-layout.tsx:317
+#: src/components/application-layout.tsx:248
+#: src/components/application-layout.tsx:333
 #: src/components/GuardBookManager.tsx:634
 #: src/components/ObjectManager.tsx:254
 #: src/pages/Organization/GuardBooksPage.tsx:29
@@ -664,8 +799,8 @@ msgstr "Ausblenden"
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:214
-#: src/components/application-layout.tsx:279
+#: src/components/application-layout.tsx:222
+#: src/components/application-layout.tsx:295
 msgid "Home"
 msgstr "Startseite"
 
@@ -686,6 +821,11 @@ msgstr "Ungültige oder unsichere URL"
 #: src/pages/Settings/SettingsPage.tsx:34
 msgid "Language"
 msgstr "Sprache"
+
+#: src/pages/Employees/EmployeeCreate.tsx:138
+#: src/pages/Employees/EmployeeEdit.tsx:213
+msgid "Last Name"
+msgstr "Nachname"
 
 #. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
 #. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
@@ -716,6 +856,27 @@ msgstr "Listenansicht"
 msgid "Loading attachments..."
 msgstr "Anhänge laden..."
 
+#: src/pages/Employees/EmployeeDetail.tsx:210
+msgid "Loading documents..."
+msgstr "Dokumente laden..."
+
+#: src/pages/Employees/EmployeeDetail.tsx:341
+#: src/pages/Employees/EmployeeEdit.tsx:142
+msgid "Loading employee..."
+msgstr "Mitarbeiter laden..."
+
+#: src/pages/Employees/EmployeeList.tsx:113
+msgid "Loading employees..."
+msgstr "Mitarbeiter laden..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:306
+msgid "Loading onboarding..."
+msgstr "Onboarding laden..."
+
+#: src/pages/Employees/EmployeeDetail.tsx:142
+msgid "Loading qualifications..."
+msgstr "Qualifikationen laden..."
+
 #: src/pages/Secrets/SecretDetail.tsx:229
 msgid "Loading secret..."
 msgstr "Geheimnis laden..."
@@ -726,6 +887,9 @@ msgid "Loading secrets..."
 msgstr "Geheimnisse laden..."
 
 #: src/components/AttachmentList.tsx:142
+#: src/components/OrganizationalRoute.tsx:28
+#: src/pages/Employees/EmployeeCreate.tsx:242
+#: src/pages/Employees/EmployeeEdit.tsx:317
 #: src/pages/Secrets/SecretEdit.tsx:116
 msgid "Loading..."
 msgstr "Laden..."
@@ -766,6 +930,10 @@ msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 msgid "Metadata"
 msgstr "Metadaten"
 
+#: src/pages/Employees/EmployeeCreate.tsx:299
+msgid "Minijob"
+msgstr "Minijob"
+
 #: src/components/OfflineIndicator.tsx:106
 msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
@@ -792,7 +960,7 @@ msgstr "Verschiebe..."
 msgid "My Organization"
 msgstr "Meine Organisation"
 
-#: src/components/application-layout.tsx:154
+#: src/components/application-layout.tsx:162
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
@@ -818,6 +986,12 @@ msgstr "Neues Geheimnis"
 #: src/components/MoveOrganizationalUnitDialog.tsx:439
 msgid "New parent"
 msgstr "neue übergeordnete Einheit"
+
+#: src/pages/Employees/EmployeeList.tsx:269
+#: src/pages/Employees/EmployeeList.tsx:311
+#: src/pages/Onboarding/OnboardingWizard.tsx:98
+msgid "Next"
+msgstr "Weiter"
 
 #: src/components/ObjectManager.tsx:402
 msgid "No"
@@ -859,6 +1033,10 @@ msgstr "Keine gemeinsamen Inhalte"
 msgid "No customer selected. Please select a customer first."
 msgstr "Kein Kunde ausgewählt. Bitte wählen Sie zuerst einen Kunden aus."
 
+#: src/pages/Employees/EmployeeDetail.tsx:218
+msgid "No documents uploaded"
+msgstr "Keine Dokumente hochgeladen"
+
 #: src/pages/Organization/GuardBooksPage.tsx:32
 msgid "No object selected. Please navigate from the objects page."
 msgstr "Kein Objekt ausgewählt. Bitte navigieren Sie von der Seite mit den Objekten."
@@ -866,6 +1044,10 @@ msgstr "Kein Objekt ausgewählt. Bitte navigieren Sie von der Seite mit den Obje
 #: src/components/MoveOrganizationalUnitDialog.tsx:423
 msgid "No parent (root unit)"
 msgstr "Keine übergeordnete Einheit (Stammeinheit)"
+
+#: src/pages/Employees/EmployeeDetail.tsx:150
+msgid "No qualifications assigned"
+msgstr "Keine Qualifikationen zugewiesen"
 
 #: src/components/GuardBookManager.tsx:359
 msgid "No reports generated yet."
@@ -934,6 +1116,13 @@ msgstr "Offline - wird synchronisiert, wenn online"
 msgid "Offline only"
 msgstr "Nur offline"
 
+#: src/pages/Employees/EmployeeCreate.tsx:272
+#: src/pages/Employees/EmployeeDetail.tsx:45
+#: src/pages/Employees/EmployeeList.tsx:43
+#: src/pages/Employees/EmployeeList.tsx:173
+msgid "On Leave"
+msgstr "in Freistellung"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
 msgstr "Optionale Beschreibung für diese Einheit."
@@ -942,14 +1131,20 @@ msgstr "Optionale Beschreibung für diese Einheit."
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
-#: src/components/application-layout.tsx:224
-#: src/components/application-layout.tsx:295
+#: src/components/application-layout.tsx:232
+#: src/components/application-layout.tsx:311
 msgid "Organization"
 msgstr "Organisation"
 
 #: src/pages/Organization/OrganizationPage.tsx:253
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
+
+#: src/pages/Employees/EmployeeCreate.tsx:229
+#: src/pages/Employees/EmployeeDetail.tsx:105
+#: src/pages/Employees/EmployeeEdit.tsx:304
+msgid "Organizational Unit"
+msgstr "Organisatorische Einheit"
 
 #: src/components/OrganizationalUnitTree.tsx:837
 msgid "Organizational structure"
@@ -973,6 +1168,10 @@ msgstr "Übergeordnete Einheit"
 msgid "Parent Unit"
 msgstr "Übergeordnete Einheit"
 
+#: src/pages/Employees/EmployeeCreate.tsx:296
+msgid "Part Time"
+msgstr "Teilzeit"
+
 #: src/pages/Secrets/SecretDetail.tsx:313
 msgid "Password"
 msgstr "Passwort"
@@ -993,9 +1192,34 @@ msgstr "Erlaubnisstufen:"
 msgid "Permission:"
 msgstr "Erlaubnis:"
 
+#: src/pages/Employees/EmployeeCreate.tsx:119
+#: src/pages/Employees/EmployeeEdit.tsx:194
+msgid "Personal Information"
+msgstr "Persönliche Informationen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:179
+#: src/pages/Employees/EmployeeDetail.tsx:78
+#: src/pages/Employees/EmployeeEdit.tsx:254
+msgid "Phone"
+msgstr "Telefon"
+
+#: src/pages/Employees/EmployeeCreate.tsx:201
+#: src/pages/Employees/EmployeeDetail.tsx:83
+#: src/pages/Employees/EmployeeEdit.tsx:276
+#: src/pages/Employees/EmployeeList.tsx:205
+msgid "Position"
+msgstr "Position"
+
 #: src/components/Footer.tsx:20
 msgid "Powered by SecPal - a guard's best friend"
 msgstr "Powered by SecPal - a guard's best friend"
+
+#: src/pages/Employees/EmployeeCreate.tsx:266
+#: src/pages/Employees/EmployeeDetail.tsx:43
+#: src/pages/Employees/EmployeeList.tsx:41
+#: src/pages/Employees/EmployeeList.tsx:167
+msgid "Pre-Contract"
+msgstr "Vorvertrag"
 
 #: src/components/AttachmentList.tsx:186
 msgid "Preview"
@@ -1005,9 +1229,23 @@ msgstr "Vorschau"
 msgid "Preview not available for this file type."
 msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 
+#: src/pages/Employees/EmployeeList.tsx:262
+#: src/pages/Employees/EmployeeList.tsx:303
+#: src/pages/Onboarding/OnboardingWizard.tsx:82
+msgid "Previous"
+msgstr "Vorherige"
+
 #: src/components/UploadStatus.tsx:234
 msgid "Processing Progress"
 msgstr "Fortschritt der Verarbeitung"
+
+#: src/pages/Employees/EmployeeDetail.tsx:416
+msgid "Profile"
+msgstr "Profil"
+
+#: src/pages/Employees/EmployeeDetail.tsx:429
+msgid "Qualifications"
+msgstr "Qualifikationen"
 
 #: src/components/ShareDialog.tsx:170
 msgid "Read"
@@ -1076,16 +1314,30 @@ msgid "Roles"
 msgstr "Rollen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
+#: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Save Changes"
 msgstr "Änderungen speichern"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:89
+msgid "Save Draft"
+msgstr "Entwurf speichern"
 
 #: src/pages/ShareTarget.tsx:717
 msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
+#: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Saving..."
 msgstr "Speichern..."
+
+#: src/pages/Employees/EmployeeList.tsx:137
+msgid "Search"
+msgstr "Suche"
+
+#: src/pages/Employees/EmployeeList.tsx:142
+msgid "Search by name or email..."
+msgstr "Suche nach Name oder E-Mail..."
 
 #: src/pages/Secrets/SecretList.tsx:177
 msgid "Search secrets"
@@ -1095,16 +1347,16 @@ msgstr "Geheimnisse durchsuchen"
 msgid "Search secrets..."
 msgstr "Geheimnisse durchsuchen..."
 
-#: src/App.tsx:47
+#: src/App.tsx:55
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:68
+#: src/App.tsx:76
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
-#: src/components/application-layout.tsx:217
-#: src/components/application-layout.tsx:285
+#: src/components/application-layout.tsx:225
+#: src/components/application-layout.tsx:301
 #: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Geheimnisse"
@@ -1145,6 +1397,11 @@ msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 msgid "Select new parent"
 msgstr "neue übergeordnete Einheit auswählen"
 
+#: src/pages/Employees/EmployeeCreate.tsx:244
+#: src/pages/Employees/EmployeeEdit.tsx:319
+msgid "Select organizational unit"
+msgstr "Organisationseinheit auswählen"
+
 #: src/components/ShareDialog.tsx:135
 msgid "Select user or role..."
 msgstr "Benutzer oder Rolle auswählen..."
@@ -1161,8 +1418,8 @@ msgstr "Separates Wachbuch"
 msgid "Server Version"
 msgstr "Server-Version"
 
-#: src/components/application-layout.tsx:160
-#: src/components/application-layout.tsx:332
+#: src/components/application-layout.tsx:168
+#: src/components/application-layout.tsx:359
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Einstellungen"
@@ -1209,11 +1466,18 @@ msgstr "Schicht-Erinnerungen"
 msgid "Show"
 msgstr "Anzeigen"
 
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Employees/EmployeeList.tsx:275
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
+msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
+
 #: src/components/OfflineDataBanner.tsx:106
 msgid "Showing cached data"
 msgstr "Zeige zwischengespeicherte Daten"
 
-#: src/components/application-layout.tsx:167
+#: src/components/application-layout.tsx:175
 msgid "Sign out"
 msgstr "Abmelden"
 
@@ -1224,6 +1488,21 @@ msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen 
 #: src/components/Footer.tsx:43
 msgid "Source Code"
 msgstr "Quelltext"
+
+#: src/pages/Employees/EmployeeCreate.tsx:257
+#: src/pages/Employees/EmployeeDetail.tsx:88
+#: src/pages/Employees/EmployeeList.tsx:150
+#: src/pages/Employees/EmployeeList.tsx:208
+msgid "Status"
+msgstr "Status"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:36
+msgid "Step {currentStep} of {totalSteps}"
+msgstr "Schritt {currentStep} von {totalSteps}"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:94
+msgid "Submit for Review"
+msgstr "Zur Überprüfung einreichen"
 
 #: src/pages/ShareTarget.tsx:695
 msgid "Successfully uploaded files!"
@@ -1256,6 +1535,17 @@ msgstr "Tags"
 #: src/components/NotificationPreferences.tsx:56
 msgid "Team Messages"
 msgstr "Team-Nachrichten"
+
+#: src/pages/Employees/EmployeeDetail.tsx:393
+msgid "Terminate"
+msgstr "Beenden"
+
+#: src/pages/Employees/EmployeeCreate.tsx:275
+#: src/pages/Employees/EmployeeDetail.tsx:46
+#: src/pages/Employees/EmployeeList.tsx:44
+#: src/pages/Employees/EmployeeList.tsx:176
+msgid "Terminated"
+msgstr "Beendet"
 
 #: src/components/NotificationPreferences.tsx:225
 msgid "Test Notification"
@@ -1323,6 +1613,10 @@ msgstr "URL:"
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Verschlüsselungsschlüssel für Anhänge kann nicht geladen werden. Bitte aktualisieren Sie die Seite oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
 
+#: src/pages/Employees/EmployeeList.tsx:211
+msgid "Unit"
+msgstr "Einheit"
+
 #: src/pages/Secrets/SecretEdit.tsx:145
 msgid "Update"
 msgstr "Update"
@@ -1351,12 +1645,22 @@ msgstr "Aktualisiert"
 msgid "Updating..."
 msgstr "Aktualisiere ..."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx:141
+msgid "Upload"
+msgstr "Hochladen"
+
 #: src/components/UploadStatus.tsx:217
 msgid "Upload Queue"
 msgstr "Upload-Warteschlange"
 
+#. placeholder {0}: uploadedFile.filename
+#: src/pages/Onboarding/OnboardingWizard.tsx:146
+msgid "Uploaded: {0}"
+msgstr "Hochgeladen: {0}"
+
 #: src/components/AttachmentUpload.tsx:210
 #: src/components/AttachmentUpload.tsx:252
+#: src/pages/Onboarding/OnboardingWizard.tsx:141
 #: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
 msgstr "Hochladen..."
@@ -1369,11 +1673,15 @@ msgstr "Benutzername"
 msgid "Users"
 msgstr "Benutzer"
 
+#: src/pages/Employees/EmployeeList.tsx:244
+msgid "View"
+msgstr "Anzeigen"
+
 #: src/pages/Organization/CustomersPage.tsx:132
 msgid "View Objects"
 msgstr "Objekte anzeigen"
 
-#: src/App.tsx:51
+#: src/App.tsx:59
 msgid "View Secrets"
 msgstr "Geheimnisse ansehen"
 
@@ -1390,9 +1698,13 @@ msgstr "Zeigen Sie Ihre Kontoinformationen an."
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
 
-#: src/App.tsx:44
+#: src/App.tsx:52
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:326
+msgid "Welcome to SecPal Onboarding"
+msgstr "Willkommen zum SecPal Onboarding"
 
 #: src/components/ShareDialog.tsx:173
 msgid "Write"
@@ -1401,6 +1713,10 @@ msgstr "Schreiben"
 #: src/components/ObjectManager.tsx:398
 msgid "Yes"
 msgstr "Ja"
+
+#: src/components/OrganizationalRoute.tsx:46
+msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
+msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
 #: src/components/NotificationPreferences.tsx:200
 msgid "You'll now receive important updates from SecPal"
@@ -1434,77 +1750,77 @@ msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:292
+#: src/pages/Login.tsx:306
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:242
+#: src/pages/Login.tsx:256
 msgid "login.email"
 msgstr "E-Mail"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:181
+#: src/pages/Login.tsx:195
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:178
+#: src/pages/Login.tsx:192
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:294
+#: src/pages/Login.tsx:308
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:154
+#: src/pages/Login.tsx:168
 msgid "login.offlineWarning.message"
 msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:149
+#: src/pages/Login.tsx:163
 msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:260
+#: src/pages/Login.tsx:274
 msgid "login.password"
 msgstr "Passwort"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:210
+#: src/pages/Login.tsx:224
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:205
+#: src/pages/Login.tsx:219
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:231
+#: src/pages/Login.tsx:245
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:300
+#: src/pages/Login.tsx:314
 msgid "login.submit"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:298
+#: src/pages/Login.tsx:312
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:127
+#: src/pages/Login.tsx:141
 msgid "login.subtitle"
 msgstr ""
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:124
+#: src/pages/Login.tsx:138
 msgid "login.title"
 msgstr "Einloggen"
 
@@ -1536,6 +1852,15 @@ msgstr "- Lesen: Geheime Details anzeigen"
 #: src/components/ShareDialog.tsx:208
 msgid "• Write: View + edit secret"
 msgstr "- Schreiben: Ansehen + Bearbeiten Geheimnis"
+
+#: src/pages/Employees/EmployeeEdit.tsx:171
+msgid "← Back to Employee"
+msgstr "← Zurück zum Mitarbeiter"
+
+#: src/pages/Employees/EmployeeCreate.tsx:96
+#: src/pages/Employees/EmployeeDetail.tsx:372
+msgid "← Back to Employees"
+msgstr "← Zurück zu Mitarbeitern"
 
 #: src/pages/Secrets/SecretDetail.tsx:267
 msgid "← Back to Secrets"

@@ -10,6 +10,7 @@ import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { OrganizationalRoute } from "./components/OrganizationalRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
@@ -36,6 +37,13 @@ const GuardBooksPage = lazy(
 );
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
+const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
+const EmployeeDetail = lazy(() => import("./pages/Employees/EmployeeDetail"));
+const EmployeeCreate = lazy(() => import("./pages/Employees/EmployeeCreate"));
+const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
+const OnboardingWizard = lazy(
+  () => import("./pages/Onboarding/OnboardingWizard")
+);
 
 function Home() {
   return (
@@ -215,6 +223,58 @@ function App() {
                 <ProtectedRoute>
                   <ApplicationLayout>
                     <GuardBooksPage />
+                  </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Employee Management Routes - Requires Organizational Access */}
+            <Route
+              path="/employees"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <EmployeeList />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/employees/create"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <EmployeeCreate />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/employees/:id/edit"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <EmployeeEdit />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/employees/:id"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <EmployeeDetail />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            {/* Onboarding Route */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <ApplicationLayout>
+                    <OnboardingWizard />
                   </ApplicationLayout>
                 </ProtectedRoute>
               }

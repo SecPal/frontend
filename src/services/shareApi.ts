@@ -54,8 +54,23 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
     );
   }
 
-  const data = await response.json();
-  return data.data;
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(
+      "Failed to parse shares response: invalid JSON",
+      response.status
+    );
+  }
+  if (!data || typeof data !== "object" || !("data" in data)) {
+    throw new ApiError(
+      "Failed to parse shares response: missing 'data' property",
+      response.status
+    );
+  }
+  // Type assertion is safe due to the above check
+  return (data as { data: SecretShare[] }).data;
 }
 
 /**
@@ -102,7 +117,10 @@ export async function createShare(
     );
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse share response", response.status);
+  }
   return data.data;
 }
 

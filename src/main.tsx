@@ -54,7 +54,15 @@ if (typeof window !== "undefined" && !isTest) {
     throw new Error("Root element not found");
   }
 
-  createRoot(rootElement).render(
+  // Cache root instance to avoid HMR warning
+  type WindowWithRoot = Window & { __app_root?: ReturnType<typeof createRoot> };
+  let root = (window as WindowWithRoot).__app_root;
+  if (!root) {
+    root = createRoot(rootElement);
+    (window as WindowWithRoot).__app_root = root;
+  }
+
+  root.render(
     <StrictMode>
       <AppWithI18n />
     </StrictMode>
