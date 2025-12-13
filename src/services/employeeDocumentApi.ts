@@ -57,7 +57,9 @@ export async function fetchEmployeeDocuments(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch employee documents");
   }
 
@@ -78,7 +80,9 @@ export async function fetchEmployeeDocument(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch document");
   }
 
@@ -118,7 +122,9 @@ export async function uploadEmployeeDocument(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to upload document");
   }
 
@@ -139,7 +145,9 @@ export async function deleteEmployeeDocument(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to delete document");
   }
 }
@@ -157,7 +165,9 @@ export async function downloadEmployeeDocument(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to download document");
   }
 

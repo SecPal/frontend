@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-13 09:48+0100\n"
+"POT-Creation-Date: 2025-12-13 09:51+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1377,7 +1377,7 @@ msgstr "neue übergeordnete Einheit auswählen"
 #: src/pages/Employees/EmployeeCreate.tsx:242
 #: src/pages/Employees/EmployeeEdit.tsx:315
 msgid "Select organizational unit"
-msgstr ""
+msgstr "Organisationseinheit auswählen"
 
 #: src/components/ShareDialog.tsx:135
 msgid "Select user or role..."

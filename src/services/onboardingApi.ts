@@ -67,7 +67,9 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch onboarding steps");
   }
 
@@ -87,7 +89,9 @@ export async function fetchOnboardingTemplate(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch onboarding template");
   }
 
@@ -111,7 +115,9 @@ export async function createOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to create onboarding submission");
   }
 
@@ -136,7 +142,9 @@ export async function updateOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to update onboarding submission");
   }
 
@@ -164,7 +172,9 @@ export async function uploadOnboardingFile(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to upload file");
   }
 
@@ -184,7 +194,9 @@ export async function approveOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to approve submission");
   }
 
@@ -209,7 +221,9 @@ export async function rejectOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to reject submission");
   }
 

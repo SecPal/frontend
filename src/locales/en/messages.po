@@ -612,11 +612,6 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
-#: src/pages/Employees/EmployeeCreate.tsx:214
-#: src/pages/Employees/EmployeeEdit.tsx:287
-#~ msgid "Enter organization unit ID"
-#~ msgstr "Enter organization unit ID"
-
 #: src/pages/Employees/EmployeeCreate.tsx:107
 #: src/pages/Employees/EmployeeEdit.tsx:180
 msgid "Error"

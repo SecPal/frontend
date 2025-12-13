@@ -55,10 +55,11 @@ if (typeof window !== "undefined" && !isTest) {
   }
 
   // Cache root instance to avoid HMR warning
-  let root = (window as any).__app_root;
+  type WindowWithRoot = Window & { __app_root?: ReturnType<typeof createRoot> };
+  let root = (window as WindowWithRoot).__app_root;
   if (!root) {
     root = createRoot(rootElement);
-    (window as any).__app_root = root;
+    (window as WindowWithRoot).__app_root = root;
   }
 
   root.render(

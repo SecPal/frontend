@@ -92,7 +92,9 @@ export async function fetchQualifications(filters?: {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch qualifications");
   }
 
@@ -110,7 +112,9 @@ export async function fetchQualification(id: string): Promise<Qualification> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch qualification");
   }
 
@@ -134,7 +138,9 @@ export async function createQualification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to create qualification");
   }
 
@@ -159,7 +165,9 @@ export async function updateQualification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to update qualification");
   }
 
@@ -177,7 +185,9 @@ export async function deleteQualification(id: string): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to delete qualification");
   }
 }
@@ -194,7 +204,9 @@ export async function fetchEmployeeQualifications(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch employee qualifications");
   }
 
@@ -219,7 +231,9 @@ export async function attachQualification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to attach qualification");
   }
 
@@ -244,7 +258,9 @@ export async function updateEmployeeQualification(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to update employee qualification");
   }
 
@@ -262,7 +278,9 @@ export async function detachQualification(id: string): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to detach qualification");
   }
 }
