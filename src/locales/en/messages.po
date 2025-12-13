@@ -66,12 +66,12 @@ msgstr "• Read: View secret details"
 msgid "• Write: View + edit secret"
 msgstr "• Write: View + edit secret"
 
-#: src/pages/Employees/EmployeeEdit.tsx:121
+#: src/pages/Employees/EmployeeEdit.tsx:167
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:68
-#: src/pages/Employees/EmployeeDetail.tsx:336
+#: src/pages/Employees/EmployeeCreate.tsx:94
+#: src/pages/Employees/EmployeeDetail.tsx:372
 msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
@@ -110,7 +110,7 @@ msgstr "Access Denied"
 
 #: src/components/GuardBookManager.tsx:382
 #: src/components/ObjectManager.tsx:384
-#: src/pages/Employees/EmployeeList.tsx:201
+#: src/pages/Employees/EmployeeList.tsx:215
 msgid "Actions"
 msgstr "Actions"
 
@@ -119,7 +119,7 @@ msgstr "Actions"
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:352
+#: src/pages/Employees/EmployeeDetail.tsx:388
 msgid "Activate"
 msgstr "Activate"
 
@@ -127,7 +127,7 @@ msgstr "Activate"
 #: src/components/GuardBookManager.tsx:675
 #: src/pages/Employees/EmployeeDetail.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:42
-#: src/pages/Employees/EmployeeList.tsx:160
+#: src/pages/Employees/EmployeeList.tsx:170
 msgid "Active"
 msgstr "Active"
 
@@ -153,7 +153,7 @@ msgstr "Add Child Unit"
 msgid "Add Customer"
 msgstr "Add Customer"
 
-#: src/pages/Employees/EmployeeList.tsx:117
+#: src/pages/Employees/EmployeeList.tsx:127
 msgid "Add Employee"
 msgstr "Add Employee"
 
@@ -178,7 +178,7 @@ msgstr "Admin"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/pages/Employees/EmployeeList.tsx:154
+#: src/pages/Employees/EmployeeList.tsx:164
 #: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "All"
@@ -245,6 +245,11 @@ msgstr "Attached Files"
 msgid "Attachments ({0})"
 msgstr "Attachments ({0})"
 
+#: src/pages/Employees/EmployeeDetail.tsx:360
+#: src/pages/Employees/EmployeeEdit.tsx:155
+msgid "Back to Employees"
+msgstr "Back to Employees"
+
 #: src/App.tsx:84
 msgid "Back to Home"
 msgstr "Back to Home"
@@ -268,8 +273,8 @@ msgstr "by"
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
-#: src/pages/Employees/EmployeeCreate.tsx:220
-#: src/pages/Employees/EmployeeEdit.tsx:273
+#: src/pages/Employees/EmployeeCreate.tsx:262
+#: src/pages/Employees/EmployeeEdit.tsx:335
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -342,9 +347,9 @@ msgstr "Contact Email"
 msgid "Contact Phone"
 msgstr "Contact Phone"
 
-#: src/pages/Employees/EmployeeCreate.tsx:182
+#: src/pages/Employees/EmployeeCreate.tsx:212
 #: src/pages/Employees/EmployeeDetail.tsx:100
-#: src/pages/Employees/EmployeeEdit.tsx:235
+#: src/pages/Employees/EmployeeEdit.tsx:285
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
 
@@ -361,7 +366,7 @@ msgstr "Create a new organizational unit under \"{parentName}\"."
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
-#: src/pages/Employees/EmployeeCreate.tsx:226
+#: src/pages/Employees/EmployeeCreate.tsx:268
 msgid "Create Employee"
 msgstr "Create Employee"
 
@@ -370,7 +375,7 @@ msgstr "Create Employee"
 msgid "Create Guard Book"
 msgstr "Create Guard Book"
 
-#: src/pages/Employees/EmployeeCreate.tsx:74
+#: src/pages/Employees/EmployeeCreate.tsx:100
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
@@ -397,7 +402,7 @@ msgstr "Created"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
-#: src/pages/Employees/EmployeeCreate.tsx:224
+#: src/pages/Employees/EmployeeCreate.tsx:266
 msgid "Creating..."
 msgstr "Creating..."
 
@@ -434,9 +439,9 @@ msgstr "Customer Number"
 msgid "Customers"
 msgstr "Customers"
 
-#: src/pages/Employees/EmployeeCreate.tsx:119
+#: src/pages/Employees/EmployeeCreate.tsx:149
 #: src/pages/Employees/EmployeeDetail.tsx:95
-#: src/pages/Employees/EmployeeEdit.tsx:172
+#: src/pages/Employees/EmployeeEdit.tsx:222
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
@@ -497,7 +502,7 @@ msgstr "Details"
 msgid "Division"
 msgstr "Division"
 
-#: src/pages/Employees/EmployeeDetail.tsx:406
+#: src/pages/Employees/EmployeeDetail.tsx:442
 msgid "Documents"
 msgstr "Documents"
 
@@ -521,7 +526,7 @@ msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
 #: src/components/OrganizationalUnitTree.tsx:347
-#: src/pages/Employees/EmployeeDetail.tsx:361
+#: src/pages/Employees/EmployeeDetail.tsx:397
 #: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
@@ -537,7 +542,7 @@ msgstr "Edit"
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
-#: src/pages/Employees/EmployeeEdit.tsx:127
+#: src/pages/Employees/EmployeeEdit.tsx:173
 msgid "Edit Employee"
 msgstr "Edit Employee"
 
@@ -558,22 +563,22 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 msgid "login.email"
 msgstr "Email"
 
-#: src/pages/Employees/EmployeeCreate.tsx:134
+#: src/pages/Employees/EmployeeCreate.tsx:164
 #: src/pages/Employees/EmployeeDetail.tsx:73
-#: src/pages/Employees/EmployeeEdit.tsx:187
+#: src/pages/Employees/EmployeeEdit.tsx:237
 #: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/Employees/EmployeeList.tsx:185
+#: src/pages/Employees/EmployeeList.tsx:199
 msgid "Employee"
 msgstr "Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:188
+#: src/pages/Employees/EmployeeList.tsx:202
 msgid "Employee #"
 msgstr "Employee #"
 
-#: src/pages/Employees/EmployeeList.tsx:113
+#: src/pages/Employees/EmployeeList.tsx:123
 msgid "Employee Management"
 msgstr "Employee Management"
 
@@ -586,8 +591,8 @@ msgstr "Employee Number"
 msgid "Employees"
 msgstr "Employees"
 
-#: src/pages/Employees/EmployeeCreate.tsx:163
-#: src/pages/Employees/EmployeeEdit.tsx:216
+#: src/pages/Employees/EmployeeCreate.tsx:193
+#: src/pages/Employees/EmployeeEdit.tsx:266
 msgid "Employment Details"
 msgstr "Employment Details"
 
@@ -607,10 +612,24 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
-#: src/pages/Employees/EmployeeCreate.tsx:203
-#: src/pages/Employees/EmployeeEdit.tsx:256
-msgid "Enter organization unit ID"
-msgstr "Enter organization unit ID"
+#: src/pages/Employees/EmployeeCreate.tsx:214
+#: src/pages/Employees/EmployeeEdit.tsx:287
+#~ msgid "Enter organization unit ID"
+#~ msgstr "Enter organization unit ID"
+
+#: src/pages/Employees/EmployeeCreate.tsx:107
+#: src/pages/Employees/EmployeeEdit.tsx:180
+msgid "Error"
+msgstr "Error"
+
+#: src/pages/Employees/EmployeeDetail.tsx:353
+#: src/pages/Employees/EmployeeEdit.tsx:150
+msgid "Error Loading Employee"
+msgstr "Error Loading Employee"
+
+#: src/pages/Employees/EmployeeList.tsx:188
+msgid "Error Loading Employees"
+msgstr "Error Loading Employees"
 
 #: src/pages/Secrets/SecretDetail.tsx:242
 msgid "Error Loading Secret"
@@ -768,8 +787,8 @@ msgstr "Filter by expiration"
 msgid "Filter by tag"
 msgstr "Filter by tag"
 
-#: src/pages/Employees/EmployeeCreate.tsx:93
-#: src/pages/Employees/EmployeeEdit.tsx:146
+#: src/pages/Employees/EmployeeCreate.tsx:123
+#: src/pages/Employees/EmployeeEdit.tsx:196
 msgid "First Name"
 msgstr "First Name"
 
@@ -873,8 +892,8 @@ msgstr "Language"
 msgid "Last modified: {0}"
 msgstr "Last modified: {0}"
 
-#: src/pages/Employees/EmployeeCreate.tsx:106
-#: src/pages/Employees/EmployeeEdit.tsx:159
+#: src/pages/Employees/EmployeeCreate.tsx:136
+#: src/pages/Employees/EmployeeEdit.tsx:209
 msgid "Last Name"
 msgstr "Last Name"
 
@@ -904,12 +923,12 @@ msgstr "Loading attachments..."
 msgid "Loading documents..."
 msgstr "Loading documents..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:318
-#: src/pages/Employees/EmployeeEdit.tsx:103
+#: src/pages/Employees/EmployeeDetail.tsx:341
+#: src/pages/Employees/EmployeeEdit.tsx:138
 msgid "Loading employee..."
 msgstr "Loading employee..."
 
-#: src/pages/Employees/EmployeeList.tsx:103
+#: src/pages/Employees/EmployeeList.tsx:113
 msgid "Loading employees..."
 msgstr "Loading employees..."
 
@@ -932,6 +951,8 @@ msgstr "Loading secrets..."
 
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
+#: src/pages/Employees/EmployeeCreate.tsx:240
+#: src/pages/Employees/EmployeeEdit.tsx:313
 #: src/pages/Secrets/SecretEdit.tsx:116
 msgid "Loading..."
 msgstr "Loading..."
@@ -1050,8 +1071,8 @@ msgstr "New parent"
 msgid "New Secret"
 msgstr "New Secret"
 
-#: src/pages/Employees/EmployeeList.tsx:255
-#: src/pages/Employees/EmployeeList.tsx:297
+#: src/pages/Employees/EmployeeList.tsx:269
+#: src/pages/Employees/EmployeeList.tsx:311
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
 msgid "Next"
 msgstr "Next"
@@ -1190,7 +1211,7 @@ msgstr "OK"
 
 #: src/pages/Employees/EmployeeDetail.tsx:45
 #: src/pages/Employees/EmployeeList.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:163
+#: src/pages/Employees/EmployeeList.tsx:173
 msgid "On Leave"
 msgstr "On Leave"
 
@@ -1215,9 +1236,9 @@ msgstr "Organization Structure"
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
-#: src/pages/Employees/EmployeeCreate.tsx:197
+#: src/pages/Employees/EmployeeCreate.tsx:227
 #: src/pages/Employees/EmployeeDetail.tsx:105
-#: src/pages/Employees/EmployeeEdit.tsx:250
+#: src/pages/Employees/EmployeeEdit.tsx:300
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
@@ -1264,14 +1285,14 @@ msgstr "Permission Levels:"
 msgid "Permission:"
 msgstr "Permission:"
 
-#: src/pages/Employees/EmployeeCreate.tsx:87
-#: src/pages/Employees/EmployeeEdit.tsx:140
+#: src/pages/Employees/EmployeeCreate.tsx:117
+#: src/pages/Employees/EmployeeEdit.tsx:190
 msgid "Personal Information"
 msgstr "Personal Information"
 
-#: src/pages/Employees/EmployeeCreate.tsx:147
+#: src/pages/Employees/EmployeeCreate.tsx:177
 #: src/pages/Employees/EmployeeDetail.tsx:78
-#: src/pages/Employees/EmployeeEdit.tsx:200
+#: src/pages/Employees/EmployeeEdit.tsx:250
 msgid "Phone"
 msgstr "Phone"
 
@@ -1280,10 +1301,10 @@ msgstr "Phone"
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
-#: src/pages/Employees/EmployeeCreate.tsx:169
+#: src/pages/Employees/EmployeeCreate.tsx:199
 #: src/pages/Employees/EmployeeDetail.tsx:83
-#: src/pages/Employees/EmployeeEdit.tsx:222
-#: src/pages/Employees/EmployeeList.tsx:191
+#: src/pages/Employees/EmployeeEdit.tsx:272
+#: src/pages/Employees/EmployeeList.tsx:205
 msgid "Position"
 msgstr "Position"
 
@@ -1293,7 +1314,7 @@ msgstr "Powered by SecPal - a guard's best friend"
 
 #: src/pages/Employees/EmployeeDetail.tsx:43
 #: src/pages/Employees/EmployeeList.tsx:41
-#: src/pages/Employees/EmployeeList.tsx:157
+#: src/pages/Employees/EmployeeList.tsx:167
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
 
@@ -1305,8 +1326,8 @@ msgstr "Preview"
 msgid "Preview not available for this file type."
 msgstr "Preview not available for this file type."
 
-#: src/pages/Employees/EmployeeList.tsx:248
-#: src/pages/Employees/EmployeeList.tsx:289
+#: src/pages/Employees/EmployeeList.tsx:262
+#: src/pages/Employees/EmployeeList.tsx:303
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
 msgid "Previous"
 msgstr "Previous"
@@ -1315,11 +1336,11 @@ msgstr "Previous"
 msgid "Processing Progress"
 msgstr "Processing Progress"
 
-#: src/pages/Employees/EmployeeDetail.tsx:380
+#: src/pages/Employees/EmployeeDetail.tsx:416
 msgid "Profile"
 msgstr "Profile"
 
-#: src/pages/Employees/EmployeeDetail.tsx:393
+#: src/pages/Employees/EmployeeDetail.tsx:429
 msgid "Qualifications"
 msgstr "Qualifications"
 
@@ -1390,7 +1411,7 @@ msgid "Roles"
 msgstr "Roles"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Employees/EmployeeEdit.tsx:276
+#: src/pages/Employees/EmployeeEdit.tsx:338
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1403,15 +1424,15 @@ msgid "Save to Secret"
 msgstr "Save to Secret"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Employees/EmployeeEdit.tsx:276
+#: src/pages/Employees/EmployeeEdit.tsx:338
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/pages/Employees/EmployeeList.tsx:127
+#: src/pages/Employees/EmployeeList.tsx:137
 msgid "Search"
 msgstr "Search"
 
-#: src/pages/Employees/EmployeeList.tsx:132
+#: src/pages/Employees/EmployeeList.tsx:142
 msgid "Search by name or email..."
 msgstr "Search by name or email..."
 
@@ -1468,6 +1489,11 @@ msgstr "Select Files"
 #: src/components/MoveOrganizationalUnitDialog.tsx:448
 msgid "Select new parent"
 msgstr "Select new parent"
+
+#: src/pages/Employees/EmployeeCreate.tsx:242
+#: src/pages/Employees/EmployeeEdit.tsx:315
+msgid "Select organizational unit"
+msgstr "Select organizational unit"
 
 #: src/pages/ShareTarget.tsx:646
 msgid "Select Secret to attach files:"
@@ -1540,7 +1566,7 @@ msgstr "Show"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:261
+#: src/pages/Employees/EmployeeList.tsx:275
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 
@@ -1561,8 +1587,8 @@ msgid "Source Code"
 msgstr "Source Code"
 
 #: src/pages/Employees/EmployeeDetail.tsx:88
-#: src/pages/Employees/EmployeeList.tsx:140
-#: src/pages/Employees/EmployeeList.tsx:194
+#: src/pages/Employees/EmployeeList.tsx:150
+#: src/pages/Employees/EmployeeList.tsx:208
 msgid "Status"
 msgstr "Status"
 
@@ -1611,13 +1637,13 @@ msgstr "Tags"
 msgid "Team Messages"
 msgstr "Team Messages"
 
-#: src/pages/Employees/EmployeeDetail.tsx:357
+#: src/pages/Employees/EmployeeDetail.tsx:393
 msgid "Terminate"
 msgstr "Terminate"
 
 #: src/pages/Employees/EmployeeDetail.tsx:46
 #: src/pages/Employees/EmployeeList.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:166
+#: src/pages/Employees/EmployeeList.tsx:176
 msgid "Terminated"
 msgstr "Terminated"
 
@@ -1688,7 +1714,7 @@ msgstr "Type is required"
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 
-#: src/pages/Employees/EmployeeList.tsx:197
+#: src/pages/Employees/EmployeeList.tsx:211
 msgid "Unit"
 msgstr "Unit"
 
@@ -1757,7 +1783,7 @@ msgstr "Username"
 msgid "Users"
 msgstr "Users"
 
-#: src/pages/Employees/EmployeeList.tsx:230
+#: src/pages/Employees/EmployeeList.tsx:244
 msgid "View"
 msgstr "View"
 
