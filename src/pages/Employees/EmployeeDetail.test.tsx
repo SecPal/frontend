@@ -267,4 +267,94 @@ describe("EmployeeDetail", () => {
       expect(screen.getByText(/no documents uploaded/i)).toBeInTheDocument();
     });
   });
+
+  it("should handle non-Error object errors on activate", async () => {
+    const preContractEmployee = {
+      ...mockEmployee,
+      status: "pre_contract" as const,
+    };
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(preContractEmployee);
+
+    vi.mocked(employeeApi.activateEmployee).mockRejectedValueOnce({
+      message: "Custom activation error",
+    });
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    // Spy on console.error to verify error is logged
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /activate/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /activate/i }));
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to activate employee:",
+        expect.objectContaining({ message: "Custom activation error" })
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it("should handle non-Error object errors on terminate", async () => {
+    vi.mocked(employeeApi.terminateEmployee).mockRejectedValueOnce({
+      message: "Custom termination error",
+    });
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    // Spy on console.error to verify error is logged
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /terminate/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /terminate/i }));
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to terminate employee:",
+        expect.objectContaining({ message: "Custom termination error" })
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it("should not terminate if user cancels confirm dialog", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /terminate/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /terminate/i }));
+
+    expect(employeeApi.terminateEmployee).not.toHaveBeenCalled();
+
+    vi.restoreAllMocks();
+  });
 });

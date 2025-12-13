@@ -266,4 +266,62 @@ describe("EmployeeCreate", () => {
     // Should still render form, just without units
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
   });
+
+  it("should handle non-Error object errors", async () => {
+    const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+    mockCreateEmployee.mockRejectedValue({ message: "Custom error object" });
+
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Fill minimal fields
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "1990-01-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/position/i), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "2025-01-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+      target: { value: "unit-1" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/custom error object/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should allow changing status and contract type fields", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Change status
+    const statusSelect = screen.getByLabelText(/status/i);
+    fireEvent.change(statusSelect, { target: { value: "active" } });
+    expect(statusSelect).toHaveValue("active");
+
+    // Change contract type
+    const contractTypeSelect = screen.getByLabelText(/contract type/i);
+    fireEvent.change(contractTypeSelect, { target: { value: "part_time" } });
+    expect(contractTypeSelect).toHaveValue("part_time");
+  });
 });

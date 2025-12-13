@@ -241,7 +241,7 @@ describe("EmployeeEdit", () => {
     });
   });
 
-  it("should show loading state while fetching employee", () => {
+  it("should show loading state while fetching employee", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockImplementation(
       () => new Promise(() => {})
     );
@@ -249,6 +249,9 @@ describe("EmployeeEdit", () => {
     renderWithProviders("emp-1");
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+    // Cleanup to avoid memory leaks
+    await waitFor(() => {}, { timeout: 100 }).catch(() => {});
   });
 
   it("should show loading state for organizational units", async () => {
@@ -264,5 +267,54 @@ describe("EmployeeEdit", () => {
 
     const orgUnitSelect = screen.getByLabelText(/organizational unit/i);
     expect(orgUnitSelect).toHaveTextContent(/loading/i);
+  });
+
+  it("should handle non-Error object errors on fetch", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockRejectedValue({
+      message: "Custom fetch error",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText(/custom fetch error/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should handle non-Error object errors on update", async () => {
+    vi.mocked(employeeApi.updateEmployee).mockRejectedValue({
+      message: "Custom update error",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+    });
+
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "Jane" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/custom update error/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should handle organizational units loading error", async () => {
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockRejectedValue(
+      new Error("Failed to load units")
+    );
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+    });
+
+    // Should still be able to edit other fields
+    expect(screen.getByLabelText(/first name/i)).not.toBeDisabled();
   });
 });

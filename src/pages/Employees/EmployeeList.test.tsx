@@ -307,4 +307,38 @@ describe("EmployeeList", () => {
     expect(viewButtons[0]).toHaveAttribute("href", "/employees/emp-1");
     expect(viewButtons[1]).toHaveAttribute("href", "/employees/emp-2");
   });
+
+  it("should handle non-Error object errors on fetch failure", async () => {
+    vi.mocked(employeeApi.fetchEmployees).mockRejectedValue({
+      message: "Custom error object",
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText(/custom error object/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should show pagination info text correctly", async () => {
+    const paginatedResponse: EmployeeListResponse = {
+      data: mockEmployees,
+      meta: {
+        current_page: 2,
+        last_page: 5,
+        per_page: 15,
+        total: 62,
+      },
+    };
+    vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(paginatedResponse);
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText(/showing/i)).toBeInTheDocument();
+      expect(screen.getByText(/16/i)).toBeInTheDocument(); // Start: (2-1)*15+1 = 16
+      expect(screen.getByText(/30/i)).toBeInTheDocument(); // End: min(2*15, 62) = 30
+      expect(screen.getByText(/62/i)).toBeInTheDocument(); // Total
+    });
+  });
 });
