@@ -267,7 +267,16 @@ export function EmployeeDetail() {
       const data = await fetchEmployee(id);
       setEmployee(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load employee");
+      console.error("Failed to load employee:", err);
+      let errorMessage = "Failed to load employee";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -287,9 +296,16 @@ export function EmployeeDetail() {
       await activateEmployee(id);
       await loadEmployee();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to activate employee"
-      );
+      console.error("Failed to activate employee:", err);
+      let errorMessage = "Failed to activate employee";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }
@@ -303,9 +319,16 @@ export function EmployeeDetail() {
       await terminateEmployee(id);
       await loadEmployee();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to terminate employee"
-      );
+      console.error("Failed to terminate employee:", err);
+      let errorMessage = "Failed to terminate employee";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+
+      setError(errorMessage);
     } finally {
       setActionLoading(false);
     }

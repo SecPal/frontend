@@ -74,7 +74,17 @@ export function EmployeeList() {
       setEmployees(response.data);
       setPagination(response.meta);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load employees");
+      console.error("Failed to load employees:", err);
+      let errorMessage = "Failed to load employees";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+
+      setError(errorMessage);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }

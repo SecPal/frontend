@@ -64,7 +64,16 @@ export function EmployeeEdit() {
         organizational_unit_id: employee.organizational_unit.id,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load employee");
+      console.error("Failed to load employee:", err);
+      let errorMessage = "Failed to load employee";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+      
+      setError(errorMessage);
     } finally {
       setFetchLoading(false);
     }
@@ -84,9 +93,16 @@ export function EmployeeEdit() {
       await updateEmployee(id, formData);
       navigate(`/employees/${id}`);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update employee"
-      );
+      console.error("Failed to update employee:", err);
+      let errorMessage = "Failed to update employee";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

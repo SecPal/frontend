@@ -49,9 +49,16 @@ export function EmployeeCreate() {
       const employee = await createEmployee(formData);
       navigate(`/employees/${employee.id}`);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create employee"
-      );
+      console.error("Failed to create employee:", err);
+      let errorMessage = "Failed to create employee";
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
