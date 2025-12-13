@@ -10,12 +10,15 @@ import {
   type EmployeeStatus,
   type EmployeeFilters,
 } from "../../services/employeeApi";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Field, Label } from "../../components/fieldset";
+import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPicker";
 import {
   Table,
   TableHead,
@@ -65,6 +68,10 @@ export function EmployeeList() {
     per_page: 15,
     total: 0,
   });
+  const [organizationalUnits, setOrganizationalUnits] = useState<
+    OrganizationalUnit[]
+  >([]);
+  const [unitsLoading, setUnitsLoading] = useState(true);
 
   const loadEmployees = useCallback(async () => {
     try {
@@ -90,12 +97,35 @@ export function EmployeeList() {
     }
   }, [filters]);
 
+  // Load organizational units on mount
+  useEffect(() => {
+    async function loadUnits() {
+      try {
+        setUnitsLoading(true);
+        const response = await listOrganizationalUnits();
+        setOrganizationalUnits(response.data);
+      } catch (err) {
+        console.error("Failed to load organizational units:", err);
+        // Don't block the UI if units fail to load
+      } finally {
+        setUnitsLoading(false);
+      }
+    }
+    loadUnits();
+  }, []);
+
   useEffect(() => {
     loadEmployees();
   }, [loadEmployees]);
 
   function handleStatusFilter(status: EmployeeStatus | undefined) {
     setFilters({ ...filters, status, page: 1 });
+  }
+
+  function handleOrganizationalUnitFilter(
+    organizational_unit_id: string | undefined
+  ) {
+    setFilters({ ...filters, organizational_unit_id, page: 1 });
   }
 
   function handleSearch(search: string) {
@@ -142,6 +172,20 @@ export function EmployeeList() {
               placeholder={_(msg`Search by name or email...`)}
               value={filters.search || ""}
               onChange={(e) => handleSearch(e.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <Label>
+              <Trans>Organizational Unit</Trans>
+            </Label>
+            <OrganizationalUnitPicker
+              units={organizationalUnits}
+              value={filters.organizational_unit_id ?? ""}
+              onChange={(unitId) =>
+                handleOrganizationalUnitFilter(unitId || undefined)
+              }
+              disabled={unitsLoading}
             />
           </Field>
 
