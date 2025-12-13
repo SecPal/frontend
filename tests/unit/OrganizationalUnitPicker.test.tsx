@@ -3,6 +3,7 @@
 
 import { describe, test, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -66,7 +67,7 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    expect(screen.getByText("All Units")).toBeDefined();
+    expect(screen.getByText("All Units")).toBeInTheDocument();
   });
 
   test("renders all organizational units after opening listbox", async () => {
@@ -86,9 +87,9 @@ describe("OrganizationalUnitPicker", () => {
     await user.click(button);
 
     // Now the options should be visible
-    expect(screen.getByText("Holding Company")).toBeDefined();
-    expect(screen.getByText("Germany Branch")).toBeDefined();
-    expect(screen.getByText("IT Department")).toBeDefined();
+    expect(screen.getByText("Holding Company")).toBeInTheDocument();
+    expect(screen.getByText("Germany Branch")).toBeInTheDocument();
+    expect(screen.getByText("IT Department")).toBeInTheDocument();
   });
 
   test("displays units in hierarchical order after opening", async () => {
@@ -146,7 +147,7 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    expect(screen.getByText("All Organizations")).toBeDefined();
+    expect(screen.getByText("All Organizations")).toBeInTheDocument();
   });
 
   test("handles disabled state", () => {
@@ -181,9 +182,9 @@ describe("OrganizationalUnitPicker", () => {
     await user.click(button);
 
     // Check for type labels in parentheses - use getAllByText since unit names also contain these words
-    expect(screen.getByText("(Holding)")).toBeDefined();
-    expect(screen.getByText("(Branch)")).toBeDefined();
-    expect(screen.getByText("(Department)")).toBeDefined();
+    expect(screen.getByText("(Holding)")).toBeInTheDocument();
+    expect(screen.getByText("(Branch)")).toBeInTheDocument();
+    expect(screen.getByText("(Department)")).toBeInTheDocument();
   });
 
   test("handles empty units array", () => {
@@ -192,7 +193,7 @@ describe("OrganizationalUnitPicker", () => {
       <OrganizationalUnitPicker units={[]} value="" onChange={onChange} />
     );
 
-    expect(screen.getByText("All Units")).toBeDefined();
+    expect(screen.getByText("All Units")).toBeInTheDocument();
   });
 
   test("alphabetically sorts units within same hierarchy level", async () => {

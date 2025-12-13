@@ -181,7 +181,7 @@ export function EmployeeList() {
             </Label>
             <OrganizationalUnitPicker
               units={organizationalUnits}
-              value={filters.organizational_unit_id || ""}
+              value={filters.organizational_unit_id ?? ""}
               onChange={(unitId) =>
                 handleOrganizationalUnitFilter(unitId || undefined)
               }
