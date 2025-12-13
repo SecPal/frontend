@@ -98,7 +98,7 @@ export async function fetchQualifications(filters?: {
     throw new Error(error.message || "Failed to fetch qualifications");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -118,7 +118,7 @@ export async function fetchQualification(id: string): Promise<Qualification> {
     throw new Error(error.message || "Failed to fetch qualification");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -144,7 +144,7 @@ export async function createQualification(
     throw new Error(error.message || "Failed to create qualification");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -171,7 +171,7 @@ export async function updateQualification(
     throw new Error(error.message || "Failed to update qualification");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -210,7 +210,7 @@ export async function fetchEmployeeQualifications(
     throw new Error(error.message || "Failed to fetch employee qualifications");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 

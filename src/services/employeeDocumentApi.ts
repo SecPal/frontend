@@ -63,7 +63,7 @@ export async function fetchEmployeeDocuments(
     throw new Error(error.message || "Failed to fetch employee documents");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -86,7 +86,7 @@ export async function fetchEmployeeDocument(
     throw new Error(error.message || "Failed to fetch document");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -128,7 +128,7 @@ export async function uploadEmployeeDocument(
     throw new Error(error.message || "Failed to upload document");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 

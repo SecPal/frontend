@@ -73,7 +73,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
     throw new Error(error.message || "Failed to fetch onboarding steps");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -95,7 +95,7 @@ export async function fetchOnboardingTemplate(
     throw new Error(error.message || "Failed to fetch onboarding template");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -178,7 +178,7 @@ export async function uploadOnboardingFile(
     throw new Error(error.message || "Failed to upload file");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -200,7 +200,7 @@ export async function approveOnboardingSubmission(
     throw new Error(error.message || "Failed to approve submission");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -227,6 +227,6 @@ export async function rejectOnboardingSubmission(
     throw new Error(error.message || "Failed to reject submission");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }

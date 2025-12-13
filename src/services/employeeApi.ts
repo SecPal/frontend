@@ -129,7 +129,7 @@ export async function fetchEmployee(id: string): Promise<Employee> {
     throw new Error(error.message || "Failed to fetch employee");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -155,7 +155,7 @@ export async function createEmployee(
     throw new Error(error.message || "Failed to create employee");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -182,7 +182,7 @@ export async function updateEmployee(
     throw new Error(error.message || "Failed to update employee");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -219,7 +219,7 @@ export async function activateEmployee(id: string): Promise<Employee> {
     throw new Error(error.message || "Failed to activate employee");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
@@ -239,6 +239,6 @@ export async function terminateEmployee(id: string): Promise<Employee> {
     throw new Error(error.message || "Failed to terminate employee");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }

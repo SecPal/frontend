@@ -54,7 +54,7 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
     );
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: [] }));
   return data.data;
 }
 
@@ -102,7 +102,7 @@ export async function createShare(
     );
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({ data: null }));
   return data.data;
 }
 
