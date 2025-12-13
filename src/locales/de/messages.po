@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-13 17:30+0100\n"
+"POT-Creation-Date: 2025-12-13 22:36+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -56,7 +56,7 @@ msgstr "Zugang verweigert"
 
 #: src/components/GuardBookManager.tsx:382
 #: src/components/ObjectManager.tsx:384
-#: src/pages/Employees/EmployeeList.tsx:215
+#: src/pages/Employees/EmployeeList.tsx:261
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -73,8 +73,8 @@ msgstr "Aktivieren"
 #: src/components/GuardBookManager.tsx:675
 #: src/pages/Employees/EmployeeCreate.tsx:269
 #: src/pages/Employees/EmployeeDetail.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:42
-#: src/pages/Employees/EmployeeList.tsx:170
+#: src/pages/Employees/EmployeeList.tsx:47
+#: src/pages/Employees/EmployeeList.tsx:216
 msgid "Active"
 msgstr "Aktiv"
 
@@ -92,7 +92,7 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Add Customer"
 msgstr "Kunde hinzufügen"
 
-#: src/pages/Employees/EmployeeList.tsx:127
+#: src/pages/Employees/EmployeeList.tsx:159
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
 
@@ -121,7 +121,7 @@ msgstr "Adresse"
 msgid "Admin"
 msgstr "Admin"
 
-#: src/pages/Employees/EmployeeList.tsx:164
+#: src/pages/Employees/EmployeeList.tsx:210
 #: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "Alle"
@@ -129,6 +129,10 @@ msgstr "Alle"
 #: src/pages/Secrets/SecretList.tsx:190
 msgid "All Tags"
 msgstr "Alle Tags"
+
+#: src/components/OrganizationalUnitPicker.tsx:242
+msgid "All Units"
+msgstr "Alle Einheiten"
 
 #: src/components/SyncStatusIndicator.tsx:125
 msgid "All synced"
@@ -499,15 +503,15 @@ msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Email"
 msgstr "E-Mail"
 
-#: src/pages/Employees/EmployeeList.tsx:199
+#: src/pages/Employees/EmployeeList.tsx:245
 msgid "Employee"
 msgstr "Mitarbeiter"
 
-#: src/pages/Employees/EmployeeList.tsx:202
+#: src/pages/Employees/EmployeeList.tsx:248
 msgid "Employee #"
 msgstr "Mitarbeiter #"
 
-#: src/pages/Employees/EmployeeList.tsx:123
+#: src/pages/Employees/EmployeeList.tsx:155
 msgid "Employee Management"
 msgstr "Mitarbeiter-Management"
 
@@ -551,7 +555,7 @@ msgstr "Fehler"
 msgid "Error Loading Employee"
 msgstr "Fehler beim Laden eines Mitarbeiters"
 
-#: src/pages/Employees/EmployeeList.tsx:188
+#: src/pages/Employees/EmployeeList.tsx:234
 msgid "Error Loading Employees"
 msgstr "Fehler beim Laden von Mitarbeitern"
 
@@ -865,7 +869,7 @@ msgstr "Dokumente laden..."
 msgid "Loading employee..."
 msgstr "Mitarbeiter laden..."
 
-#: src/pages/Employees/EmployeeList.tsx:113
+#: src/pages/Employees/EmployeeList.tsx:145
 msgid "Loading employees..."
 msgstr "Mitarbeiter laden..."
 
@@ -987,8 +991,8 @@ msgstr "Neues Geheimnis"
 msgid "New parent"
 msgstr "neue übergeordnete Einheit"
 
-#: src/pages/Employees/EmployeeList.tsx:269
-#: src/pages/Employees/EmployeeList.tsx:311
+#: src/pages/Employees/EmployeeList.tsx:315
+#: src/pages/Employees/EmployeeList.tsx:357
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
 msgid "Next"
 msgstr "Weiter"
@@ -1118,8 +1122,8 @@ msgstr "Nur offline"
 
 #: src/pages/Employees/EmployeeCreate.tsx:272
 #: src/pages/Employees/EmployeeDetail.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:173
+#: src/pages/Employees/EmployeeList.tsx:48
+#: src/pages/Employees/EmployeeList.tsx:219
 msgid "On Leave"
 msgstr "in Freistellung"
 
@@ -1143,6 +1147,7 @@ msgstr "Organisationsstruktur"
 #: src/pages/Employees/EmployeeCreate.tsx:229
 #: src/pages/Employees/EmployeeDetail.tsx:105
 #: src/pages/Employees/EmployeeEdit.tsx:304
+#: src/pages/Employees/EmployeeList.tsx:182
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
@@ -1206,7 +1211,7 @@ msgstr "Telefon"
 #: src/pages/Employees/EmployeeCreate.tsx:201
 #: src/pages/Employees/EmployeeDetail.tsx:83
 #: src/pages/Employees/EmployeeEdit.tsx:276
-#: src/pages/Employees/EmployeeList.tsx:205
+#: src/pages/Employees/EmployeeList.tsx:251
 msgid "Position"
 msgstr "Position"
 
@@ -1216,8 +1221,8 @@ msgstr "Powered by SecPal - a guard's best friend"
 
 #: src/pages/Employees/EmployeeCreate.tsx:266
 #: src/pages/Employees/EmployeeDetail.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:41
-#: src/pages/Employees/EmployeeList.tsx:167
+#: src/pages/Employees/EmployeeList.tsx:46
+#: src/pages/Employees/EmployeeList.tsx:213
 msgid "Pre-Contract"
 msgstr "Vorvertrag"
 
@@ -1229,8 +1234,8 @@ msgstr "Vorschau"
 msgid "Preview not available for this file type."
 msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 
-#: src/pages/Employees/EmployeeList.tsx:262
-#: src/pages/Employees/EmployeeList.tsx:303
+#: src/pages/Employees/EmployeeList.tsx:308
+#: src/pages/Employees/EmployeeList.tsx:349
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
 msgid "Previous"
 msgstr "Vorherige"
@@ -1331,11 +1336,11 @@ msgstr "Als Geheimnis speichern"
 msgid "Saving..."
 msgstr "Speichern..."
 
-#: src/pages/Employees/EmployeeList.tsx:137
+#: src/pages/Employees/EmployeeList.tsx:169
 msgid "Search"
 msgstr "Suche"
 
-#: src/pages/Employees/EmployeeList.tsx:142
+#: src/pages/Employees/EmployeeList.tsx:174
 msgid "Search by name or email..."
 msgstr "Suche nach Name oder E-Mail..."
 
@@ -1397,6 +1402,7 @@ msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 msgid "Select new parent"
 msgstr "neue übergeordnete Einheit auswählen"
 
+#: src/components/OrganizationalUnitPicker.tsx:237
 #: src/pages/Employees/EmployeeCreate.tsx:244
 #: src/pages/Employees/EmployeeEdit.tsx:319
 msgid "Select organizational unit"
@@ -1469,7 +1475,7 @@ msgstr "Anzeigen"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:275
+#: src/pages/Employees/EmployeeList.tsx:321
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
 
@@ -1491,8 +1497,8 @@ msgstr "Quelltext"
 
 #: src/pages/Employees/EmployeeCreate.tsx:257
 #: src/pages/Employees/EmployeeDetail.tsx:88
-#: src/pages/Employees/EmployeeList.tsx:150
-#: src/pages/Employees/EmployeeList.tsx:208
+#: src/pages/Employees/EmployeeList.tsx:196
+#: src/pages/Employees/EmployeeList.tsx:254
 msgid "Status"
 msgstr "Status"
 
@@ -1542,8 +1548,8 @@ msgstr "Beenden"
 
 #: src/pages/Employees/EmployeeCreate.tsx:275
 #: src/pages/Employees/EmployeeDetail.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:176
+#: src/pages/Employees/EmployeeList.tsx:49
+#: src/pages/Employees/EmployeeList.tsx:222
 msgid "Terminated"
 msgstr "Beendet"
 
@@ -1613,7 +1619,7 @@ msgstr "URL:"
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Verschlüsselungsschlüssel für Anhänge kann nicht geladen werden. Bitte aktualisieren Sie die Seite oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
 
-#: src/pages/Employees/EmployeeList.tsx:211
+#: src/pages/Employees/EmployeeList.tsx:257
 msgid "Unit"
 msgstr "Einheit"
 
@@ -1673,7 +1679,7 @@ msgstr "Benutzername"
 msgid "Users"
 msgstr "Benutzer"
 
-#: src/pages/Employees/EmployeeList.tsx:244
+#: src/pages/Employees/EmployeeList.tsx:290
 msgid "View"
 msgstr "Anzeigen"
 
