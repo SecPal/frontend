@@ -74,6 +74,9 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
   }
 
   const data = await response.json().catch(() => ({ data: [] }));
+  if (!data.data) {
+    throw new Error("Failed to parse onboarding steps response");
+  }
   return data.data;
 }
 
@@ -95,7 +98,10 @@ export async function fetchOnboardingTemplate(
     throw new Error(error.message || "Failed to fetch onboarding template");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse onboarding template response");
+  }
   return data.data;
 }
 
@@ -179,6 +185,9 @@ export async function uploadOnboardingFile(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse file upload response");
+  }
   return data.data;
 }
 
@@ -201,6 +210,9 @@ export async function approveOnboardingSubmission(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse approval response");
+  }
   return data.data;
 }
 
@@ -228,5 +240,8 @@ export async function rejectOnboardingSubmission(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse rejection response");
+  }
   return data.data;
 }

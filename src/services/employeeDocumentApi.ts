@@ -64,6 +64,9 @@ export async function fetchEmployeeDocuments(
   }
 
   const data = await response.json().catch(() => ({ data: [] }));
+  if (!data.data) {
+    throw new Error("Failed to parse documents response");
+  }
   return data.data;
 }
 
@@ -86,7 +89,10 @@ export async function fetchEmployeeDocument(
     throw new Error(error.message || "Failed to fetch document");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse document response");
+  }
   return data.data;
 }
 
@@ -129,6 +135,9 @@ export async function uploadEmployeeDocument(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse document response");
+  }
   return data.data;
 }
 

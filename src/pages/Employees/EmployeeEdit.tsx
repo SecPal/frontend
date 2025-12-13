@@ -47,6 +47,8 @@ export function EmployeeEdit() {
     position: "",
     contract_start_date: "",
     organizational_unit_id: "",
+    status: "pre_contract",
+    contract_type: "full_time",
   });
 
   useEffect(() => {
@@ -81,6 +83,8 @@ export function EmployeeEdit() {
         position: employee.position,
         contract_start_date: employee.contract_start_date,
         organizational_unit_id: employee.organizational_unit.id,
+        status: employee.status,
+        contract_type: employee.contract_type || "full_time",
       });
     } catch (err) {
       console.error("Failed to load employee:", err);

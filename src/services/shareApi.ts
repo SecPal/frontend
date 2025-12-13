@@ -55,6 +55,9 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
   }
 
   const data = await response.json().catch(() => ({ data: [] }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse shares response", response.status);
+  }
   return data.data;
 }
 
@@ -103,6 +106,9 @@ export async function createShare(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse share response", response.status);
+  }
   return data.data;
 }
 

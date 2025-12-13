@@ -117,6 +117,7 @@ describe("EmployeeCreate", () => {
       contract_end_date: undefined,
       position: "Developer",
       status: "active",
+      contract_type: "full_time",
       organizational_unit: {
         id: "unit-1",
         name: "Main Office",
@@ -172,6 +173,8 @@ describe("EmployeeCreate", () => {
         position: "Developer",
         contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
+        status: "pre_contract",
+        contract_type: "full_time",
       });
     });
 

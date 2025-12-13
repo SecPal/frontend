@@ -43,6 +43,8 @@ export function EmployeeCreate() {
     position: "",
     contract_start_date: "",
     organizational_unit_id: "",
+    status: "pre_contract",
+    contract_type: "full_time",
   });
 
   useEffect(() => {
@@ -247,6 +249,58 @@ export function EmployeeCreate() {
                         {unit.name}
                       </option>
                     ))}
+                  </Select>
+                </Field>
+
+                <Field>
+                  <Label>
+                    <Trans>Status</Trans> *
+                  </Label>
+                  <Select
+                    name="status"
+                    required
+                    value={formData.status}
+                    onChange={(e) => handleChange("status", e.target.value)}
+                  >
+                    <option value="pre_contract">
+                      <Trans>Pre-Contract</Trans>
+                    </option>
+                    <option value="active">
+                      <Trans>Active</Trans>
+                    </option>
+                    <option value="on_leave">
+                      <Trans>On Leave</Trans>
+                    </option>
+                    <option value="terminated">
+                      <Trans>Terminated</Trans>
+                    </option>
+                  </Select>
+                </Field>
+
+                <Field>
+                  <Label>
+                    <Trans>Contract Type</Trans> *
+                  </Label>
+                  <Select
+                    name="contract_type"
+                    required
+                    value={formData.contract_type}
+                    onChange={(e) =>
+                      handleChange("contract_type", e.target.value)
+                    }
+                  >
+                    <option value="full_time">
+                      <Trans>Full Time</Trans>
+                    </option>
+                    <option value="part_time">
+                      <Trans>Part Time</Trans>
+                    </option>
+                    <option value="minijob">
+                      <Trans>Minijob</Trans>
+                    </option>
+                    <option value="freelance">
+                      <Trans>Freelance</Trans>
+                    </option>
                   </Select>
                 </Field>
               </div>

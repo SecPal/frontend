@@ -30,6 +30,7 @@ export interface Employee {
   contract_end_date?: string;
   position: string;
   status: EmployeeStatus;
+  contract_type: "full_time" | "part_time" | "minijob" | "freelance";
   organizational_unit: {
     id: string;
     name: string;
@@ -70,6 +71,8 @@ export interface EmployeeFormData {
   position: string;
   organizational_unit_id: string;
   hire_date?: string;
+  status: EmployeeStatus;
+  contract_type: "full_time" | "part_time" | "minijob" | "freelance";
 }
 
 /**
@@ -110,7 +113,14 @@ export async function fetchEmployees(
     throw new Error(error.message || "Failed to fetch employees");
   }
 
-  return response.json();
+  const data = await response.json().catch(() => ({
+    data: [],
+    meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 },
+  }));
+  if (!data.data) {
+    throw new Error("Failed to parse employees list response");
+  }
+  return data;
 }
 
 /**
@@ -130,6 +140,9 @@ export async function fetchEmployee(id: string): Promise<Employee> {
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse employee response");
+  }
   return data.data;
 }
 
@@ -155,7 +168,18 @@ export async function createEmployee(
     throw new Error(error.message || "Failed to create employee");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json().catch((err) => {
+    console.error("Failed to parse employee response:", err);
+    console.error("Response status:", response.status);
+    console.error("Response headers:", Array.from(response.headers.entries()));
+    return { data: null };
+  });
+
+  if (!data.data) {
+    throw new Error(
+      `API returned status ${response.status} but response has no 'data' field. Check console for details.`
+    );
+  }
   return data.data;
 }
 
@@ -183,6 +207,9 @@ export async function updateEmployee(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse employee response");
+  }
   return data.data;
 }
 
@@ -220,6 +247,9 @@ export async function activateEmployee(id: string): Promise<Employee> {
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse employee response");
+  }
   return data.data;
 }
 
@@ -240,5 +270,8 @@ export async function terminateEmployee(id: string): Promise<Employee> {
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse employee response");
+  }
   return data.data;
 }

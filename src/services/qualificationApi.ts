@@ -99,6 +99,9 @@ export async function fetchQualifications(filters?: {
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse qualifications response");
+  }
   return data.data;
 }
 
@@ -118,7 +121,10 @@ export async function fetchQualification(id: string): Promise<Qualification> {
     throw new Error(error.message || "Failed to fetch qualification");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse qualification response");
+  }
   return data.data;
 }
 
@@ -145,6 +151,9 @@ export async function createQualification(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse qualification response");
+  }
   return data.data;
 }
 
@@ -172,6 +181,9 @@ export async function updateQualification(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse qualification response");
+  }
   return data.data;
 }
 
@@ -211,6 +223,9 @@ export async function fetchEmployeeQualifications(
   }
 
   const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new Error("Failed to parse employee qualifications response");
+  }
   return data.data;
 }
 
