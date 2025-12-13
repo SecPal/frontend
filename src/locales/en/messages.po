@@ -66,11 +66,11 @@ msgstr "• Read: View secret details"
 msgid "• Write: View + edit secret"
 msgstr "• Write: View + edit secret"
 
-#: src/pages/Employees/EmployeeEdit.tsx:167
+#: src/pages/Employees/EmployeeEdit.tsx:171
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:94
+#: src/pages/Employees/EmployeeCreate.tsx:96
 #: src/pages/Employees/EmployeeDetail.tsx:372
 msgid "← Back to Employees"
 msgstr "← Back to Employees"
@@ -125,6 +125,7 @@ msgstr "Activate"
 
 #: src/components/GuardBookManager.tsx:180
 #: src/components/GuardBookManager.tsx:675
+#: src/pages/Employees/EmployeeCreate.tsx:269
 #: src/pages/Employees/EmployeeDetail.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:42
 #: src/pages/Employees/EmployeeList.tsx:170
@@ -246,7 +247,7 @@ msgid "Attachments ({0})"
 msgstr "Attachments ({0})"
 
 #: src/pages/Employees/EmployeeDetail.tsx:360
-#: src/pages/Employees/EmployeeEdit.tsx:155
+#: src/pages/Employees/EmployeeEdit.tsx:159
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
@@ -273,8 +274,8 @@ msgstr "by"
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
-#: src/pages/Employees/EmployeeCreate.tsx:262
-#: src/pages/Employees/EmployeeEdit.tsx:335
+#: src/pages/Employees/EmployeeCreate.tsx:316
+#: src/pages/Employees/EmployeeEdit.tsx:339
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -347,11 +348,15 @@ msgstr "Contact Email"
 msgid "Contact Phone"
 msgstr "Contact Phone"
 
-#: src/pages/Employees/EmployeeCreate.tsx:212
+#: src/pages/Employees/EmployeeCreate.tsx:214
 #: src/pages/Employees/EmployeeDetail.tsx:100
-#: src/pages/Employees/EmployeeEdit.tsx:285
+#: src/pages/Employees/EmployeeEdit.tsx:289
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
+
+#: src/pages/Employees/EmployeeCreate.tsx:282
+msgid "Contract Type"
+msgstr "Contract Type"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:378
 #: src/pages/Secrets/SecretCreate.tsx:76
@@ -366,7 +371,7 @@ msgstr "Create a new organizational unit under \"{parentName}\"."
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
-#: src/pages/Employees/EmployeeCreate.tsx:268
+#: src/pages/Employees/EmployeeCreate.tsx:322
 msgid "Create Employee"
 msgstr "Create Employee"
 
@@ -375,7 +380,7 @@ msgstr "Create Employee"
 msgid "Create Guard Book"
 msgstr "Create Guard Book"
 
-#: src/pages/Employees/EmployeeCreate.tsx:100
+#: src/pages/Employees/EmployeeCreate.tsx:102
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
@@ -402,7 +407,7 @@ msgstr "Created"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
-#: src/pages/Employees/EmployeeCreate.tsx:266
+#: src/pages/Employees/EmployeeCreate.tsx:320
 msgid "Creating..."
 msgstr "Creating..."
 
@@ -439,9 +444,9 @@ msgstr "Customer Number"
 msgid "Customers"
 msgstr "Customers"
 
-#: src/pages/Employees/EmployeeCreate.tsx:149
+#: src/pages/Employees/EmployeeCreate.tsx:151
 #: src/pages/Employees/EmployeeDetail.tsx:95
-#: src/pages/Employees/EmployeeEdit.tsx:222
+#: src/pages/Employees/EmployeeEdit.tsx:226
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
@@ -542,7 +547,7 @@ msgstr "Edit"
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
-#: src/pages/Employees/EmployeeEdit.tsx:173
+#: src/pages/Employees/EmployeeEdit.tsx:177
 msgid "Edit Employee"
 msgstr "Edit Employee"
 
@@ -563,9 +568,9 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 msgid "login.email"
 msgstr "Email"
 
-#: src/pages/Employees/EmployeeCreate.tsx:164
+#: src/pages/Employees/EmployeeCreate.tsx:166
 #: src/pages/Employees/EmployeeDetail.tsx:73
-#: src/pages/Employees/EmployeeEdit.tsx:237
+#: src/pages/Employees/EmployeeEdit.tsx:241
 #: src/pages/Profile/ProfilePage.tsx:67
 msgid "Email"
 msgstr "Email"
@@ -591,8 +596,8 @@ msgstr "Employee Number"
 msgid "Employees"
 msgstr "Employees"
 
-#: src/pages/Employees/EmployeeCreate.tsx:193
-#: src/pages/Employees/EmployeeEdit.tsx:266
+#: src/pages/Employees/EmployeeCreate.tsx:195
+#: src/pages/Employees/EmployeeEdit.tsx:270
 msgid "Employment Details"
 msgstr "Employment Details"
 
@@ -612,13 +617,13 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
-#: src/pages/Employees/EmployeeCreate.tsx:107
-#: src/pages/Employees/EmployeeEdit.tsx:180
+#: src/pages/Employees/EmployeeCreate.tsx:109
+#: src/pages/Employees/EmployeeEdit.tsx:184
 msgid "Error"
 msgstr "Error"
 
 #: src/pages/Employees/EmployeeDetail.tsx:353
-#: src/pages/Employees/EmployeeEdit.tsx:150
+#: src/pages/Employees/EmployeeEdit.tsx:154
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
@@ -782,8 +787,8 @@ msgstr "Filter by expiration"
 msgid "Filter by tag"
 msgstr "Filter by tag"
 
-#: src/pages/Employees/EmployeeCreate.tsx:123
-#: src/pages/Employees/EmployeeEdit.tsx:196
+#: src/pages/Employees/EmployeeCreate.tsx:125
+#: src/pages/Employees/EmployeeEdit.tsx:200
 msgid "First Name"
 msgstr "First Name"
 
@@ -791,9 +796,17 @@ msgstr "First Name"
 msgid "Form fields will be rendered based on schema"
 msgstr "Form fields will be rendered based on schema"
 
+#: src/pages/Employees/EmployeeCreate.tsx:302
+msgid "Freelance"
+msgstr "Freelance"
+
 #: src/pages/Employees/EmployeeDetail.tsx:68
 msgid "Full Name"
 msgstr "Full Name"
+
+#: src/pages/Employees/EmployeeCreate.tsx:293
+msgid "Full Time"
+msgstr "Full Time"
 
 #: src/components/GuardBookManager.tsx:199
 msgid "Generate Report"
@@ -887,8 +900,8 @@ msgstr "Language"
 msgid "Last modified: {0}"
 msgstr "Last modified: {0}"
 
-#: src/pages/Employees/EmployeeCreate.tsx:136
-#: src/pages/Employees/EmployeeEdit.tsx:209
+#: src/pages/Employees/EmployeeCreate.tsx:138
+#: src/pages/Employees/EmployeeEdit.tsx:213
 msgid "Last Name"
 msgstr "Last Name"
 
@@ -919,7 +932,7 @@ msgid "Loading documents..."
 msgstr "Loading documents..."
 
 #: src/pages/Employees/EmployeeDetail.tsx:341
-#: src/pages/Employees/EmployeeEdit.tsx:138
+#: src/pages/Employees/EmployeeEdit.tsx:142
 msgid "Loading employee..."
 msgstr "Loading employee..."
 
@@ -946,8 +959,8 @@ msgstr "Loading secrets..."
 
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
-#: src/pages/Employees/EmployeeCreate.tsx:240
-#: src/pages/Employees/EmployeeEdit.tsx:313
+#: src/pages/Employees/EmployeeCreate.tsx:242
+#: src/pages/Employees/EmployeeEdit.tsx:317
 #: src/pages/Secrets/SecretEdit.tsx:116
 msgid "Loading..."
 msgstr "Loading..."
@@ -1012,6 +1025,10 @@ msgstr "Messages from team members and supervisors"
 #: src/pages/Secrets/SecretDetail.tsx:454
 msgid "Metadata"
 msgstr "Metadata"
+
+#: src/pages/Employees/EmployeeCreate.tsx:299
+msgid "Minijob"
+msgstr "Minijob"
 
 #: src/components/OfflineIndicator.tsx:106
 msgid "Minimize offline notice"
@@ -1204,6 +1221,7 @@ msgstr "Offline only"
 msgid "OK"
 msgstr "OK"
 
+#: src/pages/Employees/EmployeeCreate.tsx:272
 #: src/pages/Employees/EmployeeDetail.tsx:45
 #: src/pages/Employees/EmployeeList.tsx:43
 #: src/pages/Employees/EmployeeList.tsx:173
@@ -1231,9 +1249,9 @@ msgstr "Organization Structure"
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
-#: src/pages/Employees/EmployeeCreate.tsx:227
+#: src/pages/Employees/EmployeeCreate.tsx:229
 #: src/pages/Employees/EmployeeDetail.tsx:105
-#: src/pages/Employees/EmployeeEdit.tsx:300
+#: src/pages/Employees/EmployeeEdit.tsx:304
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
@@ -1254,6 +1272,10 @@ msgstr "Parent"
 #: src/components/OrganizationalUnitFormDialog.tsx:357
 msgid "Parent Unit"
 msgstr "Parent Unit"
+
+#: src/pages/Employees/EmployeeCreate.tsx:296
+msgid "Part Time"
+msgstr "Part Time"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:274
@@ -1280,14 +1302,14 @@ msgstr "Permission Levels:"
 msgid "Permission:"
 msgstr "Permission:"
 
-#: src/pages/Employees/EmployeeCreate.tsx:117
-#: src/pages/Employees/EmployeeEdit.tsx:190
+#: src/pages/Employees/EmployeeCreate.tsx:119
+#: src/pages/Employees/EmployeeEdit.tsx:194
 msgid "Personal Information"
 msgstr "Personal Information"
 
-#: src/pages/Employees/EmployeeCreate.tsx:177
+#: src/pages/Employees/EmployeeCreate.tsx:179
 #: src/pages/Employees/EmployeeDetail.tsx:78
-#: src/pages/Employees/EmployeeEdit.tsx:250
+#: src/pages/Employees/EmployeeEdit.tsx:254
 msgid "Phone"
 msgstr "Phone"
 
@@ -1296,9 +1318,9 @@ msgstr "Phone"
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
-#: src/pages/Employees/EmployeeCreate.tsx:199
+#: src/pages/Employees/EmployeeCreate.tsx:201
 #: src/pages/Employees/EmployeeDetail.tsx:83
-#: src/pages/Employees/EmployeeEdit.tsx:272
+#: src/pages/Employees/EmployeeEdit.tsx:276
 #: src/pages/Employees/EmployeeList.tsx:205
 msgid "Position"
 msgstr "Position"
@@ -1307,6 +1329,7 @@ msgstr "Position"
 msgid "Powered by SecPal - a guard's best friend"
 msgstr "Powered by SecPal - a guard's best friend"
 
+#: src/pages/Employees/EmployeeCreate.tsx:266
 #: src/pages/Employees/EmployeeDetail.tsx:43
 #: src/pages/Employees/EmployeeList.tsx:41
 #: src/pages/Employees/EmployeeList.tsx:167
@@ -1406,7 +1429,7 @@ msgid "Roles"
 msgstr "Roles"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Employees/EmployeeEdit.tsx:338
+#: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1419,7 +1442,7 @@ msgid "Save to Secret"
 msgstr "Save to Secret"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Employees/EmployeeEdit.tsx:338
+#: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Saving..."
 msgstr "Saving..."
 
@@ -1485,8 +1508,8 @@ msgstr "Select Files"
 msgid "Select new parent"
 msgstr "Select new parent"
 
-#: src/pages/Employees/EmployeeCreate.tsx:242
-#: src/pages/Employees/EmployeeEdit.tsx:315
+#: src/pages/Employees/EmployeeCreate.tsx:244
+#: src/pages/Employees/EmployeeEdit.tsx:319
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
 
@@ -1581,6 +1604,7 @@ msgstr "Some features may be limited. Your changes will sync when you're back on
 msgid "Source Code"
 msgstr "Source Code"
 
+#: src/pages/Employees/EmployeeCreate.tsx:257
 #: src/pages/Employees/EmployeeDetail.tsx:88
 #: src/pages/Employees/EmployeeList.tsx:150
 #: src/pages/Employees/EmployeeList.tsx:208
@@ -1636,6 +1660,7 @@ msgstr "Team Messages"
 msgid "Terminate"
 msgstr "Terminate"
 
+#: src/pages/Employees/EmployeeCreate.tsx:275
 #: src/pages/Employees/EmployeeDetail.tsx:46
 #: src/pages/Employees/EmployeeList.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:176

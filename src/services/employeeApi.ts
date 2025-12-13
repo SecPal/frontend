@@ -169,9 +169,14 @@ export async function createEmployee(
   }
 
   const data = await response.json().catch((err) => {
-    console.error("Failed to parse employee response:", err);
-    console.error("Response status:", response.status);
-    console.error("Response headers:", Array.from(response.headers.entries()));
+    if (import.meta.env.DEV) {
+      console.error("Failed to parse employee response:", err);
+      console.error("Response status:", response.status);
+      console.error(
+        "Response headers:",
+        Array.from(response.headers.entries())
+      );
+    }
     return { data: null };
   });
 

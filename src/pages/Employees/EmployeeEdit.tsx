@@ -145,7 +145,7 @@ export function EmployeeEdit() {
     );
   }
 
-  if (error && fetchLoading) {
+  if (error) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">

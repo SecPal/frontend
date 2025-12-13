@@ -54,11 +54,23 @@ export async function fetchShares(secretId: string): Promise<SecretShare[]> {
     );
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
-  if (!data.data) {
-    throw new ApiError("Failed to parse shares response", response.status);
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(
+      "Failed to parse shares response: invalid JSON",
+      response.status
+    );
   }
-  return data.data;
+  if (!data || typeof data !== "object" || !("data" in data)) {
+    throw new ApiError(
+      "Failed to parse shares response: missing 'data' property",
+      response.status
+    );
+  }
+  // Type assertion is safe due to the above check
+  return (data as { data: SecretShare[] }).data;
 }
 
 /**
