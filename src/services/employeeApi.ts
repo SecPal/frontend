@@ -104,7 +104,9 @@ export async function fetchEmployees(
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch employees");
   }
 
@@ -121,7 +123,9 @@ export async function fetchEmployee(id: string): Promise<Employee> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to fetch employee");
   }
 
@@ -145,7 +149,9 @@ export async function createEmployee(
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to create employee");
   }
 
@@ -170,7 +176,9 @@ export async function updateEmployee(
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to update employee");
   }
 
@@ -188,7 +196,9 @@ export async function deleteEmployee(id: string): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to delete employee");
   }
 }
@@ -203,7 +213,9 @@ export async function activateEmployee(id: string): Promise<Employee> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to activate employee");
   }
 
@@ -221,7 +233,9 @@ export async function terminateEmployee(id: string): Promise<Employee> {
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to terminate employee");
   }
 

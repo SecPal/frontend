@@ -346,8 +346,21 @@ export function EmployeeDetail() {
 
   if (error || !employee) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <Text className="text-red-800">{error || "Employee not found"}</Text>
+      <div className="flex items-center justify-center py-16">
+        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
+          <div className="mb-4 text-4xl">❌</div>
+          <Heading level={3} className="text-red-900 dark:text-red-400">
+            <Trans>Error Loading Employee</Trans>
+          </Heading>
+          <Text className="mt-2 text-red-700 dark:text-red-500">
+            {error || "Employee not found"}
+          </Text>
+          <div className="mt-4">
+            <Button href="/employees" color="red">
+              <Trans>Back to Employees</Trans>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

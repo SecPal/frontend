@@ -66,13 +66,13 @@ export function EmployeeEdit() {
     } catch (err) {
       console.error("Failed to load employee:", err);
       let errorMessage = "Failed to load employee";
-      
+
       if (err instanceof Error) {
         errorMessage = err.message;
       } else if (typeof err === "object" && err !== null && "message" in err) {
         errorMessage = String(err.message);
       }
-      
+
       setError(errorMessage);
     } finally {
       setFetchLoading(false);
@@ -95,13 +95,13 @@ export function EmployeeEdit() {
     } catch (err) {
       console.error("Failed to update employee:", err);
       let errorMessage = "Failed to update employee";
-      
+
       if (err instanceof Error) {
         errorMessage = err.message;
       } else if (typeof err === "object" && err !== null && "message" in err) {
         errorMessage = String(err.message);
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -124,8 +124,19 @@ export function EmployeeEdit() {
 
   if (error && fetchLoading) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <Text className="text-red-800">{error}</Text>
+      <div className="flex items-center justify-center py-16">
+        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
+          <div className="mb-4 text-4xl">❌</div>
+          <Heading level={3} className="text-red-900 dark:text-red-400">
+            <Trans>Error Loading Employee</Trans>
+          </Heading>
+          <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
+          <div className="mt-4">
+            <Button href="/employees" color="red">
+              <Trans>Back to Employees</Trans>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -144,8 +155,12 @@ export function EmployeeEdit() {
         </Heading>
 
         {error && !fetchLoading && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/10 dark:border-red-900">
-            <Text className="text-red-800 dark:text-red-400">{error}</Text>
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
+            <div className="mb-2 text-4xl">⚠️</div>
+            <Heading level={3} className="text-red-900 dark:text-red-400">
+              <Trans>Error</Trans>
+            </Heading>
+            <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
           </div>
         )}
 
