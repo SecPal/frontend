@@ -93,7 +93,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.18",
+    "eslint-plugin-react-refresh": "^0.4.25",
     "fake-indexeddb": "^6.2.5",
     "globals": "^16.5.0",
     "jsdom": "^27.3.0",
