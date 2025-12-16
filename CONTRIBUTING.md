@@ -51,23 +51,17 @@ Create a dedicated directory for all SecPal repositories. This mirrors the GitHu
    cd <repository>
    ```
 
-2. **Set up Git hooks (automatic):**
+2. **Set up Git hooks:**
 
-   Git hooks are automatically configured via `.githooks/` directory:
-
-   ```bash
-   git config core.hooksPath .githooks
-   ```
-
-3. **Install pre-commit (optional, for additional checks):**
+   Install both pre-commit and pre-push hooks:
 
    ```bash
-   # Install pre-commit
-   pip install pre-commit
-   # or: brew install pre-commit
+   # Install pre-commit (requires pre-commit to be installed first)
+   pip install --user pre-commit
+   ./scripts/setup-pre-commit.sh
 
-   # Install hooks
-   pre-commit install
+   # Install pre-push hook
+   ./scripts/setup-pre-push.sh
    ```
 
 ### Local Development Workflow
@@ -264,6 +258,64 @@ git push origin --delete spike/auth-library-evaluation
 
 ---
 
+## Code Coverage
+
+SecPal uses [Codecov](https://codecov.io) for automated code coverage tracking across all repositories.
+
+### Coverage Requirements
+
+- **Minimum Coverage:** 80% for new code (enforced by Codecov)
+- **Critical Paths:** 100% coverage required (authentication, encryption, RBAC)
+- **Coverage Reports:** Auto-generated in CI and uploaded to Codecov
+- **PR Impact:** PRs must not decrease overall coverage below 80%
+
+### Viewing Coverage
+
+- **Codecov Dashboard:** [https://codecov.io/gh/SecPal](https://codecov.io/gh/SecPal)
+- **PR Comments:** Codecov automatically comments on PRs with coverage impact
+- **Badges:** Coverage badges displayed in each repository README
+
+### Local Coverage Reports
+
+**Backend (PHP/Laravel):**
+
+```bash
+# Run tests with coverage
+ddev exec php artisan test --coverage-clover coverage.xml
+
+# View HTML report
+ddev exec php artisan test --coverage-html coverage-html/
+open coverage-html/index.html
+```
+
+**Frontend (TypeScript/React):**
+
+```bash
+# Run tests with coverage
+npm run test:coverage
+
+# View HTML report (auto-opens in browser)
+open coverage/index.html
+```
+
+### Coverage Configuration
+
+- **Organization Config:** `.codecov.yml` in `.github` repository
+- **Backend Config:** PHPUnit coverage in `phpunit.xml` (`<source>` element)
+- **Frontend Config:** Vitest coverage in `vite.config.ts` (`test.coverage`)
+
+### Exclusions
+
+The following are excluded from coverage:
+
+- Test files (`**/*Test.php`, `**/*.test.ts`, etc.)
+- Configuration files (`**/*.config.ts`, `**/*.config.js`)
+- Type definitions (`**/*.d.ts`)
+- Database migrations and seeders
+- Build artifacts and dependencies
+
+---
+
 ## Commit Message Convention
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear and structured commit messages:
@@ -334,49 +386,6 @@ gpg --armor --export <YOUR_KEY_ID>
 - **Formatting:** We use Prettier for all code formatting. Run `npx prettier --write .` before committing.
 - **Linting:** ESLint (JavaScript/TypeScript) and PHPStan (PHP) are enforced.
 - **Testing:** All new features should include tests.
-
-## Test-Driven Development (TDD)
-
-**TDD is MANDATORY for all SecPal contributions.** Tests must be written **before** implementation.
-
-### Quick TDD Workflow
-
-```bash
-# 1. Write failing test FIRST
-cat > src/components/Feature.test.tsx << 'EOF'
-it('does something', () => {
-  expect(doSomething()).toBe(expected);
-});
-EOF
-
-# 2. Commit test
-git add src/components/Feature.test.tsx
-git commit -S -m "test: Add Feature tests"
-
-# 3. Implement to make test pass
-cat > src/components/Feature.tsx << 'EOF'
-export function doSomething() {
-  return expected;
-}
-EOF
-
-# 4. Commit implementation
-git add src/components/Feature.tsx
-git commit -S -m "feat: Implement Feature"
-```
-
-**Why separate commits?**
-
-- Proves tests were written first (reviewers can verify via `git log`)
-- Enforces design-before-implementation thinking
-- Makes PR history transparent
-
-**For detailed TDD workflow with Git verification:**
-
-- Frontend: See [`docs/development/TDD_WORKFLOW.md`](docs/development/TDD_WORKFLOW.md)
-- Backend: See [SecPal/api TDD documentation](https://github.com/SecPal/api/blob/main/docs/TDD_WORKFLOW.md) (separate repository)
-
-**PR Reviewers:** Check `git log --oneline --name-status` to verify `.test.tsx` committed before `.tsx`
 
 ## REUSE Compliance
 

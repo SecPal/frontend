@@ -9,8 +9,8 @@ We follow [Semantic Versioning](https://semver.org/) (SEMVER). Security updates 
 
 | Version | Supported | Notes                                                     |
 | ------- | --------- | --------------------------------------------------------- |
-| 0.x.x   | Yes       | Development phase - all versions receive security updates |
-| < 0.0.1 | No        | Not yet released                                          |
+| 0.x.x   | ✅        | Development phase - all versions receive security updates |
+| < 0.0.1 | ❌        | Not yet released                                          |
 
 **Note:** Once we reach 1.0.0 (stable release), we will support:
 
@@ -147,14 +147,14 @@ SecPal repositories have the following security features enabled:
 
 | Feature                         | Status | Description                            |
 | ------------------------------- | ------ | -------------------------------------- |
-| **Secret Scanning**             | Yes    | Detects leaked credentials             |
-| **Push Protection**             | Yes    | Blocks commits with secrets            |
-| **Dependabot Security Updates** | Yes    | Automated security patches             |
-| **Dependabot Version Updates**  | Yes    | Daily dependency updates (04:00 CET)   |
-| **CodeQL Analysis**             | Yes    | SAST for JavaScript/TypeScript         |
-| **Branch Protection**           | Yes    | Enforced status checks, signed commits |
-| **Security Advisories**         | Yes    | Private vulnerability reporting        |
-| **Two-Factor Authentication**   | Yes    | Required for all maintainers           |
+| **Secret Scanning**             | ✅     | Detects leaked credentials             |
+| **Push Protection**             | ✅     | Blocks commits with secrets            |
+| **Dependabot Security Updates** | ✅     | Automated security patches             |
+| **Dependabot Version Updates**  | ✅     | Daily dependency updates (04:00 CET)   |
+| **CodeQL Analysis**             | ✅     | SAST for JavaScript/TypeScript         |
+| **Branch Protection**           | ✅     | Enforced status checks, signed commits |
+| **Security Advisories**         | ✅     | Private vulnerability reporting        |
+| **Two-Factor Authentication**   | ✅     | Required for all maintainers           |
 
 ## Known Security Limitations
 
@@ -169,22 +169,11 @@ We compensate with:
 - **Manual security reviews** for PHP code
 - **Consider:** Psalm, Semgrep for additional PHP security scanning
 
-### Login Rate Limiting
+### API Rate Limiting
 
-**Defense-in-depth approach implemented:**
-
-**Frontend (client-side):**
-
-- Max 5 login attempts, then 30-second lockout
-- Visual feedback with remaining attempts counter
-- Automatic reset after 15 minutes of inactivity
-- Persisted in localStorage to survive page refresh
-
-**Backend (server-side):**
-
-- Login endpoints: 5 attempts per minute per email+IP
-- Password reset: 5 requests per 60 minutes
-- Returns 429 Too Many Requests with localized message
+- Currently: No rate limiting implemented
+- **Planned:** Rate limiting for public APIs (v0.5.0)
+- **Mitigation:** Monitor for unusual traffic patterns
 
 ### CORS Configuration
 
@@ -195,8 +184,8 @@ We compensate with:
 
 Planned security enhancements:
 
-- [x] **v0.3.0:** Production-ready CORS configuration
-- [x] **v0.5.0:** Login rate limiting _(implemented)_
+- [ ] **v0.3.0:** Production-ready CORS configuration
+- [ ] **v0.5.0:** API rate limiting
 - [ ] **v0.7.0:** Comprehensive audit logging
 - [ ] **v0.9.0:** Penetration testing
 - [ ] **v1.0.0:** Security certification (OWASP ASVS Level 2)
