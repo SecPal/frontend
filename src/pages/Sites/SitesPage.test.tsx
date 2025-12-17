@@ -219,7 +219,9 @@ describe("SitesPage", () => {
     });
 
     const allLinks = screen.getAllByRole("link");
-    const siteLinks = allLinks.filter(link => link.getAttribute("href")?.includes("/sites/site"));
+    const siteLinks = allLinks.filter((link) =>
+      link.getAttribute("href")?.includes("/sites/site")
+    );
     expect(siteLinks.length).toBeGreaterThan(0);
     expect(siteLinks[0]).toHaveAttribute("href", "/sites/site-1");
   });
@@ -244,8 +246,12 @@ describe("SitesPage", () => {
 
     // Check pagination buttons are present
     const allButtons = screen.getAllByRole("button");
-    const prevButtons = allButtons.filter(btn => btn.textContent?.match(/previous/i));
-    const nextButtons = allButtons.filter(btn => btn.textContent?.match(/next/i));
+    const prevButtons = allButtons.filter((btn) =>
+      btn.textContent?.match(/previous/i)
+    );
+    const nextButtons = allButtons.filter((btn) =>
+      btn.textContent?.match(/next/i)
+    );
 
     expect(prevButtons.length).toBeGreaterThan(0);
     expect(nextButtons.length).toBeGreaterThan(0);
@@ -276,7 +282,9 @@ describe("SitesPage", () => {
     });
 
     const allButtons = screen.getAllByRole("button");
-    const nextButton = allButtons.find(btn => btn.textContent?.match(/next/i))!;
+    const nextButton = allButtons.find((btn) =>
+      btn.textContent?.match(/next/i)
+    )!;
     fireEvent.click(nextButton);
 
     await waitFor(() => {

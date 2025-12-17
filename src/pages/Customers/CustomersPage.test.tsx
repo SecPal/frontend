@@ -178,7 +178,9 @@ describe("CustomersPage", () => {
     });
 
     const allLinks = screen.getAllByRole("link");
-    const customerLinks = allLinks.filter(link => link.getAttribute("href")?.includes("/customers/cust"));
+    const customerLinks = allLinks.filter((link) =>
+      link.getAttribute("href")?.includes("/customers/cust")
+    );
     expect(customerLinks.length).toBeGreaterThan(0);
     expect(customerLinks[0]).toHaveAttribute("href", "/customers/cust-1");
   });
@@ -203,8 +205,12 @@ describe("CustomersPage", () => {
 
     // Check pagination buttons are present
     const allButtons = screen.getAllByRole("button");
-    const prevButtons = allButtons.filter(btn => btn.textContent?.match(/previous/i));
-    const nextButtons = allButtons.filter(btn => btn.textContent?.match(/next/i));
+    const prevButtons = allButtons.filter((btn) =>
+      btn.textContent?.match(/previous/i)
+    );
+    const nextButtons = allButtons.filter((btn) =>
+      btn.textContent?.match(/next/i)
+    );
 
     expect(prevButtons.length).toBeGreaterThan(0);
     expect(nextButtons.length).toBeGreaterThan(0);
@@ -235,7 +241,9 @@ describe("CustomersPage", () => {
     });
 
     const allButtons = screen.getAllByRole("button");
-    const nextButton = allButtons.find(btn => btn.textContent?.match(/next/i))!;
+    const nextButton = allButtons.find((btn) =>
+      btn.textContent?.match(/next/i)
+    )!;
     fireEvent.click(nextButton);
 
     await waitFor(() => {
