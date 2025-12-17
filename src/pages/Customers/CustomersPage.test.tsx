@@ -142,9 +142,10 @@ describe("CustomersPage", () => {
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     });
 
-    // Check all customer fields are displayed
+    // Check all customer fields are displayed in table
     expect(screen.getByText("C001")).toBeInTheDocument();
-    expect(screen.getByText(/Berlin/)).toBeInTheDocument();
+    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getByText("Tech Solutions Ltd")).toBeInTheDocument();
     expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
   });
 

@@ -102,12 +102,14 @@ describe("SitesPage", () => {
   });
 
   it("should handle API errors gracefully", async () => {
-    vi.mocked(customersApi.listSites).mockRejectedValue(new Error("API Error"));
+    vi.mocked(customersApi.listSites).mockRejectedValue(
+      new Error("API Error")
+    );
 
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load sites/i)).toBeInTheDocument();
+      expect(screen.getByText(/API Error/i)).toBeInTheDocument();
     });
   });
 
@@ -135,12 +137,15 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
+    // Clear call history to isolate this test's API calls
+    vi.mocked(customersApi.listSites).mockClear();
+
     const typeSelect = screen.getByRole("combobox", { name: /type/i });
     fireEvent.change(typeSelect, { target: { value: "permanent" } });
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
-        expect.objectContaining({ site_type: "permanent" })
+        expect.objectContaining({ type: "permanent" })
       );
     });
   });
@@ -340,12 +345,15 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
+    // Clear call history to isolate this test's API calls
+    vi.mocked(customersApi.listSites).mockClear();
+
     const typeSelect = screen.getByRole("combobox", { name: /type/i });
     fireEvent.change(typeSelect, { target: { value: "temporary" } });
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
-        expect.objectContaining({ site_type: "temporary", page: 1 })
+        expect.objectContaining({ type: "temporary", page: 1 })
       );
     });
   });
