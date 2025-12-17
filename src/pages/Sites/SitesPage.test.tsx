@@ -14,8 +14,10 @@ import type { Site, PaginatedResponse } from "../../types/customers";
 vi.mock("../../services/customersApi");
 
 // Helper to render with providers
-const renderWithProviders = () => {
-  return render(
+const renderWithProviders = () => {  // Initialize i18n for tests
+  i18n.load("en", {});
+  i18n.activate("en");
+    return render(
     <I18nProvider i18n={i18n}>
       <MemoryRouter>
         <SitesPage />

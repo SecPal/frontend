@@ -465,26 +465,6 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Customers")).not.toBeInTheDocument();
     });
 
-    it("hides Guard Books link when user has no organizational scopes", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@example.com",
-          hasOrganizationalScopes: false,
-        })
-      );
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(screen.queryByText("Guard Books")).not.toBeInTheDocument();
-    });
-
     it("shows Organization link when user has organizational scopes", () => {
       localStorage.setItem(
         "auth_user",
@@ -523,26 +503,6 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Customers")).toBeInTheDocument();
-    });
-
-    it("shows Guard Books link when user has organizational scopes", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@example.com",
-          hasOrganizationalScopes: true,
-        })
-      );
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(screen.getByText("Guard Books")).toBeInTheDocument();
     });
 
     it("always shows Home and Secrets links regardless of scopes", () => {
@@ -586,7 +546,6 @@ describe("ApplicationLayout", () => {
       // Should not show organizational menu items
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
       expect(screen.queryByText("Customers")).not.toBeInTheDocument();
-      expect(screen.queryByText("Guard Books")).not.toBeInTheDocument();
     });
   });
 
