@@ -119,7 +119,9 @@ export default function SitesPage() {
         <Field>
           <Select
             name="status"
-            value={filters.is_active === undefined ? "" : String(filters.is_active)}
+            value={
+              filters.is_active === undefined ? "" : String(filters.is_active)
+            }
             onChange={(e) => handleStatusFilter(e.target.value)}
           >
             <option value="">
@@ -182,7 +184,9 @@ export default function SitesPage() {
           <TableBody>
             {sites.map((site) => (
               <TableRow key={site.id}>
-                <TableCell className="font-medium">{site.site_number}</TableCell>
+                <TableCell className="font-medium">
+                  {site.site_number}
+                </TableCell>
                 <TableCell>{site.name}</TableCell>
                 <TableCell>
                   <Badge color={site.type === "permanent" ? "blue" : "amber"}>
@@ -198,7 +202,11 @@ export default function SitesPage() {
                 </TableCell>
                 <TableCell>
                   <Badge color={site.is_active ? "lime" : "zinc"}>
-                    {site.is_active ? <Trans>Active</Trans> : <Trans>Inactive</Trans>}
+                    {site.is_active ? (
+                      <Trans>Active</Trans>
+                    ) : (
+                      <Trans>Inactive</Trans>
+                    )}
                   </Badge>
                 </TableCell>
                 <TableCell>

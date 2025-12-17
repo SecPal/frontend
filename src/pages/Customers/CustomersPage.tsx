@@ -94,7 +94,9 @@ export default function CustomersPage() {
         <Field>
           <Select
             name="status"
-            value={filters.is_active === undefined ? "" : String(filters.is_active)}
+            value={
+              filters.is_active === undefined ? "" : String(filters.is_active)
+            }
             onChange={(e) => handleStatusFilter(e.target.value)}
           >
             <option value="">
