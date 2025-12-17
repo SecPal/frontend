@@ -27,14 +27,6 @@ const SecretList = lazy(() => import("./pages/Secrets/SecretList"));
 const SecretDetail = lazy(() => import("./pages/Secrets/SecretDetail"));
 const SecretCreate = lazy(() => import("./pages/Secrets/SecretCreate"));
 const SecretEdit = lazy(() => import("./pages/Secrets/SecretEdit"));
-const OrganizationPage = lazy(
-  () => import("./pages/Organization/OrganizationPage")
-);
-const CustomersPage = lazy(() => import("./pages/Organization/CustomersPage"));
-const ObjectsPage = lazy(() => import("./pages/Organization/ObjectsPage"));
-const GuardBooksPage = lazy(
-  () => import("./pages/Organization/GuardBooksPage")
-);
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
 const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
@@ -44,6 +36,8 @@ const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
 const OnboardingWizard = lazy(
   () => import("./pages/Onboarding/OnboardingWizard")
 );
+const CustomersPage = lazy(() => import("./pages/Customers/CustomersPage"));
+const SitesPage = lazy(() => import("./pages/Sites/SitesPage"));
 
 function Home() {
   return (
@@ -166,65 +160,25 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Organization Routes */}
-            <Route
-              path="/organization"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <OrganizationPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
+            {/* Customer & Site Management Routes - NEW (Epic #210) */}
             <Route
               path="/customers"
               element={
-                <ProtectedRoute>
+                <OrganizationalRoute>
                   <ApplicationLayout>
                     <CustomersPage />
                   </ApplicationLayout>
-                </ProtectedRoute>
+                </OrganizationalRoute>
               }
             />
             <Route
-              path="/customers/:customerId/objects"
+              path="/sites"
               element={
-                <ProtectedRoute>
+                <OrganizationalRoute>
                   <ApplicationLayout>
-                    <ObjectsPage />
+                    <SitesPage />
                   </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/customers/:customerId/objects/:objectId/guard-books"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <GuardBooksPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/customers/:customerId/objects/:objectId/areas/:areaId/guard-books"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <GuardBooksPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/guard-books"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <GuardBooksPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                </OrganizationalRoute>
               }
             />
             {/* Employee Management Routes - Requires Organizational Access */}
