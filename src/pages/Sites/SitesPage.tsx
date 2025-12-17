@@ -17,7 +17,7 @@ import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
-import { Field } from "../../components/fieldset";
+import { Field, Label } from "../../components/fieldset";
 import {
   Table,
   TableHead,
@@ -37,7 +37,12 @@ export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState(0);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+  });
 
   const loadSites = useCallback(async () => {
     setLoading(true);
@@ -45,7 +50,7 @@ export default function SitesPage() {
     try {
       const response = await listSites(filters);
       setSites(response.data);
-      setTotal(response.meta.total);
+      setPagination(response.meta);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sites");
     } finally {
@@ -77,6 +82,10 @@ export default function SitesPage() {
     });
   }
 
+  function handlePageChange(page: number) {
+    setFilters({ ...filters, page });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,6 +100,9 @@ export default function SitesPage() {
       {/* Search and Filter */}
       <div className="flex gap-4">
         <Field className="flex-1">
+          <Label>
+            <Trans>Search</Trans>
+          </Label>
           <Input
             name="search"
             type="text"
@@ -100,6 +112,9 @@ export default function SitesPage() {
           />
         </Field>
         <Field>
+          <Label>
+            <Trans>Type</Trans>
+          </Label>
           <Select
             name="type"
             value={filters.type || ""}
@@ -117,6 +132,9 @@ export default function SitesPage() {
           </Select>
         </Field>
         <Field>
+          <Label>
+            <Trans>Status</Trans>
+          </Label>
           <Select
             name="status"
             value={
@@ -223,14 +241,69 @@ export default function SitesPage() {
         </Table>
       )}
 
-      {/* Pagination Info */}
-      {!loading && sites.length > 0 && (
-        <div className="flex items-center justify-between">
-          <Text className="text-sm text-zinc-500">
-            <Trans>
-              Showing {sites.length} of {total} sites
-            </Trans>
-          </Text>
+      {/* Pagination */}
+      {pagination.last_page > 1 && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg dark:bg-zinc-900 dark:border-zinc-700">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <Button
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+              outline
+            >
+              <Trans>Previous</Trans>
+            </Button>
+            <Button
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+              outline
+            >
+              <Trans>Next</Trans>
+            </Button>
+          </div>
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <Text className="text-sm text-gray-700 dark:text-gray-300">
+                <Trans>
+                  Showing{" "}
+                  <span className="font-medium">
+                    {(pagination.current_page - 1) * pagination.per_page + 1}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {Math.min(
+                      pagination.current_page * pagination.per_page,
+                      pagination.total
+                    )}
+                  </span>{" "}
+                  of <span className="font-medium">{pagination.total}</span>{" "}
+                  sites
+                </Trans>
+              </Text>
+            </div>
+            <div>
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
+                <Button
+                  onClick={() => handlePageChange(pagination.current_page - 1)}
+                  disabled={pagination.current_page === 1}
+                  outline
+                  className="rounded-l-md"
+                >
+                  <Trans>Previous</Trans>
+                </Button>
+                <Button
+                  onClick={() => handlePageChange(pagination.current_page + 1)}
+                  disabled={pagination.current_page === pagination.last_page}
+                  outline
+                  className="rounded-r-md"
+                >
+                  <Trans>Next</Trans>
+                </Button>
+              </nav>
+            </div>
+          </div>
         </div>
       )}
     </div>
