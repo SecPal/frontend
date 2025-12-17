@@ -102,9 +102,7 @@ describe("SitesPage", () => {
   });
 
   it("should handle API errors gracefully", async () => {
-    vi.mocked(customersApi.listSites).mockRejectedValue(
-      new Error("API Error")
-    );
+    vi.mocked(customersApi.listSites).mockRejectedValue(new Error("API Error"));
 
     renderWithProviders();
 
