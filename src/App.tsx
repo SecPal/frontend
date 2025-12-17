@@ -36,6 +36,9 @@ const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
 const OnboardingWizard = lazy(
   () => import("./pages/Onboarding/OnboardingWizard")
 );
+const OrganizationPage = lazy(
+  () => import("./pages/Organization/OrganizationPage")
+);
 const CustomersPage = lazy(() => import("./pages/Customers/CustomersPage"));
 const SitesPage = lazy(() => import("./pages/Sites/SitesPage"));
 
@@ -177,6 +180,17 @@ function App() {
                 <OrganizationalRoute>
                   <ApplicationLayout>
                     <SitesPage />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            {/* Organizational Unit Management Route - INTERNAL Company Structure */}
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <OrganizationPage />
                   </ApplicationLayout>
                 </OrganizationalRoute>
               }
