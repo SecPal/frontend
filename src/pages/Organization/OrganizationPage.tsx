@@ -29,7 +29,7 @@ import {
   getTypeLabel,
   getTypeBadgeColor,
 } from "../../lib/organizationalUnitUtils";
-import type { OrganizationalUnit } from "../../types";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizationalUnitsWithOffline";
 
 /**

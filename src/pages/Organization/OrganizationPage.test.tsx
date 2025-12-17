@@ -9,7 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationPage } from "./OrganizationPage";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
-import type { OrganizationalUnit } from "../../types";
+import type { OrganizationalUnit } from "../../types/organizational";
 
 // Mock the API
 vi.mock("../../services/organizationalUnitApi", () => ({

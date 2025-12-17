@@ -92,11 +92,11 @@ msgstr "✓ Notifications are enabled. You'll receive updates based on your pref
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
-#: src/App.tsx:62
+#: src/App.tsx:59
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:73
+#: src/App.tsx:70
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -108,9 +108,9 @@ msgstr "Access Control"
 msgid "Access Denied"
 msgstr "Access Denied"
 
-#: src/components/GuardBookManager.tsx:382
-#: src/components/ObjectManager.tsx:384
-#: src/pages/Employees/EmployeeList.tsx:261
+#: src/pages/Customers/CustomersPage.tsx:170
+#: src/pages/Employees/EmployeeList.tsx:259
+#: src/pages/Sites/SitesPage.tsx:198
 msgid "Actions"
 msgstr "Actions"
 
@@ -123,23 +123,20 @@ msgstr "Actions for {0}"
 msgid "Activate"
 msgstr "Activate"
 
-#: src/components/GuardBookManager.tsx:180
-#: src/components/GuardBookManager.tsx:675
+#: src/pages/Customers/CustomersPage.tsx:121
+#: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Employees/EmployeeCreate.tsx:269
 #: src/pages/Employees/EmployeeDetail.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:47
-#: src/pages/Employees/EmployeeList.tsx:216
+#: src/pages/Employees/EmployeeList.tsx:45
+#: src/pages/Employees/EmployeeList.tsx:214
+#: src/pages/Sites/SitesPage.tsx:149
+#: src/pages/Sites/SitesPage.tsx:224
 msgid "Active"
 msgstr "Active"
 
 #: src/pages/Secrets/SecretCreate.tsx:68
 msgid "Add a new secret to your vault."
 msgstr "Add a new secret to your vault."
-
-#: src/components/ObjectManager.tsx:351
-#: src/components/ObjectManager.tsx:366
-msgid "Add Area"
-msgstr "Add Area"
 
 #: src/components/OrganizationalUnitTree.tsx:328
 msgid "Add child"
@@ -149,25 +146,15 @@ msgstr "Add child"
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
 
-#: src/components/CustomerTree.tsx:506
-#: src/components/CustomerTree.tsx:521
-msgid "Add Customer"
-msgstr "Add Customer"
-
-#: src/pages/Employees/EmployeeList.tsx:159
+#: src/pages/Employees/EmployeeList.tsx:157
 msgid "Add Employee"
 msgstr "Add Employee"
-
-#: src/components/ObjectManager.tsx:628
-#: src/components/ObjectManager.tsx:643
-msgid "Add Object"
-msgstr "Add Object"
 
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
-#: src/pages/Organization/CustomersPage.tsx:119
+#: src/pages/Sites/SitesPage.tsx:192
 msgid "Address"
 msgstr "Address"
 
@@ -179,10 +166,15 @@ msgstr "Admin"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/pages/Employees/EmployeeList.tsx:210
+#: src/pages/Employees/EmployeeList.tsx:208
 #: src/pages/Secrets/SecretList.tsx:207
 msgid "All"
 msgstr "All"
+
+#: src/pages/Customers/CustomersPage.tsx:118
+#: src/pages/Sites/SitesPage.tsx:146
+msgid "All Status"
+msgstr "All Status"
 
 #: src/components/SyncStatusIndicator.tsx:125
 msgid "All synced"
@@ -192,7 +184,11 @@ msgstr "All synced"
 msgid "All Tags"
 msgstr "All Tags"
 
-#: src/components/OrganizationalUnitPicker.tsx:242
+#: src/pages/Sites/SitesPage.tsx:124
+msgid "All Types"
+msgstr "All Types"
+
+#: src/components/OrganizationalUnitPicker.tsx:243
 msgid "All Units"
 msgstr "All Units"
 
@@ -208,38 +204,13 @@ msgstr "App updates and maintenance notifications"
 msgid "Apply Selection"
 msgstr "Apply Selection"
 
-#. placeholder {0}: area.name
-#. placeholder {0}: customer.name
-#: src/components/CustomerTree.tsx:456
-#: src/components/ObjectManager.tsx:305
-msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
-msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
-
-#. placeholder {0}: object.name
-#: src/components/ObjectManager.tsx:571
-msgid "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
-msgstr "Are you sure you want to delete \"{0}\"? This will also delete all areas and guard books. This action cannot be undone."
-
-#. placeholder {0}: guardBook.title
-#: src/components/GuardBookManager.tsx:570
-msgid "Are you sure you want to delete \"{0}\"? This will also delete all reports. This action cannot be undone."
-msgstr "Are you sure you want to delete \"{0}\"? This will also delete all reports. This action cannot be undone."
-
 #: src/pages/Secrets/SecretDetail.tsx:158
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Are you sure you want to delete this attachment?"
 
-#: src/components/GuardBookManager.tsx:320
-msgid "Are you sure you want to delete this report? This action cannot be undone."
-msgstr "Are you sure you want to delete this report? This action cannot be undone."
-
 #: src/components/SharedWithList.tsx:29
 msgid "Are you sure you want to revoke access for {name}?"
 msgstr "Are you sure you want to revoke access for {name}?"
-
-#: src/components/ObjectManager.tsx:239
-msgid "Areas"
-msgstr "Areas"
 
 #: src/pages/ShareTarget.tsx:624
 msgid "Attached Files"
@@ -255,7 +226,7 @@ msgstr "Attachments ({0})"
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
-#: src/App.tsx:84
+#: src/App.tsx:81
 msgid "Back to Home"
 msgstr "Back to Home"
 
@@ -267,10 +238,6 @@ msgstr "Back to Secrets"
 #: src/lib/organizationalUnitUtils.ts:109
 msgid "Branch"
 msgstr "Branch"
-
-#: src/components/GuardBookManager.tsx:402
-msgid "by"
-msgstr "by"
 
 #: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
@@ -334,7 +301,6 @@ msgstr "Close"
 msgid "Close detail panel"
 msgstr "Close detail panel"
 
-#: src/components/CustomerTree.tsx:222
 #: src/components/OrganizationalUnitTree.tsx:264
 msgid "Collapse"
 msgstr "Collapse"
@@ -344,13 +310,9 @@ msgstr "Collapse"
 msgid "Company"
 msgstr "Company"
 
-#: src/pages/Organization/CustomersPage.tsx:89
-msgid "Contact Email"
-msgstr "Contact Email"
-
-#: src/pages/Organization/CustomersPage.tsx:104
-msgid "Contact Phone"
-msgstr "Contact Phone"
+#: src/pages/Customers/CustomersPage.tsx:161
+msgid "Contact"
+msgstr "Contact"
 
 #: src/pages/Employees/EmployeeCreate.tsx:214
 #: src/pages/Employees/EmployeeDetail.tsx:100
@@ -378,11 +340,6 @@ msgstr "Create a new root organizational unit."
 #: src/pages/Employees/EmployeeCreate.tsx:322
 msgid "Create Employee"
 msgstr "Create Employee"
-
-#: src/components/GuardBookManager.tsx:623
-#: src/components/GuardBookManager.tsx:638
-msgid "Create Guard Book"
-msgstr "Create Guard Book"
 
 #: src/pages/Employees/EmployeeCreate.tsx:102
 msgid "Create New Employee"
@@ -428,23 +385,13 @@ msgstr "Current parent:"
 msgid "Custom"
 msgstr "Custom"
 
-#: src/components/CustomerTree.tsx:528
-msgid "Customer hierarchy"
-msgstr "Customer hierarchy"
-
-#: src/components/CustomerTree.tsx:517
-msgid "Customer Hierarchy"
-msgstr "Customer Hierarchy"
-
-#: src/pages/Organization/CustomersPage.tsx:80
+#: src/pages/Customers/CustomersPage.tsx:155
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:240
-#: src/components/application-layout.tsx:322
-#: src/pages/Organization/CustomersPage.tsx:51
-#: src/pages/Organization/GuardBooksPage.tsx:65
-#: src/pages/Organization/ObjectsPage.tsx:72
+#: src/components/application-layout.tsx:223
+#: src/components/application-layout.tsx:305
+#: src/pages/Customers/CustomersPage.tsx:85
 msgid "Customers"
 msgstr "Customers"
 
@@ -464,21 +411,6 @@ msgstr "Delete"
 msgid "Delete \"{unitName}\"?"
 msgstr "Delete \"{unitName}\"?"
 
-#. placeholder {0}: area.name
-#. placeholder {0}: customer.name
-#. placeholder {0}: guardBook.title
-#: src/components/CustomerTree.tsx:308
-#: src/components/GuardBookManager.tsx:235
-#: src/components/ObjectManager.tsx:197
-#: src/components/ObjectManager.tsx:433
-msgid "Delete {0}"
-msgstr "Delete {0}"
-
-#. placeholder {0}: report.report_number
-#: src/components/GuardBookManager.tsx:442
-msgid "Delete report {0}"
-msgstr "Delete report {0}"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:150
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Deleting organizational units is not possible while offline. Please reconnect to make changes."
@@ -492,7 +424,6 @@ msgstr "Deleting..."
 msgid "Department"
 msgstr "Department"
 
-#: src/components/ObjectManager.tsx:378
 #: src/components/OrganizationalUnitFormDialog.tsx:333
 #: src/pages/Organization/OrganizationPage.tsx:330
 msgid "Description"
@@ -541,16 +472,6 @@ msgstr "e.g., Berlin Branch"
 msgid "Edit"
 msgstr "Edit"
 
-#. placeholder {0}: area.name
-#. placeholder {0}: customer.name
-#. placeholder {0}: guardBook.title
-#: src/components/CustomerTree.tsx:286
-#: src/components/GuardBookManager.tsx:210
-#: src/components/ObjectManager.tsx:172
-#: src/components/ObjectManager.tsx:412
-msgid "Edit {0}"
-msgstr "Edit {0}"
-
 #: src/pages/Employees/EmployeeEdit.tsx:177
 msgid "Edit Employee"
 msgstr "Edit Employee"
@@ -579,15 +500,15 @@ msgstr "Email"
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/Employees/EmployeeList.tsx:245
+#: src/pages/Employees/EmployeeList.tsx:243
 msgid "Employee"
 msgstr "Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:248
+#: src/pages/Employees/EmployeeList.tsx:246
 msgid "Employee #"
 msgstr "Employee #"
 
-#: src/pages/Employees/EmployeeList.tsx:155
+#: src/pages/Employees/EmployeeList.tsx:153
 msgid "Employee Management"
 msgstr "Employee Management"
 
@@ -595,8 +516,8 @@ msgstr "Employee Management"
 msgid "Employee Number"
 msgstr "Employee Number"
 
-#: src/components/application-layout.tsx:256
-#: src/components/application-layout.tsx:344
+#: src/components/application-layout.tsx:239
+#: src/components/application-layout.tsx:316
 msgid "Employees"
 msgstr "Employees"
 
@@ -631,7 +552,7 @@ msgstr "Error"
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:234
+#: src/pages/Employees/EmployeeList.tsx:232
 msgid "Error Loading Employees"
 msgstr "Error Loading Employees"
 
@@ -647,11 +568,6 @@ msgstr "Error Loading Secrets"
 msgid "Errors:"
 msgstr "Errors:"
 
-#: src/components/GuardBookManager.tsx:376
-msgid "Events"
-msgstr "Events"
-
-#: src/components/CustomerTree.tsx:222
 #: src/components/OrganizationalUnitTree.tsx:264
 msgid "Expand"
 msgstr "Expand"
@@ -685,82 +601,29 @@ msgstr "Expires: {0}"
 msgid "Expiring Soon"
 msgstr "Expiring Soon"
 
-#. placeholder {0}: report.report_number
-#: src/components/GuardBookManager.tsx:412
-msgid "Export report {0}"
-msgstr "Export report {0}"
-
 #: src/components/UploadStatus.tsx:119
 msgid "Failed to clear uploads"
 msgstr "Failed to clear uploads"
-
-#: src/components/ObjectManager.tsx:316
-msgid "Failed to delete area"
-msgstr "Failed to delete area"
 
 #: src/pages/Secrets/SecretDetail.tsx:174
 msgid "Failed to delete attachment"
 msgstr "Failed to delete attachment"
 
-#: src/components/CustomerTree.tsx:468
-msgid "Failed to delete customer"
-msgstr "Failed to delete customer"
-
 #: src/components/UploadStatus.tsx:151
 msgid "Failed to delete file"
 msgstr "Failed to delete file"
-
-#: src/components/GuardBookManager.tsx:585
-msgid "Failed to delete guard book"
-msgstr "Failed to delete guard book"
-
-#: src/components/ObjectManager.tsx:586
-msgid "Failed to delete object"
-msgstr "Failed to delete object"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:100
 msgid "Failed to delete organizational unit"
 msgstr "Failed to delete organizational unit"
 
-#: src/components/GuardBookManager.tsx:332
-msgid "Failed to delete report"
-msgstr "Failed to delete report"
-
 #: src/pages/Secrets/SecretDetail.tsx:147
 msgid "Failed to download attachment"
 msgstr "Failed to download attachment"
 
-#: src/components/GuardBookManager.tsx:307
-msgid "Failed to export report"
-msgstr "Failed to export report"
-
-#: src/components/ObjectManager.tsx:291
-msgid "Failed to load areas"
-msgstr "Failed to load areas"
-
-#: src/components/CustomerTree.tsx:441
-msgid "Failed to load customers"
-msgstr "Failed to load customers"
-
-#: src/components/GuardBookManager.tsx:537
-msgid "Failed to load guard books"
-msgstr "Failed to load guard books"
-
-#: src/components/ObjectManager.tsx:528
-msgid "Failed to load objects"
-msgstr "Failed to load objects"
-
 #: src/pages/Secrets/SecretDetail.tsx:194
 msgid "Failed to load preview"
 msgstr "Failed to load preview"
-
-#: src/components/GuardBookManager.tsx:281
-msgid "Failed to load reports"
-msgstr "Failed to load reports"
-
-#: src/components/ObjectManager.tsx:549
-msgid "Failed to load selected object"
-msgstr "Failed to load selected object"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:346
 msgid "Failed to move organizational unit"
@@ -812,34 +675,9 @@ msgstr "Full Name"
 msgid "Full Time"
 msgstr "Full Time"
 
-#: src/components/GuardBookManager.tsx:199
-msgid "Generate Report"
-msgstr "Generate Report"
-
-#: src/components/GuardBookManager.tsx:379
-msgid "Generated"
-msgstr "Generated"
-
-#: src/components/CustomerTree.tsx:502
-msgid "Get started by adding your first customer."
-msgstr "Get started by adding your first customer."
-
-#: src/components/ObjectManager.tsx:624
-msgid "Get started by adding your first object."
-msgstr "Get started by adding your first object."
-
-#: src/components/GuardBookManager.tsx:619
-msgid "Get started by creating your first guard book."
-msgstr "Get started by creating your first guard book."
-
 #: src/components/OrganizationalUnitTree.tsx:813
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
-
-#: src/pages/Organization/GuardBooksPage.tsx:37
-#: src/pages/Organization/ObjectsPage.tsx:34
-msgid "Go to Customers"
-msgstr "Go to Customers"
 
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at)
@@ -855,13 +693,7 @@ msgstr "Grid"
 msgid "Grid view"
 msgstr "Grid view"
 
-#: src/components/application-layout.tsx:248
-#: src/components/application-layout.tsx:333
-#: src/components/GuardBookManager.tsx:634
-#: src/components/ObjectManager.tsx:254
-#: src/pages/Organization/GuardBooksPage.tsx:29
-#: src/pages/Organization/GuardBooksPage.tsx:76
-#: src/pages/Organization/GuardBooksPage.tsx:80
+#: src/components/application-layout.tsx:231
 msgid "Guard Books"
 msgstr "Guard Books"
 
@@ -874,13 +706,15 @@ msgstr "Hide"
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:222
-#: src/components/application-layout.tsx:295
+#: src/components/application-layout.tsx:205
+#: src/components/application-layout.tsx:278
 msgid "Home"
 msgstr "Home"
 
-#: src/components/GuardBookManager.tsx:182
-#: src/components/GuardBookManager.tsx:677
+#: src/pages/Customers/CustomersPage.tsx:124
+#: src/pages/Customers/CustomersPage.tsx:192
+#: src/pages/Sites/SitesPage.tsx:152
+#: src/pages/Sites/SitesPage.tsx:226
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -940,7 +774,7 @@ msgstr "Loading documents..."
 msgid "Loading employee..."
 msgstr "Loading employee..."
 
-#: src/pages/Employees/EmployeeList.tsx:145
+#: src/pages/Employees/EmployeeList.tsx:143
 msgid "Loading employees..."
 msgstr "Loading employees..."
 
@@ -963,9 +797,11 @@ msgstr "Loading secrets..."
 
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
+#: src/pages/Customers/CustomersPage.tsx:141
 #: src/pages/Employees/EmployeeCreate.tsx:242
 #: src/pages/Employees/EmployeeEdit.tsx:317
 #: src/pages/Secrets/SecretEdit.tsx:116
+#: src/pages/Sites/SitesPage.tsx:169
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -997,18 +833,6 @@ msgstr "Login requires an internet connection. Please check your connection and 
 #: src/components/MoveOrganizationalUnitDialog.tsx:453
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
-
-#: src/pages/Organization/CustomersPage.tsx:54
-msgid "Manage customer organizations and their protected objects."
-msgstr "Manage customer organizations and their protected objects."
-
-#: src/pages/Organization/GuardBooksPage.tsx:83
-msgid "Manage digital guard books and generate reports for this location."
-msgstr "Manage digital guard books and generate reports for this location."
-
-#: src/pages/Organization/ObjectsPage.tsx:83
-msgid "Manage protected objects and their areas for this customer."
-msgstr "Manage protected objects and their areas for this customer."
 
 #: src/pages/Settings/SettingsPage.tsx:24
 msgid "Manage your application preferences."
@@ -1060,14 +884,15 @@ msgstr "Moving..."
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/components/application-layout.tsx:162
+#: src/components/application-layout.tsx:145
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
 
-#: src/components/ObjectManager.tsx:375
 #: src/components/OrganizationalUnitFormDialog.tsx:284
+#: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
+#: src/pages/Sites/SitesPage.tsx:186
 msgid "Name"
 msgstr "Name"
 
@@ -1079,6 +904,10 @@ msgstr "Name is required"
 msgid "Name must be at most 255 characters"
 msgstr "Name must be at most 255 characters"
 
+#: src/pages/Customers/CustomersPage.tsx:88
+msgid "New Customer"
+msgstr "New Customer"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx:439
 msgid "New parent"
 msgstr "New parent"
@@ -1087,19 +916,19 @@ msgstr "New parent"
 msgid "New Secret"
 msgstr "New Secret"
 
-#: src/pages/Employees/EmployeeList.tsx:315
-#: src/pages/Employees/EmployeeList.tsx:357
+#: src/pages/Sites/SitesPage.tsx:96
+msgid "New Site"
+msgstr "New Site"
+
+#: src/pages/Customers/CustomersPage.tsx:226
+#: src/pages/Customers/CustomersPage.tsx:268
+#: src/pages/Employees/EmployeeList.tsx:313
+#: src/pages/Employees/EmployeeList.tsx:355
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
+#: src/pages/Sites/SitesPage.tsx:260
+#: src/pages/Sites/SitesPage.tsx:302
 msgid "Next"
 msgstr "Next"
-
-#: src/components/ObjectManager.tsx:402
-msgid "No"
-msgstr "No"
-
-#: src/components/ObjectManager.tsx:347
-msgid "No areas defined for this object."
-msgstr "No areas defined for this object."
 
 #: src/components/AttachmentList.tsx:126
 msgid "No attachments yet"
@@ -1109,13 +938,9 @@ msgstr "No attachments yet"
 msgid "No content shared"
 msgstr "No content shared"
 
-#: src/pages/Organization/ObjectsPage.tsx:31
-msgid "No customer selected. Please select a customer first."
-msgstr "No customer selected. Please select a customer first."
-
-#: src/components/CustomerTree.tsx:499
-msgid "No Customers"
-msgstr "No Customers"
+#: src/pages/Customers/CustomersPage.tsx:147
+msgid "No customers found"
+msgstr "No customers found"
 
 #: src/pages/Employees/EmployeeDetail.tsx:218
 msgid "No documents uploaded"
@@ -1125,22 +950,10 @@ msgstr "No documents uploaded"
 msgid "No Expiration"
 msgstr "No Expiration"
 
-#: src/components/GuardBookManager.tsx:616
-msgid "No Guard Books"
-msgstr "No Guard Books"
-
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:163
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
-
-#: src/pages/Organization/GuardBooksPage.tsx:32
-msgid "No object selected. Please navigate from the objects page."
-msgstr "No object selected. Please navigate from the objects page."
-
-#: src/components/ObjectManager.tsx:621
-msgid "No Objects"
-msgstr "No Objects"
 
 #: src/components/OrganizationalUnitTree.tsx:810
 msgid "No Organizational Units"
@@ -1154,10 +967,6 @@ msgstr "No parent (root unit)"
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
-#: src/components/GuardBookManager.tsx:359
-msgid "No reports generated yet."
-msgstr "No reports generated yet."
-
 #: src/pages/Secrets/SecretList.tsx:250
 msgid "No secrets found"
 msgstr "No secrets found"
@@ -1165,6 +974,10 @@ msgstr "No secrets found"
 #: src/pages/Secrets/SecretList.tsx:248
 msgid "No secrets yet"
 msgstr "No secrets yet"
+
+#: src/pages/Sites/SitesPage.tsx:175
+msgid "No sites found"
+msgstr "No sites found"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:364
 msgid "No unit selected"
@@ -1194,25 +1007,6 @@ msgstr "Notifications Enabled"
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 
-#: src/components/ObjectManager.tsx:362
-msgid "Object Areas"
-msgstr "Object Areas"
-
-#: src/components/CustomerTree.tsx:254
-msgid "objects"
-msgstr "objects"
-
-#: src/components/ObjectManager.tsx:639
-#: src/pages/Organization/GuardBooksPage.tsx:72
-#: src/pages/Organization/ObjectsPage.tsx:28
-#: src/pages/Organization/ObjectsPage.tsx:76
-msgid "Objects"
-msgstr "Objects"
-
-#: src/pages/Organization/ObjectsPage.tsx:80
-msgid "Objects & Areas"
-msgstr "Objects & Areas"
-
 #: src/components/SyncStatusIndicator.tsx:158
 msgid "Offline - will sync when online"
 msgstr "Offline - will sync when online"
@@ -1227,8 +1021,8 @@ msgstr "OK"
 
 #: src/pages/Employees/EmployeeCreate.tsx:272
 #: src/pages/Employees/EmployeeDetail.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:48
-#: src/pages/Employees/EmployeeList.tsx:219
+#: src/pages/Employees/EmployeeList.tsx:46
+#: src/pages/Employees/EmployeeList.tsx:217
 msgid "On Leave"
 msgstr "On Leave"
 
@@ -1240,8 +1034,8 @@ msgstr "Optional description for this unit."
 msgid "Optional description..."
 msgstr "Optional description..."
 
-#: src/components/application-layout.tsx:232
-#: src/components/application-layout.tsx:311
+#: src/components/application-layout.tsx:215
+#: src/components/application-layout.tsx:294
 msgid "Organization"
 msgstr "Organization"
 
@@ -1256,7 +1050,7 @@ msgstr "Organizational structure"
 #: src/pages/Employees/EmployeeCreate.tsx:229
 #: src/pages/Employees/EmployeeDetail.tsx:105
 #: src/pages/Employees/EmployeeEdit.tsx:304
-#: src/pages/Employees/EmployeeList.tsx:182
+#: src/pages/Employees/EmployeeList.tsx:180
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
@@ -1295,9 +1089,10 @@ msgstr "Password"
 msgid "Pending sync"
 msgstr "Pending sync"
 
-#: src/components/GuardBookManager.tsx:373
-msgid "Period"
-msgstr "Period"
+#: src/pages/Sites/SitesPage.tsx:127
+#: src/pages/Sites/SitesPage.tsx:212
+msgid "Permanent"
+msgstr "Permanent"
 
 #: src/components/ShareDialog.tsx:201
 msgid "Permission Levels:"
@@ -1326,7 +1121,7 @@ msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 #: src/pages/Employees/EmployeeCreate.tsx:201
 #: src/pages/Employees/EmployeeDetail.tsx:83
 #: src/pages/Employees/EmployeeEdit.tsx:276
-#: src/pages/Employees/EmployeeList.tsx:251
+#: src/pages/Employees/EmployeeList.tsx:249
 msgid "Position"
 msgstr "Position"
 
@@ -1336,8 +1131,8 @@ msgstr "Powered by SecPal - a guard's best friend"
 
 #: src/pages/Employees/EmployeeCreate.tsx:266
 #: src/pages/Employees/EmployeeDetail.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:213
+#: src/pages/Employees/EmployeeList.tsx:44
+#: src/pages/Employees/EmployeeList.tsx:211
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
 
@@ -1349,9 +1144,13 @@ msgstr "Preview"
 msgid "Preview not available for this file type."
 msgstr "Preview not available for this file type."
 
-#: src/pages/Employees/EmployeeList.tsx:308
-#: src/pages/Employees/EmployeeList.tsx:349
+#: src/pages/Customers/CustomersPage.tsx:219
+#: src/pages/Customers/CustomersPage.tsx:260
+#: src/pages/Employees/EmployeeList.tsx:306
+#: src/pages/Employees/EmployeeList.tsx:347
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
+#: src/pages/Sites/SitesPage.tsx:253
+#: src/pages/Sites/SitesPage.tsx:294
 msgid "Previous"
 msgstr "Previous"
 
@@ -1392,19 +1191,6 @@ msgstr "Reminders about upcoming shifts and duties"
 msgid "Removed {filename} from queue"
 msgstr "Removed {filename} from queue"
 
-#: src/components/GuardBookManager.tsx:370
-msgid "Report #"
-msgstr "Report #"
-
-#: src/components/GuardBookManager.tsx:684
-msgid "Reports"
-msgstr "Reports"
-
-#: src/components/CustomerTree.tsx:486
-#: src/components/GuardBookManager.tsx:348
-#: src/components/GuardBookManager.tsx:603
-#: src/components/ObjectManager.tsx:336
-#: src/components/ObjectManager.tsx:608
 #: src/components/OrganizationalUnitTree.tsx:797
 msgid "Retry"
 msgstr "Retry"
@@ -1451,13 +1237,19 @@ msgstr "Save to Secret"
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/pages/Employees/EmployeeList.tsx:169
+#: src/pages/Customers/CustomersPage.tsx:96
+#: src/pages/Employees/EmployeeList.tsx:167
+#: src/pages/Sites/SitesPage.tsx:104
 msgid "Search"
 msgstr "Search"
 
-#: src/pages/Employees/EmployeeList.tsx:174
+#: src/pages/Employees/EmployeeList.tsx:172
 msgid "Search by name or email..."
 msgstr "Search by name or email..."
+
+#: src/pages/Customers/CustomersPage.tsx:101
+msgid "Search customers..."
+msgstr "Search customers..."
 
 #: src/pages/Secrets/SecretList.tsx:177
 msgid "Search secrets"
@@ -1467,16 +1259,20 @@ msgstr "Search secrets"
 msgid "Search secrets..."
 msgstr "Search secrets..."
 
-#: src/App.tsx:55
+#: src/pages/Sites/SitesPage.tsx:109
+msgid "Search sites..."
+msgstr "Search sites..."
+
+#: src/App.tsx:52
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:76
+#: src/App.tsx:73
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
-#: src/components/application-layout.tsx:225
-#: src/components/application-layout.tsx:301
+#: src/components/application-layout.tsx:208
+#: src/components/application-layout.tsx:284
 #: src/pages/Secrets/SecretList.tsx:152
 msgid "Secrets"
 msgstr "Secrets"
@@ -1485,21 +1281,9 @@ msgstr "Secrets"
 msgid "Security Alerts"
 msgstr "Security Alerts"
 
-#: src/pages/Organization/CustomersPage.tsx:139
-msgid "Select a customer to view details"
-msgstr "Select a customer to view details"
-
-#: src/components/GuardBookManager.tsx:694
-msgid "Select a guard book to view reports"
-msgstr "Select a guard book to view reports"
-
 #: src/components/MoveOrganizationalUnitDialog.tsx:390
 msgid "Select a new parent for this organizational unit."
 msgstr "Select a new parent for this organizational unit."
-
-#: src/components/ObjectManager.tsx:706
-msgid "Select an object to view details"
-msgstr "Select an object to view details"
 
 #: src/pages/Organization/OrganizationPage.tsx:370
 msgid "Select an organizational unit to view details"
@@ -1513,7 +1297,7 @@ msgstr "Select Files"
 msgid "Select new parent"
 msgstr "Select new parent"
 
-#: src/components/OrganizationalUnitPicker.tsx:237
+#: src/components/OrganizationalUnitPicker.tsx:238
 #: src/pages/Employees/EmployeeCreate.tsx:244
 #: src/pages/Employees/EmployeeEdit.tsx:319
 msgid "Select organizational unit"
@@ -1531,16 +1315,12 @@ msgstr "Select user or role..."
 msgid "Send Test"
 msgstr "Send Test"
 
-#: src/components/ObjectManager.tsx:381
-msgid "Separate Guard Book"
-msgstr "Separate Guard Book"
-
 #: src/components/ConflictResolutionDialog.tsx:169
 msgid "Server Version"
 msgstr "Server Version"
 
-#: src/components/application-layout.tsx:168
-#: src/components/application-layout.tsx:359
+#: src/components/application-layout.tsx:151
+#: src/components/application-layout.tsx:331
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Settings"
@@ -1590,17 +1370,40 @@ msgstr "Show"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:321
+#: src/pages/Customers/CustomersPage.tsx:232
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
+msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Employees/EmployeeList.tsx:319
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Sites/SitesPage.tsx:266
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
+msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 
 #: src/components/OfflineDataBanner.tsx:106
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
-#: src/components/application-layout.tsx:175
+#: src/components/application-layout.tsx:158
 msgid "Sign out"
 msgstr "Sign out"
+
+#: src/pages/Sites/SitesPage.tsx:183
+msgid "Site Number"
+msgstr "Site Number"
+
+#: src/pages/Customers/CustomersPage.tsx:164
+#: src/pages/Sites/SitesPage.tsx:93
+msgid "Sites"
+msgstr "Sites"
 
 #: src/components/OfflineIndicator.tsx:96
 msgid "Some features may be limited. Your changes will sync when you're back online."
@@ -1610,10 +1413,14 @@ msgstr "Some features may be limited. Your changes will sync when you're back on
 msgid "Source Code"
 msgstr "Source Code"
 
+#: src/pages/Customers/CustomersPage.tsx:108
+#: src/pages/Customers/CustomersPage.tsx:167
 #: src/pages/Employees/EmployeeCreate.tsx:257
 #: src/pages/Employees/EmployeeDetail.tsx:88
-#: src/pages/Employees/EmployeeList.tsx:196
-#: src/pages/Employees/EmployeeList.tsx:254
+#: src/pages/Employees/EmployeeList.tsx:194
+#: src/pages/Employees/EmployeeList.tsx:252
+#: src/pages/Sites/SitesPage.tsx:136
+#: src/pages/Sites/SitesPage.tsx:195
 msgid "Status"
 msgstr "Status"
 
@@ -1662,14 +1469,19 @@ msgstr "Tags"
 msgid "Team Messages"
 msgstr "Team Messages"
 
+#: src/pages/Sites/SitesPage.tsx:130
+#: src/pages/Sites/SitesPage.tsx:214
+msgid "Temporary"
+msgstr "Temporary"
+
 #: src/pages/Employees/EmployeeDetail.tsx:393
 msgid "Terminate"
 msgstr "Terminate"
 
 #: src/pages/Employees/EmployeeCreate.tsx:275
 #: src/pages/Employees/EmployeeDetail.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:49
-#: src/pages/Employees/EmployeeList.tsx:222
+#: src/pages/Employees/EmployeeList.tsx:47
+#: src/pages/Employees/EmployeeList.tsx:220
 msgid "Terminated"
 msgstr "Terminated"
 
@@ -1729,6 +1541,8 @@ msgstr "Try Again"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:303
 #: src/pages/Organization/OrganizationPage.tsx:321
+#: src/pages/Sites/SitesPage.tsx:116
+#: src/pages/Sites/SitesPage.tsx:189
 msgid "Type"
 msgstr "Type"
 
@@ -1740,7 +1554,7 @@ msgstr "Type is required"
 msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 msgstr "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
 
-#: src/pages/Employees/EmployeeList.tsx:257
+#: src/pages/Employees/EmployeeList.tsx:255
 msgid "Unit"
 msgstr "Unit"
 
@@ -1809,20 +1623,13 @@ msgstr "Username"
 msgid "Users"
 msgstr "Users"
 
-#: src/pages/Employees/EmployeeList.tsx:290
+#: src/pages/Customers/CustomersPage.tsx:201
+#: src/pages/Employees/EmployeeList.tsx:288
+#: src/pages/Sites/SitesPage.tsx:235
 msgid "View"
 msgstr "View"
 
-#: src/pages/Organization/CustomersPage.tsx:132
-msgid "View Objects"
-msgstr "View Objects"
-
-#. placeholder {0}: customer.name
-#: src/components/CustomerTree.tsx:264
-msgid "View objects for {0}"
-msgstr "View objects for {0}"
-
-#: src/App.tsx:59
+#: src/App.tsx:56
 msgid "View Secrets"
 msgstr "View Secrets"
 
@@ -1834,7 +1641,7 @@ msgstr "View your account information."
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Viewing cached data. Some units may be outdated."
 
-#: src/App.tsx:52
+#: src/App.tsx:49
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
@@ -1845,10 +1652,6 @@ msgstr "Welcome to SecPal Onboarding"
 #: src/components/ShareDialog.tsx:173
 msgid "Write"
 msgstr "Write"
-
-#: src/components/ObjectManager.tsx:398
-msgid "Yes"
-msgstr "Yes"
 
 #: src/components/OrganizationalRoute.tsx:46
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
