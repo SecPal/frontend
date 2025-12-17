@@ -6,12 +6,12 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { SitesPage } from "./SitesPage";
-import * as sitesApi from "../../services/sitesApi";
-import type { Site, SiteListResponse } from "../../types/customers";
+import SitesPage from "./SitesPage";
+import * as customersApi from "../../services/customersApi";
+import type { Site, PaginatedResponse } from "../../types/customers";
 
-// Mock the sites API
-vi.mock("../../services/sitesApi");
+// Mock the customers API
+vi.mock("../../services/customersApi");
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -31,17 +31,16 @@ const mockSites: Site[] = [
     name: "Main Office",
     type: "permanent",
     address: {
-      id: "addr-1",
-      type: "site",
       street: "Main St",
-      house_number: "123",
       postal_code: "12345",
       city: "Berlin",
-      state: "Berlin",
       country: "Germany",
     },
     is_active: true,
     customer_id: "cust-1",
+    organizational_unit_id: "unit-1",
+    is_expired: false,
+    full_address: "Main St, 12345 Berlin, Germany",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
@@ -51,25 +50,24 @@ const mockSites: Site[] = [
     name: "Project Site Alpha",
     type: "temporary",
     address: {
-      id: "addr-2",
-      type: "site",
       street: "Project Rd",
-      house_number: "456",
       postal_code: "54321",
       city: "Munich",
-      state: "Bavaria",
       country: "Germany",
     },
     is_active: true,
     customer_id: "cust-2",
+    organizational_unit_id: "unit-2",
     valid_from: "2025-01-01",
     valid_until: "2025-12-31",
+    is_expired: false,
+    full_address: "Project Rd, 54321 Munich, Germany",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
 ];
 
-const mockResponse: SiteListResponse = {
+const mockResponse: PaginatedResponse<Site> = {
   data: mockSites,
   meta: {
     current_page: 1,
@@ -82,7 +80,7 @@ const mockResponse: SiteListResponse = {
 describe("SitesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(sitesApi.listSites).mockResolvedValue(mockResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(mockResponse);
   });
 
   it("should render sites list with table", async () => {
@@ -104,7 +102,7 @@ describe("SitesPage", () => {
   });
 
   it("should handle API errors gracefully", async () => {
-    vi.mocked(sitesApi.listSites).mockRejectedValue(new Error("API Error"));
+    vi.mocked(customersApi.listSites).mockRejectedValue(new Error("API Error"));
 
     renderWithProviders();
 
@@ -124,7 +122,7 @@ describe("SitesPage", () => {
     fireEvent.change(searchInput, { target: { value: "Main" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ search: "Main" })
       );
     });
@@ -141,7 +139,7 @@ describe("SitesPage", () => {
     fireEvent.change(typeSelect, { target: { value: "permanent" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ site_type: "permanent" })
       );
     });
@@ -158,7 +156,7 @@ describe("SitesPage", () => {
     fireEvent.change(statusSelect, { target: { value: "false" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ is_active: false })
       );
     });
@@ -224,7 +222,7 @@ describe("SitesPage", () => {
   });
 
   it("should handle pagination", async () => {
-    const paginatedResponse: SiteListResponse = {
+    const paginatedResponse: PaginatedResponse<Site> = {
       ...mockResponse,
       meta: {
         current_page: 1,
@@ -233,7 +231,7 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(sitesApi.listSites).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
 
     renderWithProviders();
 
@@ -255,7 +253,7 @@ describe("SitesPage", () => {
   });
 
   it("should change page when pagination buttons are clicked", async () => {
-    const paginatedResponse: SiteListResponse = {
+    const paginatedResponse: PaginatedResponse<Site> = {
       ...mockResponse,
       meta: {
         current_page: 1,
@@ -264,7 +262,7 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(sitesApi.listSites).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
 
     renderWithProviders();
 
@@ -276,14 +274,14 @@ describe("SitesPage", () => {
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })
       );
     });
   });
 
   it("should display pagination info correctly", async () => {
-    const paginatedResponse: SiteListResponse = {
+    const paginatedResponse: PaginatedResponse<Site> = {
       ...mockResponse,
       meta: {
         current_page: 1,
@@ -292,7 +290,7 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(sitesApi.listSites).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
 
     renderWithProviders();
 
@@ -314,7 +312,7 @@ describe("SitesPage", () => {
     fireEvent.change(searchInput, { target: { value: "Project" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ search: "Project", page: 1 })
       );
     });
@@ -331,7 +329,7 @@ describe("SitesPage", () => {
     fireEvent.change(typeSelect, { target: { value: "temporary" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ site_type: "temporary", page: 1 })
       );
     });
@@ -348,7 +346,7 @@ describe("SitesPage", () => {
     fireEvent.change(statusSelect, { target: { value: "false" } });
 
     await waitFor(() => {
-      expect(sitesApi.listSites).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ is_active: false, page: 1 })
       );
     });

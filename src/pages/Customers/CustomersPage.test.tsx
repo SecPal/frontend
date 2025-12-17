@@ -6,9 +6,9 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { CustomersPage } from "./CustomersPage";
+import CustomersPage from "./CustomersPage";
 import * as customersApi from "../../services/customersApi";
-import type { Customer, CustomerListResponse } from "../../types/customers";
+import type { Customer, PaginatedResponse } from "../../types/customers";
 
 // Mock the customers API
 vi.mock("../../services/customersApi");
@@ -29,17 +29,10 @@ const mockCustomers: Customer[] = [
     id: "cust-1",
     customer_number: "C001",
     name: "Acme Corp",
-    short_name: "ACME",
-    legal_form: "GmbH",
-    tax_id: "DE123456789",
     billing_address: {
-      id: "addr-1",
-      type: "billing",
       street: "Main St",
-      house_number: "123",
       postal_code: "12345",
       city: "Berlin",
-      state: "Berlin",
       country: "Germany",
     },
     is_active: true,
@@ -50,17 +43,10 @@ const mockCustomers: Customer[] = [
     id: "cust-2",
     customer_number: "C002",
     name: "Tech Solutions Ltd",
-    short_name: "TECH",
-    legal_form: "AG",
-    tax_id: "DE987654321",
     billing_address: {
-      id: "addr-2",
-      type: "billing",
       street: "Tech Ave",
-      house_number: "456",
       postal_code: "54321",
       city: "Munich",
-      state: "Bavaria",
       country: "Germany",
     },
     is_active: true,
@@ -69,7 +55,7 @@ const mockCustomers: Customer[] = [
   },
 ];
 
-const mockResponse: CustomerListResponse = {
+const mockResponse: PaginatedResponse<Customer> = {
   data: mockCustomers,
   meta: {
     current_page: 1,
@@ -96,7 +82,6 @@ describe("CustomersPage", () => {
 
     expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
-    expect(screen.getByText("ACME")).toBeInTheDocument();
   });
 
   it("should display loading state initially", () => {
@@ -159,7 +144,6 @@ describe("CustomersPage", () => {
 
     // Check all customer fields are displayed
     expect(screen.getByText("C001")).toBeInTheDocument();
-    expect(screen.getByText("ACME")).toBeInTheDocument();
     expect(screen.getByText("Berlin, Germany")).toBeInTheDocument();
     expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
   });
@@ -199,7 +183,7 @@ describe("CustomersPage", () => {
   });
 
   it("should handle pagination", async () => {
-    const paginatedResponse: CustomerListResponse = {
+    const paginatedResponse: PaginatedResponse<Customer> = {
       ...mockResponse,
       meta: {
         current_page: 1,
@@ -230,7 +214,7 @@ describe("CustomersPage", () => {
   });
 
   it("should change page when pagination buttons are clicked", async () => {
-    const paginatedResponse: CustomerListResponse = {
+    const paginatedResponse: PaginatedResponse<Customer> = {
       ...mockResponse,
       meta: {
         current_page: 1,
@@ -258,7 +242,7 @@ describe("CustomersPage", () => {
   });
 
   it("should display pagination info correctly", async () => {
-    const paginatedResponse: CustomerListResponse = {
+    const paginatedResponse: PaginatedResponse<Customer> = {
       ...mockResponse,
       meta: {
         current_page: 1,
