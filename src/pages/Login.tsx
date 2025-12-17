@@ -12,6 +12,7 @@ import { checkHealth, HealthStatus } from "../services/healthApi";
 import { AuthLayout } from "../components/auth-layout";
 import { Footer } from "../components/Footer";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { Logo } from "../components/Logo";
 import { Button } from "../components/button";
 import { Field, Label } from "../components/fieldset";
 import { Input } from "../components/input";
@@ -130,7 +131,10 @@ export function Login() {
   return (
     <AuthLayout>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">SecPal</h1>
+        <div className="flex items-center gap-3">
+          <Logo size="48" />
+          <h1 className="text-3xl font-bold">SecPal</h1>
+        </div>
         <LanguageSwitcher />
       </div>
 

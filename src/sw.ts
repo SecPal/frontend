@@ -738,8 +738,8 @@ self.addEventListener("push", (event: PushEvent) => {
     actions?: Array<{ action: string; title: string }>;
   } = {
     body: payload.body,
-    icon: payload.icon || "/pwa-192x192.svg",
-    badge: payload.badge || "/pwa-192x192.svg",
+    icon: payload.icon || "/pwa-192x192.png",
+    badge: payload.badge || "/pwa-192x192.png",
     tag: payload.tag || "default",
     requireInteraction: payload.requireInteraction || false,
     data: {

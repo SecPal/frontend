@@ -58,21 +58,29 @@ export default defineConfig(({ mode }) => {
           start_url: "/",
           icons: [
             {
-              src: "pwa-192x192.svg",
+              src: "pwa-192x192.png",
               sizes: "192x192",
-              type: "image/svg+xml",
+              type: "image/png",
+              purpose: "any",
             },
             {
-              src: "pwa-512x512.svg",
+              src: "pwa-512x512.png",
               sizes: "512x512",
-              type: "image/svg+xml",
+              type: "image/png",
+              purpose: "any",
             },
-            // Duplicate 512x512 entry with 'any maskable' purpose for adaptive icons
+            // Maskable icons with 15% safe-area padding (80% safe zone)
             {
-              src: "pwa-512x512.svg",
+              src: "pwa-192x192-maskable.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "maskable",
+            },
+            {
+              src: "pwa-512x512-maskable.png",
               sizes: "512x512",
-              type: "image/svg+xml",
-              purpose: "any maskable",
+              type: "image/png",
+              purpose: "maskable",
             },
           ],
           shortcuts: [
@@ -83,9 +91,9 @@ export default defineConfig(({ mode }) => {
               url: "/schedule",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -96,9 +104,9 @@ export default defineConfig(({ mode }) => {
               url: "/reports/new",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -109,9 +117,9 @@ export default defineConfig(({ mode }) => {
               url: "/profile",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -122,9 +130,9 @@ export default defineConfig(({ mode }) => {
               url: "/emergency",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
