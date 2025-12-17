@@ -92,7 +92,7 @@ export default function SitesPage() {
         <Heading>
           <Trans>Sites</Trans>
         </Heading>
-        <Button href="/sites/new" color="indigo">
+        <Button href="/sites/new">
           <Trans>New Site</Trans>
         </Button>
       </div>

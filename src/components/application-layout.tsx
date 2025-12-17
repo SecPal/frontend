@@ -225,14 +225,6 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             )}
             {hasOrgAccess && (
               <NavbarItem
-                href="/guard-books"
-                current={isCurrentPath("/guard-books")}
-              >
-                <Trans>Guard Books</Trans>
-              </NavbarItem>
-            )}
-            {hasOrgAccess && (
-              <NavbarItem
                 href="/employees"
                 current={isCurrentPath("/employees")}
               >

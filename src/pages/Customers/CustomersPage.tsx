@@ -84,7 +84,7 @@ export default function CustomersPage() {
         <Heading>
           <Trans>Customers</Trans>
         </Heading>
-        <Button href="/customers/new" color="indigo">
+        <Button href="/customers/new">
           <Trans>New Customer</Trans>
         </Button>
       </div>
