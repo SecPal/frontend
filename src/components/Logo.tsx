@@ -18,21 +18,23 @@ interface LogoProps {
 
 export function Logo({ className = "", size = "64" }: LogoProps) {
   return (
-    <>
+    <div role="img" aria-label="SecPal" className={className}>
       <img
         src={`/logo-light-${size}.png`}
-        alt="SecPal"
-        className={`${className} dark:hidden`}
+        alt=""
+        aria-hidden="true"
+        className="dark:hidden"
         width={size}
         height={size}
       />
       <img
         src={`/logo-dark-${size}.png`}
-        alt="SecPal"
-        className={`${className} hidden dark:block`}
+        alt=""
+        aria-hidden="true"
+        className="hidden dark:block"
         width={size}
         height={size}
       />
-    </>
+    </div>
   );
 }
