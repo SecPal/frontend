@@ -48,14 +48,13 @@ export default defineConfig(({ mode }) => {
         injectRegister: "auto",
         includeAssets: [
           "favicon.ico",
-          "apple-touch-icon-v4.png",
+          "apple-touch-icon-v5.png",
           "mask-icon.svg",
         ],
         manifest: {
           name: "SecPal",
           short_name: "SecPal",
           description: "Secure password management platform",
-          theme_color: "#3b82f6",
           background_color: "#ffffff",
           display: "standalone",
           scope: "/",
