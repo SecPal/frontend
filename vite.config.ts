@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
           name: "SecPal",
           short_name: "SecPal",
           description: "Secure password management platform",
+          theme_color: "#ffffff",
           background_color: "#ffffff",
           display: "standalone",
           scope: "/",

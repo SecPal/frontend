@@ -52,17 +52,21 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       href="/apple-touch-icon-v7.png"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="theme-color"
-      content="#ffffff"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta
-      name="theme-color"
-      content="#18181b"
-      media="(prefers-color-scheme: dark)"
-    />
+    <meta name="theme-color" content="#ffffff" />
     <title>SecPal</title>
+    <script>
+      // Android PWAs don't reliably support media queries in theme-color
+      // Update theme-color dynamically to match app background
+      (function() {
+        const updateThemeColor = (isDark) => {
+          const color = isDark ? '#18181b' : '#ffffff';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+        };
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        updateThemeColor(mq.matches);
+        mq.addEventListener('change', (e) => updateThemeColor(e.matches));
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
