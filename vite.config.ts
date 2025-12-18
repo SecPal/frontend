@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
         injectRegister: "auto",
         includeAssets: [
           "favicon.ico",
-          "apple-touch-icon-v2.png",
+          "apple-touch-icon-v3.png",
           "mask-icon.svg",
         ],
         manifest: {
@@ -73,15 +73,15 @@ export default defineConfig(({ mode }) => {
               type: "image/png",
               purpose: "any",
             },
-            // Maskable icons with 30% safe-area padding (70% logo size)
+            // Maskable icons with 50% safe-area padding (50% logo size)
             {
-              src: "pwa-192x192-maskable-v2.png",
+              src: "pwa-192x192-maskable-v3.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "maskable",
             },
             {
-              src: "pwa-512x512-maskable-v2.png",
+              src: "pwa-512x512-maskable-v3.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
