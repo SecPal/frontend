@@ -57,14 +57,16 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <script>
       // Android PWAs don't reliably support media queries in theme-color
       // Update theme-color dynamically to match app background
-      (function() {
+      (function () {
         const updateThemeColor = (isDark) => {
-          const color = isDark ? '#18181b' : '#ffffff';
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', color);
+          const color = isDark ? "#18181b" : "#ffffff";
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute("content", color);
         };
-        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
         updateThemeColor(mq.matches);
-        mq.addEventListener('change', (e) => updateThemeColor(e.matches));
+        mq.addEventListener("change", (e) => updateThemeColor(e.matches));
       })();
     </script>
   </head>
