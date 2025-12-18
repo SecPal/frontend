@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
         injectRegister: "auto",
         includeAssets: [
           "favicon.ico",
-          "apple-touch-icon-v3.png",
+          "apple-touch-icon-v4.png",
           "mask-icon.svg",
         ],
         manifest: {
