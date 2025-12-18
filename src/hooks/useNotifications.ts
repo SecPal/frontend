@@ -118,8 +118,8 @@ export function useNotifications(): UseNotificationsReturn {
         if (registration && registration.showNotification) {
           await registration.showNotification(options.title, {
             body: options.body,
-            icon: options.icon || "/pwa-192x192.svg",
-            badge: options.badge || "/pwa-192x192.svg",
+            icon: options.icon || "/pwa-192x192.png",
+            badge: options.badge || "/pwa-192x192.png",
             tag: options.tag,
             requireInteraction: options.requireInteraction,
             data: options.data,
