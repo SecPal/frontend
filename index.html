@@ -67,9 +67,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         const mq = window.matchMedia("(prefers-color-scheme: dark)");
         updateThemeColor(mq.matches);
         mq.addEventListener("change", (e) => updateThemeColor(e.matches));
-
-        // DEBUG: Log what the browser detects
-        console.log("🔍 Browser Dark Mode:", mq.matches ? "DARK" : "LIGHT");
       })();
     </script>
   </head>
