@@ -130,6 +130,7 @@ export function Login() {
 
   return (
     <AuthLayout>
+      <div className="flex-1 lg:hidden" />
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Logo size="48" />
