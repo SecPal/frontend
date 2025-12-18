@@ -62,29 +62,16 @@ export default defineConfig(({ mode }) => {
           start_url: "/",
           icons: [
             {
-              src: "pwa-192x192-v2.png",
-              sizes: "192x192",
-              type: "image/png",
-              purpose: "any",
-            },
-            {
-              src: "pwa-512x512-v2.png",
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "any",
-            },
-            // Maskable icons with 50% safe-area padding (50% logo size)
-            {
               src: "pwa-192x192-maskable-v3.png",
               sizes: "192x192",
               type: "image/png",
-              purpose: "maskable",
+              purpose: "any maskable",
             },
             {
               src: "pwa-512x512-maskable-v3.png",
               sizes: "512x512",
               type: "image/png",
-              purpose: "maskable",
+              purpose: "any maskable",
             },
           ],
           shortcuts: [
