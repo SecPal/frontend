@@ -46,32 +46,31 @@ export default defineConfig(({ mode }) => {
         srcDir: "src",
         filename: "sw.ts",
         injectRegister: "auto",
-        includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
+        includeAssets: [
+          "favicon.ico",
+          "apple-touch-icon-v7.png",
+          "mask-icon.svg",
+        ],
         manifest: {
           name: "SecPal",
           short_name: "SecPal",
           description: "Secure password management platform",
-          theme_color: "#3b82f6",
-          background_color: "#ffffff",
+          theme_color: "#ffffff",
+          background_color: "#52525b",
           display: "standalone",
           scope: "/",
           start_url: "/",
           icons: [
             {
-              src: "pwa-192x192.svg",
+              src: "pwa-192x192-maskable.png",
               sizes: "192x192",
-              type: "image/svg+xml",
+              type: "image/png",
+              purpose: "any maskable",
             },
             {
-              src: "pwa-512x512.svg",
+              src: "pwa-512x512-maskable.png",
               sizes: "512x512",
-              type: "image/svg+xml",
-            },
-            // Duplicate 512x512 entry with 'any maskable' purpose for adaptive icons
-            {
-              src: "pwa-512x512.svg",
-              sizes: "512x512",
-              type: "image/svg+xml",
+              type: "image/png",
               purpose: "any maskable",
             },
           ],
@@ -83,9 +82,9 @@ export default defineConfig(({ mode }) => {
               url: "/schedule",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -96,9 +95,9 @@ export default defineConfig(({ mode }) => {
               url: "/reports/new",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -109,9 +108,9 @@ export default defineConfig(({ mode }) => {
               url: "/profile",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },
@@ -122,9 +121,9 @@ export default defineConfig(({ mode }) => {
               url: "/emergency",
               icons: [
                 {
-                  src: "pwa-192x192.svg",
+                  src: "pwa-192x192.png",
                   sizes: "192x192",
-                  type: "image/svg+xml",
+                  type: "image/png",
                 },
               ],
             },

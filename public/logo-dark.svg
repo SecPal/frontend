@@ -1,27 +1,6 @@
-<!-- SPDX-FileCopyrightText: 2025 SecPal -->
-<!-- SPDX-License-Identifier: CC0-1.0 -->
-
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <!-- Shield background -->
-  <path d="M96 20 L150 40 L150 85 C150 120 130 145 96 170 C62 145 42 120 42 85 L42 40 Z" 
-        fill="#60a5fa" 
-        stroke="#3b82f6" 
-        stroke-width="3"/>
-  
-  <!-- Lock icon inside shield -->
-  <g transform="translate(96, 95)">
-    <!-- Lock body -->
-    <rect x="-18" y="0" width="36" height="30" rx="4" fill="#000000"/>
-    
-    <!-- Lock shackle -->
-    <path d="M -12 0 L -12 -15 C -12 -23 -8 -27 0 -27 C 8 -27 12 -23 12 -15 L 12 0" 
-          fill="none" 
-          stroke="#000000" 
-          stroke-width="6" 
-          stroke-linecap="round"/>
-    
-    <!-- Keyhole -->
-    <circle cx="0" cy="10" r="4" fill="#60a5fa"/>
-    <rect x="-2" y="12" width="4" height="8" fill="#60a5fa"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>SecPal Mark</title>
+  <desc>Shield + cap brim abstraction with cyan accent. Palette: #0B0D0F, #FFFFFF, #4FA3E3.</desc>
+  <path fill="#FFFFFF" d="M 0.00 39.59 L 0.69 33.03 L 4.62 28.42 L 36.51 15.30 L 69.78 5.59 L 87.34 2.19 L 106.05 0.00 Z"/><path fill="#FFFFFF" d="M 149.03 0.00 L 174.67 3.16 L 201.01 9.47 L 229.66 19.19 L 251.38 28.90 L 254.38 33.03 L 255.31 39.83 L 254.84 76.27 L 253.00 92.78 L 250.22 107.35 L 241.44 137.47 L 232.66 158.36 L 222.96 175.85 L 214.64 188.48 L 198.93 207.91 L 187.15 219.81 L 176.52 229.04 L 153.88 244.58 L 140.94 251.39 L 130.54 255.51 Z"/><path fill="#FFFFFF" d="M 125.00 255.51 L 111.83 249.93 L 97.96 242.16 L 83.64 232.44 L 73.47 224.18 L 66.08 217.38 L 50.14 200.14 L 34.43 178.28 L 20.56 152.53 L 14.56 137.96 L 9.94 123.87 L 3.00 94.24 L 0.69 75.78 L 0.00 61.94 Z"/>
 </svg>
