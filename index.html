@@ -67,10 +67,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         const mq = window.matchMedia("(prefers-color-scheme: dark)");
         updateThemeColor(mq.matches);
         mq.addEventListener("change", (e) => updateThemeColor(e.matches));
+
+        // DEBUG: Log what the browser detects
+        console.log("🔍 Browser Dark Mode:", mq.matches ? "DARK" : "LIGHT");
       })();
     </script>
   </head>
-  <body>
+  <body class="bg-white text-zinc-950 dark:bg-zinc-900 dark:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
