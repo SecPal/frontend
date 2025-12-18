@@ -56,19 +56,19 @@ export default defineConfig(({ mode }) => {
           short_name: "SecPal",
           description: "Secure password management platform",
           theme_color: "#ffffff",
-          background_color: "#ffffff",
+          background_color: "#52525b",
           display: "standalone",
           scope: "/",
           start_url: "/",
           icons: [
             {
-              src: "pwa-192x192-maskable-v3.png",
+              src: "pwa-192x192-maskable-v4.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "any maskable",
             },
             {
-              src: "pwa-512x512-maskable-v3.png",
+              src: "pwa-512x512-maskable-v4.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "any maskable",
