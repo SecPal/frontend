@@ -46,7 +46,11 @@ export default defineConfig(({ mode }) => {
         srcDir: "src",
         filename: "sw.ts",
         injectRegister: "auto",
-        includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
+        includeAssets: [
+          "favicon.ico",
+          "apple-touch-icon-v2.png",
+          "mask-icon.svg",
+        ],
         manifest: {
           name: "SecPal",
           short_name: "SecPal",
@@ -69,15 +73,15 @@ export default defineConfig(({ mode }) => {
               type: "image/png",
               purpose: "any",
             },
-            // Maskable icons with 15% safe-area padding (80% safe zone)
+            // Maskable icons with 30% safe-area padding (70% logo size)
             {
-              src: "pwa-192x192-maskable.png",
+              src: "pwa-192x192-maskable-v2.png",
               sizes: "192x192",
               type: "image/png",
               purpose: "maskable",
             },
             {
-              src: "pwa-512x512-maskable.png",
+              src: "pwa-512x512-maskable-v2.png",
               sizes: "512x512",
               type: "image/png",
               purpose: "maskable",
