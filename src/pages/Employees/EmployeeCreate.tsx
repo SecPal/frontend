@@ -298,7 +298,9 @@ export function EmployeeCreate() {
           </Fieldset>
 
           {error && (
-            <Text className="text-red-600 dark:text-red-500">{error}</Text>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+              <Text className="text-red-800 dark:text-red-400">{error}</Text>
+            </div>
           )}
 
           <div className="flex justify-end gap-3">
