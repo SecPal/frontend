@@ -12,13 +12,13 @@ import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
-import { Text } from "../../components/text";
 import {
   Fieldset,
   Legend,
   FieldGroup,
   Field,
   Label,
+  ErrorMessage,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
@@ -80,8 +80,6 @@ export function EmployeeCreate() {
       }
 
       setError(errorMessage);
-      // Scroll to top to show error message
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -103,16 +101,6 @@ export function EmployeeCreate() {
         <Heading className="mb-6">
           <Trans>Create New Employee</Trans>
         </Heading>
-
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
-            <div className="mb-2 text-4xl">⚠️</div>
-            <Heading level={3} className="text-red-900 dark:text-red-400">
-              <Trans>Error</Trans>
-            </Heading>
-            <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Information */}
@@ -309,11 +297,7 @@ export function EmployeeCreate() {
             </FieldGroup>
           </Fieldset>
 
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
-              <Text className="text-red-700 dark:text-red-500">{error}</Text>
-            </div>
-          )}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
 
           <div className="flex justify-end gap-3">
             <Button

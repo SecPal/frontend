@@ -218,9 +218,6 @@ describe("EmployeeCreate", () => {
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /error/i })
-      ).toBeInTheDocument();
       expect(screen.getByText(/server error/i)).toBeInTheDocument();
     });
 
