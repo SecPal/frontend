@@ -87,6 +87,10 @@ export function EmployeeCreate() {
 
   function handleChange(field: keyof EmployeeFormData, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts editing
+    if (error) {
+      setError(null);
+    }
   }
 
   return (
@@ -298,7 +302,7 @@ export function EmployeeCreate() {
           </Fieldset>
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-900/20">
               <Text className="text-red-800 dark:text-red-400">{error}</Text>
             </div>
           )}
