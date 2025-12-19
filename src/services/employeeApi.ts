@@ -3,6 +3,7 @@
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
+import { ApiError } from "./ApiError";
 
 /**
  * Employee status types
@@ -76,6 +77,14 @@ export interface EmployeeFormData {
 }
 
 /**
+ * Laravel validation error response structure
+ */
+export interface ValidationErrorResponse {
+  message: string;
+  errors: Record<string, string[]>;
+}
+
+/**
  * Employee list filters
  */
 export interface EmployeeFilters {
@@ -110,7 +119,11 @@ export async function fetchEmployees(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch employees");
+    throw new ApiError(
+      error.message || "Failed to fetch employees",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch(() => ({
@@ -118,7 +131,7 @@ export async function fetchEmployees(
     meta: { current_page: 1, last_page: 1, per_page: 15, total: 0 },
   }));
   if (!data.data) {
-    throw new Error("Failed to parse employees list response");
+    throw new ApiError("Failed to parse employees list response");
   }
   return data;
 }
@@ -136,12 +149,16 @@ export async function fetchEmployee(id: string): Promise<Employee> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch employee");
+    throw new ApiError(
+      error.message || "Failed to fetch employee",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
   if (!data.data) {
-    throw new Error("Failed to parse employee response");
+    throw new ApiError("Failed to parse employee response");
   }
   return data.data;
 }
@@ -157,15 +174,41 @@ export async function createEmployee(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(employee),
   });
 
   if (!response.ok) {
-    const error = await response
+    // Try to parse validation errors (422) or other JSON errors
+    const error: Partial<ValidationErrorResponse> = await response
       .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create employee");
+      .catch(() => ({
+        message: response.statusText,
+        errors: {},
+      }));
+
+    // Handle Laravel validation errors (422)
+    if (response.status === 422 && error.errors) {
+      // Format validation errors for display
+      const errorMessages = Object.entries(error.errors)
+        .map(([field, messages]: [string, string[]]) => {
+          const fieldName = field.replace(/_/g, " ");
+          return `${fieldName}: ${Array.isArray(messages) ? messages.join(", ") : messages}`;
+        })
+        .join("; ");
+      throw new ApiError(
+        errorMessages || error.message || "Validation failed",
+        response.status,
+        response
+      );
+    }
+
+    throw new ApiError(
+      error.message || "Failed to create employee",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch((err) => {
@@ -181,8 +224,10 @@ export async function createEmployee(
   });
 
   if (!data.data) {
-    throw new Error(
-      `API returned status ${response.status} but response has no 'data' field. Check console for details.`
+    throw new ApiError(
+      `API returned status ${response.status} but response has no 'data' field. Check console for details.`,
+      response.status,
+      response
     );
   }
   return data.data;
@@ -208,12 +253,16 @@ export async function updateEmployee(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update employee");
+    throw new ApiError(
+      error.message || "Failed to update employee",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
   if (!data.data) {
-    throw new Error("Failed to parse employee response");
+    throw new ApiError("Failed to parse employee response");
   }
   return data.data;
 }
@@ -231,7 +280,11 @@ export async function deleteEmployee(id: string): Promise<void> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to delete employee");
+    throw new ApiError(
+      error.message || "Failed to delete employee",
+      response.status,
+      response
+    );
   }
 }
 
@@ -248,12 +301,16 @@ export async function activateEmployee(id: string): Promise<Employee> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to activate employee");
+    throw new ApiError(
+      error.message || "Failed to activate employee",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
   if (!data.data) {
-    throw new Error("Failed to parse employee response");
+    throw new ApiError("Failed to parse employee response");
   }
   return data.data;
 }
@@ -271,12 +328,16 @@ export async function terminateEmployee(id: string): Promise<Employee> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to terminate employee");
+    throw new ApiError(
+      error.message || "Failed to terminate employee",
+      response.status,
+      response
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
   if (!data.data) {
-    throw new Error("Failed to parse employee response");
+    throw new ApiError("Failed to parse employee response");
   }
   return data.data;
 }

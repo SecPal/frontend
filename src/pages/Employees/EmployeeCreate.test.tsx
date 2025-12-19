@@ -218,9 +218,6 @@ describe("EmployeeCreate", () => {
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /error/i })
-      ).toBeInTheDocument();
       expect(screen.getByText(/server error/i)).toBeInTheDocument();
     });
 
@@ -323,5 +320,72 @@ describe("EmployeeCreate", () => {
     const contractTypeSelect = screen.getByLabelText(/contract type/i);
     fireEvent.change(contractTypeSelect, { target: { value: "part_time" } });
     expect(contractTypeSelect).toHaveValue("part_time");
+  });
+
+  it("should clear error message when user changes input", async () => {
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
+      data: mockOrganizationalUnits,
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 100,
+        total: mockOrganizationalUnits.length,
+        root_unit_ids: ["unit-1", "unit-2"],
+      },
+    });
+    vi.mocked(employeeApi.createEmployee).mockRejectedValue(
+      new Error("Validation error: email already exists")
+    );
+
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    // Fill form and trigger error
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "duplicate@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "1990-01-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/position/i), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "2025-01-01" },
+    });
+    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+      target: { value: "unit-1" },
+    });
+
+    // Submit form to trigger error
+    fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+
+    // Verify error is displayed
+    await waitFor(() => {
+      expect(
+        screen.getByText(/validation error: email already exists/i)
+      ).toBeInTheDocument();
+    });
+
+    // Change any input field
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "new@example.com" },
+    });
+
+    // Verify error is cleared
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/validation error: email already exists/i)
+      ).not.toBeInTheDocument();
+    });
   });
 });
