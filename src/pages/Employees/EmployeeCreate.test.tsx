@@ -330,6 +330,7 @@ describe("EmployeeCreate", () => {
         last_page: 1,
         per_page: 100,
         total: mockOrganizationalUnits.length,
+        root_unit_ids: ["unit-1", "unit-2"],
       },
     });
     vi.mocked(employeeApi.createEmployee).mockRejectedValue(
