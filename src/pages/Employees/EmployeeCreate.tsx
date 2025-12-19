@@ -80,6 +80,8 @@ export function EmployeeCreate() {
       }
 
       setError(errorMessage);
+      // Scroll to top to show error message
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -306,6 +308,12 @@ export function EmployeeCreate() {
               </div>
             </FieldGroup>
           </Fieldset>
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
+              <Text className="text-red-700 dark:text-red-500">{error}</Text>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3">
             <Button

@@ -157,14 +157,30 @@ export async function createEmployee(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify(employee),
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
+    // Try to parse validation errors (422) or other JSON errors
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+      errors: {},
+    }));
+
+    // Handle Laravel validation errors (422)
+    if (response.status === 422 && error.errors) {
+      // Format validation errors for display
+      const errorMessages = Object.entries(error.errors)
+        .map(([field, messages]) => {
+          const fieldName = field.replace(/_/g, " ");
+          return `${fieldName}: ${Array.isArray(messages) ? messages.join(", ") : messages}`;
+        })
+        .join("\n");
+      throw new Error(errorMessages || error.message || "Validation failed");
+    }
+
     throw new Error(error.message || "Failed to create employee");
   }
 
