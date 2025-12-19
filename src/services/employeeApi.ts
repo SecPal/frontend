@@ -177,7 +177,7 @@ export async function createEmployee(
           const fieldName = field.replace(/_/g, " ");
           return `${fieldName}: ${Array.isArray(messages) ? messages.join(", ") : messages}`;
         })
-        .join("\n");
+        .join("; ");
       throw new Error(errorMessages || error.message || "Validation failed");
     }
 
