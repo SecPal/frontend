@@ -12,13 +12,13 @@ import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
+import { Text } from "../../components/text";
 import {
   Fieldset,
   Legend,
   FieldGroup,
   Field,
   Label,
-  ErrorMessage,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
@@ -297,7 +297,9 @@ export function EmployeeCreate() {
             </FieldGroup>
           </Fieldset>
 
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {error && (
+            <Text className="text-red-600 dark:text-red-500">{error}</Text>
+          )}
 
           <div className="flex justify-end gap-3">
             <Button
