@@ -125,7 +125,7 @@ msgstr "Activate"
 
 #: src/pages/Customers/CustomerCreate.tsx:264
 #: src/pages/Customers/CustomerDetail.tsx:108
-#: src/pages/Customers/CustomerEdit.tsx:280
+#: src/pages/Customers/CustomerEdit.tsx:283
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Employees/EmployeeCreate.tsx:263
@@ -252,7 +252,7 @@ msgstr "Back to Secrets"
 
 #: src/pages/Customers/CustomerCreate.tsx:137
 #: src/pages/Customers/CustomerDetail.tsx:120
-#: src/pages/Customers/CustomerEdit.tsx:153
+#: src/pages/Customers/CustomerEdit.tsx:156
 msgid "Billing Address"
 msgstr "Billing Address"
 
@@ -269,7 +269,7 @@ msgstr "Branch"
 #: src/components/ShareDialog.tsx:226
 #: src/pages/Customers/CustomerCreate.tsx:278
 #: src/pages/Customers/CustomerDetail.tsx:266
-#: src/pages/Customers/CustomerEdit.tsx:294
+#: src/pages/Customers/CustomerEdit.tsx:297
 #: src/pages/Employees/EmployeeCreate.tsx:320
 #: src/pages/Employees/EmployeeEdit.tsx:339
 msgid "Cancel"
@@ -306,7 +306,7 @@ msgstr "Choose your preferred language for the application."
 
 #: src/pages/Customers/CustomerCreate.tsx:169
 #: src/pages/Customers/CustomerDetail.tsx:131
-#: src/pages/Customers/CustomerEdit.tsx:185
+#: src/pages/Customers/CustomerEdit.tsx:188
 msgid "City"
 msgstr "City"
 
@@ -347,7 +347,7 @@ msgstr "Contact"
 
 #: src/pages/Customers/CustomerCreate.tsx:203
 #: src/pages/Customers/CustomerDetail.tsx:151
-#: src/pages/Customers/CustomerEdit.tsx:219
+#: src/pages/Customers/CustomerEdit.tsx:222
 msgid "Contact Person"
 msgstr "Contact Person"
 
@@ -363,7 +363,7 @@ msgstr "Contract Type"
 
 #: src/pages/Customers/CustomerCreate.tsx:183
 #: src/pages/Customers/CustomerDetail.tsx:139
-#: src/pages/Customers/CustomerEdit.tsx:199
+#: src/pages/Customers/CustomerEdit.tsx:202
 msgid "Country"
 msgstr "Country"
 
@@ -434,12 +434,12 @@ msgid "Custom"
 msgstr "Custom"
 
 #: src/pages/Customers/CustomerCreate.tsx:122
-#: src/pages/Customers/CustomerEdit.tsx:138
+#: src/pages/Customers/CustomerEdit.tsx:141
 msgid "Customer Name"
 msgstr "Customer Name"
 
 #: src/pages/Customers/CustomerDetail.tsx:89
-#: src/pages/Customers/CustomerEdit.tsx:114
+#: src/pages/Customers/CustomerEdit.tsx:117
 msgid "Customer not found"
 msgstr "Customer not found"
 
@@ -538,7 +538,7 @@ msgstr "e.g., Berlin Branch"
 msgid "Edit"
 msgstr "Edit"
 
-#: src/pages/Customers/CustomerEdit.tsx:123
+#: src/pages/Customers/CustomerEdit.tsx:126
 msgid "Edit Customer"
 msgstr "Edit Customer"
 
@@ -565,7 +565,7 @@ msgstr "Email"
 
 #: src/pages/Customers/CustomerCreate.tsx:220
 #: src/pages/Customers/CustomerDetail.tsx:168
-#: src/pages/Customers/CustomerEdit.tsx:236
+#: src/pages/Customers/CustomerEdit.tsx:239
 #: src/pages/Employees/EmployeeCreate.tsx:160
 #: src/pages/Employees/EmployeeDetail.tsx:73
 #: src/pages/Employees/EmployeeEdit.tsx:241
@@ -765,10 +765,6 @@ msgstr "Grid"
 msgid "Grid view"
 msgstr "Grid view"
 
-#: src/components/application-layout.tsx:231
-#~ msgid "Guard Books"
-#~ msgstr "Guard Books"
-
 #: src/pages/Secrets/SecretDetail.tsx:327
 msgid "Hide"
 msgstr "Hide"
@@ -871,7 +867,7 @@ msgstr "Loading secrets..."
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
 #: src/pages/Customers/CustomerDetail.tsx:80
-#: src/pages/Customers/CustomerEdit.tsx:102
+#: src/pages/Customers/CustomerEdit.tsx:105
 #: src/pages/Customers/CustomersPage.tsx:141
 #: src/pages/Employees/EmployeeCreate.tsx:236
 #: src/pages/Employees/EmployeeEdit.tsx:317
@@ -967,7 +963,7 @@ msgstr "My profile"
 #: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Customers/CustomerCreate.tsx:208
 #: src/pages/Customers/CustomerDetail.tsx:157
-#: src/pages/Customers/CustomerEdit.tsx:224
+#: src/pages/Customers/CustomerEdit.tsx:227
 #: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
 #: src/pages/Sites/SitesPage.tsx:186
@@ -1068,7 +1064,7 @@ msgstr "Not shared with anyone"
 
 #: src/pages/Customers/CustomerCreate.tsx:247
 #: src/pages/Customers/CustomerDetail.tsx:204
-#: src/pages/Customers/CustomerEdit.tsx:263
+#: src/pages/Customers/CustomerEdit.tsx:266
 #: src/pages/Secrets/SecretDetail.tsx:393
 msgid "Notes"
 msgstr "Notes"
@@ -1191,7 +1187,7 @@ msgstr "Personal Information"
 
 #: src/pages/Customers/CustomerCreate.tsx:232
 #: src/pages/Customers/CustomerDetail.tsx:184
-#: src/pages/Customers/CustomerEdit.tsx:248
+#: src/pages/Customers/CustomerEdit.tsx:251
 #: src/pages/Employees/EmployeeCreate.tsx:173
 #: src/pages/Employees/EmployeeDetail.tsx:78
 #: src/pages/Employees/EmployeeEdit.tsx:254
@@ -1211,7 +1207,7 @@ msgid "Position"
 msgstr "Position"
 
 #: src/pages/Customers/CustomerCreate.tsx:156
-#: src/pages/Customers/CustomerEdit.tsx:172
+#: src/pages/Customers/CustomerEdit.tsx:175
 msgid "Postal Code"
 msgstr "Postal Code"
 
@@ -1310,7 +1306,7 @@ msgid "Roles"
 msgstr "Roles"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:287
+#: src/pages/Customers/CustomerEdit.tsx:290
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Save Changes"
 msgstr "Save Changes"
@@ -1324,7 +1320,7 @@ msgid "Save to Secret"
 msgstr "Save to Secret"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Customers/CustomerEdit.tsx:287
+#: src/pages/Customers/CustomerEdit.tsx:290
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Saving..."
 msgstr "Saving..."
@@ -1523,7 +1519,7 @@ msgstr "Step {currentStep} of {totalSteps}"
 
 #: src/pages/Customers/CustomerCreate.tsx:142
 #: src/pages/Customers/CustomerDetail.tsx:124
-#: src/pages/Customers/CustomerEdit.tsx:158
+#: src/pages/Customers/CustomerEdit.tsx:161
 msgid "Street"
 msgstr "Street"
 

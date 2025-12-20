@@ -12,6 +12,7 @@ import {
   deleteCustomer,
 } from "./customersApi";
 import * as csrf from "./csrf";
+import { apiConfig } from "../config";
 
 // Mock the csrf module
 vi.mock("./csrf");
@@ -65,7 +66,9 @@ describe("customersApi", () => {
 
       const result = await listCustomers();
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers?");
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers?`
+      );
       expect(result.data).toHaveLength(2);
       expect(result.data[0]?.name).toBe("Customer 1");
       expect(result.data[1]?.name).toBe("Customer 2");
@@ -88,7 +91,7 @@ describe("customersApi", () => {
       });
 
       expect(csrf.apiFetch).toHaveBeenCalledWith(
-        "/v1/customers?search=test&is_active=1&page=2&per_page=20"
+        `${apiConfig.baseUrl}/v1/customers?search=test&is_active=1&page=2&per_page=20`
       );
     });
 
@@ -135,7 +138,9 @@ describe("customersApi", () => {
 
       const result = await getCustomer("customer-123");
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers/customer-123");
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123`
+      );
       expect(result).toEqual(mockCustomer);
     });
 
@@ -183,13 +188,16 @@ describe("customersApi", () => {
 
       const result = await createCustomer(customerData);
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customerData),
-      });
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(customerData),
+        }
+      );
 
       expect(result.id).toBe("customer-new");
       expect(result.name).toBe("New Customer");
@@ -285,13 +293,16 @@ describe("customersApi", () => {
 
       const result = await updateCustomer("customer-123", updateData);
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers/customer-123", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
+        }
+      );
 
       expect(result.name).toBe("Updated Customer");
       expect(result.is_active).toBe(false);
@@ -398,9 +409,12 @@ describe("customersApi", () => {
 
       await deleteCustomer("customer-123");
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers/customer-123", {
-        method: "DELETE",
-      });
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123`,
+        {
+          method: "DELETE",
+        }
+      );
     });
 
     it("handles 404 not found", async () => {

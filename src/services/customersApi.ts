@@ -9,6 +9,7 @@
  */
 
 import { apiFetch } from "./csrf";
+import { apiConfig } from "../config";
 
 /**
  * Formats validation errors from Laravel API into a readable error message
@@ -80,7 +81,9 @@ export async function listCustomers(
     searchParams.append("per_page", filters.per_page.toString());
   }
 
-  const response = await apiFetch(`/v1/customers?${searchParams.toString()}`);
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
     const error = await response
@@ -99,7 +102,7 @@ export async function listCustomers(
  * Gets a single customer by ID
  */
 export async function getCustomer(id: string): Promise<Customer> {
-  const response = await apiFetch(`/v1/customers/${id}`);
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`);
 
   if (!response.ok) {
     const error = await response
@@ -108,7 +111,7 @@ export async function getCustomer(id: string): Promise<Customer> {
     throw new Error(error.message || "Failed to get customer");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse customer response");
   }
@@ -121,7 +124,7 @@ export async function getCustomer(id: string): Promise<Customer> {
 export async function createCustomer(
   customerData: CreateCustomerRequest
 ): Promise<Customer> {
-  const response = await apiFetch("/v1/customers", {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -139,7 +142,7 @@ export async function createCustomer(
     );
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse customer response");
   }
@@ -153,7 +156,7 @@ export async function updateCustomer(
   id: string,
   customerData: UpdateCustomerRequest
 ): Promise<Customer> {
-  const response = await apiFetch(`/v1/customers/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -171,7 +174,7 @@ export async function updateCustomer(
     );
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse customer response");
   }
@@ -182,7 +185,7 @@ export async function updateCustomer(
  * Deletes a customer (soft delete)
  */
 export async function deleteCustomer(id: string): Promise<void> {
-  const response = await apiFetch(`/v1/customers/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`, {
     method: "DELETE",
   });
 
@@ -273,7 +276,9 @@ export async function listSites(
     searchParams.append("per_page", filters.per_page.toString());
   }
 
-  const response = await apiFetch(`/v1/sites?${searchParams.toString()}`);
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/sites?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
     const error = await response
@@ -292,7 +297,7 @@ export async function listSites(
  * Gets a single site by ID
  */
 export async function getSite(id: string): Promise<Site> {
-  const response = await apiFetch(`/v1/sites/${id}`);
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites/${id}`);
 
   if (!response.ok) {
     const error = await response
@@ -312,7 +317,7 @@ export async function getSite(id: string): Promise<Site> {
  * Creates a new site
  */
 export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
-  const response = await apiFetch("/v1/sites", {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites`, {
     method: "POST",
     body: JSON.stringify(siteData),
   });
@@ -338,7 +343,7 @@ export async function updateSite(
   id: string,
   siteData: UpdateSiteRequest
 ): Promise<Site> {
-  const response = await apiFetch(`/v1/sites/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites/${id}`, {
     method: "PATCH",
     body: JSON.stringify(siteData),
   });
@@ -361,7 +366,7 @@ export async function updateSite(
  * Deletes a site (soft delete)
  */
 export async function deleteSite(id: string): Promise<void> {
-  const response = await apiFetch(`/v1/sites/${id}`, {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites/${id}`, {
     method: "DELETE",
   });
 
@@ -454,10 +459,13 @@ export async function createCustomerAssignment(
   customerId: string,
   assignmentData: CreateCustomerAssignmentRequest
 ): Promise<CustomerAssignment> {
-  const response = await apiFetch(`/v1/customers/${customerId}/assignments`, {
-    method: "POST",
-    body: JSON.stringify(assignmentData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/assignments`,
+    {
+      method: "POST",
+      body: JSON.stringify(assignmentData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -480,10 +488,13 @@ export async function updateCustomerAssignment(
   id: string,
   assignmentData: UpdateCustomerAssignmentRequest
 ): Promise<CustomerAssignment> {
-  const response = await apiFetch(`/v1/customer-assignments/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(assignmentData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customer-assignments/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(assignmentData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -503,9 +514,12 @@ export async function updateCustomerAssignment(
  * Deletes a customer assignment
  */
 export async function deleteCustomerAssignment(id: string): Promise<void> {
-  const response = await apiFetch(`/v1/customer-assignments/${id}`, {
-    method: "DELETE",
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customer-assignments/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -554,10 +568,13 @@ export async function createSiteAssignment(
   siteId: string,
   assignmentData: CreateSiteAssignmentRequest
 ): Promise<SiteAssignment> {
-  const response = await apiFetch(`/v1/sites/${siteId}/assignments`, {
-    method: "POST",
-    body: JSON.stringify(assignmentData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/sites/${siteId}/assignments`,
+    {
+      method: "POST",
+      body: JSON.stringify(assignmentData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -580,10 +597,13 @@ export async function updateSiteAssignment(
   id: string,
   assignmentData: UpdateSiteAssignmentRequest
 ): Promise<SiteAssignment> {
-  const response = await apiFetch(`/v1/site-assignments/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(assignmentData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/site-assignments/${id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(assignmentData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -603,9 +623,12 @@ export async function updateSiteAssignment(
  * Deletes a site assignment
  */
 export async function deleteSiteAssignment(id: string): Promise<void> {
-  const response = await apiFetch(`/v1/site-assignments/${id}`, {
-    method: "DELETE",
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/site-assignments/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -626,10 +649,13 @@ export async function createCostCenter(
   siteId: string,
   costCenterData: CreateCostCenterRequest
 ): Promise<CostCenter> {
-  const response = await apiFetch(`/v1/sites/${siteId}/cost-centers`, {
-    method: "POST",
-    body: JSON.stringify(costCenterData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers`,
+    {
+      method: "POST",
+      body: JSON.stringify(costCenterData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -653,10 +679,13 @@ export async function updateCostCenter(
   id: string,
   costCenterData: UpdateCostCenterRequest
 ): Promise<CostCenter> {
-  const response = await apiFetch(`/v1/sites/${siteId}/cost-centers/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(costCenterData),
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(costCenterData),
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -679,9 +708,12 @@ export async function deleteCostCenter(
   siteId: string,
   id: string
 ): Promise<void> {
-  const response = await apiFetch(`/v1/sites/${siteId}/cost-centers/${id}`, {
-    method: "DELETE",
-  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
 
   if (!response.ok) {
     const error = await response
@@ -701,7 +733,9 @@ export async function deleteCostCenter(
 export async function getMyCustomerAssignments(): Promise<
   CustomerAssignment[]
 > {
-  const response = await apiFetch("/v1/me/customer-assignments");
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/me/customer-assignments`
+  );
 
   if (!response.ok) {
     const error = await response
@@ -718,7 +752,9 @@ export async function getMyCustomerAssignments(): Promise<
  * Gets site assignments for the authenticated user
  */
 export async function getMySiteAssignments(): Promise<SiteAssignment[]> {
-  const response = await apiFetch("/v1/me/site-assignments");
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/me/site-assignments`
+  );
 
   if (!response.ok) {
     const error = await response
