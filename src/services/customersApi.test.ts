@@ -67,8 +67,8 @@ describe("customersApi", () => {
 
       expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/customers?");
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].name).toBe("Customer 1");
-      expect(result.data[1].name).toBe("Customer 2");
+      expect(result.data[0]?.name).toBe("Customer 1");
+      expect(result.data[1]?.name).toBe("Customer 2");
       expect(result.meta.total).toBe(2);
     });
 

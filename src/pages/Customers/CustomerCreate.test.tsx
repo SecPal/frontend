@@ -69,6 +69,7 @@ describe("CustomerCreate", () => {
     const mockCustomer = {
       id: "customer-123",
       name: "Test Customer",
+      customer_number: "CUST-2025-001",
       billing_address: {
         street: "Test Street 1",
         city: "Test City",
@@ -119,6 +120,7 @@ describe("CustomerCreate", () => {
     const mockCustomer = {
       id: "customer-456",
       name: "Customer with Contact",
+      customer_number: "CUST-2025-002",
       billing_address: {
         street: "Street 1",
         city: "City",
@@ -187,6 +189,7 @@ describe("CustomerCreate", () => {
     const mockCustomer = {
       id: "customer-789",
       name: "Customer without Contact",
+      customer_number: "CUST-2025-003",
       billing_address: {
         street: "Street 1",
         city: "City",

@@ -57,7 +57,7 @@ export default function CustomerCreate() {
   function updateContact(field: keyof Contact, value: string) {
     setFormData({
       ...formData,
-      contact: { ...(formData.contact || {}), [field]: value },
+      contact: { ...(formData.contact || {}), [field]: value } as Contact,
     });
   }
 

@@ -228,7 +228,6 @@ export default function CustomerDetail() {
             <Trans>Edit</Trans>
           </Button>
           <Button
-            color="red"
             outline
             onClick={() => setShowDeleteDialog(true)}
             disabled={deleting}
