@@ -92,9 +92,7 @@ export async function listCustomers(
     throw new Error(error.message || "Failed to list customers");
   }
 
-  const data = (await response
-    .json()
-    .catch(() => ({ data: [], meta: {} }))) as PaginatedResponse<Customer>;
+  const data = (await response.json()) as PaginatedResponse<Customer>;
   return data;
 }
 
