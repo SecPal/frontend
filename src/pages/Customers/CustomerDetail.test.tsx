@@ -22,9 +22,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Renders CustomerDetail with mocked router context
-// @ts-expect-error - id parameter kept for signature consistency but not used in mocked router
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function renderWithRouter(id: string) {
+function renderWithRouter() {
   return render(
     <BrowserRouter>
       <I18nProvider i18n={i18n}>
@@ -67,7 +65,7 @@ describe("CustomerDetail", () => {
   it("loads and displays customer details", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(customersApi.getCustomer).toHaveBeenCalledWith("customer-123");
@@ -83,7 +81,7 @@ describe("CustomerDetail", () => {
   it("displays contact information", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Max Mustermann")).toBeInTheDocument();
@@ -96,7 +94,7 @@ describe("CustomerDetail", () => {
   it("displays notes", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Important VIP customer")).toBeInTheDocument();
@@ -106,7 +104,7 @@ describe("CustomerDetail", () => {
   it("displays sites count", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText(/This customer has 5 site/)).toBeInTheDocument();
@@ -116,7 +114,7 @@ describe("CustomerDetail", () => {
   it("displays active status badge", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText(/active/i)).toBeInTheDocument();
@@ -127,7 +125,7 @@ describe("CustomerDetail", () => {
     const inactiveCustomer = { ...mockCustomer, is_active: false };
     vi.mocked(customersApi.getCustomer).mockResolvedValue(inactiveCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText(/inactive/i)).toBeInTheDocument();
@@ -137,7 +135,7 @@ describe("CustomerDetail", () => {
   it("navigates to edit page when edit button clicked", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -151,7 +149,7 @@ describe("CustomerDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -171,7 +169,7 @@ describe("CustomerDetail", () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.deleteCustomer).mockResolvedValue(undefined);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -201,7 +199,7 @@ describe("CustomerDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -222,7 +220,7 @@ describe("CustomerDetail", () => {
       new Error("Customer not found")
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText(/customer not found/i)).toBeInTheDocument();
@@ -236,7 +234,7 @@ describe("CustomerDetail", () => {
       new Error("Cannot delete customer with active sites")
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -264,7 +262,7 @@ describe("CustomerDetail", () => {
       customerWithoutContact
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -278,7 +276,7 @@ describe("CustomerDetail", () => {
     const customerWithoutNotes = { ...mockCustomer, notes: null };
     vi.mocked(customersApi.getCustomer).mockResolvedValue(customerWithoutNotes);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -292,7 +290,7 @@ describe("CustomerDetail", () => {
   it("links to sites filtered by customer", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -313,7 +311,7 @@ describe("CustomerDetail", () => {
   it("navigates back to list when back button clicked", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
@@ -328,7 +326,7 @@ describe("CustomerDetail", () => {
       () => new Promise(() => {}) // Never resolves
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });

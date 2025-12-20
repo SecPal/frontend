@@ -66,7 +66,10 @@ export default function CustomerEdit() {
   function updateAddress(field: keyof Address, value: string) {
     setFormData({
       ...formData,
-      billing_address: { ...formData.billing_address!, [field]: value },
+      billing_address: {
+        ...(formData.billing_address || {}),
+        [field]: value,
+      } as Address,
     });
   }
 

@@ -9,6 +9,30 @@
  */
 
 import { apiFetch } from "./csrf";
+
+/**
+ * Formats validation errors from Laravel API into a readable error message
+ */
+function formatValidationErrors(error: {
+  message?: string;
+  errors?: Record<string, string[]>;
+}): string {
+  if (error.errors) {
+    const validationEntries = Object.entries(error.errors);
+
+    if (validationEntries.length > 0) {
+      return validationEntries
+        .map(
+          ([field, messages]) =>
+            `${field}: ${(messages as string[]).join(", ")}`
+        )
+        .join("\n");
+    }
+  }
+
+  return error.message || "An error occurred";
+}
+
 import type {
   Customer,
   CreateCustomerRequest,
@@ -110,20 +134,9 @@ export async function createCustomer(
       .json()
       .catch(() => ({ message: response.statusText }));
 
-    // Format validation errors if present
-    if (error.errors) {
-      const errorMessages = Object.entries(error.errors)
-        .map(
-          ([field, messages]) =>
-            `${field}: ${(messages as string[]).join(", ")}`
-        )
-        .join("\n");
-      throw new Error(
-        errorMessages || error.message || "Failed to create customer"
-      );
-    }
-
-    throw new Error(error.message || "Failed to create customer");
+    throw new Error(
+      formatValidationErrors(error) || "Failed to create customer"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
@@ -153,20 +166,9 @@ export async function updateCustomer(
       .json()
       .catch(() => ({ message: response.statusText }));
 
-    // Format validation errors if present
-    if (error.errors) {
-      const errorMessages = Object.entries(error.errors)
-        .map(
-          ([field, messages]) =>
-            `${field}: ${(messages as string[]).join(", ")}`
-        )
-        .join("\n");
-      throw new Error(
-        errorMessages || error.message || "Failed to update customer"
-      );
-    }
-
-    throw new Error(error.message || "Failed to update customer");
+    throw new Error(
+      formatValidationErrors(error) || "Failed to update customer"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));

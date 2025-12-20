@@ -22,9 +22,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Renders CustomerEdit with mocked router context
-// @ts-expect-error - customerId parameter kept for signature consistency but not used in mocked router
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function renderWithRouter(customerId: string) {
+function renderWithRouter() {
   return render(
     <BrowserRouter>
       <I18nProvider i18n={i18n}>
@@ -67,7 +65,7 @@ describe("CustomerEdit", () => {
   it("loads and displays customer data", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(customersApi.getCustomer).toHaveBeenCalledWith("customer-123");
@@ -86,7 +84,7 @@ describe("CustomerEdit", () => {
   it("loads contact information", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       const contactNameInput = screen.getByRole("textbox", { name: /^name$/i });
@@ -105,7 +103,7 @@ describe("CustomerEdit", () => {
       name: "Updated Customer",
     });
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue(
@@ -138,7 +136,7 @@ describe("CustomerEdit", () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/street/i)).toHaveValue("Old Street 10");
@@ -168,7 +166,7 @@ describe("CustomerEdit", () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/email/i)).toHaveValue("jane@example.com");
@@ -198,7 +196,7 @@ describe("CustomerEdit", () => {
       new Error("Customer not found")
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByText(/customer not found/i)).toBeInTheDocument();
@@ -212,7 +210,7 @@ describe("CustomerEdit", () => {
       new Error("Update failed")
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue(
@@ -233,7 +231,7 @@ describe("CustomerEdit", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue(
@@ -253,7 +251,7 @@ describe("CustomerEdit", () => {
       () => new Promise((resolve) => setTimeout(resolve, 1000))
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue(
@@ -278,7 +276,7 @@ describe("CustomerEdit", () => {
       customerWithoutContact
     );
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue(
@@ -301,7 +299,7 @@ describe("CustomerEdit", () => {
 
     vi.mocked(customersApi.getCustomer).mockResolvedValue(customerWithoutNotes);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/notes/i)).toHaveValue("");
@@ -313,7 +311,7 @@ describe("CustomerEdit", () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter("customer-123");
+    renderWithRouter();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/active/i)).toBeChecked();

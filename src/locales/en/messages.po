@@ -123,9 +123,9 @@ msgstr "Actions for {0}"
 msgid "Activate"
 msgstr "Activate"
 
-#: src/pages/Customers/CustomerCreate.tsx:266
-#: src/pages/Customers/CustomerDetail.tsx:109
-#: src/pages/Customers/CustomerEdit.tsx:282
+#: src/pages/Customers/CustomerCreate.tsx:264
+#: src/pages/Customers/CustomerDetail.tsx:108
+#: src/pages/Customers/CustomerEdit.tsx:280
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Employees/EmployeeCreate.tsx:263
@@ -208,7 +208,7 @@ msgid "Apply Selection"
 msgstr "Apply Selection"
 
 #. placeholder {0}: customer.name
-#: src/pages/Customers/CustomerDetail.tsx:254
+#: src/pages/Customers/CustomerDetail.tsx:252
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 
@@ -229,7 +229,7 @@ msgstr "Attached Files"
 msgid "Attachments ({0})"
 msgstr "Attachments ({0})"
 
-#: src/pages/Customers/CustomerDetail.tsx:93
+#: src/pages/Customers/CustomerDetail.tsx:92
 msgid "Back to Customers"
 msgstr "Back to Customers"
 
@@ -242,7 +242,7 @@ msgstr "Back to Employees"
 msgid "Back to Home"
 msgstr "Back to Home"
 
-#: src/pages/Customers/CustomerDetail.tsx:240
+#: src/pages/Customers/CustomerDetail.tsx:238
 msgid "Back to List"
 msgstr "Back to List"
 
@@ -250,9 +250,9 @@ msgstr "Back to List"
 msgid "Back to Secrets"
 msgstr "Back to Secrets"
 
-#: src/pages/Customers/CustomerCreate.tsx:139
-#: src/pages/Customers/CustomerDetail.tsx:121
-#: src/pages/Customers/CustomerEdit.tsx:155
+#: src/pages/Customers/CustomerCreate.tsx:137
+#: src/pages/Customers/CustomerDetail.tsx:120
+#: src/pages/Customers/CustomerEdit.tsx:153
 msgid "Billing Address"
 msgstr "Billing Address"
 
@@ -267,9 +267,9 @@ msgstr "Branch"
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
-#: src/pages/Customers/CustomerCreate.tsx:280
-#: src/pages/Customers/CustomerDetail.tsx:268
-#: src/pages/Customers/CustomerEdit.tsx:296
+#: src/pages/Customers/CustomerCreate.tsx:278
+#: src/pages/Customers/CustomerDetail.tsx:266
+#: src/pages/Customers/CustomerEdit.tsx:294
 #: src/pages/Employees/EmployeeCreate.tsx:320
 #: src/pages/Employees/EmployeeEdit.tsx:339
 msgid "Cancel"
@@ -304,9 +304,9 @@ msgstr "Choose which notifications you want to receive"
 msgid "Choose your preferred language for the application."
 msgstr "Choose your preferred language for the application."
 
-#: src/pages/Customers/CustomerCreate.tsx:171
-#: src/pages/Customers/CustomerDetail.tsx:132
-#: src/pages/Customers/CustomerEdit.tsx:187
+#: src/pages/Customers/CustomerCreate.tsx:169
+#: src/pages/Customers/CustomerDetail.tsx:131
+#: src/pages/Customers/CustomerEdit.tsx:185
 msgid "City"
 msgstr "City"
 
@@ -345,9 +345,9 @@ msgstr "Company"
 msgid "Contact"
 msgstr "Contact"
 
-#: src/pages/Customers/CustomerCreate.tsx:205
-#: src/pages/Customers/CustomerDetail.tsx:152
-#: src/pages/Customers/CustomerEdit.tsx:221
+#: src/pages/Customers/CustomerCreate.tsx:203
+#: src/pages/Customers/CustomerDetail.tsx:151
+#: src/pages/Customers/CustomerEdit.tsx:219
 msgid "Contact Person"
 msgstr "Contact Person"
 
@@ -361,9 +361,9 @@ msgstr "Contract Start Date"
 msgid "Contract Type"
 msgstr "Contract Type"
 
-#: src/pages/Customers/CustomerCreate.tsx:185
-#: src/pages/Customers/CustomerDetail.tsx:140
-#: src/pages/Customers/CustomerEdit.tsx:201
+#: src/pages/Customers/CustomerCreate.tsx:183
+#: src/pages/Customers/CustomerDetail.tsx:139
+#: src/pages/Customers/CustomerEdit.tsx:199
 msgid "Country"
 msgstr "Country"
 
@@ -380,7 +380,7 @@ msgstr "Create a new organizational unit under \"{parentName}\"."
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
-#: src/pages/Customers/CustomerCreate.tsx:276
+#: src/pages/Customers/CustomerCreate.tsx:274
 msgid "Create Customer"
 msgstr "Create Customer"
 
@@ -415,7 +415,7 @@ msgstr "Created"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
-#: src/pages/Customers/CustomerCreate.tsx:274
+#: src/pages/Customers/CustomerCreate.tsx:272
 #: src/pages/Employees/EmployeeCreate.tsx:324
 msgid "Creating..."
 msgstr "Creating..."
@@ -433,13 +433,13 @@ msgstr "Current parent:"
 msgid "Custom"
 msgstr "Custom"
 
-#: src/pages/Customers/CustomerCreate.tsx:124
-#: src/pages/Customers/CustomerEdit.tsx:140
+#: src/pages/Customers/CustomerCreate.tsx:122
+#: src/pages/Customers/CustomerEdit.tsx:138
 msgid "Customer Name"
 msgstr "Customer Name"
 
-#: src/pages/Customers/CustomerDetail.tsx:90
-#: src/pages/Customers/CustomerEdit.tsx:116
+#: src/pages/Customers/CustomerDetail.tsx:89
+#: src/pages/Customers/CustomerEdit.tsx:114
 msgid "Customer not found"
 msgstr "Customer not found"
 
@@ -462,8 +462,8 @@ msgstr "Date of Birth"
 #: src/components/AttachmentList.tsx:215
 #: src/components/DeleteOrganizationalUnitDialog.tsx:205
 #: src/components/OrganizationalUnitTree.tsx:386
-#: src/pages/Customers/CustomerDetail.tsx:237
-#: src/pages/Customers/CustomerDetail.tsx:271
+#: src/pages/Customers/CustomerDetail.tsx:235
+#: src/pages/Customers/CustomerDetail.tsx:269
 msgid "Delete"
 msgstr "Delete"
 
@@ -471,7 +471,7 @@ msgstr "Delete"
 msgid "Delete \"{unitName}\"?"
 msgstr "Delete \"{unitName}\"?"
 
-#: src/pages/Customers/CustomerDetail.tsx:251
+#: src/pages/Customers/CustomerDetail.tsx:249
 msgid "Delete Customer"
 msgstr "Delete Customer"
 
@@ -480,7 +480,7 @@ msgid "Deleting organizational units is not possible while offline. Please recon
 msgstr "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:205
-#: src/pages/Customers/CustomerDetail.tsx:271
+#: src/pages/Customers/CustomerDetail.tsx:269
 msgid "Deleting..."
 msgstr "Deleting..."
 
@@ -531,14 +531,14 @@ msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
 #: src/components/OrganizationalUnitTree.tsx:347
-#: src/pages/Customers/CustomerDetail.tsx:229
+#: src/pages/Customers/CustomerDetail.tsx:228
 #: src/pages/Employees/EmployeeDetail.tsx:397
 #: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
 msgid "Edit"
 msgstr "Edit"
 
-#: src/pages/Customers/CustomerEdit.tsx:125
+#: src/pages/Customers/CustomerEdit.tsx:123
 msgid "Edit Customer"
 msgstr "Edit Customer"
 
@@ -563,9 +563,9 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 msgid "login.email"
 msgstr "Email"
 
-#: src/pages/Customers/CustomerCreate.tsx:222
-#: src/pages/Customers/CustomerDetail.tsx:169
-#: src/pages/Customers/CustomerEdit.tsx:238
+#: src/pages/Customers/CustomerCreate.tsx:220
+#: src/pages/Customers/CustomerDetail.tsx:168
+#: src/pages/Customers/CustomerEdit.tsx:236
 #: src/pages/Employees/EmployeeCreate.tsx:160
 #: src/pages/Employees/EmployeeDetail.tsx:73
 #: src/pages/Employees/EmployeeEdit.tsx:241
@@ -783,7 +783,7 @@ msgstr "Holding"
 msgid "Home"
 msgstr "Home"
 
-#: src/pages/Customers/CustomerDetail.tsx:111
+#: src/pages/Customers/CustomerDetail.tsx:110
 #: src/pages/Customers/CustomersPage.tsx:124
 #: src/pages/Customers/CustomersPage.tsx:192
 #: src/pages/Sites/SitesPage.tsx:152
@@ -870,8 +870,8 @@ msgstr "Loading secrets..."
 
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
-#: src/pages/Customers/CustomerDetail.tsx:81
-#: src/pages/Customers/CustomerEdit.tsx:104
+#: src/pages/Customers/CustomerDetail.tsx:80
+#: src/pages/Customers/CustomerEdit.tsx:102
 #: src/pages/Customers/CustomersPage.tsx:141
 #: src/pages/Employees/EmployeeCreate.tsx:236
 #: src/pages/Employees/EmployeeEdit.tsx:317
@@ -965,9 +965,9 @@ msgid "My profile"
 msgstr "My profile"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:284
-#: src/pages/Customers/CustomerCreate.tsx:210
-#: src/pages/Customers/CustomerDetail.tsx:158
-#: src/pages/Customers/CustomerEdit.tsx:226
+#: src/pages/Customers/CustomerCreate.tsx:208
+#: src/pages/Customers/CustomerDetail.tsx:157
+#: src/pages/Customers/CustomerEdit.tsx:224
 #: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
 #: src/pages/Sites/SitesPage.tsx:186
@@ -982,7 +982,7 @@ msgstr "Name is required"
 msgid "Name must be at most 255 characters"
 msgstr "Name must be at most 255 characters"
 
-#: src/pages/Customers/CustomerCreate.tsx:109
+#: src/pages/Customers/CustomerCreate.tsx:107
 #: src/pages/Customers/CustomersPage.tsx:88
 msgid "New Customer"
 msgstr "New Customer"
@@ -1066,9 +1066,9 @@ msgstr "No unit selected"
 msgid "Not shared with anyone"
 msgstr "Not shared with anyone"
 
-#: src/pages/Customers/CustomerCreate.tsx:249
-#: src/pages/Customers/CustomerDetail.tsx:205
-#: src/pages/Customers/CustomerEdit.tsx:265
+#: src/pages/Customers/CustomerCreate.tsx:247
+#: src/pages/Customers/CustomerDetail.tsx:204
+#: src/pages/Customers/CustomerEdit.tsx:263
 #: src/pages/Secrets/SecretDetail.tsx:393
 msgid "Notes"
 msgstr "Notes"
@@ -1189,9 +1189,9 @@ msgstr "Permission:"
 msgid "Personal Information"
 msgstr "Personal Information"
 
-#: src/pages/Customers/CustomerCreate.tsx:234
-#: src/pages/Customers/CustomerDetail.tsx:185
-#: src/pages/Customers/CustomerEdit.tsx:250
+#: src/pages/Customers/CustomerCreate.tsx:232
+#: src/pages/Customers/CustomerDetail.tsx:184
+#: src/pages/Customers/CustomerEdit.tsx:248
 #: src/pages/Employees/EmployeeCreate.tsx:173
 #: src/pages/Employees/EmployeeDetail.tsx:78
 #: src/pages/Employees/EmployeeEdit.tsx:254
@@ -1210,8 +1210,8 @@ msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Customers/CustomerCreate.tsx:158
-#: src/pages/Customers/CustomerEdit.tsx:174
+#: src/pages/Customers/CustomerCreate.tsx:156
+#: src/pages/Customers/CustomerEdit.tsx:172
 msgid "Postal Code"
 msgstr "Postal Code"
 
@@ -1310,7 +1310,7 @@ msgid "Roles"
 msgstr "Roles"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:289
+#: src/pages/Customers/CustomerEdit.tsx:287
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Save Changes"
 msgstr "Save Changes"
@@ -1324,7 +1324,7 @@ msgid "Save to Secret"
 msgstr "Save to Secret"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Customers/CustomerEdit.tsx:289
+#: src/pages/Customers/CustomerEdit.tsx:287
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Saving..."
 msgstr "Saving..."
@@ -1492,7 +1492,7 @@ msgstr "Sign out"
 msgid "Site Number"
 msgstr "Site Number"
 
-#: src/pages/Customers/CustomerDetail.tsx:214
+#: src/pages/Customers/CustomerDetail.tsx:213
 #: src/pages/Customers/CustomersPage.tsx:164
 #: src/pages/Sites/SitesPage.tsx:93
 msgid "Sites"
@@ -1521,9 +1521,9 @@ msgstr "Status"
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Step {currentStep} of {totalSteps}"
 
-#: src/pages/Customers/CustomerCreate.tsx:144
-#: src/pages/Customers/CustomerDetail.tsx:125
-#: src/pages/Customers/CustomerEdit.tsx:160
+#: src/pages/Customers/CustomerCreate.tsx:142
+#: src/pages/Customers/CustomerDetail.tsx:124
+#: src/pages/Customers/CustomerEdit.tsx:158
 msgid "Street"
 msgstr "Street"
 
@@ -1610,7 +1610,7 @@ msgid "This action cannot be undone. The organizational unit will be permanently
 msgstr "This action cannot be undone. The organizational unit will be permanently removed."
 
 #. placeholder {0}: customer.sites_count || 0
-#: src/pages/Customers/CustomerDetail.tsx:217
+#: src/pages/Customers/CustomerDetail.tsx:216
 msgid "This customer has {0} site(s)."
 msgstr "This customer has {0} site(s)."
 
@@ -1737,7 +1737,7 @@ msgstr "View"
 msgid "View Secrets"
 msgstr "View Secrets"
 
-#: src/pages/Customers/CustomerDetail.tsx:222
+#: src/pages/Customers/CustomerDetail.tsx:221
 msgid "View Sites"
 msgstr "View Sites"
 
