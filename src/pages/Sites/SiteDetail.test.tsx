@@ -49,6 +49,7 @@ describe("SiteDetail", () => {
       postal_code: "80331",
       country: "DE",
     },
+    full_address: "Teststrasse 42, 80331 München, DE",
     contact: {
       name: "Max Mustermann",
       email: "max@test.de",
@@ -194,7 +195,9 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /delete/i })
+      ).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole("button", { name: /delete/i }));
@@ -214,7 +217,9 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /delete/i })
+      ).toBeInTheDocument();
     });
 
     // Open dialog

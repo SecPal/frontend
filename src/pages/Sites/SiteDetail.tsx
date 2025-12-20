@@ -49,13 +49,13 @@ export default function SiteDetail() {
       try {
         const siteData = await getSite(id);
         setSite(siteData);
-        
+
         // Load customer and org unit in parallel, but don't fail if they error
         const [customerResult, orgUnitResult] = await Promise.allSettled([
           getCustomer(siteData.customer_id),
           getOrganizationalUnit(siteData.organizational_unit_id),
         ]);
-        
+
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
         }
