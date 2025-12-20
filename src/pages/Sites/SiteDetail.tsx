@@ -9,8 +9,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
-import { getSite, deleteSite } from "../../services/customersApi";
-import type { Site } from "../../types/customers";
+import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
+import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
+import type { Site, Customer } from "../../types/customers";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -32,26 +34,41 @@ export default function SiteDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
-    async function loadSite() {
+    async function loadData() {
       if (!id) return;
       setLoading(true);
       setError(null);
       try {
-        const data = await getSite(id);
-        setSite(data);
+        const siteData = await getSite(id);
+        setSite(siteData);
+        
+        // Load customer and org unit in parallel, but don't fail if they error
+        const [customerResult, orgUnitResult] = await Promise.allSettled([
+          getCustomer(siteData.customer_id),
+          getOrganizationalUnit(siteData.organizational_unit_id),
+        ]);
+        
+        if (customerResult.status === "fulfilled") {
+          setCustomer(customerResult.value);
+        }
+        if (orgUnitResult.status === "fulfilled") {
+          setOrgUnit(orgUnitResult.value);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load site");
       } finally {
         setLoading(false);
       }
     }
-    loadSite();
+    loadData();
   }, [id]);
 
   async function handleDelete() {
@@ -278,16 +295,20 @@ export default function SiteDetail() {
               <Trans>Customer</Trans>
             </DescriptionTerm>
             <DescriptionDetails>
-              <Button href={`/customers/${site.customer_id}`} plain>
-                <Trans>View Customer</Trans>
-              </Button>
+              {customer ? (
+                <Button href={`/customers/${site.customer_id}`} plain>
+                  {customer.name}
+                </Button>
+              ) : (
+                site.customer_id
+              )}
             </DescriptionDetails>
 
             <DescriptionTerm>
               <Trans>Organizational Unit</Trans>
             </DescriptionTerm>
             <DescriptionDetails>
-              {site.organizational_unit_id}
+              {orgUnit ? orgUnit.name : site.organizational_unit_id}
             </DescriptionDetails>
 
             <DescriptionTerm>
