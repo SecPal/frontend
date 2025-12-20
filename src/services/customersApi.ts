@@ -81,7 +81,9 @@ export async function listCustomers(
     searchParams.append("per_page", filters.per_page.toString());
   }
 
-  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers?${searchParams.toString()}`);
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
     const error = await response
@@ -743,7 +745,9 @@ export async function deleteCostCenter(
 export async function getMyCustomerAssignments(): Promise<
   CustomerAssignment[]
 > {
-  const response = await apiFetch(`${apiConfig.baseUrl}/v1/me/customer-assignments`);
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/me/customer-assignments`
+  );
 
   if (!response.ok) {
     const error = await response
@@ -760,7 +764,9 @@ export async function getMyCustomerAssignments(): Promise<
  * Gets site assignments for the authenticated user
  */
 export async function getMySiteAssignments(): Promise<SiteAssignment[]> {
-  const response = await apiFetch(`${apiConfig.baseUrl}/v1/me/site-assignments`);
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/me/site-assignments`
+  );
 
   if (!response.ok) {
     const error = await response
