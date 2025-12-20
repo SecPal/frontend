@@ -221,6 +221,16 @@ function App() {
               }
             />
             <Route
+              path="/sites/customer/:customerId"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <SitesPage />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
               path="/sites/new"
               element={
                 <OrganizationalRoute>
