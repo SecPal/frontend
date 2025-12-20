@@ -15,7 +15,7 @@ import {
   updateSite,
   listCustomers,
 } from "../../services/customersApi";
-import { listOrganizationalUnits } from "../../lib/organizationalUnitStore";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
   Site,
   UpdateSiteRequest,
@@ -24,7 +24,7 @@ import type {
   SiteType,
   Customer,
 } from "../../types/customers";
-import type { OrganizationalUnitCacheEntry } from "../../lib/db";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
@@ -48,7 +48,7 @@ export default function SiteEdit() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orgUnits, setOrgUnits] = useState<OrganizationalUnitCacheEntry[]>([]);
+  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -61,11 +61,11 @@ export default function SiteEdit() {
         const [siteData, customersData, orgUnitsData] = await Promise.all([
           getSite(id),
           listCustomers({ per_page: 100 }),
-          listOrganizationalUnits(),
+          listOrganizationalUnits({ per_page: 100 }),
         ]);
         setSite(siteData);
         setCustomers(customersData.data);
-        setOrgUnits(orgUnitsData);
+        setOrgUnits(orgUnitsData.data);
         setFormData({
           customer_id: siteData.customer_id,
           organizational_unit_id: siteData.organizational_unit_id,

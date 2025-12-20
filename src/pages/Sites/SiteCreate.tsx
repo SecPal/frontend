@@ -11,7 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { createSite, listCustomers } from "../../services/customersApi";
-import { listOrganizationalUnits } from "../../lib/organizationalUnitStore";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
   CreateSiteRequest,
   Address,
@@ -19,7 +19,7 @@ import type {
   SiteType,
   Customer,
 } from "../../types/customers";
-import type { OrganizationalUnitCacheEntry } from "../../lib/db";
+import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
@@ -41,7 +41,7 @@ export default function SiteCreate() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orgUnits, setOrgUnits] = useState<OrganizationalUnitCacheEntry[]>([]);
+  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   const [formData, setFormData] = useState<CreateSiteRequest>({
@@ -64,10 +64,10 @@ export default function SiteCreate() {
       try {
         const [customersData, orgUnitsData] = await Promise.all([
           listCustomers({ per_page: 100 }),
-          listOrganizationalUnits(),
+          listOrganizationalUnits({ per_page: 100 }),
         ]);
         setCustomers(customersData.data);
-        setOrgUnits(orgUnitsData);
+        setOrgUnits(orgUnitsData.data);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load required data"
