@@ -35,6 +35,12 @@ describe("SiteCreate", () => {
       id: "customer-1",
       customer_number: "KD-2025-0001",
       name: "Test Customer",
+      billing_address: {
+        street: "Test Street",
+        city: "Test City",
+        postal_code: "12345",
+        country: "DE",
+      },
       tenant_id: "tenant-1",
       is_active: true,
       created_at: "2025-01-01T00:00:00Z",
@@ -46,7 +52,12 @@ describe("SiteCreate", () => {
     {
       id: "org-unit-1",
       name: "Test Org Unit",
+      type: "branch" as const,
       parent_id: null,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+      cachedAt: new Date(),
+      lastSynced: new Date(),
     },
   ];
 
@@ -64,6 +75,8 @@ describe("SiteCreate", () => {
       country: "DE",
     },
     is_active: true,
+    is_expired: false,
+    full_address: "Test Street 123, 12345 Test City, DE",
     tenant_id: "tenant-1",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
@@ -83,9 +96,9 @@ describe("SiteCreate", () => {
       },
     });
 
-    vi.mocked(organizationalUnitStore.listOrganizationalUnits).mockResolvedValue(
-      mockOrgUnits
-    );
+    vi.mocked(
+      organizationalUnitStore.listOrganizationalUnits
+    ).mockResolvedValue(mockOrgUnits);
 
     vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
 
@@ -110,7 +123,9 @@ describe("SiteCreate", () => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith({
         per_page: 100,
       });
-      expect(organizationalUnitStore.listOrganizationalUnits).toHaveBeenCalled();
+      expect(
+        organizationalUnitStore.listOrganizationalUnits
+      ).toHaveBeenCalled();
     });
   });
 
@@ -186,9 +201,15 @@ describe("SiteCreate", () => {
 
     // Verify error messages are displayed
     await waitFor(() => {
-      expect(screen.getByText("Please correct the errors below.")).toBeInTheDocument();
-      expect(screen.getByText("The name field is required.")).toBeInTheDocument();
-      expect(screen.getByText("The street field is required.")).toBeInTheDocument();
+      expect(
+        screen.getByText("Please correct the errors below.")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("The name field is required.")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("The street field is required.")
+      ).toBeInTheDocument();
     });
   });
 
@@ -205,7 +226,9 @@ describe("SiteCreate", () => {
     renderComponent();
 
     await waitFor(() => {
-      const customerSelect = screen.getByLabelText(/customer/i) as HTMLSelectElement;
+      const customerSelect = screen.getByLabelText(
+        /customer/i
+      ) as HTMLSelectElement;
       expect(customerSelect.value).toBe("customer-1");
     });
   });
