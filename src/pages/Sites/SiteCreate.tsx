@@ -101,6 +101,7 @@ export default function SiteCreate() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFieldErrors({});
 
     try {
       // Clean up the data before sending
