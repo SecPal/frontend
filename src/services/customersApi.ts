@@ -139,8 +139,28 @@ export async function createCustomer(
     );
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  // Get response text first for debugging
+  const responseText = await response.text();
+  console.log("[createCustomer] Raw response:", responseText);
+
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (parseError) {
+    console.error("[createCustomer] JSON parse error:", parseError);
+    console.error("[createCustomer] Response text:", responseText);
+    throw new Error(
+      `Failed to parse customer response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+    );
+  }
+
+  console.log("[createCustomer] Parsed data:", data);
+
   if (!data.data) {
+    console.error(
+      "[createCustomer] Missing data.data in response:",
+      JSON.stringify(data)
+    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
