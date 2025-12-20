@@ -28,7 +28,12 @@ import type { OrganizationalUnitCacheEntry } from "../../lib/db";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
-import { Field, Label, FieldGroup } from "../../components/fieldset";
+import {
+  Field,
+  Label,
+  FieldGroup,
+  Description,
+} from "../../components/fieldset";
 import { Textarea } from "../../components/textarea";
 import { Checkbox, CheckboxField } from "../../components/checkbox";
 import { Select } from "../../components/select";
@@ -40,6 +45,7 @@ export default function SiteEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orgUnits, setOrgUnits] = useState<OrganizationalUnitCacheEntry[]>([]);
@@ -109,12 +115,20 @@ export default function SiteEdit() {
 
     setSaving(true);
     setError(null);
+    setFieldErrors({});
 
     try {
       await updateSite(id, formData);
       navigate(`/sites/${id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update site");
+    } catch (err: unknown) {
+      // Parse validation errors from Laravel API
+      const error = err as Error & { errors?: Record<string, string[]> };
+      if (error.errors && typeof error.errors === "object") {
+        setFieldErrors(error.errors);
+        setError("Please correct the errors below.");
+      } else {
+        setError(error.message || "Failed to update site");
+      }
     } finally {
       setSaving(false);
     }
@@ -178,6 +192,11 @@ export default function SiteEdit() {
                 </option>
               ))}
             </Select>
+            {fieldErrors.customer_id && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.customer_id.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>
@@ -199,6 +218,11 @@ export default function SiteEdit() {
                 </option>
               ))}
             </Select>
+            {fieldErrors.organizational_unit_id && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.organizational_unit_id.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>
@@ -212,6 +236,11 @@ export default function SiteEdit() {
               value={formData.name || ""}
               onChange={(e) => updateField("name", e.target.value)}
             />
+            {fieldErrors.name && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.name.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>

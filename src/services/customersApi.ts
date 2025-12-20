@@ -320,7 +320,11 @@ export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create site");
+    const errorObj = new Error(formatValidationErrors(error)) as Error & {
+      errors?: Record<string, string[]>;
+    };
+    errorObj.errors = error.errors;
+    throw errorObj;
   }
 
   const data = await response.json();
@@ -346,7 +350,11 @@ export async function updateSite(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update site");
+    const errorObj = new Error(formatValidationErrors(error)) as Error & {
+      errors?: Record<string, string[]>;
+    };
+    errorObj.errors = error.errors;
+    throw errorObj;
   }
 
   const data = await response.json();

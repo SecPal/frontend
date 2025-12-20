@@ -94,7 +94,9 @@ export default function SitesPage() {
         <Heading>
           <Trans>Sites</Trans>
         </Heading>
-        <Button href={customerId ? `/sites/new?customer_id=${customerId}` : "/sites/new"}>
+        <Button
+          href={customerId ? `/sites/new/customer/${customerId}` : "/sites/new"}
+        >
           <Trans>New Site</Trans>
         </Button>
       </div>

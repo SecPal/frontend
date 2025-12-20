@@ -116,7 +116,7 @@ msgstr "Access Instructions"
 
 #: src/pages/Customers/CustomersPage.tsx:170
 #: src/pages/Employees/EmployeeList.tsx:259
-#: src/pages/Sites/SitesPage.tsx:198
+#: src/pages/Sites/SitesPage.tsx:204
 msgid "Actions"
 msgstr "Actions"
 
@@ -141,8 +141,8 @@ msgstr "Activate"
 #: src/pages/Sites/SiteCreate.tsx:426
 #: src/pages/Sites/SiteDetail.tsx:112
 #: src/pages/Sites/SiteEdit.tsx:418
-#: src/pages/Sites/SitesPage.tsx:149
-#: src/pages/Sites/SitesPage.tsx:224
+#: src/pages/Sites/SitesPage.tsx:155
+#: src/pages/Sites/SitesPage.tsx:230
 msgid "Active"
 msgstr "Active"
 
@@ -169,7 +169,7 @@ msgstr "Add Root Unit"
 #: src/pages/Sites/SiteCreate.tsx:248
 #: src/pages/Sites/SiteDetail.tsx:126
 #: src/pages/Sites/SiteEdit.tsx:240
-#: src/pages/Sites/SitesPage.tsx:192
+#: src/pages/Sites/SitesPage.tsx:198
 msgid "Address"
 msgstr "Address"
 
@@ -187,7 +187,7 @@ msgid "All"
 msgstr "All"
 
 #: src/pages/Customers/CustomersPage.tsx:118
-#: src/pages/Sites/SitesPage.tsx:146
+#: src/pages/Sites/SitesPage.tsx:152
 msgid "All Status"
 msgstr "All Status"
 
@@ -199,7 +199,7 @@ msgstr "All synced"
 msgid "All Tags"
 msgstr "All Tags"
 
-#: src/pages/Sites/SitesPage.tsx:124
+#: src/pages/Sites/SitesPage.tsx:130
 msgid "All Types"
 msgstr "All Types"
 
@@ -849,8 +849,8 @@ msgstr "Home"
 #: src/pages/Customers/CustomersPage.tsx:124
 #: src/pages/Customers/CustomersPage.tsx:192
 #: src/pages/Sites/SiteDetail.tsx:112
-#: src/pages/Sites/SitesPage.tsx:152
-#: src/pages/Sites/SitesPage.tsx:226
+#: src/pages/Sites/SitesPage.tsx:158
+#: src/pages/Sites/SitesPage.tsx:232
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -946,7 +946,7 @@ msgstr "Loading secrets..."
 #: src/pages/Sites/SiteCreate.tsx:150
 #: src/pages/Sites/SiteDetail.tsx:76
 #: src/pages/Sites/SiteEdit.tsx:126
-#: src/pages/Sites/SitesPage.tsx:169
+#: src/pages/Sites/SitesPage.tsx:175
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -1043,7 +1043,7 @@ msgstr "My profile"
 #: src/pages/Sites/SiteCreate.tsx:320
 #: src/pages/Sites/SiteDetail.tsx:167
 #: src/pages/Sites/SiteEdit.tsx:312
-#: src/pages/Sites/SitesPage.tsx:186
+#: src/pages/Sites/SitesPage.tsx:192
 msgid "Name"
 msgstr "Name"
 
@@ -1069,7 +1069,7 @@ msgid "New Secret"
 msgstr "New Secret"
 
 #: src/pages/Sites/SiteCreate.tsx:159
-#: src/pages/Sites/SitesPage.tsx:96
+#: src/pages/Sites/SitesPage.tsx:102
 msgid "New Site"
 msgstr "New Site"
 
@@ -1078,8 +1078,8 @@ msgstr "New Site"
 #: src/pages/Employees/EmployeeList.tsx:313
 #: src/pages/Employees/EmployeeList.tsx:355
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
-#: src/pages/Sites/SitesPage.tsx:260
-#: src/pages/Sites/SitesPage.tsx:302
+#: src/pages/Sites/SitesPage.tsx:266
+#: src/pages/Sites/SitesPage.tsx:308
 msgid "Next"
 msgstr "Next"
 
@@ -1128,7 +1128,7 @@ msgstr "No secrets found"
 msgid "No secrets yet"
 msgstr "No secrets yet"
 
-#: src/pages/Sites/SitesPage.tsx:175
+#: src/pages/Sites/SitesPage.tsx:181
 msgid "No sites found"
 msgstr "No sites found"
 
@@ -1254,8 +1254,8 @@ msgstr "Pending sync"
 #: src/pages/Sites/SiteCreate.tsx:236
 #: src/pages/Sites/SiteDetail.tsx:106
 #: src/pages/Sites/SiteEdit.tsx:228
-#: src/pages/Sites/SitesPage.tsx:127
-#: src/pages/Sites/SitesPage.tsx:212
+#: src/pages/Sites/SitesPage.tsx:133
+#: src/pages/Sites/SitesPage.tsx:218
 msgid "Permanent"
 msgstr "Permanent"
 
@@ -1328,8 +1328,8 @@ msgstr "Preview not available for this file type."
 #: src/pages/Employees/EmployeeList.tsx:306
 #: src/pages/Employees/EmployeeList.tsx:347
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
-#: src/pages/Sites/SitesPage.tsx:253
-#: src/pages/Sites/SitesPage.tsx:294
+#: src/pages/Sites/SitesPage.tsx:259
+#: src/pages/Sites/SitesPage.tsx:300
 msgid "Previous"
 msgstr "Previous"
 
@@ -1422,7 +1422,7 @@ msgstr "Saving..."
 
 #: src/pages/Customers/CustomersPage.tsx:96
 #: src/pages/Employees/EmployeeList.tsx:167
-#: src/pages/Sites/SitesPage.tsx:104
+#: src/pages/Sites/SitesPage.tsx:110
 msgid "Search"
 msgstr "Search"
 
@@ -1442,7 +1442,7 @@ msgstr "Search secrets"
 msgid "Search secrets..."
 msgstr "Search secrets..."
 
-#: src/pages/Sites/SitesPage.tsx:109
+#: src/pages/Sites/SitesPage.tsx:115
 msgid "Search sites..."
 msgstr "Search sites..."
 
@@ -1577,7 +1577,7 @@ msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Sites/SitesPage.tsx:266
+#: src/pages/Sites/SitesPage.tsx:272
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 
@@ -1599,7 +1599,7 @@ msgstr "Site Name"
 msgid "Site not found"
 msgstr "Site not found"
 
-#: src/pages/Sites/SitesPage.tsx:183
+#: src/pages/Sites/SitesPage.tsx:189
 msgid "Site Number"
 msgstr "Site Number"
 
@@ -1613,7 +1613,7 @@ msgstr "Site:"
 
 #: src/pages/Customers/CustomerDetail.tsx:213
 #: src/pages/Customers/CustomersPage.tsx:164
-#: src/pages/Sites/SitesPage.tsx:93
+#: src/pages/Sites/SitesPage.tsx:95
 msgid "Sites"
 msgstr "Sites"
 
@@ -1631,8 +1631,8 @@ msgstr "Source Code"
 #: src/pages/Employees/EmployeeDetail.tsx:88
 #: src/pages/Employees/EmployeeList.tsx:194
 #: src/pages/Employees/EmployeeList.tsx:252
-#: src/pages/Sites/SitesPage.tsx:136
-#: src/pages/Sites/SitesPage.tsx:195
+#: src/pages/Sites/SitesPage.tsx:142
+#: src/pages/Sites/SitesPage.tsx:201
 msgid "Status"
 msgstr "Status"
 
@@ -1693,8 +1693,8 @@ msgstr "Team Messages"
 #: src/pages/Sites/SiteCreate.tsx:239
 #: src/pages/Sites/SiteDetail.tsx:108
 #: src/pages/Sites/SiteEdit.tsx:231
-#: src/pages/Sites/SitesPage.tsx:130
-#: src/pages/Sites/SitesPage.tsx:214
+#: src/pages/Sites/SitesPage.tsx:136
+#: src/pages/Sites/SitesPage.tsx:220
 msgid "Temporary"
 msgstr "Temporary"
 
@@ -1772,8 +1772,8 @@ msgstr "Try Again"
 #: src/pages/Organization/OrganizationPage.tsx:321
 #: src/pages/Sites/SiteCreate.tsx:227
 #: src/pages/Sites/SiteEdit.tsx:219
-#: src/pages/Sites/SitesPage.tsx:116
-#: src/pages/Sites/SitesPage.tsx:189
+#: src/pages/Sites/SitesPage.tsx:122
+#: src/pages/Sites/SitesPage.tsx:195
 msgid "Type"
 msgstr "Type"
 
@@ -1874,7 +1874,7 @@ msgstr "Validity Period"
 
 #: src/pages/Customers/CustomersPage.tsx:201
 #: src/pages/Employees/EmployeeList.tsx:288
-#: src/pages/Sites/SitesPage.tsx:235
+#: src/pages/Sites/SitesPage.tsx:241
 msgid "View"
 msgstr "View"
 

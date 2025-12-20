@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { createSite, listCustomers } from "../../services/customersApi";
@@ -23,7 +23,12 @@ import type { OrganizationalUnitCacheEntry } from "../../lib/db";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
-import { Field, Label, FieldGroup } from "../../components/fieldset";
+import {
+  Field,
+  Label,
+  FieldGroup,
+  Description,
+} from "../../components/fieldset";
 import { Textarea } from "../../components/textarea";
 import { Checkbox, CheckboxField } from "../../components/checkbox";
 import { Select } from "../../components/select";
@@ -31,17 +36,16 @@ import { Select } from "../../components/select";
 export default function SiteCreate() {
   const navigate = useNavigate();
   const { _ } = useLingui();
-  const [searchParams] = useSearchParams();
+  const { customerId } = useParams<{ customerId?: string }>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orgUnits, setOrgUnits] = useState<OrganizationalUnitCacheEntry[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  const preselectedCustomerId = searchParams.get("customer_id");
-
   const [formData, setFormData] = useState<CreateSiteRequest>({
-    customer_id: preselectedCustomerId || "",
+    customer_id: customerId || "",
     organizational_unit_id: "",
     name: "",
     type: "permanent",
@@ -137,8 +141,15 @@ export default function SiteCreate() {
 
       const site = await createSite(dataToSend);
       navigate(`/sites/${site.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create site");
+    } catch (err: unknown) {
+      // Parse validation errors from Laravel API
+      const error = err as Error & { errors?: Record<string, string[]> };
+      if (error.errors && typeof error.errors === "object") {
+        setFieldErrors(error.errors);
+        setError("Please correct the errors below.");
+      } else {
+        setError(error.message || "Failed to create site");
+      }
     } finally {
       setLoading(false);
     }
@@ -186,6 +197,11 @@ export default function SiteCreate() {
                 </option>
               ))}
             </Select>
+            {fieldErrors.customer_id && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.customer_id.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>
@@ -207,6 +223,11 @@ export default function SiteCreate() {
                 </option>
               ))}
             </Select>
+            {fieldErrors.organizational_unit_id && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.organizational_unit_id.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>
@@ -220,6 +241,11 @@ export default function SiteCreate() {
               value={formData.name}
               onChange={(e) => updateField("name", e.target.value)}
             />
+            {fieldErrors.name && (
+              <Description className="text-red-600 dark:text-red-400">
+                {fieldErrors.name.join(", ")}
+              </Description>
+            )}
           </Field>
 
           <Field>
@@ -260,6 +286,11 @@ export default function SiteCreate() {
                 value={formData.address.street}
                 onChange={(e) => updateAddress("street", e.target.value)}
               />
+              {fieldErrors["address.street"] && (
+                <Description className="text-red-600 dark:text-red-400">
+                  {fieldErrors["address.street"].join(", ")}
+                </Description>
+              )}
             </Field>
 
             <Field>
@@ -274,6 +305,11 @@ export default function SiteCreate() {
                 value={formData.address.city}
                 onChange={(e) => updateAddress("city", e.target.value)}
               />
+              {fieldErrors["address.city"] && (
+                <Description className="text-red-600 dark:text-red-400">
+                  {fieldErrors["address.city"].join(", ")}
+                </Description>
+              )}
             </Field>
 
             <Field>
@@ -288,6 +324,11 @@ export default function SiteCreate() {
                 value={formData.address.postal_code}
                 onChange={(e) => updateAddress("postal_code", e.target.value)}
               />
+              {fieldErrors["address.postal_code"] && (
+                <Description className="text-red-600 dark:text-red-400">
+                  {fieldErrors["address.postal_code"].join(", ")}
+                </Description>
+              )}
             </Field>
 
             <Field>
@@ -304,6 +345,11 @@ export default function SiteCreate() {
                 <option value="AT">Österreich</option>
                 <option value="CH">Schweiz</option>
               </Select>
+              {fieldErrors["address.country"] && (
+                <Description className="text-red-600 dark:text-red-400">
+                  {fieldErrors["address.country"].join(", ")}
+                </Description>
+              )}
             </Field>
           </FieldGroup>
         </div>
