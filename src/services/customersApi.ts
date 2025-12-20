@@ -108,8 +108,12 @@ export async function getCustomer(id: string): Promise<Customer> {
     throw new Error(error.message || "Failed to get customer");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
+    console.error(
+      "[getCustomer] Unexpected response structure:",
+      JSON.stringify(data)
+    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
@@ -139,26 +143,10 @@ export async function createCustomer(
     );
   }
 
-  // Get response text first for debugging
-  const responseText = await response.text();
-  console.log("[createCustomer] Raw response:", responseText);
-
-  let data;
-  try {
-    data = JSON.parse(responseText);
-  } catch (parseError) {
-    console.error("[createCustomer] JSON parse error:", parseError);
-    console.error("[createCustomer] Response text:", responseText);
-    throw new Error(
-      `Failed to parse customer response: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
-    );
-  }
-
-  console.log("[createCustomer] Parsed data:", data);
-
+  const data = await response.json();
   if (!data.data) {
     console.error(
-      "[createCustomer] Missing data.data in response:",
+      "[createCustomer] Unexpected response structure:",
       JSON.stringify(data)
     );
     throw new Error("Failed to parse customer response");
@@ -191,8 +179,12 @@ export async function updateCustomer(
     );
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
+    console.error(
+      "[updateCustomer] Unexpected response structure:",
+      JSON.stringify(data)
+    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
