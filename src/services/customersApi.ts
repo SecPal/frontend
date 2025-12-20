@@ -92,9 +92,7 @@ export async function listCustomers(
     throw new Error(error.message || "Failed to list customers");
   }
 
-  const data = (await response
-    .json()
-    .catch(() => ({ data: [], meta: {} }))) as PaginatedResponse<Customer>;
+  const data = (await response.json()) as PaginatedResponse<Customer>;
   return data;
 }
 
@@ -233,9 +231,7 @@ export async function getCustomerSites(
     throw new Error(error.message || "Failed to list customer sites");
   }
 
-  const data = (await response
-    .json()
-    .catch(() => ({ data: [], meta: {} }))) as PaginatedResponse<Site>;
+  const data = (await response.json()) as PaginatedResponse<Site>;
   return data;
 }
 
@@ -287,9 +283,7 @@ export async function listSites(
     throw new Error(error.message || "Failed to list sites");
   }
 
-  const data = (await response
-    .json()
-    .catch(() => ({ data: [], meta: {} }))) as PaginatedResponse<Site>;
+  const data = (await response.json()) as PaginatedResponse<Site>;
   return data;
 }
 
@@ -306,7 +300,7 @@ export async function getSite(id: string): Promise<Site> {
     throw new Error(error.message || "Failed to get site");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse site response");
   }
@@ -329,7 +323,7 @@ export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
     throw new Error(error.message || "Failed to create site");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse site response");
   }
@@ -355,7 +349,7 @@ export async function updateSite(
     throw new Error(error.message || "Failed to update site");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse site response");
   }
@@ -414,9 +408,7 @@ export async function getSiteCostCenters(
     throw new Error(error.message || "Failed to list cost centers");
   }
 
-  const data = (await response
-    .json()
-    .catch(() => ({ data: [], meta: {} }))) as PaginatedResponse<CostCenter>;
+  const data = (await response.json()) as PaginatedResponse<CostCenter>;
   return data;
 }
 
@@ -448,7 +440,7 @@ export async function listCustomerAssignments(
     throw new Error(error.message || "Failed to list customer assignments");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json();
   return (data.data || []) as CustomerAssignment[];
 }
 
@@ -474,7 +466,7 @@ export async function createCustomerAssignment(
     throw new Error(error.message || "Failed to create customer assignment");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse customer assignment response");
   }
@@ -503,7 +495,7 @@ export async function updateCustomerAssignment(
     throw new Error(error.message || "Failed to update customer assignment");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse customer assignment response");
   }
@@ -557,7 +549,7 @@ export async function listSiteAssignments(
     throw new Error(error.message || "Failed to list site assignments");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json();
   return (data.data || []) as SiteAssignment[];
 }
 
@@ -583,7 +575,7 @@ export async function createSiteAssignment(
     throw new Error(error.message || "Failed to create site assignment");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse site assignment response");
   }
@@ -612,7 +604,7 @@ export async function updateSiteAssignment(
     throw new Error(error.message || "Failed to update site assignment");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse site assignment response");
   }
@@ -664,7 +656,7 @@ export async function createCostCenter(
     throw new Error(error.message || "Failed to create cost center");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse cost center response");
   }
@@ -694,7 +686,7 @@ export async function updateCostCenter(
     throw new Error(error.message || "Failed to update cost center");
   }
 
-  const data = await response.json().catch(() => ({ data: null }));
+  const data = await response.json();
   if (!data.data) {
     throw new Error("Failed to parse cost center response");
   }
@@ -744,7 +736,7 @@ export async function getMyCustomerAssignments(): Promise<
     throw new Error(error.message || "Failed to get user customer assignments");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json();
   return (data.data || []) as CustomerAssignment[];
 }
 
@@ -763,6 +755,6 @@ export async function getMySiteAssignments(): Promise<SiteAssignment[]> {
     throw new Error(error.message || "Failed to get user site assignments");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
+  const data = await response.json();
   return (data.data || []) as SiteAssignment[];
 }
