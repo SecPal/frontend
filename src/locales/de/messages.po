@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-20 10:17+0100\n"
+"POT-Creation-Date: 2025-12-20 14:55+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -71,7 +71,7 @@ msgstr "Aktivieren"
 
 #: src/pages/Customers/CustomerCreate.tsx:264
 #: src/pages/Customers/CustomerDetail.tsx:108
-#: src/pages/Customers/CustomerEdit.tsx:280
+#: src/pages/Customers/CustomerEdit.tsx:283
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Employees/EmployeeCreate.tsx:263
@@ -194,7 +194,7 @@ msgstr "Zurück zu Geheimnisse"
 
 #: src/pages/Customers/CustomerCreate.tsx:137
 #: src/pages/Customers/CustomerDetail.tsx:120
-#: src/pages/Customers/CustomerEdit.tsx:153
+#: src/pages/Customers/CustomerEdit.tsx:156
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
 
@@ -211,7 +211,7 @@ msgstr "Niederlassung"
 #: src/components/ShareDialog.tsx:226
 #: src/pages/Customers/CustomerCreate.tsx:278
 #: src/pages/Customers/CustomerDetail.tsx:266
-#: src/pages/Customers/CustomerEdit.tsx:294
+#: src/pages/Customers/CustomerEdit.tsx:297
 #: src/pages/Employees/EmployeeCreate.tsx:320
 #: src/pages/Employees/EmployeeEdit.tsx:339
 msgid "Cancel"
@@ -243,7 +243,7 @@ msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 
 #: src/pages/Customers/CustomerCreate.tsx:169
 #: src/pages/Customers/CustomerDetail.tsx:131
-#: src/pages/Customers/CustomerEdit.tsx:185
+#: src/pages/Customers/CustomerEdit.tsx:188
 msgid "City"
 msgstr "Stadt"
 
@@ -284,7 +284,7 @@ msgstr "Kontakt"
 
 #: src/pages/Customers/CustomerCreate.tsx:203
 #: src/pages/Customers/CustomerDetail.tsx:151
-#: src/pages/Customers/CustomerEdit.tsx:219
+#: src/pages/Customers/CustomerEdit.tsx:222
 msgid "Contact Person"
 msgstr "Kontaktperson"
 
@@ -300,7 +300,7 @@ msgstr "Vertragsart"
 
 #: src/pages/Customers/CustomerCreate.tsx:183
 #: src/pages/Customers/CustomerDetail.tsx:139
-#: src/pages/Customers/CustomerEdit.tsx:199
+#: src/pages/Customers/CustomerEdit.tsx:202
 msgid "Country"
 msgstr "Land"
 
@@ -371,7 +371,7 @@ msgid "Custom"
 msgstr "Benutzerdefiniert"
 
 #: src/pages/Customers/CustomerCreate.tsx:122
-#: src/pages/Customers/CustomerEdit.tsx:138
+#: src/pages/Customers/CustomerEdit.tsx:141
 msgid "Customer Name"
 msgstr "Name des Kunden"
 
@@ -380,7 +380,7 @@ msgid "Customer Number"
 msgstr "Kundennummer"
 
 #: src/pages/Customers/CustomerDetail.tsx:89
-#: src/pages/Customers/CustomerEdit.tsx:114
+#: src/pages/Customers/CustomerEdit.tsx:117
 msgid "Customer not found"
 msgstr "Kunde nicht gefunden"
 
@@ -471,7 +471,7 @@ msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: src/pages/Customers/CustomerEdit.tsx:123
+#: src/pages/Customers/CustomerEdit.tsx:126
 msgid "Edit Customer"
 msgstr "Kunde bearbeiten"
 
@@ -493,7 +493,7 @@ msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht m�
 
 #: src/pages/Customers/CustomerCreate.tsx:220
 #: src/pages/Customers/CustomerDetail.tsx:168
-#: src/pages/Customers/CustomerEdit.tsx:236
+#: src/pages/Customers/CustomerEdit.tsx:239
 #: src/pages/Employees/EmployeeCreate.tsx:160
 #: src/pages/Employees/EmployeeDetail.tsx:73
 #: src/pages/Employees/EmployeeEdit.tsx:241
@@ -800,7 +800,7 @@ msgstr "Geheimnisse laden..."
 #: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
 #: src/pages/Customers/CustomerDetail.tsx:80
-#: src/pages/Customers/CustomerEdit.tsx:102
+#: src/pages/Customers/CustomerEdit.tsx:105
 #: src/pages/Customers/CustomersPage.tsx:141
 #: src/pages/Employees/EmployeeCreate.tsx:236
 #: src/pages/Employees/EmployeeEdit.tsx:317
@@ -871,7 +871,7 @@ msgstr "Mein Profil"
 #: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Customers/CustomerCreate.tsx:208
 #: src/pages/Customers/CustomerDetail.tsx:157
-#: src/pages/Customers/CustomerEdit.tsx:224
+#: src/pages/Customers/CustomerEdit.tsx:227
 #: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
 #: src/pages/Sites/SitesPage.tsx:186
@@ -897,7 +897,7 @@ msgstr "Neues Geheimnis"
 
 #: src/pages/Sites/SitesPage.tsx:96
 msgid "New Site"
-msgstr "Neue Website"
+msgstr "Neuer Standort"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:439
 msgid "New parent"
@@ -967,7 +967,7 @@ msgstr "Nicht mit anderen geteilt"
 
 #: src/pages/Customers/CustomerCreate.tsx:247
 #: src/pages/Customers/CustomerDetail.tsx:204
-#: src/pages/Customers/CustomerEdit.tsx:263
+#: src/pages/Customers/CustomerEdit.tsx:266
 #: src/pages/Secrets/SecretDetail.tsx:393
 msgid "Notes"
 msgstr "Anmerkungen"
@@ -1085,7 +1085,7 @@ msgstr "Persönliche Informationen"
 
 #: src/pages/Customers/CustomerCreate.tsx:232
 #: src/pages/Customers/CustomerDetail.tsx:184
-#: src/pages/Customers/CustomerEdit.tsx:248
+#: src/pages/Customers/CustomerEdit.tsx:251
 #: src/pages/Employees/EmployeeCreate.tsx:173
 #: src/pages/Employees/EmployeeDetail.tsx:78
 #: src/pages/Employees/EmployeeEdit.tsx:254
@@ -1100,7 +1100,7 @@ msgid "Position"
 msgstr "Position"
 
 #: src/pages/Customers/CustomerCreate.tsx:156
-#: src/pages/Customers/CustomerEdit.tsx:172
+#: src/pages/Customers/CustomerEdit.tsx:175
 msgid "Postal Code"
 msgstr "Postleitzahl"
 
@@ -1199,7 +1199,7 @@ msgid "Roles"
 msgstr "Rollen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:287
+#: src/pages/Customers/CustomerEdit.tsx:290
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Save Changes"
 msgstr "Änderungen speichern"
@@ -1213,7 +1213,7 @@ msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Customers/CustomerEdit.tsx:287
+#: src/pages/Customers/CustomerEdit.tsx:290
 #: src/pages/Employees/EmployeeEdit.tsx:342
 msgid "Saving..."
 msgstr "Speichern..."
@@ -1412,7 +1412,7 @@ msgstr "Schritt {currentStep} von {totalSteps}"
 
 #: src/pages/Customers/CustomerCreate.tsx:142
 #: src/pages/Customers/CustomerDetail.tsx:124
-#: src/pages/Customers/CustomerEdit.tsx:158
+#: src/pages/Customers/CustomerEdit.tsx:161
 msgid "Street"
 msgstr "Straße"
 

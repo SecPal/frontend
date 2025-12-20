@@ -113,10 +113,6 @@ export async function getCustomer(id: string): Promise<Customer> {
 
   const data = await response.json();
   if (!data.data) {
-    console.error(
-      "[getCustomer] Unexpected response structure:",
-      JSON.stringify(data)
-    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
@@ -148,10 +144,6 @@ export async function createCustomer(
 
   const data = await response.json();
   if (!data.data) {
-    console.error(
-      "[createCustomer] Unexpected response structure:",
-      JSON.stringify(data)
-    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
@@ -184,10 +176,6 @@ export async function updateCustomer(
 
   const data = await response.json();
   if (!data.data) {
-    console.error(
-      "[updateCustomer] Unexpected response structure:",
-      JSON.stringify(data)
-    );
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
