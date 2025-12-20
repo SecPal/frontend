@@ -99,6 +99,9 @@ export async function createCustomer(
 ): Promise<Customer> {
   const response = await apiFetch("/v1/customers", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(customerData),
   });
 
@@ -106,6 +109,20 @@ export async function createCustomer(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
+
+    // Format validation errors if present
+    if (error.errors) {
+      const errorMessages = Object.entries(error.errors)
+        .map(
+          ([field, messages]) =>
+            `${field}: ${(messages as string[]).join(", ")}`
+        )
+        .join("\n");
+      throw new Error(
+        errorMessages || error.message || "Failed to create customer"
+      );
+    }
+
     throw new Error(error.message || "Failed to create customer");
   }
 
@@ -125,6 +142,9 @@ export async function updateCustomer(
 ): Promise<Customer> {
   const response = await apiFetch(`/v1/customers/${id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(customerData),
   });
 
@@ -132,6 +152,20 @@ export async function updateCustomer(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
+
+    // Format validation errors if present
+    if (error.errors) {
+      const errorMessages = Object.entries(error.errors)
+        .map(
+          ([field, messages]) =>
+            `${field}: ${(messages as string[]).join(", ")}`
+        )
+        .join("\n");
+      throw new Error(
+        errorMessages || error.message || "Failed to update customer"
+      );
+    }
+
     throw new Error(error.message || "Failed to update customer");
   }
 
