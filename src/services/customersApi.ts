@@ -313,6 +313,9 @@ export async function getSite(id: string): Promise<Site> {
 export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
   const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(siteData),
   });
 
@@ -343,6 +346,9 @@ export async function updateSite(
 ): Promise<Site> {
   const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites/${id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(siteData),
   });
 
@@ -463,6 +469,9 @@ export async function createCustomerAssignment(
     `${apiConfig.baseUrl}/v1/customers/${customerId}/assignments`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -492,6 +501,9 @@ export async function updateCustomerAssignment(
     `${apiConfig.baseUrl}/v1/customer-assignments/${id}`,
     {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -572,6 +584,9 @@ export async function createSiteAssignment(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/assignments`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -601,6 +616,9 @@ export async function updateSiteAssignment(
     `${apiConfig.baseUrl}/v1/site-assignments/${id}`,
     {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -653,6 +671,9 @@ export async function createCostCenter(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(costCenterData),
     }
   );
@@ -683,6 +704,9 @@ export async function updateCostCenter(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers/${id}`,
     {
       method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(costCenterData),
     }
   );
