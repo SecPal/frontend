@@ -144,6 +144,7 @@ export default function CustomerEdit() {
               name="name"
               type="text"
               required
+              autoComplete="organization"
               value={formData.name || ""}
               onChange={(e) => updateField("name", e.target.value)}
             />
@@ -164,6 +165,7 @@ export default function CustomerEdit() {
                 name="street"
                 type="text"
                 required
+                autoComplete="street-address"
                 value={formData.billing_address?.street || ""}
                 onChange={(e) => updateAddress("street", e.target.value)}
               />
@@ -178,6 +180,7 @@ export default function CustomerEdit() {
                   name="postal_code"
                   type="text"
                   required
+                  autoComplete="postal-code"
                   value={formData.billing_address?.postal_code || ""}
                   onChange={(e) => updateAddress("postal_code", e.target.value)}
                 />
@@ -191,6 +194,7 @@ export default function CustomerEdit() {
                   name="city"
                   type="text"
                   required
+                  autoComplete="address-level2"
                   value={formData.billing_address?.city || ""}
                   onChange={(e) => updateAddress("city", e.target.value)}
                 />
@@ -207,6 +211,7 @@ export default function CustomerEdit() {
                 required
                 maxLength={2}
                 placeholder="DE"
+                autoComplete="country"
                 value={formData.billing_address?.country || ""}
                 onChange={(e) =>
                   updateAddress("country", e.target.value.toUpperCase())
@@ -229,6 +234,7 @@ export default function CustomerEdit() {
               <Input
                 name="contact_name"
                 type="text"
+                autoComplete="name"
                 value={formData.contact?.name || ""}
                 onChange={(e) => updateContact("name", e.target.value)}
               />
@@ -241,6 +247,7 @@ export default function CustomerEdit() {
               <Input
                 name="contact_email"
                 type="email"
+                autoComplete="email"
                 value={formData.contact?.email || ""}
                 onChange={(e) => updateContact("email", e.target.value)}
               />
@@ -253,6 +260,7 @@ export default function CustomerEdit() {
               <Input
                 name="contact_phone"
                 type="tel"
+                autoComplete="tel"
                 value={formData.contact?.phone || ""}
                 onChange={(e) => updateContact("phone", e.target.value)}
               />
