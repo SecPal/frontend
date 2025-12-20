@@ -9,6 +9,30 @@
  */
 
 import { apiFetch } from "./csrf";
+
+/**
+ * Formats validation errors from Laravel API into a readable error message
+ */
+function formatValidationErrors(error: {
+  message?: string;
+  errors?: Record<string, string[]>;
+}): string {
+  if (error.errors) {
+    const validationEntries = Object.entries(error.errors);
+
+    if (validationEntries.length > 0) {
+      return validationEntries
+        .map(
+          ([field, messages]) =>
+            `${field}: ${(messages as string[]).join(", ")}`
+        )
+        .join("\n");
+    }
+  }
+
+  return error.message || "An error occurred";
+}
+
 import type {
   Customer,
   CreateCustomerRequest,
@@ -99,6 +123,9 @@ export async function createCustomer(
 ): Promise<Customer> {
   const response = await apiFetch("/v1/customers", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(customerData),
   });
 
@@ -106,7 +133,10 @@ export async function createCustomer(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create customer");
+
+    throw new Error(
+      formatValidationErrors(error) || "Failed to create customer"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));
@@ -125,6 +155,9 @@ export async function updateCustomer(
 ): Promise<Customer> {
   const response = await apiFetch(`/v1/customers/${id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(customerData),
   });
 
@@ -132,7 +165,10 @@ export async function updateCustomer(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update customer");
+
+    throw new Error(
+      formatValidationErrors(error) || "Failed to update customer"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: null }));

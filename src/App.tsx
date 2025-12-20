@@ -40,6 +40,9 @@ const OrganizationPage = lazy(
   () => import("./pages/Organization/OrganizationPage")
 );
 const CustomersPage = lazy(() => import("./pages/Customers/CustomersPage"));
+const CustomerCreate = lazy(() => import("./pages/Customers/CustomerCreate"));
+const CustomerDetail = lazy(() => import("./pages/Customers/CustomerDetail"));
+const CustomerEdit = lazy(() => import("./pages/Customers/CustomerEdit"));
 const SitesPage = lazy(() => import("./pages/Sites/SitesPage"));
 
 function Home() {
@@ -170,6 +173,36 @@ function App() {
                 <OrganizationalRoute>
                   <ApplicationLayout>
                     <CustomersPage />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/customers/new"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <CustomerCreate />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/customers/:id"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <CustomerDetail />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
+            <Route
+              path="/customers/:id/edit"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <CustomerEdit />
                   </ApplicationLayout>
                 </OrganizationalRoute>
               }
