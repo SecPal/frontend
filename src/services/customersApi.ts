@@ -34,6 +34,22 @@ function formatValidationErrors(error: {
   return error.message || "An error occurred";
 }
 
+/**
+ * Handles API validation errors by creating an error object with attached errors
+ * @param error - The error response from the API
+ * @returns Error object with validation errors attached
+ */
+function handleApiValidationError(error: {
+  message?: string;
+  errors?: Record<string, string[]>;
+}): Error & { errors?: Record<string, string[]> } {
+  const errorObj = new Error(formatValidationErrors(error)) as Error & {
+    errors?: Record<string, string[]>;
+  };
+  errorObj.errors = error.errors;
+  return errorObj;
+}
+
 import type {
   Customer,
   CreateCustomerRequest,
@@ -323,11 +339,7 @@ export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    const errorObj = new Error(formatValidationErrors(error)) as Error & {
-      errors?: Record<string, string[]>;
-    };
-    errorObj.errors = error.errors;
-    throw errorObj;
+    throw handleApiValidationError(error);
   }
 
   const data = await response.json();
@@ -356,11 +368,7 @@ export async function updateSite(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    const errorObj = new Error(formatValidationErrors(error)) as Error & {
-      errors?: Record<string, string[]>;
-    };
-    errorObj.errors = error.errors;
-    throw errorObj;
+    throw handleApiValidationError(error);
   }
 
   const data = await response.json();
