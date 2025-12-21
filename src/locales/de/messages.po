@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-12-20 14:55+0100\n"
+"POT-Creation-Date: 2025-12-20 18:10+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -38,11 +38,11 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:62
+#: src/App.tsx:65
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:73
+#: src/App.tsx:76
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -54,9 +54,15 @@ msgstr "Zugangskontrolle"
 msgid "Access Denied"
 msgstr "Zugang verweigert"
 
+#: src/pages/Sites/SiteCreate.tsx:395
+#: src/pages/Sites/SiteDetail.tsx:253
+#: src/pages/Sites/SiteEdit.tsx:387
+msgid "Access Instructions"
+msgstr "Zugriffsanweisungen"
+
 #: src/pages/Customers/CustomersPage.tsx:170
 #: src/pages/Employees/EmployeeList.tsx:259
-#: src/pages/Sites/SitesPage.tsx:198
+#: src/pages/Sites/SitesPage.tsx:204
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -69,17 +75,20 @@ msgstr "Aktionen für {0}"
 msgid "Activate"
 msgstr "Aktivieren"
 
-#: src/pages/Customers/CustomerCreate.tsx:264
+#: src/pages/Customers/CustomerCreate.tsx:272
 #: src/pages/Customers/CustomerDetail.tsx:108
-#: src/pages/Customers/CustomerEdit.tsx:283
+#: src/pages/Customers/CustomerEdit.tsx:291
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Employees/EmployeeCreate.tsx:263
 #: src/pages/Employees/EmployeeDetail.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:45
 #: src/pages/Employees/EmployeeList.tsx:214
-#: src/pages/Sites/SitesPage.tsx:149
-#: src/pages/Sites/SitesPage.tsx:224
+#: src/pages/Sites/SiteCreate.tsx:426
+#: src/pages/Sites/SiteDetail.tsx:112
+#: src/pages/Sites/SiteEdit.tsx:418
+#: src/pages/Sites/SitesPage.tsx:155
+#: src/pages/Sites/SitesPage.tsx:230
 msgid "Active"
 msgstr "Aktiv"
 
@@ -103,7 +112,10 @@ msgstr "Füge ein neues Geheimnis zu deinem Tresor hinzu."
 msgid "Add child"
 msgstr "Untergeordnete Einheit hinzufügen"
 
-#: src/pages/Sites/SitesPage.tsx:192
+#: src/pages/Sites/SiteCreate.tsx:248
+#: src/pages/Sites/SiteDetail.tsx:126
+#: src/pages/Sites/SiteEdit.tsx:240
+#: src/pages/Sites/SitesPage.tsx:198
 msgid "Address"
 msgstr "Adresse"
 
@@ -117,7 +129,7 @@ msgid "All"
 msgstr "Alle"
 
 #: src/pages/Customers/CustomersPage.tsx:118
-#: src/pages/Sites/SitesPage.tsx:146
+#: src/pages/Sites/SitesPage.tsx:152
 msgid "All Status"
 msgstr "Alle Status"
 
@@ -125,7 +137,7 @@ msgstr "Alle Status"
 msgid "All Tags"
 msgstr "Alle Tags"
 
-#: src/pages/Sites/SitesPage.tsx:124
+#: src/pages/Sites/SitesPage.tsx:130
 msgid "All Types"
 msgstr "Alle Typen"
 
@@ -158,6 +170,10 @@ msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nic
 msgid "Are you sure you want to delete this attachment?"
 msgstr "Sind Sie sicher, dass Sie diesen Anhang löschen möchten?"
 
+#: src/pages/Sites/SiteDetail.tsx:333
+msgid "Are you sure you want to delete this site? This action cannot be undone."
+msgstr "Sind Sie sicher, dass Sie diesen Standort löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+
 #: src/components/SharedWithList.tsx:29
 msgid "Are you sure you want to revoke access for {name}?"
 msgstr "Sind Sie sicher, dass Sie den Zugang für {name} widerrufen wollen?"
@@ -180,11 +196,12 @@ msgstr "Zurück zu den Kunden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
-#: src/App.tsx:84
+#: src/App.tsx:87
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
 #: src/pages/Customers/CustomerDetail.tsx:238
+#: src/pages/Sites/SiteDetail.tsx:322
 msgid "Back to List"
 msgstr "Zurück zur Liste"
 
@@ -192,9 +209,13 @@ msgstr "Zurück zur Liste"
 msgid "Back to Secrets"
 msgstr "Zurück zu Geheimnisse"
 
-#: src/pages/Customers/CustomerCreate.tsx:137
+#: src/pages/Sites/SiteDetail.tsx:88
+msgid "Back to Sites"
+msgstr "zurück zu den Standorten"
+
+#: src/pages/Customers/CustomerCreate.tsx:138
 #: src/pages/Customers/CustomerDetail.tsx:120
-#: src/pages/Customers/CustomerEdit.tsx:156
+#: src/pages/Customers/CustomerEdit.tsx:157
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
 
@@ -209,11 +230,14 @@ msgstr "Niederlassung"
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/SecretForm.tsx:401
 #: src/components/ShareDialog.tsx:226
-#: src/pages/Customers/CustomerCreate.tsx:278
+#: src/pages/Customers/CustomerCreate.tsx:286
 #: src/pages/Customers/CustomerDetail.tsx:266
-#: src/pages/Customers/CustomerEdit.tsx:297
+#: src/pages/Customers/CustomerEdit.tsx:305
 #: src/pages/Employees/EmployeeCreate.tsx:320
 #: src/pages/Employees/EmployeeEdit.tsx:339
+#: src/pages/Sites/SiteCreate.tsx:436
+#: src/pages/Sites/SiteDetail.tsx:353
+#: src/pages/Sites/SiteEdit.tsx:428
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -241,9 +265,12 @@ msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 msgid "Choose your preferred language for the application."
 msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 
-#: src/pages/Customers/CustomerCreate.tsx:169
+#: src/pages/Customers/CustomerCreate.tsx:172
 #: src/pages/Customers/CustomerDetail.tsx:131
-#: src/pages/Customers/CustomerEdit.tsx:188
+#: src/pages/Customers/CustomerEdit.tsx:191
+#: src/pages/Sites/SiteCreate.tsx:267
+#: src/pages/Sites/SiteDetail.tsx:135
+#: src/pages/Sites/SiteEdit.tsx:259
 msgid "City"
 msgstr "Stadt"
 
@@ -282,9 +309,12 @@ msgstr "Unternehmen"
 msgid "Contact"
 msgstr "Kontakt"
 
-#: src/pages/Customers/CustomerCreate.tsx:203
+#: src/pages/Customers/CustomerCreate.tsx:208
 #: src/pages/Customers/CustomerDetail.tsx:151
-#: src/pages/Customers/CustomerEdit.tsx:222
+#: src/pages/Customers/CustomerEdit.tsx:227
+#: src/pages/Sites/SiteCreate.tsx:314
+#: src/pages/Sites/SiteDetail.tsx:163
+#: src/pages/Sites/SiteEdit.tsx:306
 msgid "Contact Person"
 msgstr "Kontaktperson"
 
@@ -298,9 +328,16 @@ msgstr "Datum des Vertragsbeginns"
 msgid "Contract Type"
 msgstr "Vertragsart"
 
-#: src/pages/Customers/CustomerCreate.tsx:183
+#: src/pages/Sites/SiteDetail.tsx:149
+msgid "Coordinates"
+msgstr "Koordinaten"
+
+#: src/pages/Customers/CustomerCreate.tsx:187
 #: src/pages/Customers/CustomerDetail.tsx:139
-#: src/pages/Customers/CustomerEdit.tsx:202
+#: src/pages/Customers/CustomerEdit.tsx:206
+#: src/pages/Sites/SiteCreate.tsx:295
+#: src/pages/Sites/SiteDetail.tsx:142
+#: src/pages/Sites/SiteEdit.tsx:287
 msgid "Country"
 msgstr "Land"
 
@@ -309,7 +346,7 @@ msgstr "Land"
 msgid "Create"
 msgstr "Erstellen"
 
-#: src/pages/Customers/CustomerCreate.tsx:274
+#: src/pages/Customers/CustomerCreate.tsx:282
 msgid "Create Customer"
 msgstr "Kunde anlegen"
 
@@ -331,6 +368,10 @@ msgstr "Organisatorische Einheit anlegen"
 msgid "Create Secret"
 msgstr "Geheimnis erstellen"
 
+#: src/pages/Sites/SiteCreate.tsx:433
+msgid "Create Site"
+msgstr "Standort anlegen"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:238
 msgid "Create a new organizational unit under \"{parentName}\"."
 msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
@@ -345,6 +386,7 @@ msgstr "Erstellen Sie Ihr erstes Geheimnis, um loszulegen"
 
 #: src/pages/Organization/OrganizationPage.tsx:349
 #: src/pages/Secrets/SecretDetail.tsx:466
+#: src/pages/Sites/SiteDetail.tsx:294
 msgid "Created"
 msgstr "Erstellt"
 
@@ -352,8 +394,9 @@ msgstr "Erstellt"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
-#: src/pages/Customers/CustomerCreate.tsx:272
+#: src/pages/Customers/CustomerCreate.tsx:280
 #: src/pages/Employees/EmployeeCreate.tsx:324
+#: src/pages/Sites/SiteCreate.tsx:433
 msgid "Creating..."
 msgstr "Erstellen..."
 
@@ -369,6 +412,12 @@ msgstr "Aktuelle übergeordnete Einheit:"
 #: src/lib/organizationalUnitUtils.ts:112
 msgid "Custom"
 msgstr "Benutzerdefiniert"
+
+#: src/pages/Sites/SiteCreate.tsx:174
+#: src/pages/Sites/SiteDetail.tsx:278
+#: src/pages/Sites/SiteEdit.tsx:166
+msgid "Customer"
+msgstr "Kunde"
 
 #: src/pages/Customers/CustomerCreate.tsx:122
 #: src/pages/Customers/CustomerEdit.tsx:141
@@ -401,6 +450,8 @@ msgstr "Geburtsdatum"
 #: src/components/OrganizationalUnitTree.tsx:386
 #: src/pages/Customers/CustomerDetail.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:269
+#: src/pages/Sites/SiteDetail.tsx:319
+#: src/pages/Sites/SiteDetail.tsx:356
 msgid "Delete"
 msgstr "Löschen"
 
@@ -412,12 +463,17 @@ msgstr "\"{unitName}\" löschen?"
 msgid "Delete Customer"
 msgstr "Kunde löschen"
 
+#: src/pages/Sites/SiteDetail.tsx:330
+msgid "Delete Site"
+msgstr "Standort löschen"
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx:150
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:205
 #: src/pages/Customers/CustomerDetail.tsx:269
+#: src/pages/Sites/SiteDetail.tsx:356
 msgid "Deleting..."
 msgstr "Löschen..."
 
@@ -436,6 +492,7 @@ msgid "Description must be at most 1000 characters"
 msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
 #: src/pages/Secrets/SecretDetail.tsx:298
+#: src/pages/Sites/SiteDetail.tsx:274
 msgid "Details"
 msgstr "Details"
 
@@ -468,6 +525,7 @@ msgstr "Dateien hierher ziehen oder zum Durchsuchen anklicken"
 #: src/pages/Employees/EmployeeDetail.tsx:397
 #: src/pages/Organization/OrganizationPage.tsx:360
 #: src/pages/Secrets/SecretDetail.tsx:281
+#: src/pages/Sites/SiteDetail.tsx:312
 msgid "Edit"
 msgstr "Bearbeiten"
 
@@ -487,17 +545,24 @@ msgstr "Organisatorische Einheit bearbeiten"
 msgid "Edit Secret"
 msgstr "Geheimnis bearbeiten"
 
+#: src/pages/Sites/SiteEdit.tsx:151
+msgid "Edit Site"
+msgstr "Standort bearbeiten"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:265
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
-#: src/pages/Customers/CustomerCreate.tsx:220
+#: src/pages/Customers/CustomerCreate.tsx:226
 #: src/pages/Customers/CustomerDetail.tsx:168
-#: src/pages/Customers/CustomerEdit.tsx:239
+#: src/pages/Customers/CustomerEdit.tsx:245
 #: src/pages/Employees/EmployeeCreate.tsx:160
 #: src/pages/Employees/EmployeeDetail.tsx:73
 #: src/pages/Employees/EmployeeEdit.tsx:241
 #: src/pages/Profile/ProfilePage.tsx:67
+#: src/pages/Sites/SiteCreate.tsx:333
+#: src/pages/Sites/SiteDetail.tsx:174
+#: src/pages/Sites/SiteEdit.tsx:325
 msgid "Email"
 msgstr "E-Mail"
 
@@ -576,6 +641,7 @@ msgstr "Ausklappen"
 #: src/pages/Secrets/SecretDetail.tsx:274
 #: src/pages/Secrets/SecretDetail.tsx:381
 #: src/pages/Secrets/SecretList.tsx:208
+#: src/pages/Sites/SiteDetail.tsx:116
 msgid "Expired"
 msgstr "Abgelaufen"
 
@@ -715,8 +781,9 @@ msgstr "Startseite"
 #: src/pages/Customers/CustomerDetail.tsx:110
 #: src/pages/Customers/CustomersPage.tsx:124
 #: src/pages/Customers/CustomersPage.tsx:192
-#: src/pages/Sites/SitesPage.tsx:152
-#: src/pages/Sites/SitesPage.tsx:226
+#: src/pages/Sites/SiteDetail.tsx:112
+#: src/pages/Sites/SitesPage.tsx:158
+#: src/pages/Sites/SitesPage.tsx:232
 msgid "Inactive"
 msgstr "Inaktiv"
 
@@ -737,6 +804,10 @@ msgstr "Sprache"
 #: src/pages/Employees/EmployeeEdit.tsx:213
 msgid "Last Name"
 msgstr "Nachname"
+
+#: src/pages/Sites/SiteDetail.tsx:301
+msgid "Last Updated"
+msgstr "Zuletzt aktualisiert"
 
 #. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
 #. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
@@ -805,7 +876,10 @@ msgstr "Geheimnisse laden..."
 #: src/pages/Employees/EmployeeCreate.tsx:236
 #: src/pages/Employees/EmployeeEdit.tsx:317
 #: src/pages/Secrets/SecretEdit.tsx:116
-#: src/pages/Sites/SitesPage.tsx:169
+#: src/pages/Sites/SiteCreate.tsx:150
+#: src/pages/Sites/SiteDetail.tsx:76
+#: src/pages/Sites/SiteEdit.tsx:126
+#: src/pages/Sites/SitesPage.tsx:175
 msgid "Loading..."
 msgstr "Laden..."
 
@@ -869,12 +943,15 @@ msgid "My profile"
 msgstr "Mein Profil"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:284
-#: src/pages/Customers/CustomerCreate.tsx:208
+#: src/pages/Customers/CustomerCreate.tsx:213
 #: src/pages/Customers/CustomerDetail.tsx:157
-#: src/pages/Customers/CustomerEdit.tsx:227
+#: src/pages/Customers/CustomerEdit.tsx:232
 #: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
-#: src/pages/Sites/SitesPage.tsx:186
+#: src/pages/Sites/SiteCreate.tsx:320
+#: src/pages/Sites/SiteDetail.tsx:167
+#: src/pages/Sites/SiteEdit.tsx:312
+#: src/pages/Sites/SitesPage.tsx:192
 msgid "Name"
 msgstr "Name"
 
@@ -895,7 +972,8 @@ msgstr "Neuer Kunde"
 msgid "New Secret"
 msgstr "Neues Geheimnis"
 
-#: src/pages/Sites/SitesPage.tsx:96
+#: src/pages/Sites/SiteCreate.tsx:159
+#: src/pages/Sites/SitesPage.tsx:102
 msgid "New Site"
 msgstr "Neuer Standort"
 
@@ -908,8 +986,8 @@ msgstr "neue übergeordnete Einheit"
 #: src/pages/Employees/EmployeeList.tsx:313
 #: src/pages/Employees/EmployeeList.tsx:355
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
-#: src/pages/Sites/SitesPage.tsx:260
-#: src/pages/Sites/SitesPage.tsx:302
+#: src/pages/Sites/SitesPage.tsx:266
+#: src/pages/Sites/SitesPage.tsx:308
 msgid "Next"
 msgstr "Weiter"
 
@@ -953,7 +1031,7 @@ msgstr "Keine Geheimnisse gefunden"
 msgid "No secrets yet"
 msgstr "Noch keine Geheimnisse"
 
-#: src/pages/Sites/SitesPage.tsx:175
+#: src/pages/Sites/SitesPage.tsx:181
 msgid "No sites found"
 msgstr "Keine Seiten gefunden"
 
@@ -965,10 +1043,13 @@ msgstr "Keine Einheit ausgewählt"
 msgid "Not shared with anyone"
 msgstr "Nicht mit anderen geteilt"
 
-#: src/pages/Customers/CustomerCreate.tsx:247
+#: src/pages/Customers/CustomerCreate.tsx:255
 #: src/pages/Customers/CustomerDetail.tsx:204
-#: src/pages/Customers/CustomerEdit.tsx:266
+#: src/pages/Customers/CustomerEdit.tsx:274
 #: src/pages/Secrets/SecretDetail.tsx:393
+#: src/pages/Sites/SiteCreate.tsx:408
+#: src/pages/Sites/SiteDetail.tsx:265
+#: src/pages/Sites/SiteEdit.tsx:400
 msgid "Notes"
 msgstr "Anmerkungen"
 
@@ -1028,6 +1109,9 @@ msgstr "Organisationsstruktur"
 #: src/pages/Employees/EmployeeDetail.tsx:105
 #: src/pages/Employees/EmployeeEdit.tsx:304
 #: src/pages/Employees/EmployeeList.tsx:180
+#: src/pages/Sites/SiteCreate.tsx:193
+#: src/pages/Sites/SiteDetail.tsx:287
+#: src/pages/Sites/SiteEdit.tsx:185
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
@@ -1065,8 +1149,11 @@ msgstr "Passwort"
 msgid "Pending sync"
 msgstr "Ausstehende Synchronisierung"
 
-#: src/pages/Sites/SitesPage.tsx:127
-#: src/pages/Sites/SitesPage.tsx:212
+#: src/pages/Sites/SiteCreate.tsx:236
+#: src/pages/Sites/SiteDetail.tsx:106
+#: src/pages/Sites/SiteEdit.tsx:228
+#: src/pages/Sites/SitesPage.tsx:133
+#: src/pages/Sites/SitesPage.tsx:218
 msgid "Permanent"
 msgstr "Dauerhaft"
 
@@ -1083,12 +1170,15 @@ msgstr "Erlaubnis:"
 msgid "Personal Information"
 msgstr "Persönliche Informationen"
 
-#: src/pages/Customers/CustomerCreate.tsx:232
+#: src/pages/Customers/CustomerCreate.tsx:239
 #: src/pages/Customers/CustomerDetail.tsx:184
-#: src/pages/Customers/CustomerEdit.tsx:251
+#: src/pages/Customers/CustomerEdit.tsx:258
 #: src/pages/Employees/EmployeeCreate.tsx:173
 #: src/pages/Employees/EmployeeDetail.tsx:78
 #: src/pages/Employees/EmployeeEdit.tsx:254
+#: src/pages/Sites/SiteCreate.tsx:346
+#: src/pages/Sites/SiteDetail.tsx:190
+#: src/pages/Sites/SiteEdit.tsx:338
 msgid "Phone"
 msgstr "Telefon"
 
@@ -1096,11 +1186,14 @@ msgstr "Telefon"
 #: src/pages/Employees/EmployeeDetail.tsx:83
 #: src/pages/Employees/EmployeeEdit.tsx:276
 #: src/pages/Employees/EmployeeList.tsx:249
+#: src/pages/Sites/SiteDetail.tsx:206
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Customers/CustomerCreate.tsx:156
-#: src/pages/Customers/CustomerEdit.tsx:175
+#: src/pages/Customers/CustomerCreate.tsx:158
+#: src/pages/Customers/CustomerEdit.tsx:177
+#: src/pages/Sites/SiteCreate.tsx:281
+#: src/pages/Sites/SiteEdit.tsx:273
 msgid "Postal Code"
 msgstr "Postleitzahl"
 
@@ -1128,8 +1221,8 @@ msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 #: src/pages/Employees/EmployeeList.tsx:306
 #: src/pages/Employees/EmployeeList.tsx:347
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
-#: src/pages/Sites/SitesPage.tsx:253
-#: src/pages/Sites/SitesPage.tsx:294
+#: src/pages/Sites/SitesPage.tsx:259
+#: src/pages/Sites/SitesPage.tsx:300
 msgid "Previous"
 msgstr "Vorherige"
 
@@ -1199,8 +1292,9 @@ msgid "Roles"
 msgstr "Rollen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:290
+#: src/pages/Customers/CustomerEdit.tsx:298
 #: src/pages/Employees/EmployeeEdit.tsx:342
+#: src/pages/Sites/SiteEdit.tsx:425
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
@@ -1213,14 +1307,15 @@ msgid "Save to Secret"
 msgstr "Als Geheimnis speichern"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/pages/Customers/CustomerEdit.tsx:290
+#: src/pages/Customers/CustomerEdit.tsx:298
 #: src/pages/Employees/EmployeeEdit.tsx:342
+#: src/pages/Sites/SiteEdit.tsx:425
 msgid "Saving..."
 msgstr "Speichern..."
 
 #: src/pages/Customers/CustomersPage.tsx:96
 #: src/pages/Employees/EmployeeList.tsx:167
-#: src/pages/Sites/SitesPage.tsx:104
+#: src/pages/Sites/SitesPage.tsx:110
 msgid "Search"
 msgstr "Suche"
 
@@ -1240,15 +1335,15 @@ msgstr "Geheimnisse durchsuchen"
 msgid "Search secrets..."
 msgstr "Geheimnisse durchsuchen..."
 
-#: src/pages/Sites/SitesPage.tsx:109
+#: src/pages/Sites/SitesPage.tsx:115
 msgid "Search sites..."
 msgstr "Standorte suchen..."
 
-#: src/App.tsx:55
+#: src/App.tsx:58
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:76
+#: src/App.tsx:79
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
@@ -1278,6 +1373,11 @@ msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinh
 msgid "Select an organizational unit to view details"
 msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 
+#: src/pages/Sites/SiteCreate.tsx:182
+#: src/pages/Sites/SiteEdit.tsx:174
+msgid "Select customer..."
+msgstr "Kunde auswählen..."
+
 #: src/components/MoveOrganizationalUnitDialog.tsx:448
 msgid "Select new parent"
 msgstr "neue übergeordnete Einheit auswählen"
@@ -1287,6 +1387,11 @@ msgstr "neue übergeordnete Einheit auswählen"
 #: src/pages/Employees/EmployeeEdit.tsx:319
 msgid "Select organizational unit"
 msgstr "Organisationseinheit auswählen"
+
+#: src/pages/Sites/SiteCreate.tsx:203
+#: src/pages/Sites/SiteEdit.tsx:195
+msgid "Select organizational unit..."
+msgstr "Organisationseinheit auswählen..."
 
 #: src/components/ShareDialog.tsx:135
 msgid "Select user or role..."
@@ -1365,7 +1470,7 @@ msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Sites/SitesPage.tsx:266
+#: src/pages/Sites/SitesPage.tsx:272
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Standorten"
 
@@ -1377,13 +1482,31 @@ msgstr "Zeige zwischengespeicherte Daten"
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: src/pages/Sites/SitesPage.tsx:183
+#: src/pages/Sites/SiteCreate.tsx:214
+#: src/pages/Sites/SiteEdit.tsx:206
+msgid "Site Name"
+msgstr "Name des Standorts"
+
+#: src/pages/Sites/SitesPage.tsx:189
 msgid "Site Number"
 msgstr "Standort Nummer"
 
+#: src/pages/Sites/SiteDetail.tsx:348
+msgid "Site Number:"
+msgstr "Standort-Nummer:"
+
+#: src/pages/Sites/SiteDetail.tsx:85
+#: src/pages/Sites/SiteEdit.tsx:142
+msgid "Site not found"
+msgstr "Standort nicht gefunden"
+
+#: src/pages/Sites/SiteDetail.tsx:345
+msgid "Site:"
+msgstr "Standort:"
+
 #: src/pages/Customers/CustomerDetail.tsx:213
 #: src/pages/Customers/CustomersPage.tsx:164
-#: src/pages/Sites/SitesPage.tsx:93
+#: src/pages/Sites/SitesPage.tsx:95
 msgid "Sites"
 msgstr "Standorte"
 
@@ -1401,8 +1524,8 @@ msgstr "Quelltext"
 #: src/pages/Employees/EmployeeDetail.tsx:88
 #: src/pages/Employees/EmployeeList.tsx:194
 #: src/pages/Employees/EmployeeList.tsx:252
-#: src/pages/Sites/SitesPage.tsx:136
-#: src/pages/Sites/SitesPage.tsx:195
+#: src/pages/Sites/SitesPage.tsx:142
+#: src/pages/Sites/SitesPage.tsx:201
 msgid "Status"
 msgstr "Status"
 
@@ -1410,9 +1533,12 @@ msgstr "Status"
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Schritt {currentStep} von {totalSteps}"
 
-#: src/pages/Customers/CustomerCreate.tsx:142
+#: src/pages/Customers/CustomerCreate.tsx:143
 #: src/pages/Customers/CustomerDetail.tsx:124
-#: src/pages/Customers/CustomerEdit.tsx:161
+#: src/pages/Customers/CustomerEdit.tsx:162
+#: src/pages/Sites/SiteCreate.tsx:253
+#: src/pages/Sites/SiteDetail.tsx:130
+#: src/pages/Sites/SiteEdit.tsx:245
 msgid "Street"
 msgstr "Straße"
 
@@ -1452,8 +1578,11 @@ msgstr "Tags"
 msgid "Team Messages"
 msgstr "Team-Nachrichten"
 
-#: src/pages/Sites/SitesPage.tsx:130
-#: src/pages/Sites/SitesPage.tsx:214
+#: src/pages/Sites/SiteCreate.tsx:239
+#: src/pages/Sites/SiteDetail.tsx:108
+#: src/pages/Sites/SiteEdit.tsx:231
+#: src/pages/Sites/SitesPage.tsx:136
+#: src/pages/Sites/SitesPage.tsx:220
 msgid "Temporary"
 msgstr "Vorübergehend"
 
@@ -1519,8 +1648,10 @@ msgstr "Versuchen Sie, Ihre Filter anzupassen"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:303
 #: src/pages/Organization/OrganizationPage.tsx:321
-#: src/pages/Sites/SitesPage.tsx:116
-#: src/pages/Sites/SitesPage.tsx:189
+#: src/pages/Sites/SiteCreate.tsx:227
+#: src/pages/Sites/SiteEdit.tsx:219
+#: src/pages/Sites/SitesPage.tsx:122
+#: src/pages/Sites/SitesPage.tsx:195
 msgid "Type"
 msgstr "Typ"
 
@@ -1601,13 +1732,35 @@ msgstr "Benutzername"
 msgid "Users"
 msgstr "Benutzer"
 
+#: src/pages/Sites/SiteCreate.tsx:368
+#: src/pages/Sites/SiteDetail.tsx:227
+#: src/pages/Sites/SiteEdit.tsx:360
+msgid "Valid From"
+msgstr "Gültig von"
+
+#: src/pages/Sites/SiteCreate.tsx:380
+#: src/pages/Sites/SiteDetail.tsx:238
+#: src/pages/Sites/SiteEdit.tsx:372
+msgid "Valid Until"
+msgstr "Gültig bis"
+
+#: src/pages/Sites/SiteCreate.tsx:362
+#: src/pages/Sites/SiteDetail.tsx:221
+#: src/pages/Sites/SiteEdit.tsx:354
+msgid "Validity Period"
+msgstr "Gültigkeitsdauer"
+
 #: src/pages/Customers/CustomersPage.tsx:201
 #: src/pages/Employees/EmployeeList.tsx:288
-#: src/pages/Sites/SitesPage.tsx:235
+#: src/pages/Sites/SitesPage.tsx:241
 msgid "View"
 msgstr "Anzeigen"
 
-#: src/App.tsx:59
+#: src/pages/Sites/SiteDetail.tsx:282
+msgid "View Customer"
+msgstr "Kunde anzeigen"
+
+#: src/App.tsx:62
 msgid "View Secrets"
 msgstr "Geheimnisse ansehen"
 
@@ -1623,7 +1776,7 @@ msgstr "Zeigen Sie Ihre Kontoinformationen an."
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
 
-#: src/App.tsx:52
+#: src/App.tsx:55
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 

@@ -217,7 +217,7 @@ export default function CustomerDetail() {
               This customer has {customer.sites_count || 0} site(s).
             </Trans>
           </Text>
-          <Button href={`/sites?customer_id=${customer.id}`} outline>
+          <Button href={`/sites/customer/${customer.id}`} outline>
             <Trans>View Sites</Trans>
           </Button>
         </div>

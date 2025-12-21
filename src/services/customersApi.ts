@@ -34,6 +34,22 @@ function formatValidationErrors(error: {
   return error.message || "An error occurred";
 }
 
+/**
+ * Handles API validation errors by creating an error object with attached errors
+ * @param error - The error response from the API
+ * @returns Error object with validation errors attached
+ */
+function handleApiValidationError(error: {
+  message?: string;
+  errors?: Record<string, string[]>;
+}): Error & { errors?: Record<string, string[]> } {
+  const errorObj = new Error(formatValidationErrors(error)) as Error & {
+    errors?: Record<string, string[]>;
+  };
+  errorObj.errors = error.errors;
+  return errorObj;
+}
+
 import type {
   Customer,
   CreateCustomerRequest,
@@ -313,6 +329,9 @@ export async function getSite(id: string): Promise<Site> {
 export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
   const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(siteData),
   });
 
@@ -320,7 +339,7 @@ export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create site");
+    throw handleApiValidationError(error);
   }
 
   const data = await response.json();
@@ -339,6 +358,9 @@ export async function updateSite(
 ): Promise<Site> {
   const response = await apiFetch(`${apiConfig.baseUrl}/v1/sites/${id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(siteData),
   });
 
@@ -346,7 +368,7 @@ export async function updateSite(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update site");
+    throw handleApiValidationError(error);
   }
 
   const data = await response.json();
@@ -455,6 +477,9 @@ export async function createCustomerAssignment(
     `${apiConfig.baseUrl}/v1/customers/${customerId}/assignments`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -484,6 +509,9 @@ export async function updateCustomerAssignment(
     `${apiConfig.baseUrl}/v1/customer-assignments/${id}`,
     {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -564,6 +592,9 @@ export async function createSiteAssignment(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/assignments`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -593,6 +624,9 @@ export async function updateSiteAssignment(
     `${apiConfig.baseUrl}/v1/site-assignments/${id}`,
     {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(assignmentData),
     }
   );
@@ -645,6 +679,9 @@ export async function createCostCenter(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers`,
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(costCenterData),
     }
   );
@@ -675,6 +712,9 @@ export async function updateCostCenter(
     `${apiConfig.baseUrl}/v1/sites/${siteId}/cost-centers/${id}`,
     {
       method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(costCenterData),
     }
   );

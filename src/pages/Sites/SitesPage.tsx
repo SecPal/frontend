@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { listSites } from "../../services/customersApi";
@@ -30,9 +30,11 @@ import { Badge } from "../../components/badge";
 
 export default function SitesPage() {
   const { _ } = useLingui();
+  const { customerId } = useParams<{ customerId?: string }>();
   const [filters, setFilters] = useState<SiteFilters>({
     page: 1,
     per_page: 15,
+    customer_id: customerId,
   });
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,9 @@ export default function SitesPage() {
         <Heading>
           <Trans>Sites</Trans>
         </Heading>
-        <Button href="/sites/new">
+        <Button
+          href={customerId ? `/sites/new/customer/${customerId}` : "/sites/new"}
+        >
           <Trans>New Site</Trans>
         </Button>
       </div>
