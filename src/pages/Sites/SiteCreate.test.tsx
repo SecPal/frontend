@@ -219,14 +219,14 @@ describe("SiteCreate", () => {
     });
   });
 
-  it.skip("displays validation errors from API", async () => {
+  it("displays validation errors from API", async () => {
     const user = userEvent.setup();
     const validationError = new Error("Validation failed") as Error & {
       errors?: Record<string, string[]>;
     };
     validationError.errors = {
-      name: ["The name field is required."],
-      "address.street": ["The street field is required."],
+      name: ["The name must not exceed 255 characters."],
+      "address.street": ["The street field must be a valid address."],
     };
     vi.mocked(customersApi.createSite).mockRejectedValue(validationError);
 
@@ -236,33 +236,38 @@ describe("SiteCreate", () => {
       expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
     });
 
-    // Fill only customer and org unit
+    // Fill all required fields to bypass HTML5 validation
     await user.selectOptions(screen.getByLabelText(/customer/i), "customer-1");
     await user.selectOptions(
       screen.getByLabelText(/organizational unit/i),
       "org-1"
     );
+    await user.type(screen.getByLabelText(/site name/i), "Test Site");
+    await user.type(screen.getByLabelText(/street/i), "Invalid Street");
+    await user.type(screen.getByLabelText(/city/i), "Test City");
+    await user.type(screen.getByLabelText(/postal code/i), "12345");
 
-    // Submit without required fields
+    // Submit - API will reject with validation errors
     await user.click(screen.getByRole("button", { name: /create site/i }));
 
     await waitFor(() => {
+      expect(customersApi.createSite).toHaveBeenCalled();
       expect(
-        screen.getByText(/the name field is required/i)
+        screen.getByText(/the name must not exceed 255 characters/i)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/the street field is required/i)
+        screen.getByText(/the street field must be a valid address/i)
       ).toBeInTheDocument();
     });
   });
 
-  it.skip("clears field errors when resubmitting", async () => {
+  it("clears field errors when resubmitting", async () => {
     const user = userEvent.setup();
     const validationError = new Error("Validation failed") as Error & {
       errors?: Record<string, string[]>;
     };
     validationError.errors = {
-      name: ["The name field is required."],
+      name: ["The name must be at least 3 characters."],
     };
     vi.mocked(customersApi.createSite)
       .mockRejectedValueOnce(validationError)
@@ -280,27 +285,35 @@ describe("SiteCreate", () => {
       "org-1"
     );
 
-    // Submit without name
-    await user.click(screen.getByRole("button", { name: /create site/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(/the name field is required/i)
-      ).toBeInTheDocument();
-    });
-
-    // Fill name and resubmit
-    await user.type(screen.getByLabelText(/site name/i), "New Site");
+    // Fill fields with data that will trigger validation error
+    await user.type(screen.getByLabelText(/site name/i), "AB"); // Too short
     await user.type(screen.getByLabelText(/street/i), "Test Street");
     await user.type(screen.getByLabelText(/city/i), "Test City");
     await user.type(screen.getByLabelText(/postal code/i), "12345");
+
+    // Submit - API will reject
     await user.click(screen.getByRole("button", { name: /create site/i }));
 
-    // Error should be cleared
     await waitFor(() => {
+      expect(customersApi.createSite).toHaveBeenCalledTimes(1);
       expect(
-        screen.queryByText(/the name field is required/i)
+        screen.getByText(/the name must be at least 3 characters/i)
+      ).toBeInTheDocument();
+    });
+
+    // Fix the validation error
+    const nameInput = screen.getByLabelText(/site name/i);
+    await user.clear(nameInput);
+    await user.type(nameInput, "Valid Site Name");
+    await user.click(screen.getByRole("button", { name: /create site/i }));
+
+    // Error should be cleared and navigate should be called
+    await waitFor(() => {
+      expect(customersApi.createSite).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByText(/the name must be at least 3 characters/i)
       ).not.toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
     });
   });
 
