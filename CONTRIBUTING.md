@@ -540,6 +540,55 @@ SPDX-License-Identifier = "SEE-LICENSE-IN-PACKAGE"
 
 Run `reuse lint` to check compliance.
 
+## Troubleshooting
+
+### Pre-Push Hook Issues
+
+If you experience issues with the pre-push hook (e.g., it runs on commands other than `git push`, or causes delays):
+
+1. **Run the diagnostic tool:**
+
+   ```bash
+   ./scripts/diagnose-hooks.sh
+   ```
+
+   This will check your hook installation, git configuration, and shell environment.
+
+2. **Common causes:**
+   - **Shell prompts** (starship, oh-my-zsh) may execute git commands on every prompt render
+   - **Directory hooks** (direnv, `.envrc` files) may trigger on `cd` commands
+   - **Git aliases** or wrapper functions may intercept git commands
+   - **Broken symlinks** in `.git/hooks/` directory
+
+3. **Quick fixes:**
+
+   ```bash
+   # Reinstall hooks cleanly
+   rm .git/hooks/pre-push && ./scripts/setup-pre-push.sh
+
+   # Test in a clean shell
+   env -i HOME="$HOME" TERM="$TERM" bash --norc --noprofile
+
+   # Check for git aliases
+   type git
+
+   # Enable git tracing to see what's happening
+   GIT_TRACE=1 git status 2>&1 | grep -i hook
+   ```
+
+4. **If hooks are genuinely misbehaving:**
+
+   Pre-push hooks should **only** execute during `git push` commands. If they run on other git commands (`status`, `log`, `add`), this indicates a local environment issue, not a repository bug.
+
+   Share the output of `./scripts/diagnose-hooks.sh` when reporting the issue.
+
+### Performance Tips
+
+- **Skip tests locally:** Tests are skipped by default in pre-push hooks (run in CI instead)
+- **Force enable tests:** `PREFLIGHT_RUN_TESTS=1 git push` (useful before major PRs)
+- **Force dependency reinstall:** `PREFLIGHT_FORCE_INSTALL=1 git push`
+- **Skip hook temporarily:** `git push --no-verify` (use sparingly)
+
 ## Getting Help
 
 If you have questions or need help:
