@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Git Hooks Diagnostic Tool** (#392)
+  - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
+  - Comprehensive checks for hook installation, git config, shell environment
+  - Detects prompt/tool integrations that may trigger hooks unexpectedly
+  - Provides actionable recommendations for fixing hook problems
+  - Documentation: `docs/diagnose-hooks.md`
+  - Added "Troubleshooting" section to CONTRIBUTING.md with diagnostic guide, performance tips, and common fixes
 - **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
   - **API Service Layers:**
     - Employee API service layer (CRUD operations, activate, terminate)

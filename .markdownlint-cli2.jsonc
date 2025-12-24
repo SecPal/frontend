@@ -3,8 +3,15 @@
     "MD013": false,
     "MD024": false,
     "MD025": false,
-    "MD060": false // Disable table formatting to prevent conflicts with Prettier
+    "MD060": false, // Disable table formatting to prevent conflicts with Prettier
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules/**"]
+  "ignores": [
+    "node_modules/**",
+    "playwright-report/**",
+    "test-results/**",
+    "coverage/**",
+    "dist/**",
+    "build/**",
+  ],
 }
