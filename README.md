@@ -366,8 +366,6 @@ PREFLIGHT_RUN_TESTS=1 ./scripts/preflight.sh
 
 ⚡ **Performance:** Tests are skipped by default for faster workflow. Tests always run in CI.
 
-⚡ **Performance:** Tests are skipped by default for faster workflow. Tests always run in CI.
-
 This runs:
 
 - ✅ Prettier formatting check

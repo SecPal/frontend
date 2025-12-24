@@ -132,10 +132,10 @@ fi
 if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
   # OPTIMIZATION: Skip install if node_modules is up-to-date (massive time saver)
   # Force install via: PREFLIGHT_FORCE_INSTALL=1 git push
-  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ]; then
+  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ] || [ pnpm-lock.yaml -nt node_modules ]; then
     pnpm install --frozen-lockfile
   else
-    echo "ℹ️  Skipping pnpm install (node_modules exists, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
+    echo "ℹ️  Skipping pnpm install (dependencies up-to-date, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
   fi
   # Check if scripts exist before running (pnpm run <script> exits 0 with --if-present)
   pnpm run --if-present lint
@@ -175,10 +175,10 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
   # OPTIMIZATION: Skip install if node_modules is up-to-date (massive time saver)
   # Force install via: PREFLIGHT_FORCE_INSTALL=1 git push
-  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ]; then
+  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ] || [ yarn.lock -nt node_modules ]; then
     yarn install --frozen-lockfile
   else
-    echo "ℹ️  Skipping yarn install (node_modules exists, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
+    echo "ℹ️  Skipping yarn install (dependencies up-to-date, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
   fi
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
   if command -v jq >/dev/null 2>&1; then
