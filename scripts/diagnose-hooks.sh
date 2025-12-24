@@ -70,7 +70,19 @@ echo ""
 echo "🧪 Hook Execution Test:"
 echo "  Testing: Running 'git status' (should NOT trigger pre-push hook)"
 echo "  ---"
-timeout 3 git status >/dev/null 2>&1 && echo "  ✅ git status completed without delay" || echo "  ❌ git status failed or hung"
+if command -v timeout >/dev/null 2>&1; then
+  TIMEOUT_CMD=(timeout 3)
+elif command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT_CMD=(gtimeout 3)
+else
+  TIMEOUT_CMD=()
+fi
+
+if [ ${#TIMEOUT_CMD[@]} -gt 0 ]; then
+  "${TIMEOUT_CMD[@]}" git status >/dev/null 2>&1 && echo "  ✅ git status completed without delay" || echo "  ❌ git status failed or hung"
+else
+  git status >/dev/null 2>&1 && echo "  ✅ git status completed (no timeout command available)" || echo "  ❌ git status failed"
+fi
 echo "  ---"
 echo ""
 
@@ -108,7 +120,7 @@ if [ -L .git/hooks/pre-push ] && [ -f .git/hooks/pre-push ]; then
   echo "     Look for git-related hooks, prompts, or directory change scripts"
   echo ""
   echo "  2. Try running in a clean shell:"
-  echo "     env -i HOME=\"\$HOME\" TERM=\"\$TERM\" bash --norc --noprofile"
+  echo '     env -i HOME=$HOME TERM=$TERM bash --norc --noprofile'
   echo ""
   echo "  3. Check if tools like direnv or starship are executing git commands:"
   echo "     GIT_TRACE=1 git status 2>&1 | grep -i hook"

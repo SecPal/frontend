@@ -567,7 +567,7 @@ If you experience issues with the pre-push hook (e.g., it runs on commands other
    rm .git/hooks/pre-push && ./scripts/setup-pre-push.sh
 
    # Test in a clean shell
-   env -i HOME="$HOME" TERM="$TERM" bash --norc --noprofile
+   env -i HOME=$HOME TERM=$TERM bash --norc --noprofile
 
    # Check for git aliases
    type git
