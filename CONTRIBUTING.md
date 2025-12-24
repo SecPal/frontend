@@ -86,10 +86,31 @@ This script runs automatically before every `git push` via the pre-push hook.
 - Markdown linting
 - Workflow linting (actionlint)
 - REUSE compliance
-- PHP linting and tests (if applicable)
-- Node.js linting and tests (if applicable)
+- Linting (ESLint) - always runs
+- Type checking (TypeScript) - always runs
+- Tests (Vitest, Playwright) - **skipped by default for speed** ⚡
 - OpenAPI validation (if applicable)
 - PR size (< 600 lines recommended, excluding lock files and license files)
+
+**⚡ Performance Optimization:**
+
+Tests are **skipped by default** in the pre-push hook for faster workflow.
+Dependency installation is **also skipped** if `node_modules` exists (saves 3+ minutes).
+Tests **always run in CI**, so local skip is safe.
+
+To enable tests locally when needed:
+
+```bash
+# Run with tests (useful before major PR)
+PREFLIGHT_RUN_TESTS=1 git push
+
+# Force dependency reinstall
+PREFLIGHT_FORCE_INSTALL=1 git push
+
+# Or run tests separately
+pnpm test:run        # Unit tests
+pnpm test:e2e        # E2E tests
+```
 
 **Excluded from PR size calculation:**
 

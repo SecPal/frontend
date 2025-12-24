@@ -130,16 +130,27 @@ fi
 
 # 2) Node / React
 if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
-  pnpm install --frozen-lockfile
+  # OPTIMIZATION: Skip install if node_modules is up-to-date (massive time saver)
+  # Force install via: PREFLIGHT_FORCE_INSTALL=1 git push
+  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ] || [ pnpm-lock.yaml -nt node_modules ]; then
+    pnpm install --frozen-lockfile
+  else
+    echo "ℹ️  Skipping pnpm install (dependencies up-to-date, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
+  fi
   # Check if scripts exist before running (pnpm run <script> exits 0 with --if-present)
   pnpm run --if-present lint
   pnpm run --if-present typecheck
 
-  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
-  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
-  # Reason: Tests take >2 minutes and block every push
-  # Full test suite runs on every PR via .github/workflows/quality.yml
-  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
+  # OPTIMIZATION: Tests are SKIPPED by default in pre-push hook for speed
+  # Enable via: PREFLIGHT_RUN_TESTS=1 git push
+  # Tests always run in CI, so local skip is safe
+  if [ "${PREFLIGHT_RUN_TESTS:-0}" = "1" ]; then
+    echo "→ Running tests (enabled via PREFLIGHT_RUN_TESTS=1)..."
+    pnpm run --if-present test:run
+  else
+    echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   Tests will run in CI pipeline" >&2
+  fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   # Only run npm ci if node_modules is missing or package-lock.json is newer
   if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then
@@ -151,13 +162,24 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
   npm run --if-present lint
   npm run --if-present typecheck
 
-  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
-  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
-  # Reason: Tests take >2 minutes and block every push
-  # Full test suite runs on every PR via .github/workflows/quality.yml
-  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
+  # OPTIMIZATION: Tests are SKIPPED by default in pre-push hook for speed
+  # Enable via: PREFLIGHT_RUN_TESTS=1 git push
+  # Tests always run in CI, so local skip is safe
+  if [ "${PREFLIGHT_RUN_TESTS:-0}" = "1" ]; then
+    echo "→ Running tests (enabled via PREFLIGHT_RUN_TESTS=1)..."
+    npm run --if-present test:run
+  else
+    echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   Tests will run in CI pipeline" >&2
+  fi
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
-  yarn install --frozen-lockfile
+  # OPTIMIZATION: Skip install if node_modules is up-to-date (massive time saver)
+  # Force install via: PREFLIGHT_FORCE_INSTALL=1 git push
+  if [ "${PREFLIGHT_FORCE_INSTALL:-0}" = "1" ] || [ ! -d node_modules ] || [ yarn.lock -nt node_modules ]; then
+    yarn install --frozen-lockfile
+  else
+    echo "ℹ️  Skipping yarn install (dependencies up-to-date, force via PREFLIGHT_FORCE_INSTALL=1)" >&2
+  fi
   # Yarn doesn't have --if-present, check package.json using jq or Node.js
   if command -v jq >/dev/null 2>&1; then
     jq -e '.scripts.lint' package.json >/dev/null 2>&1 && yarn lint
@@ -170,11 +192,22 @@ elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
     yarn lint 2>/dev/null || true
     yarn typecheck 2>/dev/null || true
   fi
-  # ⚠️ SKIP TESTS IN PRE-PUSH HOOK
-  # Tests run in CI (GitHub Actions) instead to avoid blocking local workflow
-  # Reason: Tests take >2 minutes and block every push
-  # Full test suite runs on every PR via .github/workflows/quality.yml
-  echo "ℹ️  Skipping tests in pre-push hook (tests run in CI)"
+  # OPTIMIZATION: Tests are SKIPPED by default in pre-push hook for speed
+  # Enable via: PREFLIGHT_RUN_TESTS=1 git push
+  # Tests always run in CI, so local skip is safe
+  if [ "${PREFLIGHT_RUN_TESTS:-0}" = "1" ]; then
+    echo "→ Running tests (enabled via PREFLIGHT_RUN_TESTS=1)..."
+    if command -v jq >/dev/null 2>&1; then
+      jq -e '.scripts."test:run"' package.json >/dev/null 2>&1 && yarn test:run
+    elif command -v node >/dev/null 2>&1; then
+      node -e "process.exit(require('./package.json').scripts?.['test:run'] ? 0 : 1)" && yarn test:run
+    else
+      yarn test:run 2>/dev/null || true
+    fi
+  else
+    echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   Tests will run in CI pipeline" >&2
+  fi
 fi
 
 # 3) OpenAPI (Spectral)
