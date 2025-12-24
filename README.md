@@ -357,8 +357,16 @@ npm run format:check
 **Before every push**, run the preflight script:
 
 ```bash
+# Fast mode (no tests, ~30s)
 ./scripts/preflight.sh
+
+# With tests (~2-5 min)
+PREFLIGHT_RUN_TESTS=1 ./scripts/preflight.sh
 ```
+
+⚡ **Performance:** Tests are skipped by default for faster workflow. Tests always run in CI.
+
+⚡ **Performance:** Tests are skipped by default for faster workflow. Tests always run in CI.
 
 This runs:
 
@@ -367,7 +375,7 @@ This runs:
 - ✅ REUSE compliance
 - ✅ ESLint
 - ✅ TypeScript type checking
-- ✅ Vitest test suite
+- ⏭️ Tests (skipped by default, run in CI)
 - ✅ PR size validation (≤600 lines)
 
 ## 📁 Project Structure
