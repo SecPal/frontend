@@ -21,13 +21,13 @@ export function validateRankRange(
   min: number | null,
   max: number | null
 ): RankRangeValidation {
-  // Invalid: Guards (min=0) mixed with Leadership (max>0)
-  // Must use separate scopes: one for Guards (min=0, max=0), one for Leadership (min=X, max=Y)
-  if (min === 0 && max !== null && max > 0) {
+  // Invalid: Guards (min=0) mixed with Leadership (max>0 or max=null)
+  // Must use separate scopes: one for Guards (min=0, max=0), one for Leadership (min>0, max>0)
+  if (min === 0 && (max === null || max > 0)) {
     return {
       valid: false,
       error:
-        "Guards (min=0) and Leadership (max>0) must use separate scopes. Use min=0, max=0 for Guards only.",
+        "Guards (min=0, max=0) and Leadership (min>0, max>0) must use separate scopes.",
     };
   }
 

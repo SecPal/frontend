@@ -19,6 +19,12 @@ describe("leadershipLevelUtils", () => {
       expect(result.error).toContain("separate scopes");
     });
 
+    it("should reject invalid combination: min=0, max=null (Guards + all Leadership mixed)", () => {
+      const result = validateRankRange(0, null);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("separate scopes");
+    });
+
     it("should reject invalid combination: min=5, max=0", () => {
       const result = validateRankRange(5, 0);
       expect(result.valid).toBe(false);
