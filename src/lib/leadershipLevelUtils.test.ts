@@ -13,6 +13,18 @@ import {
 
 describe("leadershipLevelUtils", () => {
   describe("validateRankRange", () => {
+    it("should reject invalid combination: min=0, max>0 (Guards + Leadership mixed)", () => {
+      const result = validateRankRange(0, 5);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("separate scopes");
+    });
+
+    it("should reject invalid combination: min=0, max=null (Guards + all Leadership mixed)", () => {
+      const result = validateRankRange(0, null);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("separate scopes");
+    });
+
     it("should reject invalid combination: min=5, max=0", () => {
       const result = validateRankRange(5, 0);
       expect(result.valid).toBe(false);
@@ -29,6 +41,12 @@ describe("leadershipLevelUtils", () => {
       const result = validateRankRange(10, 5);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("Minimum rank cannot be greater");
+    });
+
+    it("should accept valid combination: min=0, max=0 (Guards only)", () => {
+      const result = validateRankRange(0, 0);
+      expect(result.valid).toBe(true);
+      expect(result.error).toBeUndefined();
     });
 
     it("should accept valid combination: min=null, max=0 (only non-leadership)", () => {
