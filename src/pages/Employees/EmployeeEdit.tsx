@@ -148,7 +148,7 @@ export function EmployeeEdit() {
           : `${monthStr}/${dayStr}/${yearStr}`;
 
       return { iso, formatted, valid: true };
-    } catch (e) {
+    } catch {
       return { iso: "", formatted: displayDate, valid: false };
     }
   };
@@ -218,7 +218,7 @@ export function EmployeeEdit() {
     } finally {
       setFetchLoading(false);
     }
-  }, [id]);
+  }, [id, i18n.locale]);
 
   useEffect(() => {
     loadEmployee();

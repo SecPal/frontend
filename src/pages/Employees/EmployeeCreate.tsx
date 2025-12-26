@@ -127,7 +127,7 @@ export function EmployeeCreate() {
           : `${monthStr}/${dayStr}/${yearStr}`;
 
       return { iso, formatted, valid: true };
-    } catch (e) {
+    } catch {
       return { iso: "", formatted: displayDate, valid: false };
     }
   };
