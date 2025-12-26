@@ -36,6 +36,12 @@ export interface Employee {
     id: string;
     name: string;
   };
+  leadership_level?: {
+    id: string;
+    rank: number;
+    name: string;
+    color?: string;
+  } | null;
   user?: {
     id: string;
     name: string;
@@ -71,6 +77,7 @@ export interface EmployeeFormData {
   contract_end_date?: string;
   position: string;
   organizational_unit_id: string;
+  leadership_level_id?: string | null; // ADD: Optional leadership level assignment
   hire_date?: string;
   status: EmployeeStatus;
   contract_type: "full_time" | "part_time" | "minijob" | "freelance";
