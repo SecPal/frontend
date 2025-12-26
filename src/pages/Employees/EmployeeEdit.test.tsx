@@ -9,11 +9,13 @@ import { i18n } from "@lingui/core";
 import { EmployeeEdit } from "./EmployeeEdit";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as leadershipLevelApi from "../../services/leadershipLevelApi";
 import type { Employee } from "../../services/employeeApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/leadershipLevelApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -92,6 +94,9 @@ describe("EmployeeEdit", () => {
         root_unit_ids: [],
       },
     });
+    vi.mocked(
+      leadershipLevelApi.fetchAvailableLeadershipLevels
+    ).mockResolvedValue([]);
   });
 
   it("should load and pre-populate form with employee data", async () => {
@@ -167,6 +172,7 @@ describe("EmployeeEdit", () => {
         position: "Developer",
         contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
+        leadership_level_id: null,
         status: "active",
         contract_type: "full_time",
       });

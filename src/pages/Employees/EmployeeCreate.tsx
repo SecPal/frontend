@@ -9,7 +9,9 @@ import {
   type EmployeeFormData,
 } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import { fetchAvailableLeadershipLevels } from "../../services/leadershipLevelApi";
 import type { OrganizationalUnit } from "../../types/organizational";
+import type { LeadershipLevel } from "../../types/leadershipLevel";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -34,6 +36,10 @@ export function EmployeeCreate() {
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
+  const [leadershipLevels, setLeadershipLevels] = useState<LeadershipLevel[]>(
+    []
+  );
+  const [levelsLoading, setLevelsLoading] = useState(true);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -43,6 +49,7 @@ export function EmployeeCreate() {
     position: "",
     contract_start_date: "",
     organizational_unit_id: "",
+    leadership_level_id: null,
     status: "pre_contract",
     contract_type: "full_time",
   });
@@ -58,7 +65,20 @@ export function EmployeeCreate() {
         setUnitsLoading(false);
       }
     }
+
+    async function loadLeadershipLevels() {
+      try {
+        const levels = await fetchAvailableLeadershipLevels();
+        setLeadershipLevels(levels);
+      } catch (err) {
+        console.error("Failed to load leadership levels:", err);
+      } finally {
+        setLevelsLoading(false);
+      }
+    }
+
     loadOrganizationalUnits();
+    loadLeadershipLevels();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -85,7 +105,7 @@ export function EmployeeCreate() {
     }
   }
 
-  function handleChange(field: keyof EmployeeFormData, value: string) {
+  function handleChange(field: keyof EmployeeFormData, value: string | null) {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts editing
     if (error) {
@@ -241,6 +261,36 @@ export function EmployeeCreate() {
                     {organizationalUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
                         {unit.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <Field>
+                  <Label>
+                    <Trans>Leadership Level</Trans>
+                  </Label>
+                  <Select
+                    name="leadership_level_id"
+                    value={formData.leadership_level_id ?? ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "leadership_level_id",
+                        e.target.value || null
+                      )
+                    }
+                    disabled={levelsLoading}
+                  >
+                    <option value="">
+                      {levelsLoading ? (
+                        <Trans>Loading...</Trans>
+                      ) : (
+                        <Trans>No Leadership Level</Trans>
+                      )}
+                    </option>
+                    {leadershipLevels.map((level) => (
+                      <option key={level.id} value={level.id}>
+                        FE{level.rank} - {level.name}
                       </option>
                     ))}
                   </Select>

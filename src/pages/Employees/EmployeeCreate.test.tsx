@@ -9,10 +9,12 @@ import { i18n } from "@lingui/core";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as leadershipLevelApi from "../../services/leadershipLevelApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/leadershipLevelApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -67,6 +69,11 @@ describe("EmployeeCreate", () => {
         root_unit_ids: ["unit-1", "unit-2"],
       },
     });
+
+    // Mock leadership levels loading
+    vi.mocked(
+      leadershipLevelApi.fetchAvailableLeadershipLevels
+    ).mockResolvedValue([]);
   });
 
   it("should render create form with all fields", async () => {
@@ -173,6 +180,7 @@ describe("EmployeeCreate", () => {
         position: "Developer",
         contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
+        leadership_level_id: null,
         status: "pre_contract",
         contract_type: "full_time",
       });
@@ -245,7 +253,9 @@ describe("EmployeeCreate", () => {
 
     const select = screen.getByLabelText(/organizational unit/i);
     expect(select).toBeDisabled();
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    // Get all options with loading text - there are now 2 (org units + leadership)
+    const loadingOptions = screen.getAllByText(/loading/i);
+    expect(loadingOptions.length).toBeGreaterThan(0);
   });
 
   it("should handle organizational units loading error gracefully", async () => {

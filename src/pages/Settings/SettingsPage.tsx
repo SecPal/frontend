@@ -6,6 +6,7 @@ import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 import { Divider } from "../../components/divider";
+import { Link } from "../../components/link";
 
 /**
  * Settings Page
@@ -40,6 +41,29 @@ export function SettingsPage() {
 
         <div className="max-w-xs">
           <LanguageSwitcher />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* Leadership Levels Section */}
+      <section className="space-y-4">
+        <div>
+          <Heading level={2}>
+            <Trans>Leadership Levels</Trans>
+          </Heading>
+          <Text className="mt-1">
+            <Trans>
+              Manage tenant-wide leadership level definitions for hierarchical
+              access control.
+            </Trans>
+          </Text>
+        </div>
+
+        <div>
+          <Link href="/settings/leadership-levels">
+            <Trans>Manage Leadership Levels</Trans>
+          </Link>
         </div>
       </section>
     </div>

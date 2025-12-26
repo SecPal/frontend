@@ -11,7 +11,9 @@ import {
   type EmployeeFormData,
 } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import { fetchAvailableLeadershipLevels } from "../../services/leadershipLevelApi";
 import type { OrganizationalUnit } from "../../types/organizational";
+import type { LeadershipLevel } from "../../types/leadershipLevel";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -38,6 +40,10 @@ export function EmployeeEdit() {
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
+  const [leadershipLevels, setLeadershipLevels] = useState<LeadershipLevel[]>(
+    []
+  );
+  const [levelsLoading, setLevelsLoading] = useState(true);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -47,6 +53,7 @@ export function EmployeeEdit() {
     position: "",
     contract_start_date: "",
     organizational_unit_id: "",
+    leadership_level_id: null,
     status: "pre_contract",
     contract_type: "full_time",
   });
@@ -62,7 +69,20 @@ export function EmployeeEdit() {
         setUnitsLoading(false);
       }
     }
+
+    async function loadLeadershipLevels() {
+      try {
+        const levels = await fetchAvailableLeadershipLevels();
+        setLeadershipLevels(levels);
+      } catch (err) {
+        console.error("Failed to load leadership levels:", err);
+      } finally {
+        setLevelsLoading(false);
+      }
+    }
+
     loadOrganizationalUnits();
+    loadLeadershipLevels();
   }, []);
 
   const loadEmployee = useCallback(async () => {
@@ -83,6 +103,7 @@ export function EmployeeEdit() {
         position: employee.position,
         contract_start_date: employee.contract_start_date,
         organizational_unit_id: employee.organizational_unit.id,
+        leadership_level_id: employee.leadership_level?.id ?? null,
         status: employee.status,
         contract_type: employee.contract_type || "full_time",
       });
@@ -131,7 +152,7 @@ export function EmployeeEdit() {
     }
   }
 
-  function handleChange(field: keyof EmployeeFormData, value: string) {
+  function handleChange(field: keyof EmployeeFormData, value: string | null) {
     setFormData((prev: EmployeeFormData) => ({ ...prev, [field]: value }));
   }
 
@@ -322,6 +343,36 @@ export function EmployeeEdit() {
                     {organizationalUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
                         {unit.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <Field>
+                  <Label>
+                    <Trans>Leadership Level</Trans>
+                  </Label>
+                  <Select
+                    name="leadership_level_id"
+                    value={formData.leadership_level_id ?? ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "leadership_level_id",
+                        e.target.value || null
+                      )
+                    }
+                    disabled={levelsLoading}
+                  >
+                    <option value="">
+                      {levelsLoading ? (
+                        <Trans>Loading...</Trans>
+                      ) : (
+                        <Trans>No Leadership Level</Trans>
+                      )}
+                    </option>
+                    {leadershipLevels.map((level) => (
+                      <option key={level.id} value={level.id}>
+                        FE{level.rank} - {level.name}
                       </option>
                     ))}
                   </Select>
