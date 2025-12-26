@@ -9,13 +9,11 @@ import { i18n } from "@lingui/core";
 import { EmployeeEdit } from "./EmployeeEdit";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
-import * as leadershipLevelApi from "../../services/leadershipLevelApi";
 import type { Employee } from "../../services/employeeApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
-vi.mock("../../services/leadershipLevelApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -53,6 +51,7 @@ const mockEmployee: Employee = {
   contract_start_date: "2025-01-01",
   status: "active",
   contract_type: "full_time",
+  management_level: 0,
   organizational_unit: {
     id: "unit-1",
     name: "Engineering",
@@ -94,9 +93,6 @@ describe("EmployeeEdit", () => {
         root_unit_ids: [],
       },
     });
-    vi.mocked(
-      leadershipLevelApi.fetchAvailableLeadershipLevels
-    ).mockResolvedValue([]);
   });
 
   it("should load and pre-populate form with employee data", async () => {
@@ -109,10 +105,10 @@ describe("EmployeeEdit", () => {
     expect(screen.getByLabelText(/last name/i)).toHaveValue("Doe");
     expect(screen.getByLabelText(/email/i)).toHaveValue("john.doe@example.com");
     expect(screen.getByLabelText(/phone/i)).toHaveValue("+1234567890");
-    expect(screen.getByLabelText(/position/i)).toHaveValue("Developer");
-    expect(screen.getByLabelText(/date of birth/i)).toHaveValue("1990-01-01");
+    expect(screen.getByLabelText("Position *")).toHaveValue("Developer");
+    expect(screen.getByLabelText(/date of birth/i)).toHaveValue("01/01/1990");
     expect(screen.getByLabelText(/contract start date/i)).toHaveValue(
-      "2025-01-01"
+      "01/01/2025"
     );
   });
 
@@ -172,7 +168,7 @@ describe("EmployeeEdit", () => {
         position: "Developer",
         contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
-        leadership_level_id: null,
+        management_level: 0,
         status: "active",
         contract_type: "full_time",
       });

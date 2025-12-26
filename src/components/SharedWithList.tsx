@@ -7,6 +7,7 @@ import { useLingui } from "@lingui/react";
 import { Button } from "./button";
 import { revokeShare, ApiError } from "../services/shareApi";
 import type { SecretShare } from "../services/secretApi";
+import { formatDate } from "../lib/dateUtils";
 
 export interface SharedWithListProps {
   secretId: string;
@@ -46,10 +47,6 @@ export function SharedWithList({
     } finally {
       setRevoking(null);
     }
-  };
-
-  const formatDate = (isoDate: string) => {
-    return new Date(isoDate).toLocaleDateString();
   };
 
   if (shares.length === 0) {
@@ -98,12 +95,14 @@ export function SharedWithList({
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
                   <Trans>
                     Granted by {share.granted_by.name} on{" "}
-                    {formatDate(share.granted_at)}
+                    {formatDate(share.granted_at, i18n.locale)}
                   </Trans>
                 </p>
                 {share.expires_at && (
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>Expires: {formatDate(share.expires_at)}</Trans>
+                    <Trans>
+                      Expires: {formatDate(share.expires_at, i18n.locale)}
+                    </Trans>
                   </p>
                 )}
               </div>

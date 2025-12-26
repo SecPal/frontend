@@ -41,6 +41,7 @@ const mockEmployees: Employee[] = [
     contract_start_date: "2025-01-01",
     status: "active",
     contract_type: "full_time",
+    management_level: 0,
     organizational_unit: {
       id: "unit-1",
       name: "Engineering",
@@ -58,6 +59,7 @@ const mockEmployees: Employee[] = [
     phone: "+0987654321",
     date_of_birth: "1992-05-15",
     position: "Designer",
+    management_level: 0,
     contract_start_date: "2024-06-01",
     status: "active",
     contract_type: "full_time",

@@ -29,19 +29,14 @@ export interface Employee {
   hire_date?: string;
   contract_start_date: string;
   contract_end_date?: string;
-  position: string;
+  position?: string;
   status: EmployeeStatus;
   contract_type: "full_time" | "part_time" | "minijob" | "freelance";
   organizational_unit: {
     id: string;
     name: string;
   };
-  leadership_level?: {
-    id: string;
-    rank: number;
-    name: string;
-    color?: string;
-  } | null;
+  management_level: number; // 0=non-management, 1-255=management levels (1=CEO/highest)
   user?: {
     id: string;
     name: string;
@@ -75,9 +70,9 @@ export interface EmployeeFormData {
   date_of_birth: string;
   contract_start_date: string;
   contract_end_date?: string;
-  position: string;
+  position?: string;
   organizational_unit_id: string;
-  leadership_level_id?: string | null; // ADD: Optional leadership level assignment
+  management_level: number; // 0=non-management, 1-255=management levels (1=CEO/highest)
   hire_date?: string;
   status: EmployeeStatus;
   contract_type: "full_time" | "part_time" | "minijob" | "freelance";

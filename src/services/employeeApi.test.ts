@@ -42,6 +42,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         organizational_unit_id: "unit-1",
         status: "active",
         contract_type: "full_time",
+        management_level: 0,
       };
 
       // Mock response that returns HTML instead of JSON (simulating 500 error page)
@@ -68,6 +69,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         organizational_unit_id: "unit-1",
         status: "pre_contract",
         contract_type: "full_time",
+        management_level: 0,
       };
 
       const expectedEmployee = {
@@ -191,6 +193,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         organizational_unit_id: "unit-1",
         status: "pre_contract",
         contract_type: "full_time",
+        management_level: 0,
       };
 
       // Mock 500 error with HTML response

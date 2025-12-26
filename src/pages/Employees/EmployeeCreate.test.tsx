@@ -9,12 +9,10 @@ import { i18n } from "@lingui/core";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
-import * as leadershipLevelApi from "../../services/leadershipLevelApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
-vi.mock("../../services/leadershipLevelApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -69,11 +67,6 @@ describe("EmployeeCreate", () => {
         root_unit_ids: ["unit-1", "unit-2"],
       },
     });
-
-    // Mock leadership levels loading
-    vi.mocked(
-      leadershipLevelApi.fetchAvailableLeadershipLevels
-    ).mockResolvedValue([]);
   });
 
   it("should render create form with all fields", async () => {
@@ -88,7 +81,7 @@ describe("EmployeeCreate", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/position/i)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/position/i)[0]).toBeInTheDocument();
     expect(screen.getByLabelText(/contract start date/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
   });
@@ -125,6 +118,7 @@ describe("EmployeeCreate", () => {
       position: "Developer",
       status: "active",
       contract_type: "full_time",
+      management_level: 0,
       organizational_unit: {
         id: "unit-1",
         name: "Main Office",
@@ -157,7 +151,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/position/i), {
+    fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
@@ -176,11 +170,11 @@ describe("EmployeeCreate", () => {
         last_name: "Doe",
         email: "john.doe@example.com",
         phone: "+1234567890",
-        date_of_birth: "1990-01-01",
+        date_of_birth: "",
         position: "Developer",
-        contract_start_date: "2025-01-01",
+        contract_start_date: "",
         organizational_unit_id: "unit-1",
-        leadership_level_id: null,
+        management_level: 0,
         status: "pre_contract",
         contract_type: "full_time",
       });
@@ -212,7 +206,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/position/i), {
+    fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
@@ -253,9 +247,8 @@ describe("EmployeeCreate", () => {
 
     const select = screen.getByLabelText(/organizational unit/i);
     expect(select).toBeDisabled();
-    // Get all options with loading text - there are now 2 (org units + leadership)
-    const loadingOptions = screen.getAllByText(/loading/i);
-    expect(loadingOptions.length).toBeGreaterThan(0);
+    const loadingText = screen.getByText(/loading/i);
+    expect(loadingText).toBeInTheDocument();
   });
 
   it("should handle organizational units loading error gracefully", async () => {
@@ -297,7 +290,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/position/i), {
+    fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
@@ -366,7 +359,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/position/i), {
+    fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {

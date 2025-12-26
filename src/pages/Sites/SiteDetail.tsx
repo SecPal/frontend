@@ -9,6 +9,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type { Site, Customer } from "../../types/customers";
@@ -22,6 +23,7 @@ import {
   DescriptionTerm,
   DescriptionDetails,
 } from "../../components/description-list";
+import { formatDate } from "../../lib/dateUtils";
 import {
   Dialog,
   DialogTitle,
@@ -31,6 +33,7 @@ import {
 } from "../../components/dialog";
 
 export default function SiteDetail() {
+  const { i18n } = useLingui();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
@@ -244,7 +247,7 @@ export default function SiteDetail() {
                     <Trans>Valid From</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    {new Date(site.valid_from).toLocaleDateString()}
+                    {formatDate(site.valid_from, i18n.locale)}
                   </DescriptionDetails>
                 </>
               )}
@@ -255,7 +258,7 @@ export default function SiteDetail() {
                     <Trans>Valid Until</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    {new Date(site.valid_until).toLocaleDateString()}
+                    {formatDate(site.valid_until, i18n.locale)}
                   </DescriptionDetails>
                 </>
               )}

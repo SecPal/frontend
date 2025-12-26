@@ -53,6 +53,7 @@ const mockEmployee: Employee = {
   contract_start_date: "2025-01-01",
   status: "active",
   contract_type: "full_time",
+  management_level: 0,
   organizational_unit: {
     id: "unit-1",
     name: "Engineering",
