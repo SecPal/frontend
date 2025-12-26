@@ -204,10 +204,11 @@ export function getRankRangeInfoMessage(
 
   // Custom range
   if (min !== null && max !== null && max > 0) {
+    const safeMax = max; // max is guaranteed > 0 here
     if (type === "viewing") {
-      return `Only employees with leadership levels FE${min} to FE${max} will be visible.`;
+      return `Only employees with leadership levels FE${min} to FE${safeMax} will be visible.`;
     } else {
-      return `User can assign/remove leadership levels FE${min} to FE${max}.`;
+      return `User can assign/remove leadership levels FE${min} to FE${safeMax}.`;
     }
   }
 
