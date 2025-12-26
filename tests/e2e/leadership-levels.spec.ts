@@ -24,18 +24,22 @@ test.describe("Leadership Levels Management", () => {
 
   test("displays leadership levels management page", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /Leadership Levels/i }),
+      page.getByRole("heading", { name: /Leadership Levels/i })
     ).toBeVisible();
   });
 
   test("creates new leadership level", async ({ page }) => {
     // Click "Create Leadership Level" button
-    await page.getByRole("button", { name: /Create.*Leadership Level/i }).click();
+    await page
+      .getByRole("button", { name: /Create.*Leadership Level/i })
+      .click();
 
     // Fill in the form
     await page.getByLabel(/Name/i).fill("Test Branch Director");
     await page.getByLabel(/Rank/i).fill("10");
-    await page.getByLabel(/Description/i).fill("Test leadership level for E2E testing");
+    await page
+      .getByLabel(/Description/i)
+      .fill("Test leadership level for E2E testing");
 
     // Assuming color field exists
     const colorInput = page.getByLabel(/Color/i);
@@ -48,7 +52,7 @@ test.describe("Leadership Levels Management", () => {
 
     // Verify success message
     await expect(
-      page.getByText(/Leadership level created|successfully/i),
+      page.getByText(/Leadership level created|successfully/i)
     ).toBeVisible({ timeout: 10000 });
 
     // Verify new level appears in list
@@ -65,6 +69,12 @@ test.describe("Leadership Levels Management", () => {
     if (!(await firstEditButton.isVisible())) {
       test.skip();
       return;
+    }
+
+    await firstEditButton.click();
+
+    // Modify the description
+    const descriptionField = page.getByLabel(/Description/i);
     await descriptionField.clear();
     await descriptionField.fill("Updated description for E2E testing");
 
@@ -73,7 +83,7 @@ test.describe("Leadership Levels Management", () => {
 
     // Verify success
     await expect(
-      page.getByText(/Leadership level updated|successfully/i),
+      page.getByText(/Leadership level updated|successfully/i)
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -84,7 +94,9 @@ test.describe("Leadership Levels Management", () => {
     const existingRank = rankText ? parseInt(rankText.trim()) : 1;
 
     // Try to create level with same rank
-    await page.getByRole("button", { name: /Create.*Leadership Level/i }).click();
+    await page
+      .getByRole("button", { name: /Create.*Leadership Level/i })
+      .click();
 
     await page.getByLabel(/Name/i).fill("Duplicate Rank Test");
     await page.getByLabel(/Rank/i).fill(existingRank.toString());
@@ -94,12 +106,14 @@ test.describe("Leadership Levels Management", () => {
 
     // Verify error message
     await expect(
-      page.getByText(/rank.*already.*exists|unique|duplicate/i),
+      page.getByText(/rank.*already.*exists|unique|duplicate/i)
     ).toBeVisible({ timeout: 10000 });
   });
 
   test("validates rank range (1-255)", async ({ page }) => {
-    await page.getByRole("button", { name: /Create.*Leadership Level/i }).click();
+    await page
+      .getByRole("button", { name: /Create.*Leadership Level/i })
+      .click();
 
     // Try invalid rank (0)
     await page.getByLabel(/Name/i).fill("Invalid Rank Test");
@@ -109,7 +123,7 @@ test.describe("Leadership Levels Management", () => {
 
     // Should show validation error
     await expect(
-      page.getByText(/rank.*between.*1.*255|minimum.*1/i),
+      page.getByText(/rank.*between.*1.*255|minimum.*1/i)
     ).toBeVisible({ timeout: 5000 });
 
     // Try invalid rank (256)
@@ -119,7 +133,7 @@ test.describe("Leadership Levels Management", () => {
     await page.getByRole("button", { name: /Save|Create/i }).click();
 
     await expect(
-      page.getByText(/rank.*between.*1.*255|maximum.*255/i),
+      page.getByText(/rank.*between.*1.*255|maximum.*255/i)
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -140,7 +154,7 @@ test.describe("Leadership Levels Management", () => {
 
     // Should show confirmation or error
     const errorOrWarning = page.getByText(
-      /cannot.*delete|employees.*assigned|in use/i,
+      /cannot.*delete|employees.*assigned|in use/i
     );
 
     if (await errorOrWarning.isVisible({ timeout: 5000 })) {
@@ -149,7 +163,7 @@ test.describe("Leadership Levels Management", () => {
     } else {
       // If no error shown, confirm deletion dialog should appear
       await expect(
-        page.getByRole("dialog", { name: /confirm|delete/i }),
+        page.getByRole("dialog", { name: /confirm|delete/i })
       ).toBeVisible();
     }
   });
@@ -172,9 +186,9 @@ test.describe("Leadership Levels Management", () => {
     await toggleButton.click();
 
     // Verify status changed
-    await expect(
-      page.getByText(/status.*updated|successfully/i),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/status.*updated|successfully/i)).toBeVisible({
+      timeout: 10000,
+    });
 
     // Button text should change
     const newText = await toggleButton.textContent();
@@ -196,10 +210,7 @@ test.describe("Leadership Levels - Drag and Drop Reordering", () => {
     const firstRow = page.getByRole("row").nth(1);
     const secondRow = page.getByRole("row").nth(2);
 
-    if (
-      !(await firstRow.isVisible()) ||
-      !(await secondRow.isVisible())
-    ) {
+    if (!(await firstRow.isVisible()) || !(await secondRow.isVisible())) {
       test.skip();
       return;
     }
@@ -209,7 +220,7 @@ test.describe("Leadership Levels - Drag and Drop Reordering", () => {
 
     // Verify order changed
     await expect(
-      page.getByText(/order.*updated|reordered|successfully/i),
+      page.getByText(/order.*updated|reordered|successfully/i)
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -234,7 +245,9 @@ test.describe("Employee Form - Leadership Level Assignment", () => {
     // Fill required fields
     await page.getByLabel(/First Name/i).fill("Test");
     await page.getByLabel(/Last Name/i).fill("Employee");
-    await page.getByLabel(/Email/i).fill(`test.employee.${Date.now()}@example.com`);
+    await page
+      .getByLabel(/Email/i)
+      .fill(`test.employee.${Date.now()}@example.com`);
 
     // Select organizational unit (required)
     const orgUnitDropdown = page.getByLabel(/Organizational Unit/i);
@@ -263,9 +276,9 @@ test.describe("Employee Form - Leadership Level Assignment", () => {
     await page.getByRole("button", { name: /Save|Create Employee/i }).click();
 
     // Verify success
-    await expect(
-      page.getByText(/Employee created|successfully/i),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Employee created|successfully/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("removes leadership level from employee (set to NULL)", async ({
@@ -291,17 +304,15 @@ test.describe("Employee Form - Leadership Level Assignment", () => {
     // Change leadership to "No Leadership Role"
     const leadershipDropdown = page.getByLabel(/Leadership Level/i);
     await leadershipDropdown.click();
-    await page
-      .getByRole("option", { name: /No Leadership|None/i })
-      .click();
+    await page.getByRole("option", { name: /No Leadership|None/i }).click();
 
     // Save
     await page.getByRole("button", { name: /Save|Update/i }).click();
 
     // Verify success
-    await expect(
-      page.getByText(/Employee updated|successfully/i),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Employee updated|successfully/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 
@@ -313,7 +324,9 @@ test.describe("Employee List - Leadership Level Filtering", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for leadership level filter
-    const leadershipFilter = page.getByLabel(/Leadership Level|Filter.*Leadership/i);
+    const leadershipFilter = page.getByLabel(
+      /Leadership Level|Filter.*Leadership/i
+    );
 
     if (!(await leadershipFilter.isVisible())) {
       test.skip();
@@ -330,7 +343,9 @@ test.describe("Employee List - Leadership Level Filtering", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify filtered results (all visible employees should have this level)
-    const employeeRows = page.getByRole("row").filter({ hasText: optionText || "" });
+    const employeeRows = page
+      .getByRole("row")
+      .filter({ hasText: optionText || "" });
     expect(await employeeRows.count()).toBeGreaterThan(0);
   });
 
@@ -339,7 +354,9 @@ test.describe("Employee List - Leadership Level Filtering", () => {
     await page.waitForLoadState("networkidle");
 
     // Check for rank badge indicators (FE1, FE2, etc.)
-    const rankBadges = page.locator("[class*='badge']").filter({ hasText: /FE[0-9]+/i });
+    const rankBadges = page
+      .locator("[class*='badge']")
+      .filter({ hasText: /FE[0-9]+/i });
 
     if ((await rankBadges.count()) === 0) {
       test.skip();
@@ -355,7 +372,9 @@ test.describe("Employee List - Leadership Level Filtering", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for rank column header
-    const rankHeader = page.getByRole("columnheader", { name: /Rank|Leadership/i });
+    const rankHeader = page.getByRole("columnheader", {
+      name: /Rank|Leadership/i,
+    });
 
     if (!(await rankHeader.isVisible())) {
       test.skip();
@@ -409,7 +428,9 @@ test.describe("Permission Escalation Prevention (Security Tests)", () => {
       // Fill other required fields
       await page.getByLabel(/First Name/i).fill("Test");
       await page.getByLabel(/Last Name/i).fill("Escalation");
-      await page.getByLabel(/Email/i).fill(`test.escalation.${Date.now()}@example.com`);
+      await page
+        .getByLabel(/Email/i)
+        .fill(`test.escalation.${Date.now()}@example.com`);
 
       const orgUnitDropdown = page.getByLabel(/Organizational Unit/i);
       await orgUnitDropdown.click();
@@ -420,7 +441,7 @@ test.describe("Permission Escalation Prevention (Security Tests)", () => {
 
       // Should show permission error
       await expect(
-        page.getByText(/permission|not allowed|cannot assign/i),
+        page.getByText(/permission|not allowed|cannot assign/i)
       ).toBeVisible({ timeout: 10000 });
     } else {
       test.skip();
@@ -453,15 +474,13 @@ test.describe("Permission Escalation Prevention (Security Tests)", () => {
     // Try to remove their leadership level
     const leadershipDropdown = page.getByLabel(/Leadership Level/i);
     await leadershipDropdown.click();
-    await page
-      .getByRole("option", { name: /No Leadership|None/i })
-      .click();
+    await page.getByRole("option", { name: /No Leadership|None/i }).click();
 
     await page.getByRole("button", { name: /Save|Update/i }).click();
 
     // Should show permission error
     await expect(
-      page.getByText(/permission|not allowed|cannot remove|cannot demote/i),
+      page.getByText(/permission|not allowed|cannot remove|cannot demote/i)
     ).toBeVisible({ timeout: 10000 });
   });
 });
