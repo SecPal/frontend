@@ -319,4 +319,319 @@ describe("EmployeeEdit", () => {
     // Should still be able to edit other fields
     expect(screen.getByLabelText(/first name/i)).not.toBeDisabled();
   });
+
+  describe("Management Level Functionality", () => {
+    it("should load and display existing management level", async () => {
+      const employeeWithManagement: Employee = {
+        ...mockEmployee,
+        management_level: 3,
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+        employeeWithManagement
+      );
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      // Verify leadership switch is checked
+      const leadershipSwitch = screen.getByRole("switch");
+      expect(leadershipSwitch).toBeChecked();
+
+      // Verify management level value is displayed
+      const managementLevelInput = screen.getByRole("spinbutton");
+      expect(managementLevelInput).toHaveValue(3);
+      expect(managementLevelInput).not.toBeDisabled();
+    });
+
+    it("should show leadership switch unchecked for non-management employees", async () => {
+      const nonManagementEmployee: Employee = {
+        ...mockEmployee,
+        management_level: 0,
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+        nonManagementEmployee
+      );
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      // Verify leadership switch is NOT checked
+      const leadershipSwitch = screen.getByRole("switch");
+      expect(leadershipSwitch).not.toBeChecked();
+
+      // Verify management level input is disabled
+      const managementLevelInput = screen.getByRole("spinbutton");
+      expect(managementLevelInput).toBeDisabled();
+    });
+
+    it("should toggle leadership position and update management level", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const leadershipSwitch = screen.getByRole("switch");
+
+      // Enable leadership
+      fireEvent.click(leadershipSwitch);
+      expect(leadershipSwitch).toBeChecked();
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      expect(managementLevelInput).not.toBeDisabled();
+
+      // Set management level
+      fireEvent.change(managementLevelInput, { target: { value: "5" } });
+      expect(managementLevelInput).toHaveValue(5);
+
+      // Disable leadership
+      fireEvent.click(leadershipSwitch);
+      expect(leadershipSwitch).not.toBeChecked();
+      expect(managementLevelInput).toBeDisabled();
+      expect(managementLevelInput).toHaveValue(null);
+    });
+
+    it("should update employee with management level", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue({
+        ...mockEmployee,
+        management_level: 2,
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      // Enable leadership and set management level
+      const leadershipSwitch = screen.getByRole("switch");
+      fireEvent.click(leadershipSwitch);
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      fireEvent.change(managementLevelInput, { target: { value: "2" } });
+
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(mockUpdateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.objectContaining({
+            management_level: 2,
+          })
+        );
+      });
+    });
+
+    it("should update employee to remove management level", async () => {
+      const employeeWithManagement: Employee = {
+        ...mockEmployee,
+        management_level: 5,
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+        employeeWithManagement
+      );
+
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue({
+        ...mockEmployee,
+        management_level: 0,
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      // Verify leadership is initially enabled
+      const leadershipSwitch = screen.getByRole("switch");
+      expect(leadershipSwitch).toBeChecked();
+
+      // Disable leadership
+      fireEvent.click(leadershipSwitch);
+
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(mockUpdateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.objectContaining({
+            management_level: 0,
+          })
+        );
+      });
+    });
+  });
+
+  describe("Date Formatting and Validation", () => {
+    it("should format dates for display on load (US format)", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/date of birth/i)).toHaveValue(
+          "01/01/1990"
+        );
+      });
+
+      expect(screen.getByLabelText(/contract start date/i)).toHaveValue(
+        "01/01/2025"
+      );
+    });
+
+    it("should validate date format on blur", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Enter invalid date
+      fireEvent.change(birthDateInput, { target: { value: "invalid-date" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/invalid date.*mm\/dd\/yyyy/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should accept valid date and update form data", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Enter valid date
+      fireEvent.change(birthDateInput, { target: { value: "06/15/1985" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(birthDateInput).toHaveValue("06/15/1985");
+        expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should validate contract start date", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const contractDateInput = screen.getByLabelText(/contract start date/i);
+
+      // Enter invalid date
+      fireEvent.change(contractDateInput, { target: { value: "13/40/2025" } });
+      fireEvent.blur(contractDateInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/invalid date.*mm\/dd\/yyyy/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should clear date validation error on change", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Trigger error
+      fireEvent.change(birthDateInput, { target: { value: "99/99/9999" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+
+      // Change again - error should clear
+      fireEvent.change(birthDateInput, { target: { value: "01/01/1990" } });
+
+      await waitFor(() => {
+        expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should reject dates outside valid year range", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Year too early
+      fireEvent.change(birthDateInput, { target: { value: "01/01/1850" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+
+      // Year too late
+      fireEvent.change(birthDateInput, { target: { value: "01/01/2150" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should handle incomplete date strings", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Incomplete date
+      fireEvent.change(birthDateInput, { target: { value: "01/01" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should handle empty date input on blur", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Clear the field
+      fireEvent.change(birthDateInput, { target: { value: "" } });
+      fireEvent.blur(birthDateInput);
+
+      // Should not show error for empty field
+      await waitFor(() => {
+        expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
+      });
+    });
+  });
 });

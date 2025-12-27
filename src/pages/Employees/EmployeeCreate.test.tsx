@@ -391,4 +391,298 @@ describe("EmployeeCreate", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe("Management Level Functionality", () => {
+    it("should toggle leadership position switch", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const leadershipSwitch = screen.getByRole("switch");
+      expect(leadershipSwitch).not.toBeChecked();
+
+      // Enable leadership
+      fireEvent.click(leadershipSwitch);
+      expect(leadershipSwitch).toBeChecked();
+
+      // Verify management level input is now enabled
+      const managementLevelInput = screen.getByRole("spinbutton");
+      expect(managementLevelInput).not.toBeDisabled();
+    });
+
+    it("should disable and clear management level when leadership is turned off", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const leadershipSwitch = screen.getByRole("switch");
+
+      // Enable leadership and set management level
+      fireEvent.click(leadershipSwitch);
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      fireEvent.change(managementLevelInput, { target: { value: "5" } });
+      expect(managementLevelInput).toHaveValue(5);
+
+      // Disable leadership
+      fireEvent.click(leadershipSwitch);
+
+      // Verify management level is reset to 0 and input is disabled
+      expect(managementLevelInput).toBeDisabled();
+      expect(managementLevelInput).toHaveValue(null);
+    });
+
+    it("should accept valid management level values (1-255)", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      // Enable leadership
+      const leadershipSwitch = screen.getByRole("switch");
+      fireEvent.click(leadershipSwitch);
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+
+      // Test minimum value
+      fireEvent.change(managementLevelInput, { target: { value: "1" } });
+      expect(managementLevelInput).toHaveValue(1);
+
+      // Test maximum value
+      fireEvent.change(managementLevelInput, { target: { value: "255" } });
+      expect(managementLevelInput).toHaveValue(255);
+
+      // Test middle value
+      fireEvent.change(managementLevelInput, { target: { value: "50" } });
+      expect(managementLevelInput).toHaveValue(50);
+    });
+
+    it("should include management_level in form submission", async () => {
+      const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+      mockCreateEmployee.mockResolvedValue({
+        id: "emp-123",
+        employee_number: "EMP001",
+        first_name: "John",
+        last_name: "Doe",
+        full_name: "John Doe",
+        email: "john@example.com",
+        phone: "",
+        date_of_birth: "1990-01-01",
+        hire_date: "2025-01-01",
+        contract_start_date: "2025-01-01",
+        contract_end_date: undefined,
+        position: "CEO",
+        status: "active",
+        contract_type: "full_time",
+        management_level: 1,
+        organizational_unit: {
+          id: "unit-1",
+          name: "Main Office",
+        },
+        user: undefined,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
+
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      // Fill form with leadership position
+      fireEvent.change(screen.getByLabelText(/first name/i), {
+        target: { value: "John" },
+      });
+      fireEvent.change(screen.getByLabelText(/last name/i), {
+        target: { value: "Doe" },
+      });
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "john@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/date of birth/i), {
+        target: { value: "1990-01-01" },
+      });
+      fireEvent.change(screen.getByLabelText("Position *"), {
+        target: { value: "CEO" },
+      });
+      fireEvent.change(screen.getByLabelText(/contract start date/i), {
+        target: { value: "2025-01-01" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "unit-1" },
+      });
+
+      // Enable leadership and set management level
+      const leadershipSwitch = screen.getByRole("switch");
+      fireEvent.click(leadershipSwitch);
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      fireEvent.change(managementLevelInput, { target: { value: "1" } });
+
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+
+      await waitFor(() => {
+        expect(mockCreateEmployee).toHaveBeenCalledWith(
+          expect.objectContaining({
+            management_level: 1,
+          })
+        );
+      });
+    });
+  });
+
+  describe("Date Validation", () => {
+    it("should validate birth date format on blur (US format)", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Enter invalid date
+      fireEvent.change(birthDateInput, { target: { value: "13/32/2020" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/invalid date.*mm\/dd\/yyyy/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should accept valid US date format", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Enter valid date
+      fireEvent.change(birthDateInput, { target: { value: "01/15/1990" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(birthDateInput).toHaveValue("01/15/1990");
+        expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should validate contract start date format", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const contractDateInput = screen.getByLabelText(/contract start date/i);
+
+      // Enter invalid date
+      fireEvent.change(contractDateInput, { target: { value: "99/99/9999" } });
+      fireEvent.blur(contractDateInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/invalid date.*mm\/dd\/yyyy/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should clear date validation error on change", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Enter invalid date and trigger error
+      fireEvent.change(birthDateInput, { target: { value: "invalid" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+
+      // Change input again - error should clear
+      fireEvent.change(birthDateInput, { target: { value: "01/01/1990" } });
+
+      await waitFor(() => {
+        expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should reject dates with year outside 1900-2100 range", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Test year too early
+      fireEvent.change(birthDateInput, { target: { value: "01/01/1899" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+
+      // Test year too late
+      fireEvent.change(birthDateInput, { target: { value: "01/01/2101" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should reject invalid day/month combinations", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // February 30th doesn't exist
+      fireEvent.change(birthDateInput, { target: { value: "02/30/2020" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+    });
+
+    it("should handle incomplete date input gracefully", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+
+      // Incomplete date (missing parts)
+      fireEvent.change(birthDateInput, { target: { value: "01/01" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(screen.getByText(/invalid date/i)).toBeInTheDocument();
+      });
+    });
+  });
 });

@@ -358,4 +358,70 @@ describe("EmployeeDetail", () => {
 
     vi.restoreAllMocks();
   });
+
+  describe("Management Level Display", () => {
+    it("should display management level badge for leadership positions", async () => {
+      const managementEmployee: Employee = {
+        ...mockEmployee,
+        management_level: 3,
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+        managementEmployee
+      );
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: "John Doe" })
+        ).toBeInTheDocument();
+      });
+
+      // Should display "ML 3" badge
+      expect(screen.getByText(/ML/)).toBeInTheDocument();
+      expect(screen.getByText(/3/)).toBeInTheDocument();
+    });
+
+    it("should not display management level badge for non-management employees", async () => {
+      const nonManagementEmployee: Employee = {
+        ...mockEmployee,
+        management_level: 0,
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+        nonManagementEmployee
+      );
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: "John Doe" })
+        ).toBeInTheDocument();
+      });
+
+      // Should NOT display ML badge
+      expect(screen.queryByText(/ML/)).not.toBeInTheDocument();
+    });
+
+    it("should display high management level (CEO level)", async () => {
+      const ceoEmployee: Employee = {
+        ...mockEmployee,
+        management_level: 1,
+        position: "Chief Executive Officer",
+      };
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(ceoEmployee);
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: "John Doe" })
+        ).toBeInTheDocument();
+      });
+
+      // Should display "ML 1" badge
+      expect(screen.getByText(/ML/)).toBeInTheDocument();
+      expect(screen.getByText(/1/)).toBeInTheDocument();
+    });
+  });
 });
