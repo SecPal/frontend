@@ -10,6 +10,7 @@ import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PermissionRoute } from "./components/PermissionRoute";
 import { OrganizationalRoute } from "./components/OrganizationalRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { Heading } from "./components/heading";
@@ -47,6 +48,9 @@ const SitesPage = lazy(() => import("./pages/Sites/SitesPage"));
 const SiteCreate = lazy(() => import("./pages/Sites/SiteCreate"));
 const SiteDetail = lazy(() => import("./pages/Sites/SiteDetail"));
 const SiteEdit = lazy(() => import("./pages/Sites/SiteEdit"));
+const ActivityLogList = lazy(
+  () => import("./pages/ActivityLog/ActivityLogList")
+);
 
 function Home() {
   return (
@@ -330,6 +334,19 @@ function App() {
                   <ApplicationLayout>
                     <OnboardingWizard />
                   </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* Activity Log Route - Admin/Manager access via permissions */}
+            <Route
+              path="/activity-logs"
+              element={
+                <ProtectedRoute>
+                  <PermissionRoute permission="activity_log.read">
+                    <ApplicationLayout>
+                      <ActivityLogList />
+                    </ApplicationLayout>
+                  </PermissionRoute>
                 </ProtectedRoute>
               }
             />
