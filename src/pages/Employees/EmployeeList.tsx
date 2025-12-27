@@ -275,7 +275,19 @@ export function EmployeeList() {
               <TableCell className="text-zinc-500">
                 {employee.employee_number}
               </TableCell>
-              <TableCell>{employee.position}</TableCell>
+              <TableCell>
+                {employee.management_level > 0 ? (
+                  <>
+                    <span className="font-medium">
+                      <Trans>ML</Trans> {employee.management_level}
+                    </span>
+                    {" - "}
+                    {employee.position}
+                  </>
+                ) : (
+                  employee.position
+                )}
+              </TableCell>
               <TableCell>
                 <StatusBadge status={employee.status} />
               </TableCell>

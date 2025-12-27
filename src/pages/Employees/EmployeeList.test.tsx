@@ -41,6 +41,7 @@ const mockEmployees: Employee[] = [
     contract_start_date: "2025-01-01",
     status: "active",
     contract_type: "full_time",
+    management_level: 0,
     organizational_unit: {
       id: "unit-1",
       name: "Engineering",
@@ -58,6 +59,7 @@ const mockEmployees: Employee[] = [
     phone: "+0987654321",
     date_of_birth: "1992-05-15",
     position: "Designer",
+    management_level: 0,
     contract_start_date: "2024-06-01",
     status: "active",
     contract_type: "full_time",
@@ -339,6 +341,128 @@ describe("EmployeeList", () => {
       expect(screen.getByText(/16/i)).toBeInTheDocument(); // Start: (2-1)*15+1 = 16
       expect(screen.getByText(/30/i)).toBeInTheDocument(); // End: min(2*15, 62) = 30
       expect(screen.getByText(/62/i)).toBeInTheDocument(); // Total
+    });
+  });
+
+  describe("Management Level Display", () => {
+    it("should display management level badges in list for leadership positions", async () => {
+      const employeesWithManagement: Employee[] = [
+        {
+          ...mockEmployees[0],
+          management_level: 1,
+          position: "CEO",
+        } as Employee,
+        {
+          ...mockEmployees[1],
+          management_level: 5,
+          position: "Area Manager",
+        } as Employee,
+      ];
+
+      const responseWithManagement: EmployeeListResponse = {
+        data: employeesWithManagement,
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 2,
+        },
+      };
+
+      vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(
+        responseWithManagement
+      );
+
+      renderWithProviders();
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+      });
+
+      // Should display ML badges
+      const mlBadges = screen.getAllByText(/ML/);
+      expect(mlBadges.length).toBeGreaterThanOrEqual(2);
+
+      // Check for specific management levels
+      expect(screen.getByText(/ML\s+1/)).toBeInTheDocument();
+      expect(screen.getByText(/ML\s+5/)).toBeInTheDocument();
+    });
+
+    it("should not display management level badge for non-management employees", async () => {
+      const nonManagementEmployees: Employee[] = [
+        {
+          ...mockEmployees[0],
+          management_level: 0,
+        } as Employee,
+        {
+          ...mockEmployees[1],
+          management_level: 0,
+        } as Employee,
+      ];
+
+      const responseWithoutManagement: EmployeeListResponse = {
+        data: nonManagementEmployees,
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 2,
+        },
+      };
+
+      vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(
+        responseWithoutManagement
+      );
+
+      renderWithProviders();
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+      });
+
+      // Should NOT display ML badges
+      expect(screen.queryByText(/ML/)).not.toBeInTheDocument();
+    });
+
+    it("should display mixed management levels correctly", async () => {
+      const mixedEmployees: Employee[] = [
+        {
+          ...mockEmployees[0],
+          management_level: 3,
+          position: "Branch Director",
+        } as Employee,
+        {
+          ...mockEmployees[1],
+          management_level: 0,
+          position: "Guard",
+        } as Employee,
+      ];
+
+      const mixedResponse: EmployeeListResponse = {
+        data: mixedEmployees,
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 2,
+        },
+      };
+
+      vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(mixedResponse);
+
+      renderWithProviders();
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+      });
+
+      // Should display ML badge for management employee
+      expect(screen.getByText(/ML/)).toBeInTheDocument();
+      expect(screen.getByText(/3/)).toBeInTheDocument();
+
+      // Guard (non-management) should not have ML badge - only one ML badge total
+      const mlBadges = screen.queryAllByText(/ML/);
+      expect(mlBadges).toHaveLength(1);
     });
   });
 });

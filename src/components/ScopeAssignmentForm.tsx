@@ -11,18 +11,15 @@ import {
   DialogActions,
 } from "./dialog";
 import { Button } from "./button";
-import { Select } from "./select";
 import { Field, Label, Description } from "./fieldset";
 import { Checkbox, CheckboxField } from "./checkbox";
 import type { OrganizationalScope } from "../types/organizationalScope";
-import type { LeadershipLevel } from "../types/leadershipLevel";
 import type { User } from "../contexts/auth-context";
 import {
   createOrganizationalScope,
   updateOrganizationalScope,
   type OrganizationalScopeFormData,
 } from "../services/organizationalScopeApi";
-import { fetchLeadershipLevels } from "../services/leadershipLevelApi";
 import { ApiError } from "../services/ApiError";
 
 export interface ScopeAssignmentFormProps {
@@ -80,19 +77,15 @@ export function ScopeAssignmentForm({
     max_assignable_rank: null,
     allow_self_access: false,
   });
-  const [leadershipLevels, setLeadershipLevels] = useState<LeadershipLevel[]>(
-    []
-  );
-  const [levelsLoading, setLevelsLoading] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user's current rank (if they have one)
-  const userRank = user?.employee?.leadership_level?.rank ?? null;
+  // Get user's current management level (0=non-management, 1-255=management)
+  const userRank = user?.employee?.management_level ?? 0;
 
   // Calculate if Step 3 should be shown
   const showSelfAccessStep =
-    userRank !== null &&
+    userRank > 0 &&
     (formData.min_viewable_rank === null ||
       formData.min_viewable_rank === undefined ||
       userRank >= formData.min_viewable_rank) &&
@@ -100,24 +93,6 @@ export function ScopeAssignmentForm({
       formData.max_viewable_rank === undefined ||
       formData.max_viewable_rank === 0 ||
       userRank <= formData.max_viewable_rank);
-
-  // Load leadership levels on mount
-  useEffect(() => {
-    async function loadLevels() {
-      try {
-        const response = await fetchLeadershipLevels();
-        setLeadershipLevels(response.data);
-      } catch (err) {
-        console.error("Failed to load leadership levels:", err);
-      } finally {
-        setLevelsLoading(false);
-      }
-    }
-
-    if (open) {
-      loadLevels();
-    }
-  }, [open]);
 
   // Reset form when dialog opens or changes
   useEffect(() => {
@@ -331,7 +306,7 @@ export function ScopeAssignmentForm({
       formData.max_assignable_rank === 0
     ) {
       warnings.push(
-        t`User cannot assign OR remove ANY leadership level (prevents privilege escalation).`
+        t`User cannot assign OR remove ANY rank (prevents privilege escalation).`
       );
     }
 
@@ -344,7 +319,7 @@ export function ScopeAssignmentForm({
       formData.max_assignable_rank < formData.max_viewable_rank
     ) {
       warnings.push(
-        t`User can see leadership levels (up to ${formData.max_viewable_rank}) they cannot assign/remove (up to ${formData.max_assignable_rank}).`
+        t`User can see ranks (up to ${formData.max_viewable_rank}) they cannot assign/remove (up to ${formData.max_assignable_rank}).`
       );
     }
 
@@ -388,9 +363,8 @@ export function ScopeAssignmentForm({
                 </h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   <Trans>
-                    Configure which leadership levels this user can view. Leave
-                    empty or set to 0 to see only non-leadership employees
-                    (Guards).
+                    Configure which rank range this user can view. Leave empty
+                    or set to 0 to see only non-leadership employees (Guards).
                   </Trans>
                 </p>
               </div>
@@ -399,7 +373,10 @@ export function ScopeAssignmentForm({
                 <Label>
                   <Trans>Minimum Viewable Rank</Trans>
                 </Label>
-                <Select
+                <input
+                  type="number"
+                  min="1"
+                  max="255"
                   value={formData.min_viewable_rank ?? ""}
                   onChange={(e) =>
                     setFormData({
@@ -409,21 +386,13 @@ export function ScopeAssignmentForm({
                         : null,
                     })
                   }
-                  disabled={levelsLoading}
-                >
-                  <option value="">
-                    <Trans>No minimum (all levels)</Trans>
-                  </option>
-                  {leadershipLevels.map((level) => (
-                    <option key={level.id} value={level.rank}>
-                      FE{level.rank} - {level.name}
-                    </option>
-                  ))}
-                </Select>
+                  placeholder="Leave empty for no minimum"
+                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                />
                 <Description>
                   <Trans>
                     Lowest rank number the user can view (1 = CEO, higher
-                    numbers = lower positions)
+                    numbers = lower positions). Range: 1-255
                   </Trans>
                 </Description>
               </Field>
@@ -432,7 +401,10 @@ export function ScopeAssignmentForm({
                 <Label>
                   <Trans>Maximum Viewable Rank</Trans>
                 </Label>
-                <Select
+                <input
+                  type="number"
+                  min="0"
+                  max="255"
                   value={formData.max_viewable_rank ?? ""}
                   onChange={(e) =>
                     setFormData({
@@ -442,24 +414,13 @@ export function ScopeAssignmentForm({
                         : null,
                     })
                   }
-                  disabled={levelsLoading}
-                >
-                  <option value="">
-                    <Trans>Only non-leadership (Guards)</Trans>
-                  </option>
-                  <option value="255">
-                    <Trans>All leadership levels</Trans>
-                  </option>
-                  {leadershipLevels.map((level) => (
-                    <option key={level.id} value={level.rank}>
-                      FE{level.rank} - {level.name}
-                    </option>
-                  ))}
-                </Select>
+                  placeholder="0 or empty for non-leadership only"
+                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                />
                 <Description>
                   <Trans>
                     Highest rank number the user can view (set to 255 for all, 0
-                    or empty for non-leadership only)
+                    or empty for non-leadership only). Range: 0-255
                   </Trans>
                 </Description>
               </Field>
@@ -499,13 +460,13 @@ export function ScopeAssignmentForm({
               <div>
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white mb-2">
                   <Trans>
-                    Which leadership levels can this user ASSIGN or REMOVE?
+                    Which rank range can this user ASSIGN or REMOVE?
                   </Trans>
                 </h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   <Trans>
-                    To remove FE from employee, user must have permission to
-                    assign that FE. This prevents privilege escalation.
+                    To remove rank from employee, user must have permission to
+                    assign that rank. This prevents privilege escalation.
                   </Trans>
                 </p>
               </div>
@@ -514,7 +475,10 @@ export function ScopeAssignmentForm({
                 <Label>
                   <Trans>Minimum Assignable Rank</Trans>
                 </Label>
-                <Select
+                <input
+                  type="number"
+                  min="1"
+                  max="255"
                   value={formData.min_assignable_rank ?? ""}
                   onChange={(e) =>
                     setFormData({
@@ -524,24 +488,25 @@ export function ScopeAssignmentForm({
                         : null,
                     })
                   }
-                  disabled={levelsLoading}
-                >
-                  <option value="">
-                    <Trans>No minimum (all levels)</Trans>
-                  </option>
-                  {leadershipLevels.map((level) => (
-                    <option key={level.id} value={level.rank}>
-                      FE{level.rank} - {level.name}
-                    </option>
-                  ))}
-                </Select>
+                  placeholder="Leave empty for no minimum"
+                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                />
+                <Description>
+                  <Trans>
+                    Lowest rank number the user can assign (1 = CEO, higher
+                    numbers = lower positions). Range: 1-255
+                  </Trans>
+                </Description>
               </Field>
 
               <Field>
                 <Label>
                   <Trans>Maximum Assignable Rank</Trans>
                 </Label>
-                <Select
+                <input
+                  type="number"
+                  min="0"
+                  max="255"
                   value={formData.max_assignable_rank ?? ""}
                   onChange={(e) =>
                     setFormData({
@@ -551,20 +516,15 @@ export function ScopeAssignmentForm({
                         : null,
                     })
                   }
-                  disabled={levelsLoading}
-                >
-                  <option value="">
-                    <Trans>Cannot assign any leadership level</Trans>
-                  </option>
-                  <option value="255">
-                    <Trans>All leadership levels</Trans>
-                  </option>
-                  {leadershipLevels.map((level) => (
-                    <option key={level.id} value={level.rank}>
-                      FE{level.rank} - {level.name}
-                    </option>
-                  ))}
-                </Select>
+                  placeholder="0 or empty to prevent any assignment"
+                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                />
+                <Description>
+                  <Trans>
+                    Highest rank number the user can assign (set to 255 for all,
+                    0 or empty to prevent any assignment). Range: 0-255
+                  </Trans>
+                </Description>
               </Field>
 
               {errors.assignment && (
@@ -625,8 +585,8 @@ export function ScopeAssignmentForm({
                   <Trans>
                     By default (unchecked), users cannot see or edit their own
                     employee record. This prevents self-manipulation of salary,
-                    leadership level, etc. Check this box only if you want this
-                    user to access their own HR data.
+                    rank, etc. Check this box only if you want this user to
+                    access their own HR data.
                   </Trans>
                 </Description>
               </CheckboxField>

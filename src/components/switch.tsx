@@ -145,10 +145,12 @@ type Color = keyof typeof colors;
 export function Switch({
   color = "dark/zinc",
   className,
+  showIcons = false,
   ...props
 }: {
   color?: Color;
   className?: string;
+  showIcons?: boolean;
 } & Omit<Headless.SwitchProps, "as" | "className" | "children">) {
   return (
     <Headless.Switch
@@ -195,7 +197,42 @@ export function Switch({
           // Disabled
           "group-data-checked:group-data-disabled:bg-white group-data-checked:group-data-disabled:shadow-sm group-data-checked:group-data-disabled:ring-black/5"
         )}
-      />
+      >
+        {showIcons && (
+          <>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in group-data-checked:opacity-0 group-data-checked:duration-100 group-data-checked:ease-out"
+            >
+              <svg
+                fill="none"
+                viewBox="0 0 12 12"
+                className="size-3 text-gray-400 dark:text-gray-600"
+              >
+                <path
+                  d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out group-data-checked:opacity-100 group-data-checked:duration-200 group-data-checked:ease-in"
+            >
+              <svg
+                fill="currentColor"
+                viewBox="0 0 12 12"
+                className="size-3 text-indigo-600 dark:text-indigo-500"
+              >
+                <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+              </svg>
+            </span>
+          </>
+        )}
+      </span>
     </Headless.Switch>
   );
 }

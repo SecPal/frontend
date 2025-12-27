@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
+import { formatDate } from "../../lib/dateUtils";
 import {
   fetchEmployee,
   activateEmployee,
@@ -57,6 +59,7 @@ function StatusBadge({ status }: { status: string }) {
  * Profile Tab using Catalyst DescriptionList
  */
 function ProfileTab({ employee }: { employee: Employee }) {
+  const { i18n } = useLingui();
   return (
     <DescriptionList>
       <DescriptionTerm>
@@ -80,6 +83,21 @@ function ProfileTab({ employee }: { employee: Employee }) {
       <DescriptionDetails>{employee.phone || "-"}</DescriptionDetails>
 
       <DescriptionTerm>
+        <Trans>Management Level</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {employee.management_level > 0 ? (
+          <span className="font-medium">
+            <Trans>ML</Trans> {employee.management_level}
+          </span>
+        ) : (
+          <span className="text-zinc-500 dark:text-zinc-400">
+            <Trans>No management position</Trans>
+          </span>
+        )}
+      </DescriptionDetails>
+
+      <DescriptionTerm>
         <Trans>Position</Trans>
       </DescriptionTerm>
       <DescriptionDetails>{employee.position}</DescriptionDetails>
@@ -94,12 +112,16 @@ function ProfileTab({ employee }: { employee: Employee }) {
       <DescriptionTerm>
         <Trans>Date of Birth</Trans>
       </DescriptionTerm>
-      <DescriptionDetails>{employee.date_of_birth}</DescriptionDetails>
+      <DescriptionDetails>
+        {formatDate(employee.date_of_birth, i18n.locale)}
+      </DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Contract Start Date</Trans>
       </DescriptionTerm>
-      <DescriptionDetails>{employee.contract_start_date}</DescriptionDetails>
+      <DescriptionDetails>
+        {formatDate(employee.contract_start_date, i18n.locale)}
+      </DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Organizational Unit</Trans>

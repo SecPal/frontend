@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import {
   fetchEmployee,
   updateEmployee,
@@ -11,9 +12,7 @@ import {
   type EmployeeFormData,
 } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
-import { fetchAvailableLeadershipLevels } from "../../services/leadershipLevelApi";
 import type { OrganizationalUnit } from "../../types/organizational";
-import type { LeadershipLevel } from "../../types/leadershipLevel";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
@@ -26,24 +25,31 @@ import {
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
+import { Switch } from "../../components/switch";
 
 /**
  * Employee Edit Form
  */
 export function EmployeeEdit() {
+  const { i18n } = useLingui();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
+  // Display values for date inputs
+  const [birthDateDisplay, setBirthDateDisplay] = useState("");
+  const [contractDateDisplay, setContractDateDisplay] = useState("");
+  // Date validation errors
+  const [birthDateError, setBirthDateError] = useState<string | null>(null);
+  const [contractDateError, setContractDateError] = useState<string | null>(
+    null
+  );
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [organizationalUnits, setOrganizationalUnits] = useState<
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
-  const [leadershipLevels, setLeadershipLevels] = useState<LeadershipLevel[]>(
-    []
-  );
-  const [levelsLoading, setLevelsLoading] = useState(true);
+  const [isLeadership, setIsLeadership] = useState(false);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -53,10 +59,99 @@ export function EmployeeEdit() {
     position: "",
     contract_start_date: "",
     organizational_unit_id: "",
-    leadership_level_id: null,
+    management_level: 0,
     status: "pre_contract",
     contract_type: "full_time",
   });
+
+  // Helper function to format ISO date to display format
+  const formatDateForDisplay = (isoDate: string, locale: string): string => {
+    if (!isoDate) return "";
+    const date = new Date(isoDate);
+    if (locale === "de") {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
+    } else {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${month}/${day}/${year}`;
+    }
+  };
+
+  // Helper function to parse display format to ISO date with validation
+  const parseDateToISO = (
+    displayDate: string,
+    locale: string
+  ): { iso: string; formatted: string; valid: boolean } => {
+    if (!displayDate) return { iso: "", formatted: "", valid: false };
+
+    let parts: string[];
+    let day: number, month: number, year: number;
+
+    try {
+      if (locale === "de") {
+        // DD.MM.YYYY
+        parts = displayDate.split(".");
+        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+          return { iso: "", formatted: displayDate, valid: false };
+        }
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        year = parseInt(parts[2], 10);
+      } else {
+        // MM/DD/YYYY
+        parts = displayDate.split("/");
+        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
+          return { iso: "", formatted: displayDate, valid: false };
+        }
+        month = parseInt(parts[0], 10);
+        day = parseInt(parts[1], 10);
+        year = parseInt(parts[2], 10);
+      }
+
+      // Validate ranges
+      if (
+        isNaN(day) ||
+        isNaN(month) ||
+        isNaN(year) ||
+        year < 1900 ||
+        year > 2100 ||
+        month < 1 ||
+        month > 12 ||
+        day < 1 ||
+        day > 31
+      ) {
+        return { iso: "", formatted: displayDate, valid: false };
+      }
+
+      // Check if date is valid (e.g., not 31.02.2025)
+      const testDate = new Date(year, month - 1, day);
+      if (
+        testDate.getDate() !== day ||
+        testDate.getMonth() !== month - 1 ||
+        testDate.getFullYear() !== year
+      ) {
+        return { iso: "", formatted: displayDate, valid: false };
+      }
+
+      // Format ISO and display
+      const dayStr = day.toString().padStart(2, "0");
+      const monthStr = month.toString().padStart(2, "0");
+      const yearStr = year.toString();
+      const iso = `${yearStr}-${monthStr}-${dayStr}`;
+      const formatted =
+        locale === "de"
+          ? `${dayStr}.${monthStr}.${yearStr}`
+          : `${monthStr}/${dayStr}/${yearStr}`;
+
+      return { iso, formatted, valid: true };
+    } catch {
+      return { iso: "", formatted: displayDate, valid: false };
+    }
+  };
 
   useEffect(() => {
     async function loadOrganizationalUnits() {
@@ -70,19 +165,7 @@ export function EmployeeEdit() {
       }
     }
 
-    async function loadLeadershipLevels() {
-      try {
-        const levels = await fetchAvailableLeadershipLevels();
-        setLeadershipLevels(levels);
-      } catch (err) {
-        console.error("Failed to load leadership levels:", err);
-      } finally {
-        setLevelsLoading(false);
-      }
-    }
-
     loadOrganizationalUnits();
-    loadLeadershipLevels();
   }, []);
 
   const loadEmployee = useCallback(async () => {
@@ -100,13 +183,27 @@ export function EmployeeEdit() {
         email: employee.email,
         phone: employee.phone || "",
         date_of_birth: employee.date_of_birth,
-        position: employee.position,
+        position: employee.position || "",
         contract_start_date: employee.contract_start_date,
         organizational_unit_id: employee.organizational_unit.id,
-        leadership_level_id: employee.leadership_level?.id ?? null,
+        management_level: employee.management_level,
         status: employee.status,
         contract_type: employee.contract_type || "full_time",
       });
+      setIsLeadership(employee.management_level > 0);
+
+      // Set display values based on locale
+      if (i18n.locale === "de") {
+        setBirthDateDisplay(formatDateForDisplay(employee.date_of_birth, "de"));
+        setContractDateDisplay(
+          formatDateForDisplay(employee.contract_start_date, "de")
+        );
+      } else {
+        setBirthDateDisplay(formatDateForDisplay(employee.date_of_birth, "en"));
+        setContractDateDisplay(
+          formatDateForDisplay(employee.contract_start_date, "en")
+        );
+      }
     } catch (err) {
       console.error("Failed to load employee:", err);
       let errorMessage = "Failed to load employee";
@@ -121,7 +218,7 @@ export function EmployeeEdit() {
     } finally {
       setFetchLoading(false);
     }
-  }, [id]);
+  }, [id, i18n.locale]);
 
   useEffect(() => {
     loadEmployee();
@@ -152,7 +249,10 @@ export function EmployeeEdit() {
     }
   }
 
-  function handleChange(field: keyof EmployeeFormData, value: string | null) {
+  function handleChange(
+    field: keyof EmployeeFormData,
+    value: string | number | null
+  ) {
     setFormData((prev: EmployeeFormData) => ({ ...prev, [field]: value }));
   }
 
@@ -247,14 +347,40 @@ export function EmployeeEdit() {
                     <Trans>Date of Birth</Trans> *
                   </Label>
                   <Input
-                    type="date"
+                    type="text"
                     name="date_of_birth"
                     required
-                    value={formData.date_of_birth}
-                    onChange={(e) =>
-                      handleChange("date_of_birth", e.target.value)
+                    placeholder={
+                      i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
                     }
+                    value={birthDateDisplay}
+                    onChange={(e) => {
+                      setBirthDateDisplay(e.target.value);
+                      setBirthDateError(null); // Clear error on change
+                    }}
+                    onBlur={(e) => {
+                      const result = parseDateToISO(
+                        e.target.value,
+                        i18n.locale
+                      );
+                      if (result.valid) {
+                        setBirthDateDisplay(result.formatted);
+                        handleChange("date_of_birth", result.iso);
+                        setBirthDateError(null);
+                      } else if (e.target.value) {
+                        setBirthDateError(
+                          i18n.locale === "de"
+                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+                            : "Invalid date. Please use format MM/DD/YYYY"
+                        );
+                      }
+                    }}
                   />
+                  {birthDateError && (
+                    <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
+                      {birthDateError}
+                    </Text>
+                  )}
                 </Field>
 
                 <Field>
@@ -310,14 +436,40 @@ export function EmployeeEdit() {
                     <Trans>Contract Start Date</Trans> *
                   </Label>
                   <Input
-                    type="date"
+                    type="text"
                     name="contract_start_date"
                     required
-                    value={formData.contract_start_date}
-                    onChange={(e) =>
-                      handleChange("contract_start_date", e.target.value)
+                    placeholder={
+                      i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
                     }
+                    value={contractDateDisplay}
+                    onChange={(e) => {
+                      setContractDateDisplay(e.target.value);
+                      setContractDateError(null); // Clear error on change
+                    }}
+                    onBlur={(e) => {
+                      const result = parseDateToISO(
+                        e.target.value,
+                        i18n.locale
+                      );
+                      if (result.valid) {
+                        setContractDateDisplay(result.formatted);
+                        handleChange("contract_start_date", result.iso);
+                        setContractDateError(null);
+                      } else if (e.target.value) {
+                        setContractDateError(
+                          i18n.locale === "de"
+                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+                            : "Invalid date. Please use format MM/DD/YYYY"
+                        );
+                      }
+                    }}
                   />
+                  {contractDateError && (
+                    <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
+                      {contractDateError}
+                    </Text>
+                  )}
                 </Field>
 
                 <Field>
@@ -348,35 +500,64 @@ export function EmployeeEdit() {
                   </Select>
                 </Field>
 
-                <Field>
-                  <Label>
-                    <Trans>Leadership Level</Trans>
-                  </Label>
-                  <Select
-                    name="leadership_level_id"
-                    value={formData.leadership_level_id ?? ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "leadership_level_id",
-                        e.target.value || null
-                      )
-                    }
-                    disabled={levelsLoading}
-                  >
-                    <option value="">
-                      {levelsLoading ? (
-                        <Trans>Loading...</Trans>
-                      ) : (
-                        <Trans>No Leadership Level</Trans>
-                      )}
-                    </option>
-                    {leadershipLevels.map((level) => (
-                      <option key={level.id} value={level.id}>
-                        FE{level.rank} - {level.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Label>
+                      <Trans>Leadership Position</Trans>
+                    </Label>
+                    <Switch
+                      name="is_leadership"
+                      checked={isLeadership}
+                      showIcons
+                      onChange={(checked) => {
+                        setIsLeadership(checked);
+                        if (!checked) {
+                          handleChange("management_level", 0);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <Field>
+                    <span
+                      data-slot="control"
+                      className="relative block w-full before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm dark:before:hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500"
+                    >
+                      <div className="relative flex items-center rounded-lg border border-zinc-950/10 bg-transparent dark:border-white/10 dark:bg-white/5">
+                        {isLeadership && (
+                          <div className="shrink-0 pl-3.5 pr-2 py-2.5 text-base/6 text-gray-500 select-none sm:pl-3 sm:pr-2 sm:py-1.5 sm:text-sm/6 dark:text-gray-400">
+                            <Trans>ML</Trans>
+                          </div>
+                        )}
+                        <input
+                          type="number"
+                          name="management_level"
+                          min="1"
+                          max="255"
+                          placeholder={
+                            isLeadership
+                              ? "?"
+                              : i18n._(msg`No management position`)
+                          }
+                          disabled={!isLeadership}
+                          required={isLeadership}
+                          value={
+                            isLeadership && formData.management_level > 0
+                              ? formData.management_level
+                              : ""
+                          }
+                          onChange={(e) =>
+                            handleChange(
+                              "management_level",
+                              e.target.value ? Number(e.target.value) : 0
+                            )
+                          }
+                          className={`relative block w-full appearance-none rounded-lg py-2.5 pr-3.5 text-base/6 text-zinc-950 placeholder:text-zinc-500 bg-transparent focus:outline-hidden sm:py-1.5 sm:pr-3 sm:text-sm/6 dark:text-white dark:placeholder:text-zinc-500 disabled:opacity-50 border-0 ${isLeadership ? "pl-0" : "pl-3.5 sm:pl-3"}`}
+                        />
+                      </div>
+                    </span>
+                  </Field>
+                </div>
               </div>
             </FieldGroup>
           </Fieldset>

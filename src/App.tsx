@@ -28,9 +28,6 @@ const SecretDetail = lazy(() => import("./pages/Secrets/SecretDetail"));
 const SecretCreate = lazy(() => import("./pages/Secrets/SecretCreate"));
 const SecretEdit = lazy(() => import("./pages/Secrets/SecretEdit"));
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
-const SettingsLeadershipLevelsPage = lazy(
-  () => import("./pages/Settings/SettingsLeadershipLevelsPage")
-);
 const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
 const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
 const EmployeeDetail = lazy(() => import("./pages/Employees/EmployeeDetail"));
@@ -343,16 +340,6 @@ function App() {
                 <ProtectedRoute>
                   <ApplicationLayout>
                     <SettingsPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings/leadership-levels"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SettingsLeadershipLevelsPage />
                   </ApplicationLayout>
                 </ProtectedRoute>
               }

@@ -10,6 +10,7 @@ import {
   Suspense,
 } from "react";
 import { Trans, t } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
@@ -29,6 +30,7 @@ import {
   getTypeLabel,
   getTypeBadgeColor,
 } from "../../lib/organizationalUnitUtils";
+import { formatDate } from "../../lib/dateUtils";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizationalUnitsWithOffline";
 
@@ -59,6 +61,7 @@ interface OptimisticTreeUpdate {
  * @see Issue #283: Epic - Organizational Structure Management (CRUD) - Offline Support
  */
 export function OrganizationPage() {
+  const { i18n } = useLingui();
   // Offline-first organizational units hook
   const { isOffline, isStale, lastSynced, refresh } =
     useOrganizationalUnitsWithOffline();
@@ -349,7 +352,7 @@ export function OrganizationPage() {
                     <Trans>Created</Trans>
                   </dt>
                   <dd className="text-zinc-900 dark:text-white">
-                    {new Date(selectedUnit.created_at).toLocaleDateString()}
+                    {formatDate(selectedUnit.created_at, i18n.locale)}
                   </dd>
                 </div>
               </dl>
