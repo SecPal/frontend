@@ -384,8 +384,8 @@ describe("EmployeeList", () => {
       expect(mlBadges.length).toBeGreaterThanOrEqual(2);
 
       // Check for specific management levels
-      expect(screen.getByText(/1/)).toBeInTheDocument();
-      expect(screen.getByText(/5/)).toBeInTheDocument();
+      expect(screen.getByText(/ML\s+1/)).toBeInTheDocument();
+      expect(screen.getByText(/ML\s+5/)).toBeInTheDocument();
     });
 
     it("should not display management level badge for non-management employees", async () => {

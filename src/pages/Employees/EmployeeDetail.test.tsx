@@ -378,8 +378,7 @@ describe("EmployeeDetail", () => {
       });
 
       // Should display "ML 3" badge
-      expect(screen.getByText(/ML/)).toBeInTheDocument();
-      expect(screen.getByText(/3/)).toBeInTheDocument();
+      expect(screen.getByText(/ML\s+3/)).toBeInTheDocument();
     });
 
     it("should not display management level badge for non-management employees", async () => {
@@ -420,8 +419,7 @@ describe("EmployeeDetail", () => {
       });
 
       // Should display "ML 1" badge
-      expect(screen.getByText(/ML/)).toBeInTheDocument();
-      expect(screen.getByText(/1/)).toBeInTheDocument();
+      expect(screen.getByText(/ML\s+1/)).toBeInTheDocument();
     });
   });
 });
