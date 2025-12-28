@@ -436,7 +436,7 @@ export function ActivityLogList() {
                   <TableCell>
                     <SecurityLevelBadge level={activity.security_level} />
                   </TableCell>
-                  <TableCell className="w-24 shrink-0">
+                  <TableCell className="w-28 shrink-0">
                     <VerificationDots
                       activity={activity}
                       size="sm"
