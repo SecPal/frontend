@@ -377,8 +377,7 @@ export function ActivityLogList() {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <Table className="[--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]">
+          <Table className="[--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]">
             <TableHead>
               <TableRow>
                 <TableHeader>
@@ -399,7 +398,7 @@ export function ActivityLogList() {
                 <TableHeader>
                   <Trans>Security Level</Trans>
                 </TableHeader>
-                <TableHeader className="w-32 shrink-0">
+                <TableHeader className="w-20">
                   {/* Verification dots - no header */}
                 </TableHeader>
               </TableRow>
@@ -411,10 +410,10 @@ export function ActivityLogList() {
                   className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   onClick={() => handleRowClick(activity)}
                 >
-                  <TableCell className="font-medium whitespace-nowrap">
+                  <TableCell className="font-medium text-sm">
                     {formatDate(activity.created_at)}
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">
+                  <TableCell className="max-w-[200px] truncate">
                     {activity.description}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
@@ -437,7 +436,7 @@ export function ActivityLogList() {
                   <TableCell>
                     <SecurityLevelBadge level={activity.security_level} />
                   </TableCell>
-                  <TableCell className="w-32 shrink-0">
+                  <TableCell className="w-20">
                     <VerificationDots
                       activity={activity}
                       size="sm"
@@ -448,7 +447,6 @@ export function ActivityLogList() {
               ))}
             </TableBody>
           </Table>
-          </div>
 
           {/* Pagination */}
           {pagination.last_page > 1 && (
