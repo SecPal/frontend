@@ -377,7 +377,8 @@ export function ActivityLogList() {
         </div>
       ) : (
         <>
-          <Table className="[--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]">
+          <div className="overflow-x-auto">
+            <Table className="[--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]">
             <TableHead>
               <TableRow>
                 <TableHeader>
@@ -398,7 +399,7 @@ export function ActivityLogList() {
                 <TableHeader>
                   <Trans>Security Level</Trans>
                 </TableHeader>
-                <TableHeader className="w-16 shrink-0">
+                <TableHeader className="w-32 shrink-0">
                   {/* Verification dots - no header */}
                 </TableHeader>
               </TableRow>
@@ -447,6 +448,7 @@ export function ActivityLogList() {
               ))}
             </TableBody>
           </Table>
+          </div>
 
           {/* Pagination */}
           {pagination.last_page > 1 && (
