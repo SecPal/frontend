@@ -879,13 +879,13 @@ msgstr "HR Zugang"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:104
 #: src/pages/ActivityLog/ActivityLogList.tsx:111
 msgid "Hash Chain (Data)"
-msgstr ""
+msgstr "Hash-Kette (Daten)"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:112
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:115
 #: src/pages/ActivityLog/ActivityLogList.tsx:114
 msgid "Hash Chain (Link)"
-msgstr ""
+msgstr "Hash-Kette (Link)"
 
 #: src/pages/Secrets/SecretDetail.tsx:327
 msgid "Hide"
@@ -1099,7 +1099,7 @@ msgstr "Merkle-Wurzel"
 #: src/pages/ActivityLog/ActivityLogList.tsx:118
 #: src/pages/ActivityLog/ActivityLogList.tsx:119
 msgid "Merkle Tree"
-msgstr ""
+msgstr "Merkle-Baum"
 
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
@@ -1325,7 +1325,7 @@ msgstr "in Freistellung"
 #: src/pages/ActivityLog/ActivityLogList.tsx:123
 #: src/pages/ActivityLog/ActivityLogList.tsx:124
 msgid "OpenTimestamp"
-msgstr ""
+msgstr "OpenTimestamp"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:418
 msgid "OpenTimestamp Confirmed"
@@ -1333,7 +1333,7 @@ msgstr "OpenTimestamp Bestätigt"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:142
 msgid "OpenTimestamp: N/A"
-msgstr ""
+msgstr "OpenTimestamp: Nicht zutreffend"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
@@ -2278,22 +2278,22 @@ msgstr "{errorOps} Operation(en) fehlgeschlagen"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:84
 #: src/pages/ActivityLog/ActivityLogList.tsx:94
 msgid "{label}: Invalid"
-msgstr ""
+msgstr "{label}: Ungültig"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:64
 #: src/pages/ActivityLog/ActivityLogList.tsx:74
 msgid "{label}: N/A"
-msgstr ""
+msgstr "{label}: Nicht zutreffend"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:93
 #: src/pages/ActivityLog/ActivityLogList.tsx:103
 msgid "{label}: Pending"
-msgstr ""
+msgstr "{label}: Ausstehend"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:74
 #: src/pages/ActivityLog/ActivityLogList.tsx:84
 msgid "{label}: Valid"
-msgstr ""
+msgstr "{label}: Gültig"
 
 #: src/components/SyncStatusIndicator.tsx:117
 msgid "{pendingOps} operation(s) pending"
