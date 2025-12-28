@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import {
   Dialog,
   DialogTitle,
@@ -32,27 +33,123 @@ interface ActivityDetailDialogProps {
 }
 
 /**
- * Verification status badge
+ * Verification status dots
+ * Shows color-coded dots based on security level:
+ * - Level 1: Hash Chain only (2 dots: data integrity + link integrity)
+ * - Level 2: Hash Chain + Merkle Tree
+ * - Level 3: Hash Chain + Merkle Tree + OpenTimestamp
  */
-function VerificationBadge({
-  status,
-  label,
+function VerificationDots({
+  activity,
+  verification,
 }: {
-  status: boolean | null;
-  label: string;
+  activity: Activity;
+  verification?: ActivityVerification;
 }) {
-  if (status === null) {
+  const { _ } = useLingui();
+  const security_level = activity.security_level;
+  const verificationData = verification?.verification || activity.verification;
+
+  // Helper to render a dot
+  const renderDot = (
+    status: boolean | null | undefined,
+    label: string,
+    notApplicable = false
+  ) => {
+    // Not applicable for this security level -> grey
+    if (notApplicable) {
+      return (
+        <span
+          className="inline-block w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600"
+          title={_(msg`${label}: N/A`)}
+        />
+      );
+    }
+
+    // Valid -> green
+    if (status === true) {
+      return (
+        <span
+          className="inline-block w-3 h-3 rounded-full bg-lime-500"
+          title={_(msg`${label}: Valid`)}
+        />
+      );
+    }
+
+    // Invalid -> red
+    if (status === false) {
+      return (
+        <span
+          className="inline-block w-3 h-3 rounded-full bg-red-500"
+          title={_(msg`${label}: Invalid`)}
+        />
+      );
+    }
+
+    // null or undefined = pending -> yellow
     return (
-      <Badge color="zinc">
-        {label}: <Trans>N/A</Trans>
-      </Badge>
+      <span
+        className="inline-block w-3 h-3 rounded-full bg-yellow-500"
+        title={_(msg`${label}: Pending`)}
+      />
     );
-  }
+  };
 
   return (
-    <Badge color={status ? "lime" : "red"}>
-      {label}: {status ? <Trans>Valid</Trans> : <Trans>Invalid</Trans>}
-    </Badge>
+    <div className="flex gap-2 items-center flex-wrap">
+      {/* Hash Chain - Data Integrity (always shown for all levels) */}
+      <div className="flex items-center gap-1">
+        {renderDot(verificationData?.chain_valid, _(msg`Hash Chain (Data)`))}
+        <span className="text-sm">
+          <Trans>Hash Chain (Data)</Trans>
+        </span>
+      </div>
+
+      {/* Hash Chain - Link Integrity (connection to predecessor) */}
+      <div className="flex items-center gap-1">
+        {renderDot(
+          verificationData?.chain_link_valid,
+          _(msg`Hash Chain (Link)`)
+        )}
+        <span className="text-sm">
+          <Trans>Hash Chain (Link)</Trans>
+        </span>
+      </div>
+
+      {/* Merkle Tree - show if Level 2+, or if data exists */}
+      {(security_level >= 2 ||
+        verificationData?.merkle_valid !== undefined) && (
+        <div className="flex items-center gap-1">
+          {renderDot(verificationData?.merkle_valid, _(msg`Merkle Tree`))}
+          <span className="text-sm">
+            <Trans>Merkle Tree</Trans>
+          </span>
+        </div>
+      )}
+
+      {/* OpenTimestamp - show if Level 3 only */}
+      {security_level >= 3 ? (
+        <div className="flex items-center gap-1">
+          {renderDot(verificationData?.ots_valid, _(msg`OpenTimestamp`))}
+          <span className="text-sm">
+            <Trans>OpenTimestamp</Trans>
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1">
+          <span
+            className="inline-block w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600"
+            title={_(msg`OpenTimestamp: N/A`)}
+          />
+          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <Trans>OpenTimestamp</Trans>{" "}
+            <span className="text-xs">
+              (<Trans>N/A</Trans>)
+            </span>
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -95,28 +192,53 @@ export function ActivityDetailDialog({
     null
   );
 
-  // Load verification status when dialog opens
+  // Load verification: use cached data from list if available, otherwise fetch
   useEffect(() => {
     if (!open) return;
 
-    async function loadVerification() {
-      try {
-        setVerifying(true);
-        setVerificationError(null);
-        const response = await verifyActivityLog(activity.id);
-        setVerification(response.data);
-      } catch (err) {
-        console.error("Failed to verify activity log:", err);
-        setVerificationError(
-          err instanceof Error ? err.message : "Verification failed"
-        );
-      } finally {
-        setVerifying(false);
-      }
+    // Reset error state
+    setVerificationError(null);
+
+    // If activity already has verification data, use it
+    if (activity.verification) {
+      setVerification({
+        activity_id: activity.id,
+        verification: activity.verification,
+        details: {
+          event_hash: activity.event_hash || "",
+          previous_hash: activity.previous_hash || null,
+          merkle_root: activity.merkle_root || null,
+          merkle_batch_id: activity.merkle_batch_id?.toString() || null,
+          ots_confirmed_at: activity.ots_confirmed_at || null,
+          is_orphaned_genesis: activity.is_orphaned_genesis || false,
+          orphaned_reason: activity.orphaned_reason || null,
+        },
+      });
+      return;
     }
 
-    loadVerification();
-  }, [activity.id, open]);
+    // Otherwise, lazy load verification after small delay
+    const timeoutId = setTimeout(() => {
+      async function loadVerification() {
+        try {
+          setVerifying(true);
+          const response = await verifyActivityLog(activity.id);
+          setVerification(response.data);
+        } catch (err) {
+          console.error("Failed to verify activity log:", err);
+          setVerificationError(
+            err instanceof Error ? err.message : "Verification failed"
+          );
+        } finally {
+          setVerifying(false);
+        }
+      }
+
+      loadVerification();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [activity, open]);
 
   return (
     <Dialog open={open} onClose={onClose} size="3xl">
@@ -238,20 +360,10 @@ export function ActivityDetailDialog({
 
             {verification && !verifying && (
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <VerificationBadge
-                    status={verification.verification.chain_valid}
-                    label="Hash Chain"
-                  />
-                  <VerificationBadge
-                    status={verification.verification.merkle_valid}
-                    label="Merkle Tree"
-                  />
-                  <VerificationBadge
-                    status={verification.verification.ots_valid}
-                    label="OpenTimestamp"
-                  />
-                </div>
+                <VerificationDots
+                  activity={activity}
+                  verification={verification}
+                />
 
                 <DescriptionList>
                   <DescriptionTerm>
@@ -335,14 +447,16 @@ export function ActivityDetailDialog({
                   <Text className="text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
                       <strong>Hash Chain:</strong> Verifies the sequential
-                      integrity of activity logs.
+                      integrity of activity logs. "Pending" indicates the hash
+                      chain is still being built.
                       <br />
                       <strong>Merkle Tree:</strong> Batch verification for
                       efficient proof of log inclusion (Security Levels 2-3).
+                      Runs every minute in development, hourly in production.
                       <br />
                       <strong>OpenTimestamp:</strong> Bitcoin blockchain
                       anchoring for immutable proof of existence (Security Level
-                      3).
+                      3 only). Bitcoin confirmation takes ~10 minutes.
                     </Trans>
                   </Text>
                 </div>

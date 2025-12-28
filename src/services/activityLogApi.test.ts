@@ -210,6 +210,7 @@ describe("activityLogApi", () => {
       activity_id: "log-1",
       verification: {
         chain_valid: true,
+        chain_link_valid: true,
         merkle_valid: true,
         ots_valid: true,
       },
@@ -246,6 +247,7 @@ describe("activityLogApi", () => {
         activity_id: "log-2",
         verification: {
           chain_valid: false,
+          chain_link_valid: false,
           merkle_valid: false,
           ots_valid: null,
         },
@@ -278,6 +280,7 @@ describe("activityLogApi", () => {
         activity_id: "log-3",
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: true,
           ots_valid: null,
         },

@@ -50,6 +50,83 @@ function SecurityLevelBadge({ level }: { level: 1 | 2 | 3 }) {
 }
 
 /**
+ * Verification status dots
+ * Shows color-coded dots based on security level:
+ * - Level 1: Hash Chain only (2 dots: data integrity + link integrity)
+ * - Level 2: Hash Chain + Merkle Tree
+ * - Level 3: Hash Chain + Merkle Tree + OpenTimestamp
+ */
+function VerificationDots({ activity }: { activity: Activity }) {
+  const { verification, security_level } = activity;
+  const { _ } = useLingui();
+
+  // Helper to render a dot
+  const renderDot = (
+    status: boolean | null | undefined,
+    label: string,
+    notApplicable = false
+  ) => {
+    // Not applicable for this security level -> grey
+    if (notApplicable) {
+      return (
+        <span
+          className="inline-block w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600"
+          title={_(msg`${label}: N/A`)}
+        />
+      );
+    }
+
+    // Valid -> green
+    if (status === true) {
+      return (
+        <span
+          className="inline-block w-2 h-2 rounded-full bg-lime-500"
+          title={_(msg`${label}: Valid`)}
+        />
+      );
+    }
+
+    // Invalid -> red
+    if (status === false) {
+      return (
+        <span
+          className="inline-block w-2 h-2 rounded-full bg-red-500"
+          title={_(msg`${label}: Invalid`)}
+        />
+      );
+    }
+
+    // null or undefined = pending -> yellow
+    return (
+      <span
+        className="inline-block w-2 h-2 rounded-full bg-yellow-500"
+        title={_(msg`${label}: Pending`)}
+      />
+    );
+  };
+
+  return (
+    <div className="flex gap-1">
+      {/* Hash Chain - Data Integrity (always shown for all levels) */}
+      {renderDot(verification?.chain_valid, _(msg`Hash Chain (Data)`))}
+
+      {/* Hash Chain - Link Integrity (connection to predecessor) */}
+      {renderDot(verification?.chain_link_valid, _(msg`Hash Chain (Link)`))}
+
+      {/* Merkle Tree - show if Level 2+, or if data exists */}
+      {security_level >= 2 || verification?.merkle_valid !== undefined
+        ? renderDot(verification?.merkle_valid, _(msg`Merkle Tree`))
+        : renderDot(undefined, _(msg`Merkle Tree`), true)}
+
+      {/* OpenTimestamp - show if Level 3 only */}
+      {security_level >= 3
+        ? renderDot(verification?.ots_valid, _(msg`OpenTimestamp`))
+        : renderDot(undefined, _(msg`OpenTimestamp`), true)}
+    </div>
+  );
+}
+
+/**
  * Format date for display
  */
 function formatDate(dateString: string): string {
@@ -385,17 +462,20 @@ export function ActivityLogList() {
                 <TableHeader>
                   <Trans>Description</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden md:table-cell">
                   <Trans>Log Name</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden lg:table-cell">
                   <Trans>Causer</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden xl:table-cell">
                   <Trans>Organizational Unit</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Security Level</Trans>
+                </TableHeader>
+                <TableHeader className="w-16 shrink-0">
+                  {/* Verification dots - no header */}
                 </TableHeader>
               </TableRow>
             </TableHead>
@@ -406,23 +486,23 @@ export function ActivityLogList() {
                   className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   onClick={() => handleRowClick(activity)}
                 >
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium whitespace-nowrap">
                     {formatDate(activity.created_at)}
                   </TableCell>
-                  <TableCell className="max-w-md truncate">
+                  <TableCell className="max-w-xs truncate">
                     {activity.description}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge color="zinc">{activity.log_name}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {activity.causer?.name || (
                       <span className="text-zinc-500 dark:text-zinc-400">
                         <Trans>System</Trans>
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden xl:table-cell">
                     {activity.organizational_unit?.name || (
                       <span className="text-zinc-500 dark:text-zinc-400">
                         <Trans>Global</Trans>
@@ -431,6 +511,9 @@ export function ActivityLogList() {
                   </TableCell>
                   <TableCell>
                     <SecurityLevelBadge level={activity.security_level} />
+                  </TableCell>
+                  <TableCell className="w-16 shrink-0">
+                    <VerificationDots activity={activity} />
                   </TableCell>
                 </TableRow>
               ))}

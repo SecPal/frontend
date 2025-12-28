@@ -67,6 +67,7 @@ const mockVerification: ActivityVerification = {
   activity_id: "log-1",
   verification: {
     chain_valid: true,
+    chain_link_valid: true,
     merkle_valid: true,
     ots_valid: true,
   },
@@ -150,6 +151,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: false,
+          chain_link_valid: false,
           merkle_valid: false,
           ots_valid: false,
         },
@@ -168,12 +170,13 @@ describe("ActivityDetailDialog", () => {
     expect(invalidBadges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("should display N/A for null verification values", async () => {
+  it("should display Pending for null verification values", async () => {
     vi.mocked(activityLogApi.verifyActivityLog).mockResolvedValue({
       data: {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: null,
           ots_valid: null,
         },
@@ -188,8 +191,8 @@ describe("ActivityDetailDialog", () => {
       expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
     });
 
-    const naBadges = screen.getAllByText(/n\/a/i);
-    expect(naBadges.length).toBeGreaterThanOrEqual(2);
+    const pendingBadges = screen.getAllByText(/pending/i);
+    expect(pendingBadges.length).toBeGreaterThanOrEqual(2);
   });
 
   it("should display verification error", async () => {
@@ -382,6 +385,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: false,
           ots_valid: false,
         },
@@ -412,6 +416,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: true,
           ots_valid: false,
         },
