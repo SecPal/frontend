@@ -136,13 +136,13 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    // Look for "Valid" text in badges
-    const validBadges = screen.getAllByText(/valid/i);
-    expect(validBadges.length).toBeGreaterThanOrEqual(3);
+    // Look for "Valid" status in tooltips (dots with title="...: Valid")
+    const validDots = screen.getAllByTitle(/: valid$/i);
+    expect(validDots.length).toBeGreaterThanOrEqual(3);
   });
 
   it("should display invalid verification status", async () => {
@@ -162,12 +162,13 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    const invalidBadges = screen.getAllByText(/invalid/i);
-    expect(invalidBadges.length).toBeGreaterThanOrEqual(3);
+    // Check for Invalid status in tooltips (dots with title="...: Invalid")
+    const invalidDots = screen.getAllByTitle(/invalid/i);
+    expect(invalidDots.length).toBeGreaterThanOrEqual(3);
   });
 
   it("should display Pending for null verification values", async () => {
@@ -187,12 +188,13 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    const pendingBadges = screen.getAllByText(/pending/i);
-    expect(pendingBadges.length).toBeGreaterThanOrEqual(2);
+    // Check for Pending status in tooltips (dots with title="...: Pending")
+    const pendingDots = screen.getAllByTitle(/pending/i);
+    expect(pendingDots.length).toBeGreaterThanOrEqual(2);
   });
 
   it("should display verification error", async () => {
