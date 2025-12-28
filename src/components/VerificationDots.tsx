@@ -83,7 +83,7 @@ export function VerificationDots({
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-1 items-center">
       {/* Hash Chain - Data Integrity (always shown for all levels) */}
       <div className="flex items-center gap-1">
         {renderDot(verificationData?.chain_valid, _(msg`Hash Chain (Data)`))}
