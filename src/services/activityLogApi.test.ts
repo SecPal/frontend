@@ -512,5 +512,52 @@ describe("activityLogApi", () => {
       expect(callArg).toContain("page=3");
       expect(callArg).toContain("per_page=25");
     });
+
+    it("should handle error response with JSON parsing failure", async () => {
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
+      } as unknown as Response);
+
+      await expect(fetchActivityLogs()).rejects.toThrow(
+        "Failed to fetch activity logs"
+      );
+    });
+  });
+
+  describe("fetchActivityLog error handling", () => {
+    it("should handle error response with JSON parsing failure", async () => {
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
+      } as unknown as Response);
+
+      const { fetchActivityLog } = await import("./activityLogApi");
+      await expect(fetchActivityLog("log-1")).rejects.toThrow(
+        "Failed to fetch activity log"
+      );
+    });
+  });
+
+  describe("verifyActivityLog error handling", () => {
+    it("should handle error response with JSON parsing failure", async () => {
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => {
+          throw new Error("Invalid JSON");
+        },
+      } as unknown as Response);
+
+      await expect(verifyActivityLog("log-1")).rejects.toThrow(
+        "Failed to verify activity log"
+      );
+    });
   });
 });
