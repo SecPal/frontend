@@ -323,4 +323,194 @@ describe("activityLogApi", () => {
       );
     });
   });
+
+  describe("fetchActivityLog (single)", () => {
+    const mockActivity: Activity = {
+      id: "log-1",
+      tenant_id: "tenant-1",
+      organizational_unit_id: "unit-1",
+      organizational_unit: {
+        id: "unit-1",
+        name: "Main Unit",
+        unit_type: "regional",
+      },
+      log_name: "authentication",
+      description: "User logged in",
+      subject_type: "App\\Models\\User",
+      subject_id: "user-1",
+      subject: { id: "user-1", name: "John Doe" },
+      causer_type: "App\\Models\\User",
+      causer_id: "user-1",
+      causer: { id: "user-1", name: "John Doe", email: "john@example.com" },
+      properties: { event: "login", ip: "192.168.1.1" },
+      event_hash: "abc123",
+      previous_hash: "def456",
+      security_level: 2,
+      merkle_root: "merkle-root",
+      merkle_batch_id: "batch-1",
+      merkle_proof: null,
+      opentimestamp_proof: null,
+      opentimestamp_merkle_root: null,
+      opentimestamp_proof_confirmed: false,
+      ots_confirmed_at: null,
+      is_orphaned_genesis: false,
+      orphaned_reason: null,
+      orphaned_at: null,
+      created_at: "2025-12-27T10:00:00Z",
+      updated_at: "2025-12-27T10:00:00Z",
+    };
+
+    it("should fetch single activity log successfully", async () => {
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: mockActivity }),
+      } as Response);
+
+      const { fetchActivityLog } = await import("./activityLogApi");
+      const result = await fetchActivityLog("log-1");
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/activity-logs/log-1");
+      expect(result.data.id).toBe("log-1");
+      expect(result.data.log_name).toBe("authentication");
+    });
+
+    it("should handle 404 for non-existent activity log", async () => {
+      vi.mocked(csrf.apiFetch).mockRejectedValue(
+        new Error("Activity log not found")
+      );
+
+      const { fetchActivityLog } = await import("./activityLogApi");
+      await expect(fetchActivityLog("non-existent")).rejects.toThrow(
+        "Activity log not found"
+      );
+    });
+
+    it("should handle forbidden access to activity log", async () => {
+      vi.mocked(csrf.apiFetch).mockRejectedValue(
+        new Error("Forbidden: Access denied")
+      );
+
+      const { fetchActivityLog } = await import("./activityLogApi");
+      await expect(fetchActivityLog("restricted-log")).rejects.toThrow(
+        "Forbidden"
+      );
+    });
+  });
+
+  describe("edge cases and error handling", () => {
+    it("should handle empty activity list", async () => {
+      const emptyResponse = {
+        data: [],
+        meta: {
+          current_page: 1,
+          from: 0,
+          last_page: 0,
+          per_page: 50,
+          to: 0,
+          total: 0,
+        },
+        links: {
+          first: null,
+          last: null,
+          prev: null,
+          next: null,
+        },
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: true,
+        json: async () => emptyResponse,
+      } as Response);
+
+      const result = await fetchActivityLogs();
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+
+    it("should handle network timeout errors", async () => {
+      vi.mocked(csrf.apiFetch).mockRejectedValue(new Error("Network timeout"));
+
+      await expect(fetchActivityLogs()).rejects.toThrow("Network timeout");
+    });
+
+    it("should handle server 500 errors gracefully", async () => {
+      vi.mocked(csrf.apiFetch).mockRejectedValue(
+        new Error("Internal server error")
+      );
+
+      await expect(fetchActivityLogs()).rejects.toThrow(
+        "Internal server error"
+      );
+    });
+
+    it("should handle malformed date filters", async () => {
+      const filters: ActivityFilters = {
+        from_date: "2025-12-27",
+        to_date: "2025-12-31",
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [],
+          meta: {
+            current_page: 1,
+            from: 0,
+            last_page: 0,
+            per_page: 50,
+            to: 0,
+            total: 0,
+          },
+          links: { first: null, last: null, prev: null, next: null },
+        }),
+      } as Response);
+
+      const result = await fetchActivityLogs(filters);
+
+      const callArg = vi.mocked(csrf.apiFetch).mock.calls[0]?.[0] as string;
+      expect(callArg).toContain("from_date=2025-12-27");
+      expect(callArg).toContain("to_date=2025-12-31");
+      expect(result.data).toEqual([]);
+    });
+
+    it("should handle all filter combinations", async () => {
+      const filters: ActivityFilters = {
+        search: "test query",
+        log_name: "authentication",
+        from_date: "2025-01-01",
+        to_date: "2025-12-31",
+        organizational_unit_id: "unit-123",
+        page: 3,
+        per_page: 25,
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [],
+          meta: {
+            current_page: 3,
+            from: 51,
+            last_page: 5,
+            per_page: 25,
+            to: 75,
+            total: 125,
+          },
+          links: { first: null, last: null, prev: null, next: null },
+        }),
+      } as Response);
+
+      await fetchActivityLogs(filters);
+
+      const callArg = vi.mocked(csrf.apiFetch).mock.calls[0]?.[0] as string;
+      expect(callArg).toContain("search=test+query");
+      expect(callArg).toContain("log_name=authentication");
+      expect(callArg).toContain("from_date=2025-01-01");
+      expect(callArg).toContain("to_date=2025-12-31");
+      expect(callArg).toContain("organizational_unit_id=unit-123");
+      expect(callArg).toContain("page=3");
+      expect(callArg).toContain("per_page=25");
+    });
+  });
 });

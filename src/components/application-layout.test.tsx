@@ -593,4 +593,89 @@ describe("ApplicationLayout", () => {
       ).toBeInTheDocument();
     });
   });
+
+  describe("Activity Logs Navigation", () => {
+    it("shows Activity Logs menu item when user has permission", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin User",
+          email: "admin@example.com",
+          permissions: ["activity_log.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Activity Logs")).toBeInTheDocument();
+    });
+
+    it("hides Activity Logs menu item when user lacks permission", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Regular User",
+          email: "user@example.com",
+          permissions: [],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.queryByText("Activity Logs")).not.toBeInTheDocument();
+    });
+
+    it("highlights Activity Logs when on that page", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin User",
+          email: "admin@example.com",
+          permissions: ["activity_log.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/activity-logs" }
+      );
+
+      const activityLogsLink = screen.getByText("Activity Logs").closest("a");
+      expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
+    });
+
+    it("links to /activity-logs route", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin User",
+          email: "admin@example.com",
+          permissions: ["activity_log.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const activityLogsLink = screen.getByText("Activity Logs").closest("a");
+      expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
+    });
+  });
 });

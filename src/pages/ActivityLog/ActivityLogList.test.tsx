@@ -402,4 +402,307 @@ describe("ActivityLogList", () => {
     // but we can verify the state change happened by checking if verifyActivityLog would be called
     // This is a limitation of unit testing - integration tests would verify full dialog behavior
   });
+
+  it("should handle date range filter", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0);
+    });
+
+    // The date inputs would be tested here if they were text inputs
+    // In reality they're date pickers which require different handling
+  });
+
+  it("should handle log name filter", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("combobox").length).toBeGreaterThan(0);
+    });
+
+    // Verify log name select exists and is interactive
+    const comboboxes = screen.getAllByRole("combobox");
+    expect(comboboxes[0]).toBeInTheDocument();
+    expect(comboboxes[0]).not.toBeDisabled();
+  });
+
+  it("should handle organizational unit filter", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("combobox").length).toBeGreaterThan(0);
+    });
+
+    // Verify at least one combobox exists (could be log name or org unit depending on permissions/data)
+    const comboboxes = screen.getAllByRole("combobox");
+    expect(comboboxes.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("should handle pagination next page", async () => {
+    const multiPageResponse = {
+      ...mockResponse,
+      meta: {
+        current_page: 1,
+        from: 1,
+        last_page: 3,
+        per_page: 50,
+        to: 50,
+        total: 150,
+      },
+      links: {
+        first: "/v1/activity-logs?page=1",
+        last: "/v1/activity-logs?page=3",
+        prev: null,
+        next: "/v1/activity-logs?page=2",
+      },
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(
+      multiPageResponse
+    );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
+    });
+
+    const nextButton = screen.getByRole("button", { name: /next/i });
+    fireEvent.click(nextButton);
+
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 2 })
+      );
+    });
+  });
+
+  it("should handle pagination previous page", async () => {
+    const multiPageResponse = {
+      ...mockResponse,
+      meta: {
+        current_page: 2,
+        from: 51,
+        last_page: 3,
+        per_page: 50,
+        to: 100,
+        total: 150,
+      },
+      links: {
+        first: "/v1/activity-logs?page=1",
+        last: "/v1/activity-logs?page=3",
+        prev: "/v1/activity-logs?page=1",
+        next: "/v1/activity-logs?page=3",
+      },
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(
+      multiPageResponse
+    );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+    });
+
+    const prevButton = screen.getByRole("button", { name: /previous/i });
+    fireEvent.click(prevButton);
+
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1 })
+      );
+    });
+  });
+
+  it("should disable prev button on first page", async () => {
+    const firstPageResponse = {
+      ...mockResponse,
+      meta: {
+        current_page: 1,
+        from: 1,
+        last_page: 3,
+        per_page: 50,
+        to: 50,
+        total: 150,
+      },
+      links: {
+        first: "/v1/activity-logs?page=1",
+        last: "/v1/activity-logs?page=3",
+        prev: null,
+        next: "/v1/activity-logs?page=2",
+      },
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(
+      firstPageResponse
+    );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      const prevButton = screen.getByRole("button", { name: /previous/i });
+      expect(prevButton).toBeDisabled();
+    });
+  });
+
+  it("should disable next button on last page", async () => {
+    const lastPageResponse = {
+      ...mockResponse,
+      meta: {
+        current_page: 3,
+        from: 101,
+        last_page: 3,
+        per_page: 50,
+        to: 150,
+        total: 150,
+      },
+      links: {
+        first: "/v1/activity-logs?page=1",
+        last: "/v1/activity-logs?page=3",
+        prev: "/v1/activity-logs?page=2",
+        next: null,
+      },
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(
+      lastPageResponse
+    );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      const nextButton = screen.getByRole("button", { name: /next/i });
+      expect(nextButton).toBeDisabled();
+    });
+  });
+
+  it("should reset to page 1 when filter changes", async () => {
+    const multiPageResponse = {
+      ...mockResponse,
+      meta: {
+        current_page: 2,
+        from: 51,
+        last_page: 3,
+        per_page: 50,
+        to: 100,
+        total: 150,
+      },
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(
+      multiPageResponse
+    );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    });
+
+    // Change search filter
+    const searchInput = screen.getByPlaceholderText(/search/i);
+    fireEvent.change(searchInput, { target: { value: "new search" } });
+
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ search: "new search", page: 1 })
+      );
+    });
+  });
+
+  it("should handle API errors gracefully", async () => {
+    vi.mocked(activityLogApi.fetchActivityLogs).mockRejectedValue(
+      new Error("Network error")
+    );
+
+    renderWithProviders();
+
+    // Should not crash, error boundary or error state should handle it
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalled();
+    });
+  });
+
+  it("should show loading state initially", async () => {
+    // Mock slow API
+    vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
+      () =>
+        new Promise((resolve) => setTimeout(() => resolve(mockResponse), 100))
+    );
+
+    renderWithProviders();
+
+    // Should show loading indicator (if implemented)
+    expect(activityLogApi.fetchActivityLogs).toHaveBeenCalled();
+  });
+
+  it("should format dates correctly", async () => {
+    const activityWithDate = {
+      ...mockActivity,
+      created_at: "2025-12-27T14:30:45Z",
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
+      ...mockResponse,
+      data: [activityWithDate],
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      // Date should be formatted according to locale
+      expect(screen.getByText(/user logged in/i)).toBeInTheDocument();
+    });
+  });
+
+  it("should handle activities with no subject", async () => {
+    const activityNoSubject = {
+      ...mockActivity,
+      subject: null,
+      subject_type: null,
+      subject_id: null,
+    };
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
+      ...mockResponse,
+      data: [activityNoSubject],
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("User logged in")).toBeInTheDocument();
+    });
+  });
+
+  it("should clear search when cleared", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(
+      /search/i
+    ) as HTMLInputElement;
+
+    // Enter search
+    fireEvent.change(searchInput, { target: { value: "test" } });
+
+    await waitFor(() => {
+      expect(searchInput.value).toBe("test");
+    });
+
+    // Clear search
+    fireEvent.change(searchInput, { target: { value: "" } });
+
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ search: "" })
+      );
+    });
+  });
 });

@@ -367,4 +367,55 @@ describe("ActivityDetailDialog", () => {
       expect(screen.getByText(/verifying/i)).toBeInTheDocument();
     });
   });
+
+  it("should handle activity with no merkle data", async () => {
+    const activityWithoutMerkle: Activity = {
+      ...mockActivity,
+      merkle_root: null,
+      merkle_batch_id: null,
+      merkle_proof: null,
+    };
+
+    const onClose = vi.fn();
+    renderWithProviders({
+      activity: activityWithoutMerkle,
+      open: true,
+      onClose,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+    });
+    // Should still render without crashing
+  });
+
+  it("should handle activity with no OpenTimestamp proof", async () => {
+    const activityWithoutOTS: Activity = {
+      ...mockActivity,
+      opentimestamp_proof: null,
+    };
+
+    const onClose = vi.fn();
+    renderWithProviders({ activity: activityWithoutOTS, open: true, onClose });
+
+    await waitFor(() => {
+      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+    });
+    // Should still render without crashing
+  });
+
+  it("should handle verification errors gracefully", async () => {
+    // Mock verification to fail
+    vi.mocked(activityLogApi.verifyActivityLog).mockRejectedValue(
+      new Error("Verification failed")
+    );
+
+    const onClose = vi.fn();
+    renderWithProviders({ activity: mockActivity, open: true, onClose });
+
+    // Should not crash on verification error
+    await waitFor(() => {
+      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+    });
+  });
 });
