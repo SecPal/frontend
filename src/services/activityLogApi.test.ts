@@ -82,8 +82,10 @@ describe("activityLogApi", () => {
 
       const result = await fetchActivityLogs();
 
-      // When no filters are passed, URL has no query params
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/activity-logs");
+      // Now includes verification parameter by default
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        "/v1/activity-logs?include_verification=1"
+      );
       expect(result).toEqual(mockResponse);
       expect(result.data).toHaveLength(1);
       expect(result.data[0]?.id).toBe("log-1");

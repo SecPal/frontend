@@ -185,7 +185,9 @@ describe("ActivityDetailDialog", () => {
     });
 
     const onClose = vi.fn();
-    renderWithProviders({ activity: mockActivity, open: true, onClose });
+    // Use security level 3 to show OTS status (level 2 shows OTS as N/A)
+    const activity = { ...mockActivity, security_level: 3 as 1 | 2 | 3 };
+    renderWithProviders({ activity, open: true, onClose });
 
     await waitFor(() => {
       const hashChainLabels = screen.getAllByText(/hash chain/i);
@@ -193,6 +195,7 @@ describe("ActivityDetailDialog", () => {
     });
 
     // Check for Pending status in tooltips (dots with title="...: Pending")
+    // With security_level 3, both merkle_valid and ots_valid are shown as Pending
     const pendingDots = screen.getAllByTitle(/pending/i);
     expect(pendingDots.length).toBeGreaterThanOrEqual(2);
   });
