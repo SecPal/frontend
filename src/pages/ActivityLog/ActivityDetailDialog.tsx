@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
-import { Trans, msg } from "@lingui/macro";
-import { useLingui } from "@lingui/react";
+import { Trans } from "@lingui/macro";
 import {
   Dialog,
   DialogTitle,
@@ -118,7 +117,18 @@ export function ActivityDetailDialog({
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [activity.id, activity.verification, open]);
+  }, [
+    activity.id,
+    activity.verification,
+    activity.event_hash,
+    activity.previous_hash,
+    activity.merkle_root,
+    activity.merkle_batch_id,
+    activity.ots_confirmed_at,
+    activity.is_orphaned_genesis,
+    activity.orphaned_reason,
+    open,
+  ]);
 
   return (
     <Dialog open={open} onClose={onClose} size="3xl">
