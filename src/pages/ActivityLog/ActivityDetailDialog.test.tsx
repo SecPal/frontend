@@ -376,6 +376,18 @@ describe("ActivityDetailDialog", () => {
       merkle_proof: null,
     };
 
+    // Mock successful verification even without merkle data
+    vi.mocked(activityLogApi.verifyActivityLog).mockResolvedValue({
+      data: {
+        ...mockVerification,
+        verification: {
+          chain_valid: true,
+          merkle_valid: false,
+          ots_valid: false,
+        },
+      },
+    });
+
     const onClose = vi.fn();
     renderWithProviders({
       activity: activityWithoutMerkle,
@@ -384,9 +396,8 @@ describe("ActivityDetailDialog", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+      expect(screen.getByText("Activity Log Details")).toBeInTheDocument();
     });
-    // Should still render without crashing
   });
 
   it("should handle activity with no OpenTimestamp proof", async () => {
@@ -395,13 +406,24 @@ describe("ActivityDetailDialog", () => {
       opentimestamp_proof: null,
     };
 
+    // Mock verification without OTS
+    vi.mocked(activityLogApi.verifyActivityLog).mockResolvedValue({
+      data: {
+        ...mockVerification,
+        verification: {
+          chain_valid: true,
+          merkle_valid: true,
+          ots_valid: false,
+        },
+      },
+    });
+
     const onClose = vi.fn();
     renderWithProviders({ activity: activityWithoutOTS, open: true, onClose });
 
     await waitFor(() => {
-      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+      expect(screen.getByText("Activity Log Details")).toBeInTheDocument();
     });
-    // Should still render without crashing
   });
 
   it("should handle verification errors gracefully", async () => {
@@ -413,9 +435,9 @@ describe("ActivityDetailDialog", () => {
     const onClose = vi.fn();
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
-    // Should not crash on verification error
+    // Should still render the dialog even with verification error
     await waitFor(() => {
-      expect(screen.getByText("Activity Details")).toBeInTheDocument();
+      expect(screen.getByText("Activity Log Details")).toBeInTheDocument();
     });
   });
 });
