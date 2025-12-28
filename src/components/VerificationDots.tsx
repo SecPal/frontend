@@ -13,6 +13,8 @@ interface VerificationDotsProps {
   verification?: ActivityVerification;
   /** Size of the dots: "sm" for w-2 h-2, "md" for w-3 h-3 */
   size?: "sm" | "md";
+  /** Whether to show text labels next to the dots */
+  showLabels?: boolean;
 }
 
 /**
@@ -26,6 +28,7 @@ export function VerificationDots({
   activity,
   verification,
   size = "md",
+  showLabels = true,
 }: VerificationDotsProps) {
   const { _ } = useLingui();
   const security_level = activity.security_level;
@@ -84,9 +87,11 @@ export function VerificationDots({
       {/* Hash Chain - Data Integrity (always shown for all levels) */}
       <div className="flex items-center gap-1">
         {renderDot(verificationData?.chain_valid, _(msg`Hash Chain (Data)`))}
-        <span className="text-sm">
-          <Trans>Hash Chain (Data)</Trans>
-        </span>
+        {showLabels && (
+          <span className="text-sm">
+            <Trans>Hash Chain (Data)</Trans>
+          </span>
+        )}
       </div>
 
       {/* Hash Chain - Link Integrity (connection to predecessor) */}
@@ -95,9 +100,11 @@ export function VerificationDots({
           verificationData?.chain_link_valid,
           _(msg`Hash Chain (Link)`)
         )}
-        <span className="text-sm">
-          <Trans>Hash Chain (Link)</Trans>
-        </span>
+        {showLabels && (
+          <span className="text-sm">
+            <Trans>Hash Chain (Link)</Trans>
+          </span>
+        )}
       </div>
 
       {/* Merkle Tree - show if Level 2+, or if data exists */}
@@ -105,9 +112,11 @@ export function VerificationDots({
         verificationData?.merkle_valid !== undefined) && (
         <div className="flex items-center gap-1">
           {renderDot(verificationData?.merkle_valid, _(msg`Merkle Tree`))}
-          <span className="text-sm">
-            <Trans>Merkle Tree</Trans>
-          </span>
+          {showLabels && (
+            <span className="text-sm">
+              <Trans>Merkle Tree</Trans>
+            </span>
+          )}
         </div>
       )}
 
@@ -115,9 +124,11 @@ export function VerificationDots({
       {security_level >= 3 ? (
         <div className="flex items-center gap-1">
           {renderDot(verificationData?.ots_valid, _(msg`OpenTimestamp`))}
-          <span className="text-sm">
-            <Trans>OpenTimestamp</Trans>
-          </span>
+          {showLabels && (
+            <span className="text-sm">
+              <Trans>OpenTimestamp</Trans>
+            </span>
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-1">
@@ -125,12 +136,14 @@ export function VerificationDots({
             className={`inline-block ${dotSize} rounded-full bg-zinc-300 dark:bg-zinc-600`}
             title={_(msg`OpenTimestamp: N/A`)}
           />
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>OpenTimestamp</Trans>{" "}
-            <span className="text-xs">
-              (<Trans>N/A</Trans>)
+          {showLabels && (
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>OpenTimestamp</Trans>{" "}
+              <span className="text-xs">
+                (<Trans>N/A</Trans>)
+              </span>
             </span>
-          </span>
+          )}
         </div>
       )}
     </div>
