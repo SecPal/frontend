@@ -308,13 +308,17 @@ export function ActivityLogList() {
           outline
           className="mt-3 sm:hidden w-full"
         >
-          <Trans>
-            {showMobileFilters ? "Hide options" : "More options"}
-          </Trans>
+          {showMobileFilters ? (
+            <Trans>Hide options</Trans>
+          ) : (
+            <Trans>More options</Trans>
+          )}
         </Button>
 
         {/* Additional filters - collapsible on mobile */}
-        <div className={`${showMobileFilters ? 'block' : 'hidden'} sm:block mt-4`}>
+        <div
+          className={`${showMobileFilters ? "block" : "hidden"} sm:block mt-4`}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field>
               <Label>
@@ -344,7 +348,9 @@ export function ActivityLogList() {
               </Label>
               <Select
                 value={filters.log_name || ""}
-                onChange={(e) => handleLogNameFilter(e.target.value || undefined)}
+                onChange={(e) =>
+                  handleLogNameFilter(e.target.value || undefined)
+                }
               >
                 <option value="">
                   <Trans>All logs</Trans>
