@@ -89,6 +89,7 @@ export function ActivityLogList() {
   );
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Parse filters from URL search params
   const [filters, setFilters] = useState<ActivityFilters>(() => ({
@@ -248,20 +249,21 @@ export function ActivityLogList() {
 
   return (
     <div>
-      <div className="flex items-end justify-between gap-4 mb-6">
+      {/* Header with responsive controls */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
         <Heading>
           <Trans>Activity Logs</Trans>
         </Heading>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           {pagination.total > 0 && (
-            <Text>
+            <Text className="hidden md:block">
               <Trans>
                 Showing {pagination.from} to {pagination.to} of{" "}
                 {pagination.total} logs
               </Trans>
             </Text>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={() => loadActivities()}
               disabled={loading}
@@ -270,7 +272,7 @@ export function ActivityLogList() {
             >
               <Trans>Refresh</Trans>
             </Button>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
               <input
                 type="checkbox"
                 checked={autoRefresh}
@@ -286,7 +288,8 @@ export function ActivityLogList() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6">
+        {/* Search filter - always visible */}
         <Field>
           <Label>
             <Trans>Search</Trans>
@@ -299,66 +302,82 @@ export function ActivityLogList() {
           />
         </Field>
 
-        <Field>
-          <Label>
-            <Trans>From Date</Trans>
-          </Label>
-          <Input
-            type="date"
-            value={filters.from_date || ""}
-            onChange={(e) => handleFromDateFilter(e.target.value)}
-          />
-        </Field>
+        {/* Mobile filter toggle button */}
+        <Button
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+          outline
+          className="mt-3 sm:hidden w-full"
+        >
+          <Trans>
+            {showMobileFilters ? "Hide options" : "More options"}
+          </Trans>
+        </Button>
 
-        <Field>
-          <Label>
-            <Trans>To Date</Trans>
-          </Label>
-          <Input
-            type="date"
-            value={filters.to_date || ""}
-            onChange={(e) => handleToDateFilter(e.target.value)}
-          />
-        </Field>
+        {/* Additional filters - collapsible on mobile */}
+        <div className={`${showMobileFilters ? 'block' : 'hidden'} sm:block mt-4`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Field>
+              <Label>
+                <Trans>From Date</Trans>
+              </Label>
+              <Input
+                type="date"
+                value={filters.from_date || ""}
+                onChange={(e) => handleFromDateFilter(e.target.value)}
+              />
+            </Field>
 
-        <Field>
-          <Label>
-            <Trans>Log Name</Trans>
-          </Label>
-          <Select
-            value={filters.log_name || ""}
-            onChange={(e) => handleLogNameFilter(e.target.value || undefined)}
-          >
-            <option value="">
-              <Trans>All logs</Trans>
-            </option>
-            <option value="default">
-              <Trans>Default</Trans>
-            </option>
-            <option value="auth">
-              <Trans>Authentication</Trans>
-            </option>
-            <option value="permission">
-              <Trans>Permissions</Trans>
-            </option>
-            <option value="hr_access">
-              <Trans>HR Access</Trans>
-            </option>
-          </Select>
-        </Field>
+            <Field>
+              <Label>
+                <Trans>To Date</Trans>
+              </Label>
+              <Input
+                type="date"
+                value={filters.to_date || ""}
+                onChange={(e) => handleToDateFilter(e.target.value)}
+              />
+            </Field>
 
-        <Field>
-          <Label>
-            <Trans>Organizational Unit</Trans>
-          </Label>
-          <OrganizationalUnitPicker
-            units={organizationalUnits}
-            value={filters.organizational_unit_id || ""}
-            onChange={handleOrganizationalUnitFilter}
-            allUnitsLabel={_(msg`All units`)}
-            disabled={unitsLoading}
-          />
-        </Field>
+            <Field>
+              <Label>
+                <Trans>Log Name</Trans>
+              </Label>
+              <Select
+                value={filters.log_name || ""}
+                onChange={(e) => handleLogNameFilter(e.target.value || undefined)}
+              >
+                <option value="">
+                  <Trans>All logs</Trans>
+                </option>
+                <option value="default">
+                  <Trans>Default</Trans>
+                </option>
+                <option value="auth">
+                  <Trans>Authentication</Trans>
+                </option>
+                <option value="permission">
+                  <Trans>Permissions</Trans>
+                </option>
+                <option value="hr_access">
+                  <Trans>HR Access</Trans>
+                </option>
+              </Select>
+            </Field>
+
+            <Field>
+              <Label>
+                <Trans>Organizational Unit</Trans>
+              </Label>
+              <OrganizationalUnitPicker
+                units={organizationalUnits}
+                value={filters.organizational_unit_id || ""}
+                onChange={handleOrganizationalUnitFilter}
+                allUnitsLabel={_(msg`All units`)}
+                disabled={unitsLoading}
+              />
+            </Field>
+          </div>
+        </div>
       </div>
 
       {/* Error State */}
