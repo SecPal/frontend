@@ -839,7 +839,7 @@ msgstr "Freiberuflich"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:325
 msgid "From Date"
-msgstr "von Datum"
+msgstr "Von"
 
 #: src/pages/Employees/EmployeeDetail.tsx:71
 msgid "Full Name"
@@ -883,7 +883,7 @@ msgstr "Hash-Kette (Daten)"
 #: src/components/VerificationDots.tsx:101
 #: src/components/VerificationDots.tsx:105
 msgid "Hash Chain (Link)"
-msgstr "Hash Chain (Link)"
+msgstr "Hash-Kette (Link)"
 
 #: src/pages/Secrets/SecretDetail.tsx:327
 msgid "Hide"
@@ -1099,7 +1099,7 @@ msgstr "Merkle-Wurzel"
 #: src/components/VerificationDots.tsx:114
 #: src/components/VerificationDots.tsx:117
 msgid "Merkle Tree"
-msgstr "Merkelbaum"
+msgstr "Merkle-Baum"
 
 #: src/components/NotificationPreferences.tsx:57
 msgid "Messages from team members and supervisors"
@@ -1132,7 +1132,7 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:314
 msgid "More options"
-msgstr "weitere Optionen"
+msgstr "Weitere Optionen"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:492
 #: src/components/OrganizationalUnitTree.tsx:366
@@ -1335,7 +1335,7 @@ msgstr "OpenTimestamp Bestätigt"
 
 #: src/components/VerificationDots.tsx:137
 msgid "OpenTimestamp: N/A"
-msgstr "OpenTimestamp: N/A"
+msgstr "OpenTimestamp: K.A."
 
 #: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
@@ -1962,7 +1962,7 @@ msgstr "Titel:"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:336
 msgid "To Date"
-msgstr "bis Datum"
+msgstr "Bis"
 
 #: src/components/ScopeAssignmentForm.tsx:467
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
