@@ -67,6 +67,7 @@ const mockVerification: ActivityVerification = {
   activity_id: "log-1",
   verification: {
     chain_valid: true,
+    chain_link_valid: true,
     merkle_valid: true,
     ots_valid: true,
   },
@@ -135,13 +136,13 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    // Look for "Valid" text in badges
-    const validBadges = screen.getAllByText(/valid/i);
-    expect(validBadges.length).toBeGreaterThanOrEqual(3);
+    // Look for "Valid" status in tooltips (dots with title="...: Valid")
+    const validDots = screen.getAllByTitle(/: valid$/i);
+    expect(validDots.length).toBeGreaterThanOrEqual(3);
   });
 
   it("should display invalid verification status", async () => {
@@ -150,6 +151,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: false,
+          chain_link_valid: false,
           merkle_valid: false,
           ots_valid: false,
         },
@@ -160,20 +162,22 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    const invalidBadges = screen.getAllByText(/invalid/i);
-    expect(invalidBadges.length).toBeGreaterThanOrEqual(3);
+    // Check for Invalid status in tooltips (dots with title="...: Invalid")
+    const invalidDots = screen.getAllByTitle(/invalid/i);
+    expect(invalidDots.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("should display N/A for null verification values", async () => {
+  it("should display Pending for null verification values", async () => {
     vi.mocked(activityLogApi.verifyActivityLog).mockResolvedValue({
       data: {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: null,
           ots_valid: null,
         },
@@ -181,15 +185,19 @@ describe("ActivityDetailDialog", () => {
     });
 
     const onClose = vi.fn();
-    renderWithProviders({ activity: mockActivity, open: true, onClose });
+    // Use security level 3 to show OTS status (level 2 shows OTS as N/A)
+    const activity = { ...mockActivity, security_level: 3 as 1 | 2 | 3 };
+    renderWithProviders({ activity, open: true, onClose });
 
     await waitFor(() => {
-      const hashChainBadges = screen.getAllByText(/hash chain/i);
-      expect(hashChainBadges.length).toBeGreaterThanOrEqual(1);
+      const hashChainLabels = screen.getAllByText(/hash chain/i);
+      expect(hashChainLabels.length).toBeGreaterThanOrEqual(1);
     });
 
-    const naBadges = screen.getAllByText(/n\/a/i);
-    expect(naBadges.length).toBeGreaterThanOrEqual(2);
+    // Check for Pending status in tooltips (dots with title="...: Pending")
+    // With security_level 3, both merkle_valid and ots_valid are shown as Pending
+    const pendingDots = screen.getAllByTitle(/pending/i);
+    expect(pendingDots.length).toBeGreaterThanOrEqual(2);
   });
 
   it("should display verification error", async () => {
@@ -382,6 +390,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: false,
           ots_valid: false,
         },
@@ -412,6 +421,7 @@ describe("ActivityDetailDialog", () => {
         ...mockVerification,
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: true,
           ots_valid: false,
         },

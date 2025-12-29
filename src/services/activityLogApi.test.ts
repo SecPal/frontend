@@ -82,8 +82,10 @@ describe("activityLogApi", () => {
 
       const result = await fetchActivityLogs();
 
-      // When no filters are passed, URL has no query params
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/activity-logs");
+      // Now includes verification parameter by default
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        "/v1/activity-logs?include_verification=1"
+      );
       expect(result).toEqual(mockResponse);
       expect(result.data).toHaveLength(1);
       expect(result.data[0]?.id).toBe("log-1");
@@ -210,6 +212,7 @@ describe("activityLogApi", () => {
       activity_id: "log-1",
       verification: {
         chain_valid: true,
+        chain_link_valid: true,
         merkle_valid: true,
         ots_valid: true,
       },
@@ -246,6 +249,7 @@ describe("activityLogApi", () => {
         activity_id: "log-2",
         verification: {
           chain_valid: false,
+          chain_link_valid: false,
           merkle_valid: false,
           ots_valid: null,
         },
@@ -278,6 +282,7 @@ describe("activityLogApi", () => {
         activity_id: "log-3",
         verification: {
           chain_valid: true,
+          chain_link_valid: true,
           merkle_valid: true,
           ots_valid: null,
         },

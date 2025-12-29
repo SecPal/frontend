@@ -48,6 +48,13 @@ export interface Activity {
     name: string;
     unit_type: string;
   } | null;
+  // Verification data (optional, included when include_verification=1)
+  verification?: {
+    chain_valid: boolean | null;
+    chain_link_valid: boolean | null;
+    merkle_valid: boolean | null;
+    ots_valid: boolean | null;
+  };
 }
 
 /**
@@ -55,7 +62,8 @@ export interface Activity {
  */
 export interface ActivityDetail extends Activity {
   verification?: {
-    chain_valid: boolean;
+    chain_valid: boolean | null;
+    chain_link_valid: boolean | null;
     merkle_valid: boolean | null;
     ots_valid: boolean | null;
   };
@@ -67,7 +75,8 @@ export interface ActivityDetail extends Activity {
 export interface ActivityVerification {
   activity_id: string;
   verification: {
-    chain_valid: boolean;
+    chain_valid: boolean | null;
+    chain_link_valid: boolean | null;
     merkle_valid: boolean | null;
     ots_valid: boolean | null;
   };
@@ -179,6 +188,9 @@ export async function fetchActivityLogs(
   if (filters.causer_id) params.append("causer_id", filters.causer_id);
   if (filters.subject_type) params.append("subject_type", filters.subject_type);
   if (filters.subject_id) params.append("subject_id", filters.subject_id);
+
+  // Include verification data for displaying badges in list
+  params.append("include_verification", "1");
 
   const queryString = params.toString();
   const url = `${apiConfig.baseUrl}/v1/activity-logs${queryString ? `?${queryString}` : ""}`;

@@ -24,36 +24,12 @@ import {
   type Activity,
   type ActivityVerification,
 } from "../../services/activityLogApi";
+import { VerificationDots } from "../../components/VerificationDots";
 
 interface ActivityDetailDialogProps {
   activity: Activity;
   open: boolean;
   onClose: () => void;
-}
-
-/**
- * Verification status badge
- */
-function VerificationBadge({
-  status,
-  label,
-}: {
-  status: boolean | null;
-  label: string;
-}) {
-  if (status === null) {
-    return (
-      <Badge color="zinc">
-        {label}: <Trans>N/A</Trans>
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge color={status ? "lime" : "red"}>
-      {label}: {status ? <Trans>Valid</Trans> : <Trans>Invalid</Trans>}
-    </Badge>
-  );
 }
 
 /**
@@ -95,28 +71,64 @@ export function ActivityDetailDialog({
     null
   );
 
-  // Load verification status when dialog opens
+  // Load verification: use cached data from list if available, otherwise fetch
   useEffect(() => {
     if (!open) return;
 
-    async function loadVerification() {
-      try {
-        setVerifying(true);
-        setVerificationError(null);
-        const response = await verifyActivityLog(activity.id);
-        setVerification(response.data);
-      } catch (err) {
-        console.error("Failed to verify activity log:", err);
-        setVerificationError(
-          err instanceof Error ? err.message : "Verification failed"
-        );
-      } finally {
-        setVerifying(false);
-      }
+    // Reset error state
+    setVerificationError(null);
+
+    // If activity already has verification data, use it
+    if (activity.verification) {
+      setVerification({
+        activity_id: activity.id,
+        verification: activity.verification,
+        details: {
+          event_hash: activity.event_hash || "",
+          previous_hash: activity.previous_hash || null,
+          merkle_root: activity.merkle_root || null,
+          merkle_batch_id: activity.merkle_batch_id?.toString() || null,
+          ots_confirmed_at: activity.ots_confirmed_at || null,
+          is_orphaned_genesis: activity.is_orphaned_genesis || false,
+          orphaned_reason: activity.orphaned_reason || null,
+        },
+      });
+      return;
     }
 
-    loadVerification();
-  }, [activity.id, open]);
+    // Otherwise, lazy load verification after small delay
+    const timeoutId = setTimeout(() => {
+      async function loadVerification() {
+        try {
+          setVerifying(true);
+          const response = await verifyActivityLog(activity.id);
+          setVerification(response.data);
+        } catch (err) {
+          console.error("Failed to verify activity log:", err);
+          setVerificationError(
+            err instanceof Error ? err.message : "Verification failed"
+          );
+        } finally {
+          setVerifying(false);
+        }
+      }
+
+      loadVerification();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    activity.id,
+    activity.verification,
+    activity.event_hash,
+    activity.previous_hash,
+    activity.merkle_root,
+    activity.merkle_batch_id,
+    activity.ots_confirmed_at,
+    activity.is_orphaned_genesis,
+    activity.orphaned_reason,
+    open,
+  ]);
 
   return (
     <Dialog open={open} onClose={onClose} size="3xl">
@@ -238,20 +250,10 @@ export function ActivityDetailDialog({
 
             {verification && !verifying && (
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <VerificationBadge
-                    status={verification.verification.chain_valid}
-                    label="Hash Chain"
-                  />
-                  <VerificationBadge
-                    status={verification.verification.merkle_valid}
-                    label="Merkle Tree"
-                  />
-                  <VerificationBadge
-                    status={verification.verification.ots_valid}
-                    label="OpenTimestamp"
-                  />
-                </div>
+                <VerificationDots
+                  activity={activity}
+                  verification={verification}
+                />
 
                 <DescriptionList>
                   <DescriptionTerm>
@@ -335,14 +337,16 @@ export function ActivityDetailDialog({
                   <Text className="text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
                       <strong>Hash Chain:</strong> Verifies the sequential
-                      integrity of activity logs.
+                      integrity of activity logs. "Pending" indicates the hash
+                      chain is still being built.
                       <br />
                       <strong>Merkle Tree:</strong> Batch verification for
                       efficient proof of log inclusion (Security Levels 2-3).
+                      Runs every minute in development, hourly in production.
                       <br />
                       <strong>OpenTimestamp:</strong> Bitcoin blockchain
                       anchoring for immutable proof of existence (Security Level
-                      3).
+                      3 only). Bitcoin confirmation takes ~10 minutes.
                     </Trans>
                   </Text>
                 </div>

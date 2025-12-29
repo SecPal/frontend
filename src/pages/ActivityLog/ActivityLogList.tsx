@@ -29,6 +29,7 @@ import {
 import { Badge } from "../../components/badge";
 import { Button } from "../../components/button";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
+import { VerificationDots } from "../../components/VerificationDots";
 
 /**
  * Security level badge component
@@ -385,17 +386,20 @@ export function ActivityLogList() {
                 <TableHeader>
                   <Trans>Description</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden md:table-cell">
                   <Trans>Log Name</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden lg:table-cell">
                   <Trans>Causer</Trans>
                 </TableHeader>
-                <TableHeader>
+                <TableHeader className="hidden xl:table-cell">
                   <Trans>Organizational Unit</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Security Level</Trans>
+                </TableHeader>
+                <TableHeader className="w-20">
+                  {/* Verification dots - no header */}
                 </TableHeader>
               </TableRow>
             </TableHead>
@@ -406,23 +410,23 @@ export function ActivityLogList() {
                   className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   onClick={() => handleRowClick(activity)}
                 >
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium text-sm">
                     {formatDate(activity.created_at)}
                   </TableCell>
-                  <TableCell className="max-w-md truncate">
+                  <TableCell className="max-w-[200px] truncate">
                     {activity.description}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge color="zinc">{activity.log_name}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {activity.causer?.name || (
                       <span className="text-zinc-500 dark:text-zinc-400">
                         <Trans>System</Trans>
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden xl:table-cell">
                     {activity.organizational_unit?.name || (
                       <span className="text-zinc-500 dark:text-zinc-400">
                         <Trans>Global</Trans>
@@ -431,6 +435,13 @@ export function ActivityLogList() {
                   </TableCell>
                   <TableCell>
                     <SecurityLevelBadge level={activity.security_level} />
+                  </TableCell>
+                  <TableCell className="w-20">
+                    <VerificationDots
+                      activity={activity}
+                      size="sm"
+                      showLabels={false}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
