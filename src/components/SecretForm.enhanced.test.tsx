@@ -27,6 +27,13 @@ describe("SecretForm", () => {
     submitLabel: "Save",
   };
 
+  // Helper function to generate future dates for testing
+  const getFutureDateString = (daysInFuture = 30): string => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysInFuture);
+    return futureDate.toISOString().split("T")[0]!;
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -194,11 +201,9 @@ describe("SecretForm", () => {
       const dateInput = screen.getByLabelText(/expiration date/i);
 
       // Use a date 30 days in the future to avoid min date validation issues
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      const futureDateString = futureDate.toISOString().split("T")[0];
+      const futureDateString = getFutureDateString();
 
-      await userEvent.type(dateInput, futureDateString!);
+      await userEvent.type(dateInput, futureDateString);
 
       expect(dateInput).toHaveValue(futureDateString);
     });
@@ -211,12 +216,10 @@ describe("SecretForm", () => {
       const submitButton = screen.getByRole("button", { name: /save/i });
 
       // Use a date 30 days in the future to avoid min date validation issues
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      const futureDateString = futureDate.toISOString().split("T")[0];
+      const futureDateString = getFutureDateString();
 
       await userEvent.type(titleInput, "Test Secret");
-      await userEvent.type(dateInput, futureDateString!);
+      await userEvent.type(dateInput, futureDateString);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -268,16 +271,14 @@ describe("SecretForm", () => {
       const submitButton = screen.getByRole("button", { name: /save/i });
 
       // Use a date 30 days in the future to avoid min date validation issues
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      const futureDateString = futureDate.toISOString().split("T")[0];
+      const futureDateString = getFutureDateString();
 
       // Fill form
       await userEvent.type(titleInput, "Test Secret");
       await userEvent.type(passwordInput, "MyP@ssw0rd!");
       await userEvent.type(tagInput, "work{Enter}");
       await userEvent.type(tagInput, "important{Enter}");
-      await userEvent.type(dateInput, futureDateString!);
+      await userEvent.type(dateInput, futureDateString);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
