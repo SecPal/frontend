@@ -27,6 +27,13 @@ describe("SecretForm", () => {
     submitLabel: "Save",
   };
 
+  // Helper function to generate future dates for testing
+  const getFutureDateString = (daysInFuture = 30): string => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysInFuture);
+    return futureDate.toISOString().split("T")[0]!;
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -193,9 +200,12 @@ describe("SecretForm", () => {
 
       const dateInput = screen.getByLabelText(/expiration date/i);
 
-      await userEvent.type(dateInput, "2025-12-31");
+      // Use a date 30 days in the future to avoid min date validation issues
+      const futureDateString = getFutureDateString();
 
-      expect(dateInput).toHaveValue("2025-12-31");
+      await userEvent.type(dateInput, futureDateString);
+
+      expect(dateInput).toHaveValue(futureDateString);
     });
 
     it("should submit form with expiration date in ISO format", async () => {
@@ -205,15 +215,18 @@ describe("SecretForm", () => {
       const dateInput = screen.getByLabelText(/expiration date/i);
       const submitButton = screen.getByRole("button", { name: /save/i });
 
+      // Use a date 30 days in the future to avoid min date validation issues
+      const futureDateString = getFutureDateString();
+
       await userEvent.type(titleInput, "Test Secret");
-      await userEvent.type(dateInput, "2025-12-31");
+      await userEvent.type(dateInput, futureDateString);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
             title: "Test Secret",
-            expires_at: "2025-12-31T23:59:59Z",
+            expires_at: `${futureDateString}T23:59:59Z`,
           })
         );
       });
@@ -257,12 +270,15 @@ describe("SecretForm", () => {
       const dateInput = screen.getByLabelText(/expiration date/i);
       const submitButton = screen.getByRole("button", { name: /save/i });
 
+      // Use a date 30 days in the future to avoid min date validation issues
+      const futureDateString = getFutureDateString();
+
       // Fill form
       await userEvent.type(titleInput, "Test Secret");
       await userEvent.type(passwordInput, "MyP@ssw0rd!");
       await userEvent.type(tagInput, "work{Enter}");
       await userEvent.type(tagInput, "important{Enter}");
-      await userEvent.type(dateInput, "2025-12-31");
+      await userEvent.type(dateInput, futureDateString);
       await userEvent.click(submitButton);
 
       await waitFor(() => {
@@ -273,7 +289,7 @@ describe("SecretForm", () => {
           url: "",
           notes: "",
           tags: ["work", "important"],
-          expires_at: "2025-12-31T23:59:59Z",
+          expires_at: `${futureDateString}T23:59:59Z`,
         });
       });
     });
