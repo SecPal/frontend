@@ -258,8 +258,8 @@ export function ActivityLogList() {
               className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"
             >
               <input
-                type="checkbox"
                 id="auto-refresh"
+                type="checkbox"
                 name="auto_refresh"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
@@ -277,12 +277,12 @@ export function ActivityLogList() {
       <div className="mb-6">
         {/* Search filter - always visible */}
         <Field>
-          <Label>
+          <Label htmlFor="activity-search">
             <Trans>Search</Trans>
           </Label>
           <Input
-            type="text"
             id="activity-search"
+            type="text"
             name="search"
             autoComplete="off"
             placeholder={_(msg`Search in descriptions...`)}
@@ -310,12 +310,12 @@ export function ActivityLogList() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field>
-              <Label>
+              <Label htmlFor="from-date">
                 <Trans>From Date</Trans>
               </Label>
               <Input
-                type="date"
                 id="from-date"
+                type="date"
                 name="from_date"
                 autoComplete="off"
                 value={filters.from_date || ""}
@@ -324,12 +324,12 @@ export function ActivityLogList() {
             </Field>
 
             <Field>
-              <Label>
+              <Label htmlFor="to-date">
                 <Trans>To Date</Trans>
               </Label>
               <Input
-                type="date"
                 id="to-date"
+                type="date"
                 name="to_date"
                 autoComplete="off"
                 value={filters.to_date || ""}
@@ -338,7 +338,7 @@ export function ActivityLogList() {
             </Field>
 
             <Field>
-              <Label>
+              <Label htmlFor="log-name">
                 <Trans>Log Name</Trans>
               </Label>
               <Select
