@@ -100,9 +100,9 @@ msgstr "← Back to Secrets"
 msgid "<0>{0} field(s)</0> have conflicting changes:"
 msgstr "<0>{0} field(s)</0> have conflicting changes:"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:338
-msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion (Security Levels 2-3). Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence (Security Level 3 only). Bitcoin confirmation takes ~10 minutes."
-msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion (Security Levels 2-3). Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence (Security Level 3 only). Bitcoin confirmation takes ~10 minutes."
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:313
+msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
+msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
 
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
@@ -166,17 +166,17 @@ msgstr "Activate"
 msgid "Active"
 msgstr "Active"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:147
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:139
 msgid "Activity Information"
 msgstr "Activity Information"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:136
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:128
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
 
 #: src/components/application-layout.tsx:241
 #: src/components/application-layout.tsx:329
-#: src/pages/ActivityLog/ActivityLogList.tsx:255
+#: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Activity Logs"
 
@@ -200,7 +200,7 @@ msgstr "Add Employee"
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:362
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
 msgid "Additional Properties"
 msgstr "Additional Properties"
 
@@ -224,7 +224,7 @@ msgstr "AGPL v3+"
 msgid "All"
 msgstr "All"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:356
+#: src/pages/ActivityLog/ActivityLogList.tsx:354
 msgid "All logs"
 msgstr "All logs"
 
@@ -245,7 +245,7 @@ msgstr "All Tags"
 msgid "All Types"
 msgstr "All Types"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:381
+#: src/pages/ActivityLog/ActivityLogList.tsx:379
 msgid "All units"
 msgstr "All units"
 
@@ -299,11 +299,11 @@ msgstr "Attached Files"
 msgid "Attachments ({0})"
 msgstr "Attachments ({0})"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:362
+#: src/pages/ActivityLog/ActivityLogList.tsx:360
 msgid "Authentication"
 msgstr "Authentication"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:283
+#: src/pages/ActivityLog/ActivityLogList.tsx:269
 msgid "Auto-refresh (30s)"
 msgstr "Auto-refresh (30s)"
 
@@ -336,11 +336,6 @@ msgstr "Back to Secrets"
 #: src/pages/Sites/SiteDetail.tsx:108
 msgid "Back to Sites"
 msgstr "Back to Sites"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:184
-#: src/pages/ActivityLog/ActivityLogList.tsx:45
-msgid "Basic"
-msgstr "Basic"
 
 #: src/pages/Customers/CustomerCreate.tsx:138
 #: src/pages/Customers/CustomerDetail.tsx:120
@@ -379,8 +374,8 @@ msgstr "Cancel"
 msgid "Cannot Delete \"{unitName}\""
 msgstr "Cannot Delete \"{unitName}\""
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:191
-#: src/pages/ActivityLog/ActivityLogList.tsx:418
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:164
+#: src/pages/ActivityLog/ActivityLogList.tsx:417
 msgid "Causer"
 msgstr "Causer"
 
@@ -433,7 +428,7 @@ msgstr "Cleared {count} completed upload(s)"
 #: src/components/AttachmentPreview.tsx:134
 #: src/components/AttachmentPreview.tsx:211
 #: src/components/MoveOrganizationalUnitDialog.tsx:369
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:376
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:351
 msgid "Close"
 msgstr "Close"
 
@@ -594,12 +589,12 @@ msgstr "Customers"
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:163
-#: src/pages/ActivityLog/ActivityLogList.tsx:409
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:155
+#: src/pages/ActivityLog/ActivityLogList.tsx:408
 msgid "Date/Time"
 msgstr "Date/Time"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:359
+#: src/pages/ActivityLog/ActivityLogList.tsx:357
 msgid "Default"
 msgstr "Default"
 
@@ -641,8 +636,8 @@ msgid "Department"
 msgstr "Department"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:333
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:151
-#: src/pages/ActivityLog/ActivityLogList.tsx:412
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:143
+#: src/pages/ActivityLog/ActivityLogList.tsx:411
 #: src/pages/Organization/OrganizationPage.tsx:333
 msgid "Description"
 msgstr "Description"
@@ -781,11 +776,6 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:183
-#: src/pages/ActivityLog/ActivityLogList.tsx:46
-msgid "Enhanced"
-msgstr "Enhanced"
-
 #: src/components/ScopeAssignmentForm.tsx:349
 #: src/pages/Employees/EmployeeEdit.tsx:305
 msgid "Error"
@@ -812,7 +802,7 @@ msgstr "Error Loading Secrets"
 msgid "Errors:"
 msgstr "Errors:"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:260
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:233
 msgid "Event Hash"
 msgstr "Event Hash"
 
@@ -903,6 +893,10 @@ msgstr "File too large: {0}. Maximum size is 10MB."
 msgid "Filter by expiration"
 msgstr "Filter by expiration"
 
+#: src/pages/ActivityLog/ActivityLogList.tsx:381
+msgid "Filter by organizational unit"
+msgstr "Filter by organizational unit"
+
 #: src/pages/Secrets/SecretList.tsx:188
 msgid "Filter by tag"
 msgstr "Filter by tag"
@@ -920,7 +914,7 @@ msgstr "Form fields will be rendered based on schema"
 msgid "Freelance"
 msgstr "Freelance"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:325
+#: src/pages/ActivityLog/ActivityLogList.tsx:314
 msgid "From Date"
 msgstr "From Date"
 
@@ -936,7 +930,7 @@ msgstr "Full Time"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:457
+#: src/pages/ActivityLog/ActivityLogList.tsx:453
 msgid "Global"
 msgstr "Global"
 
@@ -968,7 +962,7 @@ msgstr "Hash Chain (Link)"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:312
+#: src/pages/ActivityLog/ActivityLogList.tsx:301
 msgid "Hide options"
 msgstr "Hide options"
 
@@ -990,7 +984,7 @@ msgstr "Holding"
 msgid "Home"
 msgstr "Home"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:368
+#: src/pages/ActivityLog/ActivityLogList.tsx:366
 msgid "HR Access"
 msgstr "HR Access"
 
@@ -1064,7 +1058,7 @@ msgstr "List"
 msgid "List view"
 msgstr "List view"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:244
+#: src/pages/ActivityLog/ActivityLogList.tsx:225
 msgid "Loading activity logs..."
 msgstr "Loading activity logs..."
 
@@ -1127,9 +1121,9 @@ msgstr "Locked ({remainingLockoutSeconds}s)"
 msgid "login.submit"
 msgstr "Log in"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:156
-#: src/pages/ActivityLog/ActivityLogList.tsx:347
-#: src/pages/ActivityLog/ActivityLogList.tsx:415
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:148
+#: src/pages/ActivityLog/ActivityLogList.tsx:342
+#: src/pages/ActivityLog/ActivityLogList.tsx:414
 msgid "Log Name"
 msgstr "Log Name"
 
@@ -1176,11 +1170,6 @@ msgstr "Manage your secrets and sensitive information securely."
 msgid "Management Level"
 msgstr "Management Level"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:182
-#: src/pages/ActivityLog/ActivityLogList.tsx:47
-msgid "Maximum"
-msgstr "Maximum"
-
 #: src/components/ScopeAssignmentForm.tsx:504
 msgid "Maximum Assignable Rank"
 msgstr "Maximum Assignable Rank"
@@ -1189,16 +1178,16 @@ msgstr "Maximum Assignable Rank"
 msgid "Maximum Viewable Rank"
 msgstr "Maximum Viewable Rank"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:297
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:270
 msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:284
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:257
 msgid "Merkle Root"
 msgstr "Merkle Root"
 
-#: src/components/VerificationDots.tsx:114
-#: src/components/VerificationDots.tsx:117
+#: src/components/VerificationDots.tsx:112
+#: src/components/VerificationDots.tsx:115
 msgid "Merkle Tree"
 msgstr "Merkle Tree"
 
@@ -1238,7 +1227,7 @@ msgstr "Minimum Viewable Rank"
 msgid "ML"
 msgstr "ML"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:314
+#: src/pages/ActivityLog/ActivityLogList.tsx:303
 msgid "More options"
 msgstr "More options"
 
@@ -1268,10 +1257,6 @@ msgstr "My Organization"
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
-
-#: src/components/VerificationDots.tsx:143
-msgid "N/A"
-msgstr "N/A"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Customers/CustomerCreate.tsx:213
@@ -1313,7 +1298,7 @@ msgid "New Site"
 msgstr "New Site"
 
 #: src/components/ScopeAssignmentForm.tsx:612
-#: src/pages/ActivityLog/ActivityLogList.tsx:496
+#: src/pages/ActivityLog/ActivityLogList.tsx:489
 #: src/pages/Customers/CustomersPage.tsx:226
 #: src/pages/Customers/CustomersPage.tsx:268
 #: src/pages/Employees/EmployeeList.tsx:325
@@ -1324,7 +1309,7 @@ msgstr "New Site"
 msgid "Next"
 msgstr "Next"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:400
+#: src/pages/ActivityLog/ActivityLogList.tsx:399
 msgid "No activity logs found."
 msgstr "No activity logs found."
 
@@ -1436,19 +1421,14 @@ msgstr "OK"
 msgid "On Leave"
 msgstr "On Leave"
 
-#: src/components/VerificationDots.tsx:126
-#: src/components/VerificationDots.tsx:129
-#: src/components/VerificationDots.tsx:141
+#: src/components/VerificationDots.tsx:122
+#: src/components/VerificationDots.tsx:125
 msgid "OpenTimestamp"
 msgstr "OpenTimestamp"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:308
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:283
 msgid "OpenTimestamp Confirmed"
 msgstr "OpenTimestamp Confirmed"
-
-#: src/components/VerificationDots.tsx:137
-msgid "OpenTimestamp: N/A"
-msgstr "OpenTimestamp: N/A"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:336
 msgid "Optional description for this unit."
@@ -1471,9 +1451,9 @@ msgstr "Organization Structure"
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:221
-#: src/pages/ActivityLog/ActivityLogList.tsx:375
-#: src/pages/ActivityLog/ActivityLogList.tsx:421
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:194
+#: src/pages/ActivityLog/ActivityLogList.tsx:373
+#: src/pages/ActivityLog/ActivityLogList.tsx:420
 #: src/pages/Employees/EmployeeCreate.tsx:364
 #: src/pages/Employees/EmployeeDetail.tsx:127
 #: src/pages/Employees/EmployeeEdit.tsx:477
@@ -1484,7 +1464,7 @@ msgstr "Organizational structure"
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:319
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:294
 msgid "Orphaned Genesis"
 msgstr "Orphaned Genesis"
 
@@ -1494,7 +1474,7 @@ msgstr "Owner"
 
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
-#: src/pages/ActivityLog/ActivityLogList.tsx:487
+#: src/pages/ActivityLog/ActivityLogList.tsx:480
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
@@ -1545,7 +1525,7 @@ msgstr "Permission Levels:"
 msgid "Permission:"
 msgstr "Permission:"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:365
+#: src/pages/ActivityLog/ActivityLogList.tsx:363
 msgid "Permissions"
 msgstr "Permissions"
 
@@ -1605,7 +1585,7 @@ msgstr "Preview"
 msgid "Preview not available for this file type."
 msgstr "Preview not available for this file type."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:484
+#: src/pages/ActivityLog/ActivityLogList.tsx:477
 #: src/pages/Customers/CustomersPage.tsx:219
 #: src/pages/Customers/CustomersPage.tsx:260
 #: src/pages/Employees/EmployeeList.tsx:318
@@ -1616,7 +1596,7 @@ msgstr "Preview not available for this file type."
 msgid "Previous"
 msgstr "Previous"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:271
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:244
 msgid "Previous Hash"
 msgstr "Previous Hash"
 
@@ -1637,11 +1617,11 @@ msgid "Read"
 msgstr "Read"
 
 #: src/components/OfflineDataBanner.tsx:125
-#: src/pages/ActivityLog/ActivityLogList.tsx:273
+#: src/pages/ActivityLog/ActivityLogList.tsx:254
 msgid "Refresh"
 msgstr "Refresh"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:271
+#: src/pages/ActivityLog/ActivityLogList.tsx:252
 msgid "Refresh activity logs"
 msgstr "Refresh activity logs"
 
@@ -1717,7 +1697,7 @@ msgstr "Save to Secret"
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:295
+#: src/pages/ActivityLog/ActivityLogList.tsx:281
 #: src/pages/Customers/CustomersPage.tsx:96
 #: src/pages/Employees/EmployeeList.tsx:167
 #: src/pages/Sites/SitesPage.tsx:108
@@ -1732,7 +1712,7 @@ msgstr "Search by name or email..."
 msgid "Search customers..."
 msgstr "Search customers..."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:299
+#: src/pages/ActivityLog/ActivityLogList.tsx:288
 msgid "Search in descriptions..."
 msgstr "Search in descriptions..."
 
@@ -1765,11 +1745,6 @@ msgstr "Secrets"
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
 msgstr "Security Alerts"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:170
-#: src/pages/ActivityLog/ActivityLogList.tsx:424
-msgid "Security Level"
-msgstr "Security Level"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:390
 msgid "Select a new parent for this organizational unit."
@@ -1874,7 +1849,7 @@ msgstr "Show"
 #. placeholder {0}: pagination.from
 #. placeholder {1}: pagination.to
 #. placeholder {2}: pagination.total
-#: src/pages/ActivityLog/ActivityLogList.tsx:260
+#: src/pages/ActivityLog/ActivityLogList.tsx:241
 msgid "Showing {0} to {1} of {2} logs"
 msgstr "Showing {0} to {1} of {2} logs"
 
@@ -1979,7 +1954,7 @@ msgstr "Step 3: Self-access control"
 msgid "Street"
 msgstr "Street"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:207
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:180
 msgid "Subject"
 msgstr "Subject"
 
@@ -2007,7 +1982,7 @@ msgstr "Sync Conflict Detected"
 msgid "Syncing..."
 msgstr "Syncing..."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:450
+#: src/pages/ActivityLog/ActivityLogList.tsx:446
 msgid "System"
 msgstr "System"
 
@@ -2093,7 +2068,7 @@ msgstr "This unit has {childCount} child unit(s). Please delete or move the chil
 msgid "Title:"
 msgstr "Title:"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:336
+#: src/pages/ActivityLog/ActivityLogList.tsx:328
 msgid "To Date"
 msgstr "To Date"
 
@@ -2237,11 +2212,11 @@ msgstr "Validation Error"
 msgid "Validity Period"
 msgstr "Validity Period"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:234
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:207
 msgid "Verification Status"
 msgstr "Verification Status"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:239
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:212
 msgid "Verifying..."
 msgstr "Verifying..."
 
@@ -2251,7 +2226,7 @@ msgstr "Verifying..."
 msgid "View"
 msgstr "View"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:139
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:131
 msgid "View activity log information and verification status"
 msgstr "View activity log information and verification status"
 
@@ -2296,7 +2271,7 @@ msgstr "Who can this user VIEW?"
 msgid "Write"
 msgstr "Write"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:323
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:298
 msgid "Yes"
 msgstr "Yes"
 

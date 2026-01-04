@@ -41,7 +41,6 @@ const mockActivity: Activity = {
   properties: { ip: "192.168.1.1" },
   event_hash: "abc123",
   previous_hash: null,
-  security_level: 1,
   merkle_root: null,
   merkle_batch_id: null,
   merkle_proof: null,
@@ -123,7 +122,6 @@ describe("ActivityLogList", () => {
     expect(screen.getByText("John Doe")).toBeInTheDocument();
     expect(screen.getByText("default")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
-    expect(screen.getByText("Basic")).toBeInTheDocument();
   });
 
   it("should display loading state", () => {
@@ -289,43 +287,6 @@ describe("ActivityLogList", () => {
       expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })
       );
-    });
-  });
-
-  it("should display security level badges correctly", async () => {
-    const activities: Activity[] = [
-      {
-        ...mockActivity,
-        id: "log-1",
-        security_level: 1,
-        description: "Basic level",
-      },
-      {
-        ...mockActivity,
-        id: "log-2",
-        security_level: 2,
-        description: "Enhanced level",
-      },
-      {
-        ...mockActivity,
-        id: "log-3",
-        security_level: 3,
-        description: "Maximum level",
-      },
-    ];
-
-    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
-      ...mockResponse,
-      data: activities,
-      meta: { ...mockResponse.meta, total: 3, to: 3 },
-    });
-
-    renderWithProviders();
-
-    await waitFor(() => {
-      expect(screen.getByText("Basic")).toBeInTheDocument();
-      expect(screen.getByText("Enhanced")).toBeInTheDocument();
-      expect(screen.getByText("Maximum")).toBeInTheDocument();
     });
   });
 

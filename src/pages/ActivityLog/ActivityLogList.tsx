@@ -26,29 +26,10 @@ import {
   TableHeader,
   TableCell,
 } from "../../components/table";
-import { Badge } from "../../components/badge";
 import { Button } from "../../components/button";
+import { Badge } from "../../components/badge";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
 import { VerificationDots } from "../../components/VerificationDots";
-
-/**
- * Security level badge component
- */
-function SecurityLevelBadge({ level }: { level: 1 | 2 | 3 }) {
-  const colors = {
-    1: "zinc",
-    2: "yellow",
-    3: "lime",
-  } as const;
-
-  const labels = {
-    1: <Trans>Basic</Trans>,
-    2: <Trans>Enhanced</Trans>,
-    3: <Trans>Maximum</Trans>,
-  };
-
-  return <Badge color={colors[level]}>{labels[level]}</Badge>;
-}
 
 /**
  * Format date for display
@@ -234,7 +215,7 @@ export function ActivityLogList() {
 
   function handleCloseDetailDialog() {
     setDetailDialogOpen(false);
-    setSelectedActivity(null);
+    // Intentionally keep selectedActivity; ActivityDetailDialog resets its internal state when it opens.
   }
 
   if (loading && activities.length === 0) {
@@ -272,9 +253,14 @@ export function ActivityLogList() {
             >
               <Trans>Refresh</Trans>
             </Button>
-            <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
+            <label
+              htmlFor="auto-refresh"
+              className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"
+            >
               <input
+                id="auto-refresh"
                 type="checkbox"
+                name="auto_refresh"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
@@ -291,11 +277,14 @@ export function ActivityLogList() {
       <div className="mb-6">
         {/* Search filter - always visible */}
         <Field>
-          <Label>
+          <Label htmlFor="activity-search">
             <Trans>Search</Trans>
           </Label>
           <Input
+            id="activity-search"
             type="text"
+            name="search"
+            autoComplete="off"
             placeholder={_(msg`Search in descriptions...`)}
             value={filters.search || ""}
             onChange={(e) => handleSearch(e.target.value)}
@@ -321,32 +310,41 @@ export function ActivityLogList() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field>
-              <Label>
+              <Label htmlFor="from-date">
                 <Trans>From Date</Trans>
               </Label>
               <Input
+                id="from-date"
                 type="date"
+                name="from_date"
+                autoComplete="off"
                 value={filters.from_date || ""}
                 onChange={(e) => handleFromDateFilter(e.target.value)}
               />
             </Field>
 
             <Field>
-              <Label>
+              <Label htmlFor="to-date">
                 <Trans>To Date</Trans>
               </Label>
               <Input
+                id="to-date"
                 type="date"
+                name="to_date"
+                autoComplete="off"
                 value={filters.to_date || ""}
                 onChange={(e) => handleToDateFilter(e.target.value)}
               />
             </Field>
 
             <Field>
-              <Label>
+              <Label htmlFor="log-name">
                 <Trans>Log Name</Trans>
               </Label>
               <Select
+                id="log-name"
+                name="log_name"
+                autoComplete="off"
                 value={filters.log_name || ""}
                 onChange={(e) =>
                   handleLogNameFilter(e.target.value || undefined)
@@ -380,6 +378,7 @@ export function ActivityLogList() {
                 onChange={handleOrganizationalUnitFilter}
                 allUnitsLabel={_(msg`All units`)}
                 disabled={unitsLoading}
+                ariaLabel={_(msg`Filter by organizational unit`)}
               />
             </Field>
           </div>
@@ -420,9 +419,6 @@ export function ActivityLogList() {
                 <TableHeader className="hidden xl:table-cell">
                   <Trans>Organizational Unit</Trans>
                 </TableHeader>
-                <TableHeader>
-                  <Trans>Security Level</Trans>
-                </TableHeader>
                 <TableHeader className="w-20">
                   {/* Verification dots - no header */}
                 </TableHeader>
@@ -457,9 +453,6 @@ export function ActivityLogList() {
                         <Trans>Global</Trans>
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <SecurityLevelBadge level={activity.security_level} />
                   </TableCell>
                   <TableCell className="w-20">
                     <VerificationDots

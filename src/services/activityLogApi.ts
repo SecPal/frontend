@@ -30,7 +30,6 @@ export interface Activity {
   properties: Record<string, unknown> | null;
   event_hash: string;
   previous_hash: string | null;
-  security_level: 1 | 2 | 3;
   merkle_root: string | null;
   merkle_batch_id: string | null;
   merkle_proof: string | null;
