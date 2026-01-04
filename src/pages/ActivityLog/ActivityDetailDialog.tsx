@@ -74,14 +74,10 @@ export function ActivityDetailDialog({
   // Load verification: use cached data from list if available, otherwise fetch
   useEffect(() => {
     if (!open) {
-      // Reset state when dialog closes
-      setVerification(null);
-      setVerifying(false);
-      setVerificationError(null);
       return;
     }
 
-    // Reset error state
+    // Reset state when dialog opens
     setVerificationError(null);
 
     // If activity already has verification data, use it
@@ -103,27 +99,24 @@ export function ActivityDetailDialog({
       return;
     }
 
-    // Otherwise, lazy load verification after small delay
+    // Otherwise, lazy load verification
     setVerifying(true);
-    const timeoutId = setTimeout(() => {
-      async function loadVerification() {
-        try {
-          const response = await verifyActivityLog(activity.id);
-          setVerification(response.data);
-        } catch (err) {
-          console.error("Failed to verify activity log:", err);
-          setVerificationError(
-            err instanceof Error ? err.message : "Verification failed"
-          );
-        } finally {
-          setVerifying(false);
-        }
+
+    async function loadVerification() {
+      try {
+        const response = await verifyActivityLog(activity.id);
+        setVerification(response.data);
+      } catch (err) {
+        console.error("Failed to verify activity log:", err);
+        setVerificationError(
+          err instanceof Error ? err.message : "Verification failed"
+        );
+      } finally {
+        setVerifying(false);
       }
+    }
 
-      loadVerification();
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
+    loadVerification();
     // We intentionally only re-run when dialog opens or activity changes (by ID)
     // This prevents flickering when switching between activities
     // eslint-disable-next-line react-hooks/exhaustive-deps
