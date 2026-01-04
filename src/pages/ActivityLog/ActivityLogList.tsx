@@ -215,7 +215,7 @@ export function ActivityLogList() {
 
   function handleCloseDetailDialog() {
     setDetailDialogOpen(false);
-    setSelectedActivity(null);
+    // Don't clear selectedActivity - the dialog resets its own state when closed
   }
 
   if (loading && activities.length === 0) {
