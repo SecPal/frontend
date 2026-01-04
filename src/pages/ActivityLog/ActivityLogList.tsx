@@ -253,9 +253,14 @@ export function ActivityLogList() {
             >
               <Trans>Refresh</Trans>
             </Button>
-            <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
+            <label
+              htmlFor="auto-refresh"
+              className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"
+            >
               <input
                 type="checkbox"
+                id="auto-refresh"
+                name="auto_refresh"
                 checked={autoRefresh}
                 onChange={(e) => setAutoRefresh(e.target.checked)}
                 className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
@@ -277,6 +282,9 @@ export function ActivityLogList() {
           </Label>
           <Input
             type="text"
+            id="activity-search"
+            name="search"
+            autoComplete="off"
             placeholder={_(msg`Search in descriptions...`)}
             value={filters.search || ""}
             onChange={(e) => handleSearch(e.target.value)}
@@ -307,6 +315,9 @@ export function ActivityLogList() {
               </Label>
               <Input
                 type="date"
+                id="from-date"
+                name="from_date"
+                autoComplete="off"
                 value={filters.from_date || ""}
                 onChange={(e) => handleFromDateFilter(e.target.value)}
               />
@@ -318,6 +329,9 @@ export function ActivityLogList() {
               </Label>
               <Input
                 type="date"
+                id="to-date"
+                name="to_date"
+                autoComplete="off"
                 value={filters.to_date || ""}
                 onChange={(e) => handleToDateFilter(e.target.value)}
               />
@@ -328,6 +342,9 @@ export function ActivityLogList() {
                 <Trans>Log Name</Trans>
               </Label>
               <Select
+                id="log-name"
+                name="log_name"
+                autoComplete="off"
                 value={filters.log_name || ""}
                 onChange={(e) =>
                   handleLogNameFilter(e.target.value || undefined)
@@ -361,6 +378,7 @@ export function ActivityLogList() {
                 onChange={handleOrganizationalUnitFilter}
                 allUnitsLabel={_(msg`All units`)}
                 disabled={unitsLoading}
+                ariaLabel={_(msg`Filter by organizational unit`)}
               />
             </Field>
           </div>
