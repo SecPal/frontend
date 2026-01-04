@@ -73,7 +73,13 @@ export function ActivityDetailDialog({
 
   // Load verification: use cached data from list if available, otherwise fetch
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Reset state when dialog closes
+      setVerification(null);
+      setVerifying(false);
+      setVerificationError(null);
+      return;
+    }
 
     // Reset error state
     setVerificationError(null);
@@ -93,14 +99,15 @@ export function ActivityDetailDialog({
           orphaned_reason: activity.orphaned_reason || null,
         },
       });
+      setVerifying(false);
       return;
     }
 
     // Otherwise, lazy load verification after small delay
+    setVerifying(true);
     const timeoutId = setTimeout(() => {
       async function loadVerification() {
         try {
-          setVerifying(true);
           const response = await verifyActivityLog(activity.id);
           setVerification(response.data);
         } catch (err) {
@@ -117,18 +124,10 @@ export function ActivityDetailDialog({
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [
-    activity.id,
-    activity.verification,
-    activity.event_hash,
-    activity.previous_hash,
-    activity.merkle_root,
-    activity.merkle_batch_id,
-    activity.ots_confirmed_at,
-    activity.is_orphaned_genesis,
-    activity.orphaned_reason,
-    open,
-  ]);
+    // We intentionally only re-run when dialog opens or activity changes (by ID)
+    // This prevents flickering when switching between activities
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, activity.id]);
 
   return (
     <Dialog open={open} onClose={onClose} size="3xl">
@@ -166,25 +165,6 @@ export function ActivityDetailDialog({
                 {formatDateTime(activity.created_at)}
               </DescriptionDetails>
 
-              <DescriptionTerm>
-                <Trans>Security Level</Trans>
-              </DescriptionTerm>
-              <DescriptionDetails>
-                <Badge
-                  color={
-                    activity.security_level === 3
-                      ? "lime"
-                      : activity.security_level === 2
-                        ? "yellow"
-                        : "zinc"
-                  }
-                >
-                  {activity.security_level === 3 && <Trans>Maximum</Trans>}
-                  {activity.security_level === 2 && <Trans>Enhanced</Trans>}
-                  {activity.security_level === 1 && <Trans>Basic</Trans>}
-                </Badge>
-              </DescriptionDetails>
-
               {activity.causer && (
                 <>
                   <DescriptionTerm>
@@ -193,9 +173,9 @@ export function ActivityDetailDialog({
                   <DescriptionDetails>
                     {activity.causer.name}{" "}
                     {activity.causer.email && (
-                      <span className="text-zinc-500 dark:text-zinc-400">
+                      <Text className="inline text-zinc-500 dark:text-zinc-400">
                         ({activity.causer.email})
-                      </span>
+                      </Text>
                     )}
                   </DescriptionDetails>
                 </>
@@ -208,9 +188,9 @@ export function ActivityDetailDialog({
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {activity.subject.name || activity.subject_type}
-                    <span className="text-zinc-500 dark:text-zinc-400 ml-2">
+                    <Text className="inline text-zinc-500 dark:text-zinc-400 ml-2">
                       (ID: {activity.subject.id})
-                    </span>
+                    </Text>
                   </DescriptionDetails>
                 </>
               )}
@@ -297,7 +277,9 @@ export function ActivityDetailDialog({
                         <Trans>Merkle Batch ID</Trans>
                       </DescriptionTerm>
                       <DescriptionDetails>
-                        {verification.details.merkle_batch_id}
+                        <code className="text-xs break-all">
+                          {verification.details.merkle_batch_id}
+                        </code>
                       </DescriptionDetails>
                     </>
                   )}
@@ -341,12 +323,12 @@ export function ActivityDetailDialog({
                       chain is still being built.
                       <br />
                       <strong>Merkle Tree:</strong> Batch verification for
-                      efficient proof of log inclusion (Security Levels 2-3).
-                      Runs every minute in development, hourly in production.
+                      efficient proof of log inclusion. Runs every minute in
+                      development, hourly in production.
                       <br />
                       <strong>OpenTimestamp:</strong> Bitcoin blockchain
-                      anchoring for immutable proof of existence (Security Level
-                      3 only). Bitcoin confirmation takes ~10 minutes.
+                      anchoring for immutable proof of existence. Bitcoin
+                      confirmation takes ~10 minutes.
                     </Trans>
                   </Text>
                 </div>

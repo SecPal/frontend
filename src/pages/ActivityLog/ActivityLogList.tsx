@@ -26,29 +26,10 @@ import {
   TableHeader,
   TableCell,
 } from "../../components/table";
-import { Badge } from "../../components/badge";
 import { Button } from "../../components/button";
+import { Badge } from "../../components/badge";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
 import { VerificationDots } from "../../components/VerificationDots";
-
-/**
- * Security level badge component
- */
-function SecurityLevelBadge({ level }: { level: 1 | 2 | 3 }) {
-  const colors = {
-    1: "zinc",
-    2: "yellow",
-    3: "lime",
-  } as const;
-
-  const labels = {
-    1: <Trans>Basic</Trans>,
-    2: <Trans>Enhanced</Trans>,
-    3: <Trans>Maximum</Trans>,
-  };
-
-  return <Badge color={colors[level]}>{labels[level]}</Badge>;
-}
 
 /**
  * Format date for display
@@ -420,9 +401,6 @@ export function ActivityLogList() {
                 <TableHeader className="hidden xl:table-cell">
                   <Trans>Organizational Unit</Trans>
                 </TableHeader>
-                <TableHeader>
-                  <Trans>Security Level</Trans>
-                </TableHeader>
                 <TableHeader className="w-20">
                   {/* Verification dots - no header */}
                 </TableHeader>
@@ -457,9 +435,6 @@ export function ActivityLogList() {
                         <Trans>Global</Trans>
                       </span>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <SecurityLevelBadge level={activity.security_level} />
                   </TableCell>
                   <TableCell className="w-20">
                     <VerificationDots

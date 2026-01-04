@@ -43,7 +43,6 @@ const mockActivity: Activity = {
   properties: { ip: "192.168.1.1", user_agent: "Mozilla/5.0" },
   event_hash: "abc123def456",
   previous_hash: "previous-hash",
-  security_level: 2,
   merkle_root: "merkle-root-hash",
   merkle_batch_id: "batch-123",
   merkle_proof: "proof-data",
@@ -119,7 +118,6 @@ describe("ActivityDetailDialog", () => {
     // Email is displayed in parentheses after name
     expect(screen.getByText(/\(john@example\.com\)/i)).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
-    expect(screen.getByText("Enhanced")).toBeInTheDocument();
   });
 
   it("should fetch verification on open", async () => {
@@ -185,9 +183,7 @@ describe("ActivityDetailDialog", () => {
     });
 
     const onClose = vi.fn();
-    // Use security level 3 to show OTS status (level 2 shows OTS as N/A)
-    const activity = { ...mockActivity, security_level: 3 as 1 | 2 | 3 };
-    renderWithProviders({ activity, open: true, onClose });
+    renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
       const hashChainLabels = screen.getAllByText(/hash chain/i);
@@ -195,7 +191,6 @@ describe("ActivityDetailDialog", () => {
     });
 
     // Check for Pending status in tooltips (dots with title="...: Pending")
-    // With security_level 3, both merkle_valid and ots_valid are shown as Pending
     const pendingDots = screen.getAllByTitle(/pending/i);
     expect(pendingDots.length).toBeGreaterThanOrEqual(2);
   });
@@ -328,38 +323,6 @@ describe("ActivityDetailDialog", () => {
 
     // Should not show Engineering
     expect(screen.queryByText("Engineering")).not.toBeInTheDocument();
-  });
-
-  it("should display security level Maximum correctly", async () => {
-    const activityMaxSecurity: Activity = {
-      ...mockActivity,
-      security_level: 3,
-    };
-
-    const onClose = vi.fn();
-    renderWithProviders({ activity: activityMaxSecurity, open: true, onClose });
-
-    await waitFor(() => {
-      expect(screen.getByText("Maximum")).toBeInTheDocument();
-    });
-  });
-
-  it("should display security level Basic correctly", async () => {
-    const activityBasicSecurity: Activity = {
-      ...mockActivity,
-      security_level: 1,
-    };
-
-    const onClose = vi.fn();
-    renderWithProviders({
-      activity: activityBasicSecurity,
-      open: true,
-      onClose,
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText("Basic")).toBeInTheDocument();
-    });
   });
 
   it("should display verifying state", async () => {
