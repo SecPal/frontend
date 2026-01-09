@@ -359,10 +359,12 @@ describe("OnboardingComplete", () => {
       name: /complete account setup/i,
     });
 
-    fireEvent.change(firstNameInput, { target: { value: " " } });
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
     fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "short" } });
-    fireEvent.change(confirmPasswordInput, { target: { value: "short" } });
+    fireEvent.change(passwordInput, { target: { value: "validPassword123" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "validPassword123" },
+    });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
