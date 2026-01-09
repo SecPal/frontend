@@ -367,7 +367,7 @@ describe("OnboardingComplete", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/the given data was invalid/i)
+        screen.getByText("The given data was invalid.")
       ).toBeInTheDocument();
     });
   });
