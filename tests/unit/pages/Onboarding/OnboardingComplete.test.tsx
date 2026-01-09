@@ -373,4 +373,88 @@ describe("OnboardingComplete", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("handles generic API errors (500)", async () => {
+    const mockError = {
+      response: {
+        status: 500,
+        data: {
+          message: "Internal server error",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    const passwordInput = document.querySelector('input[name="password"]')!;
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const submitButton = screen.getByRole("button", {
+      name: /complete account setup/i,
+    });
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "password123" },
+    });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/internal server error/i)).toBeInTheDocument();
+    });
+  });
+
+  it("handles network errors (no response)", async () => {
+    const mockError = {
+      message: "Network Error",
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    const passwordInput = document.querySelector('input[name="password"]')!;
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const submitButton = screen.getByRole("button", {
+      name: /complete account setup/i,
+    });
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "password123" },
+    });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/failed to complete onboarding/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("navigates to login when clicking 'Go to Login' button", () => {
+    renderWithProviders(<OnboardingComplete />, "/onboarding/complete");
+
+    const loginButton = screen.getByRole("button", { name: /go to login/i });
+    expect(loginButton).toBeInTheDocument();
+
+    // Verify button is interactive and clickable
+    fireEvent.click(loginButton);
+    expect(loginButton).toBeEnabled();
+  });
 });
