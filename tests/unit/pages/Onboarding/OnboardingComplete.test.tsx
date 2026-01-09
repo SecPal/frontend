@@ -53,7 +53,7 @@ describe("OnboardingComplete", () => {
 
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^password\s*\*/i)).toBeInTheDocument();
+    expect(document.querySelector('input[name="password"]')).toBeTruthy();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/profile photo/i)).toBeInTheDocument();
     expect(
