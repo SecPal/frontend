@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -73,6 +73,7 @@ export function OnboardingComplete() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const fileReaderRef = useRef<FileReader | null>(null);
 
   // Validate token and email presence on mount
   useEffect(() => {
@@ -85,10 +86,25 @@ export function OnboardingComplete() {
     }
   }, [token, email, _]);
 
+  // Cleanup FileReader on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (fileReaderRef.current) {
+        fileReaderRef.current.abort();
+      }
+    };
+  }, []);
+
   /**
    * Handle photo file selection
    */
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    // Abort previous FileReader if ongoing (cleanup)
+    if (fileReaderRef.current) {
+      fileReaderRef.current.abort();
+      fileReaderRef.current = null;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -112,11 +128,23 @@ export function OnboardingComplete() {
 
     setFormData((prev) => ({ ...prev, photo: file }));
 
-    // Generate preview
+    // Generate preview with cleanup
     const reader = new FileReader();
+    fileReaderRef.current = reader;
+
     reader.onloadend = () => {
       setPhotoPreview(reader.result as string);
+      fileReaderRef.current = null; // Clear ref after successful read
     };
+
+    reader.onerror = () => {
+      fileReaderRef.current = null;
+      setErrors((prev) => ({
+        ...prev,
+        photo: _(msg`Failed to read file`),
+      }));
+    };
+
     reader.readAsDataURL(file);
 
     // Clear photo error
