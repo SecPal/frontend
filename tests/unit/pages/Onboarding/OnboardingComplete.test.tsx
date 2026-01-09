@@ -457,4 +457,208 @@ describe("OnboardingComplete", () => {
     fireEvent.click(loginButton);
     expect(loginButton).toBeEnabled();
   });
+
+  it("cleans up FileReader on unmount during active file read", async () => {
+    // Mock FileReader to track abort calls
+    const mockAbort = vi.fn();
+    const originalFileReader = globalThis.FileReader;
+
+    class MockFileReader {
+      onloadend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      result: string | null = null;
+      abort = mockAbort;
+
+      readAsDataURL() {
+        // Simulate async read - don't complete immediately
+        setTimeout(() => {
+          if (this.onloadend) {
+            this.result = "data:image/png;base64,fake";
+            this.onloadend();
+          }
+        }, 100);
+      }
+    }
+
+    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
+
+    const { unmount } = renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    // Upload a file
+    const file = new File(["fake-image"], "photo.jpg", {
+      type: "image/jpeg",
+    });
+    const photoInput = screen.getByLabelText(/profile photo/i);
+    Object.defineProperty(photoInput, "files", {
+      value: [file],
+      writable: false,
+    });
+
+    fireEvent.change(photoInput);
+
+    // Unmount before read completes
+    unmount();
+
+    // FileReader abort should have been called
+    await waitFor(() => {
+      expect(mockAbort).toHaveBeenCalled();
+    });
+
+    // Restore original FileReader
+    globalThis.FileReader = originalFileReader;
+  });
+
+  it("handles FileReader error during photo read", async () => {
+    // Mock FileReader to trigger error
+    const originalFileReader = globalThis.FileReader;
+
+    class MockFileReader {
+      onloadend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      result: string | null = null;
+      abort = vi.fn();
+
+      readAsDataURL() {
+        // Simulate error immediately
+        setTimeout(() => {
+          if (this.onerror) {
+            this.onerror();
+          }
+        }, 10);
+      }
+    }
+
+    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    // Upload a file
+    const file = new File(["fake-image"], "photo.jpg", {
+      type: "image/jpeg",
+    });
+    const photoInput = screen.getByLabelText(/profile photo/i);
+    Object.defineProperty(photoInput, "files", {
+      value: [file],
+      writable: false,
+    });
+
+    fireEvent.change(photoInput);
+
+    // Should show error message
+    await waitFor(() => {
+      expect(screen.getByText(/failed to read file/i)).toBeInTheDocument();
+    });
+
+    // Restore original FileReader
+    globalThis.FileReader = originalFileReader;
+  });
+
+  it("aborts previous FileReader when selecting new file", async () => {
+    // Mock FileReader to track multiple reads
+    const mockAbort = vi.fn();
+    const originalFileReader = globalThis.FileReader;
+
+    class MockFileReader {
+      onloadend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      result: string | null = null;
+      abort = mockAbort;
+
+      readAsDataURL() {
+        setTimeout(() => {
+          if (this.onloadend) {
+            this.result = "data:image/png;base64,fake";
+            this.onloadend();
+          }
+        }, 50);
+      }
+    }
+
+    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    const photoInput = screen.getByLabelText(/profile photo/i);
+
+    // Upload first file
+    const file1 = new File(["fake-image-1"], "photo1.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(photoInput, "files", {
+      value: [file1],
+      configurable: true,
+    });
+    fireEvent.change(photoInput);
+
+    // Clear previous mock call
+    mockAbort.mockClear();
+
+    // Immediately upload second file (before first completes)
+    const file2 = new File(["fake-image-2"], "photo2.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(photoInput, "files", {
+      value: [file2],
+      configurable: true,
+    });
+    fireEvent.change(photoInput);
+
+    // First FileReader should have been aborted
+    await waitFor(() => {
+      expect(mockAbort).toHaveBeenCalled();
+    });
+
+    // Restore original FileReader
+    globalThis.FileReader = originalFileReader;
+  });
+
+  it("clears photo error when uploading valid file after error", async () => {
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    const photoInput = screen.getByLabelText(/profile photo/i);
+
+    // First: Upload file that's too large
+    const largeFile = new File(["a".repeat(3 * 1024 * 1024)], "large.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(photoInput, "files", {
+      value: [largeFile],
+      writable: false,
+      configurable: true,
+    });
+    fireEvent.change(photoInput);
+
+    // Error should be shown
+    await waitFor(() => {
+      expect(screen.getByText(/smaller than 2MB/i)).toBeInTheDocument();
+    });
+
+    // Now upload valid file
+    const validFile = new File(["small"], "valid.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(photoInput, "files", {
+      value: [validFile],
+      writable: false,
+      configurable: true,
+    });
+    fireEvent.change(photoInput);
+
+    // Error should be cleared
+    await waitFor(() => {
+      expect(screen.queryByText(/smaller than 2MB/i)).not.toBeInTheDocument();
+    });
+  });
 });
