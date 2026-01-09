@@ -58,6 +58,40 @@ export interface OnboardingSubmissionData {
 }
 
 /**
+ * Onboarding completion request (magic link)
+ */
+export interface OnboardingCompleteData {
+  token: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+  password_confirmation: string;
+  photo?: File;
+}
+
+/**
+ * Onboarding completion response
+ */
+export interface OnboardingCompleteResponse {
+  message: string;
+  data: {
+    token: string;
+    user: {
+      id: number;
+      email: string;
+      name: string;
+    };
+    employee: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      status: string;
+    };
+  };
+}
+
+/**
  * Get onboarding steps for current pre-contract user
  */
 export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
@@ -78,6 +112,54 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
     throw new Error("Failed to parse onboarding steps response");
   }
   return data.data;
+}
+
+/**
+ * Complete onboarding with magic link token
+ *
+ * POST /v1/onboarding/complete (public endpoint, no auth)
+ *
+ * @param data - Onboarding completion data including token, credentials, and optional photo
+ * @returns Response containing Sanctum token and user/employee data
+ * @throws Error if onboarding fails (invalid token, validation errors, etc.)
+ */
+export async function completeOnboarding(
+  data: OnboardingCompleteData
+): Promise<OnboardingCompleteResponse> {
+  const formData = new FormData();
+
+  formData.append("token", data.token);
+  formData.append("email", data.email);
+  formData.append("first_name", data.first_name);
+  formData.append("last_name", data.last_name);
+  formData.append("password", data.password);
+  formData.append("password_confirmation", data.password_confirmation);
+
+  if (data.photo) {
+    formData.append("photo", data.photo);
+  }
+
+  // Use fetch directly (not apiFetch) since this is a public endpoint
+  // No CSRF token or authentication required
+  const response = await fetch(`${apiConfig.baseUrl}/v1/onboarding/complete`, {
+    method: "POST",
+    body: formData,
+    credentials: "include", // Include cookies for future CSRF
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+    }));
+    throw {
+      response: {
+        status: response.status,
+        data: error,
+      },
+    };
+  }
+
+  return response.json();
 }
 
 /**
