@@ -78,11 +78,26 @@ export function OnboardingComplete() {
   // Validate token and email presence on mount
   useEffect(() => {
     if (!token || !email) {
-      setErrors({
-        general: _(
-          msg`Invalid onboarding link. Please check your email and try again.`
-        ),
-      });
+      let errorMessage = _(
+        msg`Invalid onboarding link. Please check your email and try again.`
+      );
+
+      // More specific error messages for debugging
+      if (!token && !email) {
+        errorMessage = _(
+          msg`Missing token and email. Please use the link from your email.`
+        );
+      } else if (!token) {
+        errorMessage = _(
+          msg`Missing onboarding token. Please use the link from your email.`
+        );
+      } else if (!email) {
+        errorMessage = _(
+          msg`Missing email address. Please use the link from your email.`
+        );
+      }
+
+      setErrors({ general: errorMessage });
     }
   }, [token, email, _]);
 
@@ -322,11 +337,13 @@ export function OnboardingComplete() {
           <LanguageSwitcher />
         </div>
 
-        <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
-          <Heading level={2} className="text-red-800">
+        <div className="mt-8 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <Heading level={2} className="text-red-800 dark:text-red-200">
             <Trans>Invalid Link</Trans>
           </Heading>
-          <Text className="mt-2 text-red-700">{errors.general}</Text>
+          <Text className="mt-2 text-red-700 dark:text-red-300">
+            {errors.general}
+          </Text>
           <div className="mt-4">
             <Button color="red" onClick={() => navigate("/login")}>
               <Trans>Go to Login</Trans>
@@ -358,8 +375,10 @@ export function OnboardingComplete() {
 
       <form onSubmit={handleSubmit} className="mt-8">
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <Text className="text-red-800">{errors.general}</Text>
+          <div className="mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <Text className="text-red-800 dark:text-red-200">
+              {errors.general}
+            </Text>
           </div>
         )}
 

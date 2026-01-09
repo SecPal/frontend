@@ -445,15 +445,15 @@ msgstr "Collapse"
 msgid "Company"
 msgstr "Company"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:482
+#: src/pages/Onboarding/OnboardingComplete.tsx:519
 msgid "Complete Account Setup"
 msgstr "Complete Account Setup"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:327
+#: src/pages/Onboarding/OnboardingComplete.tsx:364
 msgid "Complete your account setup to get started"
 msgstr "Complete your account setup to get started"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:480
+#: src/pages/Onboarding/OnboardingComplete.tsx:517
 msgid "Completing Setup..."
 msgstr "Completing Setup..."
 
@@ -461,7 +461,7 @@ msgstr "Completing Setup..."
 msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 msgstr "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:412
+#: src/pages/Onboarding/OnboardingComplete.tsx:449
 msgid "Confirm Password"
 msgstr "Confirm Password"
 
@@ -860,8 +860,8 @@ msgstr "Expiring Soon"
 msgid "Failed to clear uploads"
 msgstr "Failed to clear uploads"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:268
-#: src/pages/Onboarding/OnboardingComplete.tsx:276
+#: src/pages/Onboarding/OnboardingComplete.tsx:305
+#: src/pages/Onboarding/OnboardingComplete.tsx:313
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Failed to complete onboarding. Please try again or contact support."
 
@@ -889,6 +889,10 @@ msgstr "Failed to load preview"
 msgid "Failed to move organizational unit"
 msgstr "Failed to move organizational unit"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:153
+msgid "Failed to read file"
+msgstr "Failed to read file"
+
 #: src/components/SharedWithList.tsx:45
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
@@ -905,7 +909,7 @@ msgstr "Failed to schedule upload retry"
 msgid "Failed to share secret"
 msgstr "Failed to share secret"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:108
+#: src/pages/Onboarding/OnboardingComplete.tsx:133
 msgid "File must be an image"
 msgstr "File must be an image"
 
@@ -928,11 +932,11 @@ msgstr "Filter by tag"
 
 #: src/pages/Employees/EmployeeCreate.tsx:208
 #: src/pages/Employees/EmployeeEdit.tsx:321
-#: src/pages/Onboarding/OnboardingComplete.tsx:342
+#: src/pages/Onboarding/OnboardingComplete.tsx:379
 msgid "First Name"
 msgstr "First Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:152
+#: src/pages/Onboarding/OnboardingComplete.tsx:189
 msgid "First name is required"
 msgstr "First name is required"
 
@@ -964,7 +968,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Global"
 msgstr "Global"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:304
+#: src/pages/Onboarding/OnboardingComplete.tsx:341
 msgid "Go to Login"
 msgstr "Go to Login"
 
@@ -1045,7 +1049,7 @@ msgstr "Invalid combination: No employees will be visible with this range."
 msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
 msgstr "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:299
+#: src/pages/Onboarding/OnboardingComplete.tsx:336
 msgid "Invalid Link"
 msgstr "Invalid Link"
 
@@ -1070,11 +1074,11 @@ msgstr "Last modified: {0}"
 
 #: src/pages/Employees/EmployeeCreate.tsx:221
 #: src/pages/Employees/EmployeeEdit.tsx:334
-#: src/pages/Onboarding/OnboardingComplete.tsx:365
+#: src/pages/Onboarding/OnboardingComplete.tsx:402
 msgid "Last Name"
 msgstr "Last Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:156
+#: src/pages/Onboarding/OnboardingComplete.tsx:193
 msgid "Last name is required"
 msgstr "Last name is required"
 
@@ -1217,7 +1221,7 @@ msgstr "Manage your secrets and sensitive information securely."
 msgid "Management Level"
 msgstr "Management Level"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:467
+#: src/pages/Onboarding/OnboardingComplete.tsx:504
 msgid "Max 2MB, JPG or PNG"
 msgstr "Max 2MB, JPG or PNG"
 
@@ -1258,7 +1262,7 @@ msgstr "Minijob"
 msgid "Minimize offline notice"
 msgstr "Minimize offline notice"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:405
+#: src/pages/Onboarding/OnboardingComplete.tsx:442
 msgid "Minimum 8 characters"
 msgstr "Minimum 8 characters"
 
@@ -1274,6 +1278,18 @@ msgstr "Minimum rank cannot be greater than maximum rank."
 #: src/components/ScopeAssignmentForm.tsx:374
 msgid "Minimum Viewable Rank"
 msgstr "Minimum Viewable Rank"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:91
+msgid "Missing email address. Please use the link from your email."
+msgstr "Missing email address. Please use the link from your email."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:89
+msgid "Missing onboarding token. Please use the link from your email."
+msgstr "Missing onboarding token. Please use the link from your email."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:87
+msgid "Missing token and email. Please use the link from your email."
+msgstr "Missing token and email. Please use the link from your email."
 
 #: src/pages/Employees/EmployeeCreate.tsx:416
 #: src/pages/Employees/EmployeeDetail.tsx:91
@@ -1556,20 +1572,20 @@ msgstr "Part Time"
 msgid "login.password"
 msgstr "Password"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:387
+#: src/pages/Onboarding/OnboardingComplete.tsx:424
 #: src/pages/Secrets/SecretDetail.tsx:313
 msgid "Password"
 msgstr "Password"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:160
+#: src/pages/Onboarding/OnboardingComplete.tsx:197
 msgid "Password is required"
 msgstr "Password is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:162
+#: src/pages/Onboarding/OnboardingComplete.tsx:199
 msgid "Password must be at least 8 characters"
 msgstr "Password must be at least 8 characters"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:166
+#: src/pages/Onboarding/OnboardingComplete.tsx:203
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
@@ -1614,7 +1630,7 @@ msgstr "Personal Information"
 msgid "Phone"
 msgstr "Phone"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:99
+#: src/pages/Onboarding/OnboardingComplete.tsx:124
 msgid "Photo must be smaller than 2MB"
 msgstr "Photo must be smaller than 2MB"
 
@@ -1680,7 +1696,7 @@ msgstr "Processing Progress"
 msgid "Profile"
 msgstr "Profile"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:437
+#: src/pages/Onboarding/OnboardingComplete.tsx:474
 msgid "Profile Photo (optional)"
 msgstr "Profile Photo (optional)"
 
@@ -1714,7 +1730,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:462
+#: src/pages/Onboarding/OnboardingComplete.tsx:499
 msgid "Remove"
 msgstr "Remove"
 
@@ -2136,7 +2152,7 @@ msgstr "This customer has {0} site(s)."
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:489
+#: src/pages/Onboarding/OnboardingComplete.tsx:526
 msgid "This link is valid for 7 days and can only be used once."
 msgstr "This link is valid for 7 days and can only be used once."
 
@@ -2160,7 +2176,7 @@ msgstr "To Date"
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:260
+#: src/pages/Onboarding/OnboardingComplete.tsx:297
 msgid "Too many attempts. Please try again later."
 msgstr "Too many attempts. Please try again later."
 
@@ -2347,11 +2363,11 @@ msgstr "Welcome to SecPal"
 msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:324
+#: src/pages/Onboarding/OnboardingComplete.tsx:361
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:209
+#: src/pages/Onboarding/OnboardingComplete.tsx:246
 msgid "Welcome to SecPal! Let's complete your profile."
 msgstr "Welcome to SecPal! Let's complete your profile."
 
