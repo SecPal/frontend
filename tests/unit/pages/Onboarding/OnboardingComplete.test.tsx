@@ -98,7 +98,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
     });
@@ -123,7 +123,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
@@ -216,7 +216,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
@@ -269,7 +269,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
@@ -311,7 +311,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
@@ -353,7 +353,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^Password \*$/);
+    const passwordInput = document.querySelector('input[name="password"]')!;
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
