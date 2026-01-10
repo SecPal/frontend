@@ -86,7 +86,7 @@ describe("OnboardingComplete", () => {
     renderWithProviders(<OnboardingComplete />, "/onboarding/complete");
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
+      expect(screen.getByText(/missing token and email/i)).toBeInTheDocument();
     });
 
     expect(
