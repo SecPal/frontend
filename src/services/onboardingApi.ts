@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { apiFetch } from "./csrf";
+import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
 /**
  * Onboarding Step
@@ -192,17 +192,14 @@ export async function completeOnboarding(
     formData.append("photo", data.photo);
   }
 
-  // Get CSRF token from cookie
-  const token = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("XSRF-TOKEN="))
-    ?.split("=")[1];
+  // Get CSRF token from cookie using centralized utility
+  const token = getCsrfTokenFromCookie();
 
   const response = await fetch(`${apiConfig.baseUrl}/v1/onboarding/complete`, {
     method: "POST",
     body: formData,
     credentials: "include",
-    headers: token ? { "X-XSRF-TOKEN": decodeURIComponent(token) } : {},
+    headers: token ? { "X-XSRF-TOKEN": token } : {},
   });
 
   if (!response.ok) {

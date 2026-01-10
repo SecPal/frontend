@@ -76,6 +76,7 @@ export function OnboardingComplete() {
   const [loadingToken, setLoadingToken] = useState(true);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const fileReaderRef = useRef<FileReader | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Validate token and prefill form on mount
   useEffect(() => {
@@ -206,12 +207,9 @@ export function OnboardingComplete() {
   const handleRemovePhoto = () => {
     setFormData((prev) => ({ ...prev, photo: undefined }));
     setPhotoPreview(null);
-    // Reset file input
-    const fileInput = document.querySelector(
-      'input[type="file"]'
-    ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
+    // Reset file input using ref
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -493,6 +491,7 @@ export function OnboardingComplete() {
             <Input
               type="password"
               name="password"
+              aria-label="Password"
               value={formData.password}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, password: e.target.value }))
@@ -541,6 +540,7 @@ export function OnboardingComplete() {
               <Trans>Profile Photo (optional)</Trans>
             </Label>
             <Input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handlePhotoChange}
@@ -594,5 +594,3 @@ export function OnboardingComplete() {
     </AuthLayout>
   );
 }
-
-export default OnboardingComplete;
