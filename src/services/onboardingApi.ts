@@ -71,6 +71,17 @@ export interface OnboardingCompleteData {
 }
 
 /**
+ * Onboarding token validation response (for prefilling form)
+ */
+export interface OnboardingTokenValidationResponse {
+  data: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+/**
  * Onboarding completion response
  */
 export interface OnboardingCompleteResponse {
@@ -115,6 +126,39 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
 }
 
 /**
+ * Validate onboarding token and get employee data for prefilling
+ *
+ * GET /v1/onboarding/validate-token?token=xxx&email=xxx (public endpoint, no auth)
+ *
+ * Security: Both token AND email must match to prevent token hijacking.
+ *
+ * @param token - Onboarding token from magic link
+ * @param email - Email address from magic link
+ * @returns Employee data for prefilling form (first_name, last_name, email)
+ * @throws Error if token is invalid, expired, or email doesn't match
+ */
+export async function validateOnboardingToken(
+  token: string,
+  email: string
+): Promise<OnboardingTokenValidationResponse> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/validate-token?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || "Invalid or expired onboarding token");
+  }
+
+  return response.json();
+}
+
+/**
  * Complete onboarding with magic link token
  *
  * POST /v1/onboarding/complete (public endpoint, no auth)
@@ -126,6 +170,15 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
 export async function completeOnboarding(
   data: OnboardingCompleteData
 ): Promise<OnboardingCompleteResponse> {
+  // Fetch CSRF cookie first (required by Laravel Sanctum SPA auth)
+  const csrfResponse = await fetch(`${apiConfig.baseUrl}/sanctum/csrf-cookie`, {
+    credentials: "include",
+  });
+
+  if (!csrfResponse.ok) {
+    throw new Error("Failed to fetch CSRF token");
+  }
+
   const formData = new FormData();
 
   formData.append("token", data.token);
@@ -139,12 +192,17 @@ export async function completeOnboarding(
     formData.append("photo", data.photo);
   }
 
-  // Use fetch directly (not apiFetch) since this is a public endpoint
-  // No CSRF token or authentication required
+  // Get CSRF token from cookie
+  const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("XSRF-TOKEN="))
+    ?.split("=")[1];
+
   const response = await fetch(`${apiConfig.baseUrl}/v1/onboarding/complete`, {
     method: "POST",
     body: formData,
-    credentials: "include", // Include cookies for future CSRF
+    credentials: "include",
+    headers: token ? { "X-XSRF-TOKEN": decodeURIComponent(token) } : {},
   });
 
   if (!response.ok) {

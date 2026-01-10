@@ -16,6 +16,7 @@ import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 import { useAuth } from "../../hooks/useAuth";
 import {
   completeOnboarding,
+  validateOnboardingToken,
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
 
@@ -72,33 +73,62 @@ export function OnboardingComplete() {
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingToken, setLoadingToken] = useState(true);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const fileReaderRef = useRef<FileReader | null>(null);
 
-  // Validate token and email presence on mount
+  // Validate token and prefill form on mount
   useEffect(() => {
-    if (!token || !email) {
-      let errorMessage = _(
-        msg`Invalid onboarding link. Please check your email and try again.`
-      );
+    const validateAndPrefill = async () => {
+      if (!token || !email) {
+        let errorMessage = _(
+          msg`Invalid onboarding link. Please check your email and try again.`
+        );
 
-      // More specific error messages for debugging
-      if (!token && !email) {
-        errorMessage = _(
-          msg`Missing token and email. Please use the link from your email.`
-        );
-      } else if (!token) {
-        errorMessage = _(
-          msg`Missing onboarding token. Please use the link from your email.`
-        );
-      } else if (!email) {
-        errorMessage = _(
-          msg`Missing email address. Please use the link from your email.`
-        );
+        // More specific error messages for debugging
+        if (!token && !email) {
+          errorMessage = _(
+            msg`Missing token and email. Please use the link from your email.`
+          );
+        } else if (!token) {
+          errorMessage = _(
+            msg`Missing onboarding token. Please use the link from your email.`
+          );
+        } else if (!email) {
+          errorMessage = _(
+            msg`Missing email address. Please use the link from your email.`
+          );
+        }
+
+        setErrors({ general: errorMessage });
+        setLoadingToken(false);
+        return;
       }
 
-      setErrors({ general: errorMessage });
-    }
+      // Validate token and get employee data for prefilling
+      try {
+        const response = await validateOnboardingToken(token, email);
+
+        // Prefill form with existing employee data
+        setFormData((prev) => ({
+          ...prev,
+          first_name: response.data.first_name || "",
+          last_name: response.data.last_name || "",
+        }));
+
+        setLoadingToken(false);
+      } catch (error) {
+        setErrors({
+          general:
+            error instanceof Error
+              ? error.message
+              : _(msg`Failed to validate onboarding link`),
+        });
+        setLoadingToken(false);
+      }
+    };
+
+    validateAndPrefill();
   }, [token, email, _]);
 
   // Cleanup FileReader on unmount to prevent memory leaks
@@ -326,7 +356,7 @@ export function OnboardingComplete() {
   };
 
   // If no token or email, show error immediately
-  if (!token || !email) {
+  if (!token || !email || errors.general) {
     return (
       <AuthLayout>
         <div className="flex items-center justify-between gap-4">
@@ -349,6 +379,27 @@ export function OnboardingComplete() {
               <Trans>Go to Login</Trans>
             </Button>
           </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Show loading spinner while validating token
+  if (loadingToken) {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Logo size="48" />
+            <h1 className="text-3xl font-bold">SecPal</h1>
+          </div>
+          <LanguageSwitcher />
+        </div>
+
+        <div className="mt-8 text-center">
+          <Text>
+            <Trans>Validating your link...</Trans>
+          </Text>
         </div>
       </AuthLayout>
     );
@@ -383,10 +434,10 @@ export function OnboardingComplete() {
         )}
 
         <FieldGroup>
-          {/* First Name */}
+          {/* First Name - BewachV §16 requires all first names */}
           <Field>
             <Label>
-              <Trans>First Name</Trans> *
+              <Trans>First Names (all)</Trans> *
             </Label>
             <Input
               type="text"
@@ -399,8 +450,14 @@ export function OnboardingComplete() {
               autoFocus
               invalid={!!errors.first_name}
             />
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              <Trans>
+                Enter all your first names as shown on your ID (e.g.,
+                "Hans-Peter Friedrich")
+              </Trans>
+            </Text>
             {errors.first_name && (
-              <Text className="text-sm text-red-600 mt-1">
+              <Text className="text-sm text-red-600 dark:text-red-400 mt-1">
                 {errors.first_name}
               </Text>
             )}
@@ -532,11 +589,6 @@ export function OnboardingComplete() {
           </div>
 
           {/* Help Text */}
-          <Text className="text-sm text-zinc-500 text-center mt-4">
-            <Trans>
-              This link is valid for 7 days and can only be used once.
-            </Trans>
-          </Text>
         </FieldGroup>
       </form>
     </AuthLayout>

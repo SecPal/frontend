@@ -40,18 +40,38 @@ function renderWithProviders(ui: React.ReactElement, route?: string) {
   );
 }
 
+// Helper to wait for token validation to complete
+async function waitForFormReady() {
+  await waitFor(() => {
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+  });
+}
+
 describe("OnboardingComplete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock validateOnboardingToken to return employee data
+    vi.mocked(onboardingApi.validateOnboardingToken).mockResolvedValue({
+      data: {
+        first_name: "Max",
+        last_name: "Mustermann",
+        email: "test@example.com",
+      },
+    });
   });
 
-  it("renders form with all required fields", () => {
+  it("renders form with all required fields", async () => {
     renderWithProviders(
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+    // Wait for token validation to complete
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+    });
+
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(document.querySelector('input[name="password"]')).toBeTruthy();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
