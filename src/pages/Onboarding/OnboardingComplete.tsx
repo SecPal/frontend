@@ -26,6 +26,10 @@ import {
   validateOnboardingToken,
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
+import {
+  validateNameChange,
+  type ValidationSeverity,
+} from "../../utils/nameValidation";
 
 interface FormData {
   first_name: string;
@@ -90,8 +94,52 @@ export function OnboardingComplete() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
   const [nameChangeConfirmed, setNameChangeConfirmed] = useState(false);
+  const [nameValidation, setNameValidation] = useState<{
+    firstName: { severity: ValidationSeverity; message: string } | null;
+    lastName: { severity: ValidationSeverity; message: string } | null;
+  }>({ firstName: null, lastName: null });
   const fileReaderRef = useRef<FileReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Validate names whenever form data changes
+  useEffect(() => {
+    if (!originalNames.first_name && !originalNames.last_name) {
+      // No original names loaded yet
+      return;
+    }
+
+    const firstNameResult =
+      formData.first_name.trim() &&
+      formData.first_name.trim() !== originalNames.first_name.trim()
+        ? validateNameChange(
+            originalNames.first_name,
+            formData.first_name,
+            "First name"
+          )
+        : null;
+
+    const lastNameResult =
+      formData.last_name.trim() &&
+      formData.last_name.trim() !== originalNames.last_name.trim()
+        ? validateNameChange(
+            originalNames.last_name,
+            formData.last_name,
+            "Last name"
+          )
+        : null;
+
+    setNameValidation({
+      firstName: firstNameResult
+        ? {
+            severity: firstNameResult.severity,
+            message: firstNameResult.message,
+          }
+        : null,
+      lastName: lastNameResult
+        ? { severity: lastNameResult.severity, message: lastNameResult.message }
+        : null,
+    });
+  }, [formData.first_name, formData.last_name, originalNames]);
 
   // Validate token and prefill form on mount
   useEffect(() => {
@@ -396,10 +444,25 @@ export function OnboardingComplete() {
       formData.last_name.trim() !== "" &&
       formData.last_name.trim() !== originalNames.last_name.trim();
 
-    // Show warning dialog if name changed and user hasn't confirmed yet
-    // Only show if no validation errors exist and we're not already loading
+    // Check validation results - block major changes
+    const hasMajorChange =
+      nameValidation.firstName?.severity === "major" ||
+      nameValidation.lastName?.severity === "major";
+
+    if (hasMajorChange) {
+      // Don't submit - major changes are blocked
+      return;
+    }
+
+    // Only show warning dialog for medium changes (50-80% similarity)
+    const hasMediumChange =
+      nameValidation.firstName?.severity === "medium" ||
+      nameValidation.lastName?.severity === "medium";
+
+    // Show warning dialog if medium change and user hasn't confirmed yet
     if (
       (firstNameChanged || lastNameChanged) &&
+      hasMediumChange &&
       !nameChangeConfirmed &&
       !loading &&
       Object.keys(errors).length === 0
@@ -408,7 +471,7 @@ export function OnboardingComplete() {
       return; // Stop submission, wait for user confirmation
     }
 
-    // If we reach here, either no name change or user confirmed - proceed with submission
+    // If we reach here, either no name change, minor change, or user confirmed - proceed with submission
     await performSubmission();
   };
 
@@ -598,6 +661,20 @@ export function OnboardingComplete() {
                   ℹ️ <Trans>Original:</Trans> {originalNames.first_name}
                 </Text>
               )}
+            {nameValidation.firstName && (
+              <Text
+                className={`text-sm mt-1 ${
+                  nameValidation.firstName.severity === "major"
+                    ? "text-red-600 dark:text-red-400 font-medium"
+                    : nameValidation.firstName.severity === "medium"
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-blue-600 dark:text-blue-400"
+                }`}
+              >
+                {nameValidation.firstName.severity === "major" && "⚠️ "}
+                {nameValidation.firstName.message}
+              </Text>
+            )}
             {errors.first_name && (
               <Text className="text-sm text-red-600 dark:text-red-400 mt-1">
                 {errors.first_name}
@@ -626,6 +703,20 @@ export function OnboardingComplete() {
                   ℹ️ <Trans>Original:</Trans> {originalNames.last_name}
                 </Text>
               )}
+            {nameValidation.lastName && (
+              <Text
+                className={`text-sm mt-1 ${
+                  nameValidation.lastName.severity === "major"
+                    ? "text-red-600 dark:text-red-400 font-medium"
+                    : nameValidation.lastName.severity === "medium"
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-blue-600 dark:text-blue-400"
+                }`}
+              >
+                {nameValidation.lastName.severity === "major" && "⚠️ "}
+                {nameValidation.lastName.message}
+              </Text>
+            )}
             {errors.last_name && (
               <Text className="text-sm text-red-600 mt-1">
                 {errors.last_name}
@@ -728,7 +819,11 @@ export function OnboardingComplete() {
               type="submit"
               color="indigo"
               className="w-full"
-              disabled={loading}
+              disabled={
+                loading ||
+                nameValidation.firstName?.severity === "major" ||
+                nameValidation.lastName?.severity === "major"
+              }
             >
               {loading ? (
                 <Trans>Completing Setup...</Trans>
@@ -736,6 +831,16 @@ export function OnboardingComplete() {
                 <Trans>Complete Account Setup</Trans>
               )}
             </Button>
+            {(nameValidation.firstName?.severity === "major" ||
+              nameValidation.lastName?.severity === "major") && (
+              <Text className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
+                ⚠️{" "}
+                <Trans>
+                  Name change too significant. Please contact HR before
+                  completing onboarding.
+                </Trans>
+              </Text>
+            )}
           </div>
 
           {/* Help Text */}
