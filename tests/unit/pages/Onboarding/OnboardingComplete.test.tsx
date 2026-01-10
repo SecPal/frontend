@@ -102,10 +102,18 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-    fireEvent.click(submitButton);
+    // Clear the prefilled fields to test validation
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    fireEvent.change(firstNameInput, { target: { value: "" } });
+    fireEvent.change(lastNameInput, { target: { value: "" } });
+
+    const form = screen
+      .getByRole("button", {
+        name: /complete account setup/i,
+      })
+      .closest("form")!;
+    fireEvent.submit(form);
 
     await waitFor(() => {
       expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
@@ -247,6 +255,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
