@@ -96,6 +96,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
     });
@@ -115,6 +117,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
@@ -140,6 +144,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
@@ -168,6 +174,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const largeFile = new File(["a".repeat(3 * 1024 * 1024)], "photo.jpg", {
       type: "image/jpeg",
     });
@@ -190,6 +198,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const pdfFile = new File(["test"], "document.pdf", {
       type: "application/pdf",
@@ -287,6 +297,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=invalid&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
     const passwordInput = document.querySelector('input[name="password"]')!;
@@ -328,6 +340,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
@@ -371,6 +385,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
     const passwordInput = document.querySelector('input[name="password"]')!;
@@ -411,6 +427,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
     const passwordInput = document.querySelector('input[name="password"]')!;
@@ -443,6 +461,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
@@ -507,6 +527,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     // Upload a file
     const file = new File(["fake-image"], "photo.jpg", {
       type: "image/jpeg",
@@ -558,6 +580,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     // Upload a file
     const file = new File(["fake-image"], "photo.jpg", {
       type: "image/jpeg",
@@ -607,6 +631,8 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@example.com"
     );
 
+    await waitForFormReady();
+
     const photoInput = screen.getByLabelText(/profile photo/i);
 
     // Upload first file
@@ -646,6 +672,8 @@ describe("OnboardingComplete", () => {
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@example.com"
     );
+
+    await waitForFormReady();
 
     const photoInput = screen.getByLabelText(/profile photo/i);
 
