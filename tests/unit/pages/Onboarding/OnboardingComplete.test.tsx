@@ -82,10 +82,13 @@ describe("OnboardingComplete", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows error if token or email missing", () => {
+  it("shows error if token or email missing", async () => {
     renderWithProviders(<OnboardingComplete />, "/onboarding/complete");
 
-    expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
+    });
+    
     expect(
       screen.getByRole("button", { name: /go to login/i })
     ).toBeInTheDocument();
