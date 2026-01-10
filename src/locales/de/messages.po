@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-01-04 10:09+0100\n"
+"POT-Creation-Date: 2026-01-10 10:42+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -42,11 +42,11 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/App.tsx:69
+#: src/App.tsx:72
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:80
+#: src/App.tsx:83
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -246,7 +246,7 @@ msgstr "Zurück zu den Kunden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
-#: src/App.tsx:91
+#: src/App.tsx:94
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -366,9 +366,25 @@ msgstr "Zusammenklappen"
 msgid "Company"
 msgstr "Unternehmen"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:586
+msgid "Complete Account Setup"
+msgstr "Vollständige Kontoeinrichtung"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:423
+msgid "Complete your account setup to get started"
+msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:584
+msgid "Completing Setup..."
+msgstr "Einrichtung abschließen..."
+
 #: src/components/ScopeAssignmentForm.tsx:365
 msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:516
+msgid "Confirm Password"
+msgstr "Bestätigen Sie Ihr Passwort"
 
 #: src/pages/Customers/CustomersPage.tsx:161
 msgid "Contact"
@@ -688,6 +704,10 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:454
+msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
+msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
+
 #: src/components/ScopeAssignmentForm.tsx:349
 #: src/pages/Employees/EmployeeEdit.tsx:305
 msgid "Error"
@@ -761,6 +781,11 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 msgid "Failed to clear uploads"
 msgstr "Uploads konnten nicht gelöscht werden"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:341
+#: src/pages/Onboarding/OnboardingComplete.tsx:349
+msgid "Failed to complete onboarding. Please try again or contact support."
+msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+
 #: src/pages/Secrets/SecretDetail.tsx:174
 msgid "Failed to delete attachment"
 msgstr "Anhang konnte nicht gelöscht werden"
@@ -785,6 +810,10 @@ msgstr "Vorschau konnte nicht geladen werden"
 msgid "Failed to move organizational unit"
 msgstr "Organisationseinheit konnte nicht verschoben werden"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:189
+msgid "Failed to read file"
+msgstr "Datei konnte nicht gelesen werden"
+
 #: src/components/SharedWithList.tsx:45
 msgid "Failed to revoke access"
 msgstr "Zugriff widerrufen fehlgeschlagen"
@@ -800,6 +829,14 @@ msgstr "Upload-Wiederholungsversuch konnte nicht geplant werden"
 #: src/components/ShareDialog.tsx:91
 msgid "Failed to share secret"
 msgstr "Geheimnis teilen fehlgeschlagen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:125
+msgid "Failed to validate onboarding link"
+msgstr "Onboarding-Link konnte nicht validiert werden"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:169
+msgid "File must be an image"
+msgstr "Datei muss ein Bild sein"
 
 #. placeholder {0}: file.name
 #: src/components/AttachmentUpload.tsx:124
@@ -822,6 +859,14 @@ msgstr "Nach Tag filtern"
 #: src/pages/Employees/EmployeeEdit.tsx:321
 msgid "First Name"
 msgstr "Vorname"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:440
+msgid "First Names (all)"
+msgstr "Vornamen (alle)"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:225
+msgid "First name is required"
+msgstr "Vorname ist erforderlich"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx:382
 msgid "Form fields will be rendered based on schema"
@@ -850,6 +895,10 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 #: src/pages/ActivityLog/ActivityLogList.tsx:453
 msgid "Global"
 msgstr "Global"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:379
+msgid "Go to Login"
+msgstr "Zum Login gehen"
 
 #. placeholder {0}: share.granted_by.name
 #. placeholder {1}: formatDate(share.granted_at, i18n.locale)
@@ -914,6 +963,10 @@ msgstr "Startseite"
 msgid "Inactive"
 msgstr "Inaktiv"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:372
+msgid "Invalid Link"
+msgstr "Ungültiger Link"
+
 #: src/components/ScopeAssignmentForm.tsx:152
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
@@ -928,6 +981,10 @@ msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitneh
 msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
 msgstr "Ungültiger Dateityp: {0}. Nur Bilder, PDFs und Dokumente sind erlaubt."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:85
+msgid "Invalid onboarding link. Please check your email and try again."
+msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
+
 #: src/pages/ShareTarget.tsx:596
 msgid "Invalid or unsafe URL"
 msgstr "Ungültige oder unsichere URL"
@@ -938,6 +995,7 @@ msgstr "Sprache"
 
 #: src/pages/Employees/EmployeeCreate.tsx:221
 #: src/pages/Employees/EmployeeEdit.tsx:334
+#: src/pages/Onboarding/OnboardingComplete.tsx:469
 msgid "Last Name"
 msgstr "Nachname"
 
@@ -951,6 +1009,10 @@ msgstr "Zuletzt aktualisiert"
 #: src/components/ConflictResolutionDialog.tsx:188
 msgid "Last modified: {0}"
 msgstr "Zuletzt geändert: {0}"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:229
+msgid "Last name is required"
+msgstr "Nachname ist erforderlich"
 
 #. placeholder {0}: lastSyncTime.toLocaleTimeString()
 #: src/components/SyncStatusIndicator.tsx:132
@@ -1069,6 +1131,10 @@ msgstr "Verwalten Sie Ihre Geheimnisse und sensiblen Informationen auf sichere W
 msgid "Management Level"
 msgstr "Führungsebene"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:571
+msgid "Max 2MB, JPG or PNG"
+msgstr "Maximal 2MB, JPG oder PNG"
+
 #: src/components/ScopeAssignmentForm.tsx:504
 msgid "Maximum Assignable Rank"
 msgstr "Maximal zuordenbarer Rang"
@@ -1106,6 +1172,10 @@ msgstr "Minijob"
 msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:509
+msgid "Minimum 8 characters"
+msgstr "Mindestens 8 Zeichen"
+
 #: src/components/ScopeAssignmentForm.tsx:476
 msgid "Minimum Assignable Rank"
 msgstr "Minimaler zuweisbarer Rang"
@@ -1118,6 +1188,18 @@ msgstr "Minimal sichtbarer rang"
 #: src/components/ScopeAssignmentForm.tsx:172
 msgid "Minimum rank cannot be greater than maximum rank."
 msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:99
+msgid "Missing email address. Please use the link from your email."
+msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:95
+msgid "Missing onboarding token. Please use the link from your email."
+msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:91
+msgid "Missing token and email. Please use the link from your email."
+msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:303
 msgid "More options"
@@ -1383,9 +1465,22 @@ msgstr "Übergeordnete Einheit"
 msgid "Part Time"
 msgstr "Teilzeit"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:491
 #: src/pages/Secrets/SecretDetail.tsx:313
 msgid "Password"
 msgstr "Passwort"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:233
+msgid "Password is required"
+msgstr "Passwort ist erforderlich"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:235
+msgid "Password must be at least 8 characters"
+msgstr "Das Passwort muss mindestens 8 Zeichen lang sein"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:239
+msgid "Passwords do not match"
+msgstr "Passwörter stimmen nicht überein"
 
 #: src/components/OfflineSecretBadge.tsx:53
 msgid "Pending sync"
@@ -1427,6 +1522,10 @@ msgstr "Persönliche Informationen"
 #: src/pages/Sites/SiteEdit.tsx:367
 msgid "Phone"
 msgstr "Telefon"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:160
+msgid "Photo must be smaller than 2MB"
+msgstr "Das Foto muss kleiner als 2 MB sein"
 
 #: src/pages/Employees/EmployeeCreate.tsx:310
 #: src/pages/Employees/EmployeeDetail.tsx:101
@@ -1485,6 +1584,10 @@ msgstr "Fortschritt der Verarbeitung"
 msgid "Profile"
 msgstr "Profil"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:541
+msgid "Profile Photo (optional)"
+msgstr "Profilfoto (optional)"
+
 #: src/pages/Employees/EmployeeDetail.tsx:451
 msgid "Qualifications"
 msgstr "Qualifikationen"
@@ -1514,6 +1617,10 @@ msgstr "Region"
 #: src/components/NotificationPreferences.tsx:52
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:566
+msgid "Remove"
+msgstr "Entfernen"
 
 #: src/components/UploadStatus.tsx:137
 msgid "Removed {filename} from queue"
@@ -1605,11 +1712,11 @@ msgstr "Geheimnisse durchsuchen..."
 msgid "Search sites..."
 msgstr "Standorte suchen..."
 
-#: src/App.tsx:62
+#: src/App.tsx:65
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:83
+#: src/App.tsx:86
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
@@ -1943,6 +2050,10 @@ msgstr "Bis"
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:333
+msgid "Too many attempts. Please try again later."
+msgstr "Zu viele Versuche. Bitte versuchen Sie es später noch einmal."
+
 #: src/pages/Secrets/SecretList.tsx:130
 msgid "Try Again"
 msgstr "Erneut versuchen"
@@ -2063,6 +2174,10 @@ msgstr "Gültig von"
 msgid "Valid Until"
 msgstr "Gültig bis"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx:401
+msgid "Validating your link..."
+msgstr "Validierung Ihres Links..."
+
 #: src/components/ScopeAssignmentForm.tsx:431
 #: src/components/ScopeAssignmentForm.tsx:533
 msgid "Validation Error"
@@ -2088,7 +2203,7 @@ msgstr "Überprüfen..."
 msgid "View"
 msgstr "Anzeigen"
 
-#: src/App.tsx:66
+#: src/App.tsx:69
 msgid "View Secrets"
 msgstr "Geheimnisse ansehen"
 
@@ -2113,13 +2228,21 @@ msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein
 msgid "Warning"
 msgstr "Warnung"
 
-#: src/App.tsx:59
+#: src/App.tsx:62
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx:326
 msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:420
+msgid "Welcome to SecPal!"
+msgstr "Willkommen bei SecPal!"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:282
+msgid "Welcome to SecPal! Let's complete your profile."
+msgstr "Willkommen bei SecPal! Lassen Sie uns Ihr Profil vervollständigen."
 
 #: src/components/ScopeAssignmentForm.tsx:462
 msgid "Which rank range can this user ASSIGN or REMOVE?"

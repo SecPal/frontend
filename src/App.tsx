@@ -37,6 +37,11 @@ const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
 const OnboardingWizard = lazy(
   () => import("./pages/Onboarding/OnboardingWizard")
 );
+const OnboardingComplete = lazy(() =>
+  import("./pages/Onboarding/OnboardingComplete").then((m) => ({
+    default: m.OnboardingComplete,
+  }))
+);
 const OrganizationPage = lazy(
   () => import("./pages/Organization/OrganizationPage")
 );
@@ -103,6 +108,11 @@ function App() {
         <Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            {/* Onboarding Complete - PUBLIC route (no auth required) */}
+            <Route
+              path="/onboarding/complete"
+              element={<OnboardingComplete />}
+            />
             <Route
               path="/"
               element={

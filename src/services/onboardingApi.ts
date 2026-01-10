@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
-import { apiFetch } from "./csrf";
+import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
 /**
  * Onboarding Step
@@ -58,6 +58,51 @@ export interface OnboardingSubmissionData {
 }
 
 /**
+ * Onboarding completion request (magic link)
+ */
+export interface OnboardingCompleteData {
+  token: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+  password_confirmation: string;
+  photo?: File;
+}
+
+/**
+ * Onboarding token validation response (for prefilling form)
+ */
+export interface OnboardingTokenValidationResponse {
+  data: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+}
+
+/**
+ * Onboarding completion response
+ */
+export interface OnboardingCompleteResponse {
+  message: string;
+  data: {
+    token: string;
+    user: {
+      id: number;
+      email: string;
+      name: string;
+    };
+    employee: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      status: string;
+    };
+  };
+}
+
+/**
  * Get onboarding steps for current pre-contract user
  */
 export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
@@ -78,6 +123,98 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
     throw new Error("Failed to parse onboarding steps response");
   }
   return data.data;
+}
+
+/**
+ * Validate onboarding token and get employee data for prefilling
+ *
+ * GET /v1/onboarding/validate-token?token=xxx&email=xxx (public endpoint, no auth)
+ *
+ * Security: Both token AND email must match to prevent token hijacking.
+ *
+ * @param token - Onboarding token from magic link
+ * @param email - Email address from magic link
+ * @returns Employee data for prefilling form (first_name, last_name, email)
+ * @throws Error if token is invalid, expired, or email doesn't match
+ */
+export async function validateOnboardingToken(
+  token: string,
+  email: string
+): Promise<OnboardingTokenValidationResponse> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/validate-token?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || "Invalid or expired onboarding token");
+  }
+
+  return response.json();
+}
+
+/**
+ * Complete onboarding with magic link token
+ *
+ * POST /v1/onboarding/complete (public endpoint, no auth)
+ *
+ * @param data - Onboarding completion data including token, credentials, and optional photo
+ * @returns Response containing Sanctum token and user/employee data
+ * @throws Error if onboarding fails (invalid token, validation errors, etc.)
+ */
+export async function completeOnboarding(
+  data: OnboardingCompleteData
+): Promise<OnboardingCompleteResponse> {
+  // Fetch CSRF cookie first (required by Laravel Sanctum SPA auth)
+  const csrfResponse = await fetch(`${apiConfig.baseUrl}/sanctum/csrf-cookie`, {
+    credentials: "include",
+  });
+
+  if (!csrfResponse.ok) {
+    throw new Error("Failed to fetch CSRF token");
+  }
+
+  const formData = new FormData();
+
+  formData.append("token", data.token);
+  formData.append("email", data.email);
+  formData.append("first_name", data.first_name);
+  formData.append("last_name", data.last_name);
+  formData.append("password", data.password);
+  formData.append("password_confirmation", data.password_confirmation);
+
+  if (data.photo) {
+    formData.append("photo", data.photo);
+  }
+
+  // Get CSRF token from cookie using centralized utility
+  const token = getCsrfTokenFromCookie();
+
+  const response = await fetch(`${apiConfig.baseUrl}/v1/onboarding/complete`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+    headers: token ? { "X-XSRF-TOKEN": token } : {},
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+    }));
+    throw {
+      response: {
+        status: response.status,
+        data: error,
+      },
+    };
+  }
+
+  return response.json();
 }
 
 /**
