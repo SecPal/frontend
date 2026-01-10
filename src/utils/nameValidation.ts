@@ -70,7 +70,7 @@ export interface NameValidationResult {
   similarity: number;
   severity: ValidationSeverity;
   allowed: boolean;
-  message: string;
+  messageKey: "minor" | "medium" | "major";
 }
 
 /**
@@ -109,12 +109,11 @@ export function calculateNameSimilarity(
 
 /**
  * Validate a name change and determine if it's allowed
- * Returns validation result with severity and message
+ * Returns validation result with severity and messageKey for translation in component
  */
 export function validateNameChange(
   oldName: string,
-  newName: string,
-  fieldLabel: string
+  newName: string
 ): NameValidationResult {
   const similarity = calculateNameSimilarity(oldName, newName);
 
@@ -124,7 +123,7 @@ export function validateNameChange(
       similarity,
       severity: "minor",
       allowed: true,
-      message: `${fieldLabel} appears to be a minor correction (${similarity}% similar).`,
+      messageKey: "minor",
     };
   }
 
@@ -134,7 +133,7 @@ export function validateNameChange(
       similarity,
       severity: "medium",
       allowed: true,
-      message: `${fieldLabel} has changed significantly (${similarity}% similar). HR will be notified for verification.`,
+      messageKey: "medium",
     };
   }
 
@@ -143,6 +142,6 @@ export function validateNameChange(
     similarity,
     severity: "major",
     allowed: false,
-    message: `This ${fieldLabel.toLowerCase()} change is too significant (${similarity}% similar). Please contact HR to update your name before completing onboarding.`,
+    messageKey: "major",
   };
 }

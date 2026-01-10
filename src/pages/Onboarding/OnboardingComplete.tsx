@@ -95,8 +95,16 @@ export function OnboardingComplete() {
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
   const [nameChangeConfirmed, setNameChangeConfirmed] = useState(false);
   const [nameValidation, setNameValidation] = useState<{
-    firstName: { severity: ValidationSeverity; message: string } | null;
-    lastName: { severity: ValidationSeverity; message: string } | null;
+    firstName: {
+      severity: ValidationSeverity;
+      messageKey: string;
+      similarity: number;
+    } | null;
+    lastName: {
+      severity: ValidationSeverity;
+      messageKey: string;
+      similarity: number;
+    } | null;
   }>({ firstName: null, lastName: null });
   const fileReaderRef = useRef<FileReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -111,35 +119,54 @@ export function OnboardingComplete() {
     const firstNameResult =
       formData.first_name.trim() &&
       formData.first_name.trim() !== originalNames.first_name.trim()
-        ? validateNameChange(
-            originalNames.first_name,
-            formData.first_name,
-            "First name"
-          )
+        ? validateNameChange(originalNames.first_name, formData.first_name)
         : null;
 
     const lastNameResult =
       formData.last_name.trim() &&
       formData.last_name.trim() !== originalNames.last_name.trim()
-        ? validateNameChange(
-            originalNames.last_name,
-            formData.last_name,
-            "Last name"
-          )
+        ? validateNameChange(originalNames.last_name, formData.last_name)
         : null;
 
     setNameValidation({
       firstName: firstNameResult
         ? {
             severity: firstNameResult.severity,
-            message: firstNameResult.message,
+            messageKey: firstNameResult.messageKey,
+            similarity: firstNameResult.similarity,
           }
         : null,
       lastName: lastNameResult
-        ? { severity: lastNameResult.severity, message: lastNameResult.message }
+        ? {
+            severity: lastNameResult.severity,
+            messageKey: lastNameResult.messageKey,
+            similarity: lastNameResult.similarity,
+          }
         : null,
     });
   }, [formData.first_name, formData.last_name, originalNames]);
+
+  // Helper function to get translated validation message
+  const getValidationMessage = (
+    fieldName: string,
+    messageKey: string,
+    similarity: number
+  ): string => {
+    if (messageKey === "minor") {
+      return _(
+        msg`${fieldName} appears to be a minor correction (${similarity}% similar).`
+      );
+    } else if (messageKey === "medium") {
+      return _(
+        msg`${fieldName} has changed significantly (${similarity}% similar). HR will be notified for verification.`
+      );
+    } else {
+      // major
+      return _(
+        msg`This ${fieldName.toLowerCase()} change is too significant (${similarity}% similar). Please contact HR to update your name before completing onboarding.`
+      );
+    }
+  };
 
   // Validate token and prefill form on mount
   useEffect(() => {
@@ -672,7 +699,11 @@ export function OnboardingComplete() {
                 }`}
               >
                 {nameValidation.firstName.severity === "major" && "⚠️ "}
-                {nameValidation.firstName.message}
+                {getValidationMessage(
+                  "first name",
+                  nameValidation.firstName.messageKey,
+                  nameValidation.firstName.similarity
+                )}
               </Text>
             )}
             {errors.first_name && (
@@ -714,7 +745,11 @@ export function OnboardingComplete() {
                 }`}
               >
                 {nameValidation.lastName.severity === "major" && "⚠️ "}
-                {nameValidation.lastName.message}
+                {getValidationMessage(
+                  "last name",
+                  nameValidation.lastName.messageKey,
+                  nameValidation.lastName.similarity
+                )}
               </Text>
             )}
             {errors.last_name && (
