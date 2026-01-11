@@ -763,7 +763,11 @@ describe("OnboardingComplete", () => {
         message: "Success",
         data: {
           token: "session-token",
-          user: { id: 1, email: "max@example.com", name: "Maximilian Mustermann" },
+          user: {
+            id: 1,
+            email: "max@example.com",
+            name: "Maximilian Mustermann",
+          },
         },
       });
 
