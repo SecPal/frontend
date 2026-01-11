@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 Timo Förster <tfoerster@webdad.eu>
+// SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
