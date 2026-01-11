@@ -146,6 +146,17 @@ export function OnboardingComplete() {
     });
   }, [formData.first_name, formData.last_name, originalNames]);
 
+  // Helper function to get severity-based CSS classes
+  const getSeverityClassName = (severity: ValidationSeverity): string => {
+    if (severity === "major") {
+      return "text-red-600 dark:text-red-400 font-medium";
+    }
+    if (severity === "medium") {
+      return "text-amber-600 dark:text-amber-400";
+    }
+    return "text-blue-600 dark:text-blue-400";
+  };
+
   // Helper function to get translated validation message
   const getValidationMessage = (
     fieldName: string,
@@ -690,13 +701,7 @@ export function OnboardingComplete() {
               )}
             {nameValidation.firstName && (
               <Text
-                className={`text-sm mt-1 ${
-                  nameValidation.firstName.severity === "major"
-                    ? "text-red-600 dark:text-red-400 font-medium"
-                    : nameValidation.firstName.severity === "medium"
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-blue-600 dark:text-blue-400"
-                }`}
+                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.firstName.severity)}`}
               >
                 {nameValidation.firstName.severity === "major" && "⚠️ "}
                 {getValidationMessage(
@@ -736,13 +741,7 @@ export function OnboardingComplete() {
               )}
             {nameValidation.lastName && (
               <Text
-                className={`text-sm mt-1 ${
-                  nameValidation.lastName.severity === "major"
-                    ? "text-red-600 dark:text-red-400 font-medium"
-                    : nameValidation.lastName.severity === "medium"
-                      ? "text-amber-600 dark:text-amber-400"
-                      : "text-blue-600 dark:text-blue-400"
-                }`}
+                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.lastName.severity)}`}
               >
                 {nameValidation.lastName.severity === "major" && "⚠️ "}
                 {getValidationMessage(
