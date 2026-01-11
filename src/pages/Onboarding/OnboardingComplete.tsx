@@ -10,6 +10,13 @@ import { Input } from "../../components/input";
 import { Field, Label, FieldGroup } from "../../components/fieldset";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
+import {
+  Dialog,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogActions,
+} from "../../components/dialog";
 import { AuthLayout } from "../../components/auth-layout";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
@@ -19,6 +26,10 @@ import {
   validateOnboardingToken,
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
+import {
+  validateNameChange,
+  type ValidationSeverity,
+} from "../../utils/nameValidation";
 
 interface FormData {
   first_name: string;
@@ -71,12 +82,102 @@ export function OnboardingComplete() {
     password_confirmation: "",
   });
 
+  // Track original names from backend for change detection
+  const [originalNames, setOriginalNames] = useState<{
+    first_name: string;
+    last_name: string;
+  }>({ first_name: "", last_name: "" });
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingToken, setLoadingToken] = useState(true);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
+  const [nameChangeConfirmed, setNameChangeConfirmed] = useState(false);
+  const [nameValidation, setNameValidation] = useState<{
+    firstName: {
+      severity: ValidationSeverity;
+      messageKey: string;
+      similarity: number;
+    } | null;
+    lastName: {
+      severity: ValidationSeverity;
+      messageKey: string;
+      similarity: number;
+    } | null;
+  }>({ firstName: null, lastName: null });
   const fileReaderRef = useRef<FileReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Validate names whenever form data changes
+  useEffect(() => {
+    if (!originalNames.first_name && !originalNames.last_name) {
+      // No original names loaded yet
+      return;
+    }
+
+    const firstNameResult =
+      formData.first_name.trim() &&
+      formData.first_name.trim() !== originalNames.first_name.trim()
+        ? validateNameChange(originalNames.first_name, formData.first_name)
+        : null;
+
+    const lastNameResult =
+      formData.last_name.trim() &&
+      formData.last_name.trim() !== originalNames.last_name.trim()
+        ? validateNameChange(originalNames.last_name, formData.last_name)
+        : null;
+
+    setNameValidation({
+      firstName: firstNameResult
+        ? {
+            severity: firstNameResult.severity,
+            messageKey: firstNameResult.messageKey,
+            similarity: firstNameResult.similarity,
+          }
+        : null,
+      lastName: lastNameResult
+        ? {
+            severity: lastNameResult.severity,
+            messageKey: lastNameResult.messageKey,
+            similarity: lastNameResult.similarity,
+          }
+        : null,
+    });
+  }, [formData.first_name, formData.last_name, originalNames]);
+
+  // Helper function to get severity-based CSS classes
+  const getSeverityClassName = (severity: ValidationSeverity): string => {
+    if (severity === "major") {
+      return "text-red-600 dark:text-red-400 font-medium";
+    }
+    if (severity === "medium") {
+      return "text-amber-600 dark:text-amber-400";
+    }
+    return "text-blue-600 dark:text-blue-400";
+  };
+
+  // Helper function to get translated validation message
+  const getValidationMessage = (
+    fieldName: string,
+    messageKey: string,
+    similarity: number
+  ): string => {
+    if (messageKey === "minor") {
+      return _(
+        msg`${fieldName} appears to be a minor correction (${similarity}% similar).`
+      );
+    } else if (messageKey === "medium") {
+      return _(
+        msg`${fieldName} has changed significantly (${similarity}% similar). HR will be notified for verification.`
+      );
+    } else {
+      // major
+      return _(
+        msg`This ${fieldName.toLowerCase()} change is too significant (${similarity}% similar). Please contact HR to update your name before completing onboarding.`
+      );
+    }
+  };
 
   // Validate token and prefill form on mount
   useEffect(() => {
@@ -109,6 +210,12 @@ export function OnboardingComplete() {
       // Validate token and get employee data for prefilling
       try {
         const response = await validateOnboardingToken(token, email);
+
+        // Store original names for change detection
+        setOriginalNames({
+          first_name: response.data.first_name || "",
+          last_name: response.data.last_name || "",
+        });
 
         // Prefill form with existing employee data
         setFormData((prev) => ({
@@ -242,15 +349,11 @@ export function OnboardingComplete() {
   };
 
   /**
-   * Handle form submission
+   * Perform actual API submission
    */
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+  const performSubmission = async () => {
+    // Close dialog if open
+    setShowNameChangeWarning(false);
     setLoading(true);
     setErrors({});
 
@@ -283,6 +386,9 @@ export function OnboardingComplete() {
       });
     } catch (error: unknown) {
       console.error("Onboarding completion failed:", error);
+
+      // Reset name change confirmation on error
+      setNameChangeConfirmed(false);
 
       // Type guard for error with response property
       const isApiError = (
@@ -351,6 +457,60 @@ export function OnboardingComplete() {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    // Check if names were changed (only check if original names were loaded from backend)
+    const hasLoadedOriginalNames =
+      originalNames.first_name.trim() !== "" ||
+      originalNames.last_name.trim() !== "";
+    const firstNameChanged =
+      hasLoadedOriginalNames &&
+      formData.first_name.trim() !== "" &&
+      formData.first_name.trim() !== originalNames.first_name.trim();
+    const lastNameChanged =
+      hasLoadedOriginalNames &&
+      formData.last_name.trim() !== "" &&
+      formData.last_name.trim() !== originalNames.last_name.trim();
+
+    // Check validation results - block major changes
+    const hasMajorChange =
+      nameValidation.firstName?.severity === "major" ||
+      nameValidation.lastName?.severity === "major";
+
+    if (hasMajorChange) {
+      // Don't submit - major changes are blocked
+      return;
+    }
+
+    // Only show warning dialog for medium changes (50-80% similarity)
+    const hasMediumChange =
+      nameValidation.firstName?.severity === "medium" ||
+      nameValidation.lastName?.severity === "medium";
+
+    // Show warning dialog if medium change and user hasn't confirmed yet
+    if (
+      (firstNameChanged || lastNameChanged) &&
+      hasMediumChange &&
+      !nameChangeConfirmed &&
+      !loading &&
+      Object.keys(errors).length === 0
+    ) {
+      setShowNameChangeWarning(true);
+      return; // Stop submission, wait for user confirmation
+    }
+
+    // If we reach here, either no name change, minor change, or user confirmed - proceed with submission
+    await performSubmission();
   };
 
   // If no token or email, show error immediately
@@ -422,7 +582,11 @@ export function OnboardingComplete() {
         </Text>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-8"
+        data-onboarding-form="true"
+      >
         {errors.general && (
           <div className="mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <Text className="text-red-800 dark:text-red-200">
@@ -430,6 +594,81 @@ export function OnboardingComplete() {
             </Text>
           </div>
         )}
+
+        {/* Name Change Warning Dialog - Catalyst */}
+        <Dialog
+          open={showNameChangeWarning && !loading}
+          onClose={() => setShowNameChangeWarning(false)}
+        >
+          <DialogTitle>
+            <span className="text-amber-600 dark:text-amber-400 mr-2">⚠️</span>
+            <Trans>Name Change Detected</Trans>
+          </DialogTitle>
+          <DialogDescription>
+            <Trans>
+              You have changed your name from what was initially entered. HR
+              will be notified of this change for verification.
+            </Trans>
+          </DialogDescription>
+          <DialogBody>
+            {formData.first_name.trim() !== originalNames.first_name.trim() && (
+              <Text className="text-sm text-zinc-700 dark:text-zinc-300">
+                <strong>
+                  <Trans>First Name:</Trans>
+                </strong>{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {originalNames.first_name}
+                </span>{" "}
+                →{" "}
+                <span className="text-zinc-900 dark:text-zinc-100 font-medium">
+                  {formData.first_name}
+                </span>
+              </Text>
+            )}
+            {formData.last_name.trim() !== originalNames.last_name.trim() && (
+              <Text className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <strong>
+                  <Trans>Last Name:</Trans>
+                </strong>{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {originalNames.last_name}
+                </span>{" "}
+                →{" "}
+                <span className="text-zinc-900 dark:text-zinc-100 font-medium">
+                  {formData.last_name}
+                </span>
+              </Text>
+            )}
+          </DialogBody>
+          <DialogActions>
+            <Button
+              plain
+              onClick={() => {
+                // Reset to original names
+                setFormData((prev) => ({
+                  ...prev,
+                  first_name: originalNames.first_name,
+                  last_name: originalNames.last_name,
+                }));
+                setShowNameChangeWarning(false);
+                setNameChangeConfirmed(false);
+              }}
+            >
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button
+              color="amber"
+              onClick={async () => {
+                // User confirmed - set flag, close dialog and submit
+                setNameChangeConfirmed(true);
+                setShowNameChangeWarning(false);
+                await performSubmission();
+              }}
+            >
+              <Trans>Confirm and Continue</Trans>
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <FieldGroup>
           {/* First Name - BewachV §16 requires all first names */}
@@ -454,6 +693,24 @@ export function OnboardingComplete() {
                 "Hans-Peter Friedrich")
               </Trans>
             </Text>
+            {originalNames.first_name &&
+              formData.first_name !== originalNames.first_name && (
+                <Text className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                  ℹ️ <Trans>Original:</Trans> {originalNames.first_name}
+                </Text>
+              )}
+            {nameValidation.firstName && (
+              <Text
+                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.firstName.severity)}`}
+              >
+                {nameValidation.firstName.severity === "major" && "⚠️ "}
+                {getValidationMessage(
+                  "first name",
+                  nameValidation.firstName.messageKey,
+                  nameValidation.firstName.similarity
+                )}
+              </Text>
+            )}
             {errors.first_name && (
               <Text className="text-sm text-red-600 dark:text-red-400 mt-1">
                 {errors.first_name}
@@ -476,6 +733,24 @@ export function OnboardingComplete() {
               disabled={loading}
               invalid={!!errors.last_name}
             />
+            {originalNames.last_name &&
+              formData.last_name !== originalNames.last_name && (
+                <Text className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                  ℹ️ <Trans>Original:</Trans> {originalNames.last_name}
+                </Text>
+              )}
+            {nameValidation.lastName && (
+              <Text
+                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.lastName.severity)}`}
+              >
+                {nameValidation.lastName.severity === "major" && "⚠️ "}
+                {getValidationMessage(
+                  "last name",
+                  nameValidation.lastName.messageKey,
+                  nameValidation.lastName.similarity
+                )}
+              </Text>
+            )}
             {errors.last_name && (
               <Text className="text-sm text-red-600 mt-1">
                 {errors.last_name}
@@ -578,7 +853,11 @@ export function OnboardingComplete() {
               type="submit"
               color="indigo"
               className="w-full"
-              disabled={loading}
+              disabled={
+                loading ||
+                nameValidation.firstName?.severity === "major" ||
+                nameValidation.lastName?.severity === "major"
+              }
             >
               {loading ? (
                 <Trans>Completing Setup...</Trans>
@@ -586,6 +865,16 @@ export function OnboardingComplete() {
                 <Trans>Complete Account Setup</Trans>
               )}
             </Button>
+            {(nameValidation.firstName?.severity === "major" ||
+              nameValidation.lastName?.severity === "major") && (
+              <Text className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
+                ⚠️{" "}
+                <Trans>
+                  Name change too significant. Please contact HR before
+                  completing onboarding.
+                </Trans>
+              </Text>
+            )}
           </div>
 
           {/* Help Text */}

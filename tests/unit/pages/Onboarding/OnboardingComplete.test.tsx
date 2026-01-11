@@ -53,10 +53,11 @@ describe("OnboardingComplete", () => {
     vi.clearAllMocks();
 
     // Mock validateOnboardingToken to return employee data
+    // Using John/Doe to match test data and avoid triggering name change dialog
     vi.mocked(onboardingApi.validateOnboardingToken).mockResolvedValue({
       data: {
-        first_name: "Max",
-        last_name: "Mustermann",
+        first_name: "John",
+        last_name: "Doe",
         email: "test@example.com",
       },
     });
