@@ -101,7 +101,7 @@
     "jsdom-testing-mocks": "^1.16.0",
     "lighthouse": "^13.0.1",
     "playwright-lighthouse": "^4.0.0",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.0",
     "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.7.3",
