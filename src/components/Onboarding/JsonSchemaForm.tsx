@@ -7,6 +7,13 @@ import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import type { ReactNode } from "react";
 import { Trans } from "@lingui/macro";
 import { Button } from "../button";
+import {
+  FieldTemplate,
+  TextWidget,
+  SelectWidget,
+  ArrayFieldTemplate,
+  ObjectFieldTemplate,
+} from "./RJSFTemplates";
 
 interface JsonSchemaFormProps {
   schema: RJSFSchema;
@@ -40,7 +47,7 @@ export function JsonSchemaForm({
   }
 
   return (
-    <div className="json-schema-form">
+    <div className="json-schema-form space-y-6">
       <Form
         schema={schema}
         uiSchema={uiSchema}
@@ -49,8 +56,17 @@ export function JsonSchemaForm({
         onSubmit={handleSubmit}
         disabled={disabled}
         noHtml5Validate
+        templates={{
+          FieldTemplate,
+          ArrayFieldTemplate,
+          ObjectFieldTemplate,
+        }}
+        widgets={{
+          TextWidget,
+          SelectWidget,
+        }}
       >
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
           {onSaveDraft && (
             <Button
               type="button"
