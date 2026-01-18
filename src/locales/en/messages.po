@@ -204,6 +204,10 @@ msgstr "Add Child Unit"
 msgid "Add Employee"
 msgstr "Add Employee"
 
+#: src/components/Onboarding/RJSFTemplates.tsx:378
+msgid "Add Item"
+msgstr "Add Item"
+
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
@@ -686,7 +690,7 @@ msgid "Division"
 msgstr "Division"
 
 #: src/pages/Employees/EmployeeDetail.tsx:464
-#: src/pages/Onboarding/OnboardingWizard.tsx:328
+#: src/pages/Onboarding/OnboardingWizard.tsx:341
 msgid "Documents"
 msgstr "Documents"
 
@@ -1163,7 +1167,7 @@ msgstr "Loading employee..."
 msgid "Loading employees..."
 msgstr "Loading employees..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:255
+#: src/pages/Onboarding/OnboardingWizard.tsx:266
 msgid "Loading onboarding..."
 msgstr "Loading onboarding..."
 
@@ -1415,7 +1419,7 @@ msgstr "New Site"
 #: src/pages/Customers/CustomersPage.tsx:268
 #: src/pages/Employees/EmployeeList.tsx:325
 #: src/pages/Employees/EmployeeList.tsx:367
-#: src/pages/Onboarding/OnboardingWizard.tsx:317
+#: src/pages/Onboarding/OnboardingWizard.tsx:330
 #: src/pages/Sites/SitesPage.tsx:264
 #: src/pages/Sites/SitesPage.tsx:306
 msgid "Next"
@@ -1724,7 +1728,7 @@ msgstr "Preview not available for this file type."
 #: src/pages/Customers/CustomersPage.tsx:260
 #: src/pages/Employees/EmployeeList.tsx:318
 #: src/pages/Employees/EmployeeList.tsx:359
-#: src/pages/Onboarding/OnboardingWizard.tsx:357
+#: src/pages/Onboarding/OnboardingWizard.tsx:370
 #: src/pages/Sites/SitesPage.tsx:257
 #: src/pages/Sites/SitesPage.tsx:298
 msgid "Previous"
@@ -1776,6 +1780,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
 
+#: src/components/Onboarding/RJSFTemplates.tsx:369
 #: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Remove"
@@ -1823,7 +1828,7 @@ msgstr "Save"
 msgid "Save Changes"
 msgstr "Save Changes"
 
-#: src/components/Onboarding/JsonSchemaForm.tsx:61
+#: src/components/Onboarding/JsonSchemaForm.tsx:93
 msgid "Save Draft"
 msgstr "Save Draft"
 
@@ -2100,11 +2105,11 @@ msgstr "Street"
 msgid "Subject"
 msgstr "Subject"
 
-#: src/components/Onboarding/JsonSchemaForm.tsx:65
+#: src/components/Onboarding/JsonSchemaForm.tsx:97
 msgid "Submit"
 msgstr "Submit"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:315
+#: src/pages/Onboarding/OnboardingWizard.tsx:328
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
@@ -2297,7 +2302,7 @@ msgstr "Updated"
 msgid "Updating..."
 msgstr "Updating..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 msgid "Upload"
 msgstr "Upload"
 
@@ -2306,13 +2311,13 @@ msgid "Upload Queue"
 msgstr "Upload Queue"
 
 #. placeholder {0}: uploadedFile.filename
-#: src/pages/Onboarding/OnboardingWizard.tsx:95
+#: src/pages/Onboarding/OnboardingWizard.tsx:97
 msgid "Uploaded: {0}"
 msgstr "Uploaded: {0}"
 
 #: src/components/AttachmentUpload.tsx:210
 #: src/components/AttachmentUpload.tsx:252
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 #: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
 msgstr "Uploading..."
@@ -2418,7 +2423,7 @@ msgstr "Warning"
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:275
+#: src/pages/Onboarding/OnboardingWizard.tsx:286
 msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
 

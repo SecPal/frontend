@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-01-18 02:08+0100\n"
+"POT-Creation-Date: 2026-01-18 11:28+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -117,6 +117,10 @@ msgstr "Untergeordnete Einheit hinzufügen"
 #: src/pages/Employees/EmployeeList.tsx:157
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
+
+#: src/components/Onboarding/RJSFTemplates.tsx:378
+msgid "Add Item"
+msgstr "Feld hinzufügen"
 
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
@@ -599,7 +603,7 @@ msgid "Division"
 msgstr "Abteilung"
 
 #: src/pages/Employees/EmployeeDetail.tsx:464
-#: src/pages/Onboarding/OnboardingWizard.tsx:328
+#: src/pages/Onboarding/OnboardingWizard.tsx:341
 msgid "Documents"
 msgstr "Dokumente"
 
@@ -1068,7 +1072,7 @@ msgstr "Mitarbeiter laden..."
 msgid "Loading employees..."
 msgstr "Mitarbeiter laden..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:255
+#: src/pages/Onboarding/OnboardingWizard.tsx:266
 msgid "Loading onboarding..."
 msgstr "Onboarding laden..."
 
@@ -1295,7 +1299,7 @@ msgstr "neue übergeordnete Einheit"
 #: src/pages/Customers/CustomersPage.tsx:268
 #: src/pages/Employees/EmployeeList.tsx:325
 #: src/pages/Employees/EmployeeList.tsx:367
-#: src/pages/Onboarding/OnboardingWizard.tsx:317
+#: src/pages/Onboarding/OnboardingWizard.tsx:330
 #: src/pages/Sites/SitesPage.tsx:264
 #: src/pages/Sites/SitesPage.tsx:306
 msgid "Next"
@@ -1589,7 +1593,7 @@ msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 #: src/pages/Customers/CustomersPage.tsx:260
 #: src/pages/Employees/EmployeeList.tsx:318
 #: src/pages/Employees/EmployeeList.tsx:359
-#: src/pages/Onboarding/OnboardingWizard.tsx:357
+#: src/pages/Onboarding/OnboardingWizard.tsx:370
 #: src/pages/Sites/SitesPage.tsx:257
 #: src/pages/Sites/SitesPage.tsx:298
 msgid "Previous"
@@ -1641,6 +1645,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
+#: src/components/Onboarding/RJSFTemplates.tsx:369
 #: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Entfernen"
@@ -1688,7 +1693,7 @@ msgstr "Speichern"
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
-#: src/components/Onboarding/JsonSchemaForm.tsx:61
+#: src/components/Onboarding/JsonSchemaForm.tsx:93
 msgid "Save Draft"
 msgstr "Entwurf speichern"
 
@@ -1965,11 +1970,11 @@ msgstr "Straße"
 msgid "Subject"
 msgstr "Thema"
 
-#: src/components/Onboarding/JsonSchemaForm.tsx:65
+#: src/components/Onboarding/JsonSchemaForm.tsx:97
 msgid "Submit"
-msgstr ""
+msgstr "Einreichen"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:315
+#: src/pages/Onboarding/OnboardingWizard.tsx:328
 msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
 
@@ -2152,7 +2157,7 @@ msgstr "Aktualisiert"
 msgid "Updating..."
 msgstr "Aktualisiere ..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -2161,13 +2166,13 @@ msgid "Upload Queue"
 msgstr "Upload-Warteschlange"
 
 #. placeholder {0}: uploadedFile.filename
-#: src/pages/Onboarding/OnboardingWizard.tsx:95
+#: src/pages/Onboarding/OnboardingWizard.tsx:97
 msgid "Uploaded: {0}"
 msgstr "Hochgeladen: {0}"
 
 #: src/components/AttachmentUpload.tsx:210
 #: src/components/AttachmentUpload.tsx:252
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 #: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
 msgstr "Hochladen..."
@@ -2264,7 +2269,7 @@ msgstr "Warnung"
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:275
+#: src/pages/Onboarding/OnboardingWizard.tsx:286
 msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
 

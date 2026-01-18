@@ -15,6 +15,7 @@ import { Select } from "../select";
 import { Textarea } from "../textarea";
 import { Button } from "../button";
 import { Trans } from "@lingui/macro";
+import { translateSchemaLabel } from "./schemaTranslations";
 
 /**
  * Custom Field Template using Catalyst components
@@ -44,14 +45,24 @@ export function FieldTemplate(props: FieldTemplateProps) {
     <Field>
       {label && (
         <Label>
-          {label}
+          {translateSchemaLabel(label)}
           {required && <span className="text-red-600 ml-1">*</span>}
         </Label>
       )}
-      {description && <Description>{description}</Description>}
+      {description && (
+        <Description>
+          {typeof description === "string"
+            ? translateSchemaLabel(description)
+            : description}
+        </Description>
+      )}
       {children}
       {errors && <ErrorMessage>{errors}</ErrorMessage>}
-      {help && <Description>{help}</Description>}
+      {help && (
+        <Description>
+          {typeof help === "string" ? translateSchemaLabel(help) : help}
+        </Description>
+      )}
     </Field>
   );
 }
@@ -155,10 +166,12 @@ export function SelectWidget(props: WidgetProps) {
       onBlur={() => onBlur(id, value)}
       onFocus={() => onFocus(id, value)}
     >
-      {placeholder && <option value="">{placeholder}</option>}
+      {placeholder && (
+        <option value="">{translateSchemaLabel(placeholder)}</option>
+      )}
       {enumOptions?.map((option) => (
         <option key={option.value} value={option.value}>
-          {option.label}
+          {translateSchemaLabel(option.label)}
         </option>
       ))}
     </Select>
@@ -262,16 +275,8 @@ export function URLWidget(props: WidgetProps) {
  * Custom Date Widget using Catalyst Input with date type
  */
 export function DateWidget(props: WidgetProps) {
-  const {
-    id,
-    value,
-    required,
-    disabled,
-    readonly,
-    onChange,
-    onBlur,
-    onFocus,
-  } = props;
+  const { id, value, required, disabled, readonly, onChange, onBlur, onFocus } =
+    props;
 
   return (
     <Input
@@ -291,16 +296,8 @@ export function DateWidget(props: WidgetProps) {
  * Custom DateTime Widget using Catalyst Input with datetime-local type
  */
 export function DateTimeWidget(props: WidgetProps) {
-  const {
-    id,
-    value,
-    required,
-    disabled,
-    readonly,
-    onChange,
-    onBlur,
-    onFocus,
-  } = props;
+  const { id, value, required, disabled, readonly, onChange, onBlur, onFocus } =
+    props;
 
   return (
     <Input
@@ -326,7 +323,7 @@ export function TitleField(props: TitleFieldProps) {
 
   return (
     <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
-      {title}
+      {translateSchemaLabel(title)}
       {required && <span className="text-red-600 ml-1">*</span>}
     </h3>
   );
@@ -340,9 +337,13 @@ export function DescriptionField(props: DescriptionFieldProps) {
 
   if (!description) return null;
 
+  const translatedDesc = typeof description === "string" 
+    ? translateSchemaLabel(description) 
+    : description;
+
   return (
     <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-1">
-      {description}
+      {translatedDesc}
     </p>
   );
 }
@@ -357,7 +358,7 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
     <div className="space-y-4">
       {title && (
         <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
-          {title}
+          {translateSchemaLabel(title)}
         </h3>
       )}
       <div className="space-y-4">
@@ -410,12 +411,14 @@ export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
         <div>
           {title && (
             <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
-              {title}
+              {translateSchemaLabel(title)}
             </h3>
           )}
           {description && (
             <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-2">
-              {description}
+              {typeof description === "string"
+                ? translateSchemaLabel(description)
+                : description}
             </p>
           )}
         </div>

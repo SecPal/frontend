@@ -78,7 +78,9 @@ function FileUpload({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </label>
       <div className="flex items-center gap-4">
         <input
           type="file"
@@ -302,7 +304,9 @@ export function OnboardingWizard() {
             </Heading>
 
             {template.description && (
-              <Text className="mb-6 text-gray-600 dark:text-gray-400">{template.description}</Text>
+              <Text className="mb-6 text-gray-600 dark:text-gray-400">
+                {template.description}
+              </Text>
             )}
 
             {/* JSON Schema Form */}
