@@ -10,6 +10,7 @@ import { Button } from "../button";
 import {
   FieldTemplate,
   TextWidget,
+  PasswordWidget,
   SelectWidget,
   TextareaWidget,
   ArrayFieldTemplate,
@@ -68,6 +69,7 @@ export function JsonSchemaForm({
         }}
         widgets={{
           TextWidget,
+          PasswordWidget,
           SelectWidget,
           TextareaWidget,
         }}

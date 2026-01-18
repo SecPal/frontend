@@ -96,6 +96,37 @@ export function TextWidget(props: WidgetProps) {
 }
 
 /**
+ * Custom Password Widget using Catalyst Input
+ */
+export function PasswordWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+    placeholder,
+  } = props;
+
+  return (
+    <Input
+      id={id}
+      type="password"
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+      placeholder={placeholder}
+    />
+  );
+}
+
+/**
  * Custom Select Widget using Catalyst Select
  */
 export function SelectWidget(props: WidgetProps) {
@@ -170,7 +201,7 @@ export function TextareaWidget(props: WidgetProps) {
  */
 export function TitleField(props: TitleFieldProps) {
   const { title, required } = props;
-  
+
   if (!title) return null;
 
   return (
@@ -186,13 +217,13 @@ export function TitleField(props: TitleFieldProps) {
  */
 export function DescriptionField(props: DescriptionFieldProps) {
   const { description } = props;
-  
+
   if (!description) return null;
 
   return (
-    <Description className="text-zinc-600 dark:text-zinc-400">
+    <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-1">
       {description}
-    </Description>
+    </p>
   );
 }
 
@@ -263,9 +294,9 @@ export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
             </h3>
           )}
           {description && (
-            <Description className="mt-2 text-zinc-600 dark:text-zinc-400">
+            <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-2">
               {description}
-            </Description>
+            </p>
           )}
         </div>
       )}
