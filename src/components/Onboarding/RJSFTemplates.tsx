@@ -197,6 +197,126 @@ export function TextareaWidget(props: WidgetProps) {
 }
 
 /**
+ * Custom Email Widget using Catalyst Input with email type
+ */
+export function EmailWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+    placeholder,
+  } = props;
+
+  return (
+    <Input
+      id={id}
+      type="email"
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+      placeholder={placeholder}
+    />
+  );
+}
+
+/**
+ * Custom URL Widget using Catalyst Input with url type
+ */
+export function URLWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+    placeholder,
+  } = props;
+
+  return (
+    <Input
+      id={id}
+      type="url"
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+      placeholder={placeholder}
+    />
+  );
+}
+
+/**
+ * Custom Date Widget using Catalyst Input with date type
+ */
+export function DateWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+  } = props;
+
+  return (
+    <Input
+      id={id}
+      type="date"
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+    />
+  );
+}
+
+/**
+ * Custom DateTime Widget using Catalyst Input with datetime-local type
+ */
+export function DateTimeWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+  } = props;
+
+  return (
+    <Input
+      id={id}
+      type="datetime-local"
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+    />
+  );
+}
+
+/**
  * Custom Title Field with proper typography and color
  */
 export function TitleField(props: TitleFieldProps) {

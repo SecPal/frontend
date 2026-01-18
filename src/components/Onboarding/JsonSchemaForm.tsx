@@ -11,6 +11,10 @@ import {
   FieldTemplate,
   TextWidget,
   PasswordWidget,
+  EmailWidget,
+  URLWidget,
+  DateWidget,
+  DateTimeWidget,
   SelectWidget,
   TextareaWidget,
   ArrayFieldTemplate,
@@ -70,6 +74,10 @@ export function JsonSchemaForm({
         widgets={{
           TextWidget,
           PasswordWidget,
+          EmailWidget,
+          URLWidget,
+          DateWidget,
+          DateTimeWidget,
           SelectWidget,
           TextareaWidget,
         }}
