@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-01-10 22:40+0100\n"
+"POT-Creation-Date: 2026-01-18 13:13+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -117,6 +117,10 @@ msgstr "Untergeordnete Einheit hinzufügen"
 #: src/pages/Employees/EmployeeList.tsx:157
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
+
+#: src/components/Onboarding/RJSFTemplates.tsx:394
+msgid "Add Item"
+msgstr "Feld hinzufügen"
 
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
@@ -290,7 +294,7 @@ msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalak
 #: src/pages/Customers/CustomerEdit.tsx:305
 #: src/pages/Employees/EmployeeCreate.tsx:520
 #: src/pages/Employees/EmployeeEdit.tsx:571
-#: src/pages/Onboarding/OnboardingComplete.tsx:646
+#: src/pages/Onboarding/OnboardingComplete.tsx:657
 #: src/pages/Sites/SiteCreate.tsx:483
 #: src/pages/Sites/SiteDetail.tsx:377
 #: src/pages/Sites/SiteEdit.tsx:457
@@ -367,15 +371,15 @@ msgstr "Zusammenklappen"
 msgid "Company"
 msgstr "Unternehmen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:866
+#: src/pages/Onboarding/OnboardingComplete.tsx:865
 msgid "Complete Account Setup"
 msgstr "Vollständige Kontoeinrichtung"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:570
+#: src/pages/Onboarding/OnboardingComplete.tsx:581
 msgid "Complete your account setup to get started"
 msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:864
+#: src/pages/Onboarding/OnboardingComplete.tsx:863
 msgid "Completing Setup..."
 msgstr "Einrichtung abschließen..."
 
@@ -383,11 +387,11 @@ msgstr "Einrichtung abschließen..."
 msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:791
+#: src/pages/Onboarding/OnboardingComplete.tsx:790
 msgid "Confirm Password"
 msgstr "Bestätigen Sie Ihr Passwort"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:657
+#: src/pages/Onboarding/OnboardingComplete.tsx:668
 msgid "Confirm and Continue"
 msgstr "Bestätigen und fortfahren"
 
@@ -599,6 +603,7 @@ msgid "Division"
 msgstr "Abteilung"
 
 #: src/pages/Employees/EmployeeDetail.tsx:464
+#: src/pages/Onboarding/OnboardingWizard.tsx:341
 msgid "Documents"
 msgstr "Dokumente"
 
@@ -709,7 +714,7 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:680
+#: src/pages/Onboarding/OnboardingComplete.tsx:691
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
 
@@ -786,8 +791,8 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 msgid "Failed to clear uploads"
 msgstr "Uploads konnten nicht gelöscht werden"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:434
-#: src/pages/Onboarding/OnboardingComplete.tsx:442
+#: src/pages/Onboarding/OnboardingComplete.tsx:445
+#: src/pages/Onboarding/OnboardingComplete.tsx:453
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
 
@@ -815,7 +820,7 @@ msgstr "Vorschau konnte nicht geladen werden"
 msgid "Failed to move organizational unit"
 msgstr "Organisationseinheit konnte nicht verschoben werden"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:286
+#: src/pages/Onboarding/OnboardingComplete.tsx:297
 msgid "Failed to read file"
 msgstr "Datei konnte nicht gelesen werden"
 
@@ -835,11 +840,11 @@ msgstr "Upload-Wiederholungsversuch konnte nicht geplant werden"
 msgid "Failed to share secret"
 msgstr "Geheimnis teilen fehlgeschlagen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:222
+#: src/pages/Onboarding/OnboardingComplete.tsx:233
 msgid "Failed to validate onboarding link"
 msgstr "Onboarding-Link konnte nicht validiert werden"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:266
+#: src/pages/Onboarding/OnboardingComplete.tsx:277
 msgid "File must be an image"
 msgstr "Datei muss ein Bild sein"
 
@@ -865,21 +870,17 @@ msgstr "Nach Tag filtern"
 msgid "First Name"
 msgstr "Vorname"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:606
+#: src/pages/Onboarding/OnboardingComplete.tsx:617
 msgid "First Name:"
 msgstr "Vorname:"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:666
+#: src/pages/Onboarding/OnboardingComplete.tsx:677
 msgid "First Names (all)"
 msgstr "Vornamen (alle)"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:319
+#: src/pages/Onboarding/OnboardingComplete.tsx:330
 msgid "First name is required"
 msgstr "Vorname ist erforderlich"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx:382
-msgid "Form fields will be rendered based on schema"
-msgstr "Formularfelder werden basierend auf dem Schema gerendert"
 
 #: src/pages/Employees/EmployeeCreate.tsx:496
 msgid "Freelance"
@@ -905,7 +906,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Global"
 msgstr "Global"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:526
+#: src/pages/Onboarding/OnboardingComplete.tsx:537
 msgid "Go to Login"
 msgstr "Zum Login gehen"
 
@@ -972,7 +973,7 @@ msgstr "Startseite"
 msgid "Inactive"
 msgstr "Inaktiv"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:519
+#: src/pages/Onboarding/OnboardingComplete.tsx:530
 msgid "Invalid Link"
 msgstr "Ungültiger Link"
 
@@ -990,7 +991,7 @@ msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitneh
 msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
 msgstr "Ungültiger Dateityp: {0}. Nur Bilder, PDFs und Dokumente sind erlaubt."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:176
+#: src/pages/Onboarding/OnboardingComplete.tsx:187
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
 
@@ -1004,11 +1005,11 @@ msgstr "Sprache"
 
 #: src/pages/Employees/EmployeeCreate.tsx:221
 #: src/pages/Employees/EmployeeEdit.tsx:334
-#: src/pages/Onboarding/OnboardingComplete.tsx:719
+#: src/pages/Onboarding/OnboardingComplete.tsx:724
 msgid "Last Name"
 msgstr "Nachname"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:620
+#: src/pages/Onboarding/OnboardingComplete.tsx:631
 msgid "Last Name:"
 msgstr "Nachname:"
 
@@ -1023,7 +1024,7 @@ msgstr "Zuletzt aktualisiert"
 msgid "Last modified: {0}"
 msgstr "Zuletzt geändert: {0}"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:323
+#: src/pages/Onboarding/OnboardingComplete.tsx:334
 msgid "Last name is required"
 msgstr "Nachname ist erforderlich"
 
@@ -1071,7 +1072,7 @@ msgstr "Mitarbeiter laden..."
 msgid "Loading employees..."
 msgstr "Mitarbeiter laden..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:306
+#: src/pages/Onboarding/OnboardingWizard.tsx:266
 msgid "Loading onboarding..."
 msgstr "Onboarding laden..."
 
@@ -1144,7 +1145,7 @@ msgstr "Verwalten Sie Ihre Geheimnisse und sensiblen Informationen auf sichere W
 msgid "Management Level"
 msgstr "Führungsebene"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:847
+#: src/pages/Onboarding/OnboardingComplete.tsx:846
 msgid "Max 2MB, JPG or PNG"
 msgstr "Maximal 2MB, JPG oder PNG"
 
@@ -1185,7 +1186,7 @@ msgstr "Minijob"
 msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:784
+#: src/pages/Onboarding/OnboardingComplete.tsx:783
 msgid "Minimum 8 characters"
 msgstr "Mindestens 8 Zeichen"
 
@@ -1202,15 +1203,15 @@ msgstr "Minimal sichtbarer rang"
 msgid "Minimum rank cannot be greater than maximum rank."
 msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:190
+#: src/pages/Onboarding/OnboardingComplete.tsx:201
 msgid "Missing email address. Please use the link from your email."
 msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:186
+#: src/pages/Onboarding/OnboardingComplete.tsx:197
 msgid "Missing onboarding token. Please use the link from your email."
 msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:182
+#: src/pages/Onboarding/OnboardingComplete.tsx:193
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
@@ -1258,11 +1259,11 @@ msgstr "Mein Profil"
 msgid "Name"
 msgstr "Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:594
+#: src/pages/Onboarding/OnboardingComplete.tsx:605
 msgid "Name Change Detected"
 msgstr "Namensänderung erkannt"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:873
+#: src/pages/Onboarding/OnboardingComplete.tsx:872
 msgid "Name change too significant. Please contact HR before completing onboarding."
 msgstr "Die Namensänderung ist zu bedeutend. Bitte kontaktieren Sie die Personalabteilung, bevor Sie das Onboarding abschließen."
 
@@ -1298,7 +1299,7 @@ msgstr "neue übergeordnete Einheit"
 #: src/pages/Customers/CustomersPage.tsx:268
 #: src/pages/Employees/EmployeeList.tsx:325
 #: src/pages/Employees/EmployeeList.tsx:367
-#: src/pages/Onboarding/OnboardingWizard.tsx:98
+#: src/pages/Onboarding/OnboardingWizard.tsx:330
 #: src/pages/Sites/SitesPage.tsx:264
 #: src/pages/Sites/SitesPage.tsx:306
 msgid "Next"
@@ -1454,8 +1455,8 @@ msgstr "Organisatorische Einheit"
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:688
-#: src/pages/Onboarding/OnboardingComplete.tsx:734
+#: src/pages/Onboarding/OnboardingComplete.tsx:699
+#: src/pages/Onboarding/OnboardingComplete.tsx:739
 msgid "Original:"
 msgstr "Original:"
 
@@ -1491,20 +1492,20 @@ msgstr "Übergeordnete Einheit"
 msgid "Part Time"
 msgstr "Teilzeit"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:765
+#: src/pages/Onboarding/OnboardingComplete.tsx:764
 #: src/pages/Secrets/SecretDetail.tsx:313
 msgid "Password"
 msgstr "Passwort"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:327
+#: src/pages/Onboarding/OnboardingComplete.tsx:338
 msgid "Password is required"
 msgstr "Passwort ist erforderlich"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:329
+#: src/pages/Onboarding/OnboardingComplete.tsx:340
 msgid "Password must be at least 8 characters"
 msgstr "Das Passwort muss mindestens 8 Zeichen lang sein"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:333
+#: src/pages/Onboarding/OnboardingComplete.tsx:344
 msgid "Passwords do not match"
 msgstr "Passwörter stimmen nicht überein"
 
@@ -1549,7 +1550,7 @@ msgstr "Persönliche Informationen"
 msgid "Phone"
 msgstr "Telefon"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:257
+#: src/pages/Onboarding/OnboardingComplete.tsx:268
 msgid "Photo must be smaller than 2MB"
 msgstr "Das Foto muss kleiner als 2 MB sein"
 
@@ -1592,7 +1593,7 @@ msgstr "Für diesen Dateityp ist keine Vorschau verfügbar."
 #: src/pages/Customers/CustomersPage.tsx:260
 #: src/pages/Employees/EmployeeList.tsx:318
 #: src/pages/Employees/EmployeeList.tsx:359
-#: src/pages/Onboarding/OnboardingWizard.tsx:82
+#: src/pages/Onboarding/OnboardingWizard.tsx:370
 #: src/pages/Sites/SitesPage.tsx:257
 #: src/pages/Sites/SitesPage.tsx:298
 msgid "Previous"
@@ -1610,7 +1611,7 @@ msgstr "Fortschritt der Verarbeitung"
 msgid "Profile"
 msgstr "Profil"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:816
+#: src/pages/Onboarding/OnboardingComplete.tsx:815
 msgid "Profile Photo (optional)"
 msgstr "Profilfoto (optional)"
 
@@ -1644,7 +1645,8 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:842
+#: src/components/Onboarding/RJSFTemplates.tsx:385
+#: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -1691,7 +1693,7 @@ msgstr "Speichern"
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:89
+#: src/components/Onboarding/JsonSchemaForm.tsx:93
 msgid "Save Draft"
 msgstr "Entwurf speichern"
 
@@ -1951,7 +1953,7 @@ msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 msgid "Step 3: Self-access control"
 msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:36
+#: src/pages/Onboarding/OnboardingWizard.tsx:37
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Schritt {currentStep} von {totalSteps}"
 
@@ -1968,7 +1970,11 @@ msgstr "Straße"
 msgid "Subject"
 msgstr "Thema"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:94
+#: src/components/Onboarding/JsonSchemaForm.tsx:97
+msgid "Submit"
+msgstr "Einreichen"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:328
 msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
 
@@ -2065,7 +2071,7 @@ msgid "This unit has {childCount} child unit(s). Please delete or move the child
 msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
 
 #. placeholder {0}: fieldName.toLowerCase()
-#: src/pages/Onboarding/OnboardingComplete.tsx:166
+#: src/pages/Onboarding/OnboardingComplete.tsx:177
 msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wenden Sie sich an die Personalabteilung, um Ihren Namen zu aktualisieren, bevor Sie das Onboarding abschließen."
 
@@ -2081,7 +2087,7 @@ msgstr "Bis"
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:426
+#: src/pages/Onboarding/OnboardingComplete.tsx:437
 msgid "Too many attempts. Please try again later."
 msgstr "Zu viele Versuche. Bitte versuchen Sie es später noch einmal."
 
@@ -2151,7 +2157,7 @@ msgstr "Aktualisiert"
 msgid "Updating..."
 msgstr "Aktualisiere ..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:141
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -2160,13 +2166,13 @@ msgid "Upload Queue"
 msgstr "Upload-Warteschlange"
 
 #. placeholder {0}: uploadedFile.filename
-#: src/pages/Onboarding/OnboardingWizard.tsx:146
+#: src/pages/Onboarding/OnboardingWizard.tsx:97
 msgid "Uploaded: {0}"
 msgstr "Hochgeladen: {0}"
 
 #: src/components/AttachmentUpload.tsx:210
 #: src/components/AttachmentUpload.tsx:252
-#: src/pages/Onboarding/OnboardingWizard.tsx:141
+#: src/pages/Onboarding/OnboardingWizard.tsx:92
 #: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
 msgstr "Hochladen..."
@@ -2205,7 +2211,7 @@ msgstr "Gültig von"
 msgid "Valid Until"
 msgstr "Gültig bis"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:548
+#: src/pages/Onboarding/OnboardingComplete.tsx:559
 msgid "Validating your link..."
 msgstr "Validierung Ihres Links..."
 
@@ -2263,15 +2269,15 @@ msgstr "Warnung"
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:326
+#: src/pages/Onboarding/OnboardingWizard.tsx:286
 msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:567
+#: src/pages/Onboarding/OnboardingComplete.tsx:578
 msgid "Welcome to SecPal!"
 msgstr "Willkommen bei SecPal!"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:372
+#: src/pages/Onboarding/OnboardingComplete.tsx:383
 msgid "Welcome to SecPal! Let's complete your profile."
 msgstr "Willkommen bei SecPal! Lassen Sie uns Ihr Profil vervollständigen."
 
@@ -2295,7 +2301,7 @@ msgstr "Ja"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:597
+#: src/pages/Onboarding/OnboardingComplete.tsx:608
 msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 msgstr "Sie haben Ihren Namen gegenüber der ursprünglichen Eingabe geändert. Die Personalabteilung wird zur Überprüfung über diese Änderung informiert."
 
@@ -2410,11 +2416,11 @@ msgstr "{ 0, plural, one {# Datei bereit zum Hochladen} other {# Dateien bereit 
 msgid "{errorOps} operation(s) failed"
 msgstr "{errorOps} Operation(en) fehlgeschlagen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:157
+#: src/pages/Onboarding/OnboardingComplete.tsx:168
 msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
 msgstr "{fieldName} scheint eine geringfügige Korrektur zu sein ({similarity}% ähnlich)."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:161
+#: src/pages/Onboarding/OnboardingComplete.tsx:172
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
 msgstr "{fieldName} hat sich erheblich verändert ({similarity}% ähnlich). Die Personalabteilung wird zur Überprüfung benachrichtigt."
 

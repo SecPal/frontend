@@ -121,6 +121,21 @@ export async function apiFetch(
 
   const headers = new Headers(options.headers);
 
+  // Add Accept-Language header based on user's language preference from localStorage
+  // This ensures backend sends localized content (e.g., JSON schemas) matching the UI language
+  try {
+    const storedLocale = localStorage.getItem("secpal-locale");
+    const locale =
+      storedLocale && ["en", "de"].includes(storedLocale) ? storedLocale : "en";
+    headers.set(
+      "Accept-Language",
+      locale === "de" ? "de,en;q=0.9" : "en,de;q=0.9"
+    );
+  } catch {
+    // localStorage might be unavailable, default to English
+    headers.set("Accept-Language", "en,de;q=0.9");
+  }
+
   // Only add CSRF token for state-changing methods
   if (needsCsrf) {
     const csrfToken = getCsrfTokenFromCookie();

@@ -8,11 +8,12 @@ import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
  * Onboarding Step
  */
 export interface OnboardingStep {
-  step_number: number;
-  title: string;
-  description?: string;
-  template_id: string;
-  is_completed: boolean;
+  id: string;
+  name: string;
+  completed: boolean;
+  completed_at: string | null;
+  form_submission_id: string | null;
+  template_id: string | null;
 }
 
 /**
@@ -20,11 +21,11 @@ export interface OnboardingStep {
  */
 export interface OnboardingFormTemplate {
   id: string;
-  title: string;
+  name: string; // Backend uses "name" not "title"
   description?: string;
-  step_number: number;
   form_schema: Record<string, unknown>;
   is_system_template: boolean;
+  sort_order: number;
 }
 
 /**
@@ -118,11 +119,14 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
     throw new Error(error.message || "Failed to fetch onboarding steps");
   }
 
-  const data = await response.json().catch(() => ({ data: [] }));
-  if (!data.data) {
+  const data = await response.json().catch(() => ({ data: {} }));
+  if (!data.data || !data.data.onboarding_steps) {
     throw new Error("Failed to parse onboarding steps response");
   }
-  return data.data;
+
+  // Extract steps array from onboarding_steps.steps structure
+  const steps = data.data.onboarding_steps.steps || [];
+  return steps;
 }
 
 /**
@@ -223,7 +227,7 @@ export async function completeOnboarding(
 export async function fetchOnboardingTemplate(
   templateId: string
 ): Promise<OnboardingFormTemplate> {
-  const url = `${apiConfig.baseUrl}/v1/onboarding/forms/${templateId}`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding/templates/${templateId}`;
   const response = await apiFetch(url, {
     method: "GET",
   });
