@@ -1,37 +1,47 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { msg } from "@lingui/macro";
+import { i18n } from "@lingui/core";
+
 /**
- * Translation map for JSON Schema field labels and descriptions
+ * Translation function for JSON Schema field labels and descriptions
  * 
  * This is a temporary solution until the backend provides localized schemas.
- * Maps English schema keys/labels to German translations.
+ * Uses Lingui's msg macro for proper i18n integration with Translation.io.
+ * 
+ * TODO: Backend should send localized schemas based on Accept-Language header
  */
-export const schemaTranslations: Record<string, string> = {
-  // Common fields
-  "Gender": "Geschlecht",
-  "Birth Name": "Geburtsname",
-  "Previous Names": "Frühere Namen",
-  "Nationalities": "Staatsangehörigkeiten",
-  "Intended Activities (§ 34a GewO)": "Beabsichtigte Tätigkeiten (§ 34a GewO)",
+
+const translations: Record<string, ReturnType<typeof msg>> = {
+  // Field labels
+  "Gender": msg`Geschlecht`,
+  "Birth Name": msg`Geburtsname`,
+  "Previous Names": msg`Frühere Namen`,
+  "Nationalities": msg`Staatsangehörigkeiten`,
+  "Intended Activities (§ 34a GewO)": msg`Beabsichtigte Tätigkeiten (§ 34a GewO)`,
   
   // Gender options
-  "male": "Männlich",
-  "female": "Weiblich",
-  "diverse": "Divers",
+  "male": msg`Männlich`,
+  "female": msg`Weiblich`,
+  "diverse": msg`Divers`,
   
-  // Common labels
-  "Add Item": "Feld hinzufügen",
-  "Remove": "Entfernen",
+  // Common actions (these should already be translated via <Trans> in components)
+  "Add Item": msg`Feld hinzufügen`,
+  "Remove": msg`Entfernen`,
   
   // Descriptions
-  "BewachV § 16 required information for Bewacherregister": "BewachV § 16 erforderliche Informationen für das Bewacherregister",
-  "BewachV § 16 required information": "BewachV § 16 erforderliche Informationen",
+  "BewachV § 16 required information for Bewacherregister": msg`BewachV § 16 erforderliche Informationen für das Bewacherregister`,
+  "BewachV § 16 required information": msg`BewachV § 16 erforderliche Informationen`,
 };
 
 /**
- * Translates a schema label/title to German if available
+ * Translates a schema label/title to the current language if available
  */
 export function translateSchemaLabel(label: string): string {
-  return schemaTranslations[label] || label;
+  const msgDescriptor = translations[label];
+  if (msgDescriptor) {
+    return i18n._(msgDescriptor);
+  }
+  return label;
 }

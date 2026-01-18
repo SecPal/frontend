@@ -337,9 +337,10 @@ export function DescriptionField(props: DescriptionFieldProps) {
 
   if (!description) return null;
 
-  const translatedDesc = typeof description === "string" 
-    ? translateSchemaLabel(description) 
-    : description;
+  const translatedDesc =
+    typeof description === "string"
+      ? translateSchemaLabel(description)
+      : description;
 
   return (
     <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-1">
