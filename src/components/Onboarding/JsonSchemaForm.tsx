@@ -11,8 +11,11 @@ import {
   FieldTemplate,
   TextWidget,
   SelectWidget,
+  TextareaWidget,
   ArrayFieldTemplate,
   ObjectFieldTemplate,
+  TitleField,
+  DescriptionField,
 } from "./RJSFTemplates";
 
 interface JsonSchemaFormProps {
@@ -60,10 +63,13 @@ export function JsonSchemaForm({
           FieldTemplate,
           ArrayFieldTemplate,
           ObjectFieldTemplate,
+          TitleFieldTemplate: TitleField,
+          DescriptionFieldTemplate: DescriptionField,
         }}
         widgets={{
           TextWidget,
           SelectWidget,
+          TextareaWidget,
         }}
       >
         <div className="flex items-center justify-between mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">

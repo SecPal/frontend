@@ -6,10 +6,13 @@ import type {
   ArrayFieldTemplateProps,
   ObjectFieldTemplateProps,
   WidgetProps,
+  TitleFieldProps,
+  DescriptionFieldProps,
 } from "@rjsf/utils";
 import { Field, Label, Description, ErrorMessage } from "../fieldset";
 import { Input } from "../input";
 import { Select } from "../select";
+import { Textarea } from "../textarea";
 import { Button } from "../button";
 import { Trans } from "@lingui/macro";
 
@@ -132,6 +135,68 @@ export function SelectWidget(props: WidgetProps) {
 }
 
 /**
+ * Custom Textarea Widget using Catalyst Textarea
+ */
+export function TextareaWidget(props: WidgetProps) {
+  const {
+    id,
+    value,
+    required,
+    disabled,
+    readonly,
+    onChange,
+    onBlur,
+    onFocus,
+    placeholder,
+  } = props;
+
+  return (
+    <Textarea
+      id={id}
+      value={value || ""}
+      required={required}
+      disabled={disabled || readonly}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onBlur={() => onBlur(id, value)}
+      onFocus={() => onFocus(id, value)}
+      placeholder={placeholder}
+      rows={4}
+    />
+  );
+}
+
+/**
+ * Custom Title Field with proper typography and color
+ */
+export function TitleField(props: TitleFieldProps) {
+  const { title, required } = props;
+  
+  if (!title) return null;
+
+  return (
+    <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
+      {title}
+      {required && <span className="text-red-600 ml-1">*</span>}
+    </h3>
+  );
+}
+
+/**
+ * Custom Description Field with proper typography and color
+ */
+export function DescriptionField(props: DescriptionFieldProps) {
+  const { description } = props;
+  
+  if (!description) return null;
+
+  return (
+    <Description className="text-zinc-600 dark:text-zinc-400">
+      {description}
+    </Description>
+  );
+}
+
+/**
  * Custom Array Field Template with proper spacing
  */
 export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
@@ -139,7 +204,11 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
 
   return (
     <div className="space-y-4">
-      {title && <h3 className="text-lg font-semibold">{title}</h3>}
+      {title && (
+        <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
+          {title}
+        </h3>
+      )}
       <div className="space-y-4">
         {items.map((element) => {
           const itemProps = element as unknown as {
@@ -188,9 +257,15 @@ export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
     <div className="space-y-6">
       {(title || description) && (
         <div>
-          {title && <h3 className="text-lg font-semibold mb-2">{title}</h3>}
+          {title && (
+            <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
+              {title}
+            </h3>
+          )}
           {description && (
-            <Description className="mt-2">{description}</Description>
+            <Description className="mt-2 text-zinc-600 dark:text-zinc-400">
+              {description}
+            </Description>
           )}
         </div>
       )}
