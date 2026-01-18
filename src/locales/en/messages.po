@@ -204,7 +204,7 @@ msgstr "Add Child Unit"
 msgid "Add Employee"
 msgstr "Add Employee"
 
-#: src/components/Onboarding/RJSFTemplates.tsx:396
+#: src/components/Onboarding/RJSFTemplates.tsx:394
 msgid "Add Item"
 msgstr "Add Item"
 
@@ -348,18 +348,6 @@ msgstr "Back to Secrets"
 #: src/pages/Sites/SiteDetail.tsx:108
 msgid "Back to Sites"
 msgstr "Back to Sites"
-
-#: src/components/Onboarding/schemaTranslations.ts:22
-msgid "Beabsichtigte Tätigkeiten (§ 34a GewO)"
-msgstr "Beabsichtigte Tätigkeiten (§ 34a GewO)"
-
-#: src/components/Onboarding/schemaTranslations.ts:35
-msgid "BewachV § 16 erforderliche Informationen"
-msgstr "BewachV § 16 erforderliche Informationen"
-
-#: src/components/Onboarding/schemaTranslations.ts:34
-msgid "BewachV § 16 erforderliche Informationen für das Bewacherregister"
-msgstr "BewachV § 16 erforderliche Informationen für das Bewacherregister"
 
 #: src/pages/Customers/CustomerCreate.tsx:138
 #: src/pages/Customers/CustomerDetail.tsx:120
@@ -696,10 +684,6 @@ msgstr "Description must be at most 1000 characters"
 msgid "Details"
 msgstr "Details"
 
-#: src/components/Onboarding/schemaTranslations.ts:27
-msgid "Divers"
-msgstr "Divers"
-
 #: src/lib/organizationalUnitUtils.ts:83
 #: src/lib/organizationalUnitUtils.ts:110
 msgid "Division"
@@ -830,10 +814,6 @@ msgstr "Encrypting files..."
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 
-#: src/components/Onboarding/schemaTranslations.ts:31
-msgid "Entfernen"
-msgstr "Entfernen"
-
 #: src/components/ScopeAssignmentForm.tsx:349
 #: src/pages/Employees/EmployeeEdit.tsx:305
 msgid "Error"
@@ -955,10 +935,6 @@ msgstr "Failed to share secret"
 msgid "Failed to validate onboarding link"
 msgstr "Failed to validate onboarding link"
 
-#: src/components/Onboarding/schemaTranslations.ts:30
-msgid "Feld hinzufügen"
-msgstr "Feld hinzufügen"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx:277
 msgid "File must be an image"
 msgstr "File must be an image"
@@ -997,10 +973,6 @@ msgstr "First Name:"
 msgid "First Names (all)"
 msgstr "First Names (all)"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:382
-#~ msgid "Form fields will be rendered based on schema"
-#~ msgstr "Form fields will be rendered based on schema"
-
 #: src/pages/Employees/EmployeeCreate.tsx:496
 msgid "Freelance"
 msgstr "Freelance"
@@ -1009,10 +981,6 @@ msgstr "Freelance"
 msgid "From Date"
 msgstr "From Date"
 
-#: src/components/Onboarding/schemaTranslations.ts:20
-msgid "Frühere Namen"
-msgstr "Frühere Namen"
-
 #: src/pages/Employees/EmployeeDetail.tsx:71
 msgid "Full Name"
 msgstr "Full Name"
@@ -1020,14 +988,6 @@ msgstr "Full Name"
 #: src/pages/Employees/EmployeeCreate.tsx:487
 msgid "Full Time"
 msgstr "Full Time"
-
-#: src/components/Onboarding/schemaTranslations.ts:19
-msgid "Geburtsname"
-msgstr "Geburtsname"
-
-#: src/components/Onboarding/schemaTranslations.ts:18
-msgid "Geschlecht"
-msgstr "Geschlecht"
 
 #: src/components/OrganizationalUnitTree.tsx:813
 msgid "Get started by creating your first organizational unit."
@@ -1293,10 +1253,6 @@ msgstr "Manage your secrets and sensitive information securely."
 #: src/pages/Employees/EmployeeDetail.tsx:86
 msgid "Management Level"
 msgstr "Management Level"
-
-#: src/components/Onboarding/schemaTranslations.ts:25
-msgid "Männlich"
-msgstr "Männlich"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx:846
 msgid "Max 2MB, JPG or PNG"
@@ -1820,7 +1776,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
 
-#: src/components/Onboarding/RJSFTemplates.tsx:387
+#: src/components/Onboarding/RJSFTemplates.tsx:385
 #: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Remove"
@@ -2105,10 +2061,6 @@ msgstr "Some features may be limited. Your changes will sync when you're back on
 msgid "Source Code"
 msgstr "Source Code"
 
-#: src/components/Onboarding/schemaTranslations.ts:21
-msgid "Staatsangehörigkeiten"
-msgstr "Staatsangehörigkeiten"
-
 #: src/pages/Customers/CustomersPage.tsx:108
 #: src/pages/Customers/CustomersPage.tsx:167
 #: src/pages/Employees/EmployeeCreate.tsx:451
@@ -2255,10 +2207,6 @@ msgstr "This customer has {0} site(s)."
 #: src/components/NotificationPreferences.tsx:226
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:536
-#~ msgid "This link is valid for 7 days and can only be used once."
-#~ msgstr "This link is valid for 7 days and can only be used once."
 
 #: src/components/ConflictResolutionDialog.tsx:96
 msgid "This secret was modified both locally and on the server. Please choose which version to keep."
@@ -2462,10 +2410,6 @@ msgstr "Viewing cached data. Some units may be outdated."
 #: src/components/ScopeAssignmentForm.tsx:544
 msgid "Warning"
 msgstr "Warning"
-
-#: src/components/Onboarding/schemaTranslations.ts:26
-msgid "Weiblich"
-msgstr "Weiblich"
 
 #: src/App.tsx:64
 msgid "Welcome to SecPal"

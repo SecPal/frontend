@@ -15,10 +15,11 @@ import { Select } from "../select";
 import { Textarea } from "../textarea";
 import { Button } from "../button";
 import { Trans } from "@lingui/macro";
-import { translateSchemaLabel } from "./schemaTranslations";
 
 /**
  * Custom Field Template using Catalyst components
+ *
+ * Note: Schema values are now localized by the backend, so we use them directly.
  */
 export function FieldTemplate(props: FieldTemplateProps) {
   const {
@@ -45,23 +46,19 @@ export function FieldTemplate(props: FieldTemplateProps) {
     <Field>
       {label && (
         <Label>
-          {translateSchemaLabel(label)}
+          {label}
           {required && <span className="text-red-600 ml-1">*</span>}
         </Label>
       )}
       {description && (
         <Description>
-          {typeof description === "string"
-            ? translateSchemaLabel(description)
-            : description}
+          {typeof description === "string" ? description : description}
         </Description>
       )}
       {children}
       {errors && <ErrorMessage>{errors}</ErrorMessage>}
       {help && (
-        <Description>
-          {typeof help === "string" ? translateSchemaLabel(help) : help}
-        </Description>
+        <Description>{typeof help === "string" ? help : help}</Description>
       )}
     </Field>
   );
@@ -139,6 +136,8 @@ export function PasswordWidget(props: WidgetProps) {
 
 /**
  * Custom Select Widget using Catalyst Select
+ *
+ * Note: Enum options are now localized by the backend via enumNames.
  */
 export function SelectWidget(props: WidgetProps) {
   const {
@@ -166,12 +165,10 @@ export function SelectWidget(props: WidgetProps) {
       onBlur={() => onBlur(id, value)}
       onFocus={() => onFocus(id, value)}
     >
-      {placeholder && (
-        <option value="">{translateSchemaLabel(placeholder)}</option>
-      )}
+      {placeholder && <option value="">{placeholder}</option>}
       {enumOptions?.map((option) => (
         <option key={option.value} value={option.value}>
-          {translateSchemaLabel(option.label)}
+          {option.label}
         </option>
       ))}
     </Select>
@@ -315,6 +312,8 @@ export function DateTimeWidget(props: WidgetProps) {
 
 /**
  * Custom Title Field with proper typography and color
+ *
+ * Note: Titles are now localized by the backend.
  */
 export function TitleField(props: TitleFieldProps) {
   const { title, required } = props;
@@ -323,7 +322,7 @@ export function TitleField(props: TitleFieldProps) {
 
   return (
     <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
-      {translateSchemaLabel(title)}
+      {title}
       {required && <span className="text-red-600 ml-1">*</span>}
     </h3>
   );
@@ -331,26 +330,25 @@ export function TitleField(props: TitleFieldProps) {
 
 /**
  * Custom Description Field with proper typography and color
+ *
+ * Note: Descriptions are now localized by the backend.
  */
 export function DescriptionField(props: DescriptionFieldProps) {
   const { description } = props;
 
   if (!description) return null;
 
-  const translatedDesc =
-    typeof description === "string"
-      ? translateSchemaLabel(description)
-      : description;
-
   return (
     <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-1">
-      {translatedDesc}
+      {typeof description === "string" ? description : description}
     </p>
   );
 }
 
 /**
  * Custom Array Field Template with proper spacing
+ *
+ * Note: Titles are now localized by the backend.
  */
 export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
   const { title, items, canAdd, onAddClick } = props;
@@ -359,7 +357,7 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
     <div className="space-y-4">
       {title && (
         <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">
-          {translateSchemaLabel(title)}
+          {title}
         </h3>
       )}
       <div className="space-y-4">
@@ -402,6 +400,8 @@ export function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
 
 /**
  * Custom Object Field Template with proper spacing
+ *
+ * Note: Titles and descriptions are now localized by the backend.
  */
 export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
   const { title, description, properties } = props;
@@ -412,14 +412,12 @@ export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
         <div>
           {title && (
             <h3 className="text-lg font-semibold text-zinc-950 dark:text-white mb-2">
-              {translateSchemaLabel(title)}
+              {title}
             </h3>
           )}
           {description && (
             <p className="text-base/6 text-zinc-600 sm:text-sm/6 dark:text-zinc-400 mt-2">
-              {typeof description === "string"
-                ? translateSchemaLabel(description)
-                : description}
+              {typeof description === "string" ? description : description}
             </p>
           )}
         </div>

@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-01-18 11:36+0100\n"
+"POT-Creation-Date: 2026-01-18 13:13+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -118,7 +118,7 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
 
-#: src/components/Onboarding/RJSFTemplates.tsx:396
+#: src/components/Onboarding/RJSFTemplates.tsx:394
 msgid "Add Item"
 msgstr "Feld hinzufügen"
 
@@ -266,18 +266,6 @@ msgstr "Zurück zu Geheimnisse"
 #: src/pages/Sites/SiteDetail.tsx:108
 msgid "Back to Sites"
 msgstr "zurück zu den Standorten"
-
-#: src/components/Onboarding/schemaTranslations.ts:22
-msgid "Beabsichtigte Tätigkeiten (§ 34a GewO)"
-msgstr ""
-
-#: src/components/Onboarding/schemaTranslations.ts:35
-msgid "BewachV § 16 erforderliche Informationen"
-msgstr ""
-
-#: src/components/Onboarding/schemaTranslations.ts:34
-msgid "BewachV § 16 erforderliche Informationen für das Bewacherregister"
-msgstr ""
 
 #: src/pages/Customers/CustomerCreate.tsx:138
 #: src/pages/Customers/CustomerDetail.tsx:120
@@ -609,10 +597,6 @@ msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 msgid "Details"
 msgstr "Details"
 
-#: src/components/Onboarding/schemaTranslations.ts:27
-msgid "Divers"
-msgstr ""
-
 #: src/lib/organizationalUnitUtils.ts:83
 #: src/lib/organizationalUnitUtils.ts:110
 msgid "Division"
@@ -733,10 +717,6 @@ msgstr "Dateien verschlüsseln..."
 #: src/pages/Onboarding/OnboardingComplete.tsx:691
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
-
-#: src/components/Onboarding/schemaTranslations.ts:31
-msgid "Entfernen"
-msgstr ""
 
 #: src/components/ScopeAssignmentForm.tsx:349
 #: src/pages/Employees/EmployeeEdit.tsx:305
@@ -864,10 +844,6 @@ msgstr "Geheimnis teilen fehlgeschlagen"
 msgid "Failed to validate onboarding link"
 msgstr "Onboarding-Link konnte nicht validiert werden"
 
-#: src/components/Onboarding/schemaTranslations.ts:30
-msgid "Feld hinzufügen"
-msgstr ""
-
 #: src/pages/Onboarding/OnboardingComplete.tsx:277
 msgid "File must be an image"
 msgstr "Datei muss ein Bild sein"
@@ -914,10 +890,6 @@ msgstr "Freiberuflich"
 msgid "From Date"
 msgstr "Von"
 
-#: src/components/Onboarding/schemaTranslations.ts:20
-msgid "Frühere Namen"
-msgstr ""
-
 #: src/pages/Employees/EmployeeDetail.tsx:71
 msgid "Full Name"
 msgstr "Vollständiger Name"
@@ -925,14 +897,6 @@ msgstr "Vollständiger Name"
 #: src/pages/Employees/EmployeeCreate.tsx:487
 msgid "Full Time"
 msgstr "Vollzeit"
-
-#: src/components/Onboarding/schemaTranslations.ts:19
-msgid "Geburtsname"
-msgstr ""
-
-#: src/components/Onboarding/schemaTranslations.ts:18
-msgid "Geschlecht"
-msgstr ""
 
 #: src/components/OrganizationalUnitTree.tsx:813
 msgid "Get started by creating your first organizational unit."
@@ -1281,10 +1245,6 @@ msgstr "Meine Organisation"
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
-
-#: src/components/Onboarding/schemaTranslations.ts:25
-msgid "Männlich"
-msgstr ""
 
 #: src/components/OrganizationalUnitFormDialog.tsx:284
 #: src/pages/Customers/CustomerCreate.tsx:213
@@ -1685,7 +1645,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/components/Onboarding/RJSFTemplates.tsx:387
+#: src/components/Onboarding/RJSFTemplates.tsx:385
 #: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Entfernen"
@@ -1969,10 +1929,6 @@ msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen 
 #: src/components/Footer.tsx:43
 msgid "Source Code"
 msgstr "Quelltext"
-
-#: src/components/Onboarding/schemaTranslations.ts:21
-msgid "Staatsangehörigkeiten"
-msgstr ""
 
 #: src/pages/Customers/CustomersPage.tsx:108
 #: src/pages/Customers/CustomersPage.tsx:167
@@ -2308,10 +2264,6 @@ msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein
 #: src/components/ScopeAssignmentForm.tsx:544
 msgid "Warning"
 msgstr "Warnung"
-
-#: src/components/Onboarding/schemaTranslations.ts:26
-msgid "Weiblich"
-msgstr ""
 
 #: src/App.tsx:64
 msgid "Welcome to SecPal"
