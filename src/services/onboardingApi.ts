@@ -227,7 +227,7 @@ export async function completeOnboarding(
 export async function fetchOnboardingTemplate(
   templateId: string
 ): Promise<OnboardingFormTemplate> {
-  const url = `${apiConfig.baseUrl}/v1/onboarding/forms/${templateId}`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding/templates/${templateId}`;
   const response = await apiFetch(url, {
     method: "GET",
   });
