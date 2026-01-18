@@ -135,10 +135,19 @@ export function OnboardingWizard() {
   const loadCurrentTemplate = useCallback(async () => {
     if (!steps[currentStepIndex]) return;
 
+    const currentStep = steps[currentStepIndex];
+
+    // Skip steps without template_id (e.g., document upload, confirmation)
+    if (!currentStep.template_id) {
+      setTemplate(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const templateData = await fetchOnboardingTemplate(
-        steps[currentStepIndex].template_id
+        currentStep.template_id
       );
       setTemplate(templateData);
     } catch (err) {
@@ -289,7 +298,7 @@ export function OnboardingWizard() {
         {currentStep && template && (
           <div>
             <Heading level={2} className="mb-4">
-              {template.title}
+              {template.name}
             </Heading>
 
             {template.description && (
@@ -322,7 +331,7 @@ export function OnboardingWizard() {
             )}
 
             {/* Document Upload Section */}
-            {currentStep.step_number === 3 && (
+            {currentStep.id === "documents" && (
               <div className="space-y-4 mt-6">
                 <Heading level={3}>
                   <Trans>Documents</Trans>
