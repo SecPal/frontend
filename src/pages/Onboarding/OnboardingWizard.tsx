@@ -33,16 +33,16 @@ function ProgressIndicator({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
-        <Text className="text-sm font-medium text-gray-700">
+        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
           <Trans>
             Step {currentStep} of {totalSteps}
           </Trans>
         </Text>
-        <Text className="text-sm font-medium text-gray-700">
+        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {Math.round(percentage)}%
         </Text>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
         <div
           className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
@@ -78,20 +78,20 @@ function FileUpload({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       <div className="flex items-center gap-4">
         <input
           type="file"
           accept=".pdf,.jpg,.jpeg,.png"
           onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+          className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900"
         />
         <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
           {uploading ? <Trans>Uploading...</Trans> : <Trans>Upload</Trans>}
         </Button>
       </div>
       {uploadedFile && (
-        <Text className="text-sm text-green-600">
+        <Text className="text-sm text-green-600 dark:text-green-400">
           <Trans>Uploaded: {uploadedFile.filename}</Trans>
         </Text>
       )}
@@ -269,8 +269,8 @@ export function OnboardingWizard() {
 
   if (error && steps.length === 0) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <Text className="text-red-800">{error}</Text>
+      <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <Text className="text-red-800 dark:text-red-200">{error}</Text>
       </div>
     );
   }
@@ -279,7 +279,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white shadow-sm rounded-lg p-6">
+      <div className="bg-white dark:bg-zinc-900 shadow-sm rounded-lg p-6">
         <Heading className="mb-6">
           <Trans>Welcome to SecPal Onboarding</Trans>
         </Heading>
@@ -290,8 +290,8 @@ export function OnboardingWizard() {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <Text className="text-red-800">{error}</Text>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <Text className="text-red-800 dark:text-red-200">{error}</Text>
           </div>
         )}
 
@@ -302,7 +302,7 @@ export function OnboardingWizard() {
             </Heading>
 
             {template.description && (
-              <Text className="mb-6 text-gray-600">{template.description}</Text>
+              <Text className="mb-6 text-gray-600 dark:text-gray-400">{template.description}</Text>
             )}
 
             {/* JSON Schema Form */}
