@@ -116,7 +116,11 @@
     "@lhci/cli": "^0.15.1"
   },
   "overrides": {
-    "tmp": "^0.2.4"
+    "tmp": "^0.2.4",
+    "rollup": ">=4.59.0",
+    "serialize-javascript": ">=7.0.3",
+    "@isaacs/brace-expansion": ">=5.0.1",
+    "minimatch": ">=10.2.4"
   },
   "engines": {
     "node": ">=20.0.0",
