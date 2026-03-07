@@ -34,13 +34,13 @@ jobs:
     name: ESLint
     uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@main
     with:
-      node-version: "20"
+      node-version: "22"
 
   typecheck:
     name: TypeScript Check
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@main
     with:
-      node-version: "20"
+      node-version: "22"
       build-command: "npm run typecheck"
 
   vitest:
