@@ -416,12 +416,11 @@ describe("CustomerCreate", () => {
   });
 
   it("disables submit button while loading", async () => {
-    let resolveCreateCustomer: (() => void) | undefined;
     vi.mocked(customersApi.createCustomer).mockImplementation(
       () =>
-        new Promise((resolve) => {
-          resolveCreateCustomer = () => resolve(undefined as never);
-        })
+        new Promise<Awaited<ReturnType<typeof customersApi.createCustomer>>>(
+          () => {}
+        )
     );
 
     renderWithRouter(<CustomerCreate />);
@@ -449,7 +448,5 @@ describe("CustomerCreate", () => {
       expect(submitButton).toBeDisabled();
       expect(screen.getByText(/creating/i)).toBeInTheDocument();
     });
-
-    resolveCreateCustomer?.();
   });
 });

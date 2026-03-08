@@ -71,6 +71,7 @@ describe("CustomerDetail", () => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     });
 
+    expect(customersApi.getCustomer).toHaveBeenCalledWith("customer-123");
     expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
