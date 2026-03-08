@@ -3,25 +3,8 @@ SPDX-FileCopyrightText: 2025 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<!-- @EXTENDS: ../../.github/.github/copilot-instructions.md -->
-<!-- INHERITANCE: Core Principles + Org Rules from parent -->
-<!-- Frontend-specific rules below -->
-
-<!--
-╔════════════════════════════════════════════════════════════════╗
-║  🚨 AI MUST READ ORGANIZATION-WIDE INSTRUCTIONS FIRST 🚨       ║
-╠════════════════════════════════════════════════════════════════╣
-║  Location: `../.github/.github/copilot-instructions.md`        ║
-║                                                                ║
-║  Critical Topics Defined There:                                ║
-║  - 🛡️ Copilot Review Protocol (ALWAYS request after PR)       ║
-║  - 🧪 Quality Gates (NEVER bypass)                            ║
-║  - 📝 TDD Policy (Write tests FIRST)                          ║
-║  - 🔐 Security Requirements                                    ║
-║                                                                ║
-║  ⚠️ This file contains REPO-SPECIFIC rules only               ║
-╚════════════════════════════════════════════════════════════════╝
--->
+<!-- Org-wide principles (TDD, quality gates, PR protocol) are loaded automatically
+     via `.github/instructions/org-shared.instructions.md` — no manual reference needed. -->
 
 # Frontend Repository Instructions (React/TypeScript)
 
@@ -37,21 +20,6 @@ npx prettier --write src/    # Code formatted
 ```
 
 ---
-
-## Path-Scoped Rules (Preflight Integration)
-
-<!--
-These rules can be activated for local preflight checks in frontend repo:
-
-applyTo:
-  - "src/**"
-  - "apps/**"
-  - "packages/ui/**"
-
-rules:
-  - "React + TS; check accessibility (a11y); provide Storybook stories for new components."
-  - "API access: RTK/TanStack Query; types from the OpenAPI generator."
--->
 
 ## Architecture
 

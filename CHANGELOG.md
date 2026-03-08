@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
 - **Git Hooks Diagnostic Tool** (#392)
   - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
   - Comprehensive checks for hook installation, git config, shell environment
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `.github/copilot-instructions.md` — removed dead `@EXTENDS`, `INHERITANCE`, and `applyTo` HTML comment blocks (replaced by `org-shared.instructions.md`)
 - **Migrated to Stacked Layout design** (#TBD)
   - Switched from sidebar navigation to horizontal navbar (stacked layout)
   - Navigation items now displayed in top navbar on desktop
