@@ -74,7 +74,7 @@ Run before EVERY commit:
 - [ ] All findings have GitHub issues created
 - [ ] No `--no-verify` or force bypass used
 
-## 🐛 Issue Creation Protocol (Critical Rule #6 — Zero Tolerance)
+## 🐛 Issue Creation Protocol (Critical Rule #10 — Zero Tolerance)
 
 Found a bug, tech debt, or security issue in existing code that cannot be fixed in this PR?
 
