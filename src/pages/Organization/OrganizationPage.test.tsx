@@ -55,7 +55,6 @@ describe("OrganizationPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    i18n.load("en", {});
     i18n.activate("en");
     vi.mocked(
       organizationalUnitsHook.useOrganizationalUnitsWithOffline
@@ -65,7 +64,7 @@ describe("OrganizationPage", () => {
       error: null,
       isOffline: false,
       isStale: false,
-      rootUnitIds: ["unit-1"],
+      rootUnitIds: ["unit-1", "unit-2"],
       lastSynced: null,
       refresh: vi.fn(),
     });
@@ -76,7 +75,7 @@ describe("OrganizationPage", () => {
         last_page: 1,
         per_page: 100,
         total: 2,
-        root_unit_ids: ["unit-1"],
+        root_unit_ids: ["unit-1", "unit-2"],
       },
     });
   });
