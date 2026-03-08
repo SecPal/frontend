@@ -1,230 +1,55 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2026 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<!-- Org-wide principles (TDD, quality gates, PR protocol) are loaded automatically
-     via `.github/instructions/org-shared.instructions.md` — no manual reference needed. -->
+# Frontend Repository Instructions
 
-# Frontend Repository Instructions (React/TypeScript)
+These instructions are self-contained for the `frontend` repository at runtime.
+Do not assume instructions from sibling repositories or comment-based inheritance are loaded.
 
-**Scope:** `src/**`, `apps/**`, `packages/**`, `*.tsx`, `*.ts`
+## Always-On Rules
 
-**Pre-push Quality Gates:**
+- Apply SecPal core rules on every task: TDD first, fail fast, no bypass,
+  one topic per change, and create a GitHub issue immediately for findings
+  that cannot be fixed in the current scope.
+- Before any commit, PR, or merge, announce and verify the required checklist. Stop on the first failed check.
+- Update `CHANGELOG.md` in the same change set for real fixes, features, or breaking changes.
+- Keep GitHub-facing communication in English.
+- Domain policy is strict: use only `secpal.app` and `secpal.dev`.
+- Prefer small, user-visible fixes that match existing patterns. Avoid speculative abstractions.
 
-```bash
-npm test                      # All tests pass
-npm run typecheck            # TypeScript strict mode clean
-npm run lint                 # ESLint clean
-npx prettier --write src/    # Code formatted
-```
+## Required Checklist
 
----
+Before any commit, PR, or merge, announce and verify at least:
+
+- the smallest relevant validation passed for the affected area: tests, typecheck, and lint when applicable
+- `CHANGELOG.md` was updated in the same change set for real changes
+- no bypass was used, including `--no-verify` or force-push
+- repo-local instructions remain self-contained and do not rely on cross-repo inheritance
+- out-of-scope findings were turned into GitHub issues immediately
+
+## Repository Stack
+
+- Node 22, React, TypeScript strict mode, Vite, Vitest, React Testing Library.
+- All API types come from generated OpenAPI types. Use `@/types/api` and do not hand-write API response types.
 
 ## Architecture
 
-- Component-driven development
-- Container/Presenter pattern (smart/dumb components)
-- Custom hooks for shared logic
-- Context for global state (minimize prop drilling)
+- Keep presentation in components and logic in hooks or API clients.
+- Prefer functional components, named exports, and one component per file.
+- Use React built-ins first. Introduce extra state libraries only when the
+  existing codebase already uses them or the task truly requires them.
 
-## Code Style
+## Frontend Rules
 
-```bash
-# Lint
-npm run lint
+- Preserve strict TypeScript. Do not introduce `any` without a concrete, justified boundary.
+- Test user-visible behavior with Testing Library and MSW where applicable.
+- Run the smallest relevant validation for every change: tests, typecheck, and lint for affected areas.
+- Keep accessibility, semantic HTML, focus behavior, and responsive layouts intact.
+- Prefer generated API types, container-presenter separation, and existing design system patterns.
 
-# Type check
-npm run typecheck
+## Scope Notes
 
-# Format
-npx prettier --write src/
-```
-
-**Rules:**
-
-- Functional components only (no classes)
-- Named exports (better for refactoring)
-- One component per file
-- Props interfaces above component
-
-## TypeScript
-
-**Strict mode enabled:**
-
-```typescript
-// ❌ Don't use 'any'
-const data: any = await fetch();
-
-// ✅ Do define proper types
-interface User {
-  id: string;
-  email: string;
-}
-const data: User = await fetch();
-```
-
-**Common patterns:**
-
-```typescript
-// Props
-interface ButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  variant?: "primary" | "secondary";
-}
-
-// API responses (from OpenAPI-generated types)
-// Note: To use the '@' path alias prefix, configure your project:
-// In tsconfig.json, add the following to map '@/*' to 'src/*':
-//   "compilerOptions": {
-//     "baseUrl": ".",
-//     "paths": {
-//       "@/*": ["src/*"]
-//     }
-//   }
-// If using Vite, also add to vite.config.ts:
-//   import { defineConfig } from 'vite';
-//   import path from 'path';
-//   export default defineConfig({
-//     resolve: {
-//       alias: {
-//         '@': path.resolve(__dirname, 'src'),
-//       },
-//     },
-//   });
-import type { User } from "@/types/api";
-
-// Hooks return type
-function useUser(id: string): {
-  user: User | null;
-  loading: boolean;
-  error: Error | null;
-} {
-  // ...
-}
-```
-
-## Testing
-
-```bash
-# Run all tests
-npm test
-
-# Watch mode
-npm test -- --watch
-
-# Coverage
-npm test -- --coverage
-```
-
-**Requirements:**
-
-- Test user-visible behavior (not implementation)
-- Use `@testing-library/react` queries
-- Mock API calls with MSW
-- Aim for 80%+ coverage
-
-**Example:**
-
-```typescript
-import { render, screen } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-
-test("submits form with user input", async () => {
-  render(<LoginForm />);
-
-  await userEvent.type(screen.getByLabelText(/email/i), "test@example.com");
-  await userEvent.click(screen.getByRole("button", { name: /login/i }));
-
-  expect(await screen.findByText(/welcome/i)).toBeInTheDocument();
-});
-```
-
-## State Management
-
-**Prefer React built-ins:**
-
-- `useState` for local state
-- `useContext` for shared state
-- `useReducer` for complex state logic
-
-**External libraries (if needed):**
-
-- Zustand (lightweight, TypeScript-first)
-- TanStack Query (server state)
-
-## API Integration
-
-```typescript
-// Use OpenAPI-generated types
-import type { User, CreateUserRequest } from "@/types/api";
-
-// Fetch wrapper with types
-async function createUser(data: CreateUserRequest): Promise<User> {
-  const response = await fetch("/api/v1/users", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-```
-
-## Performance
-
-- Lazy load routes (`React.lazy`)
-- Memoize expensive computations (`useMemo`)
-- Debounce user input
-- Virtual scrolling for long lists
-- Code split by route
-
-## Accessibility
-
-- Semantic HTML elements
-- ARIA labels when needed
-- Keyboard navigation
-- Focus management
-- Color contrast (WCAG AA)
-
-**Test with:**
-
-```bash
-# Run accessibility tests
-npm test -- --testNamePattern="a11y"
-```
-
-## Styling
-
-- CSS Modules or Tailwind CSS
-- Mobile-first responsive design
-- Dark mode support
-- Consistent spacing (use design tokens)
-
-## Error Handling
-
-```typescript
-// Error boundaries for crashes
-<ErrorBoundary fallback={<ErrorPage />}>
-  <App />
-</ErrorBoundary>;
-
-// Loading states
-if (loading) return <Spinner />;
-if (error) return <ErrorMessage error={error} />;
-
-// Empty states
-if (data.length === 0) return <EmptyState />;
-```
-
-## Resources
-
-- [React Docs](https://react.dev)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs)
-- [Testing Library](https://testing-library.com/react)
-- [Vite Guide](https://vitejs.dev/guide)
+- Do not add dependencies or create documentation files unless the task requires it.
+- Treat this file as the runtime baseline for the repo. Repo-specific `.instructions.md` files add detail for matching files.
