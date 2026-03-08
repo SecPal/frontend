@@ -8,6 +8,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { EmployeeList } from "./EmployeeList";
 import * as employeeApi from "../../services/employeeApi";
+import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 import type {
   Employee,
   EmployeeListResponse,
@@ -15,6 +16,7 @@ import type {
 
 // Mock the employee API
 vi.mock("../../services/employeeApi");
+vi.mock("../../services/organizationalUnitApi");
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -86,6 +88,37 @@ describe("EmployeeList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(mockResponse);
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
+      data: [
+        {
+          id: "unit-1",
+          name: "Engineering",
+          type: "department",
+          description: null,
+          parent: null,
+          children: [],
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        {
+          id: "unit-2",
+          name: "Design",
+          type: "department",
+          description: null,
+          parent: null,
+          children: [],
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+      ],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 100,
+        total: 2,
+        root_unit_ids: [],
+      },
+    });
   });
 
   it("should render employee list with table", async () => {

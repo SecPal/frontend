@@ -9,6 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationPage } from "./OrganizationPage";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as organizationalUnitsHook from "../../hooks/useOrganizationalUnitsWithOffline";
 import type { OrganizationalUnit } from "../../types/organizational";
 
 // Mock the API
@@ -17,6 +18,10 @@ vi.mock("../../services/organizationalUnitApi", () => ({
   createOrganizationalUnit: vi.fn(),
   updateOrganizationalUnit: vi.fn(),
   deleteOrganizationalUnit: vi.fn(),
+}));
+
+vi.mock("../../hooks/useOrganizationalUnitsWithOffline", () => ({
+  useOrganizationalUnitsWithOffline: vi.fn(),
 }));
 
 // Helper to render with providers
@@ -50,6 +55,20 @@ describe("OrganizationPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+    vi.mocked(
+      organizationalUnitsHook.useOrganizationalUnitsWithOffline
+    ).mockReturnValue({
+      units: mockUnits,
+      loading: false,
+      error: null,
+      isOffline: false,
+      isStale: false,
+      rootUnitIds: ["unit-1"],
+      lastSynced: null,
+      refresh: vi.fn(),
+    });
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
       data: mockUnits,
       meta: {
@@ -99,11 +118,8 @@ describe("OrganizationPage", () => {
   it("renders the OrganizationalUnitTree component", async () => {
     renderWithProviders(<OrganizationPage />);
 
-    // Wait for tree to load
     await waitFor(() => {
-      expect(
-        organizationalUnitApi.listOrganizationalUnits
-      ).toHaveBeenCalledWith({ per_page: 100 });
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
     });
   });
 
