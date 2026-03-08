@@ -1019,8 +1019,8 @@ describe("Secret Sharing", () => {
       expect(
         screen.queryByRole("dialog", { name: /share secret/i })
       ).not.toBeInTheDocument();
-      expect(shareApi.fetchShares).toHaveBeenCalledTimes(2);
-      expect(shareApi.fetchShares).toHaveBeenNthCalledWith(2, "secret-1");
+      expect(shareApi.fetchShares).toHaveBeenCalledTimes(1);
+      expect(shareApi.fetchShares).toHaveBeenCalledWith("secret-1");
     });
   });
 });
