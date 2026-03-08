@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { login, logout, logoutAll, AuthApiError } from "./authApi";
 
 const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
 
 describe("authApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
     // Clear cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
@@ -18,10 +18,6 @@ describe("authApi", () => {
     });
     // Set CSRF token cookie for tests
     document.cookie = "XSRF-TOKEN=test-csrf-token";
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe("login", () => {

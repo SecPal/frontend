@@ -1,25 +1,21 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { login, logout } from "../../../src/services/authApi";
 
 const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
 
 describe("Cookie-based Authentication Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
     // Clear all cookies before each test
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
         .replace(/^ +/, "")
         .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe("Login Flow", () => {

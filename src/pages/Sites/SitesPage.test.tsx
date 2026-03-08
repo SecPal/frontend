@@ -97,7 +97,12 @@ describe("SitesPage", () => {
   });
 
   it("should display loading state initially", () => {
+    vi.mocked(customersApi.listSites).mockImplementation(
+      () => new Promise(() => undefined)
+    );
+
     renderWithProviders();
+
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 

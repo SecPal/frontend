@@ -7,7 +7,7 @@ import { messages as enMessages } from "../src/locales/en/messages";
 import "fake-indexeddb/auto";
 import { mockAnimationsApi } from "jsdom-testing-mocks";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
 
 // Mock the Web Animations API for HeadlessUI components
 // This prevents "Element.prototype.getAnimations" polyfill warnings
@@ -17,11 +17,28 @@ mockAnimationsApi();
 i18n.load("en", enMessages);
 i18n.activate("en");
 
+const originalConfirm = globalThis.confirm;
+const originalAlert = globalThis.alert;
+const originalPrompt = globalThis.prompt;
+const originalLocationHref = window.location.href;
+
 // React 19 act() warning fix: Cleanup after each test to prevent
 // warnings about state updates happening after test completion.
 // This ensures all pending React updates are flushed before test ends.
 afterEach(async () => {
   cleanup();
+
+  // Reset common sources of cross-test leakage.
+  localStorage.clear();
+  sessionStorage.clear();
+  vi.useRealTimers();
+  i18n.load("en", enMessages);
+  i18n.activate("en");
+  globalThis.confirm = originalConfirm;
+  globalThis.alert = originalAlert;
+  globalThis.prompt = originalPrompt;
+  window.history.replaceState({}, "", originalLocationHref);
+
   // Give React a chance to flush any pending updates
   await new Promise((resolve) => setTimeout(resolve, 0));
 });

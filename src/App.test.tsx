@@ -19,6 +19,7 @@ async function renderWithI18n(component: React.ReactElement) {
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
+    window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
   });
@@ -45,6 +46,8 @@ describe("App", () => {
   });
 
   it("protects activity-logs route with permission check", async () => {
+    window.history.replaceState({}, "", "/activity-logs");
+
     // Set authenticated user without activity_log.read permission
     localStorage.setItem(
       "auth_user",
@@ -59,9 +62,11 @@ describe("App", () => {
     // This test verifies that the route structure includes PermissionRoute
     // Actual redirect behavior is tested in PermissionRoute.test.tsx
     await renderWithI18n(<App />);
-    // Should not crash - route configuration is valid
-    expect(
-      screen.getByText(/Your digital guard companion/i)
-    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /Welcome to SecPal/i })
+      ).toBeInTheDocument();
+    });
   });
 });
