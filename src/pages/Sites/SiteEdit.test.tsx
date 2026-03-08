@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -269,9 +275,7 @@ describe("SiteEdit", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
-    });
+    await screen.findByLabelText(/site name/i);
 
     // Add contact info
     fireEvent.change(screen.getByLabelText(/^name$/i), {
@@ -290,6 +294,40 @@ describe("SiteEdit", () => {
           contact: expect.objectContaining({
             name: "Jane Doe",
             email: "jane@example.com",
+          }),
+        })
+      );
+    });
+  });
+
+  it("preserves batched nested updates when saving", async () => {
+    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    });
+
+    act(() => {
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Concurrent Street 99" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Concurrent City" },
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith(
+        "site-123",
+        expect.objectContaining({
+          address: expect.objectContaining({
+            street: "Concurrent Street 99",
+            city: "Concurrent City",
+            postal_code: "11111",
           }),
         })
       );

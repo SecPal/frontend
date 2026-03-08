@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -184,9 +190,7 @@ describe("SiteCreate", () => {
 
       renderWithRouter();
 
-      await waitFor(() => {
-        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-      });
+      await screen.findByLabelText(/customer/i);
 
       // Fill form
       fireEvent.change(screen.getByLabelText(/customer/i), {
@@ -424,6 +428,56 @@ describe("SiteCreate", () => {
               email: "john@example.com",
               phone: "+49 123 456789",
             },
+          })
+        );
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
+    "preserves batched field updates in the submitted payload",
+    async () => {
+      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+
+      renderWithRouter();
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "Race Safe Site" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "54321" },
+      });
+
+      act(() => {
+        fireEvent.change(screen.getByLabelText(/street/i), {
+          target: { value: "Concurrent Street 1" },
+        });
+        fireEvent.change(screen.getByLabelText(/city/i), {
+          target: { value: "Concurrent City" },
+        });
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledWith(
+          expect.objectContaining({
+            address: expect.objectContaining({
+              street: "Concurrent Street 1",
+              city: "Concurrent City",
+              postal_code: "54321",
+            }),
           })
         );
       });
