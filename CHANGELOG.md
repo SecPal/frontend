@@ -16,15 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
 - `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
+- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
 
 ### Changed
 
 - `.github/copilot-instructions.md` - replaced comment-based inheritance assumptions and long-form examples with a self-contained runtime baseline for this repository
 - `.github/instructions/org-shared.instructions.md` - reduced to a short repo-local overlay that reinforces the runtime baseline instead of duplicating org documents
-
-### Added
-
-- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
 - **Git Hooks Diagnostic Tool** (#392)
   - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
   - Comprehensive checks for hook installation, git config, shell environment

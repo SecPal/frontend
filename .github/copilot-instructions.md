@@ -19,6 +19,16 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 - Domain policy is strict: use only `secpal.app` and `secpal.dev`.
 - Prefer small, user-visible fixes that match existing patterns. Avoid speculative abstractions.
 
+## Required Checklist
+
+Before any commit, PR, or merge, announce and verify at least:
+
+- the smallest relevant validation passed for the affected area: tests, typecheck, and lint when applicable
+- `CHANGELOG.md` was updated in the same change set for real changes
+- no bypass was used, including `--no-verify` or force-push
+- repo-local instructions remain self-contained and do not rely on cross-repo inheritance
+- out-of-scope findings were turned into GitHub issues immediately
+
 ## Repository Stack
 
 - Node 22, React, TypeScript strict mode, Vite, Vitest, React Testing Library.
