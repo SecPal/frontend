@@ -367,6 +367,9 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: "jsdom",
       setupFiles: "./tests/setup.ts",
+      clearMocks: true,
+      unstubGlobals: true,
+      unstubEnvs: true,
       testTimeout: 10000, // 10 seconds per test (default is 5s)
       hookTimeout: 10000, // 10 seconds for beforeEach/afterEach hooks
       // Exclude Playwright E2E tests (run separately via npm run test:e2e)
