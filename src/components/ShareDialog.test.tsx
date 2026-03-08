@@ -22,9 +22,6 @@ vi.mock("../services/shareApi", async () => {
   };
 });
 
-// Setup minimal i18n for tests
-i18n.loadAndActivate({ locale: "en", messages: {} });
-
 describe("ShareDialog", () => {
   const mockSecretId = "019a9b50-test-secret";
   const mockSecretTitle = "Gmail Account";
@@ -43,6 +40,8 @@ describe("ShareDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
   });
 
   describe("rendering", () => {
@@ -452,8 +451,12 @@ describe("ShareDialog", () => {
 
     it("should show loading state during share creation", async () => {
       const user = userEvent.setup();
+      let resolveCreateShare: (() => void) | undefined;
       vi.mocked(shareApi.createShare).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
+        () =>
+          new Promise((resolve) => {
+            resolveCreateShare = () => resolve(undefined as never);
+          })
       );
 
       await renderWithTransitions(
@@ -473,9 +476,13 @@ describe("ShareDialog", () => {
       await user.selectOptions(screen.getByLabelText(/share with/i), "user-1");
       await user.click(screen.getByRole("button", { name: /share/i }));
 
-      expect(
-        screen.getByRole("button", { name: /sharing\.\.\./i })
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /sharing\.\.\./i })
+        ).toBeDisabled();
+      });
+
+      resolveCreateShare?.();
     });
 
     it("should display error message on failure", async () => {
