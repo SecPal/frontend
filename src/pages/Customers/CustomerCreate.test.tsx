@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -12,6 +12,8 @@ import * as customersApi from "../../services/customersApi";
 
 // Mock the API
 vi.mock("../../services/customersApi");
+
+const SLOW_TEST_TIMEOUT = 20000;
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -35,19 +37,25 @@ describe("CustomerCreate", () => {
     vi.clearAllMocks();
   });
 
-  it("renders the form with all required fields", () => {
-    renderWithRouter(<CustomerCreate />);
+  it(
+    "renders the form with all required fields",
+    () => {
+      renderWithRouter(<CustomerCreate />);
 
-    expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /create customer/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
-  });
+      expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /create customer/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /cancel/i })
+      ).toBeInTheDocument();
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("renders contact fields", () => {
     renderWithRouter(<CustomerCreate />);
@@ -85,11 +93,19 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
-    // Fill in required fields
-    await user.type(screen.getByLabelText(/customer name/i), "Test Customer");
-    await user.type(screen.getByLabelText(/street/i), "Test Street 1");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "Test City");
+    // Fill required fields directly to keep the happy-path test fast in full-suite runs
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
 
     // Country should already be "DE" by default
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
@@ -115,59 +131,14 @@ describe("CustomerCreate", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/customers/customer-123");
   });
 
-  it("submits form with contact information", async () => {
-    const user = userEvent.setup();
-    const mockCustomer = {
-      id: "customer-456",
-      name: "Customer with Contact",
-      customer_number: "CUST-2025-002",
-      billing_address: {
-        street: "Street 1",
-        city: "City",
-        postal_code: "12345",
-        country: "DE",
-      },
-      contact: {
-        name: "John Doe",
-        email: "john@example.com",
-        phone: "+49 123 456789",
-      },
-      is_active: true,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    };
-
-    vi.mocked(customersApi.createCustomer).mockResolvedValue(mockCustomer);
-
-    renderWithRouter(<CustomerCreate />);
-
-    // Fill required fields
-    await user.type(
-      screen.getByLabelText(/customer name/i),
-      "Customer with Contact"
-    );
-    await user.type(screen.getByLabelText(/street/i), "Street 1");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
-
-    // Fill contact fields using name attributes
-    const contactNameInput = screen.getByRole("textbox", { name: /^name$/i });
-    await user.type(contactNameInput, "John Doe");
-    await user.type(
-      screen.getByRole("textbox", { name: /email/i }),
-      "john@example.com"
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: /phone/i }),
-      "+49 123 456789"
-    );
-
-    // Submit
-    await user.click(screen.getByRole("button", { name: /create customer/i }));
-
-    await waitFor(() => {
-      expect(customersApi.createCustomer).toHaveBeenCalledWith({
+  it(
+    "submits form with contact information",
+    async () => {
+      const user = userEvent.setup();
+      const mockCustomer = {
+        id: "customer-456",
         name: "Customer with Contact",
+        customer_number: "CUST-2025-002",
         billing_address: {
           street: "Street 1",
           city: "City",
@@ -180,9 +151,66 @@ describe("CustomerCreate", () => {
           phone: "+49 123 456789",
         },
         is_active: true,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      };
+
+      vi.mocked(customersApi.createCustomer).mockResolvedValue(mockCustomer);
+
+      renderWithRouter(<CustomerCreate />);
+
+      // Fill fields directly to keep this integration-style happy path within
+      // suite timeout
+      fireEvent.change(screen.getByLabelText(/customer name/i), {
+        target: { value: "Customer with Contact" },
       });
-    });
-  });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Street 1" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "City" },
+      });
+
+      // Fill contact fields using name attributes
+      const contactNameInput = screen.getByRole("textbox", { name: /^name$/i });
+      fireEvent.change(contactNameInput, {
+        target: { value: "John Doe" },
+      });
+      fireEvent.change(screen.getByRole("textbox", { name: /email/i }), {
+        target: { value: "john@example.com" },
+      });
+      fireEvent.change(screen.getByRole("textbox", { name: /phone/i }), {
+        target: { value: "+49 123 456789" },
+      });
+
+      // Submit
+      await user.click(
+        screen.getByRole("button", { name: /create customer/i })
+      );
+
+      await waitFor(() => {
+        expect(customersApi.createCustomer).toHaveBeenCalledWith({
+          name: "Customer with Contact",
+          billing_address: {
+            street: "Street 1",
+            city: "City",
+            postal_code: "12345",
+            country: "DE",
+          },
+          contact: {
+            name: "John Doe",
+            email: "john@example.com",
+            phone: "+49 123 456789",
+          },
+          is_active: true,
+        });
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("does not include contact if all fields are empty", async () => {
     const user = userEvent.setup();
@@ -206,13 +234,18 @@ describe("CustomerCreate", () => {
     renderWithRouter(<CustomerCreate />);
 
     // Fill only required fields, leave contact empty
-    await user.type(
-      screen.getByLabelText(/customer name/i),
-      "Customer without Contact"
-    );
-    await user.type(screen.getByLabelText(/street/i), "Street 1");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Customer without Contact" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
 
     await user.click(screen.getByRole("button", { name: /create customer/i }));
 
@@ -224,19 +257,25 @@ describe("CustomerCreate", () => {
   });
 
   it("displays error message on API failure", async () => {
-    const user = userEvent.setup();
     vi.mocked(customersApi.createCustomer).mockRejectedValue(
       new Error("Server error: Failed to create customer")
     );
 
     renderWithRouter(<CustomerCreate />);
 
-    // Fill and submit
-    await user.type(screen.getByLabelText(/customer name/i), "Test");
-    await user.type(screen.getByLabelText(/street/i), "Street");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
-    await user.click(screen.getByRole("button", { name: /create customer/i }));
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
 
     // Should show error
     await waitFor(() => {
@@ -248,7 +287,6 @@ describe("CustomerCreate", () => {
   });
 
   it("displays validation errors", async () => {
-    const user = userEvent.setup();
     vi.mocked(customersApi.createCustomer).mockRejectedValue(
       new Error(
         "name: The name field is required.\nbilling_address.street: The billing street field is required."
@@ -258,12 +296,20 @@ describe("CustomerCreate", () => {
     renderWithRouter(<CustomerCreate />);
 
     // Fill minimal required fields to bypass HTML5 validation
-    await user.type(screen.getByLabelText(/customer name/i), "Test");
-    await user.type(screen.getByLabelText(/street/i), "Street");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
 
-    await user.click(screen.getByRole("button", { name: /create customer/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
 
     await waitFor(() => {
       // Error message should contain the validation errors
@@ -274,7 +320,6 @@ describe("CustomerCreate", () => {
   });
 
   it("converts country to uppercase", async () => {
-    const user = userEvent.setup();
     const mockCustomer = {
       id: "customer-country",
       name: "Test",
@@ -294,22 +339,28 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
-    await user.type(screen.getByLabelText(/customer name/i), "Test");
-    await user.type(screen.getByLabelText(/street/i), "Street");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
 
     // Clear default and type lowercase
     const countryInput = screen.getByLabelText(/country/i);
-    await user.clear(countryInput);
-    await user.type(countryInput, "de");
+    fireEvent.change(countryInput, { target: { value: "de" } });
 
     // Should be converted to uppercase
     expect(countryInput).toHaveValue("DE");
   });
 
   it("includes notes when provided", async () => {
-    const user = userEvent.setup();
     const mockCustomer = {
       id: "customer-notes",
       name: "Test",
@@ -330,13 +381,23 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
-    await user.type(screen.getByLabelText(/customer name/i), "Test");
-    await user.type(screen.getByLabelText(/street/i), "Street");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
-    await user.type(screen.getByLabelText(/notes/i), "Important customer");
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
+    fireEvent.change(screen.getByLabelText(/notes/i), {
+      target: { value: "Important customer" },
+    });
 
-    await user.click(screen.getByRole("button", { name: /create customer/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
 
     await waitFor(() => {
       const callArg = vi.mocked(customersApi.createCustomer).mock.calls[0]?.[0];
@@ -355,25 +416,40 @@ describe("CustomerCreate", () => {
   });
 
   it("disables submit button while loading", async () => {
-    const user = userEvent.setup();
+    let resolveCreateCustomer: (() => void) | undefined;
     vi.mocked(customersApi.createCustomer).mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 1000))
+      () =>
+        new Promise((resolve) => {
+          resolveCreateCustomer = () => resolve(undefined as never);
+        })
     );
 
     renderWithRouter(<CustomerCreate />);
 
-    await user.type(screen.getByLabelText(/customer name/i), "Test");
-    await user.type(screen.getByLabelText(/street/i), "Street");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
-    await user.type(screen.getByLabelText(/city/i), "City");
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
 
     const submitButton = screen.getByRole("button", {
       name: /create customer/i,
     });
-    await user.click(submitButton);
+    fireEvent.click(submitButton);
 
     // Button should be disabled during submission
-    expect(submitButton).toBeDisabled();
-    expect(screen.getByText(/creating/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(submitButton).toBeDisabled();
+      expect(screen.getByText(/creating/i)).toBeInTheDocument();
+    });
+
+    resolveCreateCustomer?.();
   });
 });

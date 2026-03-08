@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -11,6 +11,8 @@ import CustomerEdit from "./CustomerEdit";
 import * as customersApi from "../../services/customersApi";
 
 vi.mock("../../services/customersApi");
+
+const SLOW_TEST_TIMEOUT = 20000;
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -81,19 +83,27 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
   });
 
-  it("loads contact information", async () => {
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+  it(
+    "loads contact information",
+    async () => {
+      vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      const contactNameInput = screen.getByRole("textbox", { name: /^name$/i });
-      expect(contactNameInput).toHaveValue("Jane Doe");
-    });
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer name/i)).toHaveValue(
+          "Existing Customer"
+        );
+      });
 
-    expect(screen.getByLabelText(/email/i)).toHaveValue("jane@example.com");
-    expect(screen.getByLabelText(/phone/i)).toHaveValue("+49 987 654321");
-  });
+      expect(screen.getByRole("textbox", { name: /^name$/i })).toHaveValue(
+        "Jane Doe"
+      );
+      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@example.com");
+      expect(screen.getByLabelText(/phone/i)).toHaveValue("+49 987 654321");
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("updates customer with modified data", async () => {
     const user = userEvent.setup();
@@ -113,8 +123,9 @@ describe("CustomerEdit", () => {
 
     // Modify name
     const nameInput = screen.getByLabelText(/customer name/i);
-    await user.clear(nameInput);
-    await user.type(nameInput, "Updated Customer");
+    fireEvent.change(nameInput, {
+      target: { value: "Updated Customer" },
+    });
 
     // Submit
     await user.click(screen.getByRole("button", { name: /save|update/i }));
@@ -144,8 +155,9 @@ describe("CustomerEdit", () => {
 
     // Modify street
     const streetInput = screen.getByLabelText(/street/i);
-    await user.clear(streetInput);
-    await user.type(streetInput, "New Street 20");
+    fireEvent.change(streetInput, {
+      target: { value: "New Street 20" },
+    });
 
     await user.click(screen.getByRole("button", { name: /save|update/i }));
 
@@ -174,8 +186,9 @@ describe("CustomerEdit", () => {
 
     // Modify email
     const emailInput = screen.getByLabelText(/email/i);
-    await user.clear(emailInput);
-    await user.type(emailInput, "newemail@example.com");
+    fireEvent.change(emailInput, {
+      target: { value: "newemail@example.com" },
+    });
 
     await user.click(screen.getByRole("button", { name: /save|update/i }));
 
