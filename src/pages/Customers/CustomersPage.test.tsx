@@ -86,7 +86,10 @@ describe("CustomersPage", () => {
 
   it("should display loading state initially", () => {
     vi.mocked(customersApi.listCustomers).mockImplementation(
-      () => new Promise(() => undefined)
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
     );
 
     renderWithProviders();

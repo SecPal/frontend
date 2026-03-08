@@ -319,10 +319,18 @@ describe("SiteCreate", () => {
 
   it("displays loading state while loading data", () => {
     vi.mocked(customersApi.listCustomers).mockImplementation(
-      () => new Promise(() => undefined)
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
     );
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
-      () => new Promise(() => undefined)
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
+          >
+        >(() => {})
     );
 
     renderWithRouter();

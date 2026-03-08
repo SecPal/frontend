@@ -98,7 +98,10 @@ describe("SitesPage", () => {
 
   it("should display loading state initially", () => {
     vi.mocked(customersApi.listSites).mockImplementation(
-      () => new Promise(() => undefined)
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
+          () => {}
+        )
     );
 
     renderWithProviders();
