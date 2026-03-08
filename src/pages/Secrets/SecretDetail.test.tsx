@@ -12,6 +12,26 @@ import * as secretApi from "../../services/secretApi";
 import * as shareApi from "../../services/shareApi";
 import type { SecretDetail as SecretDetailType } from "../../services/secretApi";
 
+vi.mock("../../components/ShareDialog", () => ({
+  ShareDialog: ({
+    isOpen,
+    secretTitle,
+    onClose,
+  }: {
+    isOpen: boolean;
+    secretTitle: string;
+    onClose: () => void;
+  }) =>
+    isOpen ? (
+      <div aria-label="Share secret" role="dialog">
+        <h2>{`Share "${secretTitle}"`}</h2>
+        <button onClick={onClose} type="button">
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
+
 // Mock secret API (keep ApiError real)
 vi.mock("../../services/secretApi", async (importOriginal) => {
   const actual =
@@ -951,7 +971,9 @@ describe("Secret Sharing", () => {
     await user.click(shareButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Share "Gmail Account"/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: /share secret/i })
+      ).toBeInTheDocument();
     });
   });
 
@@ -979,7 +1001,9 @@ describe("Secret Sharing", () => {
     await user.click(shareButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Share "Gmail Account"/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: /share secret/i })
+      ).toBeInTheDocument();
     });
 
     // Close dialog - actual form interactions tested in ShareDialog.test.tsx
@@ -988,7 +1012,7 @@ describe("Secret Sharing", () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByText(/Share "Gmail Account"/i)
+        screen.queryByRole("dialog", { name: /share secret/i })
       ).not.toBeInTheDocument();
     });
   });
