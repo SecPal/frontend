@@ -229,6 +229,25 @@ describe("SiteEdit", () => {
   });
 
   it("displays loading state while fetching data", () => {
+    vi.mocked(customersApi.getSite).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+    );
+    vi.mocked(customersApi.listCustomers).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
+          >
+        >(() => {})
+    );
+
     renderWithRouter();
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();

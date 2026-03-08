@@ -318,6 +318,21 @@ describe("SiteCreate", () => {
   });
 
   it("displays loading state while loading data", () => {
+    vi.mocked(customersApi.listCustomers).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
+          >
+        >(() => {})
+    );
+
     renderWithRouter();
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
