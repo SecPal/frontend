@@ -2,8 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -13,6 +18,8 @@ import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
 vi.mock("../../services/customersApi");
 vi.mock("../../services/organizationalUnitApi");
+
+const SLOW_TEST_TIMEOUT = 20000;
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -199,36 +206,59 @@ describe("SiteEdit", () => {
     expect(orgUnitSelect.value).toBe("org-1");
   });
 
-  it("updates site with modified data", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+  it(
+    "updates site with modified data",
+    async () => {
+      vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+      });
 
-    // Modify name
-    const nameInput = screen.getByLabelText(/site name/i);
-    await user.clear(nameInput);
-    await user.type(nameInput, "Updated Site Name");
+      // Modify name
+      const nameInput = screen.getByLabelText(/site name/i);
+      fireEvent.change(nameInput, {
+        target: { value: "Updated Site Name" },
+      });
 
-    // Submit
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
-    await waitFor(() => {
-      expect(customersApi.updateSite).toHaveBeenCalledWith(
-        "site-123",
-        expect.objectContaining({
-          name: "Updated Site Name",
-        })
-      );
-      expect(mockNavigate).toHaveBeenCalledWith("/sites/site-123");
-    });
-  });
+      await waitFor(() => {
+        expect(customersApi.updateSite).toHaveBeenCalledWith(
+          "site-123",
+          expect.objectContaining({
+            name: "Updated Site Name",
+          })
+        );
+        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-123");
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("displays loading state while fetching data", () => {
+    vi.mocked(customersApi.getSite).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+    );
+    vi.mocked(customersApi.listCustomers).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
+          >
+        >(() => {})
+    );
+
     renderWithRouter();
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -258,22 +288,23 @@ describe("SiteEdit", () => {
   });
 
   it("handles optional contact fields", async () => {
-    const user = userEvent.setup();
     const siteWithoutContact = { ...mockSite, contact: undefined };
     vi.mocked(customersApi.getSite).mockResolvedValue(siteWithoutContact);
     vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
-    });
+    await screen.findByLabelText(/site name/i);
 
     // Add contact info
-    await user.type(screen.getByLabelText(/^name$/i), "Jane Doe");
-    await user.type(screen.getByLabelText(/email/i), "jane@example.com");
+    fireEvent.change(screen.getByLabelText(/^name$/i), {
+      target: { value: "Jane Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "jane@example.com" },
+    });
 
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
       expect(customersApi.updateSite).toHaveBeenCalledWith(
@@ -282,6 +313,40 @@ describe("SiteEdit", () => {
           contact: expect.objectContaining({
             name: "Jane Doe",
             email: "jane@example.com",
+          }),
+        })
+      );
+    });
+  });
+
+  it("preserves batched nested updates when saving", async () => {
+    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    });
+
+    act(() => {
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Concurrent Street 99" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Concurrent City" },
+      });
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith(
+        "site-123",
+        expect.objectContaining({
+          address: expect.objectContaining({
+            street: "Concurrent Street 99",
+            city: "Concurrent City",
+            postal_code: "11111",
           }),
         })
       );

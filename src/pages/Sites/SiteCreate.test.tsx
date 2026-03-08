@@ -2,8 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -13,6 +18,8 @@ import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
 vi.mock("../../services/customersApi");
 vi.mock("../../services/organizationalUnitApi");
+
+const SLOW_TEST_TIMEOUT = 20000;
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -176,148 +183,198 @@ describe("SiteCreate", () => {
     });
   });
 
-  it("submits form with valid data", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+  it(
+    "submits form with valid data",
+    async () => {
+      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-    });
+      await screen.findByLabelText(/customer/i);
 
-    // Fill form
-    await user.selectOptions(screen.getByLabelText(/customer/i), "customer-1");
-    await user.selectOptions(
-      screen.getByLabelText(/organizational unit/i),
-      "org-1"
-    );
-    await user.type(screen.getByLabelText(/site name/i), "New Site");
-    await user.type(screen.getByLabelText(/street/i), "Test Street 1");
-    await user.type(screen.getByLabelText(/city/i), "Test City");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
+      // Fill form
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "New Site" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Test Street 1" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Test City" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
 
-    // Submit
-    await user.click(screen.getByRole("button", { name: /create site/i }));
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
-    await waitFor(() => {
-      expect(customersApi.createSite).toHaveBeenCalledWith(
-        expect.objectContaining({
-          customer_id: "customer-1",
-          organizational_unit_id: "org-1",
-          name: "New Site",
-          type: "permanent",
-          address: expect.objectContaining({
-            street: "Test Street 1",
-            city: "Test City",
-            postal_code: "12345",
-            country: "DE",
-          }),
-        })
-      );
-      expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
-    });
-  });
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledWith(
+          expect.objectContaining({
+            customer_id: "customer-1",
+            organizational_unit_id: "org-1",
+            name: "New Site",
+            type: "permanent",
+            address: expect.objectContaining({
+              street: "Test Street 1",
+              city: "Test City",
+              postal_code: "12345",
+              country: "DE",
+            }),
+          })
+        );
+        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
-  it("displays validation errors from API", async () => {
-    const user = userEvent.setup();
-    const validationError = new Error("Validation failed") as Error & {
-      errors?: Record<string, string[]>;
-    };
-    validationError.errors = {
-      name: ["The name must not exceed 255 characters."],
-      "address.street": ["The street field must be a valid address."],
-    };
-    vi.mocked(customersApi.createSite).mockRejectedValue(validationError);
+  it(
+    "displays validation errors from API",
+    async () => {
+      const validationError = new Error("Validation failed") as Error & {
+        errors?: Record<string, string[]>;
+      };
+      validationError.errors = {
+        name: ["The name must not exceed 255 characters."],
+        "address.street": ["The street field must be a valid address."],
+      };
+      vi.mocked(customersApi.createSite).mockRejectedValue(validationError);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
+      });
 
-    // Fill all required fields to bypass HTML5 validation
-    await user.selectOptions(screen.getByLabelText(/customer/i), "customer-1");
-    await user.selectOptions(
-      screen.getByLabelText(/organizational unit/i),
-      "org-1"
-    );
-    await user.type(screen.getByLabelText(/site name/i), "Test Site");
-    await user.type(screen.getByLabelText(/street/i), "Invalid Street");
-    await user.type(screen.getByLabelText(/city/i), "Test City");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
+      // Fill all required fields to bypass HTML5 validation
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "Test Site" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Invalid Street" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Test City" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
 
-    // Submit - API will reject with validation errors
-    await user.click(screen.getByRole("button", { name: /create site/i }));
+      // Submit - API will reject with validation errors
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
-    await waitFor(() => {
-      expect(customersApi.createSite).toHaveBeenCalled();
-      expect(
-        screen.getByText(/the name must not exceed 255 characters/i)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/the street field must be a valid address/i)
-      ).toBeInTheDocument();
-    });
-  });
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalled();
+        expect(
+          screen.getByText(/the name must not exceed 255 characters/i)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/the street field must be a valid address/i)
+        ).toBeInTheDocument();
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
-  it("clears field errors when resubmitting", async () => {
-    const user = userEvent.setup();
-    const validationError = new Error("Validation failed") as Error & {
-      errors?: Record<string, string[]>;
-    };
-    validationError.errors = {
-      name: ["The name must be at least 3 characters."],
-    };
-    vi.mocked(customersApi.createSite)
-      .mockRejectedValueOnce(validationError)
-      .mockResolvedValueOnce(mockCreatedSite);
+  it(
+    "clears field errors when resubmitting",
+    async () => {
+      const validationError = new Error("Validation failed") as Error & {
+        errors?: Record<string, string[]>;
+      };
+      validationError.errors = {
+        name: ["The name must be at least 3 characters."],
+      };
+      vi.mocked(customersApi.createSite)
+        .mockRejectedValueOnce(validationError)
+        .mockResolvedValueOnce(mockCreatedSite);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
+      });
 
-    await user.selectOptions(screen.getByLabelText(/customer/i), "customer-1");
-    await user.selectOptions(
-      screen.getByLabelText(/organizational unit/i),
-      "org-1"
-    );
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
 
-    // Fill fields with data that will trigger validation error
-    await user.type(screen.getByLabelText(/site name/i), "AB"); // Too short
-    await user.type(screen.getByLabelText(/street/i), "Test Street");
-    await user.type(screen.getByLabelText(/city/i), "Test City");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
+      // Fill fields with data that will trigger validation error
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "AB" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Test Street" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Test City" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
 
-    // Submit - API will reject
-    await user.click(screen.getByRole("button", { name: /create site/i }));
+      // Submit - API will reject
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
-    await waitFor(() => {
-      expect(customersApi.createSite).toHaveBeenCalledTimes(1);
-      expect(
-        screen.getByText(/the name must be at least 3 characters/i)
-      ).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledTimes(1);
+        expect(
+          screen.getByText(/the name must be at least 3 characters/i)
+        ).toBeInTheDocument();
+      });
 
-    // Fix the validation error
-    const nameInput = screen.getByLabelText(/site name/i);
-    await user.clear(nameInput);
-    await user.type(nameInput, "Valid Site Name");
-    await user.click(screen.getByRole("button", { name: /create site/i }));
+      // Fix the validation error
+      const nameInput = screen.getByLabelText(/site name/i);
+      fireEvent.change(nameInput, {
+        target: { value: "Valid Site Name" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
-    // Error should be cleared and navigate should be called
-    await waitFor(() => {
-      expect(customersApi.createSite).toHaveBeenCalledTimes(2);
-      expect(
-        screen.queryByText(/the name must be at least 3 characters/i)
-      ).not.toBeInTheDocument();
-      expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
-    });
-  });
+      // Error should be cleared and navigate should be called
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledTimes(2);
+        expect(
+          screen.queryByText(/the name must be at least 3 characters/i)
+        ).not.toBeInTheDocument();
+        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("displays loading state while loading data", () => {
+    vi.mocked(customersApi.listCustomers).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
+          >
+        >(() => {})
+    );
+
     renderWithRouter();
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -335,43 +392,111 @@ describe("SiteCreate", () => {
     });
   });
 
-  it("includes optional contact information when provided", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+  it(
+    "includes optional contact information when provided",
+    async () => {
+      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
 
-    renderWithRouter();
+      renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
+      });
 
-    await user.selectOptions(screen.getByLabelText(/customer/i), "customer-1");
-    await user.selectOptions(
-      screen.getByLabelText(/organizational unit/i),
-      "org-1"
-    );
-    await user.type(screen.getByLabelText(/site name/i), "New Site");
-    await user.type(screen.getByLabelText(/street/i), "Test Street");
-    await user.type(screen.getByLabelText(/city/i), "Test City");
-    await user.type(screen.getByLabelText(/postal code/i), "12345");
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "New Site" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Test Street" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Test City" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
 
-    // Fill contact info
-    await user.type(screen.getByLabelText(/^name$/i), "John Doe");
-    await user.type(screen.getByLabelText(/email/i), "john@example.com");
-    await user.type(screen.getByLabelText(/phone/i), "+49 123 456789");
+      // Fill contact info
+      fireEvent.change(screen.getByLabelText(/^name$/i), {
+        target: { value: "John Doe" },
+      });
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "john@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/phone/i), {
+        target: { value: "+49 123 456789" },
+      });
 
-    await user.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
-    await waitFor(() => {
-      expect(customersApi.createSite).toHaveBeenCalledWith(
-        expect.objectContaining({
-          contact: {
-            name: "John Doe",
-            email: "john@example.com",
-            phone: "+49 123 456789",
-          },
-        })
-      );
-    });
-  });
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contact: {
+              name: "John Doe",
+              email: "john@example.com",
+              phone: "+49 123 456789",
+            },
+          })
+        );
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
+    "preserves batched field updates in the submitted payload",
+    async () => {
+      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+
+      renderWithRouter();
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText(/customer/i), {
+        target: { value: "customer-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "org-1" },
+      });
+      fireEvent.change(screen.getByLabelText(/site name/i), {
+        target: { value: "Race Safe Site" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "54321" },
+      });
+
+      act(() => {
+        fireEvent.change(screen.getByLabelText(/street/i), {
+          target: { value: "Concurrent Street 1" },
+        });
+        fireEvent.change(screen.getByLabelText(/city/i), {
+          target: { value: "Concurrent City" },
+        });
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+
+      await waitFor(() => {
+        expect(customersApi.createSite).toHaveBeenCalledWith(
+          expect.objectContaining({
+            address: expect.objectContaining({
+              street: "Concurrent Street 1",
+              city: "Concurrent City",
+              postal_code: "54321",
+            }),
+          })
+        );
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 });

@@ -1208,11 +1208,10 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
 
     sessionStorage.setItem("share-target-files", JSON.stringify([largeFile]));
 
-    renderComponentWithContext();
+    const fetchSecretsCallsBeforeRender =
+      vi.mocked(fetchSecrets).mock.calls.length;
 
-    await waitFor(() => {
-      expect(fetchSecrets).toHaveBeenCalled();
-    });
+    renderComponentWithContext();
 
     // Should show error about file size
     await waitFor(() => {
@@ -1220,6 +1219,10 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
         screen.getByText(/File too large.*large-file\.jpg.*Maximum 10MB/i)
       ).toBeInTheDocument();
     });
+
+    expect(vi.mocked(fetchSecrets).mock.calls).toHaveLength(
+      fetchSecretsCallsBeforeRender
+    );
   });
 
   it("should handle file parsing errors gracefully", async () => {

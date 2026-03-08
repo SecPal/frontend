@@ -85,7 +85,15 @@ describe("CustomersPage", () => {
   });
 
   it("should display loading state initially", () => {
+    vi.mocked(customersApi.listCustomers).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+          () => {}
+        )
+    );
+
     renderWithProviders();
+
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
   });
 
