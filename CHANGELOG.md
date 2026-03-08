@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
+
+### Changed
+
+- `.github/copilot-instructions.md` — removed dead `@EXTENDS`, `INHERITANCE`, and `applyTo` HTML comment blocks (replaced by `org-shared.instructions.md`)
+
+### Added
+
 - **Git Hooks Diagnostic Tool** (#392)
   - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
   - Comprehensive checks for hook installation, git config, shell environment
