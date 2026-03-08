@@ -17,14 +17,25 @@ vi.mock("../../components/ShareDialog", () => ({
     isOpen,
     secretTitle,
     onClose,
+    onSuccess,
   }: {
     isOpen: boolean;
     secretTitle: string;
     onClose: () => void;
+    onSuccess?: () => void;
   }) =>
     isOpen ? (
       <div aria-label="Share secret" role="dialog">
         <h2>{`Share "${secretTitle}"`}</h2>
+        <button
+          onClick={() => {
+            onSuccess?.();
+            onClose();
+          }}
+          type="button"
+        >
+          Confirm share
+        </button>
         <button onClick={onClose} type="button">
           Cancel
         </button>
@@ -982,13 +993,6 @@ describe("Secret Sharing", () => {
     vi.mocked(shareApi.fetchShares).mockResolvedValue(
       mockSecretWithShares.shares!
     );
-    vi.mocked(shareApi.createShare).mockResolvedValue({
-      id: "share-2",
-      user: { id: "user-3", name: "Bob Johnson" },
-      permission: "read",
-      granted_by: { id: "user-1", name: "You" },
-      granted_at: new Date().toISOString(),
-    });
 
     renderWithRouter("secret-1");
 
@@ -1006,14 +1010,17 @@ describe("Secret Sharing", () => {
       ).toBeInTheDocument();
     });
 
-    // Close dialog - actual form interactions tested in ShareDialog.test.tsx
-    const cancelButton = screen.getByRole("button", { name: /cancel/i });
-    await user.click(cancelButton);
+    const confirmShareButton = screen.getByRole("button", {
+      name: /confirm share/i,
+    });
+    await user.click(confirmShareButton);
 
     await waitFor(() => {
       expect(
         screen.queryByRole("dialog", { name: /share secret/i })
       ).not.toBeInTheDocument();
+      expect(shareApi.fetchShares).toHaveBeenCalledTimes(2);
+      expect(shareApi.fetchShares).toHaveBeenNthCalledWith(2, "secret-1");
     });
   });
 });
