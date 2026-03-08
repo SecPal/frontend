@@ -60,24 +60,30 @@ export default function CustomerEdit() {
   }, [id]);
 
   function updateField(field: keyof UpdateCustomerRequest, value: unknown) {
-    setFormData({ ...formData, [field]: value });
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [field]: value,
+    }));
   }
 
   function updateAddress(field: keyof Address, value: string) {
-    setFormData({
-      ...formData,
+    setFormData((currentFormData) => ({
+      ...currentFormData,
       billing_address: {
-        ...(formData.billing_address || {}),
+        ...(currentFormData.billing_address || {}),
         [field]: value,
       } as Address,
-    });
+    }));
   }
 
   function updateContact(field: keyof Contact, value: string) {
-    setFormData({
-      ...formData,
-      contact: { ...(formData.contact || {}), [field]: value } as Contact,
-    });
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      contact: {
+        ...(currentFormData.contact || {}),
+        [field]: value,
+      } as Contact,
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {

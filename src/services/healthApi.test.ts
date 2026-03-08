@@ -5,16 +5,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { checkHealth, HealthCheckError, HealthStatus } from "./healthApi";
 
 const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
 
 describe("healthApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
     vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
