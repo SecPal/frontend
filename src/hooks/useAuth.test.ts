@@ -1,15 +1,21 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 import { sessionEvents } from "../services/sessionEvents";
+import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+
+vi.mock("../lib/clientStateCleanup", () => ({
+  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -84,6 +90,7 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
   it("updates isAuthenticated when user changes", () => {
@@ -123,6 +130,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
   it("does not logout when session:expired is emitted but not logged in", () => {

@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { AuthContext, type User } from "./auth-context";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
+import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     authStorage.clear();
     setUser(null);
+    void clearSensitiveClientState();
   }, []);
 
   /**

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -21,7 +21,7 @@ export const apiConfig = {
    * - Development without proxy: http://localhost:8000
    * - Demo/Testing: https://api.secpal.dev
    * - Production: https://api.secpal.app
-   * - Customer On-Premise: https://api.customer.example.com
+   * - Customer On-Premise: tenant-specific SecPal domain provided during deployment
    *
    * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
    * so routes are accessible at /v1/secrets NOT /api/v1/secrets
