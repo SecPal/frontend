@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
@@ -60,7 +60,7 @@ export async function login(
   });
 
   if (!response.ok) {
-    let error: ApiError | null = null;
+    let error: ApiError | null;
     try {
       error = await response.json();
     } catch {
@@ -88,7 +88,7 @@ export async function logout(): Promise<void> {
   });
 
   if (!response.ok) {
-    let error: ApiError | null = null;
+    let error: ApiError | null;
     try {
       error = await response.json();
     } catch {
@@ -111,7 +111,7 @@ export async function logoutAll(): Promise<void> {
   });
 
   if (!response.ok) {
-    let error: ApiError | null = null;
+    let error: ApiError | null;
     try {
       error = await response.json();
     } catch {

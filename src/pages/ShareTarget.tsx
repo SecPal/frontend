@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -473,7 +473,8 @@ export function ShareTarget() {
         } catch (error) {
           console.error(`Encryption failed for ${file.name}:`, error);
           throw new Error(
-            `Encryption failed for ${file.name}: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Encryption failed for ${file.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+            { cause: error }
           );
         }
       }
