@@ -25,7 +25,9 @@ async function clearSensitiveCaches(): Promise<void> {
     )
   );
 
-  await Promise.all(sensitiveCacheNames.map((cacheName) => caches.delete(cacheName)));
+  await Promise.all(
+    sensitiveCacheNames.map((cacheName) => caches.delete(cacheName))
+  );
 }
 
 async function clearSensitiveIndexedDbState(): Promise<void> {
@@ -45,8 +47,5 @@ export async function clearSensitiveClientState(): Promise<void> {
   localStorage.removeItem("auth_token");
   sessionStorage.clear();
 
-  await Promise.all([
-    clearSensitiveCaches(),
-    clearSensitiveIndexedDbState(),
-  ]);
+  await Promise.all([clearSensitiveCaches(), clearSensitiveIndexedDbState()]);
 }
