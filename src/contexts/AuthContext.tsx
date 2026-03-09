@@ -22,7 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     authStorage.clear();
     setUser(null);
-    void clearSensitiveClientState();
+    void clearSensitiveClientState().catch((error: unknown) => {
+      console.error(
+        "Failed to clear sensitive client state during logout:",
+        error
+      );
+    });
   }, []);
 
   /**
