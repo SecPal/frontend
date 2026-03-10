@@ -67,10 +67,10 @@ describe("ApplicationLayout", () => {
 
     vi.mocked(authApi.getCurrentUser).mockImplementation(() =>
       createResolvedCurrentUser(
-        (JSON.parse(
+        JSON.parse(
           localStorage.getItem("auth_user") ??
             '{"id":1,"name":"John Doe","email":"john@example.com"}'
-        ) as Awaited<ReturnType<typeof authApi.getCurrentUser>>)
+        ) as Awaited<ReturnType<typeof authApi.getCurrentUser>>
       )
     );
 
