@@ -97,6 +97,42 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("does not restore auth state when bootstrap revalidation resolves after logout", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const revalidatedUser = {
+      ...mockUser,
+      roles: ["Admin"],
+    };
+    const deferred = createDeferredPromise<typeof revalidatedUser>();
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.isLoading).toBe(true);
+
+    act(() => {
+      result.current.logout();
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+
+    await act(async () => {
+      deferred.resolve(revalidatedUser);
+      await Promise.resolve();
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+  });
+
   it("clears stale stored auth data when revalidation fails", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
 

@@ -428,6 +428,15 @@ describe("authApi", () => {
         "Current user fetch failed: 500 Internal Server Error"
       );
     });
+
+    it("wraps network failures in AuthApiError", async () => {
+      mockFetch.mockRejectedValue(new Error("Network down"));
+
+      await expect(getCurrentUser()).rejects.toThrow(
+        "Current user fetch failed: Network down"
+      );
+      await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
+    });
   });
 
   describe("AuthApiError", () => {

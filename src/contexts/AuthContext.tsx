@@ -23,6 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authStorage.getUser() !== null && isOnline();
   });
   const isClearingSessionRef = useRef(false);
+  const bootstrapRequestVersionRef = useRef(0);
+
+  const invalidateBootstrapRevalidation = useCallback(() => {
+    bootstrapRequestVersionRef.current += 1;
+  }, []);
 
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
@@ -30,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
       authStorage.clear();
       setUser(null);
@@ -51,14 +57,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isClearingSessionRef.current = false;
         });
     },
-    []
+    [invalidateBootstrapRevalidation]
   );
 
   const login = useCallback((newUser: User) => {
+    invalidateBootstrapRevalidation();
     authStorage.setUser(newUser);
     setUser(newUser);
     setIsLoading(false);
-  }, []);
+  }, [invalidateBootstrapRevalidation]);
 
   const logout = useCallback(() => {
     clearAuthenticatedState(true);
@@ -104,8 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.hasOrganizationalScopes ?? false;
   }, [user]);
 
-  // Subscribe to session:expired events
-  // This handles 401 responses from API calls (when online)
+  // Bootstrap: revalidate any stored session on app load/refresh when online.
+  // Uses getCurrentUser() to confirm the session and clear it if invalid.
   useEffect(() => {
     const storedUser = authStorage.getUser();
 
@@ -114,10 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let isActive = true;
+    const requestVersion = bootstrapRequestVersionRef.current + 1;
+    bootstrapRequestVersionRef.current = requestVersion;
 
     void getCurrentUser()
       .then((currentUser) => {
-        if (!isActive) {
+        if (
+          !isActive ||
+          bootstrapRequestVersionRef.current !== requestVersion
+        ) {
           return;
         }
 
@@ -126,7 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       })
       .catch(() => {
-        if (!isActive) {
+        if (
+          !isActive ||
+          bootstrapRequestVersionRef.current !== requestVersion
+        ) {
           return;
         }
 
@@ -138,6 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [clearAuthenticatedState]);
 
+  // Subscribe to session:expired events.
+  // This handles 401 responses from API calls when online.
   useEffect(() => {
     const unsubscribe = sessionEvents.on("session:expired", () => {
       // Check authStorage instead of user state to avoid adding user as dependency.

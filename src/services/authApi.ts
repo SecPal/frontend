@@ -129,12 +129,21 @@ export async function logoutAll(): Promise<void> {
  * @throws {AuthApiError} If the session is invalid or the request fails
  */
 export async function getCurrentUser(): Promise<LoginResponse["user"]> {
-  const response = await apiFetch(`${getApiBaseUrl()}/v1/me`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  let response: Response;
+  try {
+    response = await apiFetch(`${getApiBaseUrl()}/v1/me`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? `Current user fetch failed: ${error.message}`
+        : "Current user fetch failed";
+    throw new AuthApiError(message);
+  }
 
   if (!response.ok) {
     let error: ApiError | null;
