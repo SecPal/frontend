@@ -1,10 +1,17 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { AuthContext, type User } from "./auth-context";
 import { authStorage } from "../services/storage";
-import { sessionEvents } from "../services/sessionEvents";
+import { getCurrentUser } from "../services/authApi";
+import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -12,23 +19,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authStorage.getUser();
   });
 
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => {
+    return authStorage.getUser() !== null && isOnline();
+  });
+  const isClearingSessionRef = useRef(false);
+  const bootstrapRequestVersionRef = useRef(0);
 
-  const login = useCallback((newUser: User) => {
-    authStorage.setUser(newUser);
-    setUser(newUser);
+  const invalidateBootstrapRevalidation = useCallback(() => {
+    bootstrapRequestVersionRef.current += 1;
   }, []);
+
+  const clearAuthenticatedState = useCallback(
+    (clearSensitiveState: boolean) => {
+      if (isClearingSessionRef.current) {
+        return;
+      }
+
+      invalidateBootstrapRevalidation();
+      isClearingSessionRef.current = true;
+      authStorage.clear();
+      setUser(null);
+      setIsLoading(false);
+
+      if (!clearSensitiveState) {
+        isClearingSessionRef.current = false;
+        return;
+      }
+
+      void clearSensitiveClientState()
+        .catch((error: unknown) => {
+          console.error(
+            "Failed to clear sensitive client state during logout:",
+            error
+          );
+        })
+        .finally(() => {
+          isClearingSessionRef.current = false;
+        });
+    },
+    [invalidateBootstrapRevalidation]
+  );
+
+  const login = useCallback(
+    (newUser: User) => {
+      invalidateBootstrapRevalidation();
+      authStorage.setUser(newUser);
+      setUser(newUser);
+      setIsLoading(false);
+    },
+    [invalidateBootstrapRevalidation]
+  );
 
   const logout = useCallback(() => {
-    authStorage.clear();
-    setUser(null);
-    void clearSensitiveClientState().catch((error: unknown) => {
-      console.error(
-        "Failed to clear sensitive client state during logout:",
-        error
-      );
-    });
-  }, []);
+    clearAuthenticatedState(true);
+  }, [clearAuthenticatedState]);
 
   /**
    * Check if user has a specific role
@@ -70,20 +114,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.hasOrganizationalScopes ?? false;
   }, [user]);
 
-  // Subscribe to session:expired events
-  // This handles 401 responses from API calls (when online)
+  // Bootstrap: revalidate any stored session on app load/refresh when online.
+  // Uses getCurrentUser() to confirm the session and clear it if invalid.
+  useEffect(() => {
+    const storedUser = authStorage.getUser();
+
+    if (!storedUser || !isOnline()) {
+      return;
+    }
+
+    let isActive = true;
+    const requestVersion = bootstrapRequestVersionRef.current + 1;
+    bootstrapRequestVersionRef.current = requestVersion;
+
+    void getCurrentUser()
+      .then((currentUser) => {
+        if (
+          !isActive ||
+          bootstrapRequestVersionRef.current !== requestVersion
+        ) {
+          return;
+        }
+
+        authStorage.setUser(currentUser);
+        setUser(currentUser);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (
+          !isActive ||
+          bootstrapRequestVersionRef.current !== requestVersion
+        ) {
+          return;
+        }
+
+        clearAuthenticatedState(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [clearAuthenticatedState]);
+
+  // Subscribe to session:expired events.
+  // This handles 401 responses from API calls when online.
   useEffect(() => {
     const unsubscribe = sessionEvents.on("session:expired", () => {
       // Check authStorage instead of user state to avoid adding user as dependency.
       // Adding user would cause re-subscription on every user change, which is unnecessary.
       // authStorage and user state are always in sync via login/logout functions.
       if (authStorage.getUser()) {
-        logout();
+        clearAuthenticatedState(true);
       }
     });
 
     return unsubscribe;
-  }, [logout]);
+  }, [clearAuthenticatedState]);
 
   const value = useMemo(
     () => ({

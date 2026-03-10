@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -10,6 +10,17 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { AuthProvider } from "../contexts/AuthContext";
 
 const mockNavigate = vi.fn();
+const { mockGetCurrentUser } = vi.hoisted(() => ({
+  mockGetCurrentUser: vi.fn(),
+}));
+
+vi.mock("../services/authApi", async () => {
+  const actual = await vi.importActual("../services/authApi");
+  return {
+    ...actual,
+    getCurrentUser: mockGetCurrentUser,
+  };
+});
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -60,7 +71,13 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText(/redirected to \/login/i)).toBeInTheDocument();
   });
 
-  it("renders children when authenticated", () => {
+  it("renders children when authenticated", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Test",
+      email: "test@example.com",
+    });
+
     localStorage.setItem(
       "auth_user",
       JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
@@ -68,8 +85,47 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("shows loading instead of protected content while stored auth is revalidated", () => {
+    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
+    );
+
+    renderProtectedRoute();
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("redirects to login after stored auth revalidation fails", async () => {
+    mockGetCurrentUser.mockRejectedValueOnce(new Error("Unauthorized"));
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
+    );
+
+    renderProtectedRoute();
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+
+    expect(screen.getByText(/redirected to \/login/i)).toBeInTheDocument();
   });
 
   it("shows loading state initially", () => {

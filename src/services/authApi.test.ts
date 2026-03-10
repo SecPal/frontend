@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { login, logout, logoutAll, AuthApiError } from "./authApi";
+import {
+  login,
+  logout,
+  logoutAll,
+  getCurrentUser,
+  AuthApiError,
+} from "./authApi";
 
 const mockFetch = vi.fn();
 
@@ -359,6 +365,77 @@ describe("authApi", () => {
       } as Partial<Response> as Response);
 
       await expect(logoutAll()).rejects.toThrow("Logout all devices failed");
+    });
+  });
+
+  describe("getCurrentUser", () => {
+    it("sends GET request to /v1/me with credentials", async () => {
+      const mockUser = {
+        id: 1,
+        name: "Test User",
+        email: "test@example.com",
+        roles: ["Admin"],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockUser,
+      } as Response);
+
+      const result = await getCurrentUser();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me"),
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+        })
+      );
+
+      const currentUserCallArgs = mockFetch.mock.calls[0];
+      expect(currentUserCallArgs).toBeDefined();
+      if (currentUserCallArgs) {
+        const requestInit = currentUserCallArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept")).toBe("application/json");
+      }
+
+      expect(result).toEqual(mockUser);
+    });
+
+    it("throws AuthApiError on failed current-user fetch", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: "Unauthorized" }),
+      } as Response);
+
+      await expect(getCurrentUser()).rejects.toThrow(AuthApiError);
+    });
+
+    it("throws AuthApiError with fallback message on non-JSON response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        json: async () => {
+          throw new Error("Not JSON");
+        },
+      } as Partial<Response> as Response);
+
+      await expect(getCurrentUser()).rejects.toThrow(
+        "Current user fetch failed: 500 Internal Server Error"
+      );
+    });
+
+    it("wraps network failures in AuthApiError", async () => {
+      mockFetch.mockRejectedValue(new Error("Network down"));
+
+      await expect(getCurrentUser()).rejects.toThrow(
+        "Current user fetch failed: Network down"
+      );
+      await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
     });
   });
 

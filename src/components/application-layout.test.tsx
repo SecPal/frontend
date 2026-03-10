@@ -45,6 +45,10 @@ describe("ApplicationLayout", () => {
     i18n.load("en", {});
     i18n.activate("en");
 
+    vi.mocked(authApi.getCurrentUser).mockImplementation(
+      () => new Promise(() => undefined)
+    );
+
     // Set up authenticated user
     localStorage.setItem(
       "auth_user",

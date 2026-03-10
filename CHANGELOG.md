@@ -67,6 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Auth bootstrap now revalidates stored sessions before unlocking protected routes** (#503)
+  - added frontend bootstrap revalidation against `GET /v1/me` when a stored session is present and the client is online
+  - protected routes now remain in the loading state until startup revalidation succeeds or fails closed
+  - stale local `auth_user` state is cleared, including sensitive client cleanup, when startup revalidation rejects
+  - offline startup still preserves existing local session state to keep the offline-first flow available
+
 - **Employee API types now use a shared contract source** (#492)
   - added `src/types/api` as the central frontend import path for employee API types
   - removed employee request and response type declarations from `src/services/employeeApi.ts`
