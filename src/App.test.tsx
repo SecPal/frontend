@@ -1,12 +1,24 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+
+const { mockGetCurrentUser } = vi.hoisted(() => ({
+  mockGetCurrentUser: vi.fn(),
+}));
+
+vi.mock("./services/authApi", async () => {
+  const actual = await vi.importActual("./services/authApi");
+  return {
+    ...actual,
+    getCurrentUser: mockGetCurrentUser,
+  };
+});
 
 // Helper to render with I18n and wait for async updates
 async function renderWithI18n(component: React.ReactElement) {
@@ -18,10 +30,29 @@ async function renderWithI18n(component: React.ReactElement) {
 
 describe("App", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     localStorage.clear();
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
+    mockGetCurrentUser.mockImplementation(async () => {
+      const storedUser = localStorage.getItem("auth_user");
+
+      return storedUser
+        ? (JSON.parse(storedUser) as {
+            id: number;
+            name: string;
+            email: string;
+            roles?: string[];
+            permissions?: string[];
+            hasOrganizationalScopes?: boolean;
+          })
+        : {
+            id: 1,
+            name: "Fallback User",
+            email: "fallback@example.com",
+          };
+    });
   });
 
   it("renders login page when not authenticated", async () => {
