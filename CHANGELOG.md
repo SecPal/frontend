@@ -12,11 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Phase 1 offline-data hardening**
+  - Removed PWA runtime caching for authenticated API routes to avoid persistent browser caching of sensitive `/v1/*` responses
+  - Added centralized sensitive client-state cleanup for logout and session-expiry flows
+  - Sensitive IndexedDB tables and legacy API cache names are now cleared when the client session ends
+  - Replaced invalid on-prem example domain in frontend config comments to stay within the `secpal.app` / `secpal.dev` domain policy
+
 ### Added
 
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
 - `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
 - `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
+- `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` - deferred Phase 2 design notes for a future encrypted offline vault with device-bound key options
 
 ### Changed
 

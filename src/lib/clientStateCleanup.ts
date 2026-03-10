@@ -1,0 +1,51 @@
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { db } from "./db";
+
+export const SENSITIVE_CACHE_NAMES = [
+  "secrets-list-cache",
+  "secrets-detail-cache",
+  "api-cache",
+  "api-secrets-list",
+  "api-secrets-detail",
+  "api-users",
+  "api-general",
+] as const;
+
+async function clearSensitiveCaches(): Promise<void> {
+  if (!("caches" in globalThis)) {
+    return;
+  }
+
+  const cacheNames = await caches.keys();
+  const sensitiveCacheNames = cacheNames.filter((cacheName) =>
+    SENSITIVE_CACHE_NAMES.includes(
+      cacheName as (typeof SENSITIVE_CACHE_NAMES)[number]
+    )
+  );
+
+  await Promise.all(
+    sensitiveCacheNames.map((cacheName) => caches.delete(cacheName))
+  );
+}
+
+async function clearSensitiveIndexedDbState(): Promise<void> {
+  await Promise.all([
+    db.guards.clear(),
+    db.syncQueue.clear(),
+    db.apiCache.clear(),
+    db.analytics.clear(),
+    db.fileQueue.clear(),
+    db.secretCache.clear(),
+    db.organizationalUnitCache.clear(),
+  ]);
+}
+
+export async function clearSensitiveClientState(): Promise<void> {
+  localStorage.removeItem("auth_user");
+  localStorage.removeItem("auth_token");
+  sessionStorage.clear();
+
+  await Promise.all([clearSensitiveCaches(), clearSensitiveIndexedDbState()]);
+}
