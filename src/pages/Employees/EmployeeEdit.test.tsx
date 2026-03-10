@@ -112,6 +112,22 @@ describe("EmployeeEdit", () => {
     );
   });
 
+  it("should format pre-populated dates for German locale", async () => {
+    i18n.activate("de");
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/date of birth/i)).toHaveValue("01.01.1990");
+    });
+
+    expect(screen.getByLabelText(/contract start date/i)).toHaveValue(
+      "01.01.2025"
+    );
+
+    i18n.activate("en");
+  });
+
   it("should keep nullable employee fields editable when optional data is missing", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
       ...mockEmployee,

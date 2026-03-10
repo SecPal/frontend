@@ -111,6 +111,19 @@ describe("EmployeeDetail", () => {
     });
   });
 
+  it("should fall back to the raw status label for unknown values", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "archived" as Employee["status"],
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("archived")).toBeInTheDocument();
+    });
+  });
+
   it("should render placeholders for nullable employee profile fields", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
       ...mockEmployee,
