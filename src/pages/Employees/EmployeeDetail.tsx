@@ -1,16 +1,16 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
+import type { Employee } from "@/types/api";
 import { formatDate } from "../../lib/dateUtils";
 import {
   fetchEmployee,
   activateEmployee,
   terminateEmployee,
-  type Employee,
 } from "../../services/employeeApi";
 import {
   fetchEmployeeQualifications,
@@ -35,6 +35,7 @@ import {
  */
 function StatusBadge({ status }: { status: string }) {
   const colors = {
+    applicant: "orange",
     pre_contract: "yellow",
     active: "lime",
     on_leave: "sky",
@@ -42,6 +43,7 @@ function StatusBadge({ status }: { status: string }) {
   } as const;
 
   const labels = {
+    applicant: <Trans>Applicant</Trans>,
     pre_contract: <Trans>Pre-Contract</Trans>,
     active: <Trans>Active</Trans>,
     on_leave: <Trans>On Leave</Trans>,
@@ -49,8 +51,8 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <Badge color={colors[status as keyof typeof colors]}>
-      {labels[status as keyof typeof labels] || status}
+    <Badge color={colors[status as keyof typeof colors] ?? "zinc"}>
+      {labels[status as keyof typeof labels] ?? status}
     </Badge>
   );
 }
@@ -113,21 +115,25 @@ function ProfileTab({ employee }: { employee: Employee }) {
         <Trans>Date of Birth</Trans>
       </DescriptionTerm>
       <DescriptionDetails>
-        {formatDate(employee.date_of_birth, i18n.locale)}
+        {employee.date_of_birth
+          ? formatDate(employee.date_of_birth, i18n.locale)
+          : "-"}
       </DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Contract Start Date</Trans>
       </DescriptionTerm>
       <DescriptionDetails>
-        {formatDate(employee.contract_start_date, i18n.locale)}
+        {employee.contract_start_date
+          ? formatDate(employee.contract_start_date, i18n.locale)
+          : "-"}
       </DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Organizational Unit</Trans>
       </DescriptionTerm>
       <DescriptionDetails>
-        {employee.organizational_unit.name}
+        {employee.organizational_unit?.name || "-"}
       </DescriptionDetails>
     </DescriptionList>
   );

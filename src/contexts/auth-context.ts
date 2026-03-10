@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { createContext } from "react";
-import type { Employee } from "../services/employeeApi";
+import type { Employee } from "@/types/api";
 
 export interface User {
   id: number;

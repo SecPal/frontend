@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -6,11 +6,11 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import type { Employee } from "@/types/api";
 import { EmployeeDetail } from "./EmployeeDetail";
 import * as employeeApi from "../../services/employeeApi";
 import * as qualificationApi from "../../services/qualificationApi";
 import * as documentApi from "../../services/employeeDocumentApi";
-import type { Employee } from "../../services/employeeApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
@@ -96,6 +96,51 @@ describe("EmployeeDetail", () => {
     await waitFor(() => {
       expect(screen.getByText("Active")).toBeInTheDocument();
     });
+  });
+
+  it("should display applicant status badge", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "applicant",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Applicant").length).toBeGreaterThan(0);
+    });
+  });
+
+  it("should fall back to the raw status label for unknown values", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "archived" as Employee["status"],
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("archived")).toBeInTheDocument();
+    });
+  });
+
+  it("should render placeholders for nullable employee profile fields", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      date_of_birth: null,
+      contract_start_date: null,
+      organizational_unit: null,
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "John Doe" })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(3);
   });
 
   it("should display error on fetch failure", async () => {

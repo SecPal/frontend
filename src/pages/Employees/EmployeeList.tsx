@@ -1,15 +1,11 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import {
-  fetchEmployees,
-  type Employee,
-  type EmployeeStatus,
-  type EmployeeFilters,
-} from "../../services/employeeApi";
+import type { Employee, EmployeeFilters, EmployeeStatus } from "@/types/api";
+import { fetchEmployees } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
@@ -34,6 +30,7 @@ import { Badge } from "../../components/badge";
  */
 function StatusBadge({ status }: { status: EmployeeStatus }) {
   const colors = {
+    applicant: "orange",
     pre_contract: "yellow",
     active: "lime",
     on_leave: "sky",
@@ -41,6 +38,7 @@ function StatusBadge({ status }: { status: EmployeeStatus }) {
   } as const;
 
   const labels = {
+    applicant: <Trans>Applicant</Trans>,
     pre_contract: <Trans>Pre-Contract</Trans>,
     active: <Trans>Active</Trans>,
     on_leave: <Trans>On Leave</Trans>,
@@ -207,6 +205,9 @@ export function EmployeeList() {
               <option value="">
                 <Trans>All</Trans>
               </option>
+              <option value="applicant">
+                <Trans>Applicant</Trans>
+              </option>
               <option value="pre_contract">
                 <Trans>Pre-Contract</Trans>
               </option>
@@ -292,7 +293,7 @@ export function EmployeeList() {
                 <StatusBadge status={employee.status} />
               </TableCell>
               <TableCell className="text-zinc-500">
-                {employee.organizational_unit.name}
+                {employee.organizational_unit?.name || "-"}
               </TableCell>
               <TableCell>
                 <div className="-mx-3 -my-1.5 sm:-mx-2.5">

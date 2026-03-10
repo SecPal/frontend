@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -114,7 +114,6 @@ describe("EmployeeCreate", () => {
       date_of_birth: "1990-01-01",
       hire_date: "2025-01-01",
       contract_start_date: "2025-01-01",
-      contract_end_date: undefined,
       position: "Developer",
       status: "active",
       contract_type: "full_time",
@@ -149,14 +148,16 @@ describe("EmployeeCreate", () => {
       target: { value: "+1234567890" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: "1990-01-01" },
+      target: { value: "01/01/1990" },
     });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
     fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
-      target: { value: "2025-01-01" },
+      target: { value: "01/01/2025" },
     });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
     fireEvent.change(screen.getByLabelText(/organizational unit/i), {
       target: { value: "unit-1" },
     });
@@ -170,9 +171,9 @@ describe("EmployeeCreate", () => {
         last_name: "Doe",
         email: "john.doe@example.com",
         phone: "+1234567890",
-        date_of_birth: "",
+        date_of_birth: "1990-01-01",
         position: "Developer",
-        contract_start_date: "",
+        contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
         management_level: 0,
         status: "pre_contract",
@@ -325,6 +326,19 @@ describe("EmployeeCreate", () => {
     expect(contractTypeSelect).toHaveValue("part_time");
   });
 
+  it("should allow selecting applicant status", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    const statusSelect = screen.getByLabelText(/status/i);
+    fireEvent.change(statusSelect, { target: { value: "applicant" } });
+
+    expect(statusSelect).toHaveValue("applicant");
+  });
+
   it("should clear error message when user changes input", async () => {
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
       data: mockOrganizationalUnits,
@@ -475,7 +489,6 @@ describe("EmployeeCreate", () => {
         date_of_birth: "1990-01-01",
         hire_date: "2025-01-01",
         contract_start_date: "2025-01-01",
-        contract_end_date: undefined,
         position: "CEO",
         status: "active",
         contract_type: "full_time",
