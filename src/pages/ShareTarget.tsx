@@ -1,20 +1,19 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Trans } from "@lingui/macro";
 import { Heading } from "../components/heading";
 import { Text } from "../components/text";
 import { Button } from "../components/button";
 import { Badge } from "../components/badge";
 import { EncryptionProgress } from "../components/EncryptionProgress";
-import { handleShareTargetMessage } from "./ShareTarget.utils";
 import {
   fetchSecrets,
   getSecretMasterKey,
   type Secret,
 } from "../services/secretApi";
-import { addFileToQueue, processFileQueue } from "../lib/fileQueue";
+import { addFileToQueue, processEncryptedFileQueue } from "../lib/fileQueue";
 import { encryptFile, deriveFileKey } from "../lib/crypto/encryption";
 import { calculateChecksum } from "../lib/crypto/checksum";
 import { db } from "../lib/db";
@@ -24,6 +23,7 @@ interface SharedFile {
   type: string;
   size: number;
   dataUrl?: string;
+  file?: File;
 }
 
 interface SharedData {
@@ -109,65 +109,140 @@ function sanitizeUrl(url: string | undefined): string | null {
   }
 }
 
+function getShareTextDataFromUrl(): Omit<SharedData, "files"> {
+  const url = new URL(window.location.href);
+
+  return {
+    title: url.searchParams.get("title") || undefined,
+    text: url.searchParams.get("text") || undefined,
+    url: url.searchParams.get("url") || undefined,
+  };
+}
+
+function buildShareDataFromUrl(files?: SharedFile[]): SharedData | null {
+  const { title, text, url } = getShareTextDataFromUrl();
+
+  const hasContent =
+    (title && title !== "") ||
+    (text && text !== "") ||
+    (url && url !== "") ||
+    (files && files.length > 0);
+
+  if (!hasContent) {
+    return null;
+  }
+
+  return {
+    title: title || undefined,
+    text: text || undefined,
+    url: url || undefined,
+    files: files && files.length > 0 ? files : undefined,
+  };
+}
+
+function normalizeSharedFiles(
+  files: unknown,
+  newErrors: string[]
+): SharedFile[] {
+  if (!Array.isArray(files)) {
+    newErrors.push("Invalid files format");
+    return [];
+  }
+
+  return files.filter((file): file is SharedFile => {
+    if (
+      typeof file !== "object" ||
+      file === null ||
+      typeof file.name !== "string" ||
+      typeof file.type !== "string" ||
+      typeof file.size !== "number"
+    ) {
+      newErrors.push("Invalid file data structure");
+      return false;
+    }
+
+    if (file.dataUrl !== undefined && typeof file.dataUrl !== "string") {
+      newErrors.push("Invalid file data structure");
+      return false;
+    }
+
+    if (file.file !== undefined && !(file.file instanceof File)) {
+      newErrors.push("Invalid file data structure");
+      return false;
+    }
+
+    if (!isFileTypeAllowed(file.type)) {
+      newErrors.push(
+        `Invalid file type: ${file.name} (${file.type}) is not supported`
+      );
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      newErrors.push(
+        `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
+      );
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function isAllowedLocalFileUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.href);
+    return parsed.protocol === "data:" || parsed.protocol === "blob:";
+  } catch {
+    return false;
+  }
+}
+
+async function readSharedFileBytes(file: SharedFile): Promise<Uint8Array> {
+  if (file.file) {
+    return new Uint8Array(await file.file.arrayBuffer());
+  }
+
+  if (!file.dataUrl) {
+    throw new Error(`File ${file.name} has no data URL`);
+  }
+
+  if (!isAllowedLocalFileUrl(file.dataUrl)) {
+    throw new Error(
+      `File ${file.name} has an invalid local file URL and cannot be uploaded`
+    );
+  }
+
+  const response = await fetch(file.dataUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file data for ${file.name}`);
+  }
+
+  const blob = await response.blob();
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
 export function ShareTarget() {
+  const [shareTextData] = useState<Omit<SharedData, "files">>(() =>
+    getShareTextDataFromUrl()
+  );
+
   // Parse initial data once using lazy initialization
   const [sharedData, setSharedData] = useState<SharedData | null>(() => {
-    const url = new URL(window.location.href);
-    const title = url.searchParams.get("title");
-    const text = url.searchParams.get("text");
-    const urlParam = url.searchParams.get("url");
     const filesJson = sessionStorage.getItem("share-target-files");
-    let files: SharedFile[] = [];
+    let files: SharedFile[] | undefined;
+    const newErrors: string[] = [];
 
     if (filesJson) {
       try {
-        const parsedFiles = JSON.parse(filesJson);
-
-        // Runtime type validation
-        if (!Array.isArray(parsedFiles)) {
-          throw new Error("Invalid files format: not an array");
-        }
-
-        files = parsedFiles.filter((file): file is SharedFile => {
-          // Validate required properties exist and have correct types
-          if (
-            typeof file !== "object" ||
-            file === null ||
-            typeof file.name !== "string" ||
-            typeof file.type !== "string" ||
-            typeof file.size !== "number"
-          ) {
-            return false;
-          }
-
-          // Validate dataUrl if present
-          if (file.dataUrl !== undefined && typeof file.dataUrl !== "string") {
-            return false;
-          }
-
-          // Apply business logic validation
-          return isFileTypeAllowed(file.type) && file.size <= MAX_FILE_SIZE;
-        });
+        files = normalizeSharedFiles(JSON.parse(filesJson), newErrors);
       } catch (error) {
         // Log parsing errors for debugging
         console.error("Failed to parse shared files during init:", error);
       }
     }
 
-    const hasContent =
-      (title && title !== "") ||
-      (text && text !== "") ||
-      (urlParam && urlParam !== "") ||
-      files.length > 0;
-
-    return hasContent
-      ? {
-          title: title || undefined,
-          text: text || undefined,
-          url: urlParam || undefined,
-          files: files.length > 0 ? files : undefined,
-        }
-      : null;
+    return buildShareDataFromUrl(files);
   });
 
   const [errors, setErrors] = useState<string[]>(() => {
@@ -176,38 +251,7 @@ export function ShareTarget() {
 
     if (filesJson) {
       try {
-        const parsedFiles = JSON.parse(filesJson);
-
-        // Runtime type validation
-        if (!Array.isArray(parsedFiles)) {
-          newErrors.push("Invalid files format");
-          return newErrors;
-        }
-
-        parsedFiles.forEach((file) => {
-          // Validate required properties
-          if (
-            typeof file !== "object" ||
-            file === null ||
-            typeof file.name !== "string" ||
-            typeof file.type !== "string" ||
-            typeof file.size !== "number"
-          ) {
-            newErrors.push("Invalid file data structure");
-            return;
-          }
-
-          if (!isFileTypeAllowed(file.type)) {
-            newErrors.push(
-              `Invalid file type: ${file.name} (${file.type}) is not supported`
-            );
-          }
-          if (file.size > MAX_FILE_SIZE) {
-            newErrors.push(
-              `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
-            );
-          }
-        });
+        normalizeSharedFiles(JSON.parse(filesJson), newErrors);
       } catch {
         newErrors.push("Failed to load shared files");
       }
@@ -276,106 +320,67 @@ export function ShareTarget() {
     }
   }, []);
 
-  // Reload function for Service Worker messages
-  const loadSharedData = useCallback(() => {
-    const url = new URL(window.location.href);
-    const newErrors: string[] = [];
-
-    // Parse text data from URL parameters (GET method)
-    const title = url.searchParams.get("title");
-    const text = url.searchParams.get("text");
-    const urlParam = url.searchParams.get("url");
-
-    // Parse files from sessionStorage (set by Service Worker)
-    const filesJson = sessionStorage.getItem("share-target-files");
-    let files: SharedFile[] = [];
-
-    if (filesJson) {
-      try {
-        const parsedFiles = JSON.parse(filesJson);
-
-        // Runtime type validation
-        if (!Array.isArray(parsedFiles)) {
-          console.error("Invalid files format: not an array");
-          newErrors.push("Failed to load shared files");
-          return;
-        }
-
-        // Validate each file with type guard
-        files = parsedFiles.filter((file): file is SharedFile => {
-          // Validate required properties exist and have correct types
-          if (
-            typeof file !== "object" ||
-            file === null ||
-            typeof file.name !== "string" ||
-            typeof file.type !== "string" ||
-            typeof file.size !== "number"
-          ) {
-            console.warn("Invalid file structure:", file);
-            return false;
-          }
-
-          // Validate dataUrl if present
-          if (file.dataUrl !== undefined && typeof file.dataUrl !== "string") {
-            console.warn("Invalid dataUrl type for file:", file.name);
-            return false;
-          }
-
-          if (!isFileTypeAllowed(file.type)) {
-            newErrors.push(
-              `Invalid file type: ${file.name} (${file.type}) is not supported`
-            );
-            return false;
-          }
-
-          if (file.size > MAX_FILE_SIZE) {
-            newErrors.push(
-              `File too large: ${file.name} (${formatFileSize(file.size)}). Maximum 10MB allowed.`
-            );
-            return false;
-          }
-
-          return true;
-        });
-      } catch (error) {
-        console.error("Failed to parse shared files:", error);
-        newErrors.push("Failed to load shared files");
-      }
-    }
-
-    // Only set shared data if we have something (including errors)
-    const hasContent =
-      (title && title !== "") ||
-      (text && text !== "") ||
-      (urlParam && urlParam !== "") ||
-      files.length > 0 ||
-      newErrors.length > 0;
-
-    if (hasContent) {
-      setSharedData({
-        title: title || undefined,
-        text: text || undefined,
-        url: urlParam || undefined,
-        files: files.length > 0 ? files : undefined,
-      });
-    }
-
-    setErrors(newErrors);
-  }, []);
-
   // Service Worker message handler
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      handleShareTargetMessage(event, shareId, loadSharedData, setErrors);
+      if (!event.data) {
+        return;
+      }
+
+      const { type, shareId: messageShareId } = event.data;
+
+      if (shareId && messageShareId && shareId !== messageShareId) {
+        return;
+      }
+
+      if (type === "SHARE_TARGET_FILES") {
+        const newErrors: string[] = [];
+        const files = normalizeSharedFiles(event.data.files, newErrors);
+
+        setSharedData((current) => {
+          const nextData: SharedData = {
+            ...(current ?? shareTextData),
+            ...shareTextData,
+            files: files.length > 0 ? files : undefined,
+          };
+
+          if (
+            !nextData.title &&
+            !nextData.text &&
+            !nextData.url &&
+            !nextData.files
+          ) {
+            return null;
+          }
+
+          return nextData;
+        });
+
+        if (newErrors.length > 0) {
+          setErrors((current) => [...current, ...newErrors]);
+        }
+      } else if (type === "SHARE_TARGET_ERROR") {
+        setErrors((current) => [
+          ...current,
+          event.data.error || "Unknown error processing shared content",
+        ]);
+      }
     };
 
     navigator.serviceWorker?.addEventListener("message", handleMessage);
+
+    if (shareId && navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "REQUEST_SHARE_TARGET_FILES",
+        shareId,
+      });
+    }
 
     // Clean up event listener on unmount
     return () => {
       navigator.serviceWorker?.removeEventListener("message", handleMessage);
     };
-  }, [shareId, loadSharedData]);
+  }, [shareId, shareTextData]);
 
   const handleClear = () => {
     setSharedData(null);
@@ -384,6 +389,13 @@ export function ShareTarget() {
     setSelectedSecretId("");
     setUploadSuccess(false);
     setUploadError(null);
+
+    if (shareId && navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "CLEAR_SHARE_TARGET_FILES",
+        shareId,
+      });
+    }
   };
 
   const handleUpload = async () => {
@@ -402,21 +414,10 @@ export function ShareTarget() {
       // Encrypt and queue all files
       for (const file of sharedData.files) {
         try {
-          // Validate dataUrl
-          if (!file.dataUrl) {
-            throw new Error(`File ${file.name} has no data URL`);
-          }
-
           // Update encryption progress (0%)
           setEncryptionProgress((prev) => new Map(prev).set(file.name, 0));
 
-          // Fetch file data from dataUrl
-          const response = await fetch(file.dataUrl);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch file data for ${file.name}`);
-          }
-          const blob = await response.blob();
-          const plaintext = new Uint8Array(await blob.arrayBuffer());
+          const plaintext = await readSharedFileBytes(file);
 
           // Update encryption progress (25%)
           setEncryptionProgress((prev) => new Map(prev).set(file.name, 25));
@@ -483,13 +484,13 @@ export function ShareTarget() {
       setIsEncrypting(false);
 
       // Process the queue (upload encrypted files)
-      const stats = await processFileQueue();
+      const stats = await processEncryptedFileQueue();
 
       if (stats.failed > 0) {
         setUploadError(
           `Failed to upload ${stats.failed} of ${sharedData.files.length} file(s)`
         );
-      } else if (stats.completed === stats.total) {
+      } else if (stats.total > 0 && stats.completed === stats.total) {
         setUploadSuccess(true);
         // Clear shared data after successful upload
         clearTimeoutRef.current = window.setTimeout(() => {

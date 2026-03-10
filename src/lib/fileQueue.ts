@@ -8,7 +8,11 @@ import {
   MAX_BACKOFF_MS,
   UPLOAD_CONCURRENCY,
 } from "./db-constants";
-import { uploadAttachment, ApiError } from "../services/secretApi";
+import {
+  uploadAttachment,
+  uploadEncryptedAttachment,
+  ApiError,
+} from "../services/secretApi";
 
 /**
  * Add a file to the upload queue
@@ -204,6 +208,98 @@ export async function retryFileUpload(entry: FileQueueEntry): Promise<boolean> {
   }
 }
 
+async function retryEncryptedFileUpload(
+  entry: FileQueueEntry
+): Promise<boolean> {
+  if (entry.retryCount >= MAX_RETRY_COUNT) {
+    await updateFileUploadState(entry.id, "failed", "Max retries exceeded");
+    return false;
+  }
+
+  if (entry.lastAttemptAt) {
+    const backoffMs = Math.min(
+      Math.pow(2, entry.retryCount) * 1000,
+      MAX_BACKOFF_MS
+    );
+    const timeSinceLastAttempt = Date.now() - entry.lastAttemptAt.getTime();
+
+    if (timeSinceLastAttempt < backoffMs) {
+      return false;
+    }
+  }
+
+  try {
+    await updateFileUploadState(entry.id, "uploading");
+
+    if (!entry.secretId) {
+      throw new Error("Cannot upload file without target Secret ID");
+    }
+
+    const checksumEncrypted =
+      entry.checksumEncrypted && entry.checksumEncrypted.trim() !== ""
+        ? entry.checksumEncrypted
+        : await calculateEncryptedChecksum(entry.file);
+
+    const attachment = await uploadEncryptedAttachment(
+      entry.secretId,
+      entry.file,
+      {
+        filename: entry.metadata.name,
+        type: entry.metadata.type,
+        size: entry.metadata.size,
+        encryptedSize: entry.file.size,
+        checksum: entry.checksum || "",
+        checksumEncrypted,
+      }
+    );
+
+    console.log(
+      `[FileQueue] Successfully uploaded encrypted ${attachment.filename} (${attachment.size} bytes) to secret ${entry.secretId}`,
+      { attachmentId: attachment.id }
+    );
+
+    await db.fileQueue.update(entry.id, {
+      uploadState: "completed",
+      checksumEncrypted,
+      error: undefined,
+      lastAttemptAt: new Date(),
+    });
+    return true;
+  } catch (error) {
+    let errorMsg = "Encrypted upload failed";
+
+    if (error instanceof ApiError) {
+      errorMsg = error.message;
+      if (error.errors && Object.keys(error.errors).length > 0) {
+        const firstErrorField = Object.keys(error.errors)[0];
+        if (firstErrorField) {
+          const fieldErrors = error.errors[firstErrorField];
+          if (fieldErrors && fieldErrors.length > 0) {
+            errorMsg = `${errorMsg}: ${fieldErrors[0]}`;
+          }
+        }
+      }
+    } else if (error instanceof Error) {
+      errorMsg = error.message;
+    }
+
+    console.error(
+      `[FileQueue] Encrypted upload failed for ${entry.metadata.name}:`,
+      errorMsg
+    );
+    await updateFileUploadState(entry.id, "failed", errorMsg);
+    return false;
+  }
+}
+
+async function calculateEncryptedChecksum(file: Blob): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray.map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
 /**
  * Process files with concurrency limit using worker pool pattern
  *
@@ -293,6 +389,55 @@ export async function processFileQueue(
     else if (file.uploadState === "pending") {
       // Check if retry count increased - if not, it was skipped due to backoff
       const originalFile = files.find((f) => f.id === file.id);
+      if (originalFile && file.retryCount === originalFile.retryCount) {
+        skipped++;
+      } else {
+        pending++;
+      }
+    } else if (file.uploadState === "uploading") pending++;
+  }
+
+  return {
+    total: files.length,
+    completed,
+    failed,
+    pending,
+    skipped,
+  };
+}
+
+export async function processEncryptedFileQueue(
+  concurrency = UPLOAD_CONCURRENCY
+): Promise<{
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  skipped: number;
+}> {
+  const files = await getEncryptedFiles();
+
+  await processWithConcurrency(
+    files,
+    (entry) => retryEncryptedFileUpload(entry),
+    concurrency
+  );
+
+  const updatedFiles = await Promise.all(
+    files.map((file) => db.fileQueue.get(file.id))
+  );
+
+  let completed = 0;
+  let failed = 0;
+  let pending = 0;
+  let skipped = 0;
+
+  for (const file of updatedFiles) {
+    if (!file) continue;
+    if (file.uploadState === "completed") completed++;
+    else if (file.uploadState === "failed") failed++;
+    else if (file.uploadState === "encrypted") {
+      const originalFile = files.find((entry) => entry.id === file.id);
       if (originalFile && file.retryCount === originalFile.retryCount) {
         skipped++;
       } else {

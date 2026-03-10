@@ -73,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - stale local `auth_user` state is cleared, including sensitive client cleanup, when startup revalidation rejects
   - offline startup still preserves existing local session state to keep the offline-first flow available
 
+- **Share Target now keeps shared files out of plaintext persistent storage** (#504)
+  - replaced the Share Target service worker's plaintext IndexedDB handoff with a transient in-memory handoff keyed by `share_id`
+  - added a request/clear message protocol so the share page can retrieve files after navigation without persisting raw attachments at rest
+  - switched the post-encryption upload path to the encrypted attachment queue processor so successful UI states require real encrypted uploads
+  - added regression coverage for the encrypted queue processor, the no-op success case, and service-worker-delivered `File` objects without `dataUrl`
+
 - **Employee API types now use a shared contract source** (#492)
   - added `src/types/api` as the central frontend import path for employee API types
   - removed employee request and response type declarations from `src/services/employeeApi.ts`

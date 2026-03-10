@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -13,6 +13,36 @@ import * as fileQueue from "../lib/fileQueue";
 // Mock modules
 vi.mock("../services/secretApi");
 vi.mock("../lib/fileQueue");
+
+const originalServiceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+  navigator,
+  "serviceWorker"
+);
+
+function setupServiceWorkerMock() {
+  const listeners: Array<(event: MessageEvent) => void> = [];
+  const serviceWorker = {
+    controller: {
+      postMessage: vi.fn(),
+    },
+    addEventListener: vi.fn(
+      (type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === "message" && typeof listener === "function") {
+          listeners.push(listener as (event: MessageEvent) => void);
+        }
+      }
+    ),
+    removeEventListener: vi.fn(),
+  };
+
+  Object.defineProperty(navigator, "serviceWorker", {
+    value: serviceWorker,
+    configurable: true,
+    writable: true,
+  });
+
+  return { serviceWorker, listeners };
+}
 
 // Wrapper component with I18n
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -51,8 +81,8 @@ describe("ShareTarget - Upload Functionality", () => {
     // Mock addFileToQueue
     vi.mocked(fileQueue.addFileToQueue).mockResolvedValue("file-123");
 
-    // Mock processFileQueue
-    vi.mocked(fileQueue.processFileQueue).mockResolvedValue({
+    // Mock processEncryptedFileQueue
+    vi.mocked(fileQueue.processEncryptedFileQueue).mockResolvedValue({
       total: 1,
       completed: 1,
       failed: 0,
@@ -81,6 +111,19 @@ describe("ShareTarget - Upload Functionality", () => {
       },
       writable: true,
     });
+  });
+
+  afterEach(() => {
+    if (originalServiceWorkerDescriptor) {
+      Object.defineProperty(
+        navigator,
+        "serviceWorker",
+        originalServiceWorkerDescriptor
+      );
+      return;
+    }
+
+    Reflect.deleteProperty(navigator, "serviceWorker");
   });
 
   it("should load and display secrets in selector", async () => {
@@ -142,7 +185,7 @@ describe("ShareTarget - Upload Functionality", () => {
     await waitFor(
       () => {
         expect(fileQueue.addFileToQueue).toHaveBeenCalled();
-        expect(fileQueue.processFileQueue).toHaveBeenCalled();
+        expect(fileQueue.processEncryptedFileQueue).toHaveBeenCalled();
       },
       { timeout: 5000 }
     );
@@ -161,7 +204,7 @@ describe("ShareTarget - Upload Functionality", () => {
 
   it("should show upload progress during upload", async () => {
     // Mock slow upload
-    vi.mocked(fileQueue.processFileQueue).mockImplementation(
+    vi.mocked(fileQueue.processEncryptedFileQueue).mockImplementation(
       () =>
         new Promise((resolve) =>
           setTimeout(
@@ -222,7 +265,7 @@ describe("ShareTarget - Upload Functionality", () => {
 
   it("should handle upload errors gracefully", async () => {
     // Mock upload failure
-    vi.mocked(fileQueue.processFileQueue).mockResolvedValue({
+    vi.mocked(fileQueue.processEncryptedFileQueue).mockResolvedValue({
       total: 1,
       completed: 0,
       failed: 1,
@@ -364,7 +407,7 @@ describe("ShareTarget - Upload Functionality", () => {
   });
 
   it("should handle partial upload completion", async () => {
-    vi.mocked(fileQueue.processFileQueue).mockResolvedValue({
+    vi.mocked(fileQueue.processEncryptedFileQueue).mockResolvedValue({
       total: 3,
       completed: 1,
       failed: 0,
@@ -389,5 +432,133 @@ describe("ShareTarget - Upload Functionality", () => {
         screen.getByText(/upload incomplete.*1 succeeded.*2 pending/i)
       ).toBeInTheDocument();
     });
+  });
+
+  it("does not report success when no encrypted uploads were processed", async () => {
+    vi.mocked(fileQueue.processEncryptedFileQueue).mockResolvedValue({
+      total: 0,
+      completed: 0,
+      failed: 0,
+      pending: 0,
+      skipped: 0,
+    });
+
+    const user = userEvent.setup();
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/upload incomplete.*0 succeeded.*0 pending/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("requests shared files from the service worker and uploads File objects without dataUrl", async () => {
+    const { serviceWorker, listeners } = setupServiceWorkerMock();
+
+    Object.defineProperty(window, "location", {
+      value: {
+        href: "http://localhost/share?title=Test&share_id=share-123",
+        pathname: "/share",
+        search: "?title=Test&share_id=share-123",
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    const user = userEvent.setup();
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    await waitFor(() => {
+      expect(serviceWorker.controller.postMessage).toHaveBeenCalledWith({
+        type: "REQUEST_SHARE_TARGET_FILES",
+        shareId: "share-123",
+      });
+    });
+
+    const sharedFile = new File(["pdf-binary"], "handoff.pdf", {
+      type: "application/pdf",
+    });
+
+    await act(async () => {
+      listeners.forEach((listener) =>
+        listener(
+          new MessageEvent("message", {
+            data: {
+              type: "SHARE_TARGET_FILES",
+              shareId: "share-123",
+              files: [
+                {
+                  name: "handoff.pdf",
+                  type: "application/pdf",
+                  size: sharedFile.size,
+                  file: sharedFile,
+                },
+              ],
+            },
+          })
+        )
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/handoff\.pdf/i)).toBeInTheDocument();
+    });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    await waitFor(() => {
+      expect(fileQueue.addFileToQueue).toHaveBeenCalled();
+      expect(fileQueue.processEncryptedFileQueue).toHaveBeenCalled();
+    });
+  });
+
+  it("rejects non-local file URLs before fetching shared file data", async () => {
+    const user = userEvent.setup();
+
+    sessionStorage.setItem(
+      "share-target-files",
+      JSON.stringify([
+        {
+          name: "handoff.pdf",
+          type: "application/pdf",
+          size: 1024,
+          dataUrl: "https://attacker.example/file.pdf",
+        },
+      ])
+    );
+
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/invalid local file url and cannot be uploaded/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(fileQueue.addFileToQueue).not.toHaveBeenCalled();
+    expect(fileQueue.processEncryptedFileQueue).not.toHaveBeenCalled();
   });
 });

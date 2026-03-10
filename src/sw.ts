@@ -90,51 +90,46 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats",
 ];
 
-/**
- * Store file in IndexedDB fileQueue
- * Service Worker cannot import from lib/fileQueue.ts, so we inline the logic
- *
- * Schema is duplicated from db.ts - use shared constants from db-constants.ts
- * to minimize sync risk.
- *
- * NOTE: Database connection is opened on each call. For typical Share Target use
- * cases (1-3 files), this is acceptable. Future optimization could cache the
- * connection if bulk operations become common.
- *
- * SCHEMA SYNC: Structure must match FileQueueEntry interface in db.ts.
- * - id: string
- * - file: Blob
- * - metadata: { name, type, size, timestamp }
- * - uploadState: "pending" | "uploading" | "completed" | "failed"
- * - retryCount: number
- * - createdAt: Date
- * - lastAttemptAt?: Date (optional, set during upload attempts)
- * - error?: string (optional, set on failure)
- * - secretId?: string (optional, target secret)
- */
-async function storeFileInQueue(
-  file: File,
-  metadata: { name: string; type: string; size: number; timestamp: number }
-): Promise<string> {
-  const db = await openDB(DB_NAME, DB_VERSION);
-  const id = crypto.randomUUID();
+interface ShareTargetTransferFile {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl?: string;
+  file: File;
+}
 
-  // Structure matches FileQueueEntry from db.ts (required fields only)
-  await db.add("fileQueue", {
-    id,
-    file, // File extends Blob, no conversion needed
-    metadata,
-    uploadState: "pending",
-    retryCount: 0,
-    createdAt: new Date(),
-  });
+const SHARE_TARGET_TTL_MS = 5 * 60 * 1000;
+const pendingShareTargetPayloads = new Map<
+  string,
+  {
+    createdAt: number;
+    files: ShareTargetTransferFile[];
+  }
+>();
 
-  return id;
+function pruneExpiredShareTargetPayloads(): void {
+  const now = Date.now();
+
+  for (const [shareId, payload] of pendingShareTargetPayloads.entries()) {
+    if (now - payload.createdAt > SHARE_TARGET_TTL_MS) {
+      pendingShareTargetPayloads.delete(shareId);
+    }
+  }
+}
+
+function generateShareId(): string {
+  if (typeof self.crypto.randomUUID === "function") {
+    return self.crypto.randomUUID();
+  }
+
+  const randomValue = self.crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+  return `${Date.now()}-${randomValue.toString(16)}`;
 }
 
 async function handleShareTargetPost(request: Request): Promise<Response> {
   // Use a shareId to correlate messages and redirects across navigation
-  const shareId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const shareId = generateShareId();
+  pruneExpiredShareTargetPayloads();
 
   try {
     const formData = await request.clone().formData();
@@ -166,22 +161,10 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
       return true;
     });
 
-    // Store files in IndexedDB for persistent offline queue
-    const fileIds = await Promise.all(
-      allowedFiles.map(async (file) => {
-        const id = await storeFileInQueue(file, {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          timestamp: Date.now(),
-        });
-        return id;
-      })
-    );
-
-    // Generate lightweight file metadata for client notification
+    // Generate transient payload for client notification.
+    // Files stay in service worker memory until the share page requests them.
     const processedFiles = await Promise.all(
-      allowedFiles.map(async (file, index) => {
+      allowedFiles.map(async (file) => {
         // Convert file to Base64 for preview only for images and limited size
         // Reduced to 2MB to prevent memory issues (Base64 is ~33% larger)
         let dataUrl: string | undefined;
@@ -195,14 +178,21 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
         }
 
         return {
-          id: fileIds[index],
           name: file.name,
           type: file.type,
           size: file.size,
           dataUrl,
+          file,
         };
       })
     );
+
+    if (processedFiles.length > 0) {
+      pendingShareTargetPayloads.set(shareId, {
+        createdAt: Date.now(),
+        files: processedFiles,
+      });
+    }
 
     // Build redirect URL with query parameters and shareId
     const redirectUrl = new URL("/share", self.location.origin);
@@ -211,11 +201,10 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     if (url) redirectUrl.searchParams.set("url", url);
     redirectUrl.searchParams.set("share_id", shareId);
 
-    // Notify clients about shared files (stored in IndexedDB)
-    // This ensures files are available when the redirect happens
+    // Notify existing clients early; newly opened clients can request the payload
+    // via REQUEST_SHARE_TARGET_FILES using the shareId from the redirect URL.
     await self.clients.matchAll({ type: "window" }).then((clients) => {
       if (clients.length > 0) {
-        // If there's an active client, notify it first
         for (const client of clients) {
           client.postMessage({
             type: "SHARE_TARGET_FILES",
@@ -258,6 +247,46 @@ async function handleShareTargetPost(request: Request): Promise<Response> {
     );
   }
 }
+
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
+  if (!event.data || typeof event.data.type !== "string") {
+    return;
+  }
+
+  pruneExpiredShareTargetPayloads();
+
+  const source = event.source;
+  if (!source || !("postMessage" in source)) {
+    return;
+  }
+
+  if (event.data.type === "REQUEST_SHARE_TARGET_FILES") {
+    const shareId = event.data.shareId;
+    const payload =
+      typeof shareId === "string"
+        ? pendingShareTargetPayloads.get(shareId)
+        : undefined;
+
+    if (!shareId || !payload) {
+      source.postMessage({
+        type: "SHARE_TARGET_ERROR",
+        shareId,
+        error: "Shared files are no longer available. Please share them again.",
+      });
+      return;
+    }
+
+    source.postMessage({
+      type: "SHARE_TARGET_FILES",
+      shareId,
+      files: payload.files,
+    });
+  } else if (event.data.type === "CLEAR_SHARE_TARGET_FILES") {
+    if (typeof event.data.shareId === "string") {
+      pendingShareTargetPayloads.delete(event.data.shareId);
+    }
+  }
+});
 
 /**
  * Background Sync handler for file uploads

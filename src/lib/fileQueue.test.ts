@@ -9,6 +9,7 @@ import {
   updateFileUploadState,
   retryFileUpload,
   processFileQueue,
+  processEncryptedFileQueue,
   clearCompletedUploads,
   getStorageQuota,
   getFailedFiles,
@@ -26,6 +27,13 @@ vi.mock("../services/secretApi", () => ({
     filename: "test.txt",
     size: 12,
     mime_type: "text/plain",
+    created_at: new Date().toISOString(),
+  }),
+  uploadEncryptedAttachment: vi.fn().mockResolvedValue({
+    id: "att-enc-123",
+    filename: "encrypted.bin",
+    size: 32,
+    mime_type: "application/octet-stream",
     created_at: new Date().toISOString(),
   }),
   ApiError: class ApiError extends Error {
@@ -819,6 +827,45 @@ describe("File Queue Utilities", () => {
       const encrypted = await getEncryptedFiles();
 
       expect(encrypted).toHaveLength(0);
+    });
+  });
+
+  describe("processEncryptedFileQueue", () => {
+    it("uploads encrypted queue entries via the encrypted attachment API", async () => {
+      const file = new Blob(["encrypted-payload"], {
+        type: "application/octet-stream",
+      });
+      const metadata = {
+        name: "report.pdf",
+        type: "application/pdf",
+        size: 1024,
+        timestamp: Date.now(),
+      };
+
+      await db.fileQueue.add({
+        id: "enc-1",
+        file,
+        metadata,
+        uploadState: "encrypted",
+        secretId: "secret-123",
+        retryCount: 0,
+        checksum: "a".repeat(64),
+        checksumEncrypted: "b".repeat(64),
+        createdAt: new Date(),
+      });
+
+      const stats = await processEncryptedFileQueue();
+
+      expect(stats).toEqual({
+        total: 1,
+        completed: 1,
+        failed: 0,
+        pending: 0,
+        skipped: 0,
+      });
+
+      const updated = await db.fileQueue.get("enc-1");
+      expect(updated?.uploadState).toBe("completed");
     });
   });
 });
