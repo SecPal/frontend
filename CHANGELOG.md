@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Employee API types now use a shared contract source** (#492)
+  - added `src/types/api` as the central frontend import path for employee API types
+  - removed employee request and response type declarations from `src/services/employeeApi.ts`
+  - rewired employee pages, tests, and auth context away from service-local employee types
+  - aligned the employee UI with the contract-backed `applicant` status
+
 - **Login page: Health check retry on offline→online transition**
   - Fixed false "System not ready" error when login page is opened offline and then comes online
   - Health check is now skipped when offline (shows offline warning instead)

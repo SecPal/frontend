@@ -1,7 +1,8 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { EmployeeFormData } from "@/types/api";
 import {
   createEmployee,
   updateEmployee,
@@ -9,7 +10,6 @@ import {
   activateEmployee,
   terminateEmployee,
 } from "./employeeApi";
-import type { EmployeeFormData } from "./employeeApi";
 
 // Mock the global fetch
 const mockFetch = vi.fn();

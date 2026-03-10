@@ -1,101 +1,16 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+  Employee,
+  EmployeeFilters,
+  EmployeeFormData,
+  EmployeeListResponse,
+  ValidationErrorResponse,
+} from "@/types/api";
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
 import { ApiError } from "./ApiError";
-
-/**
- * Employee status types
- */
-export type EmployeeStatus =
-  | "pre_contract"
-  | "active"
-  | "on_leave"
-  | "terminated";
-
-/**
- * Employee API Response Types
- */
-export interface Employee {
-  id: string;
-  employee_number: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  email: string;
-  phone?: string;
-  date_of_birth: string;
-  hire_date?: string;
-  contract_start_date: string;
-  contract_end_date?: string;
-  position?: string;
-  status: EmployeeStatus;
-  contract_type: "full_time" | "part_time" | "minijob" | "freelance";
-  organizational_unit: {
-    id: string;
-    name: string;
-  };
-  management_level: number; // 0=non-management, 1-255=management levels (1=CEO/highest)
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  created_at: string;
-  updated_at: string;
-}
-
-/**
- * Paginated employee list response
- */
-export interface EmployeeListResponse {
-  data: Employee[];
-  meta: {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-  };
-}
-
-/**
- * Employee create/update request
- */
-export interface EmployeeFormData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  date_of_birth: string;
-  contract_start_date: string;
-  contract_end_date?: string;
-  position?: string;
-  organizational_unit_id: string;
-  management_level: number; // 0=non-management, 1-255=management levels (1=CEO/highest)
-  hire_date?: string;
-  status: EmployeeStatus;
-  contract_type: "full_time" | "part_time" | "minijob" | "freelance";
-}
-
-/**
- * Laravel validation error response structure
- */
-export interface ValidationErrorResponse {
-  message: string;
-  errors: Record<string, string[]>;
-}
-
-/**
- * Employee list filters
- */
-export interface EmployeeFilters {
-  status?: EmployeeStatus;
-  organizational_unit_id?: string;
-  search?: string;
-  page?: number;
-  per_page?: number;
-}
 
 /**
  * Fetch paginated list of employees

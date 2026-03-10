@@ -1,14 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import {
-  createEmployee,
-  type EmployeeFormData,
-} from "../../services/employeeApi";
+import type { EmployeeFormData } from "@/types/api";
+import { createEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
@@ -456,6 +454,9 @@ export function EmployeeCreate() {
                     value={formData.status}
                     onChange={(e) => handleChange("status", e.target.value)}
                   >
+                    <option value="applicant">
+                      <Trans>Applicant</Trans>
+                    </option>
                     <option value="pre_contract">
                       <Trans>Pre-Contract</Trans>
                     </option>

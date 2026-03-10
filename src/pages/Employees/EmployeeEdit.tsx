@@ -1,16 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import {
-  fetchEmployee,
-  updateEmployee,
-  type Employee,
-  type EmployeeFormData,
-} from "../../services/employeeApi";
+import type { Employee, EmployeeFormData } from "@/types/api";
+import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { Heading } from "../../components/heading";
@@ -182,10 +178,10 @@ export function EmployeeEdit() {
         last_name: employee.last_name || "",
         email: employee.email,
         phone: employee.phone || "",
-        date_of_birth: employee.date_of_birth,
+        date_of_birth: employee.date_of_birth || "",
         position: employee.position || "",
-        contract_start_date: employee.contract_start_date,
-        organizational_unit_id: employee.organizational_unit.id,
+        contract_start_date: employee.contract_start_date || "",
+        organizational_unit_id: employee.organizational_unit?.id || "",
         management_level: employee.management_level,
         status: employee.status,
         contract_type: employee.contract_type || "full_time",
@@ -194,14 +190,18 @@ export function EmployeeEdit() {
 
       // Set display values based on locale
       if (i18n.locale === "de") {
-        setBirthDateDisplay(formatDateForDisplay(employee.date_of_birth, "de"));
+        setBirthDateDisplay(
+          formatDateForDisplay(employee.date_of_birth || "", "de")
+        );
         setContractDateDisplay(
-          formatDateForDisplay(employee.contract_start_date, "de")
+          formatDateForDisplay(employee.contract_start_date || "", "de")
         );
       } else {
-        setBirthDateDisplay(formatDateForDisplay(employee.date_of_birth, "en"));
+        setBirthDateDisplay(
+          formatDateForDisplay(employee.date_of_birth || "", "en")
+        );
         setContractDateDisplay(
-          formatDateForDisplay(employee.contract_start_date, "en")
+          formatDateForDisplay(employee.contract_start_date || "", "en")
         );
       }
     } catch (err) {

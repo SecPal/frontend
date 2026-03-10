@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -6,13 +6,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import type { Employee, EmployeeListResponse } from "@/types/api";
 import { EmployeeList } from "./EmployeeList";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
-import type {
-  Employee,
-  EmployeeListResponse,
-} from "../../services/employeeApi";
 
 // Mock the employee API
 vi.mock("../../services/employeeApi");
@@ -152,16 +149,39 @@ describe("EmployeeList", () => {
     });
   });
 
+  it("should show applicant in status filters and badges", async () => {
+    vi.mocked(employeeApi.fetchEmployees).mockResolvedValue({
+      data: [{ ...mockEmployees[0]!, status: "applicant" }],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 1,
+      },
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Applicant").length).toBeGreaterThan(0);
+    });
+
+    expect(
+      screen.getByRole("option", { name: /applicant/i })
+    ).toBeInTheDocument();
+  });
+
   it("should have Add Employee button", async () => {
     renderWithProviders();
 
     await waitFor(() => {
       expect(
-        screen.getByRole("link", { name: /add employee/i })
+        screen.getByRole("heading", { name: /employee management/i })
       ).toBeInTheDocument();
     });
 
     const addButton = screen.getByRole("link", { name: /add employee/i });
+    expect(addButton).toBeInTheDocument();
     expect(addButton).toHaveAttribute("href", "/employees/create");
   });
 

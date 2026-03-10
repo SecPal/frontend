@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -6,10 +6,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import type { Employee } from "@/types/api";
 import { EmployeeEdit } from "./EmployeeEdit";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
-import type { Employee } from "../../services/employeeApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
