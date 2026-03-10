@@ -253,9 +253,10 @@ self.addEventListener("message", (event: ExtendableMessageEvent) => {
 
   if (event.data.type === "REQUEST_SHARE_TARGET_FILES") {
     const shareId = event.data.shareId;
-    const payload = typeof shareId === "string"
-      ? pendingShareTargetPayloads.get(shareId)
-      : undefined;
+    const payload =
+      typeof shareId === "string"
+        ? pendingShareTargetPayloads.get(shareId)
+        : undefined;
 
     if (!shareId || !payload) {
       source.postMessage({

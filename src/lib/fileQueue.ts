@@ -240,14 +240,18 @@ async function retryEncryptedFileUpload(
         ? entry.checksumEncrypted
         : await calculateEncryptedChecksum(entry.file);
 
-    const attachment = await uploadEncryptedAttachment(entry.secretId, entry.file, {
-      filename: entry.metadata.name,
-      type: entry.metadata.type,
-      size: entry.metadata.size,
-      encryptedSize: entry.file.size,
-      checksum: entry.checksum || "",
-      checksumEncrypted,
-    });
+    const attachment = await uploadEncryptedAttachment(
+      entry.secretId,
+      entry.file,
+      {
+        filename: entry.metadata.name,
+        type: entry.metadata.type,
+        size: entry.metadata.size,
+        encryptedSize: entry.file.size,
+        checksum: entry.checksum || "",
+        checksumEncrypted,
+      }
+    );
 
     console.log(
       `[FileQueue] Successfully uploaded encrypted ${attachment.filename} (${attachment.size} bytes) to secret ${entry.secretId}`,
@@ -419,7 +423,9 @@ export async function processEncryptedFileQueue(
     concurrency
   );
 
-  const updatedFiles = await Promise.all(files.map((file) => db.fileQueue.get(file.id)));
+  const updatedFiles = await Promise.all(
+    files.map((file) => db.fileQueue.get(file.id))
+  );
 
   let completed = 0;
   let failed = 0;
