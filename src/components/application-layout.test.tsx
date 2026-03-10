@@ -9,8 +9,12 @@ import { MemoryRouter } from "react-router-dom";
 import { ApplicationLayout } from "./application-layout";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
+import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 
 vi.mock("../services/authApi");
+vi.mock("../lib/clientStateCleanup", () => ({
+  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+}));
 
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
@@ -259,6 +263,7 @@ describe("ApplicationLayout", () => {
 
       // User should be cleared from localStorage
       expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
     });
 
     it("clears local state before API call (prevents race condition)", async () => {

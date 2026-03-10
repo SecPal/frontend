@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig, loadEnv } from "vite";
@@ -9,6 +9,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,13 +17,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), "");
-  // Use mode-aware API URL detection:
-  // - Development: empty string (Vite proxy forwards /v1/* to DDEV backend)
-  // - Production: https://api.secpal.app
-  // This matches the logic in src/config.ts for consistent behavior
-  const API_URL =
-    env.VITE_API_URL || (mode === "production" ? "https://api.secpal.app" : "");
-
   return {
     plugins: [
       react({
@@ -151,140 +145,7 @@ export default defineConfig(({ mode }) => {
           navigateFallback: "/index.html",
           navigateFallbackDenylist: [/^\/v1\//, /^\/__/], // Exclude API and Vite internal routes from SPA fallback
           cleanupOutdatedCaches: true,
-          runtimeCaching: [
-            // API: Secrets List (NetworkFirst + 5min TTL)
-            // Fresh data preferred, fallback to cache on network failure
-            {
-              urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/secrets$`
-              ),
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "api-secrets-list",
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 5 * 60, // 5 minutes
-                },
-                networkTimeoutSeconds: 5,
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // API: Secret Details (StaleWhileRevalidate + 1h TTL)
-            // Instant load from cache, background refresh
-            {
-              urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/secrets/[a-zA-Z0-9_-]+$`
-              ),
-              handler: "StaleWhileRevalidate",
-              options: {
-                cacheName: "api-secrets-detail",
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60, // 1 hour
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // API: User Data (StaleWhileRevalidate + 1h TTL)
-            {
-              urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/users.*`
-              ),
-              handler: "StaleWhileRevalidate",
-              options: {
-                cacheName: "api-users",
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60, // 1 hour
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            // API: Auth Endpoints (NetworkOnly - NEVER cache credentials)
-            {
-              urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/v1/auth.*`
-              ),
-              handler: "NetworkOnly",
-            },
-            // API: Other Endpoints (NetworkFirst + 24h TTL fallback)
-            {
-              urlPattern: new RegExp(
-                `^${API_URL.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/.*`
-              ),
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "api-general",
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24, // 24 hours
-                },
-                networkTimeoutSeconds: 10,
-                backgroundSync: {
-                  name: "api-sync-queue",
-                  options: {
-                    maxRetentionTime: 60 * 24, // 24 hours (1440 minutes)
-                  },
-                },
-              },
-            },
-            // Images (CacheFirst + 30 days TTL)
-            // Rarely change, immutable with versioned URLs
-            {
-              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)(?:\?.*)?$/i,
-              handler: "CacheFirst",
-              options: {
-                cacheName: "images",
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-                },
-              },
-            },
-            // Static Assets: JS/CSS (CacheFirst + 1 year TTL)
-            // Immutable, versioned by build hash
-            {
-              urlPattern: /\.(?:js|css)(?:\?.*)?$/i,
-              handler: "CacheFirst",
-              options: {
-                cacheName: "static-assets",
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
-                },
-              },
-            },
-            // Fonts (CacheFirst + 1 year TTL)
-            {
-              urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/i,
-              handler: "CacheFirst",
-              options: {
-                cacheName: "fonts",
-                expiration: {
-                  maxEntries: 30,
-                  maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
-                },
-              },
-            },
-            // Google Fonts (CacheFirst + 1 year TTL)
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: "CacheFirst",
-              options: {
-                cacheName: "google-fonts-cache",
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                },
-              },
-            },
-          ],
+          runtimeCaching: buildPwaRuntimeCaching(),
         },
       }),
       // Bundle size visualizer (only in analyze mode)

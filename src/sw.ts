@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /// <reference lib="webworker" />
@@ -10,7 +10,7 @@ import {
   createHandlerBoundToURL,
 } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
-import { NetworkFirst, CacheFirst } from "workbox-strategies";
+import { CacheFirst } from "workbox-strategies";
 import { openDB } from "idb";
 import {
   DB_NAME,
@@ -38,39 +38,6 @@ cleanupOutdatedCaches();
 
 // Precache all build assets (injected by Vite PWA plugin)
 precacheAndRoute(self.__WB_MANIFEST);
-
-// Cache secrets list with NetworkFirst strategy (fresh data preferred)
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin &&
-    url.pathname === "/v1/secrets" &&
-    url.search === "",
-  new NetworkFirst({
-    cacheName: "secrets-list-cache",
-    networkTimeoutSeconds: 5,
-  })
-);
-
-// Cache secret details with NetworkFirst strategy
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin &&
-    url.pathname.match(/^\/v1\/secrets\/[a-f0-9-]+$/),
-  new NetworkFirst({
-    cacheName: "secrets-detail-cache",
-    networkTimeoutSeconds: 5,
-  })
-);
-
-// Cache other API requests with NetworkFirst strategy
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin && url.pathname.startsWith("/v1/"),
-  new NetworkFirst({
-    cacheName: "api-cache",
-    networkTimeoutSeconds: 10,
-  })
-);
 
 // Cache static assets with CacheFirst strategy
 registerRoute(
