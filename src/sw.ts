@@ -117,9 +117,18 @@ function pruneExpiredShareTargetPayloads(): void {
   }
 }
 
+function generateShareId(): string {
+  if (typeof self.crypto.randomUUID === "function") {
+    return self.crypto.randomUUID();
+  }
+
+  const randomValue = self.crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+  return `${Date.now()}-${randomValue.toString(16)}`;
+}
+
 async function handleShareTargetPost(request: Request): Promise<Response> {
   // Use a shareId to correlate messages and redirects across navigation
-  const shareId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const shareId = generateShareId();
   pruneExpiredShareTargetPayloads();
 
   try {

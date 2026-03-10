@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
@@ -13,6 +13,11 @@ import * as fileQueue from "../lib/fileQueue";
 // Mock modules
 vi.mock("../services/secretApi");
 vi.mock("../lib/fileQueue");
+
+const originalServiceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+  navigator,
+  "serviceWorker"
+);
 
 function setupServiceWorkerMock() {
   const listeners: Array<(event: MessageEvent) => void> = [];
@@ -106,6 +111,19 @@ describe("ShareTarget - Upload Functionality", () => {
       },
       writable: true,
     });
+  });
+
+  afterEach(() => {
+    if (originalServiceWorkerDescriptor) {
+      Object.defineProperty(
+        navigator,
+        "serviceWorker",
+        originalServiceWorkerDescriptor
+      );
+      return;
+    }
+
+    Reflect.deleteProperty(navigator, "serviceWorker");
   });
 
   it("should load and display secrets in selector", async () => {
@@ -507,5 +525,40 @@ describe("ShareTarget - Upload Functionality", () => {
       expect(fileQueue.addFileToQueue).toHaveBeenCalled();
       expect(fileQueue.processEncryptedFileQueue).toHaveBeenCalled();
     });
+  });
+
+  it("rejects non-local file URLs before fetching shared file data", async () => {
+    const user = userEvent.setup();
+
+    sessionStorage.setItem(
+      "share-target-files",
+      JSON.stringify([
+        {
+          name: "handoff.pdf",
+          type: "application/pdf",
+          size: 1024,
+          dataUrl: "https://attacker.example/file.pdf",
+        },
+      ])
+    );
+
+    render(<ShareTarget />, { wrapper: Wrapper });
+
+    const selector = await screen.findByRole("combobox");
+    await user.selectOptions(selector, "secret-1");
+
+    const uploadBtn = await screen.findByRole("button", {
+      name: /save to secret/i,
+    });
+    await user.click(uploadBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/invalid local file url and cannot be uploaded/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(fileQueue.addFileToQueue).not.toHaveBeenCalled();
+    expect(fileQueue.processEncryptedFileQueue).not.toHaveBeenCalled();
   });
 });

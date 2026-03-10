@@ -189,6 +189,15 @@ function normalizeSharedFiles(
   });
 }
 
+function isAllowedLocalFileUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.href);
+    return parsed.protocol === "data:" || parsed.protocol === "blob:";
+  } catch {
+    return false;
+  }
+}
+
 async function readSharedFileBytes(file: SharedFile): Promise<Uint8Array> {
   if (file.file) {
     return new Uint8Array(await file.file.arrayBuffer());
@@ -196,6 +205,12 @@ async function readSharedFileBytes(file: SharedFile): Promise<Uint8Array> {
 
   if (!file.dataUrl) {
     throw new Error(`File ${file.name} has no data URL`);
+  }
+
+  if (!isAllowedLocalFileUrl(file.dataUrl)) {
+    throw new Error(
+      `File ${file.name} has an invalid local file URL and cannot be uploaded`
+    );
   }
 
   const response = await fetch(file.dataUrl);
