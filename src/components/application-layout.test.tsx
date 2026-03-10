@@ -38,12 +38,41 @@ const renderWithProviders = (
   );
 };
 
+function createResolvedCurrentUser(
+  user: Awaited<ReturnType<typeof authApi.getCurrentUser>>
+): ReturnType<typeof authApi.getCurrentUser> {
+  return {
+    then(
+      onFulfilled: (
+        value: Awaited<ReturnType<typeof authApi.getCurrentUser>>
+      ) => unknown
+    ) {
+      onFulfilled(user);
+
+      return {
+        catch() {
+          return undefined;
+        },
+      };
+    },
+  } as unknown as ReturnType<typeof authApi.getCurrentUser>;
+}
+
 describe("ApplicationLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     i18n.load("en", {});
     i18n.activate("en");
+
+    vi.mocked(authApi.getCurrentUser).mockImplementation(() =>
+      createResolvedCurrentUser(
+        (JSON.parse(
+          localStorage.getItem("auth_user") ??
+            '{"id":1,"name":"John Doe","email":"john@example.com"}'
+        ) as Awaited<ReturnType<typeof authApi.getCurrentUser>>)
+      )
+    );
 
     // Set up authenticated user
     localStorage.setItem(
