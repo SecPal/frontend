@@ -60,12 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [invalidateBootstrapRevalidation]
   );
 
-  const login = useCallback((newUser: User) => {
-    invalidateBootstrapRevalidation();
-    authStorage.setUser(newUser);
-    setUser(newUser);
-    setIsLoading(false);
-  }, [invalidateBootstrapRevalidation]);
+  const login = useCallback(
+    (newUser: User) => {
+      invalidateBootstrapRevalidation();
+      authStorage.setUser(newUser);
+      setUser(newUser);
+      setIsLoading(false);
+    },
+    [invalidateBootstrapRevalidation]
+  );
 
   const logout = useCallback(() => {
     clearAuthenticatedState(true);
