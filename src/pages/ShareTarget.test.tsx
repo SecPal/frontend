@@ -15,6 +15,23 @@ import { db } from "../lib/db";
 vi.mock("../services/secretApi", () => ({
   fetchSecrets: vi.fn().mockResolvedValue([]),
   getSecretMasterKey: vi.fn(),
+  uploadEncryptedAttachment: vi.fn().mockResolvedValue({
+    id: "attachment-123",
+    filename: "encrypted.bin",
+    size: 32,
+    mime_type: "application/octet-stream",
+    created_at: new Date().toISOString(),
+  }),
+  ApiError: class ApiError extends Error {
+    constructor(
+      message: string,
+      public status?: number,
+      public errors?: Record<string, string[]>
+    ) {
+      super(message);
+      this.name = "ApiError";
+    }
+  },
 }));
 
 import { fetchSecrets, getSecretMasterKey } from "../services/secretApi";
@@ -943,7 +960,9 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
         return queueEntries.then((entries) => {
           expect(entries.length).toBeGreaterThan(0);
           const entry = entries[0];
-          expect(entry?.uploadState).toBe("encrypted");
+          expect(["encrypted", "uploading", "completed"]).toContain(
+            entry?.uploadState
+          );
         });
       },
       { timeout: 5000 }
@@ -1096,7 +1115,9 @@ describe("ShareTarget - File Encryption Integration (Phase 2)", () => {
       async () => {
         const entries = await db.fileQueue.toArray();
         const entry = entries.find((e) => e.metadata.name === "test.pdf");
-        expect(entry?.uploadState).toBe("encrypted");
+        expect(["encrypted", "uploading", "completed"]).toContain(
+          entry?.uploadState
+        );
       },
       { timeout: 5000 }
     );
