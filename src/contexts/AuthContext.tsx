@@ -24,32 +24,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const isClearingSessionRef = useRef(false);
 
-  const clearAuthenticatedState = useCallback((clearSensitiveState: boolean) => {
-    if (isClearingSessionRef.current) {
-      return;
-    }
+  const clearAuthenticatedState = useCallback(
+    (clearSensitiveState: boolean) => {
+      if (isClearingSessionRef.current) {
+        return;
+      }
 
-    isClearingSessionRef.current = true;
-    authStorage.clear();
-    setUser(null);
-    setIsLoading(false);
+      isClearingSessionRef.current = true;
+      authStorage.clear();
+      setUser(null);
+      setIsLoading(false);
 
-    if (!clearSensitiveState) {
-      isClearingSessionRef.current = false;
-      return;
-    }
-
-    void clearSensitiveClientState()
-      .catch((error: unknown) => {
-        console.error(
-          "Failed to clear sensitive client state during logout:",
-          error
-        );
-      })
-      .finally(() => {
+      if (!clearSensitiveState) {
         isClearingSessionRef.current = false;
-      });
-  }, []);
+        return;
+      }
+
+      void clearSensitiveClientState()
+        .catch((error: unknown) => {
+          console.error(
+            "Failed to clear sensitive client state during logout:",
+            error
+          );
+        })
+        .finally(() => {
+          isClearingSessionRef.current = false;
+        });
+    },
+    []
+  );
 
   const login = useCallback((newUser: User) => {
     authStorage.setUser(newUser);
