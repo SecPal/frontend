@@ -123,3 +123,34 @@ export async function logoutAll(): Promise<void> {
     );
   }
 }
+
+/**
+ * Fetch the currently authenticated user for bootstrap revalidation.
+ * @throws {AuthApiError} If the session is invalid or the request fails
+ */
+export async function getCurrentUser(): Promise<LoginResponse["user"]> {
+  const response = await apiFetch(`${getApiBaseUrl()}/v1/me`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    let error: ApiError | null;
+    try {
+      error = await response.json();
+    } catch {
+      throw new AuthApiError(
+        `Current user fetch failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    throw new AuthApiError(
+      error?.message || "Current user fetch failed",
+      error?.errors
+    );
+  }
+
+  return response.json();
+}
