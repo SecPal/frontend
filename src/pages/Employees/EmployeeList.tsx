@@ -293,7 +293,7 @@ export function EmployeeList() {
                 <StatusBadge status={employee.status} />
               </TableCell>
               <TableCell className="text-zinc-500">
-                {employee.organizational_unit.name}
+                {employee.organizational_unit?.name || "-"}
               </TableCell>
               <TableCell>
                 <div className="-mx-3 -my-1.5 sm:-mx-2.5">

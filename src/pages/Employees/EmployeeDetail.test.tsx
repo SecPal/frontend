@@ -111,6 +111,25 @@ describe("EmployeeDetail", () => {
     });
   });
 
+  it("should render placeholders for nullable employee profile fields", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      date_of_birth: null,
+      contract_start_date: null,
+      organizational_unit: null,
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "John Doe" })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(3);
+  });
+
   it("should display error on fetch failure", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockRejectedValue(
       new Error("Not found")

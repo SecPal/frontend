@@ -171,6 +171,26 @@ describe("EmployeeList", () => {
     ).toBeInTheDocument();
   });
 
+  it("should render a placeholder when the organizational unit is missing", async () => {
+    vi.mocked(employeeApi.fetchEmployees).mockResolvedValue({
+      data: [{ ...mockEmployees[0]!, organizational_unit: null }],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 1,
+      },
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("-")).toBeInTheDocument();
+  });
+
   it("should have Add Employee button", async () => {
     renderWithProviders();
 

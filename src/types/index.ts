@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Type definitions index - re-export all types
+ * Shared frontend type exports.
  *
- * Note: organizational.ts removed - see Epic #210 (Customer + Site management)
+ * Re-exports generated and contract-aligned API types. Feature-specific
+ * modules such as organizational types keep their own entry points.
  */
 
 export * from "./api";

@@ -112,6 +112,25 @@ describe("EmployeeEdit", () => {
     );
   });
 
+  it("should keep nullable employee fields editable when optional data is missing", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      date_of_birth: null,
+      contract_start_date: null,
+      organizational_unit: null,
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+    });
+
+    expect(screen.getByLabelText(/date of birth/i)).toHaveValue("");
+    expect(screen.getByLabelText(/contract start date/i)).toHaveValue("");
+    expect(screen.getByLabelText(/organizational unit/i)).toHaveValue("");
+  });
+
   it("should load organizational units into dropdown", async () => {
     renderWithProviders("emp-1");
 
