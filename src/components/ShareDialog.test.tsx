@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -482,7 +482,9 @@ describe("ShareDialog", () => {
         ).toBeDisabled();
       });
 
-      resolveCreateShare?.();
+      await act(async () => {
+        resolveCreateShare?.();
+      });
     });
 
     it("should display error message on failure", async () => {

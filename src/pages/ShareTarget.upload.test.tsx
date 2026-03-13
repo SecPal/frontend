@@ -203,22 +203,21 @@ describe("ShareTarget - Upload Functionality", () => {
   });
 
   it("should show upload progress during upload", async () => {
-    // Mock slow upload
+    let resolveUpload:
+      | ((value: {
+          total: number;
+          completed: number;
+          failed: number;
+          pending: number;
+          skipped: number;
+        }) => void)
+      | undefined;
+
     vi.mocked(fileQueue.processEncryptedFileQueue).mockImplementation(
       () =>
-        new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                total: 1,
-                completed: 1,
-                failed: 0,
-                pending: 0,
-                skipped: 0,
-              }),
-            100
-          )
-        )
+        new Promise((resolve) => {
+          resolveUpload = resolve;
+        })
     );
 
     const user = userEvent.setup();
@@ -234,14 +233,26 @@ describe("ShareTarget - Upload Functionality", () => {
     await user.click(uploadBtn);
 
     // Check progress indicator appears
-    expect(await screen.findByText(/uploading/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/uploading/i)).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      resolveUpload?.({
+        total: 1,
+        completed: 1,
+        failed: 0,
+        pending: 0,
+        skipped: 0,
+      });
+    });
 
     // Wait for completion
     await waitFor(
       () => {
         expect(screen.queryByText(/uploading/i)).not.toBeInTheDocument();
       },
-      { timeout: 200 }
+      { timeout: 5000 }
     );
   });
 
