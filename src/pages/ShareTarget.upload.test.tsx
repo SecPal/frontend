@@ -237,8 +237,11 @@ describe("ShareTarget - Upload Functionality", () => {
       expect(screen.getByText(/uploading/i)).toBeInTheDocument();
     });
 
+    expect(fileQueue.processEncryptedFileQueue).toHaveBeenCalled();
+    expect(resolveUpload).toBeDefined();
+
     await act(async () => {
-      resolveUpload?.({
+      resolveUpload!({
         total: 1,
         completed: 1,
         failed: 0,
