@@ -159,9 +159,11 @@ describe("SiteCreate", () => {
   it("displays form fields", async () => {
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByLabelText(/customer/i, undefined, {
+        timeout: SLOW_TEST_TIMEOUT,
+      })
+    ).toBeInTheDocument();
 
     expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();

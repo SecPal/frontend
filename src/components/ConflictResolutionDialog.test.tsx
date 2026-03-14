@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -92,6 +92,12 @@ describe("ConflictResolutionDialog", () => {
       screen.getByRole("button", { name: /Your Local Version/i })
     );
 
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Apply Selection/i })
+      ).toBeEnabled();
+    });
+
     // Confirm selection
     await user.click(screen.getByRole("button", { name: /Apply Selection/i }));
 
@@ -114,6 +120,12 @@ describe("ConflictResolutionDialog", () => {
 
     // Click server version
     await user.click(screen.getByRole("button", { name: /Server Version/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Apply Selection/i })
+      ).toBeEnabled();
+    });
 
     // Confirm selection
     await user.click(screen.getByRole("button", { name: /Apply Selection/i }));

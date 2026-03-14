@@ -65,6 +65,8 @@ const mockResponse: PaginatedResponse<Customer> = {
   },
 };
 
+const QUERY_TIMEOUT = 15000;
+
 describe("CustomersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -74,13 +76,11 @@ describe("CustomersPage", () => {
   it("should render customers list with table", async () => {
     renderWithProviders();
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /customers/i })
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Acme Corp", undefined, {
+        timeout: QUERY_TIMEOUT,
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
   });
 

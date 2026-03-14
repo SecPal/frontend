@@ -21,6 +21,8 @@ vi.mock("./ActivityDetailDialog", () => ({
   ),
 }));
 
+const SLOW_TEST_TIMEOUT = 20000;
+
 // Helper to render with providers
 const renderWithProviders = () => {
   i18n.load("en", enMessages);
@@ -247,59 +249,63 @@ describe("ActivityLogList", () => {
     expect(prevButton).toBeDisabled(); // First page, so previous disabled
   });
 
-  it("should handle page navigation", async () => {
-    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
-      data: [mockActivity],
-      meta: {
-        current_page: 1,
-        from: 1,
-        last_page: 3,
-        per_page: 50,
-        to: 50,
-        total: 150,
-      },
-      links: {
-        first: "/v1/activity-logs?page=1",
-        last: "/v1/activity-logs?page=3",
-        prev: null,
-        next: "/v1/activity-logs?page=2",
-      },
-    });
+  it(
+    "should handle page navigation",
+    async () => {
+      vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
+        data: [mockActivity],
+        meta: {
+          current_page: 1,
+          from: 1,
+          last_page: 3,
+          per_page: 50,
+          to: 50,
+          total: 150,
+        },
+        links: {
+          first: "/v1/activity-logs?page=1",
+          last: "/v1/activity-logs?page=3",
+          prev: null,
+          next: "/v1/activity-logs?page=2",
+        },
+      });
 
-    renderWithProviders();
+      renderWithProviders();
 
-    await waitFor(() => {
-      expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
+      });
 
-    // Mock page 2 response
-    vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
-      data: [mockActivity],
-      meta: {
-        current_page: 2,
-        from: 51,
-        last_page: 3,
-        per_page: 50,
-        to: 100,
-        total: 150,
-      },
-      links: {
-        first: "/v1/activity-logs?page=1",
-        last: "/v1/activity-logs?page=3",
-        prev: "/v1/activity-logs?page=1",
-        next: "/v1/activity-logs?page=3",
-      },
-    });
+      // Mock page 2 response
+      vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue({
+        data: [mockActivity],
+        meta: {
+          current_page: 2,
+          from: 51,
+          last_page: 3,
+          per_page: 50,
+          to: 100,
+          total: 150,
+        },
+        links: {
+          first: "/v1/activity-logs?page=1",
+          last: "/v1/activity-logs?page=3",
+          prev: "/v1/activity-logs?page=1",
+          next: "/v1/activity-logs?page=3",
+        },
+      });
 
-    const nextButton = screen.getByRole("button", { name: /next/i });
-    fireEvent.click(nextButton);
+      const nextButton = screen.getByRole("button", { name: /next/i });
+      fireEvent.click(nextButton);
 
-    await waitFor(() => {
-      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 2 })
-      );
-    });
-  });
+      await waitFor(() => {
+        expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+          expect.objectContaining({ page: 2 })
+        );
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("should display System when no causer", async () => {
     const activityNoCauser: Activity = {

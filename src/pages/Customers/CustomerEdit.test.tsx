@@ -73,7 +73,7 @@ describe("CustomerEdit", () => {
       expect(customersApi.getCustomer).toHaveBeenCalledWith("customer-123");
     });
 
-    expect(screen.getByLabelText(/customer name/i)).toHaveValue(
+    expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
       "Existing Customer"
     );
     expect(screen.getByLabelText(/street/i)).toHaveValue("Old Street 10");

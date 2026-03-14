@@ -89,7 +89,7 @@ describe("Login", () => {
     expect(
       screen.getByRole("heading", { name: /secpal/i })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 
     // Wait for health check to complete

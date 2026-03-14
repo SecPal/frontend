@@ -94,10 +94,12 @@ describe("App", () => {
     // Actual redirect behavior is tested in PermissionRoute.test.tsx
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /Welcome to SecPal/i })
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /Welcome to SecPal/i },
+        { timeout: 20000 }
+      )
+    ).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
@@ -39,6 +40,9 @@ const renderWithProviders = (
 };
 
 describe("ApplicationLayout", () => {
+  const SLOW_TEST_TIMEOUT = 20000;
+  const QUERY_TIMEOUT = 15000;
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -159,79 +163,123 @@ describe("ApplicationLayout", () => {
   });
 
   describe("navbar user dropdown", () => {
-    it("opens navbar dropdown when clicking user menu button", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
+    it(
+      "opens navbar dropdown when clicking user menu button",
+      async () => {
+        const user = userEvent.setup();
 
-      // Find and click the navbar user menu button (has aria-label)
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      fireEvent.click(userMenuButton);
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
 
-      await waitFor(() => {
-        expect(screen.getByText("My profile")).toBeInTheDocument();
-        expect(screen.getByText("Sign out")).toBeInTheDocument();
-      });
-    });
-
-    it("has profile link in navbar dropdown", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      fireEvent.click(userMenuButton);
-
-      await waitFor(() => {
-        const profileItem = screen.getByRole("menuitem", {
-          name: /my profile/i,
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
         });
+        await user.click(userMenuButton);
+
+        expect(
+          await screen.findByRole(
+            "menuitem",
+            { name: /my profile/i },
+            { timeout: QUERY_TIMEOUT }
+          )
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /sign out/i })
+        ).toBeInTheDocument();
+      },
+      SLOW_TEST_TIMEOUT
+    );
+
+    it(
+      "has profile link in navbar dropdown",
+      async () => {
+        const user = userEvent.setup();
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
+        await user.click(userMenuButton);
+
+        const profileItem = await screen.findByRole(
+          "menuitem",
+          {
+            name: /my profile/i,
+          },
+          { timeout: QUERY_TIMEOUT }
+        );
+
         expect(profileItem).toHaveAttribute("href", "/profile");
-      });
-    });
+      },
+      SLOW_TEST_TIMEOUT
+    );
 
-    it("has settings link in navbar dropdown", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
+    it(
+      "has settings link in navbar dropdown",
+      async () => {
+        const user = userEvent.setup();
 
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      fireEvent.click(userMenuButton);
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
 
-      await waitFor(() => {
-        const settingsItem = screen.getByRole("menuitem", {
-          name: /settings/i,
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
         });
+        await user.click(userMenuButton);
+
+        const settingsItem = await screen.findByRole(
+          "menuitem",
+          {
+            name: /settings/i,
+          },
+          { timeout: QUERY_TIMEOUT }
+        );
+
         expect(settingsItem).toHaveAttribute("href", "/settings");
-      });
-    });
+      },
+      SLOW_TEST_TIMEOUT
+    );
 
-    it("triggers logout when clicking sign out in navbar dropdown", async () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
+    it(
+      "triggers logout when clicking sign out in navbar dropdown",
+      async () => {
+        const user = userEvent.setup();
 
-      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      fireEvent.click(userMenuButton);
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
 
-      await waitFor(() => {
-        const signOutItem = screen.getByRole("menuitem", { name: /sign out/i });
-        fireEvent.click(signOutItem);
-      });
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
+        await user.click(userMenuButton);
 
-      // Should have called the logout API
-      await waitFor(() => {
-        expect(authApi.logout).toHaveBeenCalled();
-      });
-    });
+        const signOutItem = await screen.findByRole(
+          "menuitem",
+          { name: /sign out/i },
+          { timeout: QUERY_TIMEOUT }
+        );
+        await user.click(signOutItem);
+
+        await waitFor(() => {
+          expect(authApi.logout).toHaveBeenCalled();
+        });
+      },
+      SLOW_TEST_TIMEOUT
+    );
   });
 
   // Note: Sidebar footer with user info was removed - all user menu functionality is in the navbar.

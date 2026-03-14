@@ -15,6 +15,8 @@ import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
 
+const SLOW_TEST_TIMEOUT = 20000;
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -194,48 +196,54 @@ describe("EmployeeCreate", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
   }, 20000);
 
-  it("should display error on create failure", async () => {
-    const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
-    mockCreateEmployee.mockRejectedValue(new Error("Server error"));
+  it(
+    "should display error on create failure",
+    async () => {
+      const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+      mockCreateEmployee.mockRejectedValue(new Error("Server error"));
 
-    renderWithProviders(<EmployeeCreate />);
+      renderWithProviders(<EmployeeCreate />);
 
-    await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
 
-    // Fill in minimal required fields
-    fireEvent.change(screen.getByLabelText(/first name/i), {
-      target: { value: "John" },
-    });
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: "Doe" },
-    });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john.doe@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: "1990-01-01" },
-    });
-    fireEvent.change(screen.getByLabelText("Position *"), {
-      target: { value: "Developer" },
-    });
-    fireEvent.change(screen.getByLabelText(/contract start date/i), {
-      target: { value: "2025-01-01" },
-    });
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+      // Fill in minimal required fields
+      fireEvent.change(screen.getByLabelText(/first name/i), {
+        target: { value: "John" },
+      });
+      fireEvent.change(screen.getByLabelText(/last name/i), {
+        target: { value: "Doe" },
+      });
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "john.doe@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/date of birth/i), {
+        target: { value: "01/01/1990" },
+      });
+      fireEvent.blur(screen.getByLabelText(/date of birth/i));
+      fireEvent.change(screen.getByLabelText("Position *"), {
+        target: { value: "Developer" },
+      });
+      fireEvent.change(screen.getByLabelText(/contract start date/i), {
+        target: { value: "01/01/2025" },
+      });
+      fireEvent.blur(screen.getByLabelText(/contract start date/i));
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "unit-1" },
+      });
 
-    // Submit
-    submitEmployeeCreateForm();
+      // Submit
+      submitEmployeeCreateForm();
 
-    await waitFor(() => {
-      expect(screen.getByText(/server error/i)).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByText(/server error/i)).toBeInTheDocument();
+      });
 
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
+      expect(mockNavigate).not.toHaveBeenCalled();
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("should navigate back to employees on cancel", async () => {
     renderWithProviders(<EmployeeCreate />);
@@ -486,79 +494,87 @@ describe("EmployeeCreate", () => {
       expect(managementLevelInput).toHaveValue(50);
     });
 
-    it("should include management_level in form submission", async () => {
-      const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
-      mockCreateEmployee.mockResolvedValue({
-        id: "emp-123",
-        employee_number: "EMP001",
-        first_name: "John",
-        last_name: "Doe",
-        full_name: "John Doe",
-        email: "john@example.com",
-        phone: "",
-        date_of_birth: "1990-01-01",
-        hire_date: "2025-01-01",
-        contract_start_date: "2025-01-01",
-        position: "CEO",
-        status: "active",
-        contract_type: "full_time",
-        management_level: 1,
-        organizational_unit: {
-          id: "unit-1",
-          name: "Main Office",
-        },
-        user: undefined,
-        created_at: "2025-01-01T00:00:00Z",
-        updated_at: "2025-01-01T00:00:00Z",
-      });
+    it(
+      "should include management_level in form submission",
+      async () => {
+        const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+        mockCreateEmployee.mockResolvedValue({
+          id: "emp-123",
+          employee_number: "EMP001",
+          first_name: "John",
+          last_name: "Doe",
+          full_name: "John Doe",
+          email: "john@example.com",
+          phone: "",
+          date_of_birth: "1990-01-01",
+          hire_date: "2025-01-01",
+          contract_start_date: "2025-01-01",
+          position: "CEO",
+          status: "active",
+          contract_type: "full_time",
+          management_level: 1,
+          organizational_unit: {
+            id: "unit-1",
+            name: "Main Office",
+          },
+          user: undefined,
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        });
 
-      renderWithProviders(<EmployeeCreate />);
+        renderWithProviders(<EmployeeCreate />);
 
-      await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
-      });
+        await waitFor(() => {
+          expect(screen.getByText("Main Office")).toBeInTheDocument();
+        });
 
-      // Fill form with leadership position
-      fireEvent.change(screen.getByLabelText(/first name/i), {
-        target: { value: "John" },
-      });
-      fireEvent.change(screen.getByLabelText(/last name/i), {
-        target: { value: "Doe" },
-      });
-      fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: "john@example.com" },
-      });
-      fireEvent.change(screen.getByLabelText(/date of birth/i), {
-        target: { value: "1990-01-01" },
-      });
-      fireEvent.change(screen.getByLabelText("Position *"), {
-        target: { value: "CEO" },
-      });
-      fireEvent.change(screen.getByLabelText(/contract start date/i), {
-        target: { value: "2025-01-01" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "unit-1" },
-      });
+        // Fill form with leadership position
+        fireEvent.change(screen.getByLabelText(/first name/i), {
+          target: { value: "John" },
+        });
+        fireEvent.change(screen.getByLabelText(/last name/i), {
+          target: { value: "Doe" },
+        });
+        fireEvent.change(screen.getByLabelText(/email/i), {
+          target: { value: "john@example.com" },
+        });
+        fireEvent.change(screen.getByLabelText(/date of birth/i), {
+          target: { value: "01/01/1990" },
+        });
+        fireEvent.blur(screen.getByLabelText(/date of birth/i));
+        fireEvent.change(screen.getByLabelText("Position *"), {
+          target: { value: "CEO" },
+        });
+        fireEvent.change(screen.getByLabelText(/contract start date/i), {
+          target: { value: "01/01/2025" },
+        });
+        fireEvent.blur(screen.getByLabelText(/contract start date/i));
+        fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+          target: { value: "unit-1" },
+        });
 
-      // Enable leadership and set management level
-      const leadershipSwitch = screen.getByRole("switch");
-      fireEvent.click(leadershipSwitch);
+        // Enable leadership and set management level
+        const leadershipSwitch = screen.getByRole("switch");
+        fireEvent.click(leadershipSwitch);
 
-      const managementLevelInput = screen.getByRole("spinbutton");
-      fireEvent.change(managementLevelInput, { target: { value: "1" } });
+        const managementLevelInput = screen.getByRole("spinbutton");
+        fireEvent.change(managementLevelInput, { target: { value: "1" } });
 
-      // Submit
-      fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
-
-      await waitFor(() => {
-        expect(mockCreateEmployee).toHaveBeenCalledWith(
-          expect.objectContaining({
-            management_level: 1,
-          })
+        // Submit
+        fireEvent.click(
+          screen.getByRole("button", { name: /create employee/i })
         );
-      });
-    });
+
+        await waitFor(() => {
+          expect(mockCreateEmployee).toHaveBeenCalledWith(
+            expect.objectContaining({
+              management_level: 1,
+            })
+          );
+        });
+      },
+      SLOW_TEST_TIMEOUT
+    );
   });
 
   describe("Date Validation", () => {

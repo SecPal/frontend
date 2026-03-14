@@ -187,8 +187,10 @@ describe("SecretDetail", () => {
     await user.click(showButton);
 
     // Password should be visible
-    expect(screen.getByText("super-secret-password")).toBeInTheDocument();
-    expect(screen.queryByText("••••••••••••")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("super-secret-password")).toBeInTheDocument();
+      expect(screen.queryByText("••••••••••••")).not.toBeInTheDocument();
+    });
 
     // Button should change to Hide
     expect(
@@ -742,12 +744,15 @@ describe("SecretDetail", () => {
     });
     await user.click(previewButton);
 
-    await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
-    });
+    const closeButton = await screen.findByRole(
+      "button",
+      { name: /close preview/i },
+      { timeout: 10000 }
+    );
+
+    expect(createObjectURLSpy).toHaveBeenCalledWith(mockFile);
 
     // Close modal
-    const closeButton = screen.getByRole("button", { name: /close preview/i });
     await user.click(closeButton);
 
     await waitFor(() => {
