@@ -5,12 +5,23 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
 import * as activityLogApi from "../../services/activityLogApi";
 import type {
   Activity,
   ActivityVerification,
 } from "../../services/activityLogApi";
+
+vi.mock("../../components/dialog", () => ({
+  Dialog: vi.fn(({ open, children }) =>
+    open ? <div role="dialog">{children}</div> : null
+  ),
+  DialogTitle: vi.fn(({ children }) => <div>{children}</div>),
+  DialogDescription: vi.fn(({ children }) => <div>{children}</div>),
+  DialogBody: vi.fn(({ children }) => <div>{children}</div>),
+  DialogActions: vi.fn(({ children }) => <div>{children}</div>),
+}));
 
 // Mock the activity log API
 vi.mock("../../services/activityLogApi");
@@ -21,6 +32,8 @@ const renderWithProviders = (props: {
   open: boolean;
   onClose: () => void;
 }) => {
+  i18n.load("en", enMessages);
+  i18n.activate("en");
   return render(
     <I18nProvider i18n={i18n}>
       <ActivityDetailDialog {...props} />

@@ -6,8 +6,102 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 import { MoveOrganizationalUnitDialog } from "./MoveOrganizationalUnitDialog";
 import type { OrganizationalUnit } from "../types/organizational";
+
+vi.mock("./dialog", () => ({
+  Dialog: vi.fn(({ open, children }) =>
+    open ? <div role="dialog">{children}</div> : null
+  ),
+  DialogTitle: vi.fn(({ children }) => <div>{children}</div>),
+  DialogDescription: vi.fn(({ children }) => <div>{children}</div>),
+  DialogBody: vi.fn(({ children }) => <div>{children}</div>),
+  DialogActions: vi.fn(({ children }) => <div>{children}</div>),
+}));
+
+vi.mock("./listbox", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+
+  type MockOptionProps = {
+    value: string;
+    children: React.ReactNode;
+    onSelect?: (value: string) => void;
+    selectedValue?: string;
+  };
+
+  const MockListboxOption = ({
+    value,
+    children,
+    onSelect,
+    selectedValue,
+  }: MockOptionProps) => (
+    <div
+      role="option"
+      aria-selected={selectedValue === value}
+      onClick={() => onSelect?.(value)}
+    >
+      {children}
+    </div>
+  );
+
+  return {
+    Listbox: ({
+      value,
+      onChange,
+      disabled,
+      children,
+      "aria-label": ariaLabel,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+      disabled?: boolean;
+      children: React.ReactNode;
+      "aria-label"?: string;
+    }) => {
+      const [open, setOpen] = React.useState(false);
+      const options = React.Children.toArray(
+        children
+      ) as React.ReactElement<MockOptionProps>[];
+      const selectedOption =
+        options.find((option) => option.props.value === value) ?? null;
+
+      return (
+        <div>
+          <button
+            type="button"
+            aria-label={ariaLabel}
+            disabled={disabled}
+            onClick={() => {
+              if (!disabled) {
+                setOpen((current) => !current);
+              }
+            }}
+          >
+            {selectedOption?.props.children ?? ""}
+          </button>
+          {open && (
+            <div role="listbox">
+              {options.map((option) =>
+                React.cloneElement<MockOptionProps>(option, {
+                  onSelect: (selectedValue: string) => {
+                    onChange(selectedValue);
+                    setOpen(false);
+                  },
+                  selectedValue: value,
+                })
+              )}
+            </div>
+          )}
+        </div>
+      );
+    },
+    ListboxOption: MockListboxOption,
+    ListboxLabel: ({ children }: { children: React.ReactNode }) => (
+      <span>{children}</span>
+    ),
+  };
+});
 
 // Mock the offline hook
 vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
@@ -46,8 +140,6 @@ import {
 import { ApiError } from "../services/secretApi";
 
 function renderWithI18n(component: React.ReactElement) {
-  i18n.load("en", {});
-  i18n.activate("en");
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
 }
 
@@ -123,6 +215,8 @@ describe("MoveOrganizationalUnitDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.activate("en");
     // Default mock for hook
     vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue(
       mockHookResponse

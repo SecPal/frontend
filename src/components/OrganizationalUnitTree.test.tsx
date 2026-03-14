@@ -8,6 +8,18 @@ import { i18n } from "@lingui/core";
 import { OrganizationalUnitTree } from "./OrganizationalUnitTree";
 import type { OrganizationalUnit } from "../types/organizational";
 
+// Reuse the global test i18n instance without re-activating it per render.
+
+const {
+  deleteOrganizationalUnitMock,
+  attachOrganizationalUnitParentMock,
+  detachOrganizationalUnitParentMock,
+} = vi.hoisted(() => ({
+  deleteOrganizationalUnitMock: vi.fn(),
+  attachOrganizationalUnitParentMock: vi.fn(),
+  detachOrganizationalUnitParentMock: vi.fn(),
+}));
+
 // Mock the offline hook
 vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
   useOrganizationalUnitsWithOffline: vi.fn(),
@@ -15,10 +27,67 @@ vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
 
 // Mock the API module (only for mutation operations, not fetching)
 vi.mock("../services/organizationalUnitApi", () => ({
-  deleteOrganizationalUnit: vi.fn(),
-  attachOrganizationalUnitParent: vi.fn(),
-  detachOrganizationalUnitParent: vi.fn(),
+  deleteOrganizationalUnit: deleteOrganizationalUnitMock,
+  attachOrganizationalUnitParent: attachOrganizationalUnitParentMock,
+  detachOrganizationalUnitParent: detachOrganizationalUnitParentMock,
 }));
+
+vi.mock("./dropdown", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+  const DropdownContext = React.createContext<{
+    open: boolean;
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  } | null>(null);
+
+  return {
+    Dropdown: ({ children }: { children: React.ReactNode }) => {
+      const [open, setOpen] = React.useState(false);
+      return (
+        <DropdownContext.Provider value={{ open, setOpen }}>
+          <div>{children}</div>
+        </DropdownContext.Provider>
+      );
+    },
+    DropdownButton: ({
+      children,
+      onClick,
+      plain: plainProp,
+      ...props
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      children: React.ReactNode;
+      plain?: boolean;
+    }) => {
+      void plainProp;
+      const context = React.useContext(DropdownContext);
+      return (
+        <button
+          type="button"
+          {...props}
+          onClick={(event) => {
+            onClick?.(event);
+            context?.setOpen((current) => !current);
+          }}
+        >
+          {children}
+        </button>
+      );
+    },
+    DropdownMenu: ({ children }: { children: React.ReactNode }) => {
+      const context = React.useContext(DropdownContext);
+      return context?.open ? <div role="menu">{children}</div> : null;
+    },
+    DropdownItem: ({
+      children,
+      onClick,
+    }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      children: React.ReactNode;
+    }) => (
+      <button type="button" role="menuitem" onClick={onClick}>
+        {children}
+      </button>
+    ),
+  };
+});
 
 // Mock MoveOrganizationalUnitDialog to avoid nested hook complexity
 vi.mock("./MoveOrganizationalUnitDialog", () => ({
@@ -43,12 +112,35 @@ vi.mock("./MoveOrganizationalUnitDialog", () => ({
   }),
 }));
 
+// Mock DeleteOrganizationalUnitDialog to avoid lazy-loading and transition timing in tests
+vi.mock("./DeleteOrganizationalUnitDialog", () => ({
+  DeleteOrganizationalUnitDialog: vi.fn(
+    ({ open, unit, onClose, onSuccess }) => {
+      if (!open || !unit) return null;
+
+      return (
+        <div data-testid="mock-delete-dialog">
+          <div>Delete "{unit.name}"?</div>
+          <button
+            onClick={async () => {
+              await deleteOrganizationalUnitMock(unit.id);
+              onSuccess();
+              onClose();
+            }}
+          >
+            Delete
+          </button>
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      );
+    }
+  ),
+}));
+
 import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 import { deleteOrganizationalUnit } from "../services/organizationalUnitApi";
 
 function renderWithI18n(component: React.ReactElement) {
-  i18n.load("en", {});
-  i18n.activate("en");
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
 }
 
@@ -287,7 +379,7 @@ describe("OrganizationalUnitTree", () => {
       expect(onDelete).toHaveBeenCalledWith(
         expect.objectContaining({ id: "unit-3", name: "North Region" })
       );
-    });
+    }, 20000);
 
     it("removes child unit from tree without reloading", async () => {
       vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);

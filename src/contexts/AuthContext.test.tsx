@@ -1,10 +1,21 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
+
+vi.mock("../services/authApi", () => ({
+  getCurrentUser: vi.fn(),
+}));
+
+vi.mock("../services/sessionEvents", () => ({
+  isOnline: vi.fn(() => false),
+  sessionEvents: {
+    on: vi.fn(() => () => undefined),
+  },
+}));
 
 // Test component for permission checks
 function PermissionTestComponent({
