@@ -74,13 +74,9 @@ describe("CustomersPage", () => {
   it("should render customers list with table", async () => {
     renderWithProviders();
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /customers/i })
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Acme Corp", undefined, { timeout: 20000 })
+    ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
   });
 

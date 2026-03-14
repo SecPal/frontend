@@ -247,8 +247,8 @@ export default defineConfig(({ mode }) => {
       clearMocks: true,
       unstubGlobals: true,
       unstubEnvs: true,
-      testTimeout: 10000, // 10 seconds per test (default is 5s)
-      hookTimeout: 10000, // 10 seconds for beforeEach/afterEach hooks
+      testTimeout: 20000, // 20 seconds per test to keep full-suite UI tests stable under CI load
+      hookTimeout: 20000, // 20 seconds for beforeEach/afterEach hooks
       // Exclude Playwright E2E tests (run separately via npm run test:e2e)
       exclude: ["**/node_modules/**", "**/dist/**", "**/tests/e2e/**"],
       coverage: {

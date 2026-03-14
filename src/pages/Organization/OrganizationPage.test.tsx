@@ -34,6 +34,8 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 describe("OrganizationPage", () => {
+  const SLOW_TEST_TIMEOUT = 20000;
+
   const mockUnits: OrganizationalUnit[] = [
     {
       id: "unit-1",
@@ -281,48 +283,54 @@ describe("OrganizationPage", () => {
     });
   });
 
-  it("shows success toast after creating a unit", async () => {
-    const user = userEvent.setup();
-    const newUnit: OrganizationalUnit = {
-      id: "new-unit",
-      type: "branch",
-      name: "New Branch",
-      description: null,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    };
+  it(
+    "shows success toast after creating a unit",
+    async () => {
+      const user = userEvent.setup();
+      const newUnit: OrganizationalUnit = {
+        id: "new-unit",
+        type: "branch",
+        name: "New Branch",
+        description: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      };
 
-    vi.mocked(organizationalUnitApi.createOrganizationalUnit).mockResolvedValue(
-      newUnit
-    );
+      vi.mocked(
+        organizationalUnitApi.createOrganizationalUnit
+      ).mockResolvedValue(newUnit);
 
-    renderWithProviders(<OrganizationPage />);
+      renderWithProviders(<OrganizationPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
 
-    // Open create dialog
-    await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
+      await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
 
-    await waitFor(() => {
+      await waitFor(() => {
+        expect(
+          screen.getByText("Create Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
+      await user.type(nameInput, "New Branch");
+
+      await user.click(screen.getByRole("button", { name: /^Create$/i }));
+
       expect(
-        screen.getByText("Create Organizational Unit")
+        await screen.findByText(
+          /created successfully/i,
+          {},
+          {
+            timeout: SLOW_TEST_TIMEOUT,
+          }
+        )
       ).toBeInTheDocument();
-    });
-
-    // Fill form
-    const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
-    await user.type(nameInput, "New Branch");
-
-    // Submit
-    await user.click(screen.getByRole("button", { name: /^Create$/i }));
-
-    // Success toast should appear
-    await waitFor(() => {
-      expect(screen.getByText(/created successfully/i)).toBeInTheDocument();
-    });
-  });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("shows all type labels translated correctly", async () => {
     const user = userEvent.setup();

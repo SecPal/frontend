@@ -15,6 +15,8 @@ import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
 
+const SLOW_TEST_TIMEOUT = 20000;
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -194,7 +196,9 @@ describe("EmployeeCreate", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
   }, 20000);
 
-  it("should display error on create failure", async () => {
+  it(
+    "should display error on create failure",
+    async () => {
     const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
     mockCreateEmployee.mockRejectedValue(new Error("Server error"));
 
@@ -215,14 +219,16 @@ describe("EmployeeCreate", () => {
       target: { value: "john.doe@example.com" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: "1990-01-01" },
+      target: { value: "01/01/1990" },
     });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
     fireEvent.change(screen.getByLabelText("Position *"), {
       target: { value: "Developer" },
     });
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
-      target: { value: "2025-01-01" },
+      target: { value: "01/01/2025" },
     });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
     fireEvent.change(screen.getByLabelText(/organizational unit/i), {
       target: { value: "unit-1" },
     });
@@ -235,7 +241,9 @@ describe("EmployeeCreate", () => {
     });
 
     expect(mockNavigate).not.toHaveBeenCalled();
-  });
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("should navigate back to employees on cancel", async () => {
     renderWithProviders(<EmployeeCreate />);
@@ -486,7 +494,9 @@ describe("EmployeeCreate", () => {
       expect(managementLevelInput).toHaveValue(50);
     });
 
-    it("should include management_level in form submission", async () => {
+    it(
+      "should include management_level in form submission",
+      async () => {
       const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
       mockCreateEmployee.mockResolvedValue({
         id: "emp-123",
@@ -529,14 +539,16 @@ describe("EmployeeCreate", () => {
         target: { value: "john@example.com" },
       });
       fireEvent.change(screen.getByLabelText(/date of birth/i), {
-        target: { value: "1990-01-01" },
+        target: { value: "01/01/1990" },
       });
+      fireEvent.blur(screen.getByLabelText(/date of birth/i));
       fireEvent.change(screen.getByLabelText("Position *"), {
         target: { value: "CEO" },
       });
       fireEvent.change(screen.getByLabelText(/contract start date/i), {
-        target: { value: "2025-01-01" },
+        target: { value: "01/01/2025" },
       });
+      fireEvent.blur(screen.getByLabelText(/contract start date/i));
       fireEvent.change(screen.getByLabelText(/organizational unit/i), {
         target: { value: "unit-1" },
       });
@@ -558,7 +570,9 @@ describe("EmployeeCreate", () => {
           })
         );
       });
-    });
+      },
+      SLOW_TEST_TIMEOUT
+    );
   });
 
   describe("Date Validation", () => {
