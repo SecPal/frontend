@@ -49,10 +49,10 @@ describe("App Routing", () => {
     expect(OnboardingModule.default).toBeDefined();
   });
 
-  it("OnboardingComplete component is exported correctly", () => {
+  it("OnboardingComplete component is exported correctly", async () => {
     // Verify the component can be imported
     // This ensures the route can be lazy loaded
-    expect(
+    await expect(
       import("../../src/pages/Onboarding/OnboardingComplete")
     ).resolves.toBeDefined();
   });

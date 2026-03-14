@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { ActivityLogList } from "./ActivityLogList";
 import * as activityLogApi from "../../services/activityLogApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
@@ -14,9 +15,16 @@ import type { Activity } from "../../services/activityLogApi";
 // Mock the APIs
 vi.mock("../../services/activityLogApi");
 vi.mock("../../services/organizationalUnitApi");
+vi.mock("./ActivityDetailDialog", () => ({
+  ActivityDetailDialog: vi.fn(({ open }) =>
+    open ? <div data-testid="activity-detail-dialog" /> : null
+  ),
+}));
 
 // Helper to render with providers
 const renderWithProviders = () => {
+  i18n.load("en", enMessages);
+  i18n.activate("en");
   return render(
     <I18nProvider i18n={i18n}>
       <MemoryRouter>
@@ -127,6 +135,9 @@ describe("ActivityLogList", () => {
   it("should display loading state", () => {
     vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
       () => new Promise(() => {}) // Never resolves
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () => new Promise(() => {})
     );
 
     renderWithProviders();
@@ -359,9 +370,9 @@ describe("ActivityLogList", () => {
     const descriptionCell = screen.getByText("User logged in");
     fireEvent.click(descriptionCell);
 
-    // Dialog should open - we can't fully test it without mocking Dialog component,
-    // but we can verify the state change happened by checking if verifyActivityLog would be called
-    // This is a limitation of unit testing - integration tests would verify full dialog behavior
+    await waitFor(() => {
+      expect(screen.getByTestId("activity-detail-dialog")).toBeInTheDocument();
+    });
   });
 
   it("should handle date range filter", async () => {
@@ -588,10 +599,11 @@ describe("ActivityLogList", () => {
   });
 
   it("should show loading state initially", async () => {
-    // Mock slow API
     vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
-      () =>
-        new Promise((resolve) => setTimeout(() => resolve(mockResponse), 100))
+      () => new Promise(() => {})
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+      () => new Promise(() => {})
     );
 
     renderWithProviders();

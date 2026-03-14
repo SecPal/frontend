@@ -13,6 +13,36 @@ import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const vendorChunkPackages: Record<string, string[]> = {
+  "vendor-react": ["react", "react-dom", "react-router-dom"],
+  "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+  "vendor-lingui": ["@lingui/core", "@lingui/react"],
+  "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
+  "vendor-animation": ["motion"],
+  "vendor-monitoring": ["web-vitals"],
+  "vendor-utils": ["clsx"],
+};
+
+function getManualChunk(moduleId: string): string | undefined {
+  const normalizedModuleId = moduleId.replaceAll("\\", "/");
+
+  if (!normalizedModuleId.includes("/node_modules/")) {
+    return undefined;
+  }
+
+  for (const [chunkName, packageNames] of Object.entries(vendorChunkPackages)) {
+    if (
+      packageNames.some((packageName) =>
+        normalizedModuleId.includes(`/node_modules/${packageName}/`)
+      )
+    ) {
+      return chunkName;
+    }
+  }
+
+  return undefined;
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
@@ -165,24 +195,8 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          // Object-based manual chunks (proven to work with Heroicons)
-          // Using explicit package names ensures proper module resolution
-          manualChunks: {
-            // React ecosystem (largest vendor chunk)
-            "vendor-react": ["react", "react-dom", "react-router-dom"],
-            // UI Component libraries (must stay together for proper exports)
-            "vendor-ui": ["@headlessui/react", "@heroicons/react"],
-            // Internationalization
-            "vendor-lingui": ["@lingui/core", "@lingui/react"],
-            // Database libraries
-            "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
-            // Animation library
-            "vendor-animation": ["motion"],
-            // Web Vitals monitoring
-            "vendor-monitoring": ["web-vitals"],
-            // Utilities
-            "vendor-utils": ["clsx"],
-          },
+          // Vite 8 requires function-based manual chunking with Rolldown.
+          manualChunks: getManualChunk,
         },
       },
       // Set chunk size warning limit

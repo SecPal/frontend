@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sensitive IndexedDB tables and legacy API cache names are now cleared when the client session ends
   - Replaced invalid on-prem example domain in frontend config comments to stay within the `secpal.app` / `secpal.dev` domain policy
 
+### Fixed
+
+- Stabilized several interaction-heavy frontend tests by reusing the shared test i18n instance, mocking lazy dialog and listbox edges, and making async form/upload assertions deterministic in Vitest
+
 ### Added
 
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
@@ -66,6 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - All UI text translatable (German/English)
 
 ### Fixed
+
+- **Frontend build now stays compatible with Vite 8**
+  - replaced object-based manual chunk configuration with a function-based variant so production builds and Lighthouse CI continue to work with Vite 8
 
 - **Auth bootstrap now revalidates stored sessions before unlocking protected routes** (#503)
   - added frontend bootstrap revalidation against `GET /v1/me` when a stored session is present and the client is online

@@ -2,12 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationalUnitFormDialog } from "./OrganizationalUnitFormDialog";
 import type { OrganizationalUnit } from "../types/organizational";
+
+vi.mock("./dialog", () => ({
+  Dialog: vi.fn(({ open, children }) =>
+    open ? <div data-testid="mock-dialog">{children}</div> : null
+  ),
+  DialogTitle: vi.fn(({ children }) => <div>{children}</div>),
+  DialogDescription: vi.fn(({ children }) => <div>{children}</div>),
+  DialogBody: vi.fn(({ children }) => <div>{children}</div>),
+  DialogActions: vi.fn(({ children }) => <div>{children}</div>),
+}));
 
 // Mock the API module
 vi.mock("../services/organizationalUnitApi", () => ({
@@ -46,9 +56,15 @@ import { ApiError } from "../services/secretApi";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 function renderWithI18n(component: React.ReactElement) {
-  i18n.load("en", {});
-  i18n.activate("en");
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+}
+
+function submitDialogForm(buttonName: RegExp) {
+  const submitButton = screen.getByRole("button", { name: buttonName });
+  const form = submitButton.closest("form");
+
+  expect(form).not.toBeNull();
+  fireEvent.submit(form!);
 }
 
 describe("OrganizationalUnitFormDialog", () => {
@@ -103,7 +119,6 @@ describe("OrganizationalUnitFormDialog", () => {
     });
 
     it("submits create form with correct data", async () => {
-      const user = userEvent.setup();
       const newUnit: OrganizationalUnit = {
         ...mockUnit,
         id: "new-unit",
@@ -124,16 +139,14 @@ describe("OrganizationalUnitFormDialog", () => {
 
       // Fill in the form
       const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
-      await user.clear(nameInput);
-      await user.type(nameInput, "New Branch");
+      fireEvent.change(nameInput, { target: { value: "New Branch" } });
 
       // Select type
       const typeSelect = screen.getByRole("combobox");
-      await user.selectOptions(typeSelect, "branch");
+      fireEvent.change(typeSelect, { target: { value: "branch" } });
 
       // Submit
-      const submitButton = screen.getByRole("button", { name: /create/i });
-      await user.click(submitButton);
+      submitDialogForm(/create/i);
 
       await waitFor(() => {
         expect(createOrganizationalUnit).toHaveBeenCalledWith({
@@ -526,7 +539,6 @@ describe("OrganizationalUnitFormDialog", () => {
 
   describe("Description field", () => {
     it("allows entering description", async () => {
-      const user = userEvent.setup();
       const newUnit: OrganizationalUnit = {
         ...mockUnit,
         id: "new-unit",
@@ -546,14 +558,16 @@ describe("OrganizationalUnitFormDialog", () => {
 
       // Fill name
       const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
-      await user.type(nameInput, "Test Unit");
+      fireEvent.change(nameInput, { target: { value: "Test Unit" } });
 
       // Fill description
       const descInput = screen.getByPlaceholderText(/optional description/i);
-      await user.type(descInput, "Test description");
+      fireEvent.change(descInput, {
+        target: { value: "Test description" },
+      });
 
       // Submit
-      await user.click(screen.getByRole("button", { name: /create/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create/i }));
 
       await waitFor(() => {
         expect(createOrganizationalUnit).toHaveBeenCalledWith(

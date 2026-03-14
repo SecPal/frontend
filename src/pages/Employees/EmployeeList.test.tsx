@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee, EmployeeListResponse } from "@/types/api";
 import { EmployeeList } from "./EmployeeList";
 import * as employeeApi from "../../services/employeeApi";
@@ -17,6 +18,8 @@ vi.mock("../../services/organizationalUnitApi");
 
 // Helper to render with providers
 const renderWithProviders = () => {
+  i18n.load("en", enMessages);
+  i18n.activate("en");
   return render(
     <I18nProvider i18n={i18n}>
       <MemoryRouter>
@@ -207,6 +210,9 @@ describe("EmployeeList", () => {
 
   it("should display loading state", () => {
     vi.mocked(employeeApi.fetchEmployees).mockImplementation(
+      () => new Promise(() => {})
+    );
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
       () => new Promise(() => {})
     );
 

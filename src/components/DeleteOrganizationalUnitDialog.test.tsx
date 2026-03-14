@@ -2,12 +2,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 import { DeleteOrganizationalUnitDialog } from "./DeleteOrganizationalUnitDialog";
 import type { OrganizationalUnit } from "../types/organizational";
+
+vi.mock("./alert", () => ({
+  Alert: vi.fn(({ open, children }) =>
+    open ? <div role="dialog">{children}</div> : null
+  ),
+  AlertTitle: vi.fn(({ children }) => <div>{children}</div>),
+  AlertDescription: vi.fn(({ children }) => <div>{children}</div>),
+  AlertBody: vi.fn(({ children }) => <div>{children}</div>),
+  AlertActions: vi.fn(({ children }) => <div>{children}</div>),
+}));
 
 // Mock the API module
 vi.mock("../services/organizationalUnitApi", () => ({
@@ -36,7 +47,7 @@ import { ApiError } from "../services/secretApi";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 function renderWithI18n(component: React.ReactElement) {
-  i18n.load("en", {});
+  i18n.load("en", enMessages);
   i18n.activate("en");
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
 }
@@ -197,7 +208,9 @@ describe("DeleteOrganizationalUnitDialog", () => {
       expect(screen.getByRole("button", { name: /Deleting/i })).toBeDisabled();
 
       // Resolve the promise
-      resolveDelete!();
+      await act(async () => {
+        resolveDelete!();
+      });
 
       await waitFor(() => {
         expect(mockOnSuccess).toHaveBeenCalled();
