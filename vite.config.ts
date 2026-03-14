@@ -3,6 +3,8 @@
 
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import { lingui } from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -49,11 +51,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
     plugins: [
-      react({
-        babel: {
-          plugins: ["macros"],
-        },
+      react({}),
+      babel({
+        plugins: ["@lingui/babel-plugin-lingui-macro"],
       }),
+      lingui(),
       tailwindcss(),
       // Copy .htaccess from public/ to dist/ (Vite ignores dotfiles by default)
       viteStaticCopy({
