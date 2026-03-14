@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Frontend build now stays compatible with Vite 8**
   - replaced object-based manual chunk configuration with a function-based variant so production builds and Lighthouse CI continue to work with Vite 8
+  - switched the React Babel macro configuration to Lingui's dedicated Babel plugin so Lingui macros continue to compile correctly with `@vitejs/plugin-react` 6
 
 - **Auth bootstrap now revalidates stored sessions before unlocking protected routes** (#503)
   - added frontend bootstrap revalidation against `GET /v1/me` when a stored session is present and the client is online

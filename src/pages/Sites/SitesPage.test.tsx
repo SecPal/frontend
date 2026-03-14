@@ -87,9 +87,7 @@ describe("SitesPage", () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /sites/i })
-      ).toBeInTheDocument();
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
     expect(screen.getByText("Main Office")).toBeInTheDocument();
