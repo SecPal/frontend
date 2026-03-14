@@ -121,6 +121,10 @@ describe("Login", () => {
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
 
+    await waitFor(() => {
+      expect(submitButton).toBeEnabled();
+    });
+
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);

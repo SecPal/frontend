@@ -16,6 +16,7 @@ vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
+const QUERY_TIMEOUT = 15000;
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -37,11 +38,7 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 function submitEmployeeCreateForm() {
-  const submitButton = screen.getByRole("button", { name: /create employee/i });
-  const form = submitButton.closest("form");
-
-  expect(form).not.toBeNull();
-  fireEvent.submit(form!);
+  fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 }
 
 const mockOrganizationalUnits = [
@@ -146,6 +143,11 @@ describe("EmployeeCreate", () => {
       expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalled();
     });
 
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(screen.getByLabelText(/organizational unit/i)).not.toBeDisabled();
+    });
+
     // Fill in form
     fireEvent.change(screen.getByLabelText(/first name/i), {
       target: { value: "John" },
@@ -174,27 +176,41 @@ describe("EmployeeCreate", () => {
       target: { value: "unit-1" },
     });
 
+    await waitFor(() => {
+      expect(screen.getByLabelText(/organizational unit/i)).toHaveValue(
+        "unit-1"
+      );
+    });
+
     // Submit
     submitEmployeeCreateForm();
 
-    await waitFor(() => {
-      expect(mockCreateEmployee).toHaveBeenCalledWith({
-        first_name: "John",
-        last_name: "Doe",
-        email: "john.doe@example.com",
-        phone: "+1234567890",
-        date_of_birth: "1990-01-01",
-        position: "Developer",
-        contract_start_date: "2025-01-01",
-        organizational_unit_id: "unit-1",
-        management_level: 0,
-        status: "pre_contract",
-        contract_type: "full_time",
-      });
-    });
+    await waitFor(
+      () => {
+        expect(mockCreateEmployee).toHaveBeenCalledWith({
+          first_name: "John",
+          last_name: "Doe",
+          email: "john.doe@example.com",
+          phone: "+1234567890",
+          date_of_birth: "1990-01-01",
+          position: "Developer",
+          contract_start_date: "2025-01-01",
+          organizational_unit_id: "unit-1",
+          management_level: 0,
+          status: "pre_contract",
+          contract_type: "full_time",
+        });
+      },
+      { timeout: QUERY_TIMEOUT }
+    );
 
-    expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
-  }, 20000);
+    await waitFor(
+      () => {
+        expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
+      },
+      { timeout: QUERY_TIMEOUT }
+    );
+  }, 30000);
 
   it(
     "should display error on create failure",

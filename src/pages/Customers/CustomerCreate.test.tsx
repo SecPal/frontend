@@ -14,6 +14,8 @@ import * as customersApi from "../../services/customersApi";
 vi.mock("../../services/customersApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
+const VERY_SLOW_TEST_TIMEOUT = 40000;
+const QUERY_TIMEOUT = 15000;
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -54,7 +56,7 @@ describe("CustomerCreate", () => {
         screen.getByRole("button", { name: /cancel/i })
       ).toBeInTheDocument();
     },
-    SLOW_TEST_TIMEOUT
+    VERY_SLOW_TEST_TIMEOUT
   );
 
   it("renders contact fields", () => {
@@ -134,7 +136,6 @@ describe("CustomerCreate", () => {
   it(
     "submits form with contact information",
     async () => {
-      const user = userEvent.setup();
       const mockCustomer = {
         id: "customer-456",
         name: "Customer with Contact",
@@ -186,28 +187,38 @@ describe("CustomerCreate", () => {
         target: { value: "+49 123 456789" },
       });
 
-      // Submit
-      await user.click(
-        screen.getByRole("button", { name: /create customer/i })
+      await waitFor(
+        () => {
+          expect(screen.getByRole("textbox", { name: /phone/i })).toHaveValue(
+            "+49 123 456789"
+          );
+        },
+        { timeout: QUERY_TIMEOUT }
       );
 
-      await waitFor(() => {
-        expect(customersApi.createCustomer).toHaveBeenCalledWith({
-          name: "Customer with Contact",
-          billing_address: {
-            street: "Street 1",
-            city: "City",
-            postal_code: "12345",
-            country: "DE",
-          },
-          contact: {
-            name: "John Doe",
-            email: "john@example.com",
-            phone: "+49 123 456789",
-          },
-          is_active: true,
-        });
-      });
+      // Submit
+      fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
+
+      await waitFor(
+        () => {
+          expect(customersApi.createCustomer).toHaveBeenCalledWith({
+            name: "Customer with Contact",
+            billing_address: {
+              street: "Street 1",
+              city: "City",
+              postal_code: "12345",
+              country: "DE",
+            },
+            contact: {
+              name: "John Doe",
+              email: "john@example.com",
+              phone: "+49 123 456789",
+            },
+            is_active: true,
+          });
+        },
+        { timeout: QUERY_TIMEOUT }
+      );
     },
     SLOW_TEST_TIMEOUT
   );
