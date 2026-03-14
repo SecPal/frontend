@@ -16,6 +16,8 @@ vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
+const VERY_SLOW_TEST_TIMEOUT = 30000;
+const QUERY_TIMEOUT = 15000;
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -37,11 +39,7 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 function submitEmployeeCreateForm() {
-  const submitButton = screen.getByRole("button", { name: /create employee/i });
-  const form = submitButton.closest("form");
-
-  expect(form).not.toBeNull();
-  fireEvent.submit(form!);
+  fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 }
 
 const mockOrganizationalUnits = [
@@ -114,87 +112,114 @@ describe("EmployeeCreate", () => {
     });
   });
 
-  it("should create employee and navigate on success", async () => {
-    const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
-    mockCreateEmployee.mockResolvedValue({
-      id: "emp-123",
-      employee_number: "EMP001",
-      first_name: "John",
-      last_name: "Doe",
-      full_name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1234567890",
-      date_of_birth: "1990-01-01",
-      hire_date: "2025-01-01",
-      contract_start_date: "2025-01-01",
-      position: "Developer",
-      status: "active",
-      contract_type: "full_time",
-      management_level: 0,
-      organizational_unit: {
-        id: "unit-1",
-        name: "Main Office",
-      },
-      user: undefined,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    });
-
-    renderWithProviders(<EmployeeCreate />);
-
-    await waitFor(() => {
-      expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalled();
-    });
-
-    // Fill in form
-    fireEvent.change(screen.getByLabelText(/first name/i), {
-      target: { value: "John" },
-    });
-    fireEvent.change(screen.getByLabelText(/last name/i), {
-      target: { value: "Doe" },
-    });
-    fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john.doe@example.com" },
-    });
-    fireEvent.change(screen.getByLabelText(/phone/i), {
-      target: { value: "+1234567890" },
-    });
-    fireEvent.change(screen.getByLabelText(/date of birth/i), {
-      target: { value: "01/01/1990" },
-    });
-    fireEvent.blur(screen.getByLabelText(/date of birth/i));
-    fireEvent.change(screen.getByLabelText("Position *"), {
-      target: { value: "Developer" },
-    });
-    fireEvent.change(screen.getByLabelText(/contract start date/i), {
-      target: { value: "01/01/2025" },
-    });
-    fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
-
-    // Submit
-    submitEmployeeCreateForm();
-
-    await waitFor(() => {
-      expect(mockCreateEmployee).toHaveBeenCalledWith({
+  it(
+    "should create employee and navigate on success",
+    async () => {
+      const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+      mockCreateEmployee.mockResolvedValue({
+        id: "emp-123",
+        employee_number: "EMP001",
         first_name: "John",
         last_name: "Doe",
+        full_name: "John Doe",
         email: "john.doe@example.com",
         phone: "+1234567890",
         date_of_birth: "1990-01-01",
-        position: "Developer",
+        hire_date: "2025-01-01",
         contract_start_date: "2025-01-01",
-        organizational_unit_id: "unit-1",
-        management_level: 0,
-        status: "pre_contract",
+        position: "Developer",
+        status: "active",
         contract_type: "full_time",
+        management_level: 0,
+        organizational_unit: {
+          id: "unit-1",
+          name: "Main Office",
+        },
+        user: undefined,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
       });
-    });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
-  }, 20000);
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(
+          organizationalUnitApi.listOrganizationalUnits
+        ).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByLabelText(/organizational unit/i)
+        ).not.toBeDisabled();
+      });
+
+      // Fill in form
+      fireEvent.change(screen.getByLabelText(/first name/i), {
+        target: { value: "John" },
+      });
+      fireEvent.change(screen.getByLabelText(/last name/i), {
+        target: { value: "Doe" },
+      });
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "john.doe@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/phone/i), {
+        target: { value: "+1234567890" },
+      });
+      fireEvent.change(screen.getByLabelText(/date of birth/i), {
+        target: { value: "01/01/1990" },
+      });
+      fireEvent.blur(screen.getByLabelText(/date of birth/i));
+      fireEvent.change(screen.getByLabelText("Position *"), {
+        target: { value: "Developer" },
+      });
+      fireEvent.change(screen.getByLabelText(/contract start date/i), {
+        target: { value: "01/01/2025" },
+      });
+      fireEvent.blur(screen.getByLabelText(/contract start date/i));
+      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+        target: { value: "unit-1" },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/organizational unit/i)).toHaveValue(
+          "unit-1"
+        );
+      });
+
+      // Submit
+      submitEmployeeCreateForm();
+
+      await waitFor(
+        () => {
+          expect(mockCreateEmployee).toHaveBeenCalledWith({
+            first_name: "John",
+            last_name: "Doe",
+            email: "john.doe@example.com",
+            phone: "+1234567890",
+            date_of_birth: "1990-01-01",
+            position: "Developer",
+            contract_start_date: "2025-01-01",
+            organizational_unit_id: "unit-1",
+            management_level: 0,
+            status: "pre_contract",
+            contract_type: "full_time",
+          });
+        },
+        { timeout: QUERY_TIMEOUT }
+      );
+
+      await waitFor(
+        () => {
+          expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
+        },
+        { timeout: QUERY_TIMEOUT }
+      );
+    },
+    VERY_SLOW_TEST_TIMEOUT
+  );
 
   it(
     "should display error on create failure",

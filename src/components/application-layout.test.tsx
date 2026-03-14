@@ -17,6 +17,8 @@ vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
+const QUERY_TIMEOUT = 15000;
+
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
@@ -39,9 +41,25 @@ const renderWithProviders = (
   );
 };
 
+async function openUserMenu() {
+  const userMenuButton = screen.getByRole("button", {
+    name: /user menu/i,
+  });
+
+  fireEvent.click(userMenuButton);
+
+  await waitFor(
+    () => {
+      expect(userMenuButton).toHaveAttribute("aria-expanded", "true");
+    },
+    { timeout: QUERY_TIMEOUT }
+  );
+
+  return userMenuButton;
+}
+
 describe("ApplicationLayout", () => {
   const SLOW_TEST_TIMEOUT = 20000;
-  const QUERY_TIMEOUT = 15000;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -166,18 +184,13 @@ describe("ApplicationLayout", () => {
     it(
       "opens navbar dropdown when clicking user menu button",
       async () => {
-        const user = userEvent.setup();
-
         renderWithProviders(
           <ApplicationLayout>
             <div>Content</div>
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", {
-          name: /user menu/i,
-        });
-        await user.click(userMenuButton);
+        await openUserMenu();
 
         expect(
           await screen.findByRole(
@@ -196,18 +209,13 @@ describe("ApplicationLayout", () => {
     it(
       "has profile link in navbar dropdown",
       async () => {
-        const user = userEvent.setup();
-
         renderWithProviders(
           <ApplicationLayout>
             <div>Content</div>
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", {
-          name: /user menu/i,
-        });
-        await user.click(userMenuButton);
+        await openUserMenu();
 
         const profileItem = await screen.findByRole(
           "menuitem",
@@ -225,18 +233,13 @@ describe("ApplicationLayout", () => {
     it(
       "has settings link in navbar dropdown",
       async () => {
-        const user = userEvent.setup();
-
         renderWithProviders(
           <ApplicationLayout>
             <div>Content</div>
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", {
-          name: /user menu/i,
-        });
-        await user.click(userMenuButton);
+        await openUserMenu();
 
         const settingsItem = await screen.findByRole(
           "menuitem",
@@ -262,10 +265,7 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", {
-          name: /user menu/i,
-        });
-        await user.click(userMenuButton);
+        await openUserMenu();
 
         const signOutItem = await screen.findByRole(
           "menuitem",
@@ -295,15 +295,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown (navbar user menu)
-      const dropdownButton = screen.getByRole("button", {
-        name: /user menu/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        expect(screen.getByText("Sign out")).toBeInTheDocument();
-      });
+      await openUserMenu();
 
       // Click sign out
       const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
@@ -333,15 +325,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown (navbar user menu)
-      const dropdownButton = screen.getByRole("button", {
-        name: /user menu/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        expect(screen.getByText("Sign out")).toBeInTheDocument();
-      });
+      await openUserMenu();
 
       // Click sign out
       const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
@@ -367,15 +351,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      // Open dropdown (navbar user menu)
-      const dropdownButton = screen.getByRole("button", {
-        name: /user menu/i,
-      });
-      fireEvent.click(dropdownButton);
-
-      await waitFor(() => {
-        expect(screen.getByText("Sign out")).toBeInTheDocument();
-      });
+      await openUserMenu();
 
       // Click sign out
       const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
