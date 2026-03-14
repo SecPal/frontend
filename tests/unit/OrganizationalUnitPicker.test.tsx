@@ -10,6 +10,81 @@ import { i18n } from "@lingui/core";
 import { OrganizationalUnitPicker } from "../../src/components/OrganizationalUnitPicker";
 import type { OrganizationalUnit } from "../../src/types/organizational";
 
+vi.mock("../../src/components/listbox", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+
+  type MockOptionProps = {
+    value: string;
+    children: React.ReactNode;
+    onSelect?: (value: string) => void;
+    selectedValue?: string;
+  };
+
+  const MockListboxOption = ({
+    value,
+    children,
+    onSelect,
+    selectedValue,
+  }: MockOptionProps) => (
+    <div
+      role="option"
+      aria-selected={selectedValue === value}
+      onClick={() => onSelect?.(value)}
+    >
+      {children}
+    </div>
+  );
+
+  return {
+    Listbox: ({
+      value,
+      onChange,
+      disabled,
+      children,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+      disabled?: boolean;
+      children: React.ReactNode;
+    }) => {
+      const [open, setOpen] = React.useState(false);
+      const options = React.Children.toArray(children) as React.ReactElement[];
+      const selectedOption =
+        options.find((option) => option.props.value === value) ?? options[0];
+
+      return (
+        <div>
+          <button
+            type="button"
+            data-disabled={disabled ? "" : undefined}
+            onClick={() => {
+              if (!disabled) {
+                setOpen((current) => !current);
+              }
+            }}
+          >
+            {selectedOption?.props.children}
+          </button>
+          {open && (
+            <div role="listbox">
+              {options.map((option) =>
+                React.cloneElement(option, {
+                  onSelect: onChange,
+                  selectedValue: value,
+                })
+              )}
+            </div>
+          )}
+        </div>
+      );
+    },
+    ListboxOption: MockListboxOption,
+    ListboxLabel: ({ children }: { children: React.ReactNode }) => (
+      <span>{children}</span>
+    ),
+  };
+});
+
 // Wrapper to provide i18n context
 function renderWithI18n(ui: React.ReactElement) {
   return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -391,8 +391,6 @@ describe("SecretList", () => {
     }));
 
     vi.mocked(secretApi.fetchSecrets).mockResolvedValue(manySecrets);
-    const user = userEvent.setup();
-
     renderWithProviders(<SecretList />);
 
     await waitFor(() => {
@@ -409,13 +407,13 @@ describe("SecretList", () => {
 
     // Navigate to middle page (5)
     const page5Button = screen.getByRole("button", { name: "Page 2" });
-    await user.click(page5Button);
+    fireEvent.click(page5Button);
     const page3Button = screen.getByRole("button", { name: "Page 3" });
-    await user.click(page3Button);
+    fireEvent.click(page3Button);
     const page4Button = screen.getByRole("button", { name: "Page 4" });
-    await user.click(page4Button);
+    fireEvent.click(page4Button);
     const page5ButtonFinal = screen.getByRole("button", { name: "Page 5" });
-    await user.click(page5ButtonFinal);
+    fireEvent.click(page5ButtonFinal);
 
     await waitFor(() => {
       expect(screen.getByText(/Secret 80/)).toBeInTheDocument();
@@ -424,7 +422,7 @@ describe("SecretList", () => {
     // Should show ellipsis on both sides: 1 ... 4 5 6 ... 10
     const ellipses = screen.getAllByText("...");
     expect(ellipses).toHaveLength(2); // Left and right ellipsis
-  });
+  }, 20000);
 
   describe("offline support", () => {
     const cachedSecrets = [

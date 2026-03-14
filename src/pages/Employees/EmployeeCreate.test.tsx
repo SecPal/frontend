@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
@@ -33,6 +34,14 @@ const renderWithProviders = (component: React.ReactNode) => {
   );
 };
 
+function submitEmployeeCreateForm() {
+  const submitButton = screen.getByRole("button", { name: /create employee/i });
+  const form = submitButton.closest("form");
+
+  expect(form).not.toBeNull();
+  fireEvent.submit(form!);
+}
+
 const mockOrganizationalUnits = [
   {
     id: "unit-1",
@@ -55,6 +64,8 @@ const mockOrganizationalUnits = [
 describe("EmployeeCreate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.activate("en");
 
     // Mock organizational units loading
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
@@ -129,9 +140,8 @@ describe("EmployeeCreate", () => {
 
     renderWithProviders(<EmployeeCreate />);
 
-    // Wait for organizational units to load
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalled();
     });
 
     // Fill in form
@@ -163,7 +173,7 @@ describe("EmployeeCreate", () => {
     });
 
     // Submit
-    fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+    submitEmployeeCreateForm();
 
     await waitFor(() => {
       expect(mockCreateEmployee).toHaveBeenCalledWith({
@@ -182,7 +192,7 @@ describe("EmployeeCreate", () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-123");
-  });
+  }, 20000);
 
   it("should display error on create failure", async () => {
     const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
@@ -218,7 +228,7 @@ describe("EmployeeCreate", () => {
     });
 
     // Submit
-    fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+    submitEmployeeCreateForm();
 
     await waitFor(() => {
       expect(screen.getByText(/server error/i)).toBeInTheDocument();

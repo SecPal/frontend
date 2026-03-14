@@ -2,10 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee } from "@/types/api";
 import { EmployeeEdit } from "./EmployeeEdit";
 import * as employeeApi from "../../services/employeeApi";
@@ -82,6 +90,9 @@ const mockOrganizationalUnits = [
 describe("EmployeeEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+    i18n.activate("en");
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
       data: mockOrganizationalUnits,
@@ -113,19 +124,23 @@ describe("EmployeeEdit", () => {
   });
 
   it("should format pre-populated dates for German locale", async () => {
-    i18n.activate("de");
+    await act(async () => {
+      i18n.activate("de");
+    });
 
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/date of birth/i)).toHaveValue("01.01.1990");
+      expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue("01.01.1990");
     });
 
-    expect(screen.getByLabelText(/contract start date/i)).toHaveValue(
+    expect(screen.getByLabelText(/datum des vertragsbeginns/i)).toHaveValue(
       "01.01.2025"
     );
 
-    i18n.activate("en");
+    await act(async () => {
+      i18n.activate("en");
+    });
   });
 
   it("should keep nullable employee fields editable when optional data is missing", async () => {
