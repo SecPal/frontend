@@ -17,6 +17,8 @@ vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
+const QUERY_TIMEOUT = 15000;
+
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
@@ -50,7 +52,7 @@ async function openUserMenu() {
     () => {
       expect(userMenuButton).toHaveAttribute("aria-expanded", "true");
     },
-    { timeout: 15000 }
+    { timeout: QUERY_TIMEOUT }
   );
 
   return userMenuButton;
@@ -58,7 +60,6 @@ async function openUserMenu() {
 
 describe("ApplicationLayout", () => {
   const SLOW_TEST_TIMEOUT = 20000;
-  const QUERY_TIMEOUT = 15000;
 
   beforeEach(() => {
     vi.clearAllMocks();

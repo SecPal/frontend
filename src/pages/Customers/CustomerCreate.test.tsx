@@ -14,7 +14,6 @@ import * as customersApi from "../../services/customersApi";
 vi.mock("../../services/customersApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
-const VERY_SLOW_TEST_TIMEOUT = 40000;
 const QUERY_TIMEOUT = 15000;
 
 const mockNavigate = vi.fn();
@@ -39,25 +38,19 @@ describe("CustomerCreate", () => {
     vi.clearAllMocks();
   });
 
-  it(
-    "renders the form with all required fields",
-    () => {
-      renderWithRouter(<CustomerCreate />);
+  it("renders the form with all required fields", () => {
+    renderWithRouter(<CustomerCreate />);
 
-      expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /create customer/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /cancel/i })
-      ).toBeInTheDocument();
-    },
-    VERY_SLOW_TEST_TIMEOUT
-  );
+    expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create customer/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+  });
 
   it("renders contact fields", () => {
     renderWithRouter(<CustomerCreate />);

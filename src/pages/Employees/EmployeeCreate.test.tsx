@@ -16,6 +16,7 @@ vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
+const VERY_SLOW_TEST_TIMEOUT = 30000;
 const QUERY_TIMEOUT = 15000;
 
 // Mock useNavigate
@@ -210,7 +211,7 @@ describe("EmployeeCreate", () => {
       },
       { timeout: QUERY_TIMEOUT }
     );
-  }, 30000);
+  }, VERY_SLOW_TEST_TIMEOUT);
 
   it(
     "should display error on create failure",
