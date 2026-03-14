@@ -71,6 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Frontend build now stays compatible with Vite 8**
+  - replaced object-based manual chunk configuration with a function-based variant so production builds and Lighthouse CI continue to work with Vite 8
+
 - **Auth bootstrap now revalidates stored sessions before unlocking protected routes** (#503)
   - added frontend bootstrap revalidation against `GET /v1/me` when a stored session is present and the client is online
   - protected routes now remain in the loading state until startup revalidation succeeds or fails closed
