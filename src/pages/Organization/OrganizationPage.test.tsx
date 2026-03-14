@@ -35,6 +35,7 @@ const renderWithProviders = (component: React.ReactNode) => {
 
 describe("OrganizationPage", () => {
   const SLOW_TEST_TIMEOUT = 20000;
+  const QUERY_TIMEOUT = 15000;
 
   const mockUnits: OrganizationalUnit[] = [
     {
@@ -324,7 +325,7 @@ describe("OrganizationPage", () => {
           /created successfully/i,
           {},
           {
-            timeout: SLOW_TEST_TIMEOUT,
+            timeout: QUERY_TIMEOUT,
           }
         )
       ).toBeInTheDocument();

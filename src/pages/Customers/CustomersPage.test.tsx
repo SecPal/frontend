@@ -65,6 +65,8 @@ const mockResponse: PaginatedResponse<Customer> = {
   },
 };
 
+const QUERY_TIMEOUT = 15000;
+
 describe("CustomersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -75,7 +77,9 @@ describe("CustomersPage", () => {
     renderWithProviders();
 
     expect(
-      await screen.findByText("Acme Corp", undefined, { timeout: 20000 })
+      await screen.findByText("Acme Corp", undefined, {
+        timeout: QUERY_TIMEOUT,
+      })
     ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
   });

@@ -41,6 +41,7 @@ const renderWithProviders = (
 
 describe("ApplicationLayout", () => {
   const SLOW_TEST_TIMEOUT = 20000;
+  const QUERY_TIMEOUT = 15000;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -182,7 +183,7 @@ describe("ApplicationLayout", () => {
           await screen.findByRole(
             "menuitem",
             { name: /my profile/i },
-            { timeout: SLOW_TEST_TIMEOUT }
+            { timeout: QUERY_TIMEOUT }
           )
         ).toBeInTheDocument();
         expect(
@@ -213,7 +214,7 @@ describe("ApplicationLayout", () => {
           {
             name: /my profile/i,
           },
-          { timeout: SLOW_TEST_TIMEOUT }
+          { timeout: QUERY_TIMEOUT }
         );
 
         expect(profileItem).toHaveAttribute("href", "/profile");
@@ -242,7 +243,7 @@ describe("ApplicationLayout", () => {
           {
             name: /settings/i,
           },
-          { timeout: SLOW_TEST_TIMEOUT }
+          { timeout: QUERY_TIMEOUT }
         );
 
         expect(settingsItem).toHaveAttribute("href", "/settings");
@@ -269,7 +270,7 @@ describe("ApplicationLayout", () => {
         const signOutItem = await screen.findByRole(
           "menuitem",
           { name: /sign out/i },
-          { timeout: SLOW_TEST_TIMEOUT }
+          { timeout: QUERY_TIMEOUT }
         );
         await user.click(signOutItem);
 

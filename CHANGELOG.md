@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- Pinned transitive `yauzl` resolution to `>=3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot
+- Pinned the transitive `yauzl` resolution to `3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot
 
 - **Phase 1 offline-data hardening**
   - Removed PWA runtime caching for authenticated API routes to avoid persistent browser caching of sensitive `/v1/*` responses
