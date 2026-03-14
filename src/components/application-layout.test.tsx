@@ -173,7 +173,9 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
         await user.click(userMenuButton);
 
         expect(
@@ -183,7 +185,9 @@ describe("ApplicationLayout", () => {
             { timeout: SLOW_TEST_TIMEOUT }
           )
         ).toBeInTheDocument();
-        expect(screen.getByRole("menuitem", { name: /sign out/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /sign out/i })
+        ).toBeInTheDocument();
       },
       SLOW_TEST_TIMEOUT
     );
@@ -199,7 +203,9 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
         await user.click(userMenuButton);
 
         const profileItem = await screen.findByRole(
@@ -226,7 +232,9 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
         await user.click(userMenuButton);
 
         const settingsItem = await screen.findByRole(
@@ -253,7 +261,9 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+        const userMenuButton = screen.getByRole("button", {
+          name: /user menu/i,
+        });
         await user.click(userMenuButton);
 
         const signOutItem = await screen.findByRole(
