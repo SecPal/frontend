@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
@@ -114,7 +114,7 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.getByText("Secrets")).toBeInTheDocument();
+      expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
     });
 
     it("renders user information in navbar avatar", () => {
@@ -155,7 +155,7 @@ describe("ApplicationLayout", () => {
       expect(homeLink).toHaveAttribute("data-current", "true");
     });
 
-    it("highlights Secrets link when on secrets page", () => {
+    it("does not render a legacy secrets link on removed routes", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
@@ -163,20 +163,9 @@ describe("ApplicationLayout", () => {
         { route: "/secrets" }
       );
 
-      const secretsLink = screen.getByRole("link", { name: /secrets/i });
-      expect(secretsLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("highlights Secrets link when on secrets subpage", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/secrets/new" }
-      );
-
-      const secretsLink = screen.getByRole("link", { name: /secrets/i });
-      expect(secretsLink).toHaveAttribute("data-current", "true");
+      expect(
+        screen.queryByRole("link", { name: /secrets/i })
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -538,7 +527,7 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Customers")).toBeInTheDocument();
     });
 
-    it("always shows Home and Secrets links regardless of scopes", () => {
+    it("always shows Home without reintroducing secrets links", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
@@ -556,7 +545,7 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.getByText("Secrets")).toBeInTheDocument();
+      expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
     });
 
     it("treats undefined hasOrganizationalScopes as false", () => {

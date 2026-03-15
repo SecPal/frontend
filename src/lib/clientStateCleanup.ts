@@ -4,11 +4,7 @@
 import { db } from "./db";
 
 export const SENSITIVE_CACHE_NAMES = [
-  "secrets-list-cache",
-  "secrets-detail-cache",
   "api-cache",
-  "api-secrets-list",
-  "api-secrets-detail",
   "api-users",
   "api-general",
 ] as const;
@@ -36,8 +32,6 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
     db.syncQueue.clear(),
     db.apiCache.clear(),
     db.analytics.clear(),
-    db.fileQueue.clear(),
-    db.secretCache.clear(),
     db.organizationalUnitCache.clear(),
   ]);
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
@@ -26,7 +26,7 @@ import {
   createOrganizationalUnit,
   updateOrganizationalUnit,
 } from "../services/organizationalUnitApi";
-import { ApiError } from "../services/secretApi";
+import { ApiError } from "../services/ApiError";
 import {
   getUnitTypeOptions,
   getValidChildTypeOptions,

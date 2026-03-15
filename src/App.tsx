@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
@@ -23,11 +23,6 @@ import { getApiBaseUrl } from "./config";
 import { Login } from "./pages/Login";
 
 // All other routes are lazy loaded to reduce initial bundle size
-const ShareTarget = lazy(() => import("./pages/ShareTarget"));
-const SecretList = lazy(() => import("./pages/Secrets/SecretList"));
-const SecretDetail = lazy(() => import("./pages/Secrets/SecretDetail"));
-const SecretCreate = lazy(() => import("./pages/Secrets/SecretCreate"));
-const SecretEdit = lazy(() => import("./pages/Secrets/SecretEdit"));
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
 const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
@@ -67,8 +62,8 @@ function Home() {
         <Trans>SecPal - a guard's best friend</Trans>
       </Text>
       <div className="mt-8 flex gap-4">
-        <Button href="/secrets">
-          <Trans>View Secrets</Trans>
+        <Button href="/profile">
+          <Trans>View Profile</Trans>
         </Button>
         <Button href="/about" outline>
           <Trans>About</Trans>
@@ -129,56 +124,6 @@ function App() {
                 <ProtectedRoute>
                   <ApplicationLayout>
                     <About />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/share"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <ShareTarget />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/secrets"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SecretList />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/secrets/new"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SecretCreate />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/secrets/:id"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SecretDetail />
-                  </ApplicationLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/secrets/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SecretEdit />
                   </ApplicationLayout>
                 </ProtectedRoute>
               }

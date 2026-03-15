@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -222,8 +222,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 5", () => {
-      expect(db.verno).toBe(5);
+    it("should have version 6", () => {
+      expect(db.verno).toBe(6);
     });
 
     it("should have all required tables", () => {
@@ -232,7 +232,6 @@ describe("IndexedDB Database", () => {
       expect(tableNames).toContain("syncQueue");
       expect(tableNames).toContain("apiCache");
       expect(tableNames).toContain("analytics");
-      expect(tableNames).toContain("fileQueue");
       expect(tableNames).toContain("organizationalUnitCache");
     });
   });

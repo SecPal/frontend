@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useCallback, useRef } from "react";
@@ -16,12 +16,12 @@ import { useCallback, useRef } from "react";
  *
  * // Prefetch when browser is idle
  * useEffect(() => {
- *   prefetchOnIdle('/v1/secrets');
+ *   prefetchOnIdle('/v1/employees');
  * }, []);
  *
  * // Prefetch when user hovers over link
- * <Link to="/secrets/123" {...prefetchOnHover('/v1/secrets/123')}>
- *   View Secret
+ * <Link to="/employees/123" {...prefetchOnHover('/v1/employees/123')}>
+ *   View Employee
  * </Link>
  * ```
  */

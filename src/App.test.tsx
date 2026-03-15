@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -101,5 +101,27 @@ describe("App", () => {
         { timeout: 20000 }
       )
     ).toBeInTheDocument();
+  });
+
+  it("does not expose secrets navigation for authenticated users", async () => {
+    window.history.replaceState({}, "", "/");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@example.com",
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /Welcome to SecPal/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
+    expect(screen.queryByText("View Secrets")).not.toBeInTheDocument();
   });
 });
