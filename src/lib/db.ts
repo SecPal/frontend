@@ -26,6 +26,7 @@ export interface SyncOperation {
   createdAt: Date;
   attempts: number;
   lastAttemptAt?: Date;
+  nextRetryAt?: Date;
   error?: string;
 }
 
@@ -168,6 +169,18 @@ db.version(5).stores({
 db.version(6).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, entity, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: null,
+  secretCache: null,
+  organizationalUnitCache:
+    "id, type, parent_id, updated_at, cachedAt, pendingSync",
+});
+
+// Schema version 7 - Add scheduled retry timestamps for sync operations
+db.version(7).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, entity, status, createdAt, attempts, nextRetryAt",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: null,
