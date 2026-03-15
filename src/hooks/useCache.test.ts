@@ -31,10 +31,10 @@ describe("useCache", () => {
       const { result } = renderHook(() => useCache());
 
       await act(async () => {
-        await result.current.invalidateCache(["api-secrets", "api-users"]);
+        await result.current.invalidateCache(["api-customers", "api-users"]);
       });
 
-      expect(mockCaches.delete).toHaveBeenCalledWith("api-secrets");
+      expect(mockCaches.delete).toHaveBeenCalledWith("api-customers");
       expect(mockCaches.delete).toHaveBeenCalledWith("api-users");
       expect(mockCaches.delete).toHaveBeenCalledTimes(2);
     });
@@ -45,7 +45,7 @@ describe("useCache", () => {
       const { result } = renderHook(() => useCache());
 
       await expect(
-        result.current.invalidateCache(["api-secrets"])
+        result.current.invalidateCache(["api-customers"])
       ).rejects.toThrow("Delete failed");
     });
 
@@ -57,7 +57,7 @@ describe("useCache", () => {
       const { result } = renderHook(() => useCache());
 
       await act(async () => {
-        await result.current.invalidateCache(["api-secrets"]);
+        await result.current.invalidateCache(["api-customers"]);
       });
 
       expect(consoleSpy).toHaveBeenCalledWith("Cache API not supported");

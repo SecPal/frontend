@@ -18,11 +18,10 @@ export const DB_NAME = "SecPalDB";
  * Database schema version - must match db.ts schema version
  *
  * Source of truth: This constant
- * Used in: src/lib/db.ts, src/sw.ts
+ * Used in: src/lib/db.ts (db.version(DB_VERSION))
  *
  * When incrementing:
  * 1. Update this constant
- * 2. Add new version() block in db.ts
- * 3. Service Worker will automatically use new version
+ * 2. Update the single version() block in db.ts
  */
-export const DB_VERSION = 6;
+export const DB_VERSION = 8;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Dexie, { type EntityTable } from "dexie";
-import { DB_NAME } from "./db-constants";
+import { DB_NAME, DB_VERSION } from "./db-constants";
 
 /**
  * Guard entity stored in IndexedDB
@@ -115,76 +115,13 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
-// Schema version 1
-db.version(1).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-});
-
-// Schema version 2 - Add analytics table
-// Note: Per Dexie.js best practices, all existing tables must be re-declared
-// when upgrading schema versions, even if they haven't changed
-db.version(2).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-  analytics: "++id, synced, timestamp, sessionId, type",
-});
-
-// Schema version 3 - Add fileQueue table
-db.version(3).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-  analytics: "++id, synced, timestamp, sessionId, type",
-  fileQueue: "id, uploadState, createdAt, retryCount",
-});
-
-// Schema version 4 - Add secretCache table
-db.version(4).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-  analytics: "++id, synced, timestamp, sessionId, type",
-  fileQueue: "id, uploadState, createdAt, retryCount",
-  secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
-});
-
-// Schema version 5 - Add organizationalUnitCache table
-db.version(5).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-  analytics: "++id, synced, timestamp, sessionId, type",
-  fileQueue: "id, uploadState, createdAt, retryCount",
-  secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
-  organizationalUnitCache:
-    "id, type, parent_id, updated_at, cachedAt, pendingSync",
-});
-
-// Schema version 6 - Remove Secrets-specific offline storage
-// fileQueue and secretCache are set to null to explicitly drop them so that
-// existing users' IndexedDB is cleaned up during the v5→v6 upgrade.
-db.version(6).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts",
-  apiCache: "url, expiresAt",
-  analytics: "++id, synced, timestamp, sessionId, type",
-  fileQueue: null,
-  secretCache: null,
-  organizationalUnitCache:
-    "id, type, parent_id, updated_at, cachedAt, pendingSync",
-});
-
-// Schema version 7 - Add scheduled retry timestamps for sync operations
-db.version(7).stores({
+// Schema version 8 - Current offline storage only
+// 0.x keeps the IndexedDB schema focused on the currently supported offline data.
+db.version(DB_VERSION).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, entity, status, createdAt, attempts, nextRetryAt",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
-  fileQueue: null,
-  secretCache: null,
   organizationalUnitCache:
     "id, type, parent_id, updated_at, cachedAt, pendingSync",
 });
