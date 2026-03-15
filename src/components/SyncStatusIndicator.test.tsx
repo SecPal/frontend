@@ -105,7 +105,9 @@ describe("SyncStatusIndicator", () => {
       expect(screen.getByText(/next retry:/i)).toBeInTheDocument();
     });
 
-      expect(screen.getByText(new RegExp(futureRetryAt.toLocaleTimeString(), "i"))).toBeInTheDocument();
+    expect(
+      screen.getByText(new RegExp(futureRetryAt.toLocaleTimeString(), "i"))
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /sync now/i })).toBeNull();
   });
 
