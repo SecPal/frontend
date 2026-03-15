@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { db } from "./db";
@@ -168,18 +168,23 @@ export async function cleanExpiredCache(): Promise<number> {
  *
  * @param id - Operation ID
  * @param status - New status
- * @param error - Optional error message
+ * @param error - Optional error message to store on failure
+ * @param nextRetryAt - When set, the operation will not be retried before this
+ *   timestamp. Pass `undefined` to clear a previously scheduled retry (e.g. on
+ *   success) or when the operation has permanently failed.
  *
  * @example
  * ```ts
  * await updateSyncOperationStatus('abc-123', 'synced');
  * await updateSyncOperationStatus('def-456', 'error', 'Network timeout');
+ * await updateSyncOperationStatus('ghi-789', 'pending', 'Timeout', new Date(Date.now() + 5_000));
  * ```
  */
 export async function updateSyncOperationStatus(
   id: string,
   status: SyncOperation["status"],
-  error?: string
+  error?: string,
+  nextRetryAt?: Date
 ): Promise<void> {
   const operation = await db.syncQueue.get(id);
   if (!operation) {
@@ -191,6 +196,7 @@ export async function updateSyncOperationStatus(
     error,
     lastAttemptAt: new Date(),
     attempts: operation.attempts + 1,
+    nextRetryAt,
   });
 }
 
@@ -226,6 +232,10 @@ export async function retrySyncOperation(
   // Exponential backoff using configured multiplier
   const backoffDelay =
     Math.pow(apiConfig.retry.backoffMultiplier, operation.attempts) * 1000;
+  if (operation.nextRetryAt && operation.nextRetryAt.getTime() > Date.now()) {
+    return false;
+  }
+
   if (operation.lastAttemptAt) {
     const timeSinceLastAttempt = Date.now() - operation.lastAttemptAt.getTime();
     if (timeSinceLastAttempt < backoffDelay) {
@@ -278,14 +288,20 @@ export async function retrySyncOperation(
     }
 
     if (response.ok) {
-      await updateSyncOperationStatus(operation.id, "synced");
+      await updateSyncOperationStatus(
+        operation.id,
+        "synced",
+        undefined,
+        undefined
+      );
       return true;
     } else {
       const errorText = await response.text();
       await updateSyncOperationStatus(
         operation.id,
         "error",
-        `HTTP ${response.status}: ${errorText}`
+        `HTTP ${response.status}: ${errorText}`,
+        undefined
       );
       return false;
     }
@@ -294,10 +310,25 @@ export async function retrySyncOperation(
       error instanceof Error ? error.message : "Unknown error";
     // Mark as error if this was the final attempt, otherwise keep pending
     const finalAttemptThreshold = apiConfig.retry.maxAttempts - 1;
+    const shouldFail = operation.attempts >= finalAttemptThreshold;
+    // Schedule based on post-increment attempt count so the displayed retry
+    // time matches the actual backoff window on the next retrySyncOperation call.
+    const scheduledRetryAt = shouldFail
+      ? undefined
+      : new Date(
+          Date.now() +
+            Math.pow(
+              apiConfig.retry.backoffMultiplier,
+              operation.attempts + 1
+            ) *
+              1000
+        );
+
     await updateSyncOperationStatus(
       operation.id,
-      operation.attempts >= finalAttemptThreshold ? "error" : "pending",
-      errorMessage
+      shouldFail ? "error" : "pending",
+      errorMessage,
+      scheduledRetryAt
     );
     return false;
   }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
@@ -120,6 +120,7 @@ describe("API Cache Utilities", () => {
       expect(queued?.entity).toBe("guard");
       expect(queued?.status).toBe("pending");
       expect(queued?.attempts).toBe(0);
+      expect(queued?.nextRetryAt).toBeUndefined();
     });
 
     it("should generate unique IDs for operations", async () => {
@@ -505,7 +506,44 @@ describe("API Cache Utilities", () => {
       expect(success).toBe(false);
 
       const updated = await db.syncQueue.get(id);
+      expect(updated?.status).toBe("pending");
       expect(updated?.error).toBe("Network error");
+      expect(updated?.nextRetryAt).toBeInstanceOf(Date);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("should skip retry when next retry is scheduled in the future", async () => {
+      const mockFetch = vi.fn();
+      vi.stubGlobal("fetch", mockFetch);
+
+      const id = await addToSyncQueue({
+        type: "create",
+        entity: "guards",
+        data: {},
+      });
+
+      const futureRetryAt = new Date(Date.now() + 60_000);
+      await db.syncQueue.update(id, {
+        attempts: 1,
+        lastAttemptAt: new Date(),
+        nextRetryAt: futureRetryAt,
+      });
+
+      const operation = await db.syncQueue.get(id);
+      if (!operation) throw new Error("Operation not found");
+
+      const success = await retrySyncOperation(
+        operation,
+        "https://api.secpal.dev"
+      );
+
+      expect(success).toBe(false);
+      expect(mockFetch).not.toHaveBeenCalled();
+
+      const updated = await db.syncQueue.get(id);
+      expect(updated?.attempts).toBe(1);
+      expect(updated?.nextRetryAt?.getTime()).toBe(futureRetryAt.getTime());
 
       vi.unstubAllGlobals();
     });
@@ -618,6 +656,47 @@ describe("API Cache Utilities", () => {
       expect(stats.total).toBe(3);
       expect(stats.synced).toBe(2);
       expect(stats.failed).toBe(1);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("should keep future-scheduled retries pending without processing them", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+      });
+      vi.stubGlobal("fetch", mockFetch);
+
+      const dueOperationId = await addToSyncQueue({
+        type: "create",
+        entity: "guards",
+        data: { name: "Due" },
+      });
+      const delayedOperationId = await addToSyncQueue({
+        type: "create",
+        entity: "guards",
+        data: { name: "Delayed" },
+      });
+
+      await db.syncQueue.update(delayedOperationId, {
+        attempts: 1,
+        lastAttemptAt: new Date(),
+        nextRetryAt: new Date(Date.now() + 60_000),
+      });
+
+      const stats = await processSyncQueue("https://api.secpal.dev");
+
+      expect(stats.total).toBe(2);
+      expect(stats.synced).toBe(1);
+      expect(stats.failed).toBe(0);
+      expect(stats.pending).toBe(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      const dueOperation = await db.syncQueue.get(dueOperationId);
+      const delayedOperation = await db.syncQueue.get(delayedOperationId);
+      expect(dueOperation?.status).toBe("synced");
+      expect(delayedOperation?.status).toBe("pending");
+      expect(delayedOperation?.nextRetryAt).toBeInstanceOf(Date);
 
       vi.unstubAllGlobals();
     });

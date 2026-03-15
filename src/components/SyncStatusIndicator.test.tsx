@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
@@ -77,6 +77,38 @@ describe("SyncStatusIndicator", () => {
     await waitFor(() => {
       expect(screen.getByText(/2 operation\(s\) pending/i)).toBeInTheDocument();
     });
+  });
+
+  it("should show the next scheduled retry time for pending operations in backoff", async () => {
+    vi.mocked(useOnlineStatusModule.useOnlineStatus).mockReturnValue(true);
+
+    const futureRetryAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await db.syncQueue.add({
+      id: "retry-1",
+      type: "create",
+      entity: "guards",
+      data: {},
+      status: "pending",
+      createdAt: new Date(),
+      attempts: 1,
+      nextRetryAt: futureRetryAt,
+    });
+
+    renderWithI18n(<SyncStatusIndicator apiBaseUrl="https://api.secpal.dev" />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/1 operation\(s\) pending/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/next retry:/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(new RegExp(futureRetryAt.toLocaleTimeString(), "i"))
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sync now/i })).toBeNull();
   });
 
   it("should show error operations count", async () => {

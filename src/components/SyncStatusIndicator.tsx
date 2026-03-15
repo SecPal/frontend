@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useCallback, useEffect, useState } from "react";
@@ -29,6 +29,10 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  // Incremented by a timer when the earliest nextRetryAt window elapses so
+  // the live queries re-evaluate and the UI transitions without waiting for
+  // an unrelated DB write.
+  const [retryTimerTick, setRetryTimerTick] = useState(0);
 
   // Live query for pending operations
   const pendingOps = useLiveQuery(
@@ -40,6 +44,35 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
     () => db.syncQueue.where("status").equals("error").count(),
     []
   );
+
+  const nextRetryAt = useLiveQuery(async () => {
+    void retryTimerTick;
+    const pendingOperations = await db.syncQueue
+      .where("status")
+      .equals("pending")
+      .toArray();
+
+    const futureRetryTimes = pendingOperations
+      .map((operation) => operation.nextRetryAt)
+      .filter((retryAt): retryAt is Date => retryAt instanceof Date)
+      .filter((retryAt) => retryAt.getTime() > Date.now())
+      .sort((left, right) => left.getTime() - right.getTime());
+
+    return futureRetryTimes[0] ?? null;
+  }, [retryTimerTick]);
+
+  // True when at least one pending operation is due right now (no future nextRetryAt).
+  const hasDueOps = useLiveQuery(async () => {
+    void retryTimerTick;
+    const pending = await db.syncQueue
+      .where("status")
+      .equals("pending")
+      .toArray();
+
+    return pending.some(
+      (op) => !op.nextRetryAt || op.nextRetryAt.getTime() <= Date.now()
+    );
+  }, [retryTimerTick]);
 
   const handleManualSync = useCallback(async () => {
     if (!isOnline || isSyncing) return;
@@ -70,6 +103,20 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
       setIsSyncing(false);
     }
   }, [isOnline, isSyncing, apiBaseUrl]);
+
+  // Re-evaluate retry queries once the earliest scheduled retry window elapses
+  // so the UI updates and the manual sync button appears without waiting for
+  // an unrelated IndexedDB write.
+  useEffect(() => {
+    if (!nextRetryAt) return;
+    const delay = nextRetryAt.getTime() - Date.now();
+    if (delay <= 0) {
+      setRetryTimerTick((t) => t + 1);
+      return;
+    }
+    const timer = setTimeout(() => setRetryTimerTick((t) => t + 1), delay);
+    return () => clearTimeout(timer);
+  }, [nextRetryAt]);
 
   // Auto-sync when coming online (only trigger on online status change)
   useEffect(() => {
@@ -133,6 +180,12 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
             </p>
           )}
 
+          {nextRetryAt && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              <Trans>Next retry:</Trans> {nextRetryAt.toLocaleTimeString()}
+            </p>
+          )}
+
           {/* Error Message */}
           {syncError && (
             <p className="text-xs text-red-600 dark:text-red-400">
@@ -142,7 +195,7 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
         </div>
 
         {/* Manual Sync Button */}
-        {!isSyncing && isOnline && pendingOps && pendingOps > 0 && (
+        {!isSyncing && isOnline && hasDueOps && (
           <button
             onClick={handleManualSync}
             className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"

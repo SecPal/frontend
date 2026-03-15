@@ -171,6 +171,25 @@ describe("IndexedDB Database", () => {
       const retrieved = await db.syncQueue.get("retry-test");
       expect(retrieved?.attempts).toBe(1);
     });
+
+    it("should persist a scheduled next retry timestamp", async () => {
+      const nextRetryAt = new Date(Date.now() + 30_000);
+      const operation: SyncOperation = {
+        id: "retry-schedule-test",
+        type: "create",
+        entity: "guard",
+        data: {},
+        status: "pending",
+        createdAt: new Date(),
+        attempts: 1,
+        nextRetryAt,
+      };
+
+      await db.syncQueue.add(operation);
+
+      const retrieved = await db.syncQueue.get("retry-schedule-test");
+      expect(retrieved?.nextRetryAt?.getTime()).toBe(nextRetryAt.getTime());
+    });
   });
 
   describe("API Cache Table", () => {
@@ -222,8 +241,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 6", () => {
-      expect(db.verno).toBe(6);
+    it("should have version 7", () => {
+      expect(db.verno).toBe(7);
     });
 
     it("should have all required tables", () => {
