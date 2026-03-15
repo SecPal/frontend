@@ -112,7 +112,7 @@ export async function isServiceWorkerActive(page: Page): Promise<boolean> {
 export async function getCachedOrgUnitsCount(page: Page): Promise<number> {
   return await page.evaluate(async () => {
     return new Promise<number>((resolve) => {
-      const request = indexedDB.open("secpal-db");
+      const request = indexedDB.open("SecPalDB");
 
       request.onsuccess = () => {
         const db = request.result;
