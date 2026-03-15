@@ -4,9 +4,16 @@
 import { db } from "./db";
 
 export const SENSITIVE_CACHE_NAMES = [
+  // Active caches
   "api-cache",
   "api-users",
   "api-general",
+  // Legacy Secrets caches removed in v6 — kept here so existing users'
+  // browsers clean up sensitive data on the next logout/clearState call.
+  "secrets-list-cache",
+  "secrets-detail-cache",
+  "api-secrets-list",
+  "api-secrets-detail",
 ] as const;
 
 async function clearSensitiveCaches(): Promise<void> {

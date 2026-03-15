@@ -96,6 +96,25 @@ describe("clearSensitiveClientState", () => {
     expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
   });
 
+  it("clears legacy Secrets caches left over from previous app versions", async () => {
+    mockCaches.keys.mockResolvedValue([
+      "static-assets",
+      "secrets-list-cache",
+      "secrets-detail-cache",
+      "api-secrets-list",
+      "api-secrets-detail",
+    ]);
+    mockCaches.delete.mockResolvedValue(true);
+
+    await clearSensitiveClientState();
+
+    expect(mockCaches.delete).toHaveBeenCalledWith("secrets-list-cache");
+    expect(mockCaches.delete).toHaveBeenCalledWith("secrets-detail-cache");
+    expect(mockCaches.delete).toHaveBeenCalledWith("api-secrets-list");
+    expect(mockCaches.delete).toHaveBeenCalledWith("api-secrets-detail");
+    expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
+  });
+
   it("does not fail when Cache API is unavailable", async () => {
     // @ts-expect-error Simulate unsupported Cache API
     delete globalThis.caches;

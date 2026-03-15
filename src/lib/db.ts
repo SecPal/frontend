@@ -163,11 +163,15 @@ db.version(5).stores({
 });
 
 // Schema version 6 - Remove Secrets-specific offline storage
+// fileQueue and secretCache are set to null to explicitly drop them so that
+// existing users' IndexedDB is cleaned up during the v5→v6 upgrade.
 db.version(6).stores({
   guards: "id, email, lastSynced",
   syncQueue: "id, entity, status, createdAt, attempts",
   apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: null,
+  secretCache: null,
   organizationalUnitCache:
     "id, type, parent_id, updated_at, cachedAt, pendingSync",
 });
