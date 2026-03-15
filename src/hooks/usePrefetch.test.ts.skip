@@ -36,13 +36,13 @@ describe("usePrefetch", () => {
 
       const { result } = renderHook(() => usePrefetch());
 
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
 
       // Wait for requestIdleCallback to execute
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(global.requestIdleCallback).toHaveBeenCalled();
-      expect(global.fetch).toHaveBeenCalledWith("/api/v1/secrets", {
+      expect(global.fetch).toHaveBeenCalledWith("/v1/customers", {
         priority: "low",
       });
     });
@@ -54,11 +54,11 @@ describe("usePrefetch", () => {
 
       const { result } = renderHook(() => usePrefetch());
 
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Try to prefetch again
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -74,7 +74,7 @@ describe("usePrefetch", () => {
 
       const { result } = renderHook(() => usePrefetch());
 
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleWarnSpy).toHaveBeenCalled();
@@ -90,11 +90,11 @@ describe("usePrefetch", () => {
 
       const { result } = renderHook(() => usePrefetch());
 
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
 
       await new Promise((resolve) => setTimeout(resolve, 150));
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/v1/secrets", undefined);
+      expect(global.fetch).toHaveBeenCalledWith("/v1/customers", undefined);
     });
   });
 
@@ -102,7 +102,7 @@ describe("usePrefetch", () => {
     it("should return event handlers for prefetch", () => {
       const { result } = renderHook(() => usePrefetch());
 
-      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+      const handlers = result.current.prefetchOnHover("/v1/customers");
 
       expect(handlers).toHaveProperty("onMouseEnter");
       expect(handlers).toHaveProperty("onTouchStart");
@@ -113,24 +113,24 @@ describe("usePrefetch", () => {
     it("should add prefetch link on hover", () => {
       const { result } = renderHook(() => usePrefetch());
 
-      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+      const handlers = result.current.prefetchOnHover("/v1/customers");
       handlers.onMouseEnter?.({} as React.MouseEvent);
 
       const link = document.head.querySelector(
         'link[rel="prefetch"]'
       ) as HTMLLinkElement;
       expect(link).not.toBeNull();
-      expect(link.href).toContain("/api/v1/secrets");
+      expect(link.href).toContain("/v1/customers");
       expect(link.as).toBe("fetch");
     });
 
     it("should not prefetch same URL twice", () => {
       const { result } = renderHook(() => usePrefetch());
 
-      const handlers1 = result.current.prefetchOnHover("/api/v1/secrets");
+      const handlers1 = result.current.prefetchOnHover("/v1/customers");
       handlers1.onMouseEnter?.({} as React.MouseEvent);
 
-      const handlers2 = result.current.prefetchOnHover("/api/v1/secrets");
+      const handlers2 = result.current.prefetchOnHover("/v1/customers");
       expect(handlers2).toEqual({});
 
       const links = document.head.querySelectorAll('link[rel="prefetch"]');
@@ -142,7 +142,7 @@ describe("usePrefetch", () => {
 
       const { result } = renderHook(() => usePrefetch());
 
-      const handlers = result.current.prefetchOnHover("/api/v1/secrets");
+      const handlers = result.current.prefetchOnHover("/v1/customers");
       handlers.onMouseEnter?.({} as React.MouseEvent);
 
       expect(
@@ -166,9 +166,9 @@ describe("usePrefetch", () => {
       const { result } = renderHook(() => usePrefetch());
 
       result.current.prefetchBatch([
-        "/api/v1/secrets",
-        "/api/v1/users",
-        "/api/v1/roles",
+        "/v1/customers",
+        "/v1/users",
+        "/v1/roles",
       ]);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -186,14 +186,14 @@ describe("usePrefetch", () => {
       const { result } = renderHook(() => usePrefetch());
 
       // Prefetch URL
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Clear cache
       result.current.clearPrefetchCache();
 
       // Prefetch same URL again - should work now
-      result.current.prefetchOnIdle("/api/v1/secrets");
+      result.current.prefetchOnIdle("/v1/customers");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(global.fetch).toHaveBeenCalledTimes(2);

@@ -25,4 +25,4 @@ export const DB_NAME = "SecPalDB";
  * 2. Add new version() block in db.ts
  * 3. Service Worker will automatically use new version
  */
-export const DB_VERSION = 6;
+export const DB_VERSION = 8;

@@ -13,8 +13,8 @@ import { useCallback } from "react";
  * ```tsx
  * const { invalidateCache, clearAllCaches } = useCache();
  *
- * // After creating a secret
- * await invalidateCache(['api-secrets']);
+ * // After updating customer data
+ * await invalidateCache(["api-customers", "api-users"]);
  *
  * // Clear all caches on logout
  * await clearAllCaches();

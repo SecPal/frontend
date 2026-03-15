@@ -145,41 +145,6 @@ export async function getCachedOrgUnitsCount(page: Page): Promise<number> {
 }
 
 /**
- * Get cached secrets count from IndexedDB
- */
-export async function getCachedSecretsCount(page: Page): Promise<number> {
-  return await page.evaluate(async () => {
-    return new Promise<number>((resolve) => {
-      const request = indexedDB.open("secpal-db");
-
-      request.onsuccess = () => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains("secretCache")) {
-          resolve(0);
-          return;
-        }
-
-        const transaction = db.transaction("secretCache", "readonly");
-        const store = transaction.objectStore("secretCache");
-        const countRequest = store.count();
-
-        countRequest.onsuccess = () => {
-          resolve(countRequest.result);
-        };
-
-        countRequest.onerror = () => {
-          resolve(0);
-        };
-      };
-
-      request.onerror = () => {
-        resolve(0);
-      };
-    });
-  });
-}
-
-/**
  * Simulate slow network conditions
  */
 export async function simulateSlowNetwork(page: Page): Promise<void> {

@@ -93,7 +93,7 @@ describe("authApi", () => {
           name: "Test User",
           email: "test@example.com",
           roles: ["Admin"],
-          permissions: ["users.read", "secrets.*"],
+          permissions: ["users.read", "customers.*"],
           hasOrganizationalScopes: true,
         },
       };
@@ -114,7 +114,7 @@ describe("authApi", () => {
       });
 
       expect(result.user.roles).toEqual(["Admin"]);
-      expect(result.user.permissions).toEqual(["users.read", "secrets.*"]);
+      expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
       expect(result.user.hasOrganizationalScopes).toBe(true);
     });
 

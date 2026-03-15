@@ -3,6 +3,10 @@
 
 import { test, expect } from "./auth.setup";
 
+const supportsServiceWorkerOfflineFlows =
+  Boolean(process.env.CI) ||
+  (process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false);
+
 /**
  * Offline Functionality E2E Tests
  *
@@ -21,6 +25,11 @@ test.describe("Offline Functionality", () => {
     test("should display cached organizational units when offline", async ({
       authenticatedPage: page,
     }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       // Step 1: Load page online to populate cache
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
@@ -158,9 +167,14 @@ test.describe("Offline Functionality", () => {
   });
 
   test.describe("Offline Navigation", () => {
-    test("should navigate between Organization and Secrets while offline", async ({
+    test("should navigate between Organization and Profile while offline", async ({
       authenticatedPage: page,
     }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       // Step 1: Visit both pages online to cache them
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
@@ -168,10 +182,10 @@ test.describe("Offline Functionality", () => {
         page.getByRole("heading", { name: /Organization Structure/i })
       ).toBeVisible();
 
-      await page.goto("/secrets");
+      await page.goto("/profile");
       await page.waitForLoadState("networkidle");
       await expect(
-        page.getByRole("heading", { name: /Secrets/i })
+        page.getByRole("heading", { name: /My Profile/i })
       ).toBeVisible();
 
       // Step 2: Go offline
@@ -187,14 +201,11 @@ test.describe("Offline Functionality", () => {
         page.getByText(/You're offline.*Viewing cached/i)
       ).toBeVisible();
 
-      // Step 4: Navigate to Secrets
-      await page.goto("/secrets");
+      // Step 4: Navigate to Profile
+      await page.goto("/profile");
       await page.waitForLoadState("networkidle");
       await expect(
-        page.getByRole("heading", { name: /Secrets/i })
-      ).toBeVisible();
-      await expect(
-        page.getByText(/You're offline.*showing cached/i)
+        page.getByRole("heading", { name: /My Profile/i })
       ).toBeVisible();
 
       // Step 5: Navigate back to Organization using nav links
@@ -214,6 +225,11 @@ test.describe("Offline Functionality", () => {
     test("should handle navigation to uncached pages gracefully", async ({
       authenticatedPage: page,
     }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       // Step 1: Start online
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
@@ -238,6 +254,11 @@ test.describe("Offline Functionality", () => {
     test("should show identical data when switching online/offline", async ({
       authenticatedPage: page,
     }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       // Step 1: Load organization page online
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
@@ -319,6 +340,11 @@ test.describe("Offline Functionality", () => {
     test("should activate service worker", async ({
       authenticatedPage: page,
     }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
@@ -335,6 +361,11 @@ test.describe("Offline Functionality", () => {
     });
 
     test("should cache static assets", async ({ authenticatedPage: page }) => {
+      test.skip(
+        !supportsServiceWorkerOfflineFlows,
+        "Requires preview/staging mode with an active service worker."
+      );
+
       // Load page online
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");

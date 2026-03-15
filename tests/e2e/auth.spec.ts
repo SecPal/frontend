@@ -50,25 +50,10 @@ test.describe("Authentication", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("should logout successfully", async ({ page }) => {
-    // This test doesn't use authenticatedPage to avoid fixture issues
-    // Instead, we login manually here
-    await page.goto("/login");
-    await page.locator("#email").fill(TEST_USER.email);
-    await page.locator("#password").fill(TEST_USER.password);
-    await page
-      .getByRole("button", { name: /log in|anmelden|einloggen/i })
-      .click();
-
-    // Wait for redirect after login
-    await page.waitForURL((url) => !url.pathname.includes("/login"), {
-      timeout: 15_000,
-    });
-
-    // Now we should be on the dashboard - find the user dropdown button
-    // It contains the user's name and email
+  test("should logout successfully", async ({ authenticatedPage: page }) => {
+    // Now we should be on the dashboard - open the user menu
     const dropdownTrigger = page.getByRole("button", {
-      name: new RegExp(TEST_USER.email, "i"),
+      name: /user menu/i,
     });
 
     // Click to open user menu dropdown
@@ -98,7 +83,7 @@ test.describe("Authentication", () => {
     page,
   }) => {
     // Try to access protected route directly
-    await page.goto("/secrets");
+    await page.goto("/organization");
     await page.waitForLoadState("networkidle");
 
     // Should redirect to login

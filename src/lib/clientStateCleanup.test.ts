@@ -41,15 +41,15 @@ describe("clearSensitiveClientState", () => {
     await db.syncQueue.add({
       id: "sync-1",
       type: "create",
-      entity: "secret",
-      data: { id: "secret-1" },
+      entity: "organizational-unit",
+      data: { id: "org-1" },
       status: "pending",
       createdAt: new Date(),
       attempts: 0,
     });
     await db.apiCache.put({
-      url: "/v1/secrets",
-      data: [{ id: "secret-1" }],
+      url: "/v1/organizational-units",
+      data: [{ id: "org-1" }],
       cachedAt: new Date(),
       expiresAt: new Date(Date.now() + 60_000),
     });
@@ -93,25 +93,6 @@ describe("clearSensitiveClientState", () => {
 
     expect(mockCaches.delete).toHaveBeenCalledWith(SENSITIVE_CACHE_NAMES[0]);
     expect(mockCaches.delete).toHaveBeenCalledWith(SENSITIVE_CACHE_NAMES[2]);
-    expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
-  });
-
-  it("clears legacy Secrets caches left over from previous app versions", async () => {
-    mockCaches.keys.mockResolvedValue([
-      "static-assets",
-      "secrets-list-cache",
-      "secrets-detail-cache",
-      "api-secrets-list",
-      "api-secrets-detail",
-    ]);
-    mockCaches.delete.mockResolvedValue(true);
-
-    await clearSensitiveClientState();
-
-    expect(mockCaches.delete).toHaveBeenCalledWith("secrets-list-cache");
-    expect(mockCaches.delete).toHaveBeenCalledWith("secrets-detail-cache");
-    expect(mockCaches.delete).toHaveBeenCalledWith("api-secrets-list");
-    expect(mockCaches.delete).toHaveBeenCalledWith("api-secrets-detail");
     expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
   });
 

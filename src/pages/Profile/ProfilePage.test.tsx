@@ -20,7 +20,7 @@ const renderWithProviders = (
       name: "John Doe",
       email: "john.doe@example.com",
       roles: ["user"],
-      permissions: ["secrets.read"],
+      permissions: ["users.read"],
     },
     isAuthenticated: true,
     isLoading: false,

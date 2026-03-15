@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Removed the legacy Secrets feature from the frontend, including routes, navigation, offline caches, background sync, and share-target handling so SecPal no longer presents itself as a vault-like product
+- Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
+- Removed the remaining legacy test suites, stale documentation, and outdated frontend schema/cache references that only existed for the deleted module
 
 ### Security
 
@@ -39,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
 - `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
 - `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
-- `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` - deferred Phase 2 design notes for a future encrypted offline vault with device-bound key options
+- `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` - deferred Phase 2 design notes for future encrypted offline data protection with device-bound key options
 
 ### Changed
 
@@ -93,12 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - stale local `auth_user` state is cleared, including sensitive client cleanup, when startup revalidation rejects
   - offline startup still preserves existing local session state to keep the offline-first flow available
 
-- **Share Target now keeps shared files out of plaintext persistent storage** (#504)
-  - replaced the Share Target service worker's plaintext IndexedDB handoff with a transient in-memory handoff keyed by `share_id`
-  - added a request/clear message protocol so the share page can retrieve files after navigation without persisting raw attachments at rest
-  - switched the post-encryption upload path to the encrypted attachment queue processor so successful UI states require real encrypted uploads
-  - added regression coverage for the encrypted queue processor, the no-op success case, and service-worker-delivered `File` objects without `dataUrl`
-
 - **Employee API types now use a shared contract source** (#492)
   - added `src/types/api` as the central frontend import path for employee API types
   - removed employee request and response type declarations from `src/services/employeeApi.ts`
@@ -148,7 +143,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Test categories:
     - Authentication flow tests (login, logout, session persistence)
     - Smoke tests (page loading, navigation, accessibility basics)
-    - Secrets management integration tests
     - Organization management integration tests
     - Lighthouse performance audits (Core Web Vitals)
   - Global setup with session reuse to prevent rate-limiting
@@ -285,8 +279,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Centralized API Wrapper with Session Expiry for All Requests** (#XXX)
   - Created `apiFetch()` as centralized API wrapper function in `csrf.ts`
   - Migrated all API services from direct `fetch()` calls to `apiFetch()`:
-    - `secretApi.ts`: All GET/POST/PATCH/DELETE operations
-    - `shareApi.ts`: All share management operations
     - `customerApi.ts`: All customer CRUD + hierarchy operations
     - `objectApi.ts`: All object and area management operations
     - `guardBookApi.ts`: All guard book and report operations
@@ -298,7 +290,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Emits `session:expired` event on 401 responses (triggers automatic logout)
     - Automatic retry on 419 (CSRF token mismatch) with fresh token
   - `fetchWithCsrf()` retained as alias for backward compatibility
-  - **Root Cause:** GET requests (e.g., `fetchSecrets()`) used direct `fetch()` without 401 handling, so expired sessions were not detected
+  - **Root Cause:** Some GET requests still used direct `fetch()` without 401 handling, so expired sessions were not detected consistently
   - **Benefit:** All API calls now trigger automatic logout when session expires, improving PWA reliability
   - Updated all test files to mock `apiFetch` via `vi.mock("./csrf")`
 
@@ -320,10 +312,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **CSRF Token Integration & API Service Updates** (#224, Part of Epic #205)
-  - Updated `secretApi.ts` to use `fetchWithCsrf` for all state-changing operations
-    - POST requests (createSecret, uploadAttachment, uploadEncryptedAttachment)
-    - PATCH requests (updateSecret)
-    - DELETE requests (deleteAttachment)
   - All API services now properly include CSRF tokens via X-XSRF-TOKEN header
   - Automatic 419 (CSRF token mismatch) retry with fresh token refresh
   - Verified comprehensive test coverage: 19 unit tests + 18 integration tests, all passing
@@ -396,58 +384,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Part of httpOnly Cookie Authentication Migration Epic #208 (Phase 2/3)
   - Security: Protects against CSRF attacks for all state-changing requests
 
-- **Secret Management Frontend - Phase 4: Secret Sharing UI** (#202, Part of #191) - **MERGED 22.11.2025**
-  - `ShareDialog.tsx` modal component with user/role selector
-  - `SharedWithList.tsx` component for viewing and managing shares
-  - Permission management: Read, Write, Admin levels
-  - Optional expiration date for temporary shares
-  - Revoke functionality with confirmation dialog
-  - Integration in `SecretDetail.tsx`: Share button (owner-only) + shared-with list
-  - Shared indicator (👥) on `SecretCard.tsx` for shared secrets
-  - API service: `shareApi.ts` with `fetchShares()`, `createShare()`, `revokeShare()`
-  - XOR constraint handling (user OR role, not both)
-  - Accessibility: aria-labels, keyboard navigation, screen reader support
-  - Full i18n support with lingui
-  - 31 new tests (589/603 passing - 97.7%)
-  - 4-Pass review completed with all findings fixed
-  - Part of Secret Management Epic #191 (Phase 4/5)
-
-- **Secret Management Frontend - Phase 3: File Attachments UI Integration (Display)** (#200, Part of #191) - **MERGED 22.11.2025**
-  - `AttachmentUpload.tsx` component with drag-and-drop and file validation
-  - `AttachmentPreview.tsx` modal for images and PDFs with zoom controls
-  - Integration of `AttachmentList` component in `SecretDetail.tsx`
-  - Download, delete, and preview handlers with master key management
-  - File size limits (10MB) and type validation (images, PDFs, documents)
-  - Security: Blocks executable files, validates MIME types
-  - 21 new unit tests (547 total tests passing)
-  - Coverage: 87.95% (exceeds 80% requirement)
-  - Part of Secret Management Epic #191 (Phase 3/5)
-
-- **Secret Management Frontend - Phase 2: Secret Create/Edit Forms** (#198, Part of #191) - **MERGED 22.11.2025**
-  - `SecretForm.tsx` reusable form component with validation
-  - `SecretCreate.tsx` page for creating new secrets
-  - `SecretEdit.tsx` page for editing existing secrets
-  - API service extensions: `createSecret()`, `updateSecret()`
-  - Client-side validation and error handling
-  - Password show/hide toggle for security
-  - 28 new unit tests (all passing)
-  - Routing: `/secrets/new` and `/secrets/:id/edit`
-  - Part of Secret Management Epic #191 (Phase 2/5)
-
-- **Secret Management Frontend - Phase 1: Secret List & Detail Views** (#197, Part of #191) - **MERGED 22.11.2025**
-  - `SecretList.tsx` component with search, filtering, and pagination (20 items/page)
-  - `SecretDetail.tsx` full detail view with encrypted fields
-  - `SecretCard.tsx` reusable card component with badges
-  - API service: `secretApi.ts` with `getSecrets()`, `getSecretById()`
-  - Grid/List view toggle (persisted in localStorage)
-  - Filter by tags and expiration status
-  - Password show/hide toggle
-  - Tags, expiration badges, attachment count, shared indicator
-  - 31 new unit tests (450 total tests passing)
-  - Coverage: 87.95% (exceeds 80% requirement)
-  - Routing: `/secrets` and `/secrets/:id`
-  - Part of Secret Management Epic #191 (Phase 1/5)
-
 - **Client-Side File Encryption - Phase 5: Security Audit & Documentation** (#174, Part of #143)
   - Comprehensive security documentation in `CRYPTO_ARCHITECTURE.md`
   - Security audit completed for all encryption code
@@ -475,14 +411,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 15 active tests passing
   - Part of File Encryption Epic #143 (Phase 3/5)
 
-- **Client-Side File Encryption - Phase 2: ShareTarget Integration** (#173, Part of #143) - **MERGED 19.11.2025**
-  - ShareTarget PWA manifest configuration
-  - `useShareTarget` hook for receiving shared files
-  - Automatic encryption of shared files via Share Target API
-  - Queue management for files shared from other apps
-  - 8 active tests passing
-  - Part of File Encryption Epic #143 (Phase 2/5)
-
 - **Client-Side File Encryption - Phase 1: Crypto Utilities** (#172, Part of #143) - **MERGED 19.11.2025**
   - AES-GCM-256 encryption/decryption with Web Crypto API
   - HKDF-SHA-256 key derivation for per-file keys
@@ -491,36 +419,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - NIST test vectors validation
   - 12 active tests passing (100% coverage)
   - Part of File Encryption Epic #143 (Phase 1/5)
-
-- **Advanced Caching Strategies** (#168, Part of #144 PWA Phase 3) **FINAL SUB-ISSUE - CLOSES EPIC #144**
-  - Route-specific caching strategies for optimal performance:
-    - Secrets List: NetworkFirst with 5-minute TTL (fresh data preferred)
-    - Secret Details: StaleWhileRevalidate with 1-hour TTL (instant load + background refresh)
-    - User Data: StaleWhileRevalidate with 1-hour TTL
-    - Auth Endpoints: NetworkOnly (NEVER cache credentials)
-    - Images: CacheFirst with 30-day TTL (immutable assets)
-    - Static Assets (JS/CSS): CacheFirst with 1-year TTL (versioned by build hash)
-    - Fonts: CacheFirst with 1-year TTL
-  - Cache management utilities:
-    - `useCache()` hook - Manual cache invalidation, clear all caches, storage quota monitoring
-    - `usePrefetch()` hook - Intelligent prefetching (on idle, on hover, batch prefetch)
-    - `CacheMonitor` class - Performance tracking (hit/miss ratio, lookup times, p95 metrics)
-  - Components:
-    - `LazyImage` - Intersection Observer-based lazy loading with blur-up effect
-    - Placeholder support during loading
-    - Graceful error handling
-  - Enhanced Workbox configuration:
-    - 10 distinct cache strategies per resource type
-    - TTL-based cache expiration policies
-    - Max entries limit per cache (LRU eviction)
-    - Proper cache namespacing (api-secrets-list, api-secrets-detail, static-assets, images, fonts)
-  - Performance targets achieved:
-    - Cache hit ratio >80% for returning users
-    - Cache lookup time <50ms (p95)
-    - Offline load time <2s (cached app shell)
-  - 25 active tests passing (useCache: 13, cacheMonitor: 12)
-  - Part of PWA Phase 3 (Epic #144, Sub-Issue #168)
-  - ✅ **COMPLETES PWA PHASE 3 EPIC #144**
 
 - **Push Notifications Infrastructure** (#166, Part of #144 PWA Phase 3)
   - Service Worker push event handlers for backend notifications
@@ -563,51 +461,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Privacy-first design: No PII, no file paths, anonymous session IDs
   - Part of PWA Phase 3 (Epic #144, Sub-Issue #167)
 
-- **IndexedDB File Queue for Offline Uploads** (#142)
-  - Replaced sessionStorage with IndexedDB for persistent file storage
-  - Files now survive browser close and offline conditions
-  - Added `fileQueue` table to IndexedDB schema (version 3)
-  - Implemented FileQueueEntry interface with upload states (pending, uploading, failed, completed)
-  - Created comprehensive file queue utilities:
-    - `addFileToQueue()` - Store files in IndexedDB
-    - `getPendingFiles()` - Query pending uploads
-    - `updateFileUploadState()` - Track upload progress
-    - `retryFileUpload()` - Exponential backoff retry logic (max 5 attempts)
-    - `processFileQueue()` - Batch upload processing
-    - `clearCompletedUploads()` - Queue cleanup
-    - `getStorageQuota()` - Monitor IndexedDB quota usage
-  - Service Worker integration:
-    - Share Target now stores files directly in IndexedDB
-    - Background Sync API support for offline upload queue
-    - Automatic sync when network connection restores
-  - React Hook `useFileQueue()`:
-    - Real-time queue status with Dexie live queries
-    - Manual queue processing and cleanup
-    - Storage quota monitoring
-    - Background Sync registration
-  - Updated `useShareTarget` hook:
-    - Migrated from sessionStorage to Service Worker messages
-    - Files now include IndexedDB queue IDs
-    - Improved race condition handling
-  - Dependencies: `idb@^8.0.2` for Service Worker IndexedDB access
-  - 17 comprehensive tests with 100% coverage
-  - Placeholder for future Secret API integration
-  - Part of PWA Phase 3 (Epic #64)
-
-- **Share Target POST Method & File Sharing** (#101)
-  - Extended Share Target API to support POST method with file uploads
-  - Created `ShareTarget` page component with file preview and validation
-  - Extended `useShareTarget` hook to handle files from sessionStorage
-  - Implemented custom Service Worker (`sw.ts`) with `injectManifest` strategy
-  - Service Worker processes FormData, converts images to Base64 for preview
-  - File validation: type (images, PDFs, docs) and size (max 10MB)
-  - Support for combined text + file sharing in single share action
-  - Image preview with thumbnails for shared photos
-  - File metadata display (name, size, type badge)
-  - Clear button to remove all shared data
-  - Updated `PWA_PHASE3_TESTING.md` with comprehensive file sharing test scenarios
-  - Part of PWA Phase 3 (Epic #64)
-
 - **Code Coverage Integration** (#137)
   - Integrated Codecov for automated coverage tracking
   - Vitest now generates LCOV and Clover coverage reports
@@ -630,7 +483,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Provides impact assessment, upstream issue links, and expected resolution timeline
   - Follows Gebot #2 (Qualität vor Geschwindigkeit) by accepting the issue rather than hiding it
 
-- **PWA Phase 3 Features (Issue #67)**: Complete implementation of Push Notifications, Share Target API, and Offline Analytics
+- **PWA Phase 3 Features (Issue #67)**: Complete implementation of Push Notifications and Offline Analytics
   - **Push Notifications**: Permission management, Service Worker integration, notification display
     - `useNotifications` hook with permission state management
     - Service Worker notification display with fallback to browser API
@@ -638,12 +491,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - LocalStorage persistence for notification preferences
     - Support for 4 notification categories (alerts, updates, reminders, messages)
     - 13 comprehensive tests
-  - **Share Target API**: Receive shared content from other apps
-    - PWA manifest share_target configuration
-    - `useShareTarget` hook for URL parameter parsing
-    - Support for text and URLs (file sharing planned for future release - Issue #101)
-    - Automatic URL cleanup after processing shared data
-    - 11 comprehensive tests
   - **Offline Analytics**: Privacy-first event tracking with offline persistence
     - `OfflineAnalytics` singleton class with IndexedDB storage
     - Automatic sync when online (every 5 minutes)
