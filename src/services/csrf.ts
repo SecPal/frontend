@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getApiBaseUrl } from "../config";
@@ -102,10 +102,10 @@ const CSRF_REQUIRED_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
  * @example
  * ```ts
  * // GET request (no CSRF token needed)
- * const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`);
+ * const response = await apiFetch(`${apiConfig.baseUrl}/v1/me`);
  *
  * // POST request (CSRF token added automatically)
- * const response = await apiFetch(`${apiConfig.baseUrl}/v1/secrets`, {
+ * const response = await apiFetch(`${apiConfig.baseUrl}/v1/organizational-units`, {
  *   method: "POST",
  *   headers: { "Content-Type": "application/json" },
  *   body: JSON.stringify(data),

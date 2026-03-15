@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed the legacy Secrets feature from the frontend, including routes, navigation, offline caches, background sync, and share-target handling so SecPal no longer presents itself as a vault-like product
+
 ### Security
 
 - Pinned the transitive `yauzl` resolution to `3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot

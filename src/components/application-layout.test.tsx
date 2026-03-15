@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
@@ -114,7 +114,6 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.getByText("Secrets")).toBeInTheDocument();
     });
 
     it("renders user information in navbar avatar", () => {
@@ -153,30 +152,6 @@ describe("ApplicationLayout", () => {
 
       const homeLink = screen.getByRole("link", { name: /home/i });
       expect(homeLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("highlights Secrets link when on secrets page", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/secrets" }
-      );
-
-      const secretsLink = screen.getByRole("link", { name: /secrets/i });
-      expect(secretsLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("highlights Secrets link when on secrets subpage", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/secrets/new" }
-      );
-
-      const secretsLink = screen.getByRole("link", { name: /secrets/i });
-      expect(secretsLink).toHaveAttribute("data-current", "true");
     });
   });
 
@@ -538,7 +513,7 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Customers")).toBeInTheDocument();
     });
 
-    it("always shows Home and Secrets links regardless of scopes", () => {
+    it("always shows Home", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
@@ -556,7 +531,6 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.getByText("Secrets")).toBeInTheDocument();
     });
 
     it("treats undefined hasOrganizationalScopes as false", () => {

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -25,19 +25,4 @@ export const DB_NAME = "SecPalDB";
  * 2. Add new version() block in db.ts
  * 3. Service Worker will automatically use new version
  */
-export const DB_VERSION = 5;
-
-/**
- * Maximum retry attempts for file uploads before marking as permanently failed
- */
-export const MAX_RETRY_COUNT = 5;
-
-/**
- * Maximum backoff delay in milliseconds (60 seconds)
- */
-export const MAX_BACKOFF_MS = 60000;
-
-/**
- * Concurrency limit for parallel file uploads
- */
-export const UPLOAD_CONCURRENCY = 3;
+export const DB_VERSION = 6;

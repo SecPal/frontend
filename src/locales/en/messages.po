@@ -18,10 +18,6 @@ msgstr ""
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
-#: src/pages/ShareTarget.tsx:656
-msgid "-- Choose a Secret --"
-msgstr "-- Choose a Secret --"
-
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx:236
 msgid "\"{0}\" created successfully"
@@ -32,24 +28,15 @@ msgstr "\"{0}\" created successfully"
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" updated successfully"
 
-#: src/components/ConflictResolutionDialog.tsx:82
-msgid "(empty)"
-msgstr "(empty)"
-
-#. placeholder {0}: encrypted.length
-#: src/components/UploadStatus.tsx:251
-msgid "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
-msgstr "{0, plural, one {# file ready for upload} other {# files ready for upload}}"
-
 #: src/components/SyncStatusIndicator.tsx:121
 msgid "{errorOps} operation(s) failed"
 msgstr "{errorOps} operation(s) failed"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:157
+#: src/pages/Onboarding/OnboardingComplete.tsx:168
 msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
 msgstr "{fieldName} appears to be a minor correction ({similarity}% similar)."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:161
+#: src/pages/Onboarding/OnboardingComplete.tsx:172
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
 msgstr "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
 
@@ -78,35 +65,14 @@ msgstr "{pendingOps} operation(s) pending"
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
-#: src/components/ShareDialog.tsx:211
-msgid "• Admin: View + edit + share + delete"
-msgstr "• Admin: View + edit + share + delete"
-
-#: src/components/ShareDialog.tsx:205
-msgid "• Read: View secret details"
-msgstr "• Read: View secret details"
-
-#: src/components/ShareDialog.tsx:208
-msgid "• Write: View + edit secret"
-msgstr "• Write: View + edit secret"
-
 #: src/pages/Employees/EmployeeEdit.tsx:292
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:189
-#: src/pages/Employees/EmployeeDetail.tsx:394
+#: src/pages/Employees/EmployeeCreate.tsx:187
+#: src/pages/Employees/EmployeeDetail.tsx:400
 msgid "← Back to Employees"
 msgstr "← Back to Employees"
-
-#: src/pages/Secrets/SecretDetail.tsx:267
-msgid "← Back to Secrets"
-msgstr "← Back to Secrets"
-
-#. placeholder {0}: conflict.conflictFields.length
-#: src/components/ConflictResolutionDialog.tsx:107
-msgid "<0>{0} field(s)</0> have conflicting changes:"
-msgstr "<0>{0} field(s)</0> have conflicting changes:"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:313
 msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
@@ -120,30 +86,26 @@ msgstr "✓ Notifications are enabled. You'll receive updates based on your pref
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
-#: src/App.tsx:74
+#: src/App.tsx:69
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:85
+#: src/App.tsx:80
 msgid "About SecPal"
 msgstr "About SecPal"
-
-#: src/pages/Secrets/SecretDetail.tsx:436
-msgid "Access Control"
-msgstr "Access Control"
 
 #: src/components/OrganizationalRoute.tsx:43
 msgid "Access Denied"
 msgstr "Access Denied"
 
-#: src/pages/Sites/SiteCreate.tsx:442
+#: src/pages/Sites/SiteCreate.tsx:451
 #: src/pages/Sites/SiteDetail.tsx:273
-#: src/pages/Sites/SiteEdit.tsx:416
+#: src/pages/Sites/SiteEdit.tsx:422
 msgid "Access Instructions"
 msgstr "Access Instructions"
 
 #: src/pages/Customers/CustomersPage.tsx:170
-#: src/pages/Employees/EmployeeList.tsx:259
+#: src/pages/Employees/EmployeeList.tsx:260
 #: src/pages/Sites/SitesPage.tsx:202
 msgid "Actions"
 msgstr "Actions"
@@ -153,22 +115,22 @@ msgstr "Actions"
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:410
+#: src/pages/Employees/EmployeeDetail.tsx:416
 msgid "Activate"
 msgstr "Activate"
 
-#: src/pages/Customers/CustomerCreate.tsx:272
+#: src/pages/Customers/CustomerCreate.tsx:281
 #: src/pages/Customers/CustomerDetail.tsx:108
-#: src/pages/Customers/CustomerEdit.tsx:291
+#: src/pages/Customers/CustomerEdit.tsx:297
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
-#: src/pages/Employees/EmployeeCreate.tsx:463
-#: src/pages/Employees/EmployeeDetail.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:214
-#: src/pages/Sites/SiteCreate.tsx:473
+#: src/pages/Employees/EmployeeCreate.tsx:464
+#: src/pages/Employees/EmployeeDetail.tsx:48
+#: src/pages/Employees/EmployeeList.tsx:43
+#: src/pages/Employees/EmployeeList.tsx:215
+#: src/pages/Sites/SiteCreate.tsx:482
 #: src/pages/Sites/SiteDetail.tsx:132
-#: src/pages/Sites/SiteEdit.tsx:447
+#: src/pages/Sites/SiteEdit.tsx:453
 #: src/pages/Sites/SitesPage.tsx:153
 #: src/pages/Sites/SitesPage.tsx:228
 msgid "Active"
@@ -182,15 +144,11 @@ msgstr "Activity Information"
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
 
-#: src/components/application-layout.tsx:241
-#: src/components/application-layout.tsx:329
+#: src/components/application-layout.tsx:226
+#: src/components/application-layout.tsx:308
 #: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Activity Logs"
-
-#: src/pages/Secrets/SecretCreate.tsx:68
-msgid "Add a new secret to your vault."
-msgstr "Add a new secret to your vault."
 
 #: src/components/OrganizationalUnitTree.tsx:328
 msgid "Add child"
@@ -200,7 +158,7 @@ msgstr "Add child"
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
 
-#: src/pages/Employees/EmployeeList.tsx:157
+#: src/pages/Employees/EmployeeList.tsx:155
 msgid "Add Employee"
 msgstr "Add Employee"
 
@@ -212,23 +170,18 @@ msgstr "Add Root Unit"
 msgid "Additional Properties"
 msgstr "Additional Properties"
 
-#: src/pages/Sites/SiteCreate.tsx:275
+#: src/pages/Sites/SiteCreate.tsx:284
 #: src/pages/Sites/SiteDetail.tsx:146
-#: src/pages/Sites/SiteEdit.tsx:269
+#: src/pages/Sites/SiteEdit.tsx:275
 #: src/pages/Sites/SitesPage.tsx:196
 msgid "Address"
 msgstr "Address"
-
-#: src/components/ShareDialog.tsx:176
-msgid "Admin"
-msgstr "Admin"
 
 #: src/components/Footer.tsx:31
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/pages/Employees/EmployeeList.tsx:208
-#: src/pages/Secrets/SecretList.tsx:207
+#: src/pages/Employees/EmployeeList.tsx:206
 msgid "All"
 msgstr "All"
 
@@ -244,10 +197,6 @@ msgstr "All Status"
 #: src/components/SyncStatusIndicator.tsx:125
 msgid "All synced"
 msgstr "All synced"
-
-#: src/pages/Secrets/SecretList.tsx:190
-msgid "All Tags"
-msgstr "All Tags"
 
 #: src/pages/Sites/SitesPage.tsx:128
 msgid "All Types"
@@ -273,39 +222,25 @@ msgstr "An unexpected error occurred"
 msgid "App updates and maintenance notifications"
 msgstr "App updates and maintenance notifications"
 
-#: src/components/ConflictResolutionDialog.tsx:207
-msgid "Apply Selection"
-msgstr "Apply Selection"
+#: src/pages/Employees/EmployeeCreate.tsx:458
+#: src/pages/Employees/EmployeeDetail.tsx:46
+#: src/pages/Employees/EmployeeList.tsx:41
+#: src/pages/Employees/EmployeeList.tsx:209
+msgid "Applicant"
+msgstr "Applicant"
 
 #. placeholder {0}: customer.name
 #: src/pages/Customers/CustomerDetail.tsx:252
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 
-#: src/pages/Secrets/SecretDetail.tsx:158
-msgid "Are you sure you want to delete this attachment?"
-msgstr "Are you sure you want to delete this attachment?"
-
 #: src/pages/Sites/SiteDetail.tsx:357
 msgid "Are you sure you want to delete this site? This action cannot be undone."
 msgstr "Are you sure you want to delete this site? This action cannot be undone."
 
-#: src/components/SharedWithList.tsx:30
-msgid "Are you sure you want to revoke access for {name}?"
-msgstr "Are you sure you want to revoke access for {name}?"
-
 #: src/components/ScopeAssignmentForm.tsx:333
 msgid "Assign Organizational Scope"
 msgstr "Assign Organizational Scope"
-
-#: src/pages/ShareTarget.tsx:624
-msgid "Attached Files"
-msgstr "Attached Files"
-
-#. placeholder {0}: secret.attachments.length
-#: src/pages/Secrets/SecretDetail.tsx:405
-msgid "Attachments ({0})"
-msgstr "Attachments ({0})"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:360
 msgid "Authentication"
@@ -323,12 +258,12 @@ msgstr "Back"
 msgid "Back to Customers"
 msgstr "Back to Customers"
 
-#: src/pages/Employees/EmployeeDetail.tsx:382
+#: src/pages/Employees/EmployeeDetail.tsx:388
 #: src/pages/Employees/EmployeeEdit.tsx:280
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
-#: src/App.tsx:96
+#: src/App.tsx:91
 msgid "Back to Home"
 msgstr "Back to Home"
 
@@ -337,17 +272,13 @@ msgstr "Back to Home"
 msgid "Back to List"
 msgstr "Back to List"
 
-#: src/pages/Secrets/SecretDetail.tsx:249
-msgid "Back to Secrets"
-msgstr "Back to Secrets"
-
 #: src/pages/Sites/SiteDetail.tsx:108
 msgid "Back to Sites"
 msgstr "Back to Sites"
 
-#: src/pages/Customers/CustomerCreate.tsx:138
+#: src/pages/Customers/CustomerCreate.tsx:147
 #: src/pages/Customers/CustomerDetail.tsx:120
-#: src/pages/Customers/CustomerEdit.tsx:157
+#: src/pages/Customers/CustomerEdit.tsx:163
 msgid "Billing Address"
 msgstr "Billing Address"
 
@@ -360,22 +291,19 @@ msgstr "Branch"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 
-#: src/components/ConflictResolutionDialog.tsx:200
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
 #: src/components/OrganizationalUnitFormDialog.tsx:372
 #: src/components/ScopeAssignmentForm.tsx:599
-#: src/components/SecretForm.tsx:401
-#: src/components/ShareDialog.tsx:226
-#: src/pages/Customers/CustomerCreate.tsx:286
+#: src/pages/Customers/CustomerCreate.tsx:295
 #: src/pages/Customers/CustomerDetail.tsx:266
-#: src/pages/Customers/CustomerEdit.tsx:305
-#: src/pages/Employees/EmployeeCreate.tsx:520
+#: src/pages/Customers/CustomerEdit.tsx:311
+#: src/pages/Employees/EmployeeCreate.tsx:521
 #: src/pages/Employees/EmployeeEdit.tsx:571
-#: src/pages/Onboarding/OnboardingComplete.tsx:646
-#: src/pages/Sites/SiteCreate.tsx:483
+#: src/pages/Onboarding/OnboardingComplete.tsx:657
+#: src/pages/Sites/SiteCreate.tsx:492
 #: src/pages/Sites/SiteDetail.tsx:377
-#: src/pages/Sites/SiteEdit.tsx:457
+#: src/pages/Sites/SiteEdit.tsx:463
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -388,7 +316,7 @@ msgstr "Cannot Delete \"{unitName}\""
 msgid "Causer"
 msgstr "Causer"
 
-#: src/pages/Employees/EmployeeDetail.tsx:189
+#: src/pages/Employees/EmployeeDetail.tsx:195
 msgid "Certificate:"
 msgstr "Certificate:"
 
@@ -413,29 +341,15 @@ msgstr "Choose which notifications you want to receive"
 msgid "Choose your preferred language for the application."
 msgstr "Choose your preferred language for the application."
 
-#: src/pages/Customers/CustomerCreate.tsx:172
+#: src/pages/Customers/CustomerCreate.tsx:181
 #: src/pages/Customers/CustomerDetail.tsx:131
-#: src/pages/Customers/CustomerEdit.tsx:191
-#: src/pages/Sites/SiteCreate.tsx:299
+#: src/pages/Customers/CustomerEdit.tsx:197
+#: src/pages/Sites/SiteCreate.tsx:308
 #: src/pages/Sites/SiteDetail.tsx:155
-#: src/pages/Sites/SiteEdit.tsx:288
+#: src/pages/Sites/SiteEdit.tsx:294
 msgid "City"
 msgstr "City"
 
-#: src/pages/ShareTarget.tsx:539
-msgid "Clear"
-msgstr "Clear"
-
-#: src/components/UploadStatus.tsx:328
-msgid "Clear Completed"
-msgstr "Clear Completed"
-
-#: src/components/UploadStatus.tsx:107
-msgid "Cleared {count} completed upload(s)"
-msgstr "Cleared {count} completed upload(s)"
-
-#: src/components/AttachmentPreview.tsx:134
-#: src/components/AttachmentPreview.tsx:211
 #: src/components/MoveOrganizationalUnitDialog.tsx:369
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:351
 msgid "Close"
@@ -454,15 +368,15 @@ msgstr "Collapse"
 msgid "Company"
 msgstr "Company"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:866
+#: src/pages/Onboarding/OnboardingComplete.tsx:865
 msgid "Complete Account Setup"
 msgstr "Complete Account Setup"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:570
+#: src/pages/Onboarding/OnboardingComplete.tsx:581
 msgid "Complete your account setup to get started"
 msgstr "Complete your account setup to get started"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:864
+#: src/pages/Onboarding/OnboardingComplete.tsx:863
 msgid "Completing Setup..."
 msgstr "Completing Setup..."
 
@@ -470,11 +384,11 @@ msgstr "Completing Setup..."
 msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 msgstr "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:657
+#: src/pages/Onboarding/OnboardingComplete.tsx:668
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:791
+#: src/pages/Onboarding/OnboardingComplete.tsx:790
 msgid "Confirm Password"
 msgstr "Confirm Password"
 
@@ -482,22 +396,22 @@ msgstr "Confirm Password"
 msgid "Contact"
 msgstr "Contact"
 
-#: src/pages/Customers/CustomerCreate.tsx:208
+#: src/pages/Customers/CustomerCreate.tsx:217
 #: src/pages/Customers/CustomerDetail.tsx:151
-#: src/pages/Customers/CustomerEdit.tsx:227
-#: src/pages/Sites/SiteCreate.tsx:361
+#: src/pages/Customers/CustomerEdit.tsx:233
+#: src/pages/Sites/SiteCreate.tsx:370
 #: src/pages/Sites/SiteDetail.tsx:183
-#: src/pages/Sites/SiteEdit.tsx:335
+#: src/pages/Sites/SiteEdit.tsx:341
 msgid "Contact Person"
 msgstr "Contact Person"
 
-#: src/pages/Employees/EmployeeCreate.tsx:323
-#: src/pages/Employees/EmployeeDetail.tsx:120
+#: src/pages/Employees/EmployeeCreate.tsx:321
+#: src/pages/Employees/EmployeeDetail.tsx:124
 #: src/pages/Employees/EmployeeEdit.tsx:436
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
 
-#: src/pages/Employees/EmployeeCreate.tsx:476
+#: src/pages/Employees/EmployeeCreate.tsx:477
 msgid "Contract Type"
 msgstr "Contract Type"
 
@@ -505,17 +419,16 @@ msgstr "Contract Type"
 msgid "Coordinates"
 msgstr "Coordinates"
 
-#: src/pages/Customers/CustomerCreate.tsx:187
+#: src/pages/Customers/CustomerCreate.tsx:196
 #: src/pages/Customers/CustomerDetail.tsx:139
-#: src/pages/Customers/CustomerEdit.tsx:206
-#: src/pages/Sites/SiteCreate.tsx:337
+#: src/pages/Customers/CustomerEdit.tsx:212
+#: src/pages/Sites/SiteCreate.tsx:346
 #: src/pages/Sites/SiteDetail.tsx:162
-#: src/pages/Sites/SiteEdit.tsx:316
+#: src/pages/Sites/SiteEdit.tsx:322
 msgid "Country"
 msgstr "Country"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:378
-#: src/pages/Secrets/SecretCreate.tsx:76
 msgid "Create"
 msgstr "Create"
 
@@ -527,15 +440,15 @@ msgstr "Create a new organizational unit under \"{parentName}\"."
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
-#: src/pages/Customers/CustomerCreate.tsx:282
+#: src/pages/Customers/CustomerCreate.tsx:291
 msgid "Create Customer"
 msgstr "Create Customer"
 
-#: src/pages/Employees/EmployeeCreate.tsx:526
+#: src/pages/Employees/EmployeeCreate.tsx:527
 msgid "Create Employee"
 msgstr "Create Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:195
+#: src/pages/Employees/EmployeeCreate.tsx:193
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
@@ -544,21 +457,11 @@ msgstr "Create New Employee"
 msgid "Create Organizational Unit"
 msgstr "Create Organizational Unit"
 
-#: src/pages/Secrets/SecretCreate.tsx:65
-#: src/pages/Secrets/SecretList.tsx:263
-msgid "Create Secret"
-msgstr "Create Secret"
-
-#: src/pages/Sites/SiteCreate.tsx:480
+#: src/pages/Sites/SiteCreate.tsx:489
 msgid "Create Site"
 msgstr "Create Site"
 
-#: src/pages/Secrets/SecretList.tsx:255
-msgid "Create your first secret to get started"
-msgstr "Create your first secret to get started"
-
 #: src/pages/Organization/OrganizationPage.tsx:352
-#: src/pages/Secrets/SecretDetail.tsx:466
 #: src/pages/Sites/SiteDetail.tsx:318
 msgid "Created"
 msgstr "Created"
@@ -567,9 +470,9 @@ msgstr "Created"
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
-#: src/pages/Customers/CustomerCreate.tsx:280
-#: src/pages/Employees/EmployeeCreate.tsx:524
-#: src/pages/Sites/SiteCreate.tsx:480
+#: src/pages/Customers/CustomerCreate.tsx:289
+#: src/pages/Employees/EmployeeCreate.tsx:525
+#: src/pages/Sites/SiteCreate.tsx:489
 msgid "Creating..."
 msgstr "Creating..."
 
@@ -586,19 +489,19 @@ msgstr "Current parent:"
 msgid "Custom"
 msgstr "Custom"
 
-#: src/pages/Sites/SiteCreate.tsx:186
+#: src/pages/Sites/SiteCreate.tsx:195
 #: src/pages/Sites/SiteDetail.tsx:298
-#: src/pages/Sites/SiteEdit.tsx:180
+#: src/pages/Sites/SiteEdit.tsx:186
 msgid "Customer"
 msgstr "Customer"
 
-#: src/pages/Customers/CustomerCreate.tsx:122
-#: src/pages/Customers/CustomerEdit.tsx:141
+#: src/pages/Customers/CustomerCreate.tsx:131
+#: src/pages/Customers/CustomerEdit.tsx:147
 msgid "Customer Name"
 msgstr "Customer Name"
 
 #: src/pages/Customers/CustomerDetail.tsx:89
-#: src/pages/Customers/CustomerEdit.tsx:117
+#: src/pages/Customers/CustomerEdit.tsx:123
 msgid "Customer not found"
 msgstr "Customer not found"
 
@@ -606,14 +509,14 @@ msgstr "Customer not found"
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:225
-#: src/components/application-layout.tsx:307
+#: src/components/application-layout.tsx:210
+#: src/components/application-layout.tsx:286
 #: src/pages/Customers/CustomersPage.tsx:85
 msgid "Customers"
 msgstr "Customers"
 
-#: src/pages/Employees/EmployeeCreate.tsx:234
-#: src/pages/Employees/EmployeeDetail.tsx:113
+#: src/pages/Employees/EmployeeCreate.tsx:232
+#: src/pages/Employees/EmployeeDetail.tsx:115
 #: src/pages/Employees/EmployeeEdit.tsx:347
 msgid "Date of Birth"
 msgstr "Date of Birth"
@@ -627,7 +530,6 @@ msgstr "Date/Time"
 msgid "Default"
 msgstr "Default"
 
-#: src/components/AttachmentList.tsx:215
 #: src/components/DeleteOrganizationalUnitDialog.tsx:205
 #: src/components/OrganizationalUnitTree.tsx:386
 #: src/pages/Customers/CustomerDetail.tsx:235
@@ -675,7 +577,6 @@ msgstr "Description"
 msgid "Description must be at most 1000 characters"
 msgstr "Description must be at most 1000 characters"
 
-#: src/pages/Secrets/SecretDetail.tsx:298
 #: src/pages/Sites/SiteDetail.tsx:294
 msgid "Details"
 msgstr "Details"
@@ -685,24 +586,13 @@ msgstr "Details"
 msgid "Division"
 msgstr "Division"
 
-#: src/pages/Employees/EmployeeDetail.tsx:464
+#: src/pages/Employees/EmployeeDetail.tsx:470
 msgid "Documents"
 msgstr "Documents"
 
-#: src/components/AttachmentList.tsx:201
-#: src/components/AttachmentPreview.tsx:125
-#: src/components/AttachmentPreview.tsx:215
-#: src/pages/Employees/EmployeeDetail.tsx:263
+#: src/pages/Employees/EmployeeDetail.tsx:269
 msgid "Download"
 msgstr "Download"
-
-#: src/components/AttachmentPreview.tsx:202
-msgid "Download to view"
-msgstr "Download to view"
-
-#: src/components/AttachmentUpload.tsx:212
-msgid "Drag files here or click to browse"
-msgstr "Drag files here or click to browse"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:292
 msgid "e.g., Berlin Branch"
@@ -710,14 +600,13 @@ msgstr "e.g., Berlin Branch"
 
 #: src/components/OrganizationalUnitTree.tsx:347
 #: src/pages/Customers/CustomerDetail.tsx:228
-#: src/pages/Employees/EmployeeDetail.tsx:419
+#: src/pages/Employees/EmployeeDetail.tsx:425
 #: src/pages/Organization/OrganizationPage.tsx:363
-#: src/pages/Secrets/SecretDetail.tsx:281
 #: src/pages/Sites/SiteDetail.tsx:336
 msgid "Edit"
 msgstr "Edit"
 
-#: src/pages/Customers/CustomerEdit.tsx:126
+#: src/pages/Customers/CustomerEdit.tsx:132
 msgid "Edit Customer"
 msgstr "Edit Customer"
 
@@ -733,11 +622,7 @@ msgstr "Edit Organizational Scope"
 msgid "Edit Organizational Unit"
 msgstr "Edit Organizational Unit"
 
-#: src/pages/Secrets/SecretEdit.tsx:134
-msgid "Edit Secret"
-msgstr "Edit Secret"
-
-#: src/pages/Sites/SiteEdit.tsx:165
+#: src/pages/Sites/SiteEdit.tsx:171
 msgid "Edit Site"
 msgstr "Edit Site"
 
@@ -750,41 +635,41 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 msgid "login.email"
 msgstr "Email"
 
-#: src/pages/Customers/CustomerCreate.tsx:226
+#: src/pages/Customers/CustomerCreate.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:168
-#: src/pages/Customers/CustomerEdit.tsx:245
-#: src/pages/Employees/EmployeeCreate.tsx:275
-#: src/pages/Employees/EmployeeDetail.tsx:76
+#: src/pages/Customers/CustomerEdit.tsx:251
+#: src/pages/Employees/EmployeeCreate.tsx:273
+#: src/pages/Employees/EmployeeDetail.tsx:78
 #: src/pages/Employees/EmployeeEdit.tsx:388
 #: src/pages/Profile/ProfilePage.tsx:67
-#: src/pages/Sites/SiteCreate.tsx:380
+#: src/pages/Sites/SiteCreate.tsx:389
 #: src/pages/Sites/SiteDetail.tsx:194
-#: src/pages/Sites/SiteEdit.tsx:354
+#: src/pages/Sites/SiteEdit.tsx:360
 msgid "Email"
 msgstr "Email"
 
-#: src/pages/Employees/EmployeeList.tsx:243
+#: src/pages/Employees/EmployeeList.tsx:244
 msgid "Employee"
 msgstr "Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:246
+#: src/pages/Employees/EmployeeList.tsx:247
 msgid "Employee #"
 msgstr "Employee #"
 
-#: src/pages/Employees/EmployeeList.tsx:153
+#: src/pages/Employees/EmployeeList.tsx:151
 msgid "Employee Management"
 msgstr "Employee Management"
 
-#: src/pages/Employees/EmployeeDetail.tsx:66
+#: src/pages/Employees/EmployeeDetail.tsx:68
 msgid "Employee Number"
 msgstr "Employee Number"
 
-#: src/components/application-layout.tsx:233
-#: src/components/application-layout.tsx:318
+#: src/components/application-layout.tsx:218
+#: src/components/application-layout.tsx:297
 msgid "Employees"
 msgstr "Employees"
 
-#: src/pages/Employees/EmployeeCreate.tsx:304
+#: src/pages/Employees/EmployeeCreate.tsx:302
 #: src/pages/Employees/EmployeeEdit.tsx:417
 msgid "Employment Details"
 msgstr "Employment Details"
@@ -805,7 +690,7 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:680
+#: src/pages/Onboarding/OnboardingComplete.tsx:691
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 
@@ -814,26 +699,14 @@ msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Fried
 msgid "Error"
 msgstr "Error"
 
-#: src/pages/Employees/EmployeeDetail.tsx:375
+#: src/pages/Employees/EmployeeDetail.tsx:381
 #: src/pages/Employees/EmployeeEdit.tsx:275
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:232
+#: src/pages/Employees/EmployeeList.tsx:233
 msgid "Error Loading Employees"
 msgstr "Error Loading Employees"
-
-#: src/pages/Secrets/SecretDetail.tsx:242
-msgid "Error Loading Secret"
-msgstr "Error Loading Secret"
-
-#: src/pages/Secrets/SecretList.tsx:125
-msgid "Error Loading Secrets"
-msgstr "Error Loading Secrets"
-
-#: src/pages/ShareTarget.tsx:547
-msgid "Errors:"
-msgstr "Errors:"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:233
 msgid "Event Hash"
@@ -843,128 +716,61 @@ msgstr "Event Hash"
 msgid "Expand"
 msgstr "Expand"
 
-#: src/pages/Secrets/SecretCard.tsx:51
-#: src/pages/Secrets/SecretDetail.tsx:274
-#: src/pages/Secrets/SecretDetail.tsx:381
-#: src/pages/Secrets/SecretList.tsx:208
 #: src/pages/Sites/SiteDetail.tsx:136
 msgid "Expired"
 msgstr "Expired"
 
-#: src/pages/Secrets/SecretDetail.tsx:372
-msgid "Expires"
-msgstr "Expires"
-
-#: src/components/ShareDialog.tsx:187
-msgid "Expires (optional):"
-msgstr "Expires (optional):"
-
-#: src/pages/Employees/EmployeeDetail.tsx:197
+#: src/pages/Employees/EmployeeDetail.tsx:203
 msgid "Expires:"
 msgstr "Expires:"
 
-#. placeholder {0}: formatDate(share.expires_at, i18n.locale)
-#: src/components/SharedWithList.tsx:103
-msgid "Expires: {0}"
-msgstr "Expires: {0}"
-
-#: src/pages/Secrets/SecretCard.tsx:56
-#: src/pages/Secrets/SecretList.tsx:209
-msgid "Expiring Soon"
-msgstr "Expiring Soon"
-
-#: src/components/UploadStatus.tsx:119
-msgid "Failed to clear uploads"
-msgstr "Failed to clear uploads"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:434
-#: src/pages/Onboarding/OnboardingComplete.tsx:442
+#: src/pages/Onboarding/OnboardingComplete.tsx:445
+#: src/pages/Onboarding/OnboardingComplete.tsx:453
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Failed to complete onboarding. Please try again or contact support."
-
-#: src/pages/Secrets/SecretDetail.tsx:174
-msgid "Failed to delete attachment"
-msgstr "Failed to delete attachment"
-
-#: src/components/UploadStatus.tsx:151
-msgid "Failed to delete file"
-msgstr "Failed to delete file"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:100
 msgid "Failed to delete organizational unit"
 msgstr "Failed to delete organizational unit"
 
-#: src/pages/Secrets/SecretDetail.tsx:147
-msgid "Failed to download attachment"
-msgstr "Failed to download attachment"
-
-#: src/pages/Secrets/SecretDetail.tsx:194
-msgid "Failed to load preview"
-msgstr "Failed to load preview"
-
 #: src/components/MoveOrganizationalUnitDialog.tsx:346
 msgid "Failed to move organizational unit"
 msgstr "Failed to move organizational unit"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:286
+#: src/pages/Onboarding/OnboardingComplete.tsx:297
 msgid "Failed to read file"
 msgstr "Failed to read file"
-
-#: src/components/SharedWithList.tsx:45
-msgid "Failed to revoke access"
-msgstr "Failed to revoke access"
 
 #: src/components/ScopeAssignmentForm.tsx:258
 msgid "Failed to save scope assignment."
 msgstr "Failed to save scope assignment."
 
-#: src/components/UploadStatus.tsx:90
-msgid "Failed to schedule upload retry"
-msgstr "Failed to schedule upload retry"
-
-#: src/components/ShareDialog.tsx:91
-msgid "Failed to share secret"
-msgstr "Failed to share secret"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:222
+#: src/pages/Onboarding/OnboardingComplete.tsx:233
 msgid "Failed to validate onboarding link"
 msgstr "Failed to validate onboarding link"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:266
+#: src/pages/Onboarding/OnboardingComplete.tsx:277
 msgid "File must be an image"
 msgstr "File must be an image"
-
-#. placeholder {0}: file.name
-#: src/components/AttachmentUpload.tsx:124
-msgid "File too large: {0}. Maximum size is 10MB."
-msgstr "File too large: {0}. Maximum size is 10MB."
-
-#: src/pages/Secrets/SecretList.tsx:205
-msgid "Filter by expiration"
-msgstr "Filter by expiration"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:381
 msgid "Filter by organizational unit"
 msgstr "Filter by organizational unit"
 
-#: src/pages/Secrets/SecretList.tsx:188
-msgid "Filter by tag"
-msgstr "Filter by tag"
-
-#: src/pages/Employees/EmployeeCreate.tsx:208
+#: src/pages/Employees/EmployeeCreate.tsx:206
 #: src/pages/Employees/EmployeeEdit.tsx:321
 msgid "First Name"
 msgstr "First Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:319
+#: src/pages/Onboarding/OnboardingComplete.tsx:330
 msgid "First name is required"
 msgstr "First name is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:606
+#: src/pages/Onboarding/OnboardingComplete.tsx:617
 msgid "First Name:"
 msgstr "First Name:"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:666
+#: src/pages/Onboarding/OnboardingComplete.tsx:677
 msgid "First Names (all)"
 msgstr "First Names (all)"
 
@@ -972,7 +778,7 @@ msgstr "First Names (all)"
 msgid "Form fields will be rendered based on schema"
 msgstr "Form fields will be rendered based on schema"
 
-#: src/pages/Employees/EmployeeCreate.tsx:496
+#: src/pages/Employees/EmployeeCreate.tsx:497
 msgid "Freelance"
 msgstr "Freelance"
 
@@ -980,11 +786,11 @@ msgstr "Freelance"
 msgid "From Date"
 msgstr "From Date"
 
-#: src/pages/Employees/EmployeeDetail.tsx:71
+#: src/pages/Employees/EmployeeDetail.tsx:73
 msgid "Full Name"
 msgstr "Full Name"
 
-#: src/pages/Employees/EmployeeCreate.tsx:487
+#: src/pages/Employees/EmployeeCreate.tsx:488
 msgid "Full Time"
 msgstr "Full Time"
 
@@ -996,23 +802,9 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Global"
 msgstr "Global"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:526
+#: src/pages/Onboarding/OnboardingComplete.tsx:537
 msgid "Go to Login"
 msgstr "Go to Login"
-
-#. placeholder {0}: share.granted_by.name
-#. placeholder {1}: formatDate(share.granted_at, i18n.locale)
-#: src/components/SharedWithList.tsx:96
-msgid "Granted by {0} on {1}"
-msgstr "Granted by {0} on {1}"
-
-#: src/pages/Secrets/SecretList.tsx:224
-msgid "Grid"
-msgstr "Grid"
-
-#: src/pages/Secrets/SecretList.tsx:222
-msgid "Grid view"
-msgstr "Grid view"
 
 #: src/components/VerificationDots.tsx:89
 #: src/components/VerificationDots.tsx:92
@@ -1023,10 +815,6 @@ msgstr "Hash Chain (Data)"
 #: src/components/VerificationDots.tsx:105
 msgid "Hash Chain (Link)"
 msgstr "Hash Chain (Link)"
-
-#: src/pages/Secrets/SecretDetail.tsx:327
-msgid "Hide"
-msgstr "Hide"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:301
 msgid "Hide options"
@@ -1045,8 +833,8 @@ msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty fo
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:207
-#: src/components/application-layout.tsx:280
+#: src/components/application-layout.tsx:195
+#: src/components/application-layout.tsx:265
 msgid "Home"
 msgstr "Home"
 
@@ -1072,45 +860,29 @@ msgstr "Invalid combination: min={0}, max=0 results in no visible employees!"
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Invalid combination: No employees will be visible with this range."
 
-#. placeholder {0}: file.name
-#: src/components/AttachmentUpload.tsx:115
-msgid "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
-msgstr "Invalid file type: {0}. Only images, PDFs, and documents are allowed."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:519
+#: src/pages/Onboarding/OnboardingComplete.tsx:530
 msgid "Invalid Link"
 msgstr "Invalid Link"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:176
+#: src/pages/Onboarding/OnboardingComplete.tsx:187
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Invalid onboarding link. Please check your email and try again."
-
-#: src/pages/ShareTarget.tsx:596
-msgid "Invalid or unsafe URL"
-msgstr "Invalid or unsafe URL"
 
 #: src/pages/Settings/SettingsPage.tsx:34
 msgid "Language"
 msgstr "Language"
 
-#. placeholder {0}: new Date(conflict.localVersion.updated_at).toLocaleString()
-#. placeholder {0}: new Date(conflict.serverVersion.updated_at).toLocaleString()
-#: src/components/ConflictResolutionDialog.tsx:151
-#: src/components/ConflictResolutionDialog.tsx:188
-msgid "Last modified: {0}"
-msgstr "Last modified: {0}"
-
-#: src/pages/Employees/EmployeeCreate.tsx:221
+#: src/pages/Employees/EmployeeCreate.tsx:219
 #: src/pages/Employees/EmployeeEdit.tsx:334
-#: src/pages/Onboarding/OnboardingComplete.tsx:719
+#: src/pages/Onboarding/OnboardingComplete.tsx:724
 msgid "Last Name"
 msgstr "Last Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:323
+#: src/pages/Onboarding/OnboardingComplete.tsx:334
 msgid "Last name is required"
 msgstr "Last name is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:620
+#: src/pages/Onboarding/OnboardingComplete.tsx:631
 msgid "Last Name:"
 msgstr "Last Name:"
 
@@ -1128,37 +900,25 @@ msgstr "Last synced: {0}"
 msgid "Last Updated"
 msgstr "Last Updated"
 
-#: src/pages/Employees/EmployeeCreate.tsx:393
+#: src/pages/Employees/EmployeeCreate.tsx:391
 #: src/pages/Employees/EmployeeEdit.tsx:506
 msgid "Leadership Position"
 msgstr "Leadership Position"
-
-#: src/pages/Secrets/SecretList.tsx:235
-msgid "List"
-msgstr "List"
-
-#: src/pages/Secrets/SecretList.tsx:233
-msgid "List view"
-msgstr "List view"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:225
 msgid "Loading activity logs..."
 msgstr "Loading activity logs..."
 
-#: src/components/AttachmentList.tsx:137
-msgid "Loading attachments..."
-msgstr "Loading attachments..."
-
-#: src/pages/Employees/EmployeeDetail.tsx:232
+#: src/pages/Employees/EmployeeDetail.tsx:238
 msgid "Loading documents..."
 msgstr "Loading documents..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:363
+#: src/pages/Employees/EmployeeDetail.tsx:369
 #: src/pages/Employees/EmployeeEdit.tsx:263
 msgid "Loading employee..."
 msgstr "Loading employee..."
 
-#: src/pages/Employees/EmployeeList.tsx:143
+#: src/pages/Employees/EmployeeList.tsx:141
 msgid "Loading employees..."
 msgstr "Loading employees..."
 
@@ -1166,30 +926,19 @@ msgstr "Loading employees..."
 msgid "Loading onboarding..."
 msgstr "Loading onboarding..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:164
+#: src/pages/Employees/EmployeeDetail.tsx:170
 msgid "Loading qualifications..."
 msgstr "Loading qualifications..."
 
-#: src/pages/Secrets/SecretDetail.tsx:229
-msgid "Loading secret..."
-msgstr "Loading secret..."
-
-#: src/pages/Secrets/SecretList.tsx:112
-#: src/pages/ShareTarget.tsx:637
-msgid "Loading secrets..."
-msgstr "Loading secrets..."
-
-#: src/components/AttachmentList.tsx:142
 #: src/components/OrganizationalRoute.tsx:28
 #: src/pages/Customers/CustomerDetail.tsx:80
-#: src/pages/Customers/CustomerEdit.tsx:105
+#: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:141
-#: src/pages/Employees/EmployeeCreate.tsx:377
+#: src/pages/Employees/EmployeeCreate.tsx:375
 #: src/pages/Employees/EmployeeEdit.tsx:490
-#: src/pages/Secrets/SecretEdit.tsx:116
-#: src/pages/Sites/SiteCreate.tsx:162
+#: src/pages/Sites/SiteCreate.tsx:171
 #: src/pages/Sites/SiteDetail.tsx:96
-#: src/pages/Sites/SiteEdit.tsx:140
+#: src/pages/Sites/SiteEdit.tsx:146
 #: src/pages/Sites/SitesPage.tsx:173
 msgid "Loading..."
 msgstr "Loading..."
@@ -1245,15 +994,11 @@ msgstr "Manage your application preferences."
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Manage your internal organizational units including departments, branches, and teams."
 
-#: src/pages/Secrets/SecretList.tsx:155
-msgid "Manage your secrets and sensitive information securely."
-msgstr "Manage your secrets and sensitive information securely."
-
-#: src/pages/Employees/EmployeeDetail.tsx:86
+#: src/pages/Employees/EmployeeDetail.tsx:88
 msgid "Management Level"
 msgstr "Management Level"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:847
+#: src/pages/Onboarding/OnboardingComplete.tsx:846
 msgid "Max 2MB, JPG or PNG"
 msgstr "Max 2MB, JPG or PNG"
 
@@ -1282,11 +1027,7 @@ msgstr "Merkle Tree"
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
 
-#: src/pages/Secrets/SecretDetail.tsx:454
-msgid "Metadata"
-msgstr "Metadata"
-
-#: src/pages/Employees/EmployeeCreate.tsx:493
+#: src/pages/Employees/EmployeeCreate.tsx:494
 msgid "Minijob"
 msgstr "Minijob"
 
@@ -1294,7 +1035,7 @@ msgstr "Minijob"
 msgid "Minimize offline notice"
 msgstr "Minimize offline notice"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:784
+#: src/pages/Onboarding/OnboardingComplete.tsx:783
 msgid "Minimum 8 characters"
 msgstr "Minimum 8 characters"
 
@@ -1311,22 +1052,22 @@ msgstr "Minimum rank cannot be greater than maximum rank."
 msgid "Minimum Viewable Rank"
 msgstr "Minimum Viewable Rank"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:190
+#: src/pages/Onboarding/OnboardingComplete.tsx:201
 msgid "Missing email address. Please use the link from your email."
 msgstr "Missing email address. Please use the link from your email."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:186
+#: src/pages/Onboarding/OnboardingComplete.tsx:197
 msgid "Missing onboarding token. Please use the link from your email."
 msgstr "Missing onboarding token. Please use the link from your email."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:182
+#: src/pages/Onboarding/OnboardingComplete.tsx:193
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Missing token and email. Please use the link from your email."
 
-#: src/pages/Employees/EmployeeCreate.tsx:416
-#: src/pages/Employees/EmployeeDetail.tsx:91
+#: src/pages/Employees/EmployeeCreate.tsx:414
+#: src/pages/Employees/EmployeeDetail.tsx:93
 #: src/pages/Employees/EmployeeEdit.tsx:529
-#: src/pages/Employees/EmployeeList.tsx:282
+#: src/pages/Employees/EmployeeList.tsx:283
 msgid "ML"
 msgstr "ML"
 
@@ -1356,29 +1097,29 @@ msgstr "Moving..."
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/components/application-layout.tsx:146
+#: src/components/application-layout.tsx:134
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:284
-#: src/pages/Customers/CustomerCreate.tsx:213
+#: src/pages/Customers/CustomerCreate.tsx:222
 #: src/pages/Customers/CustomerDetail.tsx:157
-#: src/pages/Customers/CustomerEdit.tsx:232
+#: src/pages/Customers/CustomerEdit.tsx:238
 #: src/pages/Customers/CustomersPage.tsx:158
 #: src/pages/Profile/ProfilePage.tsx:62
-#: src/pages/Sites/SiteCreate.tsx:367
+#: src/pages/Sites/SiteCreate.tsx:376
 #: src/pages/Sites/SiteDetail.tsx:187
-#: src/pages/Sites/SiteEdit.tsx:341
+#: src/pages/Sites/SiteEdit.tsx:347
 #: src/pages/Sites/SitesPage.tsx:190
 msgid "Name"
 msgstr "Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:594
+#: src/pages/Onboarding/OnboardingComplete.tsx:605
 msgid "Name Change Detected"
 msgstr "Name Change Detected"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:873
+#: src/pages/Onboarding/OnboardingComplete.tsx:872
 msgid "Name change too significant. Please contact HR before completing onboarding."
 msgstr "Name change too significant. Please contact HR before completing onboarding."
 
@@ -1390,7 +1131,7 @@ msgstr "Name is required"
 msgid "Name must be at most 255 characters"
 msgstr "Name must be at most 255 characters"
 
-#: src/pages/Customers/CustomerCreate.tsx:107
+#: src/pages/Customers/CustomerCreate.tsx:116
 #: src/pages/Customers/CustomersPage.tsx:88
 msgid "New Customer"
 msgstr "New Customer"
@@ -1399,11 +1140,7 @@ msgstr "New Customer"
 msgid "New parent"
 msgstr "New parent"
 
-#: src/pages/Secrets/SecretList.tsx:161
-msgid "New Secret"
-msgstr "New Secret"
-
-#: src/pages/Sites/SiteCreate.tsx:171
+#: src/pages/Sites/SiteCreate.tsx:180
 #: src/pages/Sites/SitesPage.tsx:100
 msgid "New Site"
 msgstr "New Site"
@@ -1412,8 +1149,8 @@ msgstr "New Site"
 #: src/pages/ActivityLog/ActivityLogList.tsx:489
 #: src/pages/Customers/CustomersPage.tsx:226
 #: src/pages/Customers/CustomersPage.tsx:268
-#: src/pages/Employees/EmployeeList.tsx:325
-#: src/pages/Employees/EmployeeList.tsx:367
+#: src/pages/Employees/EmployeeList.tsx:326
+#: src/pages/Employees/EmployeeList.tsx:368
 #: src/pages/Onboarding/OnboardingWizard.tsx:98
 #: src/pages/Sites/SitesPage.tsx:264
 #: src/pages/Sites/SitesPage.tsx:306
@@ -1424,33 +1161,21 @@ msgstr "Next"
 msgid "No activity logs found."
 msgstr "No activity logs found."
 
-#: src/components/AttachmentList.tsx:126
-msgid "No attachments yet"
-msgstr "No attachments yet"
-
-#: src/pages/ShareTarget.tsx:526
-msgid "No content shared"
-msgstr "No content shared"
-
 #: src/pages/Customers/CustomersPage.tsx:147
 msgid "No customers found"
 msgstr "No customers found"
 
-#: src/pages/Employees/EmployeeDetail.tsx:240
+#: src/pages/Employees/EmployeeDetail.tsx:246
 msgid "No documents uploaded"
 msgstr "No documents uploaded"
-
-#: src/pages/Secrets/SecretList.tsx:210
-msgid "No Expiration"
-msgstr "No Expiration"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:168
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
-#: src/pages/Employees/EmployeeCreate.tsx:427
-#: src/pages/Employees/EmployeeDetail.tsx:95
+#: src/pages/Employees/EmployeeCreate.tsx:425
+#: src/pages/Employees/EmployeeDetail.tsx:97
 #: src/pages/Employees/EmployeeEdit.tsx:540
 msgid "No management position"
 msgstr "No management position"
@@ -1463,17 +1188,9 @@ msgstr "No Organizational Units"
 msgid "No parent (root unit)"
 msgstr "No parent (root unit)"
 
-#: src/pages/Employees/EmployeeDetail.tsx:172
+#: src/pages/Employees/EmployeeDetail.tsx:178
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
-
-#: src/pages/Secrets/SecretList.tsx:250
-msgid "No secrets found"
-msgstr "No secrets found"
-
-#: src/pages/Secrets/SecretList.tsx:248
-msgid "No secrets yet"
-msgstr "No secrets yet"
 
 #: src/pages/Sites/SitesPage.tsx:179
 msgid "No sites found"
@@ -1483,17 +1200,12 @@ msgstr "No sites found"
 msgid "No unit selected"
 msgstr "No unit selected"
 
-#: src/components/SharedWithList.tsx:55
-msgid "Not shared with anyone"
-msgstr "Not shared with anyone"
-
-#: src/pages/Customers/CustomerCreate.tsx:255
+#: src/pages/Customers/CustomerCreate.tsx:264
 #: src/pages/Customers/CustomerDetail.tsx:204
-#: src/pages/Customers/CustomerEdit.tsx:274
-#: src/pages/Secrets/SecretDetail.tsx:393
-#: src/pages/Sites/SiteCreate.tsx:455
+#: src/pages/Customers/CustomerEdit.tsx:280
+#: src/pages/Sites/SiteCreate.tsx:464
 #: src/pages/Sites/SiteDetail.tsx:285
-#: src/pages/Sites/SiteEdit.tsx:429
+#: src/pages/Sites/SiteEdit.tsx:435
 msgid "Notes"
 msgstr "Notes"
 
@@ -1517,18 +1229,14 @@ msgstr "Notifications have been blocked. Please enable them in your browser sett
 msgid "Offline - will sync when online"
 msgstr "Offline - will sync when online"
 
-#: src/components/OfflineSecretBadge.tsx:44
-msgid "Offline only"
-msgstr "Offline only"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:177
 msgid "OK"
 msgstr "OK"
 
-#: src/pages/Employees/EmployeeCreate.tsx:466
-#: src/pages/Employees/EmployeeDetail.tsx:47
-#: src/pages/Employees/EmployeeList.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:217
+#: src/pages/Employees/EmployeeCreate.tsx:467
+#: src/pages/Employees/EmployeeDetail.tsx:49
+#: src/pages/Employees/EmployeeList.tsx:44
+#: src/pages/Employees/EmployeeList.tsx:218
 msgid "On Leave"
 msgstr "On Leave"
 
@@ -1549,8 +1257,8 @@ msgstr "Optional description for this unit."
 msgid "Optional description..."
 msgstr "Optional description..."
 
-#: src/components/application-layout.tsx:217
-#: src/components/application-layout.tsx:296
+#: src/components/application-layout.tsx:202
+#: src/components/application-layout.tsx:275
 msgid "Organization"
 msgstr "Organization"
 
@@ -1565,18 +1273,18 @@ msgstr "Organizational structure"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:194
 #: src/pages/ActivityLog/ActivityLogList.tsx:373
 #: src/pages/ActivityLog/ActivityLogList.tsx:420
-#: src/pages/Employees/EmployeeCreate.tsx:364
-#: src/pages/Employees/EmployeeDetail.tsx:127
+#: src/pages/Employees/EmployeeCreate.tsx:362
+#: src/pages/Employees/EmployeeDetail.tsx:133
 #: src/pages/Employees/EmployeeEdit.tsx:477
-#: src/pages/Employees/EmployeeList.tsx:180
-#: src/pages/Sites/SiteCreate.tsx:210
+#: src/pages/Employees/EmployeeList.tsx:178
+#: src/pages/Sites/SiteCreate.tsx:219
 #: src/pages/Sites/SiteDetail.tsx:311
-#: src/pages/Sites/SiteEdit.tsx:204
+#: src/pages/Sites/SiteEdit.tsx:210
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:688
-#: src/pages/Onboarding/OnboardingComplete.tsx:734
+#: src/pages/Onboarding/OnboardingComplete.tsx:699
+#: src/pages/Onboarding/OnboardingComplete.tsx:739
 msgid "Original:"
 msgstr "Original:"
 
@@ -1584,21 +1292,11 @@ msgstr "Original:"
 msgid "Orphaned Genesis"
 msgstr "Orphaned Genesis"
 
-#: src/pages/Secrets/SecretDetail.tsx:460
-msgid "Owner"
-msgstr "Owner"
-
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx:480
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
-
-#. placeholder {0}: filteredSecrets.length
-#. placeholder {1}: filteredSecrets.length === 1 ? "secret" : "secrets"
-#: src/pages/Secrets/SecretList.tsx:368
-msgid "Page {currentPage} of {totalPages} ({0} {1})"
-msgstr "Page {currentPage} of {totalPages} ({0} {1})"
 
 #: src/pages/Organization/OrganizationPage.tsx:343
 msgid "Parent"
@@ -1608,7 +1306,7 @@ msgstr "Parent"
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:490
+#: src/pages/Employees/EmployeeCreate.tsx:491
 msgid "Part Time"
 msgstr "Part Time"
 
@@ -1617,65 +1315,52 @@ msgstr "Part Time"
 msgid "login.password"
 msgstr "Password"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:765
-#: src/pages/Secrets/SecretDetail.tsx:313
+#: src/pages/Onboarding/OnboardingComplete.tsx:764
 msgid "Password"
 msgstr "Password"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:327
+#: src/pages/Onboarding/OnboardingComplete.tsx:338
 msgid "Password is required"
 msgstr "Password is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:329
+#: src/pages/Onboarding/OnboardingComplete.tsx:340
 msgid "Password must be at least 8 characters"
 msgstr "Password must be at least 8 characters"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:333
+#: src/pages/Onboarding/OnboardingComplete.tsx:344
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
-#: src/components/OfflineSecretBadge.tsx:53
-msgid "Pending sync"
-msgstr "Pending sync"
-
-#: src/pages/Sites/SiteCreate.tsx:263
+#: src/pages/Sites/SiteCreate.tsx:272
 #: src/pages/Sites/SiteDetail.tsx:126
-#: src/pages/Sites/SiteEdit.tsx:257
+#: src/pages/Sites/SiteEdit.tsx:263
 #: src/pages/Sites/SitesPage.tsx:131
 #: src/pages/Sites/SitesPage.tsx:216
 msgid "Permanent"
 msgstr "Permanent"
 
-#: src/components/ShareDialog.tsx:201
-msgid "Permission Levels:"
-msgstr "Permission Levels:"
-
-#: src/components/ShareDialog.tsx:159
-msgid "Permission:"
-msgstr "Permission:"
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:363
 msgid "Permissions"
 msgstr "Permissions"
 
-#: src/pages/Employees/EmployeeCreate.tsx:202
+#: src/pages/Employees/EmployeeCreate.tsx:200
 #: src/pages/Employees/EmployeeEdit.tsx:315
 msgid "Personal Information"
 msgstr "Personal Information"
 
-#: src/pages/Customers/CustomerCreate.tsx:239
+#: src/pages/Customers/CustomerCreate.tsx:248
 #: src/pages/Customers/CustomerDetail.tsx:184
-#: src/pages/Customers/CustomerEdit.tsx:258
-#: src/pages/Employees/EmployeeCreate.tsx:288
-#: src/pages/Employees/EmployeeDetail.tsx:81
+#: src/pages/Customers/CustomerEdit.tsx:264
+#: src/pages/Employees/EmployeeCreate.tsx:286
+#: src/pages/Employees/EmployeeDetail.tsx:83
 #: src/pages/Employees/EmployeeEdit.tsx:401
-#: src/pages/Sites/SiteCreate.tsx:393
+#: src/pages/Sites/SiteCreate.tsx:402
 #: src/pages/Sites/SiteDetail.tsx:210
-#: src/pages/Sites/SiteEdit.tsx:367
+#: src/pages/Sites/SiteEdit.tsx:373
 msgid "Phone"
 msgstr "Phone"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:257
+#: src/pages/Onboarding/OnboardingComplete.tsx:268
 msgid "Photo must be smaller than 2MB"
 msgstr "Photo must be smaller than 2MB"
 
@@ -1684,18 +1369,18 @@ msgstr "Photo must be smaller than 2MB"
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
-#: src/pages/Employees/EmployeeCreate.tsx:310
-#: src/pages/Employees/EmployeeDetail.tsx:101
+#: src/pages/Employees/EmployeeCreate.tsx:308
+#: src/pages/Employees/EmployeeDetail.tsx:103
 #: src/pages/Employees/EmployeeEdit.tsx:423
-#: src/pages/Employees/EmployeeList.tsx:249
+#: src/pages/Employees/EmployeeList.tsx:250
 #: src/pages/Sites/SiteDetail.tsx:226
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Customers/CustomerCreate.tsx:158
-#: src/pages/Customers/CustomerEdit.tsx:177
-#: src/pages/Sites/SiteCreate.tsx:318
-#: src/pages/Sites/SiteEdit.tsx:302
+#: src/pages/Customers/CustomerCreate.tsx:167
+#: src/pages/Customers/CustomerEdit.tsx:183
+#: src/pages/Sites/SiteCreate.tsx:327
+#: src/pages/Sites/SiteEdit.tsx:308
 msgid "Postal Code"
 msgstr "Postal Code"
 
@@ -1703,26 +1388,18 @@ msgstr "Postal Code"
 msgid "Powered by SecPal - a guard's best friend"
 msgstr "Powered by SecPal - a guard's best friend"
 
-#: src/pages/Employees/EmployeeCreate.tsx:460
-#: src/pages/Employees/EmployeeDetail.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:211
+#: src/pages/Employees/EmployeeCreate.tsx:461
+#: src/pages/Employees/EmployeeDetail.tsx:47
+#: src/pages/Employees/EmployeeList.tsx:42
+#: src/pages/Employees/EmployeeList.tsx:212
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
-
-#: src/components/AttachmentList.tsx:186
-msgid "Preview"
-msgstr "Preview"
-
-#: src/components/AttachmentPreview.tsx:198
-msgid "Preview not available for this file type."
-msgstr "Preview not available for this file type."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:477
 #: src/pages/Customers/CustomersPage.tsx:219
 #: src/pages/Customers/CustomersPage.tsx:260
-#: src/pages/Employees/EmployeeList.tsx:318
-#: src/pages/Employees/EmployeeList.tsx:359
+#: src/pages/Employees/EmployeeList.tsx:319
+#: src/pages/Employees/EmployeeList.tsx:360
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
 #: src/pages/Sites/SitesPage.tsx:257
 #: src/pages/Sites/SitesPage.tsx:298
@@ -1733,25 +1410,17 @@ msgstr "Previous"
 msgid "Previous Hash"
 msgstr "Previous Hash"
 
-#: src/components/UploadStatus.tsx:234
-msgid "Processing Progress"
-msgstr "Processing Progress"
-
-#: src/pages/Employees/EmployeeDetail.tsx:438
+#: src/pages/Employees/EmployeeDetail.tsx:444
 msgid "Profile"
 msgstr "Profile"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:816
+#: src/pages/Onboarding/OnboardingComplete.tsx:815
 msgid "Profile Photo (optional)"
 msgstr "Profile Photo (optional)"
 
-#: src/pages/Employees/EmployeeDetail.tsx:451
+#: src/pages/Employees/EmployeeDetail.tsx:457
 msgid "Qualifications"
 msgstr "Qualifications"
-
-#: src/components/ShareDialog.tsx:170
-msgid "Read"
-msgstr "Read"
 
 #: src/components/OfflineDataBanner.tsx:125
 #: src/pages/ActivityLog/ActivityLogList.tsx:254
@@ -1775,50 +1444,22 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:842
+#: src/pages/Onboarding/OnboardingComplete.tsx:841
 msgid "Remove"
 msgstr "Remove"
-
-#: src/components/UploadStatus.tsx:137
-msgid "Removed {filename} from queue"
-msgstr "Removed {filename} from queue"
 
 #: src/components/OrganizationalUnitTree.tsx:797
 msgid "Retry"
 msgstr "Retry"
-
-#: src/components/UploadStatus.tsx:320
-msgid "Retry Failed"
-msgstr "Retry Failed"
-
-#: src/components/UploadStatus.tsx:77
-msgid "Retry scheduled. Files will upload when network is available."
-msgstr "Retry scheduled. Files will upload when network is available."
-
-#: src/components/SharedWithList.tsx:120
-msgid "Revoke"
-msgstr "Revoke"
-
-#: src/components/SharedWithList.tsx:115
-msgid "Revoke access for {name}"
-msgstr "Revoke access for {name}"
-
-#: src/components/SharedWithList.tsx:118
-msgid "Revoking..."
-msgstr "Revoking..."
-
-#: src/components/ShareDialog.tsx:143
-msgid "Roles"
-msgstr "Roles"
 
 #: src/components/ScopeAssignmentForm.tsx:610
 msgid "Save"
 msgstr "Save"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:298
+#: src/pages/Customers/CustomerEdit.tsx:304
 #: src/pages/Employees/EmployeeEdit.tsx:574
-#: src/pages/Sites/SiteEdit.tsx:454
+#: src/pages/Sites/SiteEdit.tsx:460
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1826,26 +1467,22 @@ msgstr "Save Changes"
 msgid "Save Draft"
 msgstr "Save Draft"
 
-#: src/pages/ShareTarget.tsx:717
-msgid "Save to Secret"
-msgstr "Save to Secret"
-
 #: src/components/OrganizationalUnitFormDialog.tsx:376
 #: src/components/ScopeAssignmentForm.tsx:608
-#: src/pages/Customers/CustomerEdit.tsx:298
+#: src/pages/Customers/CustomerEdit.tsx:304
 #: src/pages/Employees/EmployeeEdit.tsx:574
-#: src/pages/Sites/SiteEdit.tsx:454
+#: src/pages/Sites/SiteEdit.tsx:460
 msgid "Saving..."
 msgstr "Saving..."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:281
 #: src/pages/Customers/CustomersPage.tsx:96
-#: src/pages/Employees/EmployeeList.tsx:167
+#: src/pages/Employees/EmployeeList.tsx:165
 #: src/pages/Sites/SitesPage.tsx:108
 msgid "Search"
 msgstr "Search"
 
-#: src/pages/Employees/EmployeeList.tsx:172
+#: src/pages/Employees/EmployeeList.tsx:170
 msgid "Search by name or email..."
 msgstr "Search by name or email..."
 
@@ -1857,31 +1494,17 @@ msgstr "Search customers..."
 msgid "Search in descriptions..."
 msgstr "Search in descriptions..."
 
-#: src/pages/Secrets/SecretList.tsx:177
-msgid "Search secrets"
-msgstr "Search secrets"
-
-#: src/pages/Secrets/SecretList.tsx:171
-msgid "Search secrets..."
-msgstr "Search secrets..."
-
 #: src/pages/Sites/SitesPage.tsx:113
 msgid "Search sites..."
 msgstr "Search sites..."
 
-#: src/App.tsx:67
+#: src/App.tsx:62
 msgid "SecPal - a guard's best friend"
 msgstr "SecPal - a guard's best friend"
 
-#: src/App.tsx:88
+#: src/App.tsx:83
 msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
-
-#: src/components/application-layout.tsx:210
-#: src/components/application-layout.tsx:286
-#: src/pages/Secrets/SecretList.tsx:152
-msgid "Secrets"
-msgstr "Secrets"
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -1895,37 +1518,25 @@ msgstr "Select a new parent for this organizational unit."
 msgid "Select an organizational unit to view details"
 msgstr "Select an organizational unit to view details"
 
-#: src/pages/Sites/SiteCreate.tsx:194
-#: src/pages/Sites/SiteEdit.tsx:188
+#: src/pages/Sites/SiteCreate.tsx:203
+#: src/pages/Sites/SiteEdit.tsx:194
 msgid "Select customer..."
 msgstr "Select customer..."
-
-#: src/components/AttachmentUpload.tsx:229
-msgid "Select Files"
-msgstr "Select Files"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:448
 msgid "Select new parent"
 msgstr "Select new parent"
 
 #: src/components/OrganizationalUnitPicker.tsx:238
-#: src/pages/Employees/EmployeeCreate.tsx:379
+#: src/pages/Employees/EmployeeCreate.tsx:377
 #: src/pages/Employees/EmployeeEdit.tsx:492
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
 
-#: src/pages/Sites/SiteCreate.tsx:220
-#: src/pages/Sites/SiteEdit.tsx:214
+#: src/pages/Sites/SiteCreate.tsx:229
+#: src/pages/Sites/SiteEdit.tsx:220
 msgid "Select organizational unit..."
 msgstr "Select organizational unit..."
-
-#: src/pages/ShareTarget.tsx:646
-msgid "Select Secret to attach files:"
-msgstr "Select Secret to attach files:"
-
-#: src/components/ShareDialog.tsx:135
-msgid "Select user or role..."
-msgstr "Select user or role..."
 
 #: src/components/ScopeAssignmentForm.tsx:564
 msgid "Self-Access Control Required"
@@ -1935,57 +1546,15 @@ msgstr "Self-Access Control Required"
 msgid "Send Test"
 msgstr "Send Test"
 
-#: src/components/ConflictResolutionDialog.tsx:169
-msgid "Server Version"
-msgstr "Server Version"
-
-#: src/components/application-layout.tsx:152
-#: src/components/application-layout.tsx:344
+#: src/components/application-layout.tsx:140
+#: src/components/application-layout.tsx:323
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Settings"
 
-#: src/components/ShareDialog.tsx:229
-#: src/pages/Secrets/SecretDetail.tsx:285
-msgid "Share"
-msgstr "Share"
-
-#: src/components/ShareDialog.tsx:108
-msgid "Share \"{secretTitle}\""
-msgstr "Share \"{secretTitle}\""
-
-#: src/pages/ShareTarget.tsx:523
-msgid "Share Target"
-msgstr "Share Target"
-
-#: src/components/ShareDialog.tsx:113
-msgid "Share this secret with users or roles. Select a recipient, choose permission level, and optionally set an expiration date."
-msgstr "Share this secret with users or roles. Select a recipient, choose permission level, and optionally set an expiration date."
-
-#: src/components/ShareDialog.tsx:125
-msgid "Share with:"
-msgstr "Share with:"
-
-#: src/pages/ShareTarget.tsx:536
-msgid "Shared Content"
-msgstr "Shared Content"
-
-#. placeholder {0}: shares.length
-#: src/components/SharedWithList.tsx:66
-msgid "Shared with ({0})"
-msgstr "Shared with ({0})"
-
-#: src/components/ShareDialog.tsx:229
-msgid "Sharing..."
-msgstr "Sharing..."
-
 #: src/components/NotificationPreferences.tsx:51
 msgid "Shift Reminders"
 msgstr "Shift Reminders"
-
-#: src/pages/Secrets/SecretDetail.tsx:327
-msgid "Show"
-msgstr "Show"
 
 #. placeholder {0}: pagination.from
 #. placeholder {1}: pagination.to
@@ -2004,7 +1573,7 @@ msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:331
+#: src/pages/Employees/EmployeeList.tsx:332
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 
@@ -2019,17 +1588,17 @@ msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
-#: src/components/application-layout.tsx:159
+#: src/components/application-layout.tsx:147
 msgid "Sign out"
 msgstr "Sign out"
 
-#: src/pages/Sites/SiteCreate.tsx:236
-#: src/pages/Sites/SiteEdit.tsx:230
+#: src/pages/Sites/SiteCreate.tsx:245
+#: src/pages/Sites/SiteEdit.tsx:236
 msgid "Site Name"
 msgstr "Site Name"
 
 #: src/pages/Sites/SiteDetail.tsx:105
-#: src/pages/Sites/SiteEdit.tsx:156
+#: src/pages/Sites/SiteEdit.tsx:162
 msgid "Site not found"
 msgstr "Site not found"
 
@@ -2061,10 +1630,10 @@ msgstr "Source Code"
 
 #: src/pages/Customers/CustomersPage.tsx:108
 #: src/pages/Customers/CustomersPage.tsx:167
-#: src/pages/Employees/EmployeeCreate.tsx:451
-#: src/pages/Employees/EmployeeDetail.tsx:106
-#: src/pages/Employees/EmployeeList.tsx:194
-#: src/pages/Employees/EmployeeList.tsx:252
+#: src/pages/Employees/EmployeeCreate.tsx:449
+#: src/pages/Employees/EmployeeDetail.tsx:108
+#: src/pages/Employees/EmployeeList.tsx:192
+#: src/pages/Employees/EmployeeList.tsx:253
 #: src/pages/Sites/SitesPage.tsx:140
 #: src/pages/Sites/SitesPage.tsx:199
 msgid "Status"
@@ -2086,12 +1655,12 @@ msgstr "Step 2: Configure assignment permissions"
 msgid "Step 3: Self-access control"
 msgstr "Step 3: Self-access control"
 
-#: src/pages/Customers/CustomerCreate.tsx:143
+#: src/pages/Customers/CustomerCreate.tsx:152
 #: src/pages/Customers/CustomerDetail.tsx:124
-#: src/pages/Customers/CustomerEdit.tsx:162
-#: src/pages/Sites/SiteCreate.tsx:280
+#: src/pages/Customers/CustomerEdit.tsx:168
+#: src/pages/Sites/SiteCreate.tsx:289
 #: src/pages/Sites/SiteDetail.tsx:150
-#: src/pages/Sites/SiteEdit.tsx:274
+#: src/pages/Sites/SiteEdit.tsx:280
 msgid "Street"
 msgstr "Street"
 
@@ -2103,21 +1672,9 @@ msgstr "Subject"
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
-#: src/pages/ShareTarget.tsx:695
-msgid "Successfully uploaded files!"
-msgstr "Successfully uploaded files!"
-
-#: src/components/AttachmentUpload.tsx:218
-msgid "Supported: Images, PDFs, Documents (max 10MB)"
-msgstr "Supported: Images, PDFs, Documents (max 10MB)"
-
 #: src/components/SyncStatusIndicator.tsx:151
 msgid "Sync"
 msgstr "Sync"
-
-#: src/components/ConflictResolutionDialog.tsx:93
-msgid "Sync Conflict Detected"
-msgstr "Sync Conflict Detected"
 
 #: src/components/SyncStatusIndicator.tsx:113
 msgid "Syncing..."
@@ -2136,40 +1693,32 @@ msgstr "System not ready"
 msgid "System Updates"
 msgstr "System Updates"
 
-#: src/pages/Secrets/SecretDetail.tsx:355
-msgid "Tags"
-msgstr "Tags"
-
 #: src/components/NotificationPreferences.tsx:56
 msgid "Team Messages"
 msgstr "Team Messages"
 
-#: src/pages/Sites/SiteCreate.tsx:266
+#: src/pages/Sites/SiteCreate.tsx:275
 #: src/pages/Sites/SiteDetail.tsx:128
-#: src/pages/Sites/SiteEdit.tsx:260
+#: src/pages/Sites/SiteEdit.tsx:266
 #: src/pages/Sites/SitesPage.tsx:134
 #: src/pages/Sites/SitesPage.tsx:218
 msgid "Temporary"
 msgstr "Temporary"
 
-#: src/pages/Employees/EmployeeDetail.tsx:415
+#: src/pages/Employees/EmployeeDetail.tsx:421
 msgid "Terminate"
 msgstr "Terminate"
 
-#: src/pages/Employees/EmployeeCreate.tsx:469
-#: src/pages/Employees/EmployeeDetail.tsx:48
-#: src/pages/Employees/EmployeeList.tsx:47
-#: src/pages/Employees/EmployeeList.tsx:220
+#: src/pages/Employees/EmployeeCreate.tsx:470
+#: src/pages/Employees/EmployeeDetail.tsx:50
+#: src/pages/Employees/EmployeeList.tsx:45
+#: src/pages/Employees/EmployeeList.tsx:221
 msgid "Terminated"
 msgstr "Terminated"
 
 #: src/components/NotificationPreferences.tsx:225
 msgid "Test Notification"
 msgstr "Test Notification"
-
-#: src/pages/ShareTarget.tsx:578
-msgid "Text:"
-msgstr "Text:"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:363
 msgid "The new unit will be created under this parent."
@@ -2185,7 +1734,7 @@ msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
 #. placeholder {0}: fieldName.toLowerCase()
-#: src/pages/Onboarding/OnboardingComplete.tsx:166
+#: src/pages/Onboarding/OnboardingComplete.tsx:177
 msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 msgstr "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 
@@ -2202,21 +1751,9 @@ msgstr "This customer has {0} site(s)."
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:536
-#~ msgid "This link is valid for 7 days and can only be used once."
-#~ msgstr "This link is valid for 7 days and can only be used once."
-
-#: src/components/ConflictResolutionDialog.tsx:96
-msgid "This secret was modified both locally and on the server. Please choose which version to keep."
-msgstr "This secret was modified both locally and on the server. Please choose which version to keep."
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:160
 msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
 msgstr "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
-
-#: src/pages/ShareTarget.tsx:569
-msgid "Title:"
-msgstr "Title:"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:328
 msgid "To Date"
@@ -2226,7 +1763,7 @@ msgstr "To Date"
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:426
+#: src/pages/Onboarding/OnboardingComplete.tsx:437
 msgid "Too many attempts. Please try again later."
 msgstr "Too many attempts. Please try again later."
 
@@ -2235,18 +1772,10 @@ msgstr "Too many attempts. Please try again later."
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 
-#: src/pages/Secrets/SecretList.tsx:257
-msgid "Try adjusting your filters"
-msgstr "Try adjusting your filters"
-
-#: src/pages/Secrets/SecretList.tsx:130
-msgid "Try Again"
-msgstr "Try Again"
-
 #: src/components/OrganizationalUnitFormDialog.tsx:303
 #: src/pages/Organization/OrganizationPage.tsx:324
-#: src/pages/Sites/SiteCreate.tsx:254
-#: src/pages/Sites/SiteEdit.tsx:248
+#: src/pages/Sites/SiteCreate.tsx:263
+#: src/pages/Sites/SiteEdit.tsx:254
 #: src/pages/Sites/SitesPage.tsx:120
 #: src/pages/Sites/SitesPage.tsx:193
 msgid "Type"
@@ -2256,17 +1785,9 @@ msgstr "Type"
 msgid "Type is required"
 msgstr "Type is required"
 
-#: src/pages/Secrets/SecretDetail.tsx:421
-msgid "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
-msgstr "Unable to load encryption key for attachments. Please refresh the page or contact support if the problem persists."
-
-#: src/pages/Employees/EmployeeList.tsx:255
+#: src/pages/Employees/EmployeeList.tsx:256
 msgid "Unit"
 msgstr "Unit"
-
-#: src/pages/Secrets/SecretEdit.tsx:145
-msgid "Update"
-msgstr "Update"
 
 #: src/components/UpdatePrompt.tsx:77
 msgid "Update application now"
@@ -2276,17 +1797,9 @@ msgstr "Update application now"
 msgid "Update now"
 msgstr "Update now"
 
-#: src/pages/Secrets/SecretEdit.tsx:137
-msgid "Update the details of your secret."
-msgstr "Update the details of your secret."
-
 #: src/components/OrganizationalUnitFormDialog.tsx:243
 msgid "Update the organizational unit details."
 msgstr "Update the organizational unit details."
-
-#: src/pages/Secrets/SecretDetail.tsx:472
-msgid "Updated"
-msgstr "Updated"
 
 #: src/components/UpdatePrompt.tsx:65
 msgid "Updating..."
@@ -2296,30 +1809,14 @@ msgstr "Updating..."
 msgid "Upload"
 msgstr "Upload"
 
-#: src/components/UploadStatus.tsx:217
-msgid "Upload Queue"
-msgstr "Upload Queue"
-
 #. placeholder {0}: uploadedFile.filename
 #: src/pages/Onboarding/OnboardingWizard.tsx:146
 msgid "Uploaded: {0}"
 msgstr "Uploaded: {0}"
 
-#: src/components/AttachmentUpload.tsx:210
-#: src/components/AttachmentUpload.tsx:252
 #: src/pages/Onboarding/OnboardingWizard.tsx:141
-#: src/pages/ShareTarget.tsx:680
 msgid "Uploading..."
 msgstr "Uploading..."
-
-#: src/pages/Secrets/SecretDetail.tsx:337
-msgid "URL"
-msgstr "URL"
-
-#: src/pages/ShareTarget.tsx:593
-#: src/pages/ShareTarget.tsx:604
-msgid "URL:"
-msgstr "URL:"
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
@@ -2335,27 +1832,19 @@ msgstr "User cannot assign OR remove ANY rank (prevents privilege escalation)."
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 msgstr "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 
-#: src/pages/Secrets/SecretDetail.tsx:304
-msgid "Username"
-msgstr "Username"
-
-#: src/components/ShareDialog.tsx:136
-msgid "Users"
-msgstr "Users"
-
-#: src/pages/Sites/SiteCreate.tsx:415
+#: src/pages/Sites/SiteCreate.tsx:424
 #: src/pages/Sites/SiteDetail.tsx:247
-#: src/pages/Sites/SiteEdit.tsx:389
+#: src/pages/Sites/SiteEdit.tsx:395
 msgid "Valid From"
 msgstr "Valid From"
 
-#: src/pages/Sites/SiteCreate.tsx:427
+#: src/pages/Sites/SiteCreate.tsx:436
 #: src/pages/Sites/SiteDetail.tsx:258
-#: src/pages/Sites/SiteEdit.tsx:401
+#: src/pages/Sites/SiteEdit.tsx:407
 msgid "Valid Until"
 msgstr "Valid Until"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:548
+#: src/pages/Onboarding/OnboardingComplete.tsx:559
 msgid "Validating your link..."
 msgstr "Validating your link..."
 
@@ -2364,9 +1853,9 @@ msgstr "Validating your link..."
 msgid "Validation Error"
 msgstr "Validation Error"
 
-#: src/pages/Sites/SiteCreate.tsx:409
+#: src/pages/Sites/SiteCreate.tsx:418
 #: src/pages/Sites/SiteDetail.tsx:241
-#: src/pages/Sites/SiteEdit.tsx:383
+#: src/pages/Sites/SiteEdit.tsx:389
 msgid "Validity Period"
 msgstr "Validity Period"
 
@@ -2379,7 +1868,7 @@ msgid "Verifying..."
 msgstr "Verifying..."
 
 #: src/pages/Customers/CustomersPage.tsx:201
-#: src/pages/Employees/EmployeeList.tsx:300
+#: src/pages/Employees/EmployeeList.tsx:301
 #: src/pages/Sites/SitesPage.tsx:239
 msgid "View"
 msgstr "View"
@@ -2388,9 +1877,9 @@ msgstr "View"
 msgid "View activity log information and verification status"
 msgstr "View activity log information and verification status"
 
-#: src/App.tsx:71
-msgid "View Secrets"
-msgstr "View Secrets"
+#: src/App.tsx:66
+msgid "View Profile"
+msgstr "View Profile"
 
 #: src/pages/Customers/CustomerDetail.tsx:221
 msgid "View Sites"
@@ -2409,7 +1898,7 @@ msgstr "Viewing cached data. Some units may be outdated."
 msgid "Warning"
 msgstr "Warning"
 
-#: src/App.tsx:64
+#: src/App.tsx:59
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
@@ -2417,11 +1906,11 @@ msgstr "Welcome to SecPal"
 msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:567
+#: src/pages/Onboarding/OnboardingComplete.tsx:578
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:372
+#: src/pages/Onboarding/OnboardingComplete.tsx:383
 msgid "Welcome to SecPal! Let's complete your profile."
 msgstr "Welcome to SecPal! Let's complete your profile."
 
@@ -2433,10 +1922,6 @@ msgstr "Which rank range can this user ASSIGN or REMOVE?"
 msgid "Who can this user VIEW?"
 msgstr "Who can this user VIEW?"
 
-#: src/components/ShareDialog.tsx:173
-msgid "Write"
-msgstr "Write"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:298
 msgid "Yes"
 msgstr "Yes"
@@ -2445,7 +1930,7 @@ msgstr "Yes"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:597
+#: src/pages/Onboarding/OnboardingComplete.tsx:608
 msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 msgstr "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 
@@ -2472,7 +1957,3 @@ msgstr "You're offline. Click for details."
 #: src/pages/Login.tsx:146
 msgid "login.subtitle"
 msgstr "Your digital guard companion"
-
-#: src/components/ConflictResolutionDialog.tsx:132
-msgid "Your Local Version"
-msgstr "Your Local Version"

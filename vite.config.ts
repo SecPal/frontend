@@ -80,7 +80,8 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "SecPal",
           short_name: "SecPal",
-          description: "Secure password management platform",
+          description:
+            "Offline-first platform for security personnel and service management",
           theme_color: "#ffffff",
           background_color: "#52525b",
           display: "standalone",
@@ -154,22 +155,6 @@ export default defineConfig(({ mode }) => {
               ],
             },
           ],
-          share_target: {
-            action: "/share",
-            method: "POST",
-            enctype: "multipart/form-data",
-            params: {
-              title: "title",
-              text: "text",
-              url: "url",
-              files: [
-                {
-                  name: "files",
-                  accept: ["image/*", "application/pdf", ".doc", ".docx"],
-                },
-              ],
-            },
-          },
         },
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],

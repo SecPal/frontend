@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -25,8 +25,8 @@ vi.mock("../services/organizationalUnitApi", () => ({
   updateOrganizationalUnit: vi.fn(),
 }));
 
-// Mock secretApi for ApiError
-vi.mock("../services/secretApi", () => ({
+// Mock ApiError for error-path assertions
+vi.mock("../services/ApiError", () => ({
   ApiError: class ApiError extends Error {
     status: number;
     errors?: Record<string, string[]>;
@@ -52,7 +52,7 @@ import {
   createOrganizationalUnit,
   updateOrganizationalUnit,
 } from "../services/organizationalUnitApi";
-import { ApiError } from "../services/secretApi";
+import { ApiError } from "../services/ApiError";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 function renderWithI18n(component: React.ReactElement) {

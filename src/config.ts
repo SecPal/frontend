@@ -24,7 +24,7 @@ export const apiConfig = {
    * - Customer On-Premise: tenant-specific SecPal domain provided during deployment
    *
    * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
-   * so routes are accessible at /v1/secrets NOT /api/v1/secrets
+   * so routes are accessible at /v1/* NOT /api/v1/*
    *
    * Local Development:
    * When VITE_API_URL is not set, we use empty string for same-origin requests.

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -133,12 +133,12 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached("/v1/secrets", "api-secrets");
+        cached = await result.current.isCached("/v1/me", "api-users");
       });
 
       expect(cached).toBe(true);
-      expect(mockCaches.open).toHaveBeenCalledWith("api-secrets");
-      expect(mockCache.match).toHaveBeenCalledWith("/v1/secrets");
+      expect(mockCaches.open).toHaveBeenCalledWith("api-users");
+      expect(mockCache.match).toHaveBeenCalledWith("/v1/me");
     });
 
     it("should check if URL is cached in any cache", async () => {
@@ -148,11 +148,11 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached("/v1/secrets");
+        cached = await result.current.isCached("/v1/me");
       });
 
       expect(cached).toBe(true);
-      expect(mockCaches.match).toHaveBeenCalledWith("/v1/secrets");
+      expect(mockCaches.match).toHaveBeenCalledWith("/v1/me");
     });
 
     it("should return false if URL not cached", async () => {
@@ -162,7 +162,7 @@ describe("useCache", () => {
 
       let cached;
       await act(async () => {
-        cached = await result.current.isCached("/v1/secrets");
+        cached = await result.current.isCached("/v1/me");
       });
 
       expect(cached).toBe(false);

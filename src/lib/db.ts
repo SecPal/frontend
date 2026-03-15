@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Dexie, { type EntityTable } from "dexie";
@@ -65,67 +65,6 @@ export interface AnalyticsEvent {
 }
 
 /**
- * File metadata for file queue entries
- */
-export interface FileMetadata {
-  name: string;
-  type: string;
-  size: number;
-  timestamp: number;
-}
-
-/**
- * File queue entry for offline file uploads
- * Stores files in IndexedDB for persistent offline queue
- */
-export interface FileQueueEntry {
-  id: string; // UUID
-  file: Blob; // Actual file data (encrypted)
-  metadata: FileMetadata;
-  uploadState:
-    | "pending"
-    | "encrypting"
-    | "encrypted"
-    | "uploading"
-    | "failed"
-    | "completed";
-  secretId?: string; // Target Secret (if known)
-  retryCount: number;
-  error?: string;
-  createdAt: Date;
-  lastAttemptAt?: Date;
-  checksum?: string; // SHA-256 checksum of original (plaintext) file
-  checksumEncrypted?: string; // SHA-256 checksum of encrypted file
-}
-
-/**
- * Secret cache entry stored in IndexedDB
- * Mirrors SecretDetail from secretApi.ts but adds offline-specific fields
- */
-export interface SecretCacheEntry {
-  id: string;
-  title: string;
-  username?: string;
-  password?: string;
-  url?: string;
-  notes?: string;
-  tags?: string[];
-  expires_at?: string;
-  created_at: string;
-  updated_at: string;
-  attachment_count?: number;
-  is_shared?: boolean;
-  owner?: {
-    id: string;
-    name: string;
-  };
-  // Offline-specific fields
-  cachedAt: Date;
-  lastSynced: Date;
-  pendingSync?: boolean; // True if local changes haven't been synced
-}
-
-/**
  * Organizational unit cache entry stored in IndexedDB
  * Mirrors OrganizationalUnit from types/organizational.ts but adds offline-specific fields
  */
@@ -165,8 +104,6 @@ export interface OrganizationalUnitCacheEntry {
  * - Sync queue (operations to sync when online)
  * - API cache (cached responses for offline access)
  * - Analytics (offline event tracking)
- * - File queue (offline file upload queue)
- * - Secret cache (offline secret management)
  * - Organizational unit cache (offline organizational structure)
  */
 export const db = new Dexie(DB_NAME) as Dexie & {
@@ -174,8 +111,6 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   syncQueue: EntityTable<SyncOperation, "id">;
   apiCache: EntityTable<ApiCacheEntry, "url">;
   analytics: EntityTable<AnalyticsEvent, "id">;
-  fileQueue: EntityTable<FileQueueEntry, "id">;
-  secretCache: EntityTable<SecretCacheEntry, "id">;
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
@@ -223,6 +158,20 @@ db.version(5).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   fileQueue: "id, uploadState, createdAt, retryCount",
   secretCache: "id, updated_at, cachedAt, pendingSync, *tags",
+  organizationalUnitCache:
+    "id, type, parent_id, updated_at, cachedAt, pendingSync",
+});
+
+// Schema version 6 - Remove Secrets-specific offline storage
+// fileQueue and secretCache are set to null to explicitly drop them so that
+// existing users' IndexedDB is cleaned up during the v5→v6 upgrade.
+db.version(6).stores({
+  guards: "id, email, lastSynced",
+  syncQueue: "id, entity, status, createdAt, attempts",
+  apiCache: "url, expiresAt",
+  analytics: "++id, synced, timestamp, sessionId, type",
+  fileQueue: null,
+  secretCache: null,
   organizationalUnitCache:
     "id, type, parent_id, updated_at, cachedAt, pendingSync",
 });

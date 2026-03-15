@@ -24,7 +24,6 @@
     "progressive-web-app",
     "offline-first",
     "push-notifications",
-    "share-target",
     "analytics"
   ],
   "scripts": {
@@ -63,7 +62,6 @@
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.2.0",
-    "idb": "^8.0.2",
     "motion": "^12.36.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

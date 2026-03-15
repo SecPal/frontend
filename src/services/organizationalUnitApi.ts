@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
-import { ApiError } from "./secretApi";
+import { ApiError } from "./ApiError";
 import {
   saveOrganizationalUnit as saveToCache,
   deleteOrganizationalUnit as deleteFromCache,

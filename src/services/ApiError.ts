@@ -1,17 +1,36 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
  * Custom error class for API-related errors
  */
+export type ApiValidationErrors = Record<string, string[]>;
+
 export class ApiError extends Error {
+  public readonly status?: number;
+  public readonly statusCode?: number;
+  public readonly errors?: ApiValidationErrors;
+  public readonly response?: Response;
+
   constructor(
     message: string,
-    public readonly statusCode?: number,
-    public readonly response?: Response
+    statusCode?: number,
+    errorsOrResponse?: ApiValidationErrors | Response,
+    response?: Response
   ) {
     super(message);
     this.name = "ApiError";
+
+    this.status = statusCode;
+    this.statusCode = statusCode;
+
+    if (errorsOrResponse instanceof Response) {
+      this.response = errorsOrResponse;
+    } else {
+      this.errors = errorsOrResponse;
+      this.response = response;
+    }
+
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ApiError);

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -14,7 +14,7 @@ import {
   detachOrganizationalUnitParent,
   getMyOrganizationalScopes,
 } from "./organizationalUnitApi";
-import { ApiError } from "./secretApi";
+import { ApiError } from "./ApiError";
 import { apiConfig } from "../config";
 import type {
   OrganizationalUnit,
