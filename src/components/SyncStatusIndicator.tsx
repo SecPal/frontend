@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useCallback, useEffect, useState } from "react";
@@ -40,6 +40,21 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
     () => db.syncQueue.where("status").equals("error").count(),
     []
   );
+
+  const nextRetryAt = useLiveQuery(async () => {
+    const pendingOperations = await db.syncQueue
+      .where("status")
+      .equals("pending")
+      .toArray();
+
+    const futureRetryTimes = pendingOperations
+      .map((operation) => operation.nextRetryAt)
+      .filter((retryAt): retryAt is Date => retryAt instanceof Date)
+      .filter((retryAt) => retryAt.getTime() > Date.now())
+      .sort((left, right) => left.getTime() - right.getTime());
+
+    return futureRetryTimes[0] ?? null;
+  }, []);
 
   const handleManualSync = useCallback(async () => {
     if (!isOnline || isSyncing) return;
@@ -133,6 +148,12 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
             </p>
           )}
 
+          {nextRetryAt && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              <Trans>Next retry:</Trans> {nextRetryAt.toLocaleTimeString()}
+            </p>
+          )}
+
           {/* Error Message */}
           {syncError && (
             <p className="text-xs text-red-600 dark:text-red-400">
@@ -142,15 +163,19 @@ export function SyncStatusIndicator({ apiBaseUrl }: { apiBaseUrl: string }) {
         </div>
 
         {/* Manual Sync Button */}
-        {!isSyncing && isOnline && pendingOps && pendingOps > 0 && (
-          <button
-            onClick={handleManualSync}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-            aria-label="Sync now"
-          >
-            <Trans>Sync</Trans>
-          </button>
-        )}
+        {!isSyncing &&
+          isOnline &&
+          pendingOps &&
+          pendingOps > 0 &&
+          !nextRetryAt && (
+            <button
+              onClick={handleManualSync}
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              aria-label="Sync now"
+            >
+              <Trans>Sync</Trans>
+            </button>
+          )}
 
         {/* Offline Notice */}
         {!isOnline && (
