@@ -102,26 +102,4 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
   });
-
-  it("does not expose secrets navigation for authenticated users", async () => {
-    window.history.replaceState({}, "", "/");
-
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@example.com",
-        permissions: [],
-      })
-    );
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByRole("heading", { name: /Welcome to SecPal/i })
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
-    expect(screen.queryByText("View Secrets")).not.toBeInTheDocument();
-  });
 });

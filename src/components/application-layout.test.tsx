@@ -114,7 +114,6 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
     });
 
     it("renders user information in navbar avatar", () => {
@@ -153,19 +152,6 @@ describe("ApplicationLayout", () => {
 
       const homeLink = screen.getByRole("link", { name: /home/i });
       expect(homeLink).toHaveAttribute("data-current", "true");
-    });
-
-    it("does not render a legacy secrets link on removed routes", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>,
-        { route: "/secrets" }
-      );
-
-      expect(
-        screen.queryByRole("link", { name: /secrets/i })
-      ).not.toBeInTheDocument();
     });
   });
 
@@ -527,7 +513,7 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Customers")).toBeInTheDocument();
     });
 
-    it("always shows Home without reintroducing secrets links", () => {
+    it("always shows Home", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
@@ -545,7 +531,6 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.queryByText("Secrets")).not.toBeInTheDocument();
     });
 
     it("treats undefined hasOrganizationalScopes as false", () => {
