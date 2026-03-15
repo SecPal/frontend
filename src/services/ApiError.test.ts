@@ -57,4 +57,19 @@ describe("ApiError", () => {
     expect(serverError.isServerError()).toBe(true);
     expect(serverError.isValidationError()).toBe(false);
   });
+
+  it("handles message-only construction without a status code", () => {
+    const error = new ApiError("Network error");
+
+    expect(error.message).toBe("Network error");
+    expect(error.status).toBeUndefined();
+    expect(error.statusCode).toBeUndefined();
+    expect(error.errors).toBeUndefined();
+    expect(error.response).toBeUndefined();
+    expect(error.isServerError()).toBe(false);
+    expect(error.isValidationError()).toBe(false);
+    expect(error.isNotFoundError()).toBe(false);
+    expect(error.isAuthenticationError()).toBe(false);
+    expect(error.isAuthorizationError()).toBe(false);
+  });
 });
