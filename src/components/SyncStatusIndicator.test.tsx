@@ -82,7 +82,7 @@ describe("SyncStatusIndicator", () => {
   it("should show the next scheduled retry time for pending operations in backoff", async () => {
     vi.mocked(useOnlineStatusModule.useOnlineStatus).mockReturnValue(true);
 
-    const futureRetryAt = new Date("2026-03-15T17:00:00.000Z");
+    const futureRetryAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await db.syncQueue.add({
       id: "retry-1",
@@ -90,7 +90,7 @@ describe("SyncStatusIndicator", () => {
       entity: "guards",
       data: {},
       status: "pending",
-      createdAt: new Date("2026-03-15T16:55:00.000Z"),
+      createdAt: new Date(),
       attempts: 1,
       nextRetryAt: futureRetryAt,
     });

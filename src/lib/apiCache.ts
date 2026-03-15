@@ -168,12 +168,16 @@ export async function cleanExpiredCache(): Promise<number> {
  *
  * @param id - Operation ID
  * @param status - New status
- * @param error - Optional error message
+ * @param error - Optional error message to store on failure
+ * @param nextRetryAt - When set, the operation will not be retried before this
+ *   timestamp. Pass `undefined` to clear a previously scheduled retry (e.g. on
+ *   success) or when the operation has permanently failed.
  *
  * @example
  * ```ts
  * await updateSyncOperationStatus('abc-123', 'synced');
  * await updateSyncOperationStatus('def-456', 'error', 'Network timeout');
+ * await updateSyncOperationStatus('ghi-789', 'pending', 'Timeout', new Date(Date.now() + 5_000));
  * ```
  */
 export async function updateSyncOperationStatus(
@@ -307,9 +311,18 @@ export async function retrySyncOperation(
     // Mark as error if this was the final attempt, otherwise keep pending
     const finalAttemptThreshold = apiConfig.retry.maxAttempts - 1;
     const shouldFail = operation.attempts >= finalAttemptThreshold;
+    // Schedule based on post-increment attempt count so the displayed retry
+    // time matches the actual backoff window on the next retrySyncOperation call.
     const scheduledRetryAt = shouldFail
       ? undefined
-      : new Date(Date.now() + backoffDelay);
+      : new Date(
+          Date.now() +
+            Math.pow(
+              apiConfig.retry.backoffMultiplier,
+              operation.attempts + 1
+            ) *
+              1000
+        );
 
     await updateSyncOperationStatus(
       operation.id,
