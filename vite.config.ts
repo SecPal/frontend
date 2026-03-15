@@ -80,7 +80,8 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "SecPal",
           short_name: "SecPal",
-          description: "Secure password management platform",
+          description:
+            "Offline-first platform for security personnel and service management",
           theme_color: "#ffffff",
           background_color: "#52525b",
           display: "standalone",
