@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the stale `docs/PERFORMANCE_NEXT_STEPS.md` and `docs/PERFORMANCE_README.md` planning summaries because they only captured temporary 2025 performance follow-up plans
 - Removed the stale `docs/PROJECT_STATUS.md` snapshot because it no longer matched the current frontend state and duplicated newer repository history
 - Removed the stale `docs/PERFORMANCE_ISSUE319_STATUS.md` and `docs/PERFORMANCE_TBT_DEFER_IMPLEMENTATION.md` worklog documents because they no longer reflected the final outcome of the 2025 Issue #319 investigation
+- Removed the stale `docs/PERFORMANCE_DEPLOYMENT_STATUS.md` snapshot because it only documented a temporary 2025 deployment checkpoint and no longer reflected the repository's active guidance
 
 ### Security
 

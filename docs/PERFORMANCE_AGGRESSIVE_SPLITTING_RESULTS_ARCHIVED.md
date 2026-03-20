@@ -9,7 +9,6 @@ SPDX-License-Identifier: CC0-1.0
 
 **For actual deployed results, see:**
 
-- `PERFORMANCE_DEPLOYMENT_STATUS.md` - Current implementation details
 - `PERFORMANCE_TBT_ANALYSIS.md` - Analysis and next steps
 
 ---
