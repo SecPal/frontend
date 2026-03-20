@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
 - Removed the remaining legacy test suites, stale documentation, and outdated frontend schema/cache references that only existed for the deleted module
 - Removed the stale `docs/PERFORMANCE_NEXT_STEPS.md` and `docs/PERFORMANCE_README.md` planning summaries because they only captured temporary 2025 performance follow-up plans
+- Removed the stale `docs/PROJECT_STATUS.md` snapshot because it no longer matched the current frontend state and duplicated newer repository history
 
 ### Security
 
@@ -48,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Marked `docs/PERFORMANCE_ANALYSIS_2025-12-06.md` as historical reference material so it is not mistaken for the current frontend optimization plan
+- Marked `docs/IMPLEMENTATION_PLAN_ISSUE143.md` as a historical planning artifact so it is not mistaken for current implementation guidance
 
 - Updated frontend package baselines to the latest currently compatible releases for `@lingui/core`, `@lingui/react`, `@lingui/macro`, and `vite-plugin-static-copy`
 

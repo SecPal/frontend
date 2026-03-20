@@ -5,6 +5,8 @@ SPDX-License-Identifier: CC0-1.0
 
 # Implementation Plan: Client-Side File Encryption (Issue #143)
 
+> Historical planning document: this file records the original implementation plan for Issue #143 and should not be treated as the current source of truth for frontend state or roadmap priority.
+
 **Issue:** SecPal/frontend#143
 **Epic:** SecPal/frontend#64 (PWA Infrastructure)
 **Priority:** High (Security-Critical)
