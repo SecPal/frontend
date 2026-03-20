@@ -5,6 +5,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Performance Issue #319 - Phase 2: React Profiling Session
 
+> Historical analysis document: this file records the profiling outcome of the 2025 Issue #319 work and is not an active task plan.
+
 **Status:** ✅ SUCCESS
 **Date:** 2025-12-06
 **Goal:** Identify React rendering bottlenecks causing TBT >373ms
@@ -278,4 +280,4 @@ const TreeNode = memo(
 
 - **Issue:** #319
 - **Previous PR:** #320 (Phase 1 - FAILED)
-- **Status Doc:** `docs/PERFORMANCE_ISSUE319_STATUS.md`
+- **Related analysis:** `docs/PERFORMANCE_TBT_ANALYSIS.md`
