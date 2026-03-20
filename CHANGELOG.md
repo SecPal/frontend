@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the stale `docs/PERFORMANCE_DEPLOYMENT_STATUS.md` snapshot because it only documented a temporary 2025 deployment checkpoint and no longer reflected the repository's active guidance
 - Removed the obsolete `docs/PERFORMANCE_AGGRESSIVE_SPLITTING_RESULTS_ARCHIVED.md` archive because it only preserved a reverted implementation path and no longer served as useful active documentation
 - Removed the stale `docs/PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md` worklog because it only tracked temporary 2025 optimization steps and duplicated more precise historical analysis records
+- Removed the obsolete `docs/PERFORMANCE_OPTIMIZATIONS_2025-12-06-AGGRESSIVE.md` note because it documented a superseded aggressive chunk-splitting experiment that was not retained as active guidance
 
 ### Security
 
