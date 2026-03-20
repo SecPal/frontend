@@ -5,6 +5,8 @@ SPDX-License-Identifier: CC0-1.0
 
 # Total Blocking Time (TBT) Analysis & Optimization Strategy
 
+> Historical analysis document: this file records the 2025 TBT investigation around PR #318 and is kept only as technical context for past performance work.
+
 **Date:** 2025-12-06
 **Context:** PR #318 Performance Optimization
 **Current TBT:** 384ms (Target: <200ms, Gap: +184ms)
