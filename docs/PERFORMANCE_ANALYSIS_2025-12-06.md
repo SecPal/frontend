@@ -5,6 +5,8 @@ SPDX-License-Identifier: CC0-1.0
 
 # Performance Analysis - app.secpal.dev
 
+> Historical analysis document: this file captures a 2025 performance investigation snapshot and should not be treated as the current frontend optimization plan.
+
 **Date:** 2025-12-06
 **Test Target:** <https://app.secpal.dev>
 **Tool:** Playwright + Lighthouse CI
