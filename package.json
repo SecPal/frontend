@@ -51,8 +51,8 @@
     "lingui:compile": "lingui compile --namespace es",
     "sync": "cross-env-shell \"lingui extract --overwrite && lingui compile --namespace es\"",
     "sync:purge": "cross-env-shell \"lingui extract --overwrite --clean && lingui compile --namespace es\"",
-    "lighthouse": "lhci autorun",
-    "lighthouse:ci": "lhci autorun --config=lighthouserc.cjs"
+    "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
+    "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -113,9 +113,6 @@
     "vite-plugin-static-copy": "^3.3.0",
     "vitest": "^4.1.0",
     "workbox-window": "^7.4.0"
-  },
-  "optionalDependencies": {
-    "@lhci/cli": "^0.15.1"
   },
   "overrides": {
     "tmp": "^0.2.4",

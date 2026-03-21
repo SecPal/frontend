@@ -13,7 +13,6 @@
  * @see https://github.com/GoogleChrome/lighthouse-ci
  */
 
-/** @type {import('@lhci/cli').Config} */
 module.exports = {
   ci: {
     collect: {
