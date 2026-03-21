@@ -81,3 +81,31 @@ We will update dependencies as soon as stable upstream releases make that possib
 **Last Updated**: 2026-03-21
 **Reviewed By**: SecPal Team
 **Status**: Accepted Risk (Non-Critical)
+
+---
+
+## ESLint 9 and Global minimatch Override
+
+### Status: Intentional, Confirmed Compatible
+
+Package `@eslint/config-array` (pulled in by ESLint 9.x) declares `minimatch@^3.1.5`, but `package.json` contains a global `overrides.minimatch: ">=10.2.4"` that forces all minimatch resolutions to the `10.x` line.
+
+### Why the Override Exists
+
+The global `minimatch` override enforces a minimum version across the entire dependency tree as a precautionary floor against any packages that may still reference an old minimatch range. The specific `>=10.2.4` boundary was chosen to align with versions already required by other tooling in this repo (e.g. `typescript-eslint` requires `^10.2.2`).
+
+### Compatibility
+
+ESLint 9 uses minimatch exclusively for internal glob pattern matching (config file/ignore patterns). The glob API surface used is backward compatible between minimatch 3.x and 10.x. This is confirmed by all CI lint checks passing with `minimatch@10.2.4` in the resolved lock.
+
+### Impact Assessment
+
+- **Security**: ✅ No regression — minimatch 10 fixes all known CVEs present in older 3.x releases
+- **Functionality**: ✅ All ESLint checks pass in CI with minimatch@10.2.4
+- **Maintainability**: ✅ Intentional — no remediation required unless a future ESLint or minimatch release breaks the current API contract
+
+---
+
+**Last Updated**: 2026-03-21
+**Reviewed By**: SecPal Team
+**Status**: Accepted Risk (Intentional Override)
