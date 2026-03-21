@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced the deprecated PWA service-worker build setting `inlineDynamicImports` with `codeSplitting: false` via the plugin's custom SW build hook so `npm run build` no longer emits the Vite 8 deprecation warning
 - Stabilized several interaction-heavy frontend tests by reusing the shared test i18n instance, mocking lazy dialog and listbox edges, and making async form/upload assertions deterministic in Vitest
 - Hardened the `EmployeeCreate` success-path test to wait for loaded organizational-unit options and async navigation, reducing full-suite timeout flakiness
 - Hardened additional full-suite-sensitive submit flows in `Login`, `ApplicationLayout`, and `CustomerCreate` tests to reduce timing-dependent Vitest failures
