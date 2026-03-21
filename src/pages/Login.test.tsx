@@ -934,7 +934,7 @@ describe("Login", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/powered by secpal - a guard's best friend/i)
+          screen.getByRole("link", { name: "SecPal – A guard’s best friend" })
         ).toBeInTheDocument();
       });
     });
