@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Moved the local Lighthouse CI CLI to on-demand `npx` execution so regular frontend installs no longer pull the deprecated `@lhci/cli` dependency chain that emitted `rimraf`, `glob@7`, and `inflight` warnings during pre-push installs
 - Aligned `eslint` and `@eslint/js` with the `eslint-plugin-react-hooks` peer range by moving both packages back to the latest compatible 9.x line, so `npm ls` no longer reports an invalid frontend lint dependency tree; documented in `docs/KNOWN_ISSUES.md` that the global `minimatch: >=10.2.4` override is intentional and confirmed compatible with ESLint 9 by CI
 - Replaced the deprecated PWA service-worker build setting `inlineDynamicImports` with `codeSplitting: false` via the plugin's custom SW build hook so `npm run build` no longer emits the Vite 8 deprecation warning
 - Stabilized several interaction-heavy frontend tests by reusing the shared test i18n instance, mocking lazy dialog and listbox edges, and making async form/upload assertions deterministic in Vitest
