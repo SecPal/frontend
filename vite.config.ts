@@ -11,6 +11,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -69,6 +70,9 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: "prompt",
         strategies: "injectManifest",
+        integration: {
+          configureCustomSWViteBuild: applyInjectManifestCodeSplittingFix,
+        },
         srcDir: "src",
         filename: "sw.ts",
         injectRegister: "auto",
