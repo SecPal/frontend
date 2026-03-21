@@ -596,7 +596,9 @@ describe("ApplicationLayout", () => {
       );
 
       expect(
-        screen.getByText(/powered by secpal - a guard's best friend/i)
+        screen.getByRole("link", {
+          name: "Powered by SecPal – A guard's best friend",
+        })
       ).toBeInTheDocument();
     });
   });

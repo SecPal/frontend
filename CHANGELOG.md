@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Standardized the frontend-visible SecPal tagline to `Powered by SecPal – A guard's best friend` across footer text, landing copy, tests, and generated locale catalogs; the tagline is intentionally identical in all locales (no translation)
 - Marked `docs/PERFORMANCE_ANALYSIS_2025-12-06.md` as historical reference material so it is not mistaken for the current frontend optimization plan
 - Marked `docs/IMPLEMENTATION_PLAN_ISSUE143.md` as a historical planning artifact so it is not mistaken for current implementation guidance
 - Marked the retained Issue #319 profiling and TBT analysis notes as historical reference material so they are not mistaken for active implementation instructions

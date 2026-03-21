@@ -28,7 +28,7 @@ msgstr "\"{0}\" created successfully"
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" updated successfully"
 
-#: src/components/SyncStatusIndicator.tsx:121
+#: src/components/SyncStatusIndicator.tsx:168
 msgid "{errorOps} operation(s) failed"
 msgstr "{errorOps} operation(s) failed"
 
@@ -56,7 +56,7 @@ msgstr "{label}: Pending"
 msgid "{label}: Valid"
 msgstr "{label}: Valid"
 
-#: src/components/SyncStatusIndicator.tsx:117
+#: src/components/SyncStatusIndicator.tsx:164
 msgid "{pendingOps} operation(s) pending"
 msgstr "{pendingOps} operation(s) pending"
 
@@ -194,7 +194,7 @@ msgstr "All logs"
 msgid "All Status"
 msgstr "All Status"
 
-#: src/components/SyncStatusIndicator.tsx:125
+#: src/components/SyncStatusIndicator.tsx:172
 msgid "All synced"
 msgstr "All synced"
 
@@ -887,7 +887,7 @@ msgid "Last Name:"
 msgstr "Last Name:"
 
 #. placeholder {0}: lastSyncTime.toLocaleTimeString()
-#: src/components/SyncStatusIndicator.tsx:132
+#: src/components/SyncStatusIndicator.tsx:179
 msgid "Last sync: {0}"
 msgstr "Last sync: {0}"
 
@@ -1157,6 +1157,10 @@ msgstr "New Site"
 msgid "Next"
 msgstr "Next"
 
+#: src/components/SyncStatusIndicator.tsx:185
+msgid "Next retry:"
+msgstr "Next retry:"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx:399
 msgid "No activity logs found."
 msgstr "No activity logs found."
@@ -1225,7 +1229,7 @@ msgstr "Notifications Enabled"
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 
-#: src/components/SyncStatusIndicator.tsx:158
+#: src/components/SyncStatusIndicator.tsx:211
 msgid "Offline - will sync when online"
 msgstr "Offline - will sync when online"
 
@@ -1385,8 +1389,8 @@ msgid "Postal Code"
 msgstr "Postal Code"
 
 #: src/components/Footer.tsx:20
-msgid "Powered by SecPal - a guard's best friend"
-msgstr "Powered by SecPal - a guard's best friend"
+msgid "Powered by SecPal – A guard's best friend"
+msgstr "Powered by SecPal – A guard's best friend"
 
 #: src/pages/Employees/EmployeeCreate.tsx:461
 #: src/pages/Employees/EmployeeDetail.tsx:47
@@ -1499,12 +1503,12 @@ msgid "Search sites..."
 msgstr "Search sites..."
 
 #: src/App.tsx:62
-msgid "SecPal - a guard's best friend"
-msgstr "SecPal - a guard's best friend"
+msgid "SecPal – A guard’s best friend"
+msgstr "SecPal – A guard’s best friend"
 
 #: src/App.tsx:83
-msgid "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
-msgstr "SecPal - a guard's best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
+msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
+msgstr "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -1672,11 +1676,11 @@ msgstr "Subject"
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
-#: src/components/SyncStatusIndicator.tsx:151
+#: src/components/SyncStatusIndicator.tsx:204
 msgid "Sync"
 msgstr "Sync"
 
-#: src/components/SyncStatusIndicator.tsx:113
+#: src/components/SyncStatusIndicator.tsx:160
 msgid "Syncing..."
 msgstr "Syncing..."
 

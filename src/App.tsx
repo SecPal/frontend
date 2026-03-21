@@ -59,7 +59,7 @@ function Home() {
         <Trans>Welcome to SecPal</Trans>
       </Heading>
       <Text className="mt-2">
-        <Trans>SecPal - a guard's best friend</Trans>
+        <Trans>SecPal – A guard’s best friend</Trans>
       </Text>
       <div className="mt-8 flex gap-4">
         <Button href="/profile">
@@ -81,7 +81,7 @@ function About() {
       </Heading>
       <Text className="mt-4">
         <Trans>
-          SecPal - a guard's best friend. An offline-first progressive web app
+          SecPal – A guard’s best friend. An offline-first progressive web app
           for security personnel, combining digital guard books with modern
           service management.
         </Trans>
