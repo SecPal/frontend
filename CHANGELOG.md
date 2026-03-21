@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Pinned third-party GitHub Actions in frontend workflows to immutable commit SHAs so Lighthouse and Codecov automation no longer depend on floating action tags at runtime
 - Pinned the transitive `flatted` resolution to `3.4.2` so Vitest UI and ESLint cache tooling no longer ship the vulnerable parser affected by CVE-2026-33228 / GHSA-rf6f-7fwh-wjgh
 
 - Pinned the transitive `yauzl` resolution to `3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot
