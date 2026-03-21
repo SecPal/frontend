@@ -1159,7 +1159,7 @@ msgstr "Weiter"
 
 #: src/components/SyncStatusIndicator.tsx:185
 msgid "Next retry:"
-msgstr ""
+msgstr "Nächster Wiederholungsversuch:"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:399
 msgid "No activity logs found."
@@ -1508,7 +1508,7 @@ msgstr "SecPal – A guard’s best friend"
 
 #: src/App.tsx:83
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
-msgstr "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
+msgstr "SecPal – der beste Freund eines Wachmanns. Eine Offline-First Progressive Web App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management verbindet."
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
