@@ -13,10 +13,18 @@ type ServiceWorkerRollupOptions = {
   output?: ServiceWorkerBuildOutput | ServiceWorkerBuildOutput[];
 };
 
-function isSingleOutput(
-  output: ServiceWorkerRollupOptions["output"]
-): output is ServiceWorkerBuildOutput {
-  return Boolean(output) && !Array.isArray(output);
+function patchOutput(
+  output: ServiceWorkerBuildOutput
+): ServiceWorkerBuildOutput {
+  if (output.inlineDynamicImports !== true) {
+    return output;
+  }
+
+  const patched = { ...output };
+
+  delete patched.inlineDynamicImports;
+
+  return { ...patched, codeSplitting: false };
 }
 
 export function applyInjectManifestCodeSplittingFix(
@@ -26,20 +34,15 @@ export function applyInjectManifestCodeSplittingFix(
     | ServiceWorkerRollupOptions
     | undefined;
 
-  if (!rollupOptions || !isSingleOutput(rollupOptions.output)) {
+  if (!rollupOptions?.output) {
     return;
   }
 
-  if (rollupOptions.output.inlineDynamicImports !== true) {
+  if (Array.isArray(rollupOptions.output)) {
+    rollupOptions.output = rollupOptions.output.map(patchOutput);
+
     return;
   }
 
-  const output = { ...rollupOptions.output };
-
-  delete output.inlineDynamicImports;
-
-  rollupOptions.output = {
-    ...output,
-    codeSplitting: false,
-  };
+  rollupOptions.output = patchOutput(rollupOptions.output);
 }

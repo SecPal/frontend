@@ -42,4 +42,34 @@ describe("applyInjectManifestCodeSplittingFix", () => {
       entryFileNames: "sw.mjs",
     });
   });
+
+  it("updates matching entries when rollup output is an array", () => {
+    const inlineConfig = {
+      build: {
+        rollupOptions: {
+          output: [
+            {
+              entryFileNames: "sw.mjs",
+              inlineDynamicImports: true,
+            },
+            {
+              entryFileNames: "other-[name].js",
+            },
+          ],
+        },
+      },
+    };
+
+    applyInjectManifestCodeSplittingFix(inlineConfig);
+
+    expect(inlineConfig.build.rollupOptions.output).toEqual([
+      {
+        entryFileNames: "sw.mjs",
+        codeSplitting: false,
+      },
+      {
+        entryFileNames: "other-[name].js",
+      },
+    ]);
+  });
 });
