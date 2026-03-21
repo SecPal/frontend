@@ -1388,6 +1388,10 @@ msgstr "Position"
 msgid "Postal Code"
 msgstr "Postleitzahl"
 
+#: src/components/Footer.tsx:20
+msgid "Powered by SecPal – A guard's best friend"
+msgstr "Powered by SecPal – A guard's best friend"
+
 #: src/pages/Employees/EmployeeCreate.tsx:461
 #: src/pages/Employees/EmployeeDetail.tsx:47
 #: src/pages/Employees/EmployeeList.tsx:42
@@ -1499,7 +1503,6 @@ msgid "Search sites..."
 msgstr "Standorte suchen..."
 
 #: src/App.tsx:62
-#: src/components/Footer.tsx:20
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 

@@ -17,7 +17,7 @@ export function Footer() {
             rel="noopener noreferrer"
             className="font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
           >
-            <Trans>SecPal – A guard’s best friend</Trans>
+            <Trans>Powered by SecPal – A guard's best friend</Trans>
           </Link>
         </div>
         <div className="flex items-center justify-center gap-3">
