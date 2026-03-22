@@ -60,14 +60,16 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Login/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Log in/i })
+    ).toBeInTheDocument();
   });
 
   it("renders login form", async () => {
     await renderWithI18n(<App />);
     expect(
-      screen.getByText(/Your digital guard companion/i)
-    ).toBeInTheDocument();
+      screen.queryByText(/Your digital guard companion/i)
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
