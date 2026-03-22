@@ -12,14 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Updated `.npmrc` to document that `legacy-peer-deps=true` is specifically
-  required to suppress the `vite-plugin-pwa@1.2.0` peer-dependency conflict
-  with Vite 8; the plugin declares peer support only through Vite 7 and there
-  is no upstream release adding Vite 8 to its range as of 2026-03-22
-  (closes #559); the SPDX copyright year range was extended to `2025-2026`
-
 ### Removed
 
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
@@ -73,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated `.npmrc` to document that `legacy-peer-deps=true` is specifically
+  required to suppress the `vite-plugin-pwa@1.2.0` peer-dependency conflict
+  with Vite 8; the plugin currently declares peer support only through Vite 7
+  (see #559 for status); the SPDX copyright year range was extended to `2025-2026`
 - `.github/copilot-instructions.md` now requires a branch hygiene check before any write action so frontend work never starts on local `main` and dirty non-`main` branches must be assessed before continuing
 - `.github/copilot-instructions.md` now requires stale `SPDX-FileCopyrightText` years in edited files and license sidecars to be normalized to `YYYY` or `YYYY-YYYY` without spaces
 - `.github/copilot-instructions.md` now clarifies that if an edited file has no inline SPDX header, its companion `.license` file must be checked and updated instead
