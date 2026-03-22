@@ -143,7 +143,7 @@ export function Login() {
         <Trans id="login.title">Login</Trans>
       </h2>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        <Trans id="login.subtitle">Your digital guard companion</Trans>
+        <Trans>A guard's best friend</Trans>
       </p>
 
       <form

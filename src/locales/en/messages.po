@@ -82,6 +82,10 @@ msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
+#: src/pages/Login.tsx:146
+msgid "A guard's best friend"
+msgstr "A guard's best friend"
+
 #: src/components/UpdatePrompt.tsx:71
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
@@ -1956,8 +1960,3 @@ msgstr "You're offline - showing cached data"
 #: src/components/OfflineIndicator.tsx:73
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:146
-msgid "login.subtitle"
-msgstr "Your digital guard companion"
