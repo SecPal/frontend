@@ -12,16 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
-  deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
-  replaced by a current, non-deprecated release; the remaining deprecated
-  transitive packages inside `workbox-build@7.4.0` (`sourcemap-codec@1.4.8`,
-  `source-map@0.8.0-beta.0`) are blocked upstream and tracked separately
-  (closes #558, remaining items blocked by upstream `vite-plugin-pwa` /
-  `workbox-build`)
-
 ### Removed
 
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
@@ -36,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
+  deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
+  replaced by a current, non-deprecated release; the remaining deprecated
+  transitive packages inside `workbox-build@7.4.0` (`sourcemap-codec@1.4.8`,
+  `source-map@0.8.0-beta.0`) are blocked upstream and tracked separately
+  (closes #558, remaining items blocked by upstream `vite-plugin-pwa` /
+  `workbox-build`)
 - Pinned third-party GitHub Actions in frontend workflows to immutable commit SHAs so Lighthouse and Codecov automation no longer depend on floating action tags at runtime
 - Pinned the transitive `flatted` resolution to `3.4.2` so Vitest UI and ESLint cache tooling no longer ship the vulnerable parser affected by CVE-2026-33228 / GHSA-rf6f-7fwh-wjgh
 
