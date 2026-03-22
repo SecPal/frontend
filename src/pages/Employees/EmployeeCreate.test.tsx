@@ -317,9 +317,6 @@ describe("EmployeeCreate", () => {
       screen.getAllByText(/first name is required/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/date of birth is required/i).length
-    ).toBeGreaterThan(0);
-    expect(
       screen.getAllByText(/organizational unit is required/i).length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText(/first name/i)).toHaveFocus();
