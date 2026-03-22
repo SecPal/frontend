@@ -62,9 +62,9 @@ export function EmployeeCreate() {
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
   const [isLeadership, setIsLeadership] = useState(false);
-  const fieldRefs = useRef<Partial<Record<EmployeeFormField, HTMLElement | null>>>(
-    {}
-  );
+  const fieldRefs = useRef<
+    Partial<Record<EmployeeFormField, HTMLElement | null>>
+  >({});
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -91,7 +91,10 @@ export function EmployeeCreate() {
     field: EmployeeFormField,
     descriptionId?: string
   ): string | undefined {
-    const ids = [descriptionId, fieldErrors[field] ? getFieldErrorId(field) : null]
+    const ids = [
+      descriptionId,
+      fieldErrors[field] ? getFieldErrorId(field) : null,
+    ]
       .filter(Boolean)
       .join(" ");
 
@@ -197,9 +200,7 @@ export function EmployeeCreate() {
 
         const parsedBirthDate = new Date(`${birthDate.iso}T00:00:00`);
         if (parsedBirthDate >= today) {
-          errors.date_of_birth = i18n._(
-            msg`Date of birth must be in the past`
-          );
+          errors.date_of_birth = i18n._(msg`Date of birth must be in the past`);
         } else {
           normalizedData.date_of_birth = birthDate.iso;
           normalizedBirthDateDisplay = birthDate.formatted;
@@ -521,7 +522,9 @@ export function EmployeeCreate() {
                     <Trans>Date of Birth</Trans> *
                   </Label>
                   <Description id={getFieldDescriptionId("date_of_birth")}>
-                    {i18n.locale === "de" ? "Erforderlich. Format TT.MM.JJJJ" : "Required. Use format MM/DD/YYYY"}
+                    {i18n.locale === "de"
+                      ? "Erforderlich. Format TT.MM.JJJJ"
+                      : "Required. Use format MM/DD/YYYY"}
                   </Description>
                   <Input
                     id="date_of_birth"
@@ -556,9 +559,9 @@ export function EmployeeCreate() {
                         setFieldErrors((prev) => ({
                           ...prev,
                           date_of_birth:
-                          i18n.locale === "de"
-                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
-                            : "Invalid date. Please use format MM/DD/YYYY"
+                            i18n.locale === "de"
+                              ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+                              : "Invalid date. Please use format MM/DD/YYYY",
                         }));
                       }
                     }}
@@ -643,8 +646,12 @@ export function EmployeeCreate() {
                   <Label htmlFor="contract_start_date">
                     <Trans>Contract Start Date</Trans> *
                   </Label>
-                  <Description id={getFieldDescriptionId("contract_start_date")}>
-                    {i18n.locale === "de" ? "Erforderlich. Format TT.MM.JJJJ" : "Required. Use format MM/DD/YYYY"}
+                  <Description
+                    id={getFieldDescriptionId("contract_start_date")}
+                  >
+                    {i18n.locale === "de"
+                      ? "Erforderlich. Format TT.MM.JJJJ"
+                      : "Required. Use format MM/DD/YYYY"}
                   </Description>
                   <Input
                     id="contract_start_date"
@@ -685,9 +692,9 @@ export function EmployeeCreate() {
                         setFieldErrors((prev) => ({
                           ...prev,
                           contract_start_date:
-                          i18n.locale === "de"
-                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
-                            : "Invalid date. Please use format MM/DD/YYYY"
+                            i18n.locale === "de"
+                              ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+                              : "Invalid date. Please use format MM/DD/YYYY",
                         }));
                       }
                     }}
@@ -703,8 +710,13 @@ export function EmployeeCreate() {
                   <Label htmlFor="organizational_unit_id">
                     <Trans>Organizational Unit</Trans> *
                   </Label>
-                  <Description id={getFieldDescriptionId("organizational_unit_id")}>
-                    <Trans>Required. Select the employee's primary organizational unit.</Trans>
+                  <Description
+                    id={getFieldDescriptionId("organizational_unit_id")}
+                  >
+                    <Trans>
+                      Required. Select the employee's primary organizational
+                      unit.
+                    </Trans>
                   </Description>
                   <Select
                     id="organizational_unit_id"
@@ -743,7 +755,9 @@ export function EmployeeCreate() {
                     ))}
                   </Select>
                   {fieldErrors.organizational_unit_id && (
-                    <ErrorMessage id={getFieldErrorId("organizational_unit_id")}>
+                    <ErrorMessage
+                      id={getFieldErrorId("organizational_unit_id")}
+                    >
                       {fieldErrors.organizational_unit_id}
                     </ErrorMessage>
                   )}
@@ -841,7 +855,10 @@ export function EmployeeCreate() {
                     <Trans>Status</Trans> *
                   </Label>
                   <Description id={getFieldDescriptionId("status")}>
-                    <Trans>Required. This controls the employee's current lifecycle state.</Trans>
+                    <Trans>
+                      Required. This controls the employee's current lifecycle
+                      state.
+                    </Trans>
                   </Description>
                   <Select
                     id="status"
@@ -885,7 +902,9 @@ export function EmployeeCreate() {
                     <Trans>Contract Type</Trans> *
                   </Label>
                   <Description id={getFieldDescriptionId("contract_type")}>
-                    <Trans>Required. Choose the contract model for this employee.</Trans>
+                    <Trans>
+                      Required. Choose the contract model for this employee.
+                    </Trans>
                   </Description>
                   <Select
                     id="contract_type"
