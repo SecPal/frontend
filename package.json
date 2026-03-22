@@ -121,7 +121,8 @@
     "flatted": "3.4.2",
     "@isaacs/brace-expansion": ">=5.0.1",
     "minimatch": ">=10.2.4",
-    "yauzl": "3.2.1"
+    "yauzl": "3.2.1",
+    "glob": "^13.0.6"
   },
   "engines": {
     "node": ">=20.0.0",
