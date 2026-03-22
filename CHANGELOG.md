@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
+  deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
+  replaced by a current, non-deprecated release; the remaining deprecated
+  transitive packages inside `workbox-build@7.4.0` (`sourcemap-codec@1.4.8`,
+  `source-map@0.8.0-beta.0`) are blocked upstream and tracked separately
+  (closes #558, remaining items blocked by upstream `vite-plugin-pwa` /
+  `workbox-build`)
+
 ### Removed
 
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
