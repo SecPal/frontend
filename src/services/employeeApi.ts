@@ -117,7 +117,7 @@ export async function createEmployee(
       throw new ApiError(
         errorMessages || error.message || "Validation failed",
         response.status,
-        error.errors,
+        Object.keys(error.errors).length > 0 ? error.errors : undefined,
         response
       );
     }

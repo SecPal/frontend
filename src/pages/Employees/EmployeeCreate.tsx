@@ -394,6 +394,7 @@ export function EmployeeCreate() {
             )
           );
           focusFirstInvalidField(apiFieldErrors);
+          return;
         }
         errorMessage = err.message;
       } else if (err instanceof Error) {
@@ -402,9 +403,7 @@ export function EmployeeCreate() {
         errorMessage = String(err.message);
       }
 
-      if (!(err instanceof ApiError && err.isValidationError() && err.errors)) {
-        setError(errorMessage);
-      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
