@@ -68,9 +68,7 @@ describe("App", () => {
   it("renders login form", async () => {
     await renderWithI18n(<App />);
     expect(
-      screen.queryByText(/A guard's best friend/i, {
-        selector: "p",
-      })
+      screen.queryByText(/Your digital guard companion/i)
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
