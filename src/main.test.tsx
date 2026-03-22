@@ -54,7 +54,9 @@ describe("AppWithI18n Integration", () => {
     });
 
     // Check for English text on Login page
-    expect(screen.getByRole("heading", { name: /Log in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Log in/i })
+    ).toBeInTheDocument();
   });
 
   it("does not render blank/black screen on locale load failure", async () => {

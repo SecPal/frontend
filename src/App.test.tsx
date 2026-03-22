@@ -60,7 +60,9 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Log in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Log in/i })
+    ).toBeInTheDocument();
   });
 
   it("renders login form", async () => {
