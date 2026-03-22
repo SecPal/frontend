@@ -14,7 +14,6 @@ import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 import {
-  Description,
   ErrorMessage,
   Fieldset,
   Legend,
@@ -83,22 +82,8 @@ export function EmployeeCreate() {
     return `${field}-error`;
   }
 
-  function getFieldDescriptionId(field: EmployeeFormField): string {
-    return `${field}-description`;
-  }
-
-  function getAriaDescribedBy(
-    field: EmployeeFormField,
-    descriptionId?: string
-  ): string | undefined {
-    const ids = [
-      descriptionId,
-      fieldErrors[field] ? getFieldErrorId(field) : null,
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-    return ids || undefined;
+  function getAriaDescribedBy(field: EmployeeFormField): string | undefined {
+    return fieldErrors[field] ? getFieldErrorId(field) : undefined;
   }
 
   function setFieldRef(field: EmployeeFormField, element: HTMLElement | null) {
@@ -447,10 +432,6 @@ export function EmployeeCreate() {
           <Trans>Create New Employee</Trans>
         </Heading>
 
-        <Text className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-          <Trans>Required fields are marked with *</Trans>
-        </Text>
-
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           {submitFeedback && (
             <div
@@ -521,11 +502,6 @@ export function EmployeeCreate() {
                   <Label htmlFor="date_of_birth">
                     <Trans>Date of Birth</Trans> *
                   </Label>
-                  <Description id={getFieldDescriptionId("date_of_birth")}>
-                    {i18n.locale === "de"
-                      ? "Erforderlich. Format TT.MM.JJJJ"
-                      : "Required. Use format MM/DD/YYYY"}
-                  </Description>
                   <Input
                     id="date_of_birth"
                     ref={(element) => setFieldRef("date_of_birth", element)}
@@ -533,10 +509,7 @@ export function EmployeeCreate() {
                     name="date_of_birth"
                     required
                     aria-invalid={fieldErrors.date_of_birth ? true : undefined}
-                    aria-describedby={getAriaDescribedBy(
-                      "date_of_birth",
-                      getFieldDescriptionId("date_of_birth")
-                    )}
+                    aria-describedby={getAriaDescribedBy("date_of_birth")}
                     data-invalid={fieldErrors.date_of_birth ? true : undefined}
                     placeholder={
                       i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
@@ -646,13 +619,6 @@ export function EmployeeCreate() {
                   <Label htmlFor="contract_start_date">
                     <Trans>Contract Start Date</Trans> *
                   </Label>
-                  <Description
-                    id={getFieldDescriptionId("contract_start_date")}
-                  >
-                    {i18n.locale === "de"
-                      ? "Erforderlich. Format TT.MM.JJJJ"
-                      : "Required. Use format MM/DD/YYYY"}
-                  </Description>
                   <Input
                     id="contract_start_date"
                     ref={(element) =>
@@ -664,10 +630,7 @@ export function EmployeeCreate() {
                     aria-invalid={
                       fieldErrors.contract_start_date ? true : undefined
                     }
-                    aria-describedby={getAriaDescribedBy(
-                      "contract_start_date",
-                      getFieldDescriptionId("contract_start_date")
-                    )}
+                    aria-describedby={getAriaDescribedBy("contract_start_date")}
                     data-invalid={
                       fieldErrors.contract_start_date ? true : undefined
                     }
@@ -710,14 +673,6 @@ export function EmployeeCreate() {
                   <Label htmlFor="organizational_unit_id">
                     <Trans>Organizational Unit</Trans> *
                   </Label>
-                  <Description
-                    id={getFieldDescriptionId("organizational_unit_id")}
-                  >
-                    <Trans>
-                      Required. Select the employee's primary organizational
-                      unit.
-                    </Trans>
-                  </Description>
                   <Select
                     id="organizational_unit_id"
                     ref={(element) =>
@@ -729,8 +684,7 @@ export function EmployeeCreate() {
                       fieldErrors.organizational_unit_id ? true : undefined
                     }
                     aria-describedby={getAriaDescribedBy(
-                      "organizational_unit_id",
-                      getFieldDescriptionId("organizational_unit_id")
+                      "organizational_unit_id"
                     )}
                     data-invalid={
                       fieldErrors.organizational_unit_id ? true : undefined
@@ -783,15 +737,6 @@ export function EmployeeCreate() {
                       }}
                     />
                   </div>
-                  <Text
-                    id={getFieldDescriptionId("management_level")}
-                    className="text-sm text-zinc-600 dark:text-zinc-400"
-                  >
-                    <Trans>
-                      Management level is required only when Leadership Position
-                      is enabled.
-                    </Trans>
-                  </Text>
 
                   <Field>
                     <span
@@ -824,8 +769,7 @@ export function EmployeeCreate() {
                             fieldErrors.management_level ? true : undefined
                           }
                           aria-describedby={getAriaDescribedBy(
-                            "management_level",
-                            getFieldDescriptionId("management_level")
+                            "management_level"
                           )}
                           value={
                             isLeadership && formData.management_level > 0
@@ -854,22 +798,13 @@ export function EmployeeCreate() {
                   <Label htmlFor="status">
                     <Trans>Status</Trans> *
                   </Label>
-                  <Description id={getFieldDescriptionId("status")}>
-                    <Trans>
-                      Required. This controls the employee's current lifecycle
-                      state.
-                    </Trans>
-                  </Description>
                   <Select
                     id="status"
                     ref={(element) => setFieldRef("status", element)}
                     name="status"
                     required
                     aria-invalid={fieldErrors.status ? true : undefined}
-                    aria-describedby={getAriaDescribedBy(
-                      "status",
-                      getFieldDescriptionId("status")
-                    )}
+                    aria-describedby={getAriaDescribedBy("status")}
                     data-invalid={fieldErrors.status ? true : undefined}
                     value={formData.status}
                     onChange={(e) => handleChange("status", e.target.value)}
@@ -901,21 +836,13 @@ export function EmployeeCreate() {
                   <Label htmlFor="contract_type">
                     <Trans>Contract Type</Trans> *
                   </Label>
-                  <Description id={getFieldDescriptionId("contract_type")}>
-                    <Trans>
-                      Required. Choose the contract model for this employee.
-                    </Trans>
-                  </Description>
                   <Select
                     id="contract_type"
                     ref={(element) => setFieldRef("contract_type", element)}
                     name="contract_type"
                     required
                     aria-invalid={fieldErrors.contract_type ? true : undefined}
-                    aria-describedby={getAriaDescribedBy(
-                      "contract_type",
-                      getFieldDescriptionId("contract_type")
-                    )}
+                    aria-describedby={getAriaDescribedBy("contract_type")}
                     data-invalid={fieldErrors.contract_type ? true : undefined}
                     value={formData.contract_type}
                     onChange={(e) =>
