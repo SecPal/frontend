@@ -10,6 +10,7 @@ import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import { ApiError } from "../../services/ApiError";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
@@ -293,6 +294,131 @@ describe("EmployeeCreate", () => {
     expect(select).toBeDisabled();
     const loadingText = screen.getByText(/loading/i);
     expect(loadingText).toBeInTheDocument();
+  });
+
+  it("should show a visible submit summary, inline errors, and focus the first invalid field", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    submitEmployeeCreateForm();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please correct the highlighted fields before submitting/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText(/first name is required/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/date of birth is required/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/organizational unit is required/i).length
+    ).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/first name/i)).toHaveFocus();
+    expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
+  });
+
+  it("should require management level when leadership is enabled", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "john@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "01/01/1990" },
+    });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
+    fireEvent.change(screen.getByLabelText("Position *"), {
+      target: { value: "Team Lead" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "01/01/2025" },
+    });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
+    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+      target: { value: "unit-1" },
+    });
+
+    fireEvent.click(screen.getByRole("switch"));
+    submitEmployeeCreateForm();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/management level is required when leadership position is enabled/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("spinbutton")).toHaveFocus();
+    expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
+  });
+
+  it("should show inline field errors from API validation responses", async () => {
+    const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+    mockCreateEmployee.mockRejectedValue(
+      new ApiError(
+        "Validation failed",
+        422,
+        {
+          email: ["Email address is already in use"],
+          organizational_unit_id: ["Please select an organizational unit"],
+        }
+      )
+    );
+
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "john@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "01/01/1990" },
+    });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
+    fireEvent.change(screen.getByLabelText("Position *"), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "01/01/2025" },
+    });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
+    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+      target: { value: "unit-1" },
+    });
+
+    submitEmployeeCreateForm();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/email address is already in use/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/please select an organizational unit/i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toHaveFocus();
   });
 
   it("should handle organizational units loading error gracefully", async () => {

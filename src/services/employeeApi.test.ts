@@ -10,6 +10,7 @@ import {
   activateEmployee,
   terminateEmployee,
 } from "./employeeApi";
+import { ApiError } from "./ApiError";
 
 // Mock the global fetch
 const mockFetch = vi.fn();
@@ -182,6 +183,43 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
   });
 
   describe("Error response handling", () => {
+    it("should preserve structured validation errors for 422 responses", async () => {
+      const mockEmployee: EmployeeFormData = {
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@example.com",
+        position: "Developer",
+        date_of_birth: "1990-01-01",
+        contract_start_date: "2025-01-01",
+        organizational_unit_id: "unit-1",
+        status: "pre_contract",
+        contract_type: "full_time",
+        management_level: 0,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        statusText: "Unprocessable Entity",
+        json: vi.fn().mockResolvedValue({
+          message: "The given data was invalid.",
+          errors: {
+            email: ["Email address is already in use"],
+            organizational_unit_id: ["Organizational unit is required"],
+          },
+        }),
+      });
+
+      await expect(createEmployee(mockEmployee)).rejects.toMatchObject({
+        name: "ApiError",
+        statusCode: 422,
+        errors: {
+          email: ["Email address is already in use"],
+          organizational_unit_id: ["Organizational unit is required"],
+        },
+      });
+    });
+
     it("should handle error responses with JSON parsing failure", async () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",
@@ -207,6 +245,35 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       await expect(createEmployee(mockEmployee)).rejects.toThrow(
         "Internal Server Error"
       );
+    });
+
+    it("should throw ApiError for validation failures", async () => {
+      const mockEmployee: EmployeeFormData = {
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@example.com",
+        position: "Developer",
+        date_of_birth: "1990-01-01",
+        contract_start_date: "2025-01-01",
+        organizational_unit_id: "unit-1",
+        status: "pre_contract",
+        contract_type: "full_time",
+        management_level: 0,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        statusText: "Unprocessable Entity",
+        json: vi.fn().mockResolvedValue({
+          message: "The given data was invalid.",
+          errors: {
+            email: ["Email address is already in use"],
+          },
+        }),
+      });
+
+      await expect(createEmployee(mockEmployee)).rejects.toBeInstanceOf(ApiError);
     });
   });
 });

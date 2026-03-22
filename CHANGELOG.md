@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Made the employee create form fail loudly instead of silently by adding Catalyst-aligned submit summaries, inline field errors, first-invalid-field focus, clearer required-field guidance for Date of Birth, Organizational Unit, Status, Contract Type, and the Leadership Position/Management Level relationship, plus structured handling for API validation errors
 - Replaced the incomplete `public/logo-light.svg` and `public/logo-dark.svg` placeholder contents with valid SVG logo assets that render the canonical frontend light and dark branding outputs correctly
 - Moved the local Lighthouse CI CLI to on-demand `npx` execution so regular frontend installs no longer pull the deprecated `@lhci/cli` dependency chain that emitted `rimraf`, `glob@7`, and `inflight` warnings during pre-push installs
 - Aligned `eslint` and `@eslint/js` with the `eslint-plugin-react-hooks` peer range by moving both packages back to the latest compatible 9.x line, so `npm ls` no longer reports an invalid frontend lint dependency tree; documented in `docs/KNOWN_ISSUES.md` that the global `minimatch: >=10.2.4` override is intentional and confirmed compatible with ESLint 9 by CI
