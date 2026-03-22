@@ -273,9 +273,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         }),
       });
 
-      await expect(createEmployee(mockEmployee)).rejects.toBeInstanceOf(
-        ApiError
-      );
+      await expect(createEmployee(mockEmployee)).rejects.toBeInstanceOf(ApiError);
     });
   });
 });

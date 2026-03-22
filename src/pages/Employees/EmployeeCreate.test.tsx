@@ -307,18 +307,12 @@ describe("EmployeeCreate", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /please correct the highlighted fields before submitting/i
-        )
+        screen.getByText(/please correct the highlighted fields before submitting/i)
       ).toBeInTheDocument();
     });
 
-    expect(
-      screen.getAllByText(/first name is required/i).length
-    ).toBeGreaterThan(0);
-    expect(
-      screen.getAllByText(/date of birth is required/i).length
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/first name is required/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/date of birth is required/i).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/organizational unit is required/i).length
     ).toBeGreaterThan(0);
@@ -362,9 +356,7 @@ describe("EmployeeCreate", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /management level is required when leadership position is enabled/i
-        )
+        screen.getByText(/management level is required when leadership position is enabled/i)
       ).toBeInTheDocument();
     });
 
@@ -375,10 +367,14 @@ describe("EmployeeCreate", () => {
   it("should show inline field errors from API validation responses", async () => {
     const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
     mockCreateEmployee.mockRejectedValue(
-      new ApiError("Validation failed", 422, {
-        email: ["Email address is already in use"],
-        organizational_unit_id: ["Please select an organizational unit"],
-      })
+      new ApiError(
+        "Validation failed",
+        422,
+        {
+          email: ["Email address is already in use"],
+          organizational_unit_id: ["Please select an organizational unit"],
+        }
+      )
     );
 
     renderWithProviders(<EmployeeCreate />);
