@@ -208,6 +208,5 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         "Internal Server Error"
       );
     });
-
   });
 });
