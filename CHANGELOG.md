@@ -63,7 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.github/copilot-instructions.md` now clarifies that if an edited file has no inline SPDX header, its companion `.license` file must be checked and updated instead
 - repo-local frontend instructions and overlays now also restate Copilot review handling, signed-commit checks, EPIC/sub-issue requirements, REUSE checks, 4-pass review, and the `secpal.app` vs `secpal.dev` use-case split so project-wide governance is locally complete
 - repo-local frontend instructions and overlays now also require warning, audit, and deprecation notices from scripts and package managers to be reviewed and either fixed or tracked immediately
-- Replaced the login-page subtitle `Your digital guard companion` with the reduced claim `A guard's best friend` so the auth entrypoint keeps the established slogan without duplicating the footer-only `Powered by` framing
+- Changed the English login email field label from `Email` to `Email address` for clearer authentication microcopy without altering the rest of the screen
+- Changed the login-page heading from `Login` to `Log in` for consistent authentication microcopy while leaving the rest of the screen unchanged
+- Removed the login-page subtitle so the auth entrypoint shows only the product name and keeps the footer slogan as the sole claim treatment
 - Synchronized the frontend Lingui catalogs with Translation.io so the updated German login and tagline-related copy is reflected locally after the recent remote translation refresh
 - Standardized the frontend-visible SecPal tagline to `Powered by SecPal – A guard's best friend` across footer text, landing copy, tests, and generated locale catalogs; the tagline is intentionally identical in all locales (no translation)
 - Marked `docs/PERFORMANCE_ANALYSIS_2025-12-06.md` as historical reference material so it is not mistaken for the current frontend optimization plan

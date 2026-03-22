@@ -61,7 +61,7 @@ msgid "{pendingOps} operation(s) pending"
 msgstr "{pendingOps} operation(s) pending"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:250
+#: src/pages/Login.tsx:247
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
@@ -81,10 +81,6 @@ msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
-
-#: src/pages/Login.tsx:146
-msgid "A guard's best friend"
-msgstr "A guard's best friend"
 
 #: src/components/UpdatePrompt.tsx:71
 msgid "A new version of SecPal is available."
@@ -325,7 +321,7 @@ msgid "Certificate:"
 msgstr "Certificate:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:311
+#: src/pages/Login.tsx:308
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
@@ -634,11 +630,6 @@ msgstr "Edit Site"
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Editing organizational units is not possible while offline. Please reconnect to make changes."
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:261
-msgid "login.email"
-msgstr "Email"
-
 #: src/pages/Customers/CustomerCreate.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:168
 #: src/pages/Customers/CustomerEdit.tsx:251
@@ -651,6 +642,11 @@ msgstr "Email"
 #: src/pages/Sites/SiteEdit.tsx:360
 msgid "Email"
 msgstr "Email"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:258
+msgid "login.email"
+msgstr "Email address"
 
 #: src/pages/Employees/EmployeeList.tsx:244
 msgid "Employee"
@@ -948,12 +944,17 @@ msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:313
+#: src/pages/Login.tsx:310
 msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:319
+#: src/pages/Login.tsx:143
+msgid "login.title"
+msgstr "Log in"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:316
 msgid "login.submit"
 msgstr "Log in"
 
@@ -964,17 +965,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:317
+#: src/pages/Login.tsx:314
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:143
-msgid "login.title"
-msgstr "Login"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:173
+#: src/pages/Login.tsx:170
 msgid "login.offlineWarning.message"
 msgstr "Login requires an internet connection. Please check your connection and try again."
 
@@ -1178,7 +1174,7 @@ msgid "No documents uploaded"
 msgstr "No documents uploaded"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:168
+#: src/pages/Login.tsx:165
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
@@ -1319,7 +1315,7 @@ msgid "Part Time"
 msgstr "Part Time"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:279
+#: src/pages/Login.tsx:276
 msgid "login.password"
 msgstr "Password"
 
@@ -1373,7 +1369,7 @@ msgid "Photo must be smaller than 2MB"
 msgstr "Photo must be smaller than 2MB"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:229
+#: src/pages/Login.tsx:226
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
@@ -1693,7 +1689,7 @@ msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:197
+#: src/pages/Login.tsx:194
 msgid "login.healthWarning.title"
 msgstr "System not ready"
 
@@ -1733,7 +1729,7 @@ msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:200
+#: src/pages/Login.tsx:197
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
@@ -1776,7 +1772,7 @@ msgid "Too many attempts. Please try again later."
 msgstr "Too many attempts. Please try again later."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:224
+#: src/pages/Login.tsx:221
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 

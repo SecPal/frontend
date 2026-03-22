@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-03-22 16:13+0000\n"
+"POT-Creation-Date: 2026-03-22 16:48+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -55,7 +55,7 @@ msgid "{pendingOps} operation(s) pending"
 msgstr "{pendingOps} ausstehende(r) Vorgang(e)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:250
+#: src/pages/Login.tsx:247
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
@@ -75,10 +75,6 @@ msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivit�
 #: src/components/NotificationPreferences.tsx:323
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
-
-#: src/pages/Login.tsx:146
-msgid "A guard's best friend"
-msgstr "A guard's best friend"
 
 #: src/components/UpdatePrompt.tsx:71
 msgid "A new version of SecPal is available."
@@ -319,7 +315,7 @@ msgid "Certificate:"
 msgstr "Zertifikat:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:311
+#: src/pages/Login.tsx:308
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
@@ -628,11 +624,6 @@ msgstr "Standort bearbeiten"
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:261
-msgid "login.email"
-msgstr "E-Mail"
-
 #: src/pages/Customers/CustomerCreate.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:168
 #: src/pages/Customers/CustomerEdit.tsx:251
@@ -644,7 +635,12 @@ msgstr "E-Mail"
 #: src/pages/Sites/SiteDetail.tsx:194
 #: src/pages/Sites/SiteEdit.tsx:360
 msgid "Email"
-msgstr "E-Mail"
+msgstr "E-Mail-Adresse"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:258
+msgid "login.email"
+msgstr "E-Mail-Adresse"
 
 #: src/pages/Employees/EmployeeList.tsx:244
 msgid "Employee"
@@ -942,12 +938,17 @@ msgid "Loading..."
 msgstr "Laden..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:313
+#: src/pages/Login.tsx:310
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:319
+#: src/pages/Login.tsx:143
+msgid "login.title"
+msgstr "Einloggen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:316
 msgid "login.submit"
 msgstr "Einloggen"
 
@@ -958,17 +959,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:317
+#: src/pages/Login.tsx:314
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:143
-msgid "login.title"
-msgstr "Einloggen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:173
+#: src/pages/Login.tsx:170
 msgid "login.offlineWarning.message"
 msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
@@ -1172,7 +1168,7 @@ msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:168
+#: src/pages/Login.tsx:165
 msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
@@ -1313,7 +1309,7 @@ msgid "Part Time"
 msgstr "Teilzeit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:279
+#: src/pages/Login.tsx:276
 msgid "login.password"
 msgstr "Passwort"
 
@@ -1367,7 +1363,7 @@ msgid "Photo must be smaller than 2MB"
 msgstr "Das Foto muss kleiner als 2 MB sein"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:229
+#: src/pages/Login.tsx:226
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
@@ -1687,7 +1683,7 @@ msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:197
+#: src/pages/Login.tsx:194
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
@@ -1727,7 +1723,7 @@ msgid "The new unit will be created under this parent."
 msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:200
+#: src/pages/Login.tsx:197
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
@@ -1770,7 +1766,7 @@ msgid "Too many attempts. Please try again later."
 msgstr "Zu viele Versuche. Bitte versuchen Sie es später noch einmal."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:224
+#: src/pages/Login.tsx:221
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 

@@ -37,7 +37,7 @@ describe("AppWithI18n Integration", () => {
 
     // Verify app actually rendered - should show login page when not authenticated
     await waitFor(() => {
-      const loginHeading = screen.getByRole("heading", { name: /Login/i });
+      const loginHeading = screen.getByRole("heading", { name: /Log in/i });
       expect(loginHeading).toBeInTheDocument();
     });
   });
@@ -54,7 +54,7 @@ describe("AppWithI18n Integration", () => {
     });
 
     // Check for English text on Login page
-    expect(screen.getByRole("heading", { name: /Login/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Log in/i })).toBeInTheDocument();
   });
 
   it("does not render blank/black screen on locale load failure", async () => {

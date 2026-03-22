@@ -140,11 +140,8 @@ export function Login() {
       </div>
 
       <h2 className="mt-8 text-2xl font-semibold">
-        <Trans id="login.title">Login</Trans>
+        <Trans id="login.title">Log in</Trans>
       </h2>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        <Trans>A guard's best friend</Trans>
-      </p>
 
       <form
         onSubmit={handleSubmit}
@@ -258,7 +255,7 @@ export function Login() {
 
         <Field>
           <Label htmlFor="email">
-            <Trans id="login.email">Email</Trans>
+            <Trans id="login.email">Email address</Trans>
           </Label>
           <Input
             id="email"
