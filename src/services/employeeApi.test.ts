@@ -11,6 +11,9 @@ import {
   terminateEmployee,
 } from "./employeeApi";
 
+type IsOptional<T, K extends keyof T> =
+  Record<never, never> extends Pick<T, K> ? true : false;
+
 // Mock the global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -31,6 +34,28 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
   });
 
   describe("createEmployee", () => {
+    it("should keep contract-required employee create fields mandatory in the type", () => {
+      const dateOfBirthIsOptional: IsOptional<
+        EmployeeFormData,
+        "date_of_birth"
+      > = false;
+      const positionIsOptional: IsOptional<EmployeeFormData, "position"> =
+        false;
+      const contractStartDateIsOptional: IsOptional<
+        EmployeeFormData,
+        "contract_start_date"
+      > = false;
+      const organizationalUnitIdIsOptional: IsOptional<
+        EmployeeFormData,
+        "organizational_unit_id"
+      > = false;
+
+      expect(dateOfBirthIsOptional).toBe(false);
+      expect(positionIsOptional).toBe(false);
+      expect(contractStartDateIsOptional).toBe(false);
+      expect(organizationalUnitIdIsOptional).toBe(false);
+    });
+
     it("should throw error when JSON parsing fails on success response", async () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",

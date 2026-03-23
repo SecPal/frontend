@@ -81,7 +81,7 @@ export interface EmployeeFormData {
   phone?: string;
   date_of_birth: string;
   contract_start_date: string;
-  position?: string;
+  position: string;
   organizational_unit_id: string;
   management_level: number;
   hire_date?: string;
