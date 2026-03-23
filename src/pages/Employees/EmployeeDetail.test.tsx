@@ -54,6 +54,14 @@ const mockEmployee: Employee = {
   status: "active",
   contract_type: "full_time",
   management_level: 0,
+  onboarding_invitation: {
+    status: "sent",
+    requested_at: "2025-01-01T09:00:00Z",
+    token_created_at: "2025-01-01T09:00:00Z",
+    mail_sent_at: "2025-01-01T09:01:00Z",
+    mail_failed_at: null,
+    failure_reason: null,
+  },
   organizational_unit: {
     id: "unit-1",
     name: "Engineering",
@@ -88,6 +96,31 @@ describe("EmployeeDetail", () => {
     expect(screen.getByText("+1234567890")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("should display onboarding invitation failure details", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      onboarding_invitation: {
+        status: "created_not_sent",
+        requested_at: "2025-01-01T09:00:00Z",
+        token_created_at: "2025-01-01T09:00:00Z",
+        mail_sent_at: null,
+        mail_failed_at: "2025-01-01T09:02:00Z",
+        failure_reason: "Frontend URL or employee email not configured",
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Created, but not sent")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText("Frontend URL or employee email not configured")
+    ).toBeInTheDocument();
   });
 
   it("should display active status badge", async () => {

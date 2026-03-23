@@ -30,6 +30,21 @@ import {
   DescriptionDetails,
 } from "../../components/description-list";
 
+function InvitationStatusLabel({ status }: { status: string }) {
+  switch (status) {
+    case "sent":
+      return <Trans>Sent</Trans>;
+    case "created_not_sent":
+      return <Trans>Created, but not sent</Trans>;
+    case "failed":
+      return <Trans>Failed</Trans>;
+    case "not_requested":
+      return <Trans>Not requested</Trans>;
+    default:
+      return <>{status}</>;
+  }
+}
+
 /**
  * Status badge component using Catalyst Badge
  */
@@ -62,6 +77,8 @@ function StatusBadge({ status }: { status: string }) {
  */
 function ProfileTab({ employee }: { employee: Employee }) {
   const { i18n } = useLingui();
+  const onboardingInvitation = employee.onboarding_invitation;
+
   return (
     <DescriptionList>
       <DescriptionTerm>
@@ -134,6 +151,42 @@ function ProfileTab({ employee }: { employee: Employee }) {
       </DescriptionTerm>
       <DescriptionDetails>
         {employee.organizational_unit?.name || "-"}
+      </DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Onboarding Invitation</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {onboardingInvitation ? (
+          <InvitationStatusLabel status={onboardingInvitation.status} />
+        ) : (
+          "-"
+        )}
+      </DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Invitation Requested</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {onboardingInvitation?.requested_at
+          ? formatDate(onboardingInvitation.requested_at, i18n.locale)
+          : "-"}
+      </DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Invitation Mail Sent</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {onboardingInvitation?.mail_sent_at
+          ? formatDate(onboardingInvitation.mail_sent_at, i18n.locale)
+          : "-"}
+      </DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Invitation Failure Reason</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>
+        {onboardingInvitation?.failure_reason || "-"}
       </DescriptionDetails>
     </DescriptionList>
   );

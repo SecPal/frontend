@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- aligned the employee create UI and API types with the invite-enabled backend flow by adding `send_invitation` to the create payload and surfacing persisted onboarding invitation delivery status on employee detail pages
 - Aligned the frontend employee create payload type with the shared contract by making `EmployeeFormData.position` mandatory, matching the existing required create-form validation and backend/runtime expectations (fixes #578)
 - Made the employee create form fail loudly instead of silently by adding Catalyst-aligned submit summaries, inline field errors, first-invalid-field focus, clearer required-field guidance for Date of Birth, Organizational Unit, Status, Contract Type, and the Leadership Position/Management Level relationship, plus structured handling for API validation errors
 - Synchronized the employee create Lingui catalogs and finalized the shipped German validation and helper copy so the recent form-usability messages are present in both source and compiled locale bundles
