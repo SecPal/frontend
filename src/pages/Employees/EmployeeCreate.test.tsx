@@ -39,12 +39,6 @@ const renderWithProviders = (component: React.ReactNode) => {
   );
 };
 
-function getLeadershipSwitch() {
-  const switchElement = document.getElementById("is_leadership");
-  expect(switchElement).toBeInstanceOf(HTMLButtonElement);
-  return switchElement as HTMLButtonElement;
-}
-
 function submitEmployeeCreateForm() {
   fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 }
@@ -369,7 +363,7 @@ describe("EmployeeCreate", () => {
       target: { value: "unit-1" },
     });
 
-    fireEvent.click(getLeadershipSwitch());
+    fireEvent.click(screen.getByRole("switch", { name: /leadership/i }));
     submitEmployeeCreateForm();
 
     await waitFor(() => {
@@ -624,7 +618,7 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = getLeadershipSwitch();
+      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
       expect(leadershipSwitch).not.toBeChecked();
 
       // Enable leadership
@@ -643,7 +637,7 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = getLeadershipSwitch();
+      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
 
       // Enable leadership and set management level
       fireEvent.click(leadershipSwitch);
@@ -668,7 +662,7 @@ describe("EmployeeCreate", () => {
       });
 
       // Enable leadership
-      const leadershipSwitch = getLeadershipSwitch();
+      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
       fireEvent.click(leadershipSwitch);
 
       const managementLevelInput = screen.getByRole("spinbutton");
@@ -746,7 +740,7 @@ describe("EmployeeCreate", () => {
         });
 
         // Enable leadership and set management level
-        const leadershipSwitch = getLeadershipSwitch();
+        const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
         fireEvent.click(leadershipSwitch);
 
         const managementLevelInput = screen.getByRole("spinbutton");

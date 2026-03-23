@@ -155,6 +155,10 @@ export function EmployeeCreate() {
       position: formData.position?.trim() ?? "",
       organizational_unit_id: formData.organizational_unit_id.trim(),
       management_level: isLeadership ? formData.management_level : 0,
+      send_invitation:
+        formData.status === "pre_contract"
+          ? Boolean(formData.send_invitation)
+          : false,
     };
     let normalizedBirthDateDisplay = birthDateDisplay.trim();
     let normalizedContractDateDisplay = contractDateDisplay.trim();
@@ -422,12 +426,7 @@ export function EmployeeCreate() {
   }
 
   function handleStatusChange(status: EmployeeStatus) {
-    setFormData((prev) => ({
-      ...prev,
-      status,
-      send_invitation:
-        status === "pre_contract" ? (prev.send_invitation ?? true) : false,
-    }));
+    setFormData((prev) => ({ ...prev, status }));
     clearFieldError("status");
     clearSubmitMessages();
   }

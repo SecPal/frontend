@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee } from "@/types/api";
-import { formatDate } from "../../lib/dateUtils";
+import type { Employee, EmployeeOnboardingInvitationStatus } from "@/types/api";
+import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
   fetchEmployee,
   activateEmployee,
@@ -30,7 +30,11 @@ import {
   DescriptionDetails,
 } from "../../components/description-list";
 
-function InvitationStatusLabel({ status }: { status: string }) {
+function InvitationStatusLabel({
+  status,
+}: {
+  status: EmployeeOnboardingInvitationStatus;
+}) {
   switch (status) {
     case "sent":
       return <Trans>Sent</Trans>;
@@ -169,7 +173,7 @@ function ProfileTab({ employee }: { employee: Employee }) {
       </DescriptionTerm>
       <DescriptionDetails>
         {onboardingInvitation?.requested_at
-          ? formatDate(onboardingInvitation.requested_at, i18n.locale)
+          ? formatDateTime(onboardingInvitation.requested_at, i18n.locale)
           : "-"}
       </DescriptionDetails>
 
@@ -178,7 +182,7 @@ function ProfileTab({ employee }: { employee: Employee }) {
       </DescriptionTerm>
       <DescriptionDetails>
         {onboardingInvitation?.mail_sent_at
-          ? formatDate(onboardingInvitation.mail_sent_at, i18n.locale)
+          ? formatDateTime(onboardingInvitation.mail_sent_at, i18n.locale)
           : "-"}
       </DescriptionDetails>
 
