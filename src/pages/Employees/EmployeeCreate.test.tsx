@@ -618,7 +618,9 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
       expect(leadershipSwitch).not.toBeChecked();
 
       // Enable leadership
@@ -637,7 +639,9 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
 
       // Enable leadership and set management level
       fireEvent.click(leadershipSwitch);
@@ -662,7 +666,9 @@ describe("EmployeeCreate", () => {
       });
 
       // Enable leadership
-      const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
       fireEvent.click(leadershipSwitch);
 
       const managementLevelInput = screen.getByRole("spinbutton");
@@ -740,7 +746,9 @@ describe("EmployeeCreate", () => {
         });
 
         // Enable leadership and set management level
-        const leadershipSwitch = screen.getByRole("switch", { name: /leadership/i });
+        const leadershipSwitch = screen.getByRole("switch", {
+          name: /leadership/i,
+        });
         fireEvent.click(leadershipSwitch);
 
         const managementLevelInput = screen.getByRole("spinbutton");
