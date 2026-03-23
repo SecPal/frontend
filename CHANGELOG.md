@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Aligned the frontend employee create payload type with the shared contract by making `EmployeeFormData.position` mandatory, matching the existing required create-form validation and backend/runtime expectations (fixes #578)
 - Made the employee create form fail loudly instead of silently by adding Catalyst-aligned submit summaries, inline field errors, first-invalid-field focus, clearer required-field guidance for Date of Birth, Organizational Unit, Status, Contract Type, and the Leadership Position/Management Level relationship, plus structured handling for API validation errors
 - Synchronized the employee create Lingui catalogs and finalized the shipped German validation and helper copy so the recent form-usability messages are present in both source and compiled locale bundles
 - Replaced the incomplete `public/logo-light.svg` and `public/logo-dark.svg` placeholder contents with valid SVG logo assets that render the canonical frontend light and dark branding outputs correctly
