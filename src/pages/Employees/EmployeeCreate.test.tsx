@@ -132,6 +132,14 @@ describe("EmployeeCreate", () => {
         status: "active",
         contract_type: "full_time",
         management_level: 0,
+        onboarding_invitation: {
+          status: "sent",
+          requested_at: "2025-01-01T00:00:00Z",
+          token_created_at: "2025-01-01T00:00:00Z",
+          mail_sent_at: "2025-01-01T00:00:00Z",
+          mail_failed_at: null,
+          failure_reason: null,
+        },
         organizational_unit: {
           id: "unit-1",
           name: "Main Office",
@@ -207,6 +215,7 @@ describe("EmployeeCreate", () => {
             management_level: 0,
             status: "pre_contract",
             contract_type: "full_time",
+            send_invitation: true,
           });
         },
         { timeout: QUERY_TIMEOUT }
@@ -354,7 +363,7 @@ describe("EmployeeCreate", () => {
       target: { value: "unit-1" },
     });
 
-    fireEvent.click(screen.getByRole("switch"));
+    fireEvent.click(screen.getByRole("switch", { name: /leadership/i }));
     submitEmployeeCreateForm();
 
     await waitFor(() => {
@@ -496,6 +505,31 @@ describe("EmployeeCreate", () => {
     expect(contractTypeSelect).toHaveValue("part_time");
   });
 
+  it("should disable invitation sending for non pre-contract employees", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    const invitationSwitch = screen.getByLabelText(
+      /send onboarding invitation/i
+    );
+    expect(invitationSwitch).toBeChecked();
+
+    fireEvent.change(screen.getByLabelText(/status/i), {
+      target: { value: "active" },
+    });
+
+    expect(invitationSwitch).toBeDisabled();
+    expect(invitationSwitch).not.toBeChecked();
+    expect(
+      screen.getByText(
+        /invitations are only available for employees in pre-contract status/i
+      )
+    ).toBeInTheDocument();
+  });
+
   it("should allow selecting applicant status", async () => {
     renderWithProviders(<EmployeeCreate />);
 
@@ -584,7 +618,9 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = screen.getByRole("switch");
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
       expect(leadershipSwitch).not.toBeChecked();
 
       // Enable leadership
@@ -603,7 +639,9 @@ describe("EmployeeCreate", () => {
         expect(screen.getByText("Main Office")).toBeInTheDocument();
       });
 
-      const leadershipSwitch = screen.getByRole("switch");
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
 
       // Enable leadership and set management level
       fireEvent.click(leadershipSwitch);
@@ -628,7 +666,9 @@ describe("EmployeeCreate", () => {
       });
 
       // Enable leadership
-      const leadershipSwitch = screen.getByRole("switch");
+      const leadershipSwitch = screen.getByRole("switch", {
+        name: /leadership/i,
+      });
       fireEvent.click(leadershipSwitch);
 
       const managementLevelInput = screen.getByRole("spinbutton");
@@ -706,7 +746,9 @@ describe("EmployeeCreate", () => {
         });
 
         // Enable leadership and set management level
-        const leadershipSwitch = screen.getByRole("switch");
+        const leadershipSwitch = screen.getByRole("switch", {
+          name: /leadership/i,
+        });
         fireEvent.click(leadershipSwitch);
 
         const managementLevelInput = screen.getByRole("spinbutton");
