@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import type { EmployeeFormData } from "@/types/api";
+import type { EmployeeFormData, EmployeeStatus } from "@/types/api";
 import { createEmployee } from "../../services/employeeApi";
 import { ApiError } from "../../services/ApiError";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
@@ -76,7 +76,10 @@ export function EmployeeCreate() {
     management_level: 0,
     status: "pre_contract",
     contract_type: "full_time",
+    send_invitation: true,
   });
+
+  const inviteSupported = formData.status === "pre_contract";
 
   function getFieldErrorId(field: EmployeeFormField): string {
     return `${field}-error`;
@@ -152,6 +155,10 @@ export function EmployeeCreate() {
       position: formData.position?.trim() ?? "",
       organizational_unit_id: formData.organizational_unit_id.trim(),
       management_level: isLeadership ? formData.management_level : 0,
+      send_invitation:
+        formData.status === "pre_contract"
+          ? Boolean(formData.send_invitation)
+          : false,
     };
     let normalizedBirthDateDisplay = birthDateDisplay.trim();
     let normalizedContractDateDisplay = contractDateDisplay.trim();
@@ -411,10 +418,16 @@ export function EmployeeCreate() {
 
   function handleChange(
     field: keyof EmployeeFormData,
-    value: string | number | null
+    value: string | number | boolean | null
   ) {
     setFormData((prev) => ({ ...prev, [field]: value }));
     clearFieldError(field);
+    clearSubmitMessages();
+  }
+
+  function handleStatusChange(status: EmployeeStatus) {
+    setFormData((prev) => ({ ...prev, status }));
+    clearFieldError("status");
     clearSubmitMessages();
   }
 
@@ -806,7 +819,9 @@ export function EmployeeCreate() {
                     aria-describedby={getAriaDescribedBy("status")}
                     data-invalid={fieldErrors.status ? true : undefined}
                     value={formData.status}
-                    onChange={(e) => handleChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleStatusChange(e.target.value as EmployeeStatus)
+                    }
                   >
                     <option value="applicant">
                       <Trans>Applicant</Trans>
@@ -866,6 +881,43 @@ export function EmployeeCreate() {
                       {fieldErrors.contract_type}
                     </ErrorMessage>
                   )}
+                </Field>
+
+                <Field>
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-zinc-950/10 px-4 py-3 dark:border-white/10">
+                    <div className="space-y-1">
+                      <Label htmlFor="send_invitation">
+                        <Trans>Send Onboarding Invitation</Trans>
+                      </Label>
+                      <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {inviteSupported ? (
+                          <Trans>
+                            The new employee will receive an onboarding email
+                            immediately after creation.
+                          </Trans>
+                        ) : (
+                          <Trans>
+                            Invitations are only available for employees in
+                            pre-contract status.
+                          </Trans>
+                        )}
+                      </Text>
+                    </div>
+                    <Switch
+                      id="send_invitation"
+                      name="send_invitation"
+                      checked={
+                        Boolean(formData.send_invitation) && inviteSupported
+                      }
+                      disabled={!inviteSupported}
+                      onChange={(checked) =>
+                        handleChange(
+                          "send_invitation",
+                          inviteSupported ? checked : false
+                        )
+                      }
+                    />
+                  </div>
                 </Field>
               </div>
             </FieldGroup>

@@ -68,6 +68,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         status: "active",
         contract_type: "full_time",
         management_level: 0,
+        send_invitation: false,
       };
 
       // Mock response that returns HTML instead of JSON (simulating 500 error page)
@@ -95,6 +96,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         status: "pre_contract",
         contract_type: "full_time",
         management_level: 0,
+        send_invitation: true,
       };
 
       const expectedEmployee = {
@@ -106,6 +108,14 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         organizational_unit: { id: "unit-1", name: "Engineering" },
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
+        onboarding_invitation: {
+          status: "sent",
+          requested_at: "2025-01-01T00:00:00Z",
+          token_created_at: "2025-01-01T00:00:00Z",
+          mail_sent_at: "2025-01-01T00:00:01Z",
+          mail_failed_at: null,
+          failure_reason: null,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -147,10 +157,20 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         date_of_birth: "1990-01-01",
         contract_start_date: "2025-01-01",
         status: "active" as const,
+        contract_type: "full_time" as const,
+        management_level: 0,
         phone: null,
         organizational_unit: { id: "unit-1", name: "Engineering" },
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
+        onboarding_invitation: {
+          status: "not_requested" as const,
+          requested_at: null,
+          token_created_at: null,
+          mail_sent_at: null,
+          mail_failed_at: null,
+          failure_reason: null,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({

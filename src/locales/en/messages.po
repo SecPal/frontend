@@ -69,8 +69,8 @@ msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:425
-#: src/pages/Employees/EmployeeDetail.tsx:400
+#: src/pages/Employees/EmployeeCreate.tsx:439
+#: src/pages/Employees/EmployeeDetail.tsx:453
 msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
@@ -115,7 +115,7 @@ msgstr "Actions"
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:416
+#: src/pages/Employees/EmployeeDetail.tsx:469
 msgid "Activate"
 msgstr "Activate"
 
@@ -124,8 +124,8 @@ msgstr "Activate"
 #: src/pages/Customers/CustomerEdit.tsx:297
 #: src/pages/Customers/CustomersPage.tsx:121
 #: src/pages/Customers/CustomersPage.tsx:190
-#: src/pages/Employees/EmployeeCreate.tsx:818
-#: src/pages/Employees/EmployeeDetail.tsx:48
+#: src/pages/Employees/EmployeeCreate.tsx:834
+#: src/pages/Employees/EmployeeDetail.tsx:63
 #: src/pages/Employees/EmployeeList.tsx:43
 #: src/pages/Employees/EmployeeList.tsx:215
 #: src/pages/Sites/SiteCreate.tsx:482
@@ -222,8 +222,8 @@ msgstr "An unexpected error occurred"
 msgid "App updates and maintenance notifications"
 msgstr "App updates and maintenance notifications"
 
-#: src/pages/Employees/EmployeeCreate.tsx:812
-#: src/pages/Employees/EmployeeDetail.tsx:46
+#: src/pages/Employees/EmployeeCreate.tsx:828
+#: src/pages/Employees/EmployeeDetail.tsx:61
 #: src/pages/Employees/EmployeeList.tsx:41
 #: src/pages/Employees/EmployeeList.tsx:209
 msgid "Applicant"
@@ -258,7 +258,7 @@ msgstr "Back"
 msgid "Back to Customers"
 msgstr "Back to Customers"
 
-#: src/pages/Employees/EmployeeDetail.tsx:388
+#: src/pages/Employees/EmployeeDetail.tsx:441
 #: src/pages/Employees/EmployeeEdit.tsx:280
 msgid "Back to Employees"
 msgstr "Back to Employees"
@@ -298,7 +298,7 @@ msgstr "By default (unchecked), users cannot see or edit their own employee reco
 #: src/pages/Customers/CustomerCreate.tsx:295
 #: src/pages/Customers/CustomerDetail.tsx:266
 #: src/pages/Customers/CustomerEdit.tsx:311
-#: src/pages/Employees/EmployeeCreate.tsx:890
+#: src/pages/Employees/EmployeeCreate.tsx:939
 #: src/pages/Employees/EmployeeEdit.tsx:571
 #: src/pages/Onboarding/OnboardingComplete.tsx:657
 #: src/pages/Sites/SiteCreate.tsx:492
@@ -316,7 +316,7 @@ msgstr "Cannot Delete \"{unitName}\""
 msgid "Causer"
 msgstr "Causer"
 
-#: src/pages/Employees/EmployeeDetail.tsx:195
+#: src/pages/Employees/EmployeeDetail.tsx:248
 msgid "Certificate:"
 msgstr "Certificate:"
 
@@ -405,21 +405,21 @@ msgstr "Contact"
 msgid "Contact Person"
 msgstr "Contact Person"
 
-#: src/pages/Employees/EmployeeCreate.tsx:619
-#: src/pages/Employees/EmployeeDetail.tsx:124
+#: src/pages/Employees/EmployeeCreate.tsx:633
+#: src/pages/Employees/EmployeeDetail.tsx:141
 #: src/pages/Employees/EmployeeEdit.tsx:436
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
 
-#: src/pages/Employees/EmployeeCreate.tsx:201
+#: src/pages/Employees/EmployeeCreate.tsx:204
 msgid "Contract start date is required"
 msgstr "Contract start date is required"
 
-#: src/pages/Employees/EmployeeCreate.tsx:836
+#: src/pages/Employees/EmployeeCreate.tsx:852
 msgid "Contract Type"
 msgstr "Contract Type"
 
-#: src/pages/Employees/EmployeeCreate.tsx:233
+#: src/pages/Employees/EmployeeCreate.tsx:236
 msgid "Contract type is required"
 msgstr "Contract type is required"
 
@@ -452,11 +452,11 @@ msgstr "Create a new root organizational unit."
 msgid "Create Customer"
 msgstr "Create Customer"
 
-#: src/pages/Employees/EmployeeCreate.tsx:896
+#: src/pages/Employees/EmployeeCreate.tsx:945
 msgid "Create Employee"
 msgstr "Create Employee"
 
-#: src/pages/Employees/EmployeeCreate.tsx:431
+#: src/pages/Employees/EmployeeCreate.tsx:445
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
@@ -474,12 +474,16 @@ msgstr "Create Site"
 msgid "Created"
 msgstr "Created"
 
+#: src/pages/Employees/EmployeeDetail.tsx:38
+msgid "Created, but not sent"
+msgstr "Created, but not sent"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:260
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
 #: src/pages/Customers/CustomerCreate.tsx:289
-#: src/pages/Employees/EmployeeCreate.tsx:894
+#: src/pages/Employees/EmployeeCreate.tsx:943
 #: src/pages/Sites/SiteCreate.tsx:489
 msgid "Creating..."
 msgstr "Creating..."
@@ -523,17 +527,17 @@ msgstr "Customer Number"
 msgid "Customers"
 msgstr "Customers"
 
-#: src/pages/Employees/EmployeeCreate.tsx:502
-#: src/pages/Employees/EmployeeDetail.tsx:115
+#: src/pages/Employees/EmployeeCreate.tsx:516
+#: src/pages/Employees/EmployeeDetail.tsx:132
 #: src/pages/Employees/EmployeeEdit.tsx:347
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
-#: src/pages/Employees/EmployeeCreate.tsx:174
+#: src/pages/Employees/EmployeeCreate.tsx:177
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
 
-#: src/pages/Employees/EmployeeCreate.tsx:188
+#: src/pages/Employees/EmployeeCreate.tsx:191
 msgid "Date of birth must be in the past"
 msgstr "Date of birth must be in the past"
 
@@ -602,11 +606,11 @@ msgstr "Details"
 msgid "Division"
 msgstr "Division"
 
-#: src/pages/Employees/EmployeeDetail.tsx:470
+#: src/pages/Employees/EmployeeDetail.tsx:523
 msgid "Documents"
 msgstr "Documents"
 
-#: src/pages/Employees/EmployeeDetail.tsx:269
+#: src/pages/Employees/EmployeeDetail.tsx:322
 msgid "Download"
 msgstr "Download"
 
@@ -616,7 +620,7 @@ msgstr "e.g., Berlin Branch"
 
 #: src/components/OrganizationalUnitTree.tsx:347
 #: src/pages/Customers/CustomerDetail.tsx:228
-#: src/pages/Employees/EmployeeDetail.tsx:425
+#: src/pages/Employees/EmployeeDetail.tsx:478
 #: src/pages/Organization/OrganizationPage.tsx:363
 #: src/pages/Sites/SiteDetail.tsx:336
 msgid "Edit"
@@ -649,8 +653,8 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 #: src/pages/Customers/CustomerCreate.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:168
 #: src/pages/Customers/CustomerEdit.tsx:251
-#: src/pages/Employees/EmployeeCreate.tsx:550
-#: src/pages/Employees/EmployeeDetail.tsx:78
+#: src/pages/Employees/EmployeeCreate.tsx:564
+#: src/pages/Employees/EmployeeDetail.tsx:95
 #: src/pages/Employees/EmployeeEdit.tsx:388
 #: src/pages/Profile/ProfilePage.tsx:67
 #: src/pages/Sites/SiteCreate.tsx:389
@@ -664,7 +668,7 @@ msgstr "Email"
 msgid "login.email"
 msgstr "Email address"
 
-#: src/pages/Employees/EmployeeCreate.tsx:168
+#: src/pages/Employees/EmployeeCreate.tsx:171
 msgid "Email address is required"
 msgstr "Email address is required"
 
@@ -680,7 +684,7 @@ msgstr "Employee #"
 msgid "Employee Management"
 msgstr "Employee Management"
 
-#: src/pages/Employees/EmployeeDetail.tsx:68
+#: src/pages/Employees/EmployeeDetail.tsx:85
 msgid "Employee Number"
 msgstr "Employee Number"
 
@@ -689,7 +693,7 @@ msgstr "Employee Number"
 msgid "Employees"
 msgstr "Employees"
 
-#: src/pages/Employees/EmployeeCreate.tsx:590
+#: src/pages/Employees/EmployeeCreate.tsx:604
 #: src/pages/Employees/EmployeeEdit.tsx:417
 msgid "Employment Details"
 msgstr "Employment Details"
@@ -719,7 +723,7 @@ msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Fried
 msgid "Error"
 msgstr "Error"
 
-#: src/pages/Employees/EmployeeDetail.tsx:381
+#: src/pages/Employees/EmployeeDetail.tsx:434
 #: src/pages/Employees/EmployeeEdit.tsx:275
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
@@ -740,9 +744,13 @@ msgstr "Expand"
 msgid "Expired"
 msgstr "Expired"
 
-#: src/pages/Employees/EmployeeDetail.tsx:203
+#: src/pages/Employees/EmployeeDetail.tsx:256
 msgid "Expires:"
 msgstr "Expires:"
+
+#: src/pages/Employees/EmployeeDetail.tsx:40
+msgid "Failed"
+msgstr "Failed"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx:445
 #: src/pages/Onboarding/OnboardingComplete.tsx:453
@@ -777,12 +785,12 @@ msgstr "File must be an image"
 msgid "Filter by organizational unit"
 msgstr "Filter by organizational unit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:456
+#: src/pages/Employees/EmployeeCreate.tsx:470
 #: src/pages/Employees/EmployeeEdit.tsx:321
 msgid "First Name"
 msgstr "First Name"
 
-#: src/pages/Employees/EmployeeCreate.tsx:160
+#: src/pages/Employees/EmployeeCreate.tsx:163
 #: src/pages/Onboarding/OnboardingComplete.tsx:330
 msgid "First name is required"
 msgstr "First name is required"
@@ -799,7 +807,7 @@ msgstr "First Names (all)"
 msgid "Form fields will be rendered based on schema"
 msgstr "Form fields will be rendered based on schema"
 
-#: src/pages/Employees/EmployeeCreate.tsx:861
+#: src/pages/Employees/EmployeeCreate.tsx:877
 msgid "Freelance"
 msgstr "Freelance"
 
@@ -807,11 +815,11 @@ msgstr "Freelance"
 msgid "From Date"
 msgstr "From Date"
 
-#: src/pages/Employees/EmployeeDetail.tsx:73
+#: src/pages/Employees/EmployeeDetail.tsx:90
 msgid "Full Name"
 msgstr "Full Name"
 
-#: src/pages/Employees/EmployeeCreate.tsx:852
+#: src/pages/Employees/EmployeeCreate.tsx:868
 msgid "Full Time"
 msgstr "Full Time"
 
@@ -889,17 +897,33 @@ msgstr "Invalid Link"
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Invalid onboarding link. Please check your email and try again."
 
+#: src/pages/Employees/EmployeeDetail.tsx:186
+msgid "Invitation Failure Reason"
+msgstr "Invitation Failure Reason"
+
+#: src/pages/Employees/EmployeeDetail.tsx:177
+msgid "Invitation Mail Sent"
+msgstr "Invitation Mail Sent"
+
+#: src/pages/Employees/EmployeeDetail.tsx:168
+msgid "Invitation Requested"
+msgstr "Invitation Requested"
+
+#: src/pages/Employees/EmployeeCreate.tsx:899
+msgid "Invitations are only available for employees in pre-contract status."
+msgstr "Invitations are only available for employees in pre-contract status."
+
 #: src/pages/Settings/SettingsPage.tsx:34
 msgid "Language"
 msgstr "Language"
 
-#: src/pages/Employees/EmployeeCreate.tsx:479
+#: src/pages/Employees/EmployeeCreate.tsx:493
 #: src/pages/Employees/EmployeeEdit.tsx:334
 #: src/pages/Onboarding/OnboardingComplete.tsx:724
 msgid "Last Name"
 msgstr "Last Name"
 
-#: src/pages/Employees/EmployeeCreate.tsx:164
+#: src/pages/Employees/EmployeeCreate.tsx:167
 #: src/pages/Onboarding/OnboardingComplete.tsx:334
 msgid "Last name is required"
 msgstr "Last name is required"
@@ -922,7 +946,7 @@ msgstr "Last synced: {0}"
 msgid "Last Updated"
 msgstr "Last Updated"
 
-#: src/pages/Employees/EmployeeCreate.tsx:722
+#: src/pages/Employees/EmployeeCreate.tsx:736
 #: src/pages/Employees/EmployeeEdit.tsx:506
 msgid "Leadership Position"
 msgstr "Leadership Position"
@@ -931,11 +955,11 @@ msgstr "Leadership Position"
 msgid "Loading activity logs..."
 msgstr "Loading activity logs..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:238
+#: src/pages/Employees/EmployeeDetail.tsx:291
 msgid "Loading documents..."
 msgstr "Loading documents..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:369
+#: src/pages/Employees/EmployeeDetail.tsx:422
 #: src/pages/Employees/EmployeeEdit.tsx:263
 msgid "Loading employee..."
 msgstr "Loading employee..."
@@ -948,7 +972,7 @@ msgstr "Loading employees..."
 msgid "Loading onboarding..."
 msgstr "Loading onboarding..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:170
+#: src/pages/Employees/EmployeeDetail.tsx:223
 msgid "Loading qualifications..."
 msgstr "Loading qualifications..."
 
@@ -956,7 +980,7 @@ msgstr "Loading qualifications..."
 #: src/pages/Customers/CustomerDetail.tsx:80
 #: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:141
-#: src/pages/Employees/EmployeeCreate.tsx:699
+#: src/pages/Employees/EmployeeCreate.tsx:713
 #: src/pages/Employees/EmployeeEdit.tsx:490
 #: src/pages/Sites/SiteCreate.tsx:171
 #: src/pages/Sites/SiteDetail.tsx:96
@@ -1016,15 +1040,15 @@ msgstr "Manage your application preferences."
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Manage your internal organizational units including departments, branches, and teams."
 
-#: src/pages/Employees/EmployeeDetail.tsx:88
+#: src/pages/Employees/EmployeeDetail.tsx:105
 msgid "Management Level"
 msgstr "Management Level"
 
-#: src/pages/Employees/EmployeeCreate.tsx:242
+#: src/pages/Employees/EmployeeCreate.tsx:245
 msgid "Management level is required when leadership position is enabled"
 msgstr "Management level is required when leadership position is enabled"
 
-#: src/pages/Employees/EmployeeCreate.tsx:246
+#: src/pages/Employees/EmployeeCreate.tsx:249
 msgid "Management level must be between 1 and 255"
 msgstr "Management level must be between 1 and 255"
 
@@ -1057,7 +1081,7 @@ msgstr "Merkle Tree"
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
 
-#: src/pages/Employees/EmployeeCreate.tsx:858
+#: src/pages/Employees/EmployeeCreate.tsx:874
 msgid "Minijob"
 msgstr "Minijob"
 
@@ -1094,8 +1118,8 @@ msgstr "Missing onboarding token. Please use the link from your email."
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Missing token and email. Please use the link from your email."
 
-#: src/pages/Employees/EmployeeCreate.tsx:748
-#: src/pages/Employees/EmployeeDetail.tsx:93
+#: src/pages/Employees/EmployeeCreate.tsx:762
+#: src/pages/Employees/EmployeeDetail.tsx:110
 #: src/pages/Employees/EmployeeEdit.tsx:529
 #: src/pages/Employees/EmployeeList.tsx:283
 msgid "ML"
@@ -1199,7 +1223,7 @@ msgstr "No activity logs found."
 msgid "No customers found"
 msgstr "No customers found"
 
-#: src/pages/Employees/EmployeeDetail.tsx:246
+#: src/pages/Employees/EmployeeDetail.tsx:299
 msgid "No documents uploaded"
 msgstr "No documents uploaded"
 
@@ -1208,8 +1232,8 @@ msgstr "No documents uploaded"
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
-#: src/pages/Employees/EmployeeCreate.tsx:760
-#: src/pages/Employees/EmployeeDetail.tsx:97
+#: src/pages/Employees/EmployeeCreate.tsx:774
+#: src/pages/Employees/EmployeeDetail.tsx:114
 #: src/pages/Employees/EmployeeEdit.tsx:540
 msgid "No management position"
 msgstr "No management position"
@@ -1222,7 +1246,7 @@ msgstr "No Organizational Units"
 msgid "No parent (root unit)"
 msgstr "No parent (root unit)"
 
-#: src/pages/Employees/EmployeeDetail.tsx:178
+#: src/pages/Employees/EmployeeDetail.tsx:231
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
@@ -1233,6 +1257,10 @@ msgstr "No sites found"
 #: src/components/MoveOrganizationalUnitDialog.tsx:364
 msgid "No unit selected"
 msgstr "No unit selected"
+
+#: src/pages/Employees/EmployeeDetail.tsx:42
+msgid "Not requested"
+msgstr "Not requested"
 
 #: src/pages/Customers/CustomerCreate.tsx:264
 #: src/pages/Customers/CustomerDetail.tsx:204
@@ -1267,12 +1295,16 @@ msgstr "Offline - will sync when online"
 msgid "OK"
 msgstr "OK"
 
-#: src/pages/Employees/EmployeeCreate.tsx:821
-#: src/pages/Employees/EmployeeDetail.tsx:49
+#: src/pages/Employees/EmployeeCreate.tsx:837
+#: src/pages/Employees/EmployeeDetail.tsx:64
 #: src/pages/Employees/EmployeeList.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:218
 msgid "On Leave"
 msgstr "On Leave"
+
+#: src/pages/Employees/EmployeeDetail.tsx:157
+msgid "Onboarding Invitation"
+msgstr "Onboarding Invitation"
 
 #: src/components/VerificationDots.tsx:122
 #: src/components/VerificationDots.tsx:125
@@ -1307,8 +1339,8 @@ msgstr "Organizational structure"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:194
 #: src/pages/ActivityLog/ActivityLogList.tsx:373
 #: src/pages/ActivityLog/ActivityLogList.tsx:420
-#: src/pages/Employees/EmployeeCreate.tsx:673
-#: src/pages/Employees/EmployeeDetail.tsx:133
+#: src/pages/Employees/EmployeeCreate.tsx:687
+#: src/pages/Employees/EmployeeDetail.tsx:150
 #: src/pages/Employees/EmployeeEdit.tsx:477
 #: src/pages/Employees/EmployeeList.tsx:178
 #: src/pages/Sites/SiteCreate.tsx:219
@@ -1317,11 +1349,11 @@ msgstr "Organizational structure"
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:224
+#: src/pages/Employees/EmployeeCreate.tsx:227
 msgid "Organizational unit is required"
 msgstr "Organizational unit is required"
 
-#: src/pages/Employees/EmployeeCreate.tsx:220
+#: src/pages/Employees/EmployeeCreate.tsx:223
 msgid "Organizational units are still loading. Please wait a moment and try again."
 msgstr "Organizational units are still loading. Please wait a moment and try again."
 
@@ -1348,7 +1380,7 @@ msgstr "Parent"
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:855
+#: src/pages/Employees/EmployeeCreate.tsx:871
 msgid "Part Time"
 msgstr "Part Time"
 
@@ -1385,7 +1417,7 @@ msgstr "Permanent"
 msgid "Permissions"
 msgstr "Permissions"
 
-#: src/pages/Employees/EmployeeCreate.tsx:450
+#: src/pages/Employees/EmployeeCreate.tsx:464
 #: src/pages/Employees/EmployeeEdit.tsx:315
 msgid "Personal Information"
 msgstr "Personal Information"
@@ -1393,8 +1425,8 @@ msgstr "Personal Information"
 #: src/pages/Customers/CustomerCreate.tsx:248
 #: src/pages/Customers/CustomerDetail.tsx:184
 #: src/pages/Customers/CustomerEdit.tsx:264
-#: src/pages/Employees/EmployeeCreate.tsx:573
-#: src/pages/Employees/EmployeeDetail.tsx:83
+#: src/pages/Employees/EmployeeCreate.tsx:587
+#: src/pages/Employees/EmployeeDetail.tsx:100
 #: src/pages/Employees/EmployeeEdit.tsx:401
 #: src/pages/Sites/SiteCreate.tsx:402
 #: src/pages/Sites/SiteDetail.tsx:210
@@ -1406,11 +1438,11 @@ msgstr "Phone"
 msgid "Photo must be smaller than 2MB"
 msgstr "Photo must be smaller than 2MB"
 
-#: src/pages/Employees/EmployeeCreate.tsx:369
+#: src/pages/Employees/EmployeeCreate.tsx:372
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
-#: src/pages/Employees/EmployeeCreate.tsx:170
+#: src/pages/Employees/EmployeeCreate.tsx:173
 msgid "Please enter a valid email address"
 msgstr "Please enter a valid email address"
 
@@ -1419,15 +1451,15 @@ msgstr "Please enter a valid email address"
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
-#: src/pages/Employees/EmployeeCreate.tsx:596
-#: src/pages/Employees/EmployeeDetail.tsx:103
+#: src/pages/Employees/EmployeeCreate.tsx:610
+#: src/pages/Employees/EmployeeDetail.tsx:120
 #: src/pages/Employees/EmployeeEdit.tsx:423
 #: src/pages/Employees/EmployeeList.tsx:250
 #: src/pages/Sites/SiteDetail.tsx:226
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Employees/EmployeeCreate.tsx:197
+#: src/pages/Employees/EmployeeCreate.tsx:200
 msgid "Position is required"
 msgstr "Position is required"
 
@@ -1442,8 +1474,8 @@ msgstr "Postal Code"
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 
-#: src/pages/Employees/EmployeeCreate.tsx:815
-#: src/pages/Employees/EmployeeDetail.tsx:47
+#: src/pages/Employees/EmployeeCreate.tsx:831
+#: src/pages/Employees/EmployeeDetail.tsx:62
 #: src/pages/Employees/EmployeeList.tsx:42
 #: src/pages/Employees/EmployeeList.tsx:212
 msgid "Pre-Contract"
@@ -1464,7 +1496,7 @@ msgstr "Previous"
 msgid "Previous Hash"
 msgstr "Previous Hash"
 
-#: src/pages/Employees/EmployeeDetail.tsx:444
+#: src/pages/Employees/EmployeeDetail.tsx:497
 msgid "Profile"
 msgstr "Profile"
 
@@ -1472,7 +1504,7 @@ msgstr "Profile"
 msgid "Profile Photo (optional)"
 msgstr "Profile Photo (optional)"
 
-#: src/pages/Employees/EmployeeDetail.tsx:457
+#: src/pages/Employees/EmployeeDetail.tsx:510
 msgid "Qualifications"
 msgstr "Qualifications"
 
@@ -1582,7 +1614,7 @@ msgid "Select new parent"
 msgstr "Select new parent"
 
 #: src/components/OrganizationalUnitPicker.tsx:238
-#: src/pages/Employees/EmployeeCreate.tsx:701
+#: src/pages/Employees/EmployeeCreate.tsx:715
 #: src/pages/Employees/EmployeeEdit.tsx:492
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
@@ -1596,9 +1628,17 @@ msgstr "Select organizational unit..."
 msgid "Self-Access Control Required"
 msgstr "Self-Access Control Required"
 
+#: src/pages/Employees/EmployeeCreate.tsx:891
+msgid "Send Onboarding Invitation"
+msgstr "Send Onboarding Invitation"
+
 #: src/components/NotificationPreferences.tsx:299
 msgid "Send Test"
 msgstr "Send Test"
+
+#: src/pages/Employees/EmployeeDetail.tsx:36
+msgid "Sent"
+msgstr "Sent"
 
 #: src/components/application-layout.tsx:140
 #: src/components/application-layout.tsx:323
@@ -1684,8 +1724,8 @@ msgstr "Source Code"
 
 #: src/pages/Customers/CustomersPage.tsx:108
 #: src/pages/Customers/CustomersPage.tsx:167
-#: src/pages/Employees/EmployeeCreate.tsx:798
-#: src/pages/Employees/EmployeeDetail.tsx:108
+#: src/pages/Employees/EmployeeCreate.tsx:812
+#: src/pages/Employees/EmployeeDetail.tsx:125
 #: src/pages/Employees/EmployeeList.tsx:192
 #: src/pages/Employees/EmployeeList.tsx:253
 #: src/pages/Sites/SitesPage.tsx:140
@@ -1693,7 +1733,7 @@ msgstr "Source Code"
 msgid "Status"
 msgstr "Status"
 
-#: src/pages/Employees/EmployeeCreate.tsx:229
+#: src/pages/Employees/EmployeeCreate.tsx:232
 msgid "Status is required"
 msgstr "Status is required"
 
@@ -1763,12 +1803,12 @@ msgstr "Team Messages"
 msgid "Temporary"
 msgstr "Temporary"
 
-#: src/pages/Employees/EmployeeDetail.tsx:421
+#: src/pages/Employees/EmployeeDetail.tsx:474
 msgid "Terminate"
 msgstr "Terminate"
 
-#: src/pages/Employees/EmployeeCreate.tsx:824
-#: src/pages/Employees/EmployeeDetail.tsx:50
+#: src/pages/Employees/EmployeeCreate.tsx:840
+#: src/pages/Employees/EmployeeDetail.tsx:65
 #: src/pages/Employees/EmployeeList.tsx:45
 #: src/pages/Employees/EmployeeList.tsx:221
 msgid "Terminated"
@@ -1777,6 +1817,10 @@ msgstr "Terminated"
 #: src/components/NotificationPreferences.tsx:225
 msgid "Test Notification"
 msgstr "Test Notification"
+
+#: src/pages/Employees/EmployeeCreate.tsx:895
+msgid "The new employee will receive an onboarding email immediately after creation."
+msgstr "The new employee will receive an onboarding email immediately after creation."
 
 #: src/components/OrganizationalUnitFormDialog.tsx:363
 msgid "The new unit will be created under this parent."
@@ -1956,7 +2000,7 @@ msgstr "Viewing cached data. Some units may be outdated."
 msgid "Warning"
 msgstr "Warning"
 
-#: src/pages/Employees/EmployeeCreate.tsx:393
+#: src/pages/Employees/EmployeeCreate.tsx:396
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 

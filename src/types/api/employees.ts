@@ -33,6 +33,21 @@ export interface EmployeeOrganizationalUnitSummary {
   name: string;
 }
 
+export type EmployeeOnboardingInvitationStatus =
+  | "not_requested"
+  | "sent"
+  | "created_not_sent"
+  | "failed";
+
+export interface EmployeeOnboardingInvitation {
+  status: EmployeeOnboardingInvitationStatus;
+  requested_at?: string | null;
+  token_created_at?: string | null;
+  mail_sent_at?: string | null;
+  mail_failed_at?: string | null;
+  failure_reason?: string | null;
+}
+
 export interface Employee {
   id: string;
   tenant_id?: string;
@@ -57,6 +72,7 @@ export interface Employee {
   user_id?: string | null;
   user_account_active?: boolean;
   onboarding_completed?: boolean;
+  onboarding_invitation?: EmployeeOnboardingInvitation;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;
@@ -87,6 +103,7 @@ export interface EmployeeFormData {
   hire_date?: string;
   status: EmployeeStatus;
   contract_type: EmployeeContractType;
+  send_invitation?: boolean;
 }
 
 export interface ValidationErrorResponse {
