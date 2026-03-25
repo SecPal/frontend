@@ -3,10 +3,7 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import {
-  RouteAccessDeniedState,
-  RouteLoadingState,
-} from "./RouteGuardState";
+import { RouteAccessDeniedState, RouteLoadingState } from "./RouteGuardState";
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;

@@ -83,9 +83,7 @@ describe("OrganizationalRoute", () => {
     expect(
       screen.getByText(/You do not have permission to access this feature/i)
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Organization Content")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
   });
 
   it("redirects unauthenticated users to login", () => {
