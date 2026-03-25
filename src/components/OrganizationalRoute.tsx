@@ -1,10 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Navigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
-import { Text } from "./text";
+import {
+  RouteAccessDeniedState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;
@@ -18,17 +20,7 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
   const { isAuthenticated, isLoading, hasOrganizationalAccess } = useAuth();
 
   if (isLoading) {
-    return (
-      <div
-        className="flex min-h-screen items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="text-lg">
-          <Trans>Loading...</Trans>
-        </div>
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   if (!isAuthenticated) {
@@ -36,21 +28,7 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
   }
 
   if (!hasOrganizationalAccess()) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="max-w-md text-center">
-          <Text className="text-lg font-semibold mb-2">
-            <Trans>Access Denied</Trans>
-          </Text>
-          <Text className="text-zinc-500 dark:text-zinc-400">
-            <Trans>
-              You do not have permission to access this feature. Contact your
-              administrator if you believe this is an error.
-            </Trans>
-          </Text>
-        </div>
-      </div>
-    );
+    return <RouteAccessDeniedState />;
   }
 
   return <>{children}</>;

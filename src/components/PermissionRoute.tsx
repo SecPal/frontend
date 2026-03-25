@@ -1,8 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import {
+  RouteAccessDeniedState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -14,7 +18,8 @@ interface PermissionRouteProps {
  * PermissionRoute Component
  *
  * Protects routes by requiring a specific permission.
- * Redirects to fallback path (default: "/") if permission is missing.
+ * Shows a consistent access denied state by default and only redirects when an
+ * explicit fallback path is provided.
  *
  * @example
  * <PermissionRoute permission="activity_log.read">
@@ -24,25 +29,24 @@ interface PermissionRouteProps {
 export function PermissionRoute({
   children,
   permission,
-  fallbackPath = "/",
+  fallbackPath,
 }: PermissionRouteProps) {
-  const { hasPermission, isLoading } = useAuth();
+  const { hasPermission, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div
-        className="flex min-h-screen items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+    return <RouteLoadingState />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   if (!hasPermission(permission)) {
-    // Show error message briefly then redirect
-    return <Navigate to={fallbackPath} replace />;
+    if (fallbackPath) {
+      return <Navigate to={fallbackPath} replace />;
+    }
+
+    return <RouteAccessDeniedState />;
   }
 
   return <>{children}</>;

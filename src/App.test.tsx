@@ -92,8 +92,45 @@ describe("App", () => {
       })
     );
 
-    // This test verifies that the route structure includes PermissionRoute
-    // Actual redirect behavior is tested in PermissionRoute.test.tsx
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("shows access denied for the legacy organizational-units app route when the user lacks organizational access", async () => {
+    window.history.replaceState({}, "", "/organizational-units");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@example.com",
+        hasOrganizationalScopes: false,
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("redirects authenticated users from unknown app routes instead of rendering a blank page", async () => {
+    window.history.replaceState({}, "", "/dashboard");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@example.com",
+      })
+    );
+
     await renderWithI18n(<App />);
 
     expect(
