@@ -50,7 +50,7 @@ describe("App", () => {
         : {
             id: 1,
             name: "Fallback User",
-            email: "fallback@example.com",
+            email: "fallback@secpal.dev",
           };
     });
   });
@@ -87,7 +87,7 @@ describe("App", () => {
       JSON.stringify({
         id: 1,
         name: "User",
-        email: "user@example.com",
+        email: "user@secpal.dev",
         permissions: [],
       })
     );
@@ -107,7 +107,7 @@ describe("App", () => {
       JSON.stringify({
         id: 1,
         name: "User",
-        email: "user@example.com",
+        email: "user@secpal.dev",
         hasOrganizationalScopes: false,
       })
     );
@@ -127,7 +127,7 @@ describe("App", () => {
       JSON.stringify({
         id: 1,
         name: "User",
-        email: "user@example.com",
+        email: "user@secpal.dev",
       })
     );
 
