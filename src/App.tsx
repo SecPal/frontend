@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { OfflineIndicator } from "./components/OfflineIndicator";
@@ -240,6 +240,16 @@ function App() {
                 </OrganizationalRoute>
               }
             />
+            <Route
+              path="/organizational-units"
+              element={
+                <OrganizationalRoute>
+                  <ApplicationLayout>
+                    <OrganizationPage />
+                  </ApplicationLayout>
+                </OrganizationalRoute>
+              }
+            />
             {/* Employee Management Routes - Requires Organizational Access */}
             <Route
               path="/employees"
@@ -323,6 +333,14 @@ function App() {
                   <ApplicationLayout>
                     <ProfilePage />
                   </ApplicationLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/" replace />
                 </ProtectedRoute>
               }
             />

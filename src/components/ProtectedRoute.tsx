@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { RouteLoadingState } from "./RouteGuardState";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,15 +13,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div
-        className="flex min-h-screen items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   if (!isAuthenticated) {
