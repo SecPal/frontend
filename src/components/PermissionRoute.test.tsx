@@ -51,7 +51,7 @@ describe("PermissionRoute", () => {
     expect(screen.getByText("Protected Content")).toBeInTheDocument();
   });
 
-  it("should redirect when user lacks required permission", () => {
+  it("should show access denied when user lacks required permission", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       hasPermission: vi.fn(() => false),
       isLoading: false,
