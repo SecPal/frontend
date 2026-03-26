@@ -43,7 +43,7 @@ const mockEmployees: Employee[] = [
     first_name: "John",
     last_name: "Doe",
     full_name: "John Doe",
-    email: "john.doe@example.dev",
+    email: "john.doe@secpal.dev",
     phone: "+1234567890",
     date_of_birth: "1990-01-01",
     position: "Developer",
@@ -64,7 +64,7 @@ const mockEmployees: Employee[] = [
     first_name: "Jane",
     last_name: "Smith",
     full_name: "Jane Smith",
-    email: "jane.smith@example.dev",
+    email: "jane.smith@secpal.dev",
     phone: "+0987654321",
     date_of_birth: "1992-05-15",
     position: "Designer",
@@ -149,13 +149,13 @@ describe("EmployeeList", () => {
     });
 
     expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.getByText("john.doe@example.dev")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E001")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
 
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
-    expect(screen.getByText("jane.smith@example.dev")).toBeInTheDocument();
+    expect(screen.getByText("jane.smith@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E002")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
     expect(screen.getByText("Design")).toBeInTheDocument();

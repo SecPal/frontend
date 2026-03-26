@@ -53,7 +53,7 @@ const mockEmployee: Employee = {
   first_name: "John",
   last_name: "Doe",
   full_name: "John Doe",
-  email: "john.doe@example.dev",
+  email: "john.doe@secpal.dev",
   phone: "+1234567890",
   date_of_birth: "1990-01-01",
   position: "Developer",
@@ -110,7 +110,7 @@ describe("EmployeeDetail", () => {
     });
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
-    expect(screen.getByText("john.doe@example.dev")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("+1234567890")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
