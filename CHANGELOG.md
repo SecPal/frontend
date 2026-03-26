@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Centralized frontend UI capabilities for low-privilege users so scope-only accounts stay in self-service areas and direct navigation to elevated feature routes now resolves through one shared capability guard instead of mixed ad hoc checks
+- Applied the centralized low-privilege capability model to the main application navigation so management links stay hidden unless the user has the matching feature access
 - Unified frontend route-guard handling for low-privilege users outside the onboarding flow: permission-gated routes now show the same access-denied state as organizational routes, the legacy `/organizational-units` app path is guarded and mapped to the existing organization screen, and unknown authenticated app URLs now fall back cleanly instead of rendering blank pages
 - Aligned the employee create UI and API types with the invite-enabled backend flow by adding `send_invitation` to the create payload and surfacing persisted onboarding invitation delivery status on employee detail pages
 - Aligned the frontend employee create payload type with the shared contract by making `EmployeeFormData.position` mandatory, matching the existing required create-form validation and backend/runtime expectations (fixes #578)
