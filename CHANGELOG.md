@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Pinned the transitive `picomatch` resolution to `2.3.2` for 2.x consumers and
+  `4.0.4` for 4.x consumers via `overrides`, so the frontend no longer ships
+  the vulnerable glob-matching releases flagged by Dependabot alerts `#37` and
+  `#38` for CVE-2026-33672 / GHSA-3v7f-55p6-f55p; upstream major-version
+  constraints remain unchanged while the patched releases are enforced in the
+  lockfile (refs #598)
 - Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
   deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
   replaced by a current, non-deprecated release; the remaining deprecated
