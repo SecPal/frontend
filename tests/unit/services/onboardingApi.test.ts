@@ -20,7 +20,9 @@ function makeFetchResponse(
       get: (name: string) => headers[name.toLowerCase()] ?? null,
     },
     json: () =>
-      body !== null ? Promise.resolve(body) : Promise.reject(new SyntaxError("invalid json")),
+      body !== null
+        ? Promise.resolve(body)
+        : Promise.reject(new SyntaxError("invalid json")),
   } as unknown as Response;
 }
 
@@ -29,9 +31,13 @@ describe("validateOnboardingToken", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        makeFetchResponse(429, { message: "Too many attempts" }, {
-          "retry-after": "45",
-        })
+        makeFetchResponse(
+          429,
+          { message: "Too many attempts" },
+          {
+            "retry-after": "45",
+          }
+        )
       )
     );
 
@@ -49,9 +55,9 @@ describe("validateOnboardingToken", () => {
   it("throws OnboardingApiError without retryAfterSeconds when Retry-After header is absent", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        makeFetchResponse(404, { message: "Not found" })
-      )
+      vi
+        .fn()
+        .mockResolvedValue(makeFetchResponse(404, { message: "Not found" }))
     );
 
     await expect(
@@ -69,9 +75,13 @@ describe("validateOnboardingToken", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        makeFetchResponse(429, { message: "Rate limited" }, {
-          "retry-after": "not-a-number",
-        })
+        makeFetchResponse(
+          429,
+          { message: "Rate limited" },
+          {
+            "retry-after": "not-a-number",
+          }
+        )
       )
     );
 
@@ -88,9 +98,7 @@ describe("validateOnboardingToken", () => {
   it("falls back to statusText when response body is not valid JSON", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        makeFetchResponse(503, null, {})
-      )
+      vi.fn().mockResolvedValue(makeFetchResponse(503, null, {}))
     );
 
     await expect(
@@ -116,7 +124,8 @@ describe("completeOnboarding", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce(successfulCsrf)
         .mockResolvedValueOnce(rateLimitedComplete)
     );
@@ -148,7 +157,8 @@ describe("completeOnboarding", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn()
+      vi
+        .fn()
         .mockResolvedValueOnce(successfulCsrf)
         .mockResolvedValueOnce(validationError)
     );
