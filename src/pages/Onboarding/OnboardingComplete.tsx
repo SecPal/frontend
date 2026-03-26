@@ -98,7 +98,9 @@ export function OnboardingComplete() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [tokenValidationState, setTokenValidationState] =
-    useState<TokenValidationState>({ kind: "validating" });
+    useState<TokenValidationState>(
+      token && email ? { kind: "validating" } : { kind: "invalid" }
+    );
   const [validationAttempt, setValidationAttempt] = useState(0);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);

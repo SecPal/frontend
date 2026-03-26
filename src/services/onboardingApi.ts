@@ -174,7 +174,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
  * @param token - Onboarding token from magic link
  * @param email - Email address from magic link
  * @returns Employee data for prefilling form (first_name, last_name, email)
- * @throws Error if token is invalid, expired, or email doesn't match
+ * @throws {OnboardingApiError} with response.status (e.g. 401, 429) and optional retryAfterSeconds
  */
 export async function validateOnboardingToken(
   token: string,
@@ -202,7 +202,7 @@ export async function validateOnboardingToken(
  *
  * @param data - Onboarding completion data including token, credentials, and optional photo
  * @returns Response containing Sanctum token and user/employee data
- * @throws Error if onboarding fails (invalid token, validation errors, etc.)
+ * @throws {OnboardingApiError} with response.status (422 for validation errors, 429 for rate limit) and optional retryAfterSeconds
  */
 export async function completeOnboarding(
   data: OnboardingCompleteData
