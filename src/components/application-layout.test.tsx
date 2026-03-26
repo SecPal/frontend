@@ -77,7 +77,7 @@ describe("ApplicationLayout", () => {
       JSON.stringify({
         id: 1,
         name: "John Doe",
-        email: "john@example.com",
+        email: "john@example.dev",
       })
     );
   });
@@ -354,7 +354,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Jane Smith",
-          email: "jane@example.com",
+          email: "jane@example.dev",
         })
       );
 
@@ -375,7 +375,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin",
-          email: "admin@example.com",
+          email: "admin@example.dev",
         })
       );
 
@@ -396,7 +396,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Paul Smith",
-          email: "john@example.com",
+          email: "john@example.dev",
         })
       );
 
@@ -416,7 +416,7 @@ describe("ApplicationLayout", () => {
         "auth_user",
         JSON.stringify({
           id: 1,
-          email: "user@example.com",
+          email: "user@example.dev",
         })
       );
 
@@ -439,7 +439,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@example.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -459,7 +459,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@example.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -473,14 +473,40 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Customers")).not.toBeInTheDocument();
     });
 
-    it("shows Organization link when user has organizational scopes", () => {
+    it("keeps management links hidden for scope-only users", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@example.dev",
           hasOrganizationalScopes: true,
+          roles: [],
+          permissions: [],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+      expect(screen.queryByText("Customers")).not.toBeInTheDocument();
+      expect(screen.queryByText("Employees")).not.toBeInTheDocument();
+    });
+
+    it("shows management links for elevated organization roles", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@example.dev",
+          hasOrganizationalScopes: true,
+          roles: ["Manager"],
+          permissions: [],
         })
       );
 
@@ -491,16 +517,20 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Organization")).toBeInTheDocument();
+      expect(screen.getByText("Customers")).toBeInTheDocument();
+      expect(screen.getByText("Employees")).toBeInTheDocument();
     });
 
-    it("shows Customers link when user has organizational scopes", () => {
+    it("shows Customers for users with explicit customer permissions", () => {
       localStorage.setItem(
         "auth_user",
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
-          hasOrganizationalScopes: true,
+          email: "john@example.dev",
+          hasOrganizationalScopes: false,
+          roles: [],
+          permissions: ["customers.read"],
         })
       );
 
@@ -511,6 +541,8 @@ describe("ApplicationLayout", () => {
       );
 
       expect(screen.getByText("Customers")).toBeInTheDocument();
+      expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+      expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
     it("always shows Home", () => {
@@ -519,7 +551,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@example.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -539,7 +571,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@example.dev",
           // hasOrganizationalScopes not set
         })
       );
@@ -610,7 +642,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.com",
+          email: "admin@example.dev",
           permissions: ["activity_log.read"],
         })
       );
@@ -630,7 +662,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Regular User",
-          email: "user@example.com",
+          email: "user@example.dev",
           permissions: [],
         })
       );
@@ -650,7 +682,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.com",
+          email: "admin@example.dev",
           permissions: ["activity_log.read"],
         })
       );
@@ -672,7 +704,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.com",
+          email: "admin@example.dev",
           permissions: ["activity_log.read"],
         })
       );

@@ -4,6 +4,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
+import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { logout as apiLogout } from "../services/authApi";
 import { getInitials } from "../lib/stringUtils";
 import { Avatar } from "./avatar";
@@ -152,13 +153,10 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
 }
 
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, hasOrganizationalAccess, hasPermission } = useAuth();
+  const { user, logout } = useAuth();
+  const capabilities = useUserCapabilities();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check if user has access to organizational features
-  const hasOrgAccess = hasOrganizationalAccess();
-  const canViewActivityLogs = hasPermission("activity_log.read");
 
   const handleLogout = async () => {
     // Clear local state FIRST to prevent race conditions
@@ -194,7 +192,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             >
               <Trans>Home</Trans>
             </NavbarItem>
-            {hasOrgAccess && (
+            {capabilities.organization && (
               <NavbarItem
                 href="/organization"
                 current={isCurrentPath("/organization")}
@@ -202,7 +200,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Organization</Trans>
               </NavbarItem>
             )}
-            {hasOrgAccess && (
+            {capabilities.customers && (
               <NavbarItem
                 href="/customers"
                 current={isCurrentPath("/customers")}
@@ -210,7 +208,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Customers</Trans>
               </NavbarItem>
             )}
-            {hasOrgAccess && (
+            {capabilities.employees && (
               <NavbarItem
                 href="/employees"
                 current={isCurrentPath("/employees")}
@@ -218,7 +216,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Employees</Trans>
               </NavbarItem>
             )}
-            {canViewActivityLogs && (
+            {capabilities.activityLogs && (
               <NavbarItem
                 href="/activity-logs"
                 current={isCurrentPath("/activity-logs")}
@@ -265,7 +263,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   <Trans>Home</Trans>
                 </SidebarLabel>
               </SidebarItem>
-              {hasOrgAccess && (
+              {capabilities.organization && (
                 <SidebarItem
                   href="/organization"
                   current={isCurrentPath("/organization")}
@@ -276,7 +274,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   </SidebarLabel>
                 </SidebarItem>
               )}
-              {hasOrgAccess && (
+              {capabilities.customers && (
                 <SidebarItem
                   href="/customers"
                   current={isCurrentPath("/customers")}
@@ -287,7 +285,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   </SidebarLabel>
                 </SidebarItem>
               )}
-              {hasOrgAccess && (
+              {capabilities.employees && (
                 <SidebarItem
                   href="/employees"
                   current={isCurrentPath("/employees")}
@@ -298,7 +296,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   </SidebarLabel>
                 </SidebarItem>
               )}
-              {canViewActivityLogs && (
+              {capabilities.activityLogs && (
                 <SidebarItem
                   href="/activity-logs"
                   current={isCurrentPath("/activity-logs")}

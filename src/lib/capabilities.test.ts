@@ -23,6 +23,9 @@ describe("getUserCapabilities", () => {
     expect(capabilities.sites).toBe(false);
     expect(capabilities.employees).toBe(false);
     expect(capabilities.activityLogs).toBe(false);
+    expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.sites.update).toBe(false);
+    expect(capabilities.actions.employees.activate).toBe(false);
   });
 
   it("enables management areas for elevated organization roles", () => {
@@ -39,6 +42,9 @@ describe("getUserCapabilities", () => {
     expect(capabilities.customers).toBe(true);
     expect(capabilities.sites).toBe(true);
     expect(capabilities.employees).toBe(true);
+    expect(capabilities.actions.customers.create).toBe(true);
+    expect(capabilities.actions.sites.delete).toBe(true);
+    expect(capabilities.actions.employees.terminate).toBe(true);
   });
 
   it("enables customer and site features from explicit permissions", () => {
@@ -54,5 +60,7 @@ describe("getUserCapabilities", () => {
     expect(capabilities.sites).toBe(true);
     expect(capabilities.organization).toBe(false);
     expect(capabilities.employees).toBe(false);
+    expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.sites.create).toBe(false);
   });
 });
