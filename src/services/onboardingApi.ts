@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
@@ -102,6 +102,45 @@ export interface OnboardingCompleteResponse {
   };
 }
 
+export interface OnboardingApiErrorData {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+export interface OnboardingApiError {
+  response: {
+    status: number;
+    data: OnboardingApiErrorData;
+    retryAfterSeconds?: number;
+  };
+}
+
+async function parseErrorData(
+  response: Response
+): Promise<OnboardingApiErrorData> {
+  return response.json().catch(() => ({ message: response.statusText }));
+}
+
+function buildOnboardingApiError(
+  response: Response,
+  data: OnboardingApiErrorData
+): OnboardingApiError {
+  const retryAfterHeader = response.headers.get("Retry-After");
+  const retryAfterSeconds = retryAfterHeader
+    ? Number.parseInt(retryAfterHeader, 10)
+    : Number.NaN;
+
+  return {
+    response: {
+      status: response.status,
+      data,
+      retryAfterSeconds: Number.isFinite(retryAfterSeconds)
+        ? retryAfterSeconds
+        : undefined,
+    },
+  };
+}
+
 /**
  * Get onboarding steps for current pre-contract user
  */
@@ -135,7 +174,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
  * @param token - Onboarding token from magic link
  * @param email - Email address from magic link
  * @returns Employee data for prefilling form (first_name, last_name, email)
- * @throws Error if token is invalid, expired, or email doesn't match
+ * @throws {OnboardingApiError} with response.status (e.g. 401, 429) and optional retryAfterSeconds
  */
 export async function validateOnboardingToken(
   token: string,
@@ -149,10 +188,8 @@ export async function validateOnboardingToken(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Invalid or expired onboarding token");
+    const error = await parseErrorData(response);
+    throw buildOnboardingApiError(response, error);
   }
 
   return response.json();
@@ -165,7 +202,7 @@ export async function validateOnboardingToken(
  *
  * @param data - Onboarding completion data including token, credentials, and optional photo
  * @returns Response containing Sanctum token and user/employee data
- * @throws Error if onboarding fails (invalid token, validation errors, etc.)
+ * @throws {OnboardingApiError} with response.status (422 for validation errors, 429 for rate limit) and optional retryAfterSeconds
  */
 export async function completeOnboarding(
   data: OnboardingCompleteData
@@ -203,15 +240,8 @@ export async function completeOnboarding(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: response.statusText,
-    }));
-    throw {
-      response: {
-        status: response.status,
-        data: error,
-      },
-    };
+    const error = await parseErrorData(response);
+    throw buildOnboardingApiError(response, error);
   }
 
   return response.json();
