@@ -63,4 +63,51 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.customers.create).toBe(false);
     expect(capabilities.actions.sites.create).toBe(false);
   });
+
+  it("grants action capabilities from explicit action permissions", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "Action User",
+      email: "action.user@secpal.dev",
+      roles: [],
+      permissions: ["customers.create", "sites.update"],
+    });
+
+    expect(capabilities.actions.customers.create).toBe(true);
+    expect(capabilities.actions.customers.update).toBe(false);
+    expect(capabilities.actions.customers.delete).toBe(false);
+    expect(capabilities.actions.sites.create).toBe(false);
+    expect(capabilities.actions.sites.update).toBe(true);
+    expect(capabilities.actions.sites.delete).toBe(false);
+  });
+
+  it("grants employee action capabilities from explicit permissions with org scopes", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "Employee Manager",
+      email: "emp.manager@secpal.dev",
+      hasOrganizationalScopes: true,
+      roles: [],
+      permissions: ["employees.activate", "employees.terminate"],
+    });
+
+    expect(capabilities.actions.employees.activate).toBe(true);
+    expect(capabilities.actions.employees.terminate).toBe(true);
+    expect(capabilities.actions.employees.create).toBe(false);
+  });
+
+  it("blocks employee action capabilities without org scopes even with matching permissions", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "External User",
+      email: "external.user@secpal.dev",
+      hasOrganizationalScopes: false,
+      roles: [],
+      permissions: ["employees.activate", "employees.terminate"],
+    });
+
+    expect(capabilities.actions.employees.activate).toBe(false);
+    expect(capabilities.actions.employees.terminate).toBe(false);
+    expect(capabilities.employees).toBe(false);
+  });
 });

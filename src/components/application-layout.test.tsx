@@ -77,7 +77,7 @@ describe("ApplicationLayout", () => {
       JSON.stringify({
         id: 1,
         name: "John Doe",
-        email: "john@example.dev",
+        email: "john@secpal.dev",
       })
     );
   });
@@ -354,7 +354,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Jane Smith",
-          email: "jane@example.dev",
+          email: "jane@secpal.dev",
         })
       );
 
@@ -375,7 +375,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin",
-          email: "admin@example.dev",
+          email: "admin@secpal.dev",
         })
       );
 
@@ -396,7 +396,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Paul Smith",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
         })
       );
 
@@ -416,7 +416,7 @@ describe("ApplicationLayout", () => {
         "auth_user",
         JSON.stringify({
           id: 1,
-          email: "user@example.dev",
+          email: "user@secpal.dev",
         })
       );
 
@@ -439,7 +439,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -459,7 +459,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -479,7 +479,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: true,
           roles: [],
           permissions: [],
@@ -503,7 +503,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: true,
           roles: ["Manager"],
           permissions: [],
@@ -527,7 +527,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: false,
           roles: [],
           permissions: ["customers.read"],
@@ -551,7 +551,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -571,7 +571,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "John Doe",
-          email: "john@example.dev",
+          email: "john@secpal.dev",
           // hasOrganizationalScopes not set
         })
       );
@@ -642,7 +642,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.dev",
+          email: "admin@secpal.dev",
           permissions: ["activity_log.read"],
         })
       );
@@ -662,7 +662,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Regular User",
-          email: "user@example.dev",
+          email: "user@secpal.dev",
           permissions: [],
         })
       );
@@ -682,7 +682,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.dev",
+          email: "admin@secpal.dev",
           permissions: ["activity_log.read"],
         })
       );
@@ -704,7 +704,7 @@ describe("ApplicationLayout", () => {
         JSON.stringify({
           id: 1,
           name: "Admin User",
-          email: "admin@example.dev",
+          email: "admin@secpal.dev",
           permissions: ["activity_log.read"],
         })
       );
