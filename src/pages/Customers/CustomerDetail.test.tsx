@@ -10,7 +10,14 @@ import { i18n } from "@lingui/core";
 import CustomerDetail from "./CustomerDetail";
 import * as customersApi from "../../services/customersApi";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 vi.mock("../../services/customersApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -60,6 +67,11 @@ describe("CustomerDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.pushState({}, "", "/customers/customer-123");
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: true, update: true, delete: true },
+      },
+    });
   });
 
   it("loads and displays customer details", async () => {
@@ -320,6 +332,28 @@ describe("CustomerDetail", () => {
 
     const backLink = screen.getByRole("link", { name: /back to list/i });
     expect(backLink).toHaveAttribute("href", "/customers");
+  });
+
+  it("hides edit and delete actions without management capabilities", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: false, update: false, delete: false },
+      },
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^delete$/i })
+    ).not.toBeInTheDocument();
   });
 
   it("displays loading state initially", () => {

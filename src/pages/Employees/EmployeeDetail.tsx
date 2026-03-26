@@ -24,6 +24,7 @@ import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 import { Badge } from "../../components/badge";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import {
   DescriptionList,
   DescriptionTerm,
@@ -337,6 +338,7 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
  */
 export function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
+  const capabilities = useUserCapabilities();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -468,19 +470,23 @@ export function EmployeeDetail() {
               </Text>
             </div>
             <div className="flex gap-2">
-              {employee.status === "pre_contract" && (
-                <Button onClick={handleActivate} disabled={actionLoading}>
-                  <Trans>Activate</Trans>
+              {employee.status === "pre_contract" &&
+                capabilities.actions.employees.activate && (
+                  <Button onClick={handleActivate} disabled={actionLoading}>
+                    <Trans>Activate</Trans>
+                  </Button>
+                )}
+              {employee.status === "active" &&
+                capabilities.actions.employees.terminate && (
+                  <Button onClick={handleTerminate} disabled={actionLoading}>
+                    <Trans>Terminate</Trans>
+                  </Button>
+                )}
+              {capabilities.actions.employees.update && (
+                <Button href={`/employees/${id}/edit`} outline>
+                  <Trans>Edit</Trans>
                 </Button>
               )}
-              {employee.status === "active" && (
-                <Button onClick={handleTerminate} disabled={actionLoading}>
-                  <Trans>Terminate</Trans>
-                </Button>
-              )}
-              <Button href={`/employees/${id}/edit`} outline>
-                <Trans>Edit</Trans>
-              </Button>
             </div>
           </div>
         </div>

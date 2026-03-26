@@ -24,6 +24,7 @@ import {
   TableCell,
 } from "../../components/table";
 import { Badge } from "../../components/badge";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 /**
  * Status badge component using Catalyst Badge
@@ -53,6 +54,7 @@ function StatusBadge({ status }: { status: EmployeeStatus }) {
  */
 export function EmployeeList() {
   const { _ } = useLingui();
+  const capabilities = useUserCapabilities();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,11 +152,13 @@ export function EmployeeList() {
         <Heading>
           <Trans>Employee Management</Trans>
         </Heading>
-        <div className="mt-4 sm:mt-0">
-          <Button href="/employees/create">
-            <Trans>Add Employee</Trans>
-          </Button>
-        </div>
+        {capabilities.actions.employees.create && (
+          <div className="mt-4 sm:mt-0">
+            <Button href="/employees/create">
+              <Trans>Add Employee</Trans>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}

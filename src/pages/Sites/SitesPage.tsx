@@ -27,10 +27,12 @@ import {
   TableCell,
 } from "../../components/table";
 import { Badge } from "../../components/badge";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function SitesPage() {
   const { _ } = useLingui();
   const { customerId } = useParams<{ customerId?: string }>();
+  const capabilities = useUserCapabilities();
   const [filters, setFilters] = useState<SiteFilters>({
     page: 1,
     per_page: 15,
@@ -94,11 +96,15 @@ export default function SitesPage() {
         <Heading>
           <Trans>Sites</Trans>
         </Heading>
-        <Button
-          href={customerId ? `/sites/new/customer/${customerId}` : "/sites/new"}
-        >
-          <Trans>New Site</Trans>
-        </Button>
+        {capabilities.actions.sites.create && (
+          <Button
+            href={
+              customerId ? `/sites/new/customer/${customerId}` : "/sites/new"
+            }
+          >
+            <Trans>New Site</Trans>
+          </Button>
+        )}
       </div>
 
       {/* Search and Filter */}

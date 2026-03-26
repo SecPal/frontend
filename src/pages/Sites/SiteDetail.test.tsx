@@ -11,8 +11,15 @@ import SiteDetail from "./SiteDetail";
 import * as customersApi from "../../services/customersApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 vi.mock("../../services/customersApi");
 vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -88,6 +95,11 @@ describe("SiteDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.pushState({}, "", "/sites/site-123");
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        sites: { create: true, update: true, delete: true },
+      },
+    });
   });
 
   it("loads and displays site details with customer and org unit names", async () => {
@@ -274,5 +286,31 @@ describe("SiteDetail", () => {
     // Should display IDs as fallback
     expect(screen.getByText("customer-123")).toBeInTheDocument();
     expect(screen.getByText("org-unit-123")).toBeInTheDocument();
+  });
+
+  it("hides edit and delete actions without site management capabilities", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        sites: { create: false, update: false, delete: false },
+      },
+    });
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Munich Office")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^delete$/i })
+    ).not.toBeInTheDocument();
   });
 });

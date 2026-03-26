@@ -10,8 +10,15 @@ import CustomersPage from "./CustomersPage";
 import * as customersApi from "../../services/customersApi";
 import type { Customer, PaginatedResponse } from "../../types/customers";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 // Mock the customers API
 vi.mock("../../services/customersApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -71,6 +78,11 @@ describe("CustomersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.listCustomers).mockResolvedValue(mockResponse);
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: true, update: true, delete: true },
+      },
+    });
   });
 
   it("should render customers list with table", async () => {
@@ -177,6 +189,24 @@ describe("CustomersPage", () => {
 
     const newButton = screen.getByText(/new customer/i);
     expect(newButton.closest("a")).toHaveAttribute("href", "/customers/new");
+  });
+
+  it("hides the new customer CTA without create capability", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: false, update: false, delete: false },
+      },
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /new customer/i })
+    ).not.toBeInTheDocument();
   });
 
   it("should have links to customer detail pages", async () => {
