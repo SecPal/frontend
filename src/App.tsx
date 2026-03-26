@@ -306,11 +306,9 @@ function App() {
               path="/activity-logs"
               element={
                 <FeatureRoute feature="activityLogs">
-                  <ProtectedRoute>
-                    <ApplicationLayout>
-                      <ActivityLogList />
-                    </ApplicationLayout>
-                  </ProtectedRoute>
+                  <ApplicationLayout>
+                    <ActivityLogList />
+                  </ApplicationLayout>
                 </FeatureRoute>
               }
             />
