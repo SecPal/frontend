@@ -118,9 +118,7 @@ export function OnboardingComplete() {
   const fileReaderRef = useRef<FileReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isOnboardingApiError = (
-    err: unknown
-  ): err is OnboardingApiError => {
+  const isOnboardingApiError = (err: unknown): err is OnboardingApiError => {
     return (
       typeof err === "object" &&
       err !== null &&
@@ -611,7 +609,9 @@ export function OnboardingComplete() {
           )}
           <div className="mt-4">
             {isRateLimited ? (
-              <Button onClick={() => setValidationAttempt((attempt) => attempt + 1)}>
+              <Button
+                onClick={() => setValidationAttempt((attempt) => attempt + 1)}
+              >
                 <Trans>Try Again</Trans>
               </Button>
             ) : (

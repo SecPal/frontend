@@ -115,7 +115,9 @@ export interface OnboardingApiError {
   };
 }
 
-async function parseErrorData(response: Response): Promise<OnboardingApiErrorData> {
+async function parseErrorData(
+  response: Response
+): Promise<OnboardingApiErrorData> {
   return response.json().catch(() => ({ message: response.statusText }));
 }
 

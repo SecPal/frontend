@@ -116,7 +116,9 @@ describe("OnboardingComplete", () => {
     });
 
     expect(screen.queryByText(/invalid link/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/please try again in about 2 minutes/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/please try again in about 2 minutes/i)
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /try again/i })
     ).toBeInTheDocument();
