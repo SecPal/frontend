@@ -27,9 +27,11 @@ import {
   TableCell,
 } from "../../components/table";
 import { Badge } from "../../components/badge";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function CustomersPage() {
   const { _ } = useLingui();
+  const capabilities = useUserCapabilities();
   const [filters, setFilters] = useState<CustomerFilters>({
     page: 1,
     per_page: 15,
@@ -84,9 +86,11 @@ export default function CustomersPage() {
         <Heading>
           <Trans>Customers</Trans>
         </Heading>
-        <Button href="/customers/new">
-          <Trans>New Customer</Trans>
-        </Button>
+        {capabilities.actions.customers.create && (
+          <Button href="/customers/new">
+            <Trans>New Customer</Trans>
+          </Button>
+        )}
       </div>
 
       {/* Search and Filter */}

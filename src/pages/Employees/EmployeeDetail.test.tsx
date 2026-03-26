@@ -12,10 +12,17 @@ import * as employeeApi from "../../services/employeeApi";
 import * as qualificationApi from "../../services/qualificationApi";
 import * as documentApi from "../../services/employeeDocumentApi";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/qualificationApi");
 vi.mock("../../services/employeeDocumentApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -46,7 +53,7 @@ const mockEmployee: Employee = {
   first_name: "John",
   last_name: "Doe",
   full_name: "John Doe",
-  email: "john.doe@example.com",
+  email: "john.doe@secpal.dev",
   phone: "+1234567890",
   date_of_birth: "1990-01-01",
   position: "Developer",
@@ -73,6 +80,17 @@ const mockEmployee: Employee = {
 describe("EmployeeDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        employees: {
+          create: true,
+          update: true,
+          delete: true,
+          activate: true,
+          terminate: true,
+        },
+      },
+    });
 
     // Setup default mocks
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
@@ -92,7 +110,7 @@ describe("EmployeeDetail", () => {
     });
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
-    expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("+1234567890")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
@@ -435,6 +453,38 @@ describe("EmployeeDetail", () => {
     expect(employeeApi.terminateEmployee).not.toHaveBeenCalled();
 
     vi.restoreAllMocks();
+  });
+
+  it("hides employee management actions without the matching capabilities", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        employees: {
+          create: false,
+          update: false,
+          delete: false,
+          activate: false,
+          terminate: false,
+        },
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "John Doe" })
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /^edit$/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /terminate/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /activate/i })
+    ).not.toBeInTheDocument();
   });
 
   describe("Management Level Display", () => {

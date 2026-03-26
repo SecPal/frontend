@@ -31,9 +31,11 @@ import {
   DialogBody,
   DialogActions,
 } from "../../components/dialog";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function SiteDetail() {
   const { i18n } = useLingui();
+  const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
@@ -332,16 +334,20 @@ export default function SiteDetail() {
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button href={`/sites/${site.id}/edit`}>
-            <Trans>Edit</Trans>
-          </Button>
-          <Button
-            outline
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={deleting}
-          >
-            <Trans>Delete</Trans>
-          </Button>
+          {capabilities.actions.sites.update && (
+            <Button href={`/sites/${site.id}/edit`}>
+              <Trans>Edit</Trans>
+            </Button>
+          )}
+          {capabilities.actions.sites.delete && (
+            <Button
+              outline
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deleting}
+            >
+              <Trans>Delete</Trans>
+            </Button>
+          )}
           <Button href="/sites" outline>
             <Trans>Back to List</Trans>
           </Button>
@@ -349,38 +355,40 @@ export default function SiteDetail() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onClose={setShowDeleteDialog}>
-        <DialogTitle>
-          <Trans>Delete Site</Trans>
-        </DialogTitle>
-        <DialogDescription>
-          <Trans>
-            Are you sure you want to delete this site? This action cannot be
-            undone.
-          </Trans>
-        </DialogDescription>
-        <DialogBody>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
-              {error}
-            </div>
-          )}
-          <Text>
-            <Trans>Site:</Trans> <strong>{site.name}</strong>
-          </Text>
-          <Text>
-            <Trans>Site Number:</Trans> <strong>{site.site_number}</strong>
-          </Text>
-        </DialogBody>
-        <DialogActions>
-          <Button outline onClick={() => setShowDeleteDialog(false)}>
-            <Trans>Cancel</Trans>
-          </Button>
-          <Button onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {capabilities.actions.sites.delete && (
+        <Dialog open={showDeleteDialog} onClose={setShowDeleteDialog}>
+          <DialogTitle>
+            <Trans>Delete Site</Trans>
+          </DialogTitle>
+          <DialogDescription>
+            <Trans>
+              Are you sure you want to delete this site? This action cannot be
+              undone.
+            </Trans>
+          </DialogDescription>
+          <DialogBody>
+            {error && (
+              <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
+                {error}
+              </div>
+            )}
+            <Text>
+              <Trans>Site:</Trans> <strong>{site.name}</strong>
+            </Text>
+            <Text>
+              <Trans>Site Number:</Trans> <strong>{site.site_number}</strong>
+            </Text>
+          </DialogBody>
+          <DialogActions>
+            <Button outline onClick={() => setShowDeleteDialog(false)}>
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </div>
   );
 }

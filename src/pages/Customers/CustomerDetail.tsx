@@ -27,8 +27,10 @@ import {
   DialogBody,
   DialogActions,
 } from "../../components/dialog";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function CustomerDetail() {
+  const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -224,16 +226,20 @@ export default function CustomerDetail() {
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button href={`/customers/${customer.id}/edit`}>
-            <Trans>Edit</Trans>
-          </Button>
-          <Button
-            outline
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={deleting}
-          >
-            <Trans>Delete</Trans>
-          </Button>
+          {capabilities.actions.customers.update && (
+            <Button href={`/customers/${customer.id}/edit`}>
+              <Trans>Edit</Trans>
+            </Button>
+          )}
+          {capabilities.actions.customers.delete && (
+            <Button
+              outline
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={deleting}
+            >
+              <Trans>Delete</Trans>
+            </Button>
+          )}
           <Button href="/customers" outline>
             <Trans>Back to List</Trans>
           </Button>
@@ -241,35 +247,37 @@ export default function CustomerDetail() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-      >
-        <DialogTitle>
-          <Trans>Delete Customer</Trans>
-        </DialogTitle>
-        <DialogDescription>
-          <Trans>
-            Are you sure you want to delete "{customer.name}"? This action
-            cannot be undone.
-          </Trans>
-        </DialogDescription>
-        <DialogBody>
-          {error && <Text className="text-red-600 mb-4">{error}</Text>}
-        </DialogBody>
-        <DialogActions>
-          <Button
-            plain
-            onClick={() => setShowDeleteDialog(false)}
-            disabled={deleting}
-          >
-            <Trans>Cancel</Trans>
-          </Button>
-          <Button color="red" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {capabilities.actions.customers.delete && (
+        <Dialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+        >
+          <DialogTitle>
+            <Trans>Delete Customer</Trans>
+          </DialogTitle>
+          <DialogDescription>
+            <Trans>
+              Are you sure you want to delete "{customer.name}"? This action
+              cannot be undone.
+            </Trans>
+          </DialogDescription>
+          <DialogBody>
+            {error && <Text className="text-red-600 mb-4">{error}</Text>}
+          </DialogBody>
+          <DialogActions>
+            <Button
+              plain
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button color="red" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </div>
   );
 }

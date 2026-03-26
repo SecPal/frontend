@@ -12,9 +12,16 @@ import { EmployeeList } from "./EmployeeList";
 import * as employeeApi from "../../services/employeeApi";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 // Mock the employee API
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -36,7 +43,7 @@ const mockEmployees: Employee[] = [
     first_name: "John",
     last_name: "Doe",
     full_name: "John Doe",
-    email: "john.doe@example.com",
+    email: "john.doe@secpal.dev",
     phone: "+1234567890",
     date_of_birth: "1990-01-01",
     position: "Developer",
@@ -57,7 +64,7 @@ const mockEmployees: Employee[] = [
     first_name: "Jane",
     last_name: "Smith",
     full_name: "Jane Smith",
-    email: "jane.smith@example.com",
+    email: "jane.smith@secpal.dev",
     phone: "+0987654321",
     date_of_birth: "1992-05-15",
     position: "Designer",
@@ -87,6 +94,17 @@ const mockResponse: EmployeeListResponse = {
 describe("EmployeeList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        employees: {
+          create: true,
+          update: true,
+          delete: true,
+          activate: true,
+          terminate: true,
+        },
+      },
+    });
     vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(mockResponse);
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
       data: [
@@ -131,13 +149,13 @@ describe("EmployeeList", () => {
     });
 
     expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.getByText("john.doe@example.com")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E001")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
 
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
-    expect(screen.getByText("jane.smith@example.com")).toBeInTheDocument();
+    expect(screen.getByText("jane.smith@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E002")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
     expect(screen.getByText("Design")).toBeInTheDocument();
@@ -206,6 +224,30 @@ describe("EmployeeList", () => {
     const addButton = screen.getByRole("link", { name: /add employee/i });
     expect(addButton).toBeInTheDocument();
     expect(addButton).toHaveAttribute("href", "/employees/create");
+  });
+
+  it("hides the add employee CTA without create capability", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        employees: {
+          create: false,
+          update: false,
+          delete: false,
+          activate: false,
+          terminate: false,
+        },
+      },
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /add employee/i })
+    ).not.toBeInTheDocument();
   });
 
   it("should display loading state", () => {

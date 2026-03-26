@@ -10,8 +10,15 @@ import SitesPage from "./SitesPage";
 import * as customersApi from "../../services/customersApi";
 import type { Site, PaginatedResponse } from "../../types/customers";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 // Mock the customers API
 vi.mock("../../services/customersApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -81,6 +88,11 @@ describe("SitesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.listSites).mockResolvedValue(mockResponse);
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        sites: { create: true, update: true, delete: true },
+      },
+    });
   });
 
   it("should render sites list with table", async () => {
@@ -218,6 +230,24 @@ describe("SitesPage", () => {
 
     const newButton = screen.getByText(/new site/i);
     expect(newButton.closest("a")).toHaveAttribute("href", "/sites/new");
+  });
+
+  it("hides the new site CTA without create capability", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        sites: { create: false, update: false, delete: false },
+      },
+    });
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("link", { name: /new site/i })
+    ).not.toBeInTheDocument();
   });
 
   it("should have links to site detail pages", async () => {
