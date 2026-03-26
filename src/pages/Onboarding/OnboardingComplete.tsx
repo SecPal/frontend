@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
@@ -24,6 +24,7 @@ import { useAuth } from "../../hooks/useAuth";
 import {
   completeOnboarding,
   validateOnboardingToken,
+  type OnboardingApiError,
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
 import {
@@ -46,6 +47,12 @@ interface ValidationErrors {
   password_confirmation?: string;
   photo?: string;
   general?: string;
+}
+
+interface TokenValidationState {
+  kind: "validating" | "ready" | "invalid" | "rate_limited";
+  message?: string;
+  retryAfterSeconds?: number;
 }
 
 /**
@@ -90,7 +97,9 @@ export function OnboardingComplete() {
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [loadingToken, setLoadingToken] = useState(true);
+  const [tokenValidationState, setTokenValidationState] =
+    useState<TokenValidationState>({ kind: "validating" });
+  const [validationAttempt, setValidationAttempt] = useState(0);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
   const [nameChangeConfirmed, setNameChangeConfirmed] = useState(false);
@@ -108,6 +117,41 @@ export function OnboardingComplete() {
   }>({ firstName: null, lastName: null });
   const fileReaderRef = useRef<FileReader | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const isOnboardingApiError = (
+    err: unknown
+  ): err is OnboardingApiError => {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "response" in err &&
+      typeof (err as { response: unknown }).response === "object" &&
+      (err as { response: unknown }).response !== null
+    );
+  };
+
+  const getRetryHint = (retryAfterSeconds?: number): string | null => {
+    if (!retryAfterSeconds || retryAfterSeconds <= 0) {
+      return null;
+    }
+
+    const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
+
+    if (retryAfterMinutes <= 1) {
+      return _(msg`Please try again in about 1 minute.`);
+    }
+
+    return _(msg`Please try again in about ${retryAfterMinutes} minutes.`);
+  };
+
+  const buildRateLimitMessage = (retryAfterSeconds?: number): string => {
+    const retryHint = getRetryHint(retryAfterSeconds);
+    const baseMessage = _(
+      msg`Too many onboarding attempts. Please try again later.`
+    );
+
+    return retryHint ? `${baseMessage} ${retryHint}` : baseMessage;
+  };
 
   // Validate names whenever form data changes
   useEffect(() => {
@@ -202,10 +246,14 @@ export function OnboardingComplete() {
           );
         }
 
-        setErrors({ general: errorMessage });
-        setLoadingToken(false);
+        setTokenValidationState({
+          kind: "invalid",
+          message: errorMessage,
+        });
         return;
       }
+
+      setTokenValidationState({ kind: "validating" });
 
       // Validate token and get employee data for prefilling
       try {
@@ -224,20 +272,34 @@ export function OnboardingComplete() {
           last_name: response.data.last_name || "",
         }));
 
-        setLoadingToken(false);
+        setTokenValidationState({ kind: "ready" });
       } catch (error) {
-        setErrors({
-          general:
-            error instanceof Error
+        if (isOnboardingApiError(error) && error.response.status === 429) {
+          setTokenValidationState({
+            kind: "rate_limited",
+            message: _(
+              msg`Too many onboarding attempts. Please try again later.`
+            ),
+            retryAfterSeconds: error.response.retryAfterSeconds,
+          });
+
+          return;
+        }
+
+        setTokenValidationState({
+          kind: "invalid",
+          message: isOnboardingApiError(error)
+            ? error.response.data.message ||
+              _(msg`Failed to validate onboarding link`)
+            : error instanceof Error
               ? error.message
               : _(msg`Failed to validate onboarding link`),
         });
-        setLoadingToken(false);
       }
     };
 
     validateAndPrefill();
-  }, [token, email, _]);
+  }, [token, email, _, validationAttempt]);
 
   // Cleanup FileReader on unmount to prevent memory leaks
   useEffect(() => {
@@ -390,25 +452,7 @@ export function OnboardingComplete() {
       // Reset name change confirmation on error
       setNameChangeConfirmed(false);
 
-      // Type guard for error with response property
-      const isApiError = (
-        err: unknown
-      ): err is {
-        response: {
-          status: number;
-          data: { message?: string; errors?: Record<string, string[]> };
-        };
-      } => {
-        return (
-          typeof err === "object" &&
-          err !== null &&
-          "response" in err &&
-          typeof (err as { response: unknown }).response === "object" &&
-          (err as { response: unknown }).response !== null
-        );
-      };
-
-      if (isApiError(error)) {
+      if (isOnboardingApiError(error)) {
         if (error.response.status === 422) {
           // Validation errors from backend
           const backendErrors = error.response.data.errors || {};
@@ -434,7 +478,7 @@ export function OnboardingComplete() {
         } else if (error.response.status === 429) {
           // Rate limit exceeded
           setErrors({
-            general: _(msg`Too many attempts. Please try again later.`),
+            general: buildRateLimitMessage(error.response.retryAfterSeconds),
           });
         } else {
           // Generic error
@@ -513,8 +557,13 @@ export function OnboardingComplete() {
     await performSubmission();
   };
 
-  // If no token or email, show error immediately
-  if (!token || !email || errors.general) {
+  if (
+    tokenValidationState.kind === "invalid" ||
+    tokenValidationState.kind === "rate_limited"
+  ) {
+    const isRateLimited = tokenValidationState.kind === "rate_limited";
+    const retryHint = getRetryHint(tokenValidationState.retryAfterSeconds);
+
     return (
       <AuthLayout>
         <div className="flex items-center justify-between gap-4">
@@ -525,17 +574,51 @@ export function OnboardingComplete() {
           <LanguageSwitcher />
         </div>
 
-        <div className="mt-8 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-6">
-          <Heading level={2} className="text-red-800 dark:text-red-200">
-            <Trans>Invalid Link</Trans>
+        <div
+          className={
+            isRateLimited
+              ? "mt-8 rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30"
+              : "mt-8 rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/30"
+          }
+        >
+          <Heading
+            level={2}
+            className={
+              isRateLimited
+                ? "text-amber-800 dark:text-amber-200"
+                : "text-red-800 dark:text-red-200"
+            }
+          >
+            {isRateLimited ? (
+              <Trans>Too Many Attempts</Trans>
+            ) : (
+              <Trans>Invalid Link</Trans>
+            )}
           </Heading>
-          <Text className="mt-2 text-red-700 dark:text-red-300">
-            {errors.general}
+          <Text
+            className={
+              isRateLimited
+                ? "mt-2 text-amber-700 dark:text-amber-300"
+                : "mt-2 text-red-700 dark:text-red-300"
+            }
+          >
+            {tokenValidationState.message}
           </Text>
+          {isRateLimited && retryHint && (
+            <Text className="mt-2 text-amber-700 dark:text-amber-300">
+              {retryHint}
+            </Text>
+          )}
           <div className="mt-4">
-            <Button color="red" onClick={() => navigate("/login")}>
-              <Trans>Go to Login</Trans>
-            </Button>
+            {isRateLimited ? (
+              <Button onClick={() => setValidationAttempt((attempt) => attempt + 1)}>
+                <Trans>Try Again</Trans>
+              </Button>
+            ) : (
+              <Button color="red" onClick={() => navigate("/login")}>
+                <Trans>Go to Login</Trans>
+              </Button>
+            )}
           </div>
         </div>
       </AuthLayout>
@@ -543,7 +626,7 @@ export function OnboardingComplete() {
   }
 
   // Show loading spinner while validating token
-  if (loadingToken) {
+  if (tokenValidationState.kind === "validating") {
     return (
       <AuthLayout>
         <div className="flex items-center justify-between gap-4">

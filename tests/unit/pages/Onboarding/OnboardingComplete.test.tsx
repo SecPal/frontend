@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -92,6 +92,33 @@ describe("OnboardingComplete", () => {
 
     expect(
       screen.getByRole("button", { name: /go to login/i })
+    ).toBeInTheDocument();
+  });
+
+  it("shows a dedicated rate-limit state when token validation returns 429", async () => {
+    vi.mocked(onboardingApi.validateOnboardingToken).mockRejectedValueOnce({
+      response: {
+        status: 429,
+        data: {
+          message: "Too many onboarding attempts. Please try again later.",
+        },
+        retryAfterSeconds: 120,
+      },
+    });
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/too many attempts/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/invalid link/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/please try again in about 2 minutes/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /try again/i })
     ).toBeInTheDocument();
   });
 
@@ -375,8 +402,12 @@ describe("OnboardingComplete", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/too many attempts/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/too many onboarding attempts/i)
+      ).toBeInTheDocument();
     });
+
+    expect(screen.queryByText(/^invalid link$/i)).not.toBeInTheDocument();
   });
 
   it("handles API validation errors from backend", async () => {

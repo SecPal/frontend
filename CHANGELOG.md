@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- distinguish temporary onboarding rate limits from invalid or expired invitation links in the onboarding completion flow, keep form-level `429` feedback inline instead of collapsing into the invalid-link screen, and surface a dedicated retry state when token validation is temporarily throttled
 - Centralized frontend UI capabilities for low-privilege users so scope-only accounts stay in self-service areas and direct navigation to elevated feature routes now resolves through one shared capability guard instead of mixed ad hoc checks
 - Applied the centralized low-privilege capability model to the main application navigation so management links stay hidden unless the user has the matching feature access
 - Hid customer, site, and employee create/update/delete or status-transition CTAs unless the centralized UI capability model grants the matching action, so low-privilege users no longer see misleading management buttons inside accessible pages
