@@ -141,7 +141,7 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("redirects authenticated users from unknown app routes instead of rendering a blank page", async () => {
+  it("shows a not found state for authenticated users on unknown app routes", async () => {
     window.history.replaceState({}, "", "/dashboard");
 
     localStorage.setItem(
@@ -156,11 +156,9 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByRole(
-        "heading",
-        { name: /Welcome to SecPal/i },
-        { timeout: 20000 }
-      )
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
     ).toBeInTheDocument();
+
+    expect(window.location.pathname).toBe("/dashboard");
   });
 });

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/macro";
+import { Button } from "./button";
 import { Text } from "./text";
 
 export function RouteLoadingState() {
@@ -31,6 +32,28 @@ export function RouteAccessDeniedState() {
             administrator if you believe this is an error.
           </Trans>
         </Text>
+      </div>
+    </div>
+  );
+}
+
+export function RouteNotFoundState() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center p-4">
+      <div className="max-w-md text-center">
+        <Text className="mb-2 text-lg font-semibold">
+          <Trans>Page Not Found</Trans>
+        </Text>
+        <Text className="text-zinc-500 dark:text-zinc-400">
+          <Trans>
+            The page you requested does not exist or is no longer available.
+          </Trans>
+        </Text>
+        <div className="mt-6 flex justify-center">
+          <Button href="/" outline>
+            <Trans>Back to Home</Trans>
+          </Button>
+        </div>
       </div>
     </div>
   );
