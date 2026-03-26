@@ -119,6 +119,28 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows access denied for organization routes when the user only has scopes but no elevated feature capability", async () => {
+    window.history.replaceState({}, "", "/organization");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
   it("redirects authenticated users from unknown app routes instead of rendering a blank page", async () => {
     window.history.replaceState({}, "", "/dashboard");
 

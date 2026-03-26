@@ -10,8 +10,7 @@ import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { PermissionRoute } from "./components/PermissionRoute";
-import { OrganizationalRoute } from "./components/OrganizationalRoute";
+import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
@@ -132,163 +131,163 @@ function App() {
             <Route
               path="/customers"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomersPage />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/customers/new"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomerCreate />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/customers/:id"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomerDetail />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/customers/:id/edit"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomerEdit />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SitesPage />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites/customer/:customerId"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SitesPage />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites/new"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SiteCreate />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites/new/customer/:customerId"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SiteCreate />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites/:id"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SiteDetail />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/sites/:id/edit"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SiteEdit />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             {/* Organizational Unit Management Route - INTERNAL Company Structure */}
             <Route
               path="/organization"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="organization">
                   <ApplicationLayout>
                     <OrganizationPage />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/organizational-units"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="organization">
                   <ApplicationLayout>
                     <OrganizationPage />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             {/* Employee Management Routes - Requires Organizational Access */}
             <Route
               path="/employees"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeList />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/employees/create"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeCreate />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/employees/:id/edit"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeEdit />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             <Route
               path="/employees/:id"
               element={
-                <OrganizationalRoute>
+                <FeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeDetail />
                   </ApplicationLayout>
-                </OrganizationalRoute>
+                </FeatureRoute>
               }
             />
             {/* Onboarding Route */}
@@ -306,13 +305,13 @@ function App() {
             <Route
               path="/activity-logs"
               element={
-                <ProtectedRoute>
-                  <PermissionRoute permission="activity_log.read">
+                <FeatureRoute feature="activityLogs">
+                  <ProtectedRoute>
                     <ApplicationLayout>
                       <ActivityLogList />
                     </ApplicationLayout>
-                  </PermissionRoute>
-                </ProtectedRoute>
+                  </ProtectedRoute>
+                </FeatureRoute>
               }
             />
             {/* User Routes */}

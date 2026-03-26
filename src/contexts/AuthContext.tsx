@@ -13,6 +13,7 @@ import { authStorage } from "../services/storage";
 import { getCurrentUser } from "../services/authApi";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { hasUserPermission, hasUserRole } from "../lib/capabilities";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const hasRole = useCallback(
     (role: string): boolean => {
-      return user?.roles?.includes(role) ?? false;
+      return hasUserRole(user, role);
     },
     [user]
   );
@@ -90,18 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const hasPermission = useCallback(
     (permission: string): boolean => {
-      if (!user?.permissions) return false;
-
-      // Direct match
-      if (user.permissions.includes(permission)) return true;
-
-      // Wildcard match: check if user has resource.* for resource.action
-      if (permission.includes(".")) {
-        const [resource] = permission.split(".");
-        if (user.permissions.includes(`${resource}.*`)) return true;
-      }
-
-      return false;
+      return hasUserPermission(user, permission);
     },
     [user]
   );
