@@ -124,6 +124,29 @@ describe("OnboardingComplete", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows singular minute hint when retryAfterSeconds is ≤60", async () => {
+    vi.mocked(onboardingApi.validateOnboardingToken).mockRejectedValueOnce({
+      response: {
+        status: 429,
+        data: {
+          message: "Too many onboarding attempts. Please try again later.",
+        },
+        retryAfterSeconds: 45,
+      },
+    });
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@example.com"
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please try again in about 1 minute/i)
+      ).toBeInTheDocument();
+    });
+  });
+
   it("validates required fields on submit", async () => {
     renderWithProviders(
       <OnboardingComplete />,
