@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee, EmployeeFormData } from "@/types/api";
+import type { Employee, EmployeeFormData, EmployeeStatus } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -22,6 +22,7 @@ import {
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
+import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
 
 /**
  * Employee Edit Form
@@ -558,6 +559,33 @@ export function EmployeeEdit() {
                     </span>
                   </Field>
                 </div>
+
+                <Field>
+                  <Label>
+                    <Trans>Status</Trans> *
+                  </Label>
+                  <Select
+                    name="status"
+                    required
+                    value={formData.status}
+                    onChange={(e) =>
+                      handleChange("status", e.target.value as EmployeeStatus)
+                    }
+                  >
+                    <EmployeeStatusOptions />
+                  </Select>
+                  <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <Trans>
+                      Applicant / Pre-Contract / Active / On Leave / Terminated
+                    </Trans>
+                  </Text>
+                  <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    <Trans>
+                      Invitations are only available for employees in
+                      pre-contract status.
+                    </Trans>
+                  </Text>
+                </Field>
               </div>
             </FieldGroup>
           </Fieldset>

@@ -41,6 +41,9 @@ export type EmployeeOnboardingInvitationStatus =
 
 export interface EmployeeOnboardingInvitation {
   status: EmployeeOnboardingInvitationStatus;
+  available?: boolean;
+  eligible_statuses?: EmployeeStatus[];
+  rule_message?: string | null;
   requested_at?: string | null;
   token_created_at?: string | null;
   mail_sent_at?: string | null;

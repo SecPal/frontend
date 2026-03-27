@@ -24,6 +24,7 @@ import {
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
+import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
 
 type EmployeeFormField = keyof EmployeeFormData;
 type EmployeeFormErrors = Partial<Record<EmployeeFormField, string>>;
@@ -38,6 +39,7 @@ const fieldOrder: EmployeeFormField[] = [
   "organizational_unit_id",
   "management_level",
   "status",
+  "send_invitation",
   "contract_type",
 ];
 
@@ -426,8 +428,13 @@ export function EmployeeCreate() {
   }
 
   function handleStatusChange(status: EmployeeStatus) {
-    setFormData((prev) => ({ ...prev, status }));
+    setFormData((prev) => ({
+      ...prev,
+      status,
+      ...(status !== "pre_contract" && { send_invitation: false }),
+    }));
     clearFieldError("status");
+    clearFieldError("send_invitation");
     clearSubmitMessages();
   }
 
@@ -823,27 +830,31 @@ export function EmployeeCreate() {
                       handleStatusChange(e.target.value as EmployeeStatus)
                     }
                   >
-                    <option value="applicant">
-                      <Trans>Applicant</Trans>
-                    </option>
-                    <option value="pre_contract">
-                      <Trans>Pre-Contract</Trans>
-                    </option>
-                    <option value="active">
-                      <Trans>Active</Trans>
-                    </option>
-                    <option value="on_leave">
-                      <Trans>On Leave</Trans>
-                    </option>
-                    <option value="terminated">
-                      <Trans>Terminated</Trans>
-                    </option>
+                    <EmployeeStatusOptions />
                   </Select>
                   {fieldErrors.status && (
                     <ErrorMessage id={getFieldErrorId("status")}>
                       {fieldErrors.status}
                     </ErrorMessage>
                   )}
+                  <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <Trans>
+                      Applicant / Pre-Contract / Active / On Leave / Terminated
+                    </Trans>
+                  </Text>
+                  <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    {inviteSupported ? (
+                      <Trans>
+                        Pre-Contract is the only status that allows onboarding
+                        invitations.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        Invitations are only available for employees in
+                        pre-contract status.
+                      </Trans>
+                    )}
+                  </Text>
                 </Field>
 
                 <Field>
@@ -906,6 +917,10 @@ export function EmployeeCreate() {
                     <Switch
                       id="send_invitation"
                       name="send_invitation"
+                      aria-invalid={
+                        fieldErrors.send_invitation ? true : undefined
+                      }
+                      aria-describedby={getAriaDescribedBy("send_invitation")}
                       checked={
                         Boolean(formData.send_invitation) && inviteSupported
                       }
@@ -918,6 +933,11 @@ export function EmployeeCreate() {
                       }
                     />
                   </div>
+                  {fieldErrors.send_invitation && (
+                    <ErrorMessage id={getFieldErrorId("send_invitation")}>
+                      {fieldErrors.send_invitation}
+                    </ErrorMessage>
+                  )}
                 </Field>
               </div>
             </FieldGroup>

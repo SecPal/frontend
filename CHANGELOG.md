@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Clarified the employee status rules in the create and edit UI by showing the full valid status set (`Applicant`, `Pre-Contract`, `Active`, `On Leave`, `Terminated`) and by explaining inline that onboarding invitations are only available in `Pre-Contract`.
 - Aligned the frontend auth client, integration tests, and migration guide with the canonical backend auth/self-service surface so browser sessions now use `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` instead of legacy or guessed paths
 
 ### Removed
@@ -56,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Surfaced backend `send_invitation` validation errors inline in the employee create form, showed onboarding-invitation availability reasons on employee detail pages, and aligned the terminate action with the backend by allowing it for `on_leave` employees as well as `active` ones.
 - Replaced the authenticated wildcard app-route redirect to `/` with a dedicated not-found state, so unknown non-onboarding URLs now fail clearly while protected feature routes continue to use the shared access-denied UX
 - distinguish temporary onboarding rate limits from invalid or expired invitation links in the onboarding completion flow, keep form-level `429` feedback inline instead of collapsing into the invalid-link screen, and surface a dedicated retry state when token validation is temporarily throttled
 - Centralized frontend UI capabilities for low-privilege users so scope-only accounts stay in self-service areas and direct navigation to elevated feature routes now resolves through one shared capability guard instead of mixed ad hoc checks
