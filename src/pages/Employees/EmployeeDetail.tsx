@@ -486,7 +486,8 @@ export function EmployeeDetail() {
                     <Trans>Activate</Trans>
                   </Button>
                 )}
-              {(employee.status === "active" || employee.status === "on_leave") &&
+              {(employee.status === "active" ||
+                employee.status === "on_leave") &&
                 capabilities.actions.employees.terminate && (
                   <Button onClick={handleTerminate} disabled={actionLoading}>
                     <Trans>Terminate</Trans>
