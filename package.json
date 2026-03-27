@@ -60,7 +60,7 @@
     "@lingui/core": "^5.9.3",
     "@lingui/react": "^5.9.3",
     "clsx": "^2.1.1",
-    "dexie": "^4.2.1",
+    "dexie": "^4.4.1",
     "dexie-react-hooks": "^4.2.0",
     "motion": "^12.38.0",
     "react": "^19.2.3",
