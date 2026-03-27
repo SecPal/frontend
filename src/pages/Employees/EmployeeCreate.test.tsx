@@ -526,8 +526,8 @@ describe("EmployeeCreate", () => {
     expect(
       screen.getAllByText(
         /invitations are only available for employees in pre-contract status/i
-      ).length
-    ).toBeGreaterThan(0);
+      )
+    ).toHaveLength(2);
     expect(
       screen.getByText(
         /applicant\s*\/\s*pre-contract\s*\/\s*active\s*\/\s*on leave\s*\/\s*terminated/i

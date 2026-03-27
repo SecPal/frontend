@@ -22,6 +22,7 @@ import {
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
+import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
 
 /**
  * Employee Edit Form
@@ -571,24 +572,10 @@ export function EmployeeEdit() {
                       handleChange("status", e.target.value as EmployeeStatus)
                     }
                   >
-                    <option value="applicant">
-                      <Trans>Applicant</Trans>
-                    </option>
-                    <option value="pre_contract">
-                      <Trans>Pre-Contract</Trans>
-                    </option>
-                    <option value="active">
-                      <Trans>Active</Trans>
-                    </option>
-                    <option value="on_leave">
-                      <Trans>On Leave</Trans>
-                    </option>
-                    <option value="terminated">
-                      <Trans>Terminated</Trans>
-                    </option>
+                    <EmployeeStatusOptions />
                   </Select>
                   <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    Applicant / Pre-Contract / Active / On Leave / Terminated
+                    <Trans>Applicant / Pre-Contract / Active / On Leave / Terminated</Trans>
                   </Text>
                   <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
