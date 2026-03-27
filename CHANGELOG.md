@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Clarified the employee status rules in the create and edit UI by showing the full valid status set (`Applicant`, `Pre-Contract`, `Active`, `On Leave`, `Terminated`) and by explaining inline that onboarding invitations are only available in `Pre-Contract`.
 - Aligned the frontend auth client, integration tests, and migration guide with the canonical backend auth/self-service surface so browser sessions now use `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` instead of legacy or guessed paths
+- Pinned frontend TypeScript back to the supported `5.9.x` line so `@typescript-eslint` linting no longer runs outside its declared compatibility range while the repository waits for official TypeScript 6 support
 
 ### Removed
 

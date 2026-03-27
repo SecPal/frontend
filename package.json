@@ -106,7 +106,7 @@
     "prettier": "^3.8.1",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.1.17",
-    "typescript": "^6.0.2",
+    "typescript": "5.9.x",
     "typescript-eslint": "^8.57.2",
     "vite": "^8.0.3",
     "vite-plugin-pwa": "^1.2.0",
