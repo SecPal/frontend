@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal Contributors
+SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -9,7 +9,7 @@ This document tracks known issues that are outside our direct control and requir
 
 ## npm Deprecation Warnings
 
-### Status: Partially Mitigated, Awaiting Upstream Fixes
+### Status: Audit Clean, Remaining Deprecations Await Upstream Fixes
 
 When running `npm ci` or fresh `npm install`, you may still see deprecation warnings for the following packages:
 
@@ -32,9 +32,11 @@ These are **transitive dependencies** from packages that currently have no compa
 
 The previously observed `@lhci/cli` → `chrome-launcher` → `rimraf` / `glob@7.2.3` / `inflight@1.0.6` chain was removed from regular installs on 2026-03-21 by switching local Lighthouse CLI usage to on-demand `npx` execution.
 
+The previously tracked `npm audit` findings for `brace-expansion` and `serialize-javascript` were eliminated on 2026-03-27 by raising the frontend override floors to patched releases. `npm audit` now reports 0 vulnerabilities in this repository.
+
 ### Impact Assessment
 
-- **Security**: ✅ No known CVEs
+- **Security**: ✅ `npm audit` is clean; no known runtime CVEs remain in the current dependency graph
 - **Deprecated Build Tooling**: ⚠️ Limited to build-time and local tooling paths, not shipped runtime code
 - **Functionality**: ✅ All features work correctly
 - **Build Process**: ✅ No impact on build or runtime
@@ -49,6 +51,7 @@ The previously observed `@lhci/cli` → `chrome-launcher` → `rimraf` / `glob@7
 ### What We're Doing
 
 - ✅ Removed the direct `@lhci/cli` install path from normal dependency installation
+- ✅ Raised `brace-expansion` and `serialize-javascript` override floors so `npm audit` now returns 0 vulnerabilities
 - ✅ Monitoring upstream repositories for updates
 - ✅ Testing new versions as they're released
 - ✅ Documented in this file for team awareness
@@ -78,9 +81,9 @@ We will update dependencies as soon as stable upstream releases make that possib
 
 ---
 
-**Last Updated**: 2026-03-21
+**Last Updated**: 2026-03-27
 **Reviewed By**: SecPal Team
-**Status**: Accepted Risk (Non-Critical)
+**Status**: Accepted Risk (Deprecations Only)
 
 ---
 

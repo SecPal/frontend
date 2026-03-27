@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Raised the frontend override floors for `brace-expansion` and `serialize-javascript` so `npm audit` now returns 0 vulnerabilities; the remaining install-time deprecation warnings still come from the upstream `vite-plugin-pwa` / `workbox-build` toolchain and remain documented as accepted build-time risk
+
 - Pinned the transitive `picomatch` resolution to `2.3.2` for 2.x consumers and
   `4.0.4` for 4.x consumers via `overrides`, so the frontend no longer ships
   the vulnerable glob-matching releases flagged by Dependabot security alerts for
