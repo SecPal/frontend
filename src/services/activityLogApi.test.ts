@@ -1,7 +1,8 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { apiConfig } from "../config";
 import { fetchActivityLogs, verifyActivityLog } from "./activityLogApi";
 import type {
   Activity,
@@ -83,7 +84,7 @@ describe("activityLogApi", () => {
 
       // Now includes verification parameter by default
       expect(csrf.apiFetch).toHaveBeenCalledWith(
-        "/v1/activity-logs?include_verification=1"
+        `${apiConfig.baseUrl}/v1/activity-logs?include_verification=1`
       );
       expect(result).toEqual(mockResponse);
       expect(result.data).toHaveLength(1);
@@ -235,7 +236,7 @@ describe("activityLogApi", () => {
       const result = await verifyActivityLog("log-1");
 
       expect(csrf.apiFetch).toHaveBeenCalledWith(
-        "/v1/activity-logs/log-1/verify"
+        `${apiConfig.baseUrl}/v1/activity-logs/log-1/verify`
       );
       expect(result).toEqual({ data: mockVerification });
       expect(result.data.verification.chain_valid).toBe(true);
@@ -372,7 +373,9 @@ describe("activityLogApi", () => {
       const { fetchActivityLog } = await import("./activityLogApi");
       const result = await fetchActivityLog("log-1");
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith("/v1/activity-logs/log-1");
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/activity-logs/log-1`
+      );
       expect(result.data.id).toBe("log-1");
       expect(result.data.log_name).toBe("authentication");
     });
