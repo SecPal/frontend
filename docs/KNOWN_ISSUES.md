@@ -14,8 +14,6 @@ This document tracks known issues that are outside our direct control and requir
 When running `npm ci` or fresh `npm install`, you may still see deprecation warnings for the following packages:
 
 ```text
-npm warn deprecated glob@11.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update.
-
 npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
 
 npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta
@@ -26,9 +24,10 @@ npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta
 
 These are **transitive dependencies** from packages that currently have no compatible upstream replacement in this repo's supported toolchain:
 
-- `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `glob@11.1.0`
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `@rollup/plugin-replace@2.x` / `magic-string@0.25.9` → `sourcemap-codec@1.4.8`
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `source-map@0.8.0-beta.0`
+
+The previously observed `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `glob@11.1.0` warning was resolved on 2026-03-27 because the existing `"glob": "^13.0.6"` override in `package.json` causes npm to resolve all glob requests (including `^11.0.1` from workbox-build) to the non-deprecated `glob@13.0.6`.
 
 The previously observed `@lhci/cli` → `chrome-launcher` → `rimraf` / `glob@7.2.3` / `inflight@1.0.6` chain was removed from regular installs on 2026-03-21 by switching local Lighthouse CLI usage to on-demand `npx` execution.
 
@@ -43,7 +42,7 @@ The previously tracked `npm audit` findings for `brace-expansion` and `serialize
 
 ### Why We Can't Fix This Directly
 
-1. **`workbox-build@7.4.0`** is still the latest release and still depends on `glob@11.1.0`, `sourcemap-codec@1.4.8`, and `source-map@0.8.0-beta.0`
+1. **`workbox-build@7.4.0`** is still the latest release and still depends on `sourcemap-codec@1.4.8` and `source-map@0.8.0-beta.0`
 2. **`vite-plugin-pwa@1.2.0`** is still the latest release and still depends on `workbox-build@7.4.0`
 3. **npm overrides** would force unverified major-version replacements into build tooling
 4. **Forking/patching** would create permanent maintenance overhead for non-runtime warnings
