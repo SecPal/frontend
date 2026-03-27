@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Raised the frontend override floors for `brace-expansion` and `serialize-javascript` so `npm audit` now returns 0 vulnerabilities; the remaining install-time deprecation warnings still come from the upstream `vite-plugin-pwa` / `workbox-build` toolchain and remain documented as accepted build-time risk
+
 - Pinned the transitive `picomatch` resolution to `2.3.2` for 2.x consumers and
   `4.0.4` for 4.x consumers via `overrides`, so the frontend no longer ships
   the vulnerable glob-matching releases flagged by Dependabot security alerts for
@@ -58,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated the `activityLogApi` service tests to expect the configured absolute API URL, matching the current client behavior and restoring the targeted Vitest coverage for activity-log requests
 - Surfaced backend `send_invitation` validation errors inline in the employee create form, showed onboarding-invitation availability reasons on employee detail pages, and aligned the terminate action with the backend by allowing it for `on_leave` employees as well as `active` ones.
 - Replaced the authenticated wildcard app-route redirect to `/` with a dedicated not-found state, so unknown non-onboarding URLs now fail clearly while protected feature routes continue to use the shared access-denied UX
 - distinguish temporary onboarding rate limits from invalid or expired invitation links in the onboarding completion flow, keep form-level `429` feedback inline instead of collapsing into the invalid-link screen, and surface a dedicated retry state when token validation is temporarily throttled
