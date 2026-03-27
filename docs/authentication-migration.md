@@ -88,7 +88,7 @@ sequenceDiagram
     Browser->>Frontend: User requests protected resource
     Frontend->>Backend: GET /v1/me<br/>(credentials: include, cookies sent automatically)
     Backend->>Database: Validate session
-    Backend-->>Frontend: 200 OK { data: {...} }
+    Backend-->>Frontend: 200 OK { id: ..., name: ..., email: ..., roles: [...], permissions: [...] }
 
     Note over Browser,Database: Logout Flow
     Browser->>Frontend: User clicks logout
