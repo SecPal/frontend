@@ -575,7 +575,9 @@ export function EmployeeEdit() {
                     <EmployeeStatusOptions />
                   </Select>
                   <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>Applicant / Pre-Contract / Active / On Leave / Terminated</Trans>
+                    <Trans>
+                      Applicant / Pre-Contract / Active / On Leave / Terminated
+                    </Trans>
                   </Text>
                   <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
