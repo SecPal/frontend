@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
@@ -79,14 +79,14 @@ sequenceDiagram
     Browser->>Frontend: User submits login form
     Frontend->>Backend: GET /sanctum/csrf-cookie
     Backend-->>Frontend: Set-Cookie: XSRF-TOKEN=...
-    Frontend->>Backend: POST /v1/auth/token<br/>(email, password, X-XSRF-TOKEN header)
+    Frontend->>Backend: POST /v1/auth/login<br/>(email, password, X-XSRF-TOKEN header)
     Backend->>Database: Verify credentials
     Backend-->>Frontend: Set-Cookie: laravel_session=...; HttpOnly<br/>Response: { user: {...} }
     Frontend->>Browser: Update UI (user logged in)
 
     Note over Browser,Database: Authenticated Request
     Browser->>Frontend: User requests protected resource
-    Frontend->>Backend: GET /v1/user/profile<br/>(credentials: include, cookies sent automatically)
+    Frontend->>Backend: GET /v1/me<br/>(credentials: include, cookies sent automatically)
     Backend->>Database: Validate session
     Backend-->>Frontend: 200 OK { data: {...} }
 
@@ -94,9 +94,11 @@ sequenceDiagram
     Browser->>Frontend: User clicks logout
     Frontend->>Backend: POST /v1/auth/logout<br/>(X-XSRF-TOKEN header, cookies)
     Backend->>Database: Revoke session
-    Backend-->>Frontend: Set-Cookie: laravel_session=deleted; Max-Age=0<br/>204 No Content
+    Backend-->>Frontend: Set-Cookie: laravel_session=deleted; Max-Age=0<br/>200 OK { message: "Logged out successfully" }
     Frontend->>Browser: Update UI (user logged out)
 ```
+
+The SPA flow uses `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` as its canonical auth/self-service surface. `POST /v1/auth/token` remains reserved for Android, native, CLI, and other Bearer-token clients.
 
 ### CSRF Token Flow
 

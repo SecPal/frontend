@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- aligned the frontend auth client, integration tests, and migration guide with the canonical backend auth/self-service surface so browser sessions now use `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` instead of legacy or guessed paths
+
 ### Removed
 
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
