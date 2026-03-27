@@ -163,7 +163,17 @@ function ProfileTab({ employee }: { employee: Employee }) {
       </DescriptionTerm>
       <DescriptionDetails>
         {onboardingInvitation ? (
-          <InvitationStatusLabel status={onboardingInvitation.status} />
+          <div className="space-y-1">
+            <div>
+              <InvitationStatusLabel status={onboardingInvitation.status} />
+            </div>
+            {onboardingInvitation.available === false &&
+              onboardingInvitation.rule_message && (
+                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {onboardingInvitation.rule_message}
+                </Text>
+              )}
+          </div>
         ) : (
           "-"
         )}
@@ -476,7 +486,7 @@ export function EmployeeDetail() {
                     <Trans>Activate</Trans>
                   </Button>
                 )}
-              {employee.status === "active" &&
+              {(employee.status === "active" || employee.status === "on_leave") &&
                 capabilities.actions.employees.terminate && (
                   <Button onClick={handleTerminate} disabled={actionLoading}>
                     <Trans>Terminate</Trans>

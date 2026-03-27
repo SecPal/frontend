@@ -524,8 +524,69 @@ describe("EmployeeCreate", () => {
     expect(invitationSwitch).toBeDisabled();
     expect(invitationSwitch).not.toBeChecked();
     expect(
-      screen.getByText(
+      screen.getAllByText(
         /invitations are only available for employees in pre-contract status/i
+      ).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        /applicant\s*\/\s*pre-contract\s*\/\s*active\s*\/\s*on leave\s*\/\s*terminated/i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("should show send invitation validation errors inline when the API rejects the request", async () => {
+    vi.mocked(employeeApi.createEmployee).mockRejectedValue(
+      new ApiError("Validation failed", 422, {
+        send_invitation: [
+          "Invitation sending is only available when employee status is pre_contract. Received: active.",
+        ],
+      })
+    );
+
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Main Office")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "john.doe@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "01/01/1990" },
+    });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
+    fireEvent.change(screen.getByLabelText("Position *"), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "01/01/2025" },
+    });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
+    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
+      target: { value: "unit-1" },
+    });
+
+    submitEmployeeCreateForm();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /we couldn't submit the form yet\. please review the highlighted fields/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        /invitation sending is only available when employee status is pre_contract\. received: active\./i
       )
     ).toBeInTheDocument();
   });

@@ -38,6 +38,7 @@ const fieldOrder: EmployeeFormField[] = [
   "organizational_unit_id",
   "management_level",
   "status",
+  "send_invitation",
   "contract_type",
 ];
 
@@ -428,6 +429,7 @@ export function EmployeeCreate() {
   function handleStatusChange(status: EmployeeStatus) {
     setFormData((prev) => ({ ...prev, status }));
     clearFieldError("status");
+    clearFieldError("send_invitation");
     clearSubmitMessages();
   }
 
@@ -844,6 +846,22 @@ export function EmployeeCreate() {
                       {fieldErrors.status}
                     </ErrorMessage>
                   )}
+                  <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    Applicant / Pre-Contract / Active / On Leave / Terminated
+                  </Text>
+                  <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    {inviteSupported ? (
+                      <Trans>
+                        Pre-Contract is the only status that allows onboarding
+                        invitations.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        Invitations are only available for employees in
+                        pre-contract status.
+                      </Trans>
+                    )}
+                  </Text>
                 </Field>
 
                 <Field>
@@ -906,6 +924,10 @@ export function EmployeeCreate() {
                     <Switch
                       id="send_invitation"
                       name="send_invitation"
+                      aria-invalid={
+                        fieldErrors.send_invitation ? true : undefined
+                      }
+                      aria-describedby={getAriaDescribedBy("send_invitation")}
                       checked={
                         Boolean(formData.send_invitation) && inviteSupported
                       }
@@ -918,6 +940,11 @@ export function EmployeeCreate() {
                       }
                     />
                   </div>
+                  {fieldErrors.send_invitation && (
+                    <ErrorMessage id={getFieldErrorId("send_invitation")}>
+                      {fieldErrors.send_invitation}
+                    </ErrorMessage>
+                  )}
                 </Field>
               </div>
             </FieldGroup>

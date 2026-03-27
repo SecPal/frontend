@@ -297,6 +297,54 @@ describe("EmployeeDetail", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("should show terminate button for on-leave employees", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "on_leave",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("On Leave")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("button", { name: /terminate/i })
+    ).toBeInTheDocument();
+  });
+
+  it("should explain when onboarding invitations are unavailable for the current status", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "active",
+      onboarding_invitation: {
+        status: "not_requested",
+        requested_at: null,
+        token_created_at: null,
+        mail_sent_at: null,
+        mail_failed_at: null,
+        failure_reason: null,
+        available: false,
+        eligible_statuses: ["pre_contract"],
+        rule_message:
+          "Onboarding invitations are only available while the employee is in pre_contract status.",
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByText("Not requested")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(
+        /onboarding invitations are only available while the employee is in pre_contract status\./i
+      )
+    ).toBeInTheDocument();
+  });
+
   it("should switch between tabs", async () => {
     renderWithProviders("emp-1");
 

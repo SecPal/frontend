@@ -293,6 +293,35 @@ describe("EmployeeEdit", () => {
     });
   });
 
+  it("should allow changing the employee status to on leave", async () => {
+    const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+    mockUpdateEmployee.mockResolvedValue({
+      ...mockEmployee,
+      status: "on_leave",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+    });
+
+    fireEvent.change(screen.getByLabelText(/status/i), {
+      target: { value: "on_leave" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateEmployee).toHaveBeenCalledWith(
+        "emp-1",
+        expect.objectContaining({
+          status: "on_leave",
+        })
+      );
+    });
+  });
+
   it("should show loading state while fetching employee", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockImplementation(
       () => new Promise(() => {})
