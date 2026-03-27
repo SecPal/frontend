@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-03-26 20:20+0000\n"
+"POT-Creation-Date: 2026-03-26 22:11+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -80,15 +80,15 @@ msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend au
 msgid "A new version of SecPal is available."
 msgstr "Eine neue Version von SecPal ist verfügbar."
 
-#: src/App.tsx:68
+#: src/App.tsx:69
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:79
+#: src/App.tsx:80
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/components/RouteGuardState.tsx:26
+#: src/components/RouteGuardState.tsx:27
 msgid "Access Denied"
 msgstr "Zugang verweigert"
 
@@ -257,7 +257,8 @@ msgstr "Zurück zu den Kunden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
-#: src/App.tsx:90
+#: src/App.tsx:91
+#: src/components/RouteGuardState.tsx:54
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -294,7 +295,7 @@ msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalak
 #: src/pages/Customers/CustomerEdit.tsx:311
 #: src/pages/Employees/EmployeeCreate.tsx:942
 #: src/pages/Employees/EmployeeEdit.tsx:571
-#: src/pages/Onboarding/OnboardingComplete.tsx:740
+#: src/pages/Onboarding/OnboardingComplete.tsx:742
 #: src/pages/Sites/SiteCreate.tsx:492
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:463
@@ -362,15 +363,15 @@ msgstr "Zusammenklappen"
 msgid "Company"
 msgstr "Unternehmen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:948
+#: src/pages/Onboarding/OnboardingComplete.tsx:950
 msgid "Complete Account Setup"
 msgstr "Vollständige Kontoeinrichtung"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:664
+#: src/pages/Onboarding/OnboardingComplete.tsx:666
 msgid "Complete your account setup to get started"
 msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:946
+#: src/pages/Onboarding/OnboardingComplete.tsx:948
 msgid "Completing Setup..."
 msgstr "Einrichtung abschließen..."
 
@@ -378,11 +379,11 @@ msgstr "Einrichtung abschließen..."
 msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
 msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:751
+#: src/pages/Onboarding/OnboardingComplete.tsx:753
 msgid "Confirm and Continue"
 msgstr "Bestätigen und fortfahren"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:873
+#: src/pages/Onboarding/OnboardingComplete.tsx:875
 msgid "Confirm Password"
 msgstr "Bestätigen Sie Ihr Passwort"
 
@@ -708,7 +709,7 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:774
+#: src/pages/Onboarding/OnboardingComplete.tsx:776
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
 
@@ -790,11 +791,11 @@ msgstr "Vorname"
 msgid "First name is required"
 msgstr "Vorname ist erforderlich"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:700
+#: src/pages/Onboarding/OnboardingComplete.tsx:702
 msgid "First Name:"
 msgstr "Vorname:"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:760
+#: src/pages/Onboarding/OnboardingComplete.tsx:762
 msgid "First Names (all)"
 msgstr "Vornamen (alle)"
 
@@ -826,7 +827,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Global"
 msgstr "Global"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:619
+#: src/pages/Onboarding/OnboardingComplete.tsx:621
 msgid "Go to Login"
 msgstr "Zum Login gehen"
 
@@ -914,7 +915,7 @@ msgstr "Sprache"
 
 #: src/pages/Employees/EmployeeCreate.tsx:492
 #: src/pages/Employees/EmployeeEdit.tsx:334
-#: src/pages/Onboarding/OnboardingComplete.tsx:807
+#: src/pages/Onboarding/OnboardingComplete.tsx:809
 msgid "Last Name"
 msgstr "Nachname"
 
@@ -923,7 +924,7 @@ msgstr "Nachname"
 msgid "Last name is required"
 msgstr "Nachname ist erforderlich"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:714
+#: src/pages/Onboarding/OnboardingComplete.tsx:716
 msgid "Last Name:"
 msgstr "Nachname:"
 
@@ -971,7 +972,7 @@ msgstr "Onboarding laden..."
 msgid "Loading qualifications..."
 msgstr "Qualifikationen laden..."
 
-#: src/components/RouteGuardState.tsx:15
+#: src/components/RouteGuardState.tsx:16
 #: src/pages/Customers/CustomerDetail.tsx:82
 #: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:145
@@ -1047,7 +1048,7 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 msgid "Management level must be between 1 and 255"
 msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:929
+#: src/pages/Onboarding/OnboardingComplete.tsx:931
 msgid "Max 2MB, JPG or PNG"
 msgstr "Maximal 2MB, JPG oder PNG"
 
@@ -1084,7 +1085,7 @@ msgstr "Minijob"
 msgid "Minimize offline notice"
 msgstr "Offline-Benachrichtigung minimieren"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:866
+#: src/pages/Onboarding/OnboardingComplete.tsx:868
 msgid "Minimum 8 characters"
 msgstr "Mindestens 8 Zeichen"
 
@@ -1164,11 +1165,11 @@ msgstr "Mein Profil"
 msgid "Name"
 msgstr "Name"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:688
+#: src/pages/Onboarding/OnboardingComplete.tsx:690
 msgid "Name Change Detected"
 msgstr "Namensänderung erkannt"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:955
+#: src/pages/Onboarding/OnboardingComplete.tsx:957
 msgid "Name change too significant. Please contact HR before completing onboarding."
 msgstr "Die Namensänderung ist zu bedeutend. Bitte kontaktieren Sie die Personalabteilung, bevor Sie das Onboarding abschließen."
 
@@ -1352,8 +1353,8 @@ msgstr "Organisatorische Einheit ist erforderlich"
 msgid "Organizational units are still loading. Please wait a moment and try again."
 msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:782
-#: src/pages/Onboarding/OnboardingComplete.tsx:822
+#: src/pages/Onboarding/OnboardingComplete.tsx:784
+#: src/pages/Onboarding/OnboardingComplete.tsx:824
 msgid "Original:"
 msgstr "Original:"
 
@@ -1366,6 +1367,10 @@ msgstr "Verwaiste Genesis"
 #: src/pages/ActivityLog/ActivityLogList.tsx:480
 msgid "Page {0} of {1}"
 msgstr "Seite {0} von {1}"
+
+#: src/components/RouteGuardState.tsx:45
+msgid "Page Not Found"
+msgstr "Seite nicht gefunden"
 
 #: src/pages/Organization/OrganizationPage.tsx:343
 msgid "Parent"
@@ -1384,7 +1389,7 @@ msgstr "Teilzeit"
 msgid "login.password"
 msgstr "Passwort"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:847
+#: src/pages/Onboarding/OnboardingComplete.tsx:849
 msgid "Password"
 msgstr "Passwort"
 
@@ -1503,7 +1508,7 @@ msgstr "Vorheriger Hash"
 msgid "Profile"
 msgstr "Profil"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:898
+#: src/pages/Onboarding/OnboardingComplete.tsx:900
 msgid "Profile Photo (optional)"
 msgstr "Profilfoto (optional)"
 
@@ -1533,7 +1538,7 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:924
+#: src/pages/Onboarding/OnboardingComplete.tsx:926
 msgid "Remove"
 msgstr "Entfernen"
 
@@ -1587,11 +1592,11 @@ msgstr "Suche in Beschreibungen..."
 msgid "Search sites..."
 msgstr "Standorte suchen..."
 
-#: src/App.tsx:61
+#: src/App.tsx:62
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
-#: src/App.tsx:82
+#: src/App.tsx:83
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal – A guard’s best friend. Eine offline-first progressive Web-App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management kombiniert."
 
@@ -1829,6 +1834,10 @@ msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einfü
 msgid "The new unit will be created under this parent."
 msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 
+#: src/components/RouteGuardState.tsx:48
+msgid "The page you requested does not exist or is no longer available."
+msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:197
 msgid "login.healthWarning.message"
@@ -1886,7 +1895,7 @@ msgstr "Zu viele gescheiterte Versuche"
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:615
+#: src/pages/Onboarding/OnboardingComplete.tsx:617
 msgid "Try Again"
 msgstr "Erneut versuchen"
 
@@ -1962,7 +1971,7 @@ msgstr "Gültig von"
 msgid "Valid Until"
 msgstr "Gültig bis"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:642
+#: src/pages/Onboarding/OnboardingComplete.tsx:644
 msgid "Validating your link..."
 msgstr "Validierung Ihres Links..."
 
@@ -1995,7 +2004,7 @@ msgstr "Anzeigen"
 msgid "View activity log information and verification status"
 msgstr "Aktivitätsprotokollinformationen und Überprüfungsstatus anzeigen"
 
-#: src/App.tsx:65
+#: src/App.tsx:66
 msgid "View Profile"
 msgstr "Profil ansehen"
 
@@ -2020,7 +2029,7 @@ msgstr "Warnung"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
-#: src/App.tsx:58
+#: src/App.tsx:59
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
@@ -2028,7 +2037,7 @@ msgstr "Willkommen zu SecPal"
 msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:661
+#: src/pages/Onboarding/OnboardingComplete.tsx:663
 msgid "Welcome to SecPal!"
 msgstr "Willkommen bei SecPal!"
 
@@ -2048,11 +2057,11 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/components/RouteGuardState.tsx:29
+#: src/components/RouteGuardState.tsx:30
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:691
+#: src/pages/Onboarding/OnboardingComplete.tsx:693
 msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 msgstr "Sie haben Ihren Namen gegenüber der ursprünglichen Eingabe geändert. Die Personalabteilung wird zur Überprüfung über diese Änderung informiert."
 

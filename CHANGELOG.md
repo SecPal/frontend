@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced the authenticated wildcard app-route redirect to `/` with a dedicated not-found state, so unknown non-onboarding URLs now fail clearly while protected feature routes continue to use the shared access-denied UX
 - distinguish temporary onboarding rate limits from invalid or expired invitation links in the onboarding completion flow, keep form-level `429` feedback inline instead of collapsing into the invalid-link screen, and surface a dedicated retry state when token validation is temporarily throttled
 - Centralized frontend UI capabilities for low-privilege users so scope-only accounts stay in self-service areas and direct navigation to elevated feature routes now resolves through one shared capability guard instead of mixed ad hoc checks
 - Applied the centralized low-privilege capability model to the main application navigation so management links stay hidden unless the user has the matching feature access

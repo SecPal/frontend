@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { OfflineIndicator } from "./components/OfflineIndicator";
@@ -12,6 +12,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
+import { RouteNotFoundState } from "./components/RouteGuardState";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
@@ -337,7 +338,9 @@ function App() {
               path="*"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/" replace />
+                  <ApplicationLayout>
+                    <RouteNotFoundState />
+                  </ApplicationLayout>
                 </ProtectedRoute>
               }
             />
