@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -267,7 +267,7 @@ describe("authApi", () => {
   });
 
   describe("logout", () => {
-    it("sends POST request to /v1/auth/session/logout with credentials", async () => {
+    it("sends POST request to /v1/auth/logout with credentials", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -276,7 +276,7 @@ describe("authApi", () => {
       await logout();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/v1/auth/session/logout"),
+        expect.stringContaining("/v1/auth/logout"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",

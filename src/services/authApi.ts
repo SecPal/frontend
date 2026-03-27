@@ -76,11 +76,11 @@ export async function login(
 }
 
 /**
- * Logout - end current session (for SPA cookie auth)
+ * Logout - end current session using the canonical auth endpoint
  * @throws {AuthApiError} If logout fails
  */
 export async function logout(): Promise<void> {
-  const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/session/logout`, {
+  const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/logout`, {
     method: "POST",
     headers: {
       Accept: "application/json",

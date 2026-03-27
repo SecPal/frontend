@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -158,7 +158,7 @@ describe("Cookie-based Authentication Integration", () => {
         json: async () => ({ data: "protected resource" }),
       } as Response);
 
-      const response = await fetch("https://api.secpal.app/v1/user/profile", {
+      const response = await fetch("https://api.secpal.app/v1/me", {
         credentials: "include",
         headers: {
           "X-XSRF-TOKEN": "csrf-token",
@@ -182,7 +182,7 @@ describe("Cookie-based Authentication Integration", () => {
         statusText: "Unauthorized",
       } as Response);
 
-      const response = await fetch("https://api.secpal.app/v1/user/profile", {
+      const response = await fetch("https://api.secpal.app/v1/me", {
         credentials: "include",
       });
 
@@ -205,9 +205,9 @@ describe("Cookie-based Authentication Integration", () => {
 
       await logout();
 
-      // Verify logout request was sent with credentials (SPA uses /v1/auth/session/logout)
+      // Verify logout request was sent with credentials (SPA uses /v1/auth/logout)
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/v1/auth/session/logout"),
+        expect.stringContaining("/v1/auth/logout"),
         expect.objectContaining({
           method: "POST",
           credentials: "include",
