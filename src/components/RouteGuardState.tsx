@@ -23,9 +23,9 @@ export function RouteAccessDeniedState() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="max-w-md text-center">
-        <Text className="mb-2 text-lg font-semibold">
+        <h1 className="mb-2 text-lg font-semibold">
           <Trans>Access Denied</Trans>
-        </Text>
+        </h1>
         <Text className="text-zinc-500 dark:text-zinc-400">
           <Trans>
             You do not have permission to access this feature. Contact your
@@ -41,9 +41,9 @@ export function RouteNotFoundState() {
   return (
     <div className="flex min-h-[50vh] items-center justify-center p-4">
       <div className="max-w-md text-center">
-        <Text className="mb-2 text-lg font-semibold">
+        <h1 className="mb-2 text-lg font-semibold">
           <Trans>Page Not Found</Trans>
-        </Text>
+        </h1>
         <Text className="text-zinc-500 dark:text-zinc-400">
           <Trans>
             The page you requested does not exist or is no longer available.
