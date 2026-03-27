@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated the `activityLogApi` service tests to expect the configured absolute API URL, matching the current client behavior and restoring the targeted Vitest coverage for activity-log requests
 - Surfaced backend `send_invitation` validation errors inline in the employee create form, showed onboarding-invitation availability reasons on employee detail pages, and aligned the terminate action with the backend by allowing it for `on_leave` employees as well as `active` ones.
 - Replaced the authenticated wildcard app-route redirect to `/` with a dedicated not-found state, so unknown non-onboarding URLs now fail clearly while protected feature routes continue to use the shared access-denied UX
 - distinguish temporary onboarding rate limits from invalid or expired invitation links in the onboarding completion flow, keep form-level `429` feedback inline instead of collapsing into the invalid-link screen, and surface a dedicated retry state when token validation is temporarily throttled
