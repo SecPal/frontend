@@ -40,7 +40,7 @@ import { UserProfile } from './UserProfile';
 
 describe('UserProfile', () => {
   it('renders user name', () => {
-    render(<UserProfile user={{ name: 'John Doe', email: 'john@example.com' }} />);
+    render(<UserProfile user={{ name: 'John Doe', email: 'john@secpal.dev' }} />);
     expect(screen.getByText('John Doe')).toBeInTheDocument();
   });
 });

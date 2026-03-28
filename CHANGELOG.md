@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced the remaining frontend documentation-only placeholder-domain references with `secpal.dev` and `app.secpal.dev` examples so the repo stays aligned with the SecPal domain policy outside runtime and test fixtures as well.
 - Replaced the remaining non-SecPal frontend test fixtures with `secpal.dev` addresses and updated the login email placeholder to a SecPal domain. This keeps the repository aligned with the `secpal.app` / `secpal.dev` domain policy consistently.
 - Filled the remaining generic German Lingui catalog gaps for employee status guidance so the frontend `de` locale no longer falls back to English for those UI strings.
 - Updated the `activityLogApi` service tests to expect the configured absolute API URL, matching the current client behavior and restoring the targeted Vitest coverage for activity-log requests
