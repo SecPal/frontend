@@ -11,6 +11,8 @@ export interface User {
   roles?: string[];
   permissions?: string[];
   hasOrganizationalScopes?: boolean;
+  hasCustomerAccess?: boolean;
+  hasSiteAccess?: boolean;
   employee?: Employee | null; // User's employee record (if they are an employee)
 }
 

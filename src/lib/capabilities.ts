@@ -184,6 +184,8 @@ export function getUserCapabilities(
 ): UserCapabilities {
   const isAuthenticated = user !== null && user !== undefined;
   const hasOrganizationalScopes = user?.hasOrganizationalScopes ?? false;
+  const hasCustomerAccess = user?.hasCustomerAccess ?? false;
+  const hasSiteAccess = user?.hasSiteAccess ?? false;
   const hasElevatedUiRole = hasAnyUserRole(user, ELEVATED_UI_ROLES);
   const canCreateCustomers =
     isAuthenticated &&
@@ -241,10 +243,12 @@ export function getUserCapabilities(
     customers:
       isAuthenticated &&
       (hasElevatedUiRole ||
+        hasCustomerAccess ||
         hasAnyUserPermission(user, CUSTOMER_FEATURE_PERMISSIONS)),
     sites:
       isAuthenticated &&
       (hasElevatedUiRole ||
+        hasSiteAccess ||
         hasAnyUserPermission(user, CUSTOMER_FEATURE_PERMISSIONS)),
     employees:
       isAuthenticated &&

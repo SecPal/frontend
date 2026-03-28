@@ -95,6 +95,8 @@ describe("authApi", () => {
           roles: ["Admin"],
           permissions: ["users.read", "customers.*"],
           hasOrganizationalScopes: true,
+          hasCustomerAccess: true,
+          hasSiteAccess: true,
         },
       };
 
@@ -116,6 +118,8 @@ describe("authApi", () => {
       expect(result.user.roles).toEqual(["Admin"]);
       expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
       expect(result.user.hasOrganizationalScopes).toBe(true);
+      expect(result.user.hasCustomerAccess).toBe(true);
+      expect(result.user.hasSiteAccess).toBe(true);
     });
 
     it("sends login request with email and password only (no device_name for SPA)", async () => {
