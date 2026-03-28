@@ -60,7 +60,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",
         last_name: "Doe",
-        email: "john@example.com",
+        email: "john@secpal.dev",
         position: "Developer",
         date_of_birth: "1990-01-01",
         contract_start_date: "2025-01-01",
@@ -88,7 +88,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",
         last_name: "Doe",
-        email: "john@example.com",
+        email: "john@secpal.dev",
         position: "Developer",
         date_of_birth: "1990-01-01",
         contract_start_date: "2025-01-01",
@@ -152,7 +152,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         first_name: "Jane",
         last_name: "Doe",
         full_name: "Jane Doe",
-        email: "jane@example.com",
+        email: "jane@secpal.dev",
         position: "Developer",
         date_of_birth: "1990-01-01",
         contract_start_date: "2025-01-01",
@@ -231,7 +231,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",
         last_name: "Doe",
-        email: "john@example.com",
+        email: "john@secpal.dev",
         position: "Developer",
         date_of_birth: "1990-01-01",
         contract_start_date: "2025-01-01",

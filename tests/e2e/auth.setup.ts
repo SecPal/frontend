@@ -10,7 +10,7 @@ import { test as base, expect, type Page } from "@playwright/test";
  * In CI, these can be overridden via environment variables.
  */
 export const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL || "test@example.com",
+  email: process.env.TEST_USER_EMAIL || "test@secpal.dev",
   password: process.env.TEST_USER_PASSWORD || "password",
 };
 

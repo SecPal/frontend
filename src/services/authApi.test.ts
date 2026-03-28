@@ -29,7 +29,7 @@ describe("authApi", () => {
   describe("login", () => {
     it("sends POST request to /v1/auth/login with credentials", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test User", email: "test@example.com" },
+        user: { id: 1, name: "Test User", email: "test@secpal.dev" },
       };
 
       // Mock CSRF token fetch
@@ -45,7 +45,7 @@ describe("authApi", () => {
       } as Response);
 
       const result = await login({
-        email: "test@example.com",
+        email: "test@secpal.dev",
         password: "password123",
       });
 
@@ -66,7 +66,7 @@ describe("authApi", () => {
           method: "POST",
           credentials: "include",
           body: JSON.stringify({
-            email: "test@example.com",
+            email: "test@secpal.dev",
             password: "password123",
           }),
         })
@@ -91,7 +91,7 @@ describe("authApi", () => {
         user: {
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           roles: ["Admin"],
           permissions: ["users.read", "customers.*"],
           hasOrganizationalScopes: true,
@@ -109,7 +109,7 @@ describe("authApi", () => {
       } as Response);
 
       const result = await login({
-        email: "test@example.com",
+        email: "test@secpal.dev",
         password: "password123",
       });
 
@@ -120,7 +120,7 @@ describe("authApi", () => {
 
     it("sends login request with email and password only (no device_name for SPA)", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test", email: "test@example.com" },
+        user: { id: 1, name: "Test", email: "test@secpal.dev" },
       };
 
       // Mock CSRF token fetch
@@ -136,7 +136,7 @@ describe("authApi", () => {
       } as Response);
 
       await login({
-        email: "test@example.com",
+        email: "test@secpal.dev",
         password: "password123",
       });
 
@@ -147,7 +147,7 @@ describe("authApi", () => {
         const requestInit = loginCall[1] as RequestInit;
         const body = JSON.parse(requestInit.body as string);
         expect(body).toEqual({
-          email: "test@example.com",
+          email: "test@secpal.dev",
           password: "password123",
         });
         expect(body).not.toHaveProperty("device_name");
@@ -173,7 +173,7 @@ describe("authApi", () => {
       } as Response);
 
       await expect(
-        login({ email: "wrong@example.com", password: "wrong" })
+        login({ email: "wrong@secpal.dev", password: "wrong" })
       ).rejects.toThrow(AuthApiError);
 
       // Second call with fresh mock
@@ -188,7 +188,7 @@ describe("authApi", () => {
       } as Response);
 
       try {
-        await login({ email: "wrong@example.com", password: "wrong" });
+        await login({ email: "wrong@secpal.dev", password: "wrong" });
       } catch (error) {
         expect(error).toBeInstanceOf(AuthApiError);
         expect((error as AuthApiError).message).toBe("Invalid credentials");
@@ -210,7 +210,7 @@ describe("authApi", () => {
       } as Response);
 
       await expect(
-        login({ email: "test@example.com", password: "test" })
+        login({ email: "test@secpal.dev", password: "test" })
       ).rejects.toThrow("Login failed");
     });
 
@@ -231,7 +231,7 @@ describe("authApi", () => {
       } as Partial<Response> as Response);
 
       await expect(
-        login({ email: "test@example.com", password: "test" })
+        login({ email: "test@secpal.dev", password: "test" })
       ).rejects.toThrow("Login failed: 500 Internal Server Error");
     });
 
@@ -373,7 +373,7 @@ describe("authApi", () => {
       const mockUser = {
         id: 1,
         name: "Test User",
-        email: "test@example.com",
+        email: "test@secpal.dev",
         roles: ["Admin"],
       };
 

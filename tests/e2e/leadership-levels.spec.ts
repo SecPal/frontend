@@ -247,7 +247,7 @@ test.describe("Employee Form - Leadership Level Assignment", () => {
     await page.getByLabel(/Last Name/i).fill("Employee");
     await page
       .getByLabel(/Email/i)
-      .fill(`test.employee.${Date.now()}@example.com`);
+      .fill(`test.employee.${Date.now()}@secpal.dev`);
 
     // Select organizational unit (required)
     const orgUnitDropdown = page.getByLabel(/Organizational Unit/i);
@@ -430,7 +430,7 @@ test.describe("Permission Escalation Prevention (Security Tests)", () => {
       await page.getByLabel(/Last Name/i).fill("Escalation");
       await page
         .getByLabel(/Email/i)
-        .fill(`test.escalation.${Date.now()}@example.com`);
+        .fill(`test.escalation.${Date.now()}@secpal.dev`);
 
       const orgUnitDropdown = page.getByLabel(/Organizational Unit/i);
       await orgUnitDropdown.click();

@@ -129,12 +129,12 @@ describe("csrf", () => {
         json: async () => ({ success: true }),
       } as Response);
 
-      await fetchWithCsrf("http://api.example.com/test", {
+      await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://api.example.com/test",
+        "http://api.secpal.dev/test",
         expect.objectContaining({
           method: "POST",
           credentials: "include",
@@ -156,7 +156,7 @@ describe("csrf", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("http://api.example.com/test", {
+      await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -193,7 +193,7 @@ describe("csrf", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("http://api.example.com/test", {
+      await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
       });
 
@@ -228,7 +228,7 @@ describe("csrf", () => {
         json: async () => ({ success: true }),
       } as Response);
 
-      const response = await fetchWithCsrf("http://api.example.com/test", {
+      const response = await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
       });
 
@@ -247,7 +247,7 @@ describe("csrf", () => {
       // Verify retry with new token
       expect(mockFetch).toHaveBeenNthCalledWith(
         3,
-        "http://api.example.com/test",
+        "http://api.secpal.dev/test",
         expect.objectContaining({
           method: "POST",
           credentials: "include",
@@ -277,7 +277,7 @@ describe("csrf", () => {
       } as Response);
 
       await expect(
-        fetchWithCsrf("http://api.example.com/test", {
+        fetchWithCsrf("http://api.secpal.dev/test", {
           method: "POST",
         })
       ).rejects.toThrow(CsrfError);
@@ -290,7 +290,7 @@ describe("csrf", () => {
         statusText: "Bad Request",
       } as Response);
 
-      const response = await fetchWithCsrf("http://api.example.com/test", {
+      const response = await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
       });
 
@@ -305,7 +305,7 @@ describe("csrf", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("http://api.example.com/test", {
+      await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "POST",
       });
 
@@ -333,7 +333,7 @@ describe("csrf", () => {
         statusText: "Unauthorized",
       } as Response);
 
-      const response = await fetchWithCsrf("http://api.example.com/test", {
+      const response = await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "GET",
       });
 
@@ -360,7 +360,7 @@ describe("csrf", () => {
         statusText: "Unauthorized",
       } as Response);
 
-      const response = await fetchWithCsrf("http://api.example.com/test", {
+      const response = await fetchWithCsrf("http://api.secpal.dev/test", {
         method: "GET",
       });
 

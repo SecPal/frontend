@@ -121,7 +121,7 @@ describe("customersApi", () => {
         },
         contact: {
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@secpal.dev",
           phone: "+49 123 456789",
         },
         is_active: true,

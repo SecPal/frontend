@@ -222,11 +222,11 @@ describe("useServiceWorkerUpdate", () => {
 
       // Simulate SW registration callback
       if (capturedOnRegisteredSW) {
-        capturedOnRegisteredSW("https://example.com/sw.js");
+        capturedOnRegisteredSW("https://app.secpal.dev/sw.js");
       }
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[SW] Service Worker registered: https://example.com/sw.js"
+        "[SW] Service Worker registered: https://app.secpal.dev/sw.js"
       );
 
       consoleSpy.mockRestore();
@@ -242,7 +242,10 @@ describe("useServiceWorkerUpdate", () => {
 
       // Simulate SW registration callback with registration object
       if (capturedOnRegisteredSW) {
-        capturedOnRegisteredSW("https://example.com/sw.js", mockRegistration);
+        capturedOnRegisteredSW(
+          "https://app.secpal.dev/sw.js",
+          mockRegistration
+        );
       }
 
       // Should set up interval for periodic checks
@@ -264,7 +267,10 @@ describe("useServiceWorkerUpdate", () => {
 
       // Simulate SW registration callback
       if (capturedOnRegisteredSW) {
-        capturedOnRegisteredSW("https://example.com/sw.js", mockRegistration);
+        capturedOnRegisteredSW(
+          "https://app.secpal.dev/sw.js",
+          mockRegistration
+        );
       }
 
       // Fast-forward 1 hour to trigger periodic check

@@ -52,7 +52,7 @@ const mockActivity: Activity = {
   subject: { id: "user-1", name: "Test User" },
   causer_type: "App\\Models\\User",
   causer_id: "user-1",
-  causer: { id: "user-1", name: "John Doe", email: "john@example.com" },
+  causer: { id: "user-1", name: "John Doe", email: "john@secpal.dev" },
   properties: { ip: "192.168.1.1", user_agent: "Mozilla/5.0" },
   event_hash: "abc123def456",
   previous_hash: "previous-hash",
@@ -129,7 +129,7 @@ describe("ActivityDetailDialog", () => {
     expect(screen.getByText("default")).toBeInTheDocument();
     expect(screen.getByText("John Doe")).toBeInTheDocument();
     // Email is displayed in parentheses after name
-    expect(screen.getByText(/\(john@example\.com\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/\(john@secpal\.dev\)/i)).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 

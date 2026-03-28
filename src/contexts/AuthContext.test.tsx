@@ -57,7 +57,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           roles: ["Admin", "Manager"],
         })
       );
@@ -77,7 +77,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           roles: ["Guard"],
         })
       );
@@ -97,7 +97,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
         })
       );
 
@@ -128,7 +128,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           permissions: ["employees.read", "employees.create"],
         })
       );
@@ -148,7 +148,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           permissions: ["employees.read"],
         })
       );
@@ -168,7 +168,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           permissions: ["employees.*"],
         })
       );
@@ -188,7 +188,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           permissions: ["employees.*"],
         })
       );
@@ -208,7 +208,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
         })
       );
 
@@ -237,7 +237,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           permissions: ["admin"],
         })
       );
@@ -259,7 +259,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           hasOrganizationalScopes: true,
         })
       );
@@ -279,7 +279,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
           hasOrganizationalScopes: false,
         })
       );
@@ -299,7 +299,7 @@ describe("AuthContext", () => {
         JSON.stringify({
           id: 1,
           name: "Test User",
-          email: "test@example.com",
+          email: "test@secpal.dev",
         })
       );
 

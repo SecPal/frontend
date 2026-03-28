@@ -50,7 +50,7 @@ describe("CustomerEdit", () => {
     },
     contact: {
       name: "Jane Doe",
-      email: "jane@example.com",
+      email: "jane@secpal.dev",
       phone: "+49 987 654321",
     },
     notes: "Existing notes",
@@ -99,7 +99,7 @@ describe("CustomerEdit", () => {
       expect(screen.getByRole("textbox", { name: /^name$/i })).toHaveValue(
         "Jane Doe"
       );
-      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@example.com");
+      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@secpal.dev");
       expect(screen.getByLabelText(/phone/i)).toHaveValue("+49 987 654321");
     },
     SLOW_TEST_TIMEOUT
@@ -181,13 +181,13 @@ describe("CustomerEdit", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@example.com");
+      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@secpal.dev");
     });
 
     // Modify email
     const emailInput = screen.getByLabelText(/email/i);
     fireEvent.change(emailInput, {
-      target: { value: "newemail@example.com" },
+      target: { value: "newemail@secpal.dev" },
     });
 
     await user.click(screen.getByRole("button", { name: /save|update/i }));
@@ -197,7 +197,7 @@ describe("CustomerEdit", () => {
         "customer-123",
         expect.objectContaining({
           contact: expect.objectContaining({
-            email: "newemail@example.com",
+            email: "newemail@secpal.dev",
           }),
         })
       );

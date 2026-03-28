@@ -18,7 +18,7 @@ const renderWithProviders = (
     user: {
       id: 1,
       name: "John Doe",
-      email: "john.doe@example.com",
+      email: "john.doe@secpal.dev",
       roles: ["user"],
       permissions: ["users.read"],
     },
@@ -69,7 +69,7 @@ describe("ProfilePage", () => {
     renderWithProviders(<ProfilePage />);
 
     // Email appears twice: in avatar section and description list
-    const emailElements = screen.getAllByText("john.doe@example.com");
+    const emailElements = screen.getAllByText("john.doe@secpal.dev");
     expect(emailElements.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -104,7 +104,7 @@ describe("ProfilePage", () => {
       user: {
         id: 2,
         name: "Alice",
-        email: "alice@example.com",
+        email: "alice@secpal.dev",
       },
     });
 
@@ -133,7 +133,7 @@ describe("ProfilePage", () => {
       user: {
         id: 3,
         name: "",
-        email: "empty@example.com",
+        email: "empty@secpal.dev",
       },
     });
 
@@ -146,7 +146,7 @@ describe("ProfilePage", () => {
       user: {
         id: 4,
         name: "   ",
-        email: "whitespace@example.com",
+        email: "whitespace@secpal.dev",
       },
     });
 
