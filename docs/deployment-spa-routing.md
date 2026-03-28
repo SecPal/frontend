@@ -268,7 +268,7 @@ After deployment, test these scenarios:
 
 ```typescript
 export default defineConfig({
-  base: "/app/", // If deployed to example.com/app/
+  base: "/app/", // If deployed to app.secpal.dev/app/
   // ...
 });
 ```
