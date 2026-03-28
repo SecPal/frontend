@@ -304,7 +304,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **OfflineIndicator no longer blocks app interaction** (#XXX)
+- **OfflineIndicator no longer blocks app interaction** (#283)
   - Replaced blocking modal dialog (`Alert`) with non-blocking toast banner
   - Banner auto-minimizes to icon after 5 seconds to reduce obstruction
   - Users can manually minimize/expand the notification
@@ -342,7 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Centralized API Wrapper with Session Expiry for All Requests** (#XXX)
+- **Centralized API Wrapper with Session Expiry for All Requests** (#263)
   - Created `apiFetch()` as centralized API wrapper function in `csrf.ts`
   - Migrated all API services from direct `fetch()` calls to `apiFetch()`:
     - `customerApi.ts`: All customer CRUD + hierarchy operations
