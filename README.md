@@ -232,11 +232,17 @@ npm run lingui:extract
 # Compile translation catalogs for production
 npm run lingui:compile
 
-# Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
+# Extract, compile, and keep catalogs local-only
 npm run sync
 
-# Sync and remove unused translations
+# Extract, compile, and remove unused translations locally
 npm run sync:purge
+
+# Sync with Translation.io (requires TRANSLATION_IO_API_KEY in .env.local)
+npm run sync:translationio
+
+# Sync with Translation.io and remove unused translations
+npm run sync:translationio:purge
 ```
 
 **Translation.io Integration:**
@@ -248,13 +254,13 @@ This project uses [Translation.io](https://translation.io/) for collaborative tr
 1. Copy `.env.example` to `.env.local`
 2. Get the Translation.io API key from a maintainer or from the project's Translation.io account
 3. Add the key to `.env.local`: `TRANSLATION_IO_API_KEY=your_key_here`
-4. Run `npm run sync` to synchronize translations
+4. Run `npm run sync:translationio` to synchronize translations
 
 Translation.io provides free, unlimited accounts for open-source projects.
 
 **For maintainers:** The API key is also configured as a GitHub Secret for automated CI translation syncs.
 
-**Local-only development:** You can edit `.po` files directly without syncing to Translation.io
+**Local-only development:** `npm run sync` and `npm run sync:purge` only update local Lingui catalogs. Translation.io synchronization is opt-in via `npm run sync:translationio`.
 
 **Adding Translations:**
 

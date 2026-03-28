@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Split frontend translation catalog maintenance into a local-only `npm run sync` flow and explicit `sync:translationio` commands, so contributors without a Translation.io API key no longer get noisy sync warnings while maintainers still have a fail-fast remote sync path.
 - Replaced the remaining frontend documentation-only placeholder-domain references with `secpal.dev` / `app.secpal.dev` host examples and `secpal.app` email examples so the repo stays aligned with the SecPal domain policy outside runtime and test fixtures as well.
 - Replaced the remaining non-SecPal frontend test fixtures with `secpal.dev` addresses and updated the login email placeholder to a SecPal domain. This keeps the repository aligned with the `secpal.app` / `secpal.dev` domain policy consistently.
 - Filled the remaining generic German Lingui catalog gaps for employee status guidance so the frontend `de` locale no longer falls back to English for those UI strings.

@@ -51,6 +51,8 @@
     "lingui:compile": "lingui compile --namespace es",
     "sync": "cross-env-shell \"lingui extract --overwrite && lingui compile --namespace es\"",
     "sync:purge": "cross-env-shell \"lingui extract --overwrite --clean && lingui compile --namespace es\"",
+    "sync:translationio": "cross-env-shell \"lingui extract --overwrite --config lingui.translationio.config.cjs && lingui compile --namespace es\"",
+    "sync:translationio:purge": "cross-env-shell \"lingui extract --overwrite --clean --config lingui.translationio.config.cjs && lingui compile --namespace es\"",
     "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
     "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
