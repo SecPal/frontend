@@ -1309,7 +1309,7 @@ msgstr "OK"
 #: src/pages/Employees/EmployeeList.tsx:222
 #: src/pages/Employees/EmployeeStatusOptions.tsx:19
 msgid "On Leave"
-msgstr "in Freistellung"
+msgstr "Beurlaubt"
 
 #: src/pages/Employees/EmployeeDetail.tsx:162
 msgid "Onboarding Invitation"
