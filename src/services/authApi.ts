@@ -18,6 +18,8 @@ interface LoginResponse {
     roles?: string[];
     permissions?: string[];
     hasOrganizationalScopes?: boolean;
+    hasCustomerAccess?: boolean;
+    hasSiteAccess?: boolean;
   };
 }
 

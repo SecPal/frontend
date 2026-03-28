@@ -64,6 +64,23 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.sites.create).toBe(false);
   });
 
+  it("enables customer and site features from backend scoped-access flags", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "Scoped Access User",
+      email: "scoped.access@secpal.dev",
+      roles: [],
+      permissions: [],
+      hasCustomerAccess: true,
+      hasSiteAccess: true,
+    });
+
+    expect(capabilities.customers).toBe(true);
+    expect(capabilities.sites).toBe(true);
+    expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.sites.delete).toBe(false);
+  });
+
   it("grants action capabilities from explicit action permissions", () => {
     const capabilities = getUserCapabilities({
       id: 1,

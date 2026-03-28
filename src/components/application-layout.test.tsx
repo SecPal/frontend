@@ -545,6 +545,31 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
+    it("shows Customers for users with backend scoped-access flags", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "John Doe",
+          email: "john@secpal.dev",
+          hasOrganizationalScopes: false,
+          hasCustomerAccess: true,
+          roles: [],
+          permissions: [],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Customers")).toBeInTheDocument();
+      expect(screen.queryByText("Organization")).not.toBeInTheDocument();
+      expect(screen.queryByText("Employees")).not.toBeInTheDocument();
+    });
+
     it("always shows Home", () => {
       localStorage.setItem(
         "auth_user",
