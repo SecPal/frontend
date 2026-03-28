@@ -193,7 +193,7 @@ Note: Service Worker updates work differently in `npm run dev`:
    - **Option C (Test URL):** Manually open:
 
      ```text
-     http://localhost:5173/share?title=Test&text=Hello&url=https://example.com
+     http://localhost:5173/share?title=Test&text=Hello&url=https://app.secpal.dev
      ```
 
 3. **Verify text display**
