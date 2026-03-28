@@ -58,7 +58,7 @@ describe("OnboardingComplete", () => {
       data: {
         first_name: "John",
         last_name: "Doe",
-        email: "test@example.com",
+        email: "test@secpal.dev",
       },
     });
   });
@@ -66,7 +66,7 @@ describe("OnboardingComplete", () => {
   it("renders form with all required fields", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     // Wait for token validation to complete
@@ -108,7 +108,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitFor(() => {
@@ -137,7 +137,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitFor(() => {
@@ -150,7 +150,7 @@ describe("OnboardingComplete", () => {
   it("validates required fields on submit", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -180,7 +180,7 @@ describe("OnboardingComplete", () => {
   it("validates password minimum length (8 characters)", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -207,7 +207,7 @@ describe("OnboardingComplete", () => {
   it("validates password confirmation match", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -236,7 +236,7 @@ describe("OnboardingComplete", () => {
   it("validates photo file size (max 2MB)", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -261,7 +261,7 @@ describe("OnboardingComplete", () => {
   it("validates photo file type (images only)", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -290,7 +290,7 @@ describe("OnboardingComplete", () => {
         token: "test-sanctum-token",
         user: {
           id: 1,
-          email: "john@example.com",
+          email: "john@secpal.dev",
           name: "John Doe",
         },
         employee: {
@@ -306,7 +306,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -330,7 +330,7 @@ describe("OnboardingComplete", () => {
     await waitFor(() => {
       expect(onboardingApi.completeOnboarding).toHaveBeenCalledWith({
         token: "abc",
-        email: "test@example.com",
+        email: "test@secpal.dev",
         first_name: "John",
         last_name: "Doe",
         password: "password123",
@@ -341,7 +341,7 @@ describe("OnboardingComplete", () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
         id: 1,
-        email: "john@example.com",
+        email: "john@secpal.dev",
         name: "John Doe",
       });
     });
@@ -361,7 +361,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=invalid&email=test@example.com"
+      "/onboarding/complete?token=invalid&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -405,7 +405,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -453,7 +453,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -495,7 +495,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -530,7 +530,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -595,7 +595,7 @@ describe("OnboardingComplete", () => {
 
     const { unmount } = renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -648,7 +648,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -699,7 +699,7 @@ describe("OnboardingComplete", () => {
 
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();
@@ -741,7 +741,7 @@ describe("OnboardingComplete", () => {
   it("clears photo error when uploading valid file after error", async () => {
     renderWithProviders(
       <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@example.com"
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
     await waitForFormReady();

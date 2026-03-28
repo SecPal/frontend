@@ -75,12 +75,12 @@ describe("ProtectedRoute", () => {
     mockGetCurrentUser.mockResolvedValueOnce({
       id: 1,
       name: "Test",
-      email: "test@example.com",
+      email: "test@secpal.dev",
     });
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
+      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
     );
 
     renderProtectedRoute();
@@ -99,7 +99,7 @@ describe("ProtectedRoute", () => {
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
+      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
     );
 
     renderProtectedRoute();
@@ -114,7 +114,7 @@ describe("ProtectedRoute", () => {
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@example.com" })
+      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
     );
 
     renderProtectedRoute();

@@ -141,7 +141,7 @@ describe("CustomerCreate", () => {
         },
         contact: {
           name: "John Doe",
-          email: "john@example.com",
+          email: "john@secpal.dev",
           phone: "+49 123 456789",
         },
         is_active: true,
@@ -174,7 +174,7 @@ describe("CustomerCreate", () => {
         target: { value: "John Doe" },
       });
       fireEvent.change(screen.getByRole("textbox", { name: /email/i }), {
-        target: { value: "john@example.com" },
+        target: { value: "john@secpal.dev" },
       });
       fireEvent.change(screen.getByRole("textbox", { name: /phone/i }), {
         target: { value: "+49 123 456789" },
@@ -204,7 +204,7 @@ describe("CustomerCreate", () => {
             },
             contact: {
               name: "John Doe",
-              email: "john@example.com",
+              email: "john@secpal.dev",
               phone: "+49 123 456789",
             },
             is_active: true,

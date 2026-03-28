@@ -265,7 +265,7 @@ export function Login() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder="you@secpal.app"
             aria-describedby={ariaDescribedBy}
             disabled={!isOnline || isSystemNotReady || isLocked}
           />

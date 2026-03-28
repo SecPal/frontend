@@ -52,7 +52,7 @@ const mockEmployee: Employee = {
   first_name: "John",
   last_name: "Doe",
   full_name: "John Doe",
-  email: "john.doe@example.com",
+  email: "john.doe@secpal.dev",
   phone: "+1234567890",
   date_of_birth: "1990-01-01",
   position: "Developer",
@@ -114,7 +114,7 @@ describe("EmployeeEdit", () => {
     });
 
     expect(screen.getByLabelText(/last name/i)).toHaveValue("Doe");
-    expect(screen.getByLabelText(/email/i)).toHaveValue("john.doe@example.com");
+    expect(screen.getByLabelText(/email/i)).toHaveValue("john.doe@secpal.dev");
     expect(screen.getByLabelText(/phone/i)).toHaveValue("+1234567890");
     expect(screen.getByLabelText("Position *")).toHaveValue("Developer");
     expect(screen.getByLabelText(/date of birth/i)).toHaveValue("01/01/1990");
@@ -212,7 +212,7 @@ describe("EmployeeEdit", () => {
       expect(mockUpdateEmployee).toHaveBeenCalledWith("emp-1", {
         first_name: "Jane",
         last_name: "Doe",
-        email: "john.doe@example.com",
+        email: "john.doe@secpal.dev",
         phone: "+1234567890",
         date_of_birth: "1990-01-01",
         position: "Developer",

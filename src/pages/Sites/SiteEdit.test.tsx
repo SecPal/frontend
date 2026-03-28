@@ -60,7 +60,7 @@ describe("SiteEdit", () => {
     full_address: "Old Street 1, 11111 Old City, DE",
     contact: {
       name: "John Doe",
-      email: "john@example.com",
+      email: "john@secpal.dev",
       phone: "+49 123 456789",
     },
     is_active: true,
@@ -301,7 +301,7 @@ describe("SiteEdit", () => {
       target: { value: "Jane Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "jane@example.com" },
+      target: { value: "jane@secpal.dev" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -312,7 +312,7 @@ describe("SiteEdit", () => {
         expect.objectContaining({
           contact: expect.objectContaining({
             name: "Jane Doe",
-            email: "jane@example.com",
+            email: "jane@secpal.dev",
           }),
         })
       );

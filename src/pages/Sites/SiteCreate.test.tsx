@@ -429,7 +429,7 @@ describe("SiteCreate", () => {
         target: { value: "John Doe" },
       });
       fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: "john@example.com" },
+        target: { value: "john@secpal.dev" },
       });
       fireEvent.change(screen.getByLabelText(/phone/i), {
         target: { value: "+49 123 456789" },
@@ -442,7 +442,7 @@ describe("SiteCreate", () => {
           expect.objectContaining({
             contact: {
               name: "John Doe",
-              email: "john@example.com",
+              email: "john@secpal.dev",
               phone: "+49 123 456789",
             },
           })

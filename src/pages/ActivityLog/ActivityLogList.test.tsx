@@ -47,7 +47,7 @@ const mockActivity: Activity = {
   subject: { id: "user-1", name: "Test Subject" },
   causer_type: "App\\Models\\User",
   causer_id: "user-1",
-  causer: { id: "user-1", name: "John Doe", email: "john@example.com" },
+  causer: { id: "user-1", name: "John Doe", email: "john@secpal.dev" },
   properties: { ip: "192.168.1.1" },
   event_hash: "abc123",
   previous_hash: null,

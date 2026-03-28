@@ -44,7 +44,7 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
       name: "Bootstrap User",
-      email: "bootstrap@example.com",
+      email: "bootstrap@secpal.dev",
     });
   });
 
@@ -66,7 +66,7 @@ describe("useAuth", () => {
   });
 
   it("revalidates a stored user before completing bootstrap", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
     const revalidatedUser = {
       ...mockUser,
       roles: ["Admin"],
@@ -98,7 +98,7 @@ describe("useAuth", () => {
   });
 
   it("does not restore auth state when bootstrap revalidation resolves after logout", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
     const revalidatedUser = {
       ...mockUser,
       roles: ["Admin"],
@@ -134,7 +134,7 @@ describe("useAuth", () => {
   });
 
   it("clears stale stored auth data when revalidation fails", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
     mockGetCurrentUser.mockRejectedValueOnce(new Error("Unauthorized"));
@@ -156,7 +156,7 @@ describe("useAuth", () => {
   });
 
   it("keeps stored auth when offline without revalidation", () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
@@ -192,7 +192,7 @@ describe("useAuth", () => {
       wrapper: AuthProvider,
     });
 
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
     act(() => {
       result.current.login(mockUser);
@@ -204,7 +204,7 @@ describe("useAuth", () => {
   });
 
   it("logout clears user", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
@@ -247,7 +247,7 @@ describe("useAuth", () => {
   });
 
   it("logs out when session:expired event is emitted", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
     const { result } = renderHook(() => useAuth(), {

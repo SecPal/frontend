@@ -123,7 +123,7 @@ describe("EmployeeCreate", () => {
         first_name: "John",
         last_name: "Doe",
         full_name: "John Doe",
-        email: "john.doe@example.com",
+        email: "john.doe@secpal.dev",
         phone: "+1234567890",
         date_of_birth: "1990-01-01",
         hire_date: "2025-01-01",
@@ -172,7 +172,7 @@ describe("EmployeeCreate", () => {
         target: { value: "Doe" },
       });
       fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: "john.doe@example.com" },
+        target: { value: "john.doe@secpal.dev" },
       });
       fireEvent.change(screen.getByLabelText(/phone/i), {
         target: { value: "+1234567890" },
@@ -206,7 +206,7 @@ describe("EmployeeCreate", () => {
           expect(mockCreateEmployee).toHaveBeenCalledWith({
             first_name: "John",
             last_name: "Doe",
-            email: "john.doe@example.com",
+            email: "john.doe@secpal.dev",
             phone: "+1234567890",
             date_of_birth: "1990-01-01",
             position: "Developer",
@@ -251,7 +251,7 @@ describe("EmployeeCreate", () => {
         target: { value: "Doe" },
       });
       fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: "john.doe@example.com" },
+        target: { value: "john.doe@secpal.dev" },
       });
       fireEvent.change(screen.getByLabelText(/date of birth/i), {
         target: { value: "01/01/1990" },
@@ -346,7 +346,7 @@ describe("EmployeeCreate", () => {
       target: { value: "Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john@example.com" },
+      target: { value: "john@secpal.dev" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "01/01/1990" },
@@ -400,7 +400,7 @@ describe("EmployeeCreate", () => {
       target: { value: "Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john@example.com" },
+      target: { value: "john@secpal.dev" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "01/01/1990" },
@@ -465,7 +465,7 @@ describe("EmployeeCreate", () => {
       target: { value: "Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "test@example.com" },
+      target: { value: "test@secpal.dev" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
@@ -557,7 +557,7 @@ describe("EmployeeCreate", () => {
       target: { value: "Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "john.doe@example.com" },
+      target: { value: "john.doe@secpal.dev" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "01/01/1990" },
@@ -633,7 +633,7 @@ describe("EmployeeCreate", () => {
       target: { value: "Doe" },
     });
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "duplicate@example.com" },
+      target: { value: "duplicate@secpal.dev" },
     });
     fireEvent.change(screen.getByLabelText(/date of birth/i), {
       target: { value: "1990-01-01" },
@@ -660,7 +660,7 @@ describe("EmployeeCreate", () => {
 
     // Change any input field
     fireEvent.change(screen.getByLabelText(/email/i), {
-      target: { value: "new@example.com" },
+      target: { value: "new@secpal.dev" },
     });
 
     // Verify error is cleared
@@ -757,7 +757,7 @@ describe("EmployeeCreate", () => {
           first_name: "John",
           last_name: "Doe",
           full_name: "John Doe",
-          email: "john@example.com",
+          email: "john@secpal.dev",
           phone: "",
           date_of_birth: "1990-01-01",
           hire_date: "2025-01-01",
@@ -789,7 +789,7 @@ describe("EmployeeCreate", () => {
           target: { value: "Doe" },
         });
         fireEvent.change(screen.getByLabelText(/email/i), {
-          target: { value: "john@example.com" },
+          target: { value: "john@secpal.dev" },
         });
         fireEvent.change(screen.getByLabelText(/date of birth/i), {
           target: { value: "01/01/1990" },

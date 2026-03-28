@@ -104,7 +104,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const mockResponse = {
       token: "test-token",
-      user: { id: 1, name: "Test User", email: "test@example.com" },
+      user: { id: 1, name: "Test User", email: "test@secpal.dev" },
     };
     mockLogin.mockResolvedValueOnce(mockResponse);
 
@@ -125,13 +125,13 @@ describe("Login", () => {
       expect(submitButton).toBeEnabled();
     });
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
-        email: "test@example.com",
+        email: "test@secpal.dev",
         password: "password123",
       });
     });
@@ -155,7 +155,7 @@ describe("Login", () => {
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
 
-    fireEvent.change(emailInput, { target: { value: "wrong@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "wrong@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "wrongpass" } });
     fireEvent.click(submitButton);
 
@@ -188,7 +188,7 @@ describe("Login", () => {
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "password" } });
     fireEvent.click(submitButton);
 
@@ -222,7 +222,7 @@ describe("Login", () => {
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "password" } });
     fireEvent.click(submitButton);
 
@@ -254,7 +254,7 @@ describe("Login", () => {
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "password123" } });
     fireEvent.click(submitButton);
 
@@ -280,7 +280,7 @@ describe("Login", () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
     const submitButton = screen.getByRole("button", { name: /log in/i });
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
     fireEvent.change(passwordInput, { target: { value: "wrong" } });
     fireEvent.click(submitButton);
 
@@ -294,7 +294,7 @@ describe("Login", () => {
 
     // Second call: success
     mockLogin.mockResolvedValueOnce({
-      user: { id: 1, name: "Test", email: "test@example.com" },
+      user: { id: 1, name: "Test", email: "test@secpal.dev" },
     });
 
     // Second submission should clear error
@@ -489,7 +489,7 @@ describe("Login", () => {
       const submitButton = screen.getByRole("button", { name: /log in/i });
 
       // First failed attempt
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "wrong" } });
       fireEvent.click(submitButton);
 
@@ -532,7 +532,7 @@ describe("Login", () => {
       const submitButton = screen.getByRole("button", { name: /log in/i });
 
       // Third failed attempt - should show warning
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "wrong" } });
       fireEvent.click(submitButton);
 
@@ -569,7 +569,7 @@ describe("Login", () => {
       const submitButton = screen.getByRole("button", { name: /log in/i });
 
       // Fifth failed attempt - should trigger lockout
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "wrong" } });
       fireEvent.click(submitButton);
 
@@ -632,7 +632,7 @@ describe("Login", () => {
 
       const mockLogin = vi.mocked(authApi.login);
       mockLogin.mockResolvedValueOnce({
-        user: { id: 1, name: "Test", email: "test@example.com" },
+        user: { id: 1, name: "Test", email: "test@secpal.dev" },
       });
 
       renderLogin();
@@ -648,7 +648,7 @@ describe("Login", () => {
       const passwordInput = screen.getByLabelText(/password/i);
       const submitButton = screen.getByRole("button", { name: /log in/i });
 
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "correct" } });
       fireEvent.click(submitButton);
 

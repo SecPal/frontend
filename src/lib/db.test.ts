@@ -41,7 +41,7 @@ describe("IndexedDB Database", () => {
         {
           id: "2",
           name: "Bob",
-          email: "bob@example.com",
+          email: "bob@secpal.app",
           lastSynced: new Date(),
         },
         {

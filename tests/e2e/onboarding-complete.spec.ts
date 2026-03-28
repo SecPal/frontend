@@ -7,7 +7,7 @@ test.describe("Onboarding Complete Flow", () => {
   test("completes onboarding with valid magic link", async ({ page }) => {
     // Navigate to onboarding complete page with token
     await page.goto(
-      "/onboarding/complete?token=test-token-12345&email=john.doe@example.com"
+      "/onboarding/complete?token=test-token-12345&email=john.doe@secpal.dev"
     );
 
     // Verify page loaded
@@ -36,9 +36,7 @@ test.describe("Onboarding Complete Flow", () => {
   });
 
   test("shows error for invalid token", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=invalid&email=test@example.com"
-    );
+    await page.goto("/onboarding/complete?token=invalid&email=test@secpal.dev");
 
     await page.fill('input[name="first_name"]', "John");
     await page.fill('input[name="last_name"]', "Doe");
@@ -67,7 +65,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("validates password mismatch", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     await page.fill('input[name="first_name"]', "John");
@@ -86,7 +84,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("validates password minimum length", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     await page.fill('input[name="first_name"]', "John");
@@ -105,7 +103,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("validates required fields", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     // Submit empty form
@@ -119,7 +117,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("uploads profile photo", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     // Create a test image file
@@ -153,7 +151,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("shows loading state during submission", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     await page.fill('input[name="first_name"]', "John");
@@ -182,7 +180,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("allows removing uploaded photo", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     // Upload photo
@@ -205,7 +203,7 @@ test.describe("Onboarding Complete Flow", () => {
 
   test("validates photo file size (max 2MB)", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@example.com"
+      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
     );
 
     // Create a file larger than 2MB (3MB)
