@@ -554,7 +554,6 @@ describe("ApplicationLayout", () => {
           email: "john@secpal.dev",
           hasOrganizationalScopes: false,
           hasCustomerAccess: true,
-          hasSiteAccess: true,
           roles: [],
           permissions: [],
         })
