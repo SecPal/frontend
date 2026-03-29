@@ -53,6 +53,68 @@ describe("OfflineAnalytics", () => {
       expect(analytics).toBeDefined();
     });
 
+    it("uses crypto.getRandomValues when randomUUID is unavailable", () => {
+      const originalCrypto = Object.getOwnPropertyDescriptor(
+        globalThis,
+        "crypto"
+      );
+      const getRandomValues = vi.fn((values: Uint8Array) => {
+        values.set([
+          0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa,
+          0xbb, 0xcc, 0xdd, 0xee, 0xff,
+        ]);
+        return values;
+      });
+
+      Object.defineProperty(globalThis, "crypto", {
+        configurable: true,
+        value: {
+          getRandomValues,
+          randomUUID: undefined,
+        } as unknown as Crypto,
+      });
+
+      try {
+        const sessionId = analytics!["generateSessionId"]();
+
+        expect(getRandomValues).toHaveBeenCalledTimes(1);
+        expect(sessionId).toBe("session_00112233445566778899aabbccddeeff");
+      } finally {
+        if (originalCrypto) {
+          Object.defineProperty(globalThis, "crypto", originalCrypto);
+        }
+      }
+    });
+
+    it("falls back to deterministic session ids when web crypto is unavailable", () => {
+      const originalCrypto = Object.getOwnPropertyDescriptor(
+        globalThis,
+        "crypto"
+      );
+      const consoleWarn = vi.mocked(console.warn);
+
+      Object.defineProperty(globalThis, "crypto", {
+        configurable: true,
+        value: undefined,
+      });
+
+      try {
+        const firstSessionId = analytics!["generateSessionId"]();
+        const secondSessionId = analytics!["generateSessionId"]();
+
+        expect(firstSessionId).toMatch(/^session_\d+_\d+$/);
+        expect(secondSessionId).toMatch(/^session_\d+_\d+$/);
+        expect(firstSessionId).not.toBe(secondSessionId);
+        expect(consoleWarn).toHaveBeenCalledWith(
+          "Web Crypto not available, falling back to deterministic session ID generation"
+        );
+      } finally {
+        if (originalCrypto) {
+          Object.defineProperty(globalThis, "crypto", originalCrypto);
+        }
+      }
+    });
+
     it("should set userId", () => {
       analytics!.resumeAuthenticatedSession("test-user-123");
       // User ID will be included in subsequent events
