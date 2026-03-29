@@ -64,6 +64,32 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.sites.create).toBe(false);
   });
 
+  it("does not leak the site feature from customer-only read access", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "Customer Reader",
+      email: "customer.reader@secpal.dev",
+      roles: [],
+      permissions: ["customers.read"],
+    });
+
+    expect(capabilities.customers).toBe(true);
+    expect(capabilities.sites).toBe(false);
+  });
+
+  it("does not unlock customer or site features from assignment mutation permissions alone", () => {
+    const capabilities = getUserCapabilities({
+      id: 1,
+      name: "Assignment Operator",
+      email: "assignment.operator@secpal.dev",
+      roles: [],
+      permissions: ["assignments.create"],
+    });
+
+    expect(capabilities.customers).toBe(false);
+    expect(capabilities.sites).toBe(false);
+  });
+
   it("enables customer and site features from backend scoped-access flags", () => {
     const capabilities = getUserCapabilities({
       id: 1,
