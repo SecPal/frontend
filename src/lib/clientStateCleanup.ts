@@ -9,6 +9,12 @@ export const SENSITIVE_CACHE_NAMES = [
   "api-general",
 ] as const;
 
+const USER_SCOPED_LOCAL_STORAGE_KEYS = [
+  "auth_user",
+  "auth_token",
+  "secpal-notification-preferences",
+] as const;
+
 async function clearSensitiveCaches(): Promise<void> {
   if (!("caches" in globalThis)) {
     return;
@@ -49,8 +55,10 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
 }
 
 export async function clearSensitiveClientState(): Promise<void> {
-  localStorage.removeItem("auth_user");
-  localStorage.removeItem("auth_token");
+  for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
+    localStorage.removeItem(key);
+  }
+
   sessionStorage.clear();
 
   await Promise.all([clearSensitiveCaches(), clearSensitiveIndexedDbState()]);

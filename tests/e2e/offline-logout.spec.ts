@@ -145,6 +145,13 @@ test.describe("Offline Logout Privacy", () => {
       page.getByText(offlineLogoutMockUser.email).first()
     ).toBeVisible();
 
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "secpal-notification-preferences",
+        JSON.stringify([{ category: "alerts", enabled: false }])
+      );
+    });
+
     await context.setOffline(false);
     await page.getByRole("button", { name: /user menu/i }).click();
     await page.getByRole("menuitem", { name: /sign out|abmelden/i }).click();
