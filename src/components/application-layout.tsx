@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
-import { logout as apiLogout } from "../services/authApi";
+import { getAuthTransport } from "../services/authTransport";
 import { getInitials } from "../lib/stringUtils";
 import { Avatar } from "./avatar";
 import {
@@ -155,6 +156,7 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const capabilities = useUserCapabilities();
+  const authTransport = useMemo(() => getAuthTransport(), []);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -163,7 +165,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     logout();
 
     try {
-      await apiLogout();
+      await authTransport.logout();
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
