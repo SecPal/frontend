@@ -7,6 +7,8 @@ export interface SanitizeAuthUserOptions {
   includeEmployee?: boolean;
 }
 
+export type PersistedAuthUser = Omit<User, "employee">;
+
 function sanitizeStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -86,4 +88,45 @@ export function sanitizeAuthUser(
   }
 
   return sanitizedUser;
+}
+
+export function sanitizePersistedAuthUser(
+  value: unknown
+): PersistedAuthUser | null {
+  const sanitizedUser = sanitizeAuthUser(value, {
+    includeEmployee: false,
+  });
+
+  if (!sanitizedUser) {
+    return null;
+  }
+
+  const persistedAuthUser: PersistedAuthUser = {
+    id: sanitizedUser.id,
+    name: sanitizedUser.name,
+    email: sanitizedUser.email,
+  };
+
+  if (sanitizedUser.roles) {
+    persistedAuthUser.roles = sanitizedUser.roles;
+  }
+
+  if (sanitizedUser.permissions) {
+    persistedAuthUser.permissions = sanitizedUser.permissions;
+  }
+
+  if (sanitizedUser.hasOrganizationalScopes !== undefined) {
+    persistedAuthUser.hasOrganizationalScopes =
+      sanitizedUser.hasOrganizationalScopes;
+  }
+
+  if (sanitizedUser.hasCustomerAccess !== undefined) {
+    persistedAuthUser.hasCustomerAccess = sanitizedUser.hasCustomerAccess;
+  }
+
+  if (sanitizedUser.hasSiteAccess !== undefined) {
+    persistedAuthUser.hasSiteAccess = sanitizedUser.hasSiteAccess;
+  }
+
+  return persistedAuthUser;
 }

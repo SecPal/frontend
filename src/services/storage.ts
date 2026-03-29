@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { User } from "../contexts/auth-context";
-import { sanitizeAuthUser } from "./authState";
+import { sanitizePersistedAuthUser } from "./authState";
 
 /**
  * Storage abstraction layer for auth data
@@ -43,9 +43,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (!storedUser) return null;
 
     try {
-      const sanitizedUser = sanitizeAuthUser(JSON.parse(storedUser), {
-        includeEmployee: false,
-      });
+      const sanitizedUser = sanitizePersistedAuthUser(JSON.parse(storedUser));
 
       if (!sanitizedUser) {
         this.removeUser();
@@ -61,9 +59,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   setUser(user: User): void {
-    const sanitizedUser = sanitizeAuthUser(user, {
-      includeEmployee: false,
-    });
+    const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
       this.removeUser();
