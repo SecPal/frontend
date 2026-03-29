@@ -122,8 +122,9 @@ The SPA flow uses `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me
 **Frontend `.env.local`:**
 
 ```env
-# Development API endpoint
-VITE_API_URL=http://api.secpal.dev
+# Development API endpoint (leave empty to use Vite proxy, or use https:// for a remote dev server)
+# VITE_API_URL=           # empty = Vite proxy → recommended for local DDEV
+# VITE_API_URL=https://api.secpal.dev   # explicit remote dev/testing server
 
 # No token-related variables needed anymore!
 # ❌ OLD: VITE_AUTH_TOKEN_KEY (removed)
