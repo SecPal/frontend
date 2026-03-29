@@ -142,17 +142,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (!analytics) {
-      return;
-    }
-
-    if (!user) {
-      resetAnalyticsState();
+    if (!analytics || !user) {
       return;
     }
 
     analytics.resumeAuthenticatedSession(String(user.id));
-  }, [resetAnalyticsState, user]);
+  }, [user]);
 
   // Bootstrap: revalidate any stored session on app load/refresh when online.
   // Uses getCurrentUser() to confirm the session and clear it if invalid.

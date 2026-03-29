@@ -171,9 +171,8 @@ test.describe("Offline Logout Privacy", () => {
     ).not.toBeVisible();
 
     await page.goto("/settings").catch(() => undefined);
-    await page.waitForLoadState("networkidle");
+    await page.waitForURL(/\/login/);
 
-    await expect(page).toHaveURL(/\/login/);
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
 
