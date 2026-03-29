@@ -11,8 +11,62 @@ import {
 } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
 import { CacheFirst } from "workbox-strategies";
+import { resolveOfflineProtectedRouteRedirect } from "./lib/offlineNavigationAccess";
+import {
+  readOfflineSessionState,
+  writeOfflineSessionState,
+} from "./lib/offlineSessionState";
 
 declare const self: ServiceWorkerGlobalScope;
+
+interface AuthSessionChangedMessage {
+  type: "AUTH_SESSION_CHANGED";
+  isAuthenticated: boolean;
+}
+
+function isAuthSessionChangedMessage(
+  value: unknown
+): value is AuthSessionChangedMessage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return (
+    "type" in value &&
+    value.type === "AUTH_SESSION_CHANGED" &&
+    "isAuthenticated" in value &&
+    typeof value.isAuthenticated === "boolean"
+  );
+}
+
+async function redirectProtectedClientsToLogin(): Promise<void> {
+  const windowClients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  await Promise.all(
+    windowClients.map(async (client) => {
+      const pathname = new URL(client.url).pathname;
+
+      if (!resolveOfflineProtectedRouteRedirect(pathname, false)) {
+        return;
+      }
+
+      await client.navigate(new URL("/login", self.location.origin).toString());
+    })
+  );
+}
+
+async function handleAuthSessionChanged(
+  message: AuthSessionChangedMessage
+): Promise<void> {
+  await writeOfflineSessionState(message.isAuthenticated);
+
+  if (!message.isAuthenticated) {
+    await redirectProtectedClientsToLogin();
+  }
+}
 
 // Take control of all pages immediately
 clientsClaim();
@@ -40,10 +94,29 @@ registerRoute(
  * This enables offline navigation and page reloads
  */
 const navigationHandler = createHandlerBoundToURL("/index.html");
-const navigationRoute = new NavigationRoute(navigationHandler, {
-  // Exclude API routes and special paths
-  denylist: [/^\/v1\//, /^\/__/],
-});
+const navigationRoute = new NavigationRoute(
+  async (context) => {
+    const sessionState = await readOfflineSessionState();
+    const pathname = new URL(context.request.url).pathname;
+    const redirectTarget = resolveOfflineProtectedRouteRedirect(
+      pathname,
+      sessionState?.isAuthenticated ?? null
+    );
+
+    if (redirectTarget) {
+      return Response.redirect(
+        new URL(redirectTarget, self.location.origin).toString(),
+        302
+      );
+    }
+
+    return navigationHandler(context);
+  },
+  {
+    // Exclude API routes and special paths
+    denylist: [/^\/v1\//, /^\/__/],
+  }
+);
 registerRoute(navigationRoute);
 
 /**
@@ -175,5 +248,10 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
 self.addEventListener("message", (event: ExtendableMessageEvent) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+
+  if (isAuthSessionChangedMessage(event.data)) {
+    event.waitUntil(handleAuthSessionChanged(event.data));
   }
 });

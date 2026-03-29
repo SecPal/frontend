@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { chromium, type FullConfig } from "@playwright/test";
@@ -19,6 +19,13 @@ const AUTH_FILE = path.join(__dirname, ".auth/user.json");
  * This prevents rate-limiting issues from multiple login attempts.
  */
 async function globalSetup(config: FullConfig) {
+  if (process.env.PLAYWRIGHT_SKIP_GLOBAL_LOGIN === "1") {
+    console.log(
+      "⏭️  Skipping global login setup (PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1)"
+    );
+    return;
+  }
+
   // Ensure auth directory exists
   const authDir = path.dirname(AUTH_FILE);
   if (!fs.existsSync(authDir)) {

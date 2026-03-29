@@ -7,6 +7,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -22,6 +23,10 @@ vi.mock("../services/authApi", async () => {
 
 vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../lib/serviceWorkerSession", () => ({
+  syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
 }));
 
 function createDeferredPromise<T>() {
@@ -46,6 +51,7 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
+    vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -283,5 +289,64 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("clears auth state when another tab removes auth storage", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.removeItem("auth_user");
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: JSON.stringify(mockUser),
+          newValue: null,
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.removeItem("auth_user");
+      window.dispatchEvent(new Event("pageshow"));
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 });
