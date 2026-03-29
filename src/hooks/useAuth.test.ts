@@ -45,6 +45,8 @@ describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
@@ -427,6 +429,23 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", () => {
+    const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(staleUser));
+    localStorage.setItem("auth_logout_barrier", String(Date.now()));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.isLoading).toBe(false);
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
   it("ignores storage events for keys other than auth_user", async () => {

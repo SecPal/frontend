@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { db, type AnalyticsEvent, type AnalyticsEventType } from "./db";
@@ -9,6 +9,8 @@ export type { AnalyticsEvent, AnalyticsEventType };
 class OfflineAnalytics {
   private sessionId: string;
   private userId?: string;
+  private trackingEnabled: boolean;
+  private fallbackSessionSequence: number = 0;
   private isOnline: boolean;
   private syncInterval?: number;
   private syncTimeout?: number;
@@ -19,6 +21,7 @@ class OfflineAnalytics {
 
   constructor() {
     this.sessionId = this.generateSessionId();
+    this.trackingEnabled = false;
     this.isOnline = typeof navigator !== "undefined" && navigator.onLine;
 
     // Bind event handlers for cleanup
@@ -37,7 +40,7 @@ class OfflineAnalytics {
 
   /**
    * Generate a unique session ID using cryptographically secure random
-   * Falls back to timestamp + Math.random for older browsers
+   * Falls back to a deterministic unique suffix when Web Crypto is unavailable
    */
   private generateSessionId(): string {
     // Prefer crypto.randomUUID for cryptographic security
@@ -45,24 +48,61 @@ class OfflineAnalytics {
       return `session_${crypto.randomUUID()}`;
     }
 
-    // Fallback for older browsers using Math.random()
-    // SECURITY NOTE: This is acceptable because:
-    // 1. Session IDs are NOT used for authentication or authorization
-    // 2. They are only used for grouping analytics events (non-security context)
-    // 3. Collision risk is negligible (timestamp ensures uniqueness across sessions)
-    // 4. No PII is stored (privacy-first design)
-    // 5. Primary path uses crypto.randomUUID (cryptographically secure)
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const randomBytes = new Uint8Array(16);
+      crypto.getRandomValues(randomBytes);
+
+      const randomHex = Array.from(randomBytes, (byte) =>
+        byte.toString(16).padStart(2, "0")
+      ).join("");
+
+      return `session_${randomHex}`;
+    }
+
+    // Final fallback keeps IDs unique without using insecure randomness.
     console.warn(
-      "crypto.randomUUID not available, falling back to timestamp-based session ID"
+      "Web Crypto not available, falling back to deterministic session ID generation"
     );
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+
+    this.fallbackSessionSequence += 1;
+    return `session_${Date.now()}_${this.fallbackSessionSequence}`;
   }
 
   /**
-   * Set the current user ID for analytics
+   * Resume analytics for an authenticated session.
+   * Rotates the local analytics session when moving from logged-out to logged-in
+   * or when the authenticated user changes.
+   */
+  resumeAuthenticatedSession(userId: string): void {
+    if (!this.trackingEnabled || this.userId !== userId) {
+      this.sessionId = this.generateSessionId();
+    }
+
+    this.trackingEnabled = true;
+    this.userId = userId;
+  }
+
+  /**
+   * Backwards-compatible alias for older call sites.
    */
   setUserId(userId: string): void {
-    this.userId = userId;
+    this.resumeAuthenticatedSession(userId);
+  }
+
+  /**
+   * Reset analytics after logout so no user- or session-linked local data remains.
+   */
+  async resetForLogout(): Promise<void> {
+    this.trackingEnabled = false;
+    this.userId = undefined;
+    this.sessionId = this.generateSessionId();
+
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+      this.syncTimeout = undefined;
+    }
+
+    await db.analytics.clear();
   }
 
   /**
@@ -84,6 +124,10 @@ class OfflineAnalytics {
       console.warn(
         "Analytics instance has been destroyed, ignoring track call"
       );
+      return;
+    }
+
+    if (!this.trackingEnabled) {
       return;
     }
 
@@ -288,7 +332,7 @@ class OfflineAnalytics {
    * an analytics endpoint. See README for current limitations.
    */
   async syncEvents(): Promise<void> {
-    if (!this.isOnline || this.isDestroyed) return;
+    if (!this.isOnline || this.isDestroyed || !this.trackingEnabled) return;
 
     // Clear any pending debounced sync to prevent duplicate sync attempts
     // This ensures manual sync (e.g., from handleOnline) cancels debounced sync
