@@ -43,7 +43,9 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (!storedUser) return null;
 
     try {
-      const sanitizedUser = sanitizeAuthUser(JSON.parse(storedUser));
+      const sanitizedUser = sanitizeAuthUser(JSON.parse(storedUser), {
+        includeEmployee: false,
+      });
 
       if (!sanitizedUser) {
         this.removeUser();
@@ -59,7 +61,9 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   setUser(user: User): void {
-    const sanitizedUser = sanitizeAuthUser(user);
+    const sanitizedUser = sanitizeAuthUser(user, {
+      includeEmployee: false,
+    });
 
     if (!sanitizedUser) {
       this.removeUser();

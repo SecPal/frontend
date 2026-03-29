@@ -3,6 +3,10 @@
 
 import type { User } from "../contexts/auth-context";
 
+export interface SanitizeAuthUserOptions {
+  includeEmployee?: boolean;
+}
+
 function sanitizeStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -19,10 +23,15 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
-export function sanitizeAuthUser(value: unknown): User | null {
+export function sanitizeAuthUser(
+  value: unknown,
+  options: SanitizeAuthUserOptions = {}
+): User | null {
   if (typeof value !== "object" || value === null) {
     return null;
   }
+
+  const includeEmployee = options.includeEmployee ?? true;
 
   const candidate = value as Record<string, unknown>;
 
@@ -69,6 +78,7 @@ export function sanitizeAuthUser(value: unknown): User | null {
   }
 
   if (
+    includeEmployee &&
     "employee" in candidate &&
     (typeof candidate.employee === "object" || candidate.employee === null)
   ) {
