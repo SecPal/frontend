@@ -1,7 +1,8 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { User } from "../contexts/auth-context";
+import { sanitizePersistedAuthUser } from "./authState";
 
 /**
  * Storage abstraction layer for auth data
@@ -42,7 +43,14 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (!storedUser) return null;
 
     try {
-      return JSON.parse(storedUser) as User;
+      const sanitizedUser = sanitizePersistedAuthUser(JSON.parse(storedUser));
+
+      if (!sanitizedUser) {
+        this.removeUser();
+        return null;
+      }
+
+      return sanitizedUser;
     } catch (error) {
       console.error("Failed to parse stored user data:", error);
       this.removeUser();
@@ -51,7 +59,14 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   setUser(user: User): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    const sanitizedUser = sanitizePersistedAuthUser(user);
+
+    if (!sanitizedUser) {
+      this.removeUser();
+      return;
+    }
+
+    localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser));
   }
 
   removeUser(): void {

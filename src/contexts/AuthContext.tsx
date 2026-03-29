@@ -9,14 +9,16 @@ import React, {
   useRef,
 } from "react";
 import { AuthContext, type User } from "./auth-context";
+import { getAuthTransport } from "../services/authTransport";
+import { sanitizeAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
-import { getCurrentUser } from "../services/authApi";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const authTransport = useMemo(() => getAuthTransport(), []);
   const [user, setUser] = useState<User | null>(() => {
     return authStorage.getUser();
   });
@@ -71,13 +73,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     (newUser: User) => {
+      const sanitizedUser = sanitizeAuthUser(newUser);
+
+      if (!sanitizedUser) {
+        clearAuthenticatedState(true);
+        return;
+      }
+
       invalidateBootstrapRevalidation();
-      authStorage.setUser(newUser);
-      setUser(newUser);
+      authStorage.setUser(sanitizedUser);
+      setUser(sanitizedUser);
       setIsLoading(false);
       syncOfflineAuthState(true);
     },
-    [invalidateBootstrapRevalidation, syncOfflineAuthState]
+    [
+      clearAuthenticatedState,
+      invalidateBootstrapRevalidation,
+      syncOfflineAuthState,
+    ]
   );
 
   const logout = useCallback(() => {
@@ -130,7 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
 
-    void getCurrentUser()
+    void authTransport
+      .getCurrentUser()
       .then((currentUser) => {
         if (
           !isActive ||
@@ -158,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isActive = false;
     };
-  }, [clearAuthenticatedState, syncOfflineAuthState]);
+  }, [authTransport, clearAuthenticatedState, syncOfflineAuthState]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -172,7 +186,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const nextUser = JSON.parse(event.newValue) as User;
+        const nextUser = authStorage.getUser();
+
+        if (!nextUser) {
+          clearAuthenticatedState(true);
+          return;
+        }
 
         invalidateBootstrapRevalidation();
         setUser(nextUser);

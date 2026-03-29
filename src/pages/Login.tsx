@@ -1,13 +1,13 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useMemo, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { login as apiLogin, AuthApiError } from "../services/authApi";
+import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import { checkHealth, HealthStatus } from "../services/healthApi";
 import { AuthLayout } from "../components/auth-layout";
 import { Footer } from "../components/Footer";
@@ -20,6 +20,7 @@ import { Input } from "../components/input";
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const authTransport = useMemo(() => getAuthTransport(), []);
   const {
     remainingAttempts,
     isLocked,
@@ -107,7 +108,7 @@ export function Login() {
     setIsSubmitting(true);
 
     try {
-      const response = await apiLogin({ email, password });
+      const response = await authTransport.login({ email, password });
       resetAttempts(); // Clear rate limit state on successful login
       login(response.user);
       navigate("/");
