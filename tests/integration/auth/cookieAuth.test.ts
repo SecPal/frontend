@@ -158,7 +158,7 @@ describe("Cookie-based Authentication Integration", () => {
         json: async () => ({ data: "protected resource" }),
       } as Response);
 
-      const response = await fetch("https://api.secpal.app/v1/me", {
+      const response = await fetch("https://api.secpal.dev/v1/me", {
         credentials: "include",
         headers: {
           "X-XSRF-TOKEN": "csrf-token",
@@ -182,7 +182,7 @@ describe("Cookie-based Authentication Integration", () => {
         statusText: "Unauthorized",
       } as Response);
 
-      const response = await fetch("https://api.secpal.app/v1/me", {
+      const response = await fetch("https://api.secpal.dev/v1/me", {
         credentials: "include",
       });
 

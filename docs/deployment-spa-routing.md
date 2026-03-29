@@ -195,19 +195,19 @@ server {
 
 **Build-time variables** (set before `npm run build`):
 
-- `VITE_API_URL` - Backend API URL (e.g., `https://api.secpal.app`)
+- `VITE_API_URL` - Backend API URL (e.g., `https://api.secpal.dev`)
 
 **Example (.env.production):**
 
 ```env
-VITE_API_URL=https://api.secpal.app
+VITE_API_URL=https://api.secpal.dev
 ```
 
 **Load environment:**
 
 ```bash
 # Production build
-VITE_API_URL=https://api.secpal.app npm run build
+VITE_API_URL=https://api.secpal.dev npm run build
 
 # Or use .env.production file
 npm run build
@@ -222,7 +222,7 @@ Before deploying to production:
 - ✅ HTTPS enabled (Let's Encrypt, Certbot)
 - ✅ Security headers configured (`.htaccess` includes them)
 - ✅ CORS configured on backend (API must allow frontend domain)
-- ✅ `VITE_API_URL` points to production API
+- ✅ `VITE_API_URL` points to the canonical `api.secpal.dev` production API
 - ✅ No `.env` files committed to Git
 - ✅ Service Worker registered (PWA functionality)
 - ✅ CSP headers if needed (restrict script sources)

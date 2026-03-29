@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host; `api.secpal.app` is deprecated and not deployed.
 - Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
 - Aligned customer and site feature gating with the backend collection policy by honoring explicit `hasCustomerAccess` and `hasSiteAccess` auth-context flags, so scoped-assignment users can enter the same areas the API intentionally exposes while users without any effective access continue to see the shared access-denied state.
 - Clarified the employee status rules in the create and edit UI by showing the full valid status set (`Applicant`, `Pre-Contract`, `Active`, `On Leave`, `Terminated`) and by explaining inline that onboarding invitations are only available in `Pre-Contract`.
@@ -376,7 +377,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PWA Service Worker API_URL mode detection** (#249)
   - Updated `vite.config.ts` to use mode-aware API_URL detection matching `src/config.ts`
   - Development mode now uses empty string (Vite proxy forwards `/v1/*` to DDEV backend)
-  - Production mode uses `https://api.secpal.app` as fallback
+  - Production mode uses `https://api.secpal.dev` as fallback
   - **Benefit:** Service worker cache patterns now correctly match local proxy configuration, fixing cache misses in development mode
   - Related to: PR #248 (Vite proxy configuration for local DDEV development)
 

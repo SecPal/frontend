@@ -122,8 +122,9 @@ The SPA flow uses `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me
 **Frontend `.env.local`:**
 
 ```env
-# Development API endpoint
-VITE_API_URL=http://api.secpal.dev
+# Development API endpoint (leave empty to use Vite proxy, or use https:// for a remote dev server)
+# VITE_API_URL=           # empty = Vite proxy → recommended for local DDEV
+# VITE_API_URL=https://api.secpal.dev   # explicit remote dev/testing server
 
 # No token-related variables needed anymore!
 # ❌ OLD: VITE_AUTH_TOKEN_KEY (removed)
@@ -133,13 +134,20 @@ VITE_API_URL=http://api.secpal.dev
 
 ```env
 # Sanctum Configuration
-SANCTUM_STATEFUL_DOMAINS=localhost:5173,secpal.app,www.secpal.app
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.secpal.dev
 SESSION_DOMAIN=localhost
 SESSION_SECURE_COOKIE=false  # true in production
 SESSION_DRIVER=cookie
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS=http://localhost:5173,https://secpal.app
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://app.secpal.dev
+```
+
+Production SPA baseline:
+
+```env
+SANCTUM_STATEFUL_DOMAINS=app.secpal.dev
+CORS_ALLOWED_ORIGINS=https://app.secpal.dev
 ```
 
 ### Running Locally
@@ -215,7 +223,7 @@ await logoutAll();
 import { fetchWithCsrf } from "@/services/csrf";
 
 // For state-changing requests (POST, PUT, PATCH, DELETE)
-const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
+const response = await fetchWithCsrf("https://api.secpal.dev/v1/secrets", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -232,7 +240,7 @@ const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
 
 ```typescript
 // For GET requests (no CSRF protection needed)
-const response = await fetch("https://api.secpal.app/v1/secrets", {
+const response = await fetch("https://api.secpal.dev/v1/secrets", {
   credentials: "include", // REQUIRED: Sends cookies
   headers: {
     Accept: "application/json",
@@ -378,7 +386,7 @@ fetch(url, {
 'supports_credentials' => true,
 'allowed_origins' => [
     'http://localhost:5173',
-    'https://secpal.app',
+    'https://app.secpal.dev',
 ],
 ```
 
@@ -420,7 +428,7 @@ await fetchWithCsrf(url, {
 
 ```env
 # Backend .env
-SANCTUM_STATEFUL_DOMAINS=localhost:5173,secpal.app
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.secpal.dev
 SESSION_DOMAIN=localhost
 ```
 
@@ -517,16 +525,16 @@ All supported browsers must:
 ```env
 # Backend production .env
 SESSION_SECURE_COOKIE=true  # REQUIRED in production
-SANCTUM_STATEFUL_DOMAINS=secpal.app,www.secpal.app
+SANCTUM_STATEFUL_DOMAINS=app.secpal.dev
 ```
 
 ### Domain Configuration
 
 ```env
 # Backend production .env
-SESSION_DOMAIN=.secpal.app  # Allows subdomains
-APP_URL=https://secpal.app
-FRONTEND_URL=https://secpal.app
+SESSION_DOMAIN=.secpal.dev  # Allows app/api subdomains
+APP_URL=https://api.secpal.dev
+FRONTEND_URL=https://app.secpal.dev
 ```
 
 ### Security Headers
