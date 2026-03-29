@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal.app` identifier-only for Android
 - Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host; `api.secpal.app` is deprecated and not deployed.
 - Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
 - Aligned customer and site feature gating with the backend collection policy by honoring explicit `hasCustomerAccess` and `hasSiteAccess` auth-context flags, so scoped-assignment users can enter the same areas the API intentionally exposes while users without any effective access continue to see the shared access-denied state.
