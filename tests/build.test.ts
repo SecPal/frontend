@@ -14,12 +14,11 @@ function readRepoFile(relativePath: string): string {
 }
 
 /**
- * Build Output Tests
+ * Build Configuration and Source Verification Tests
  *
- * These tests verify that the build process produces the expected output,
- * including SPA routing configuration files.
- *
- * Note: These tests require a successful build (npm run build) to pass.
+ * These tests verify that the required source files and build configuration
+ * are present and contain the expected directives. They read repo source
+ * files directly and do not require a prior build step to pass.
  */
 describe("Build Output Verification", () => {
   it("keeps the Apache SPA routing file in the build inputs", () => {
