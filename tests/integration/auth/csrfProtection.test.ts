@@ -32,7 +32,7 @@ describe("CSRF Protection Integration", () => {
         json: async () => ({ success: true }),
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource", {
         method: "POST",
         body: JSON.stringify({ data: "test" }),
       });
@@ -63,7 +63,7 @@ describe("CSRF Protection Integration", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource/1", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource/1", {
         method: "PUT",
         body: JSON.stringify({ name: "updated" }),
       });
@@ -84,7 +84,7 @@ describe("CSRF Protection Integration", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource/1", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource/1", {
         method: "PATCH",
         body: JSON.stringify({ status: "active" }),
       });
@@ -105,7 +105,7 @@ describe("CSRF Protection Integration", () => {
         status: 204,
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource/1", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource/1", {
         method: "DELETE",
       });
 
@@ -143,7 +143,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
           body: JSON.stringify({ data: "test" }),
@@ -180,7 +180,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
           body: JSON.stringify({ data: "test" }),
@@ -239,7 +239,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       // Should throw CsrfError with specific message
-      const error = await fetchWithCsrf("https://api.secpal.app/v1/resource", {
+      const error = await fetchWithCsrf("https://api.secpal.dev/v1/resource", {
         method: "POST",
       }).catch((e) => e);
 
@@ -273,7 +273,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
         }
@@ -334,7 +334,7 @@ describe("CSRF Protection Integration", () => {
           json: async () => ({ success: true }),
         } as Response);
 
-        await fetchWithCsrf(`https://api.secpal.app/v1/resource`, {
+        await fetchWithCsrf(`https://api.secpal.dev/v1/resource`, {
           method,
           body:
             method !== "DELETE" ? JSON.stringify({ data: "test" }) : undefined,
@@ -362,7 +362,7 @@ describe("CSRF Protection Integration", () => {
         json: async () => ({ data: "public data" }),
       } as Response);
 
-      const response = await fetchWithCsrf("https://api.secpal.app/v1/public", {
+      const response = await fetchWithCsrf("https://api.secpal.dev/v1/public", {
         method: "GET",
       });
 
@@ -390,7 +390,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
         }
@@ -411,7 +411,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
         }
@@ -432,7 +432,7 @@ describe("CSRF Protection Integration", () => {
       } as Response);
 
       const response = await fetchWithCsrf(
-        "https://api.secpal.app/v1/resource",
+        "https://api.secpal.dev/v1/resource",
         {
           method: "POST",
         }
@@ -453,7 +453,7 @@ describe("CSRF Protection Integration", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource", {
         method: "POST",
         body: JSON.stringify({ test: true }),
       });
@@ -489,7 +489,7 @@ describe("CSRF Protection Integration", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("https://api.secpal.app/v1/resource", {
+      await fetchWithCsrf("https://api.secpal.dev/v1/resource", {
         method: "POST",
       });
 

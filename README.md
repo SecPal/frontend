@@ -141,7 +141,7 @@ await logout();
 import { fetchWithCsrf } from "@/services/csrf";
 
 // For state-changing requests (POST, PUT, PATCH, DELETE)
-const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
+const response = await fetchWithCsrf("https://api.secpal.dev/v1/secrets", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ title: "My Secret" }),
@@ -151,7 +151,7 @@ const response = await fetchWithCsrf("https://api.secpal.app/v1/secrets", {
 // ✅ 419 retry handled automatically
 
 // For GET requests (no CSRF needed)
-const response = await fetch("https://api.secpal.app/v1/secrets", {
+const response = await fetch("https://api.secpal.dev/v1/secrets", {
   credentials: "include", // REQUIRED: Sends cookies
 });
 ```
