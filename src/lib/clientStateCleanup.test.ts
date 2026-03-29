@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "./db";
 import {
   clearSensitiveClientState,
@@ -15,6 +15,7 @@ const mockCaches = {
 
 describe("clearSensitiveClientState", () => {
   beforeEach(async () => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     await db.delete();
     await db.open();
@@ -26,11 +27,19 @@ describe("clearSensitiveClientState", () => {
     globalThis.caches = mockCaches;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("clears auth storage, sensitive caches, and deletes the IndexedDB database", async () => {
     const deleteSpy = vi.spyOn(db, "delete");
 
     localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
     localStorage.setItem("auth_token", "legacy-token");
+    localStorage.setItem(
+      "secpal-notification-preferences",
+      JSON.stringify([{ category: "alerts", enabled: false }])
+    );
     localStorage.setItem("locale", "de");
     sessionStorage.setItem("share-draft", "pending");
 
@@ -86,6 +95,7 @@ describe("clearSensitiveClientState", () => {
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.length).toBe(0);
 
@@ -106,6 +116,76 @@ describe("clearSensitiveClientState", () => {
     expect(mockCaches.delete).toHaveBeenCalledWith(SENSITIVE_CACHE_NAMES[0]);
     expect(mockCaches.delete).toHaveBeenCalledWith(SENSITIVE_CACHE_NAMES[2]);
     expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
+  });
+
+  it("falls back to clearing IndexedDB tables when deleting the database fails", async () => {
+    const deleteError = new Error("Delete blocked by another connection");
+    const deleteSpy = vi.spyOn(db, "delete").mockRejectedValueOnce(deleteError);
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
+    localStorage.setItem(
+      "secpal-notification-preferences",
+      JSON.stringify([{ category: "alerts", enabled: true }])
+    );
+    sessionStorage.setItem("share-draft", "pending");
+
+    await db.guards.add({
+      id: "guard-1",
+      name: "Guard",
+      email: "guard@secpal.dev",
+      lastSynced: new Date(),
+    });
+    await db.syncQueue.add({
+      id: "sync-1",
+      type: "create",
+      entity: "organizational-unit",
+      data: { id: "org-1" },
+      status: "pending",
+      createdAt: new Date(),
+      attempts: 0,
+    });
+    await db.apiCache.put({
+      url: "/v1/organizational-units",
+      data: [{ id: "org-1" }],
+      cachedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "open",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+    });
+    await db.organizationalUnitCache.add({
+      id: "org-1",
+      type: "company",
+      name: "SecPal GmbH",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      cachedAt: new Date(),
+      lastSynced: new Date(),
+    });
+
+    mockCaches.keys.mockResolvedValue([]);
+
+    await clearSensitiveClientState();
+
+    expect(deleteSpy).toHaveBeenCalled();
+    expect(consoleWarn).toHaveBeenCalledWith(
+      "Failed to delete SecPalDB during logout, falling back to table clearing:",
+      deleteError
+    );
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
+    expect(sessionStorage.length).toBe(0);
+    expect(await db.guards.count()).toBe(0);
+    expect(await db.syncQueue.count()).toBe(0);
+    expect(await db.apiCache.count()).toBe(0);
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
   });
 
   it("does not fail when Cache API is unavailable", async () => {
