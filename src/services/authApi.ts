@@ -51,6 +51,7 @@ export async function login(
   // Use SPA login endpoint (session-based, not token-based)
   const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/login`, {
     method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -84,6 +85,7 @@ export async function login(
 export async function logout(): Promise<void> {
   const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/logout`, {
     method: "POST",
+    cache: "no-store",
     headers: {
       Accept: "application/json",
     },
@@ -107,6 +109,7 @@ export async function logout(): Promise<void> {
 export async function logoutAll(): Promise<void> {
   const response = await apiFetch(`${getApiBaseUrl()}/v1/auth/logout-all`, {
     method: "POST",
+    cache: "no-store",
     headers: {
       Accept: "application/json",
     },
@@ -135,6 +138,7 @@ export async function getCurrentUser(): Promise<LoginResponse["user"]> {
   try {
     response = await apiFetch(`${getApiBaseUrl()}/v1/me`, {
       method: "GET",
+      cache: "no-store",
       headers: {
         Accept: "application/json",
       },

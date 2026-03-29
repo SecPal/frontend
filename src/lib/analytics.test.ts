@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -10,6 +10,7 @@ vi.mock("./db", () => ({
   db: {
     analytics: {
       add: vi.fn().mockResolvedValue(1),
+      clear: vi.fn().mockResolvedValue(undefined),
       where: vi.fn(() => ({
         equals: vi.fn(() => ({
           toArray: vi.fn().mockResolvedValue([]),
@@ -38,6 +39,7 @@ describe("OfflineAnalytics", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -52,13 +54,15 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should set userId", () => {
-      analytics!.setUserId("test-user-123");
+      analytics!.resumeAuthenticatedSession("test-user-123");
       // User ID will be included in subsequent events
     });
   });
 
   describe("track", () => {
     it("should track basic event", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.track("page_view", "navigation", "view_home");
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -74,6 +78,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track event with options", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.track("button_click", "interaction", "submit", {
         label: "login-button",
         value: 1,
@@ -93,7 +99,7 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should include userId if set", async () => {
-      analytics!.setUserId("user-456");
+      analytics!.resumeAuthenticatedSession("user-456");
 
       await analytics!.track("page_view", "navigation", "view_dashboard");
 
@@ -105,7 +111,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should handle tracking errors gracefully", async () => {
-      const consoleWarn = vi.spyOn(console, "warn");
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
+      const consoleWarn = vi.mocked(console.warn);
       const error = new Error("Database error");
       vi.mocked(db.analytics!.add).mockRejectedValueOnce(error);
 
@@ -120,6 +128,8 @@ describe("OfflineAnalytics", () => {
 
   describe("convenience methods", () => {
     it("should track page view", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackPageView("/dashboard", "Dashboard");
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -134,6 +144,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track click", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackClick("submit-button", { form: "login" });
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -148,6 +160,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track form submit", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackFormSubmit("login-form", true, { method: "email" });
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -163,6 +177,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track form submit failure", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackFormSubmit("login-form", false);
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -173,6 +189,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track error without stack by default", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       const error = new Error("Test error");
       await analytics!.trackError(error, { component: "LoginForm" });
 
@@ -194,6 +212,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track error with stack when explicitly requested", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       const error = new Error("Test error with stack");
       await analytics!.trackError(error, { component: "LoginForm" }, true);
 
@@ -212,6 +232,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track performance", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackPerformance("page_load", 1234, { page: "/home" });
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -226,6 +248,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should track feature usage", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       await analytics!.trackFeatureUsage("dark-mode", { enabled: true });
 
       expect(db.analytics!.add).toHaveBeenCalledWith(
@@ -242,6 +266,8 @@ describe("OfflineAnalytics", () => {
 
   describe("syncEvents", () => {
     it("should sync unsynced events when online", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       const mockEvents = [
         {
           id: 1,
@@ -278,7 +304,26 @@ describe("OfflineAnalytics", () => {
       ]);
     });
 
+    it("clears persisted analytics state and disables tracking on logout reset", async () => {
+      analytics!.resumeAuthenticatedSession("user-456");
+
+      await analytics!.trackPageView("/dashboard", "Dashboard");
+      expect(db.analytics!.add).toHaveBeenCalledTimes(1);
+
+      vi.clearAllMocks();
+
+      await analytics!.resetForLogout();
+
+      expect(db.analytics!.clear).toHaveBeenCalledTimes(1);
+
+      await analytics!.trackPageView("/login", "Login");
+
+      expect(db.analytics!.add).not.toHaveBeenCalled();
+    });
+
     it("should not sync when no unsynced events", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       vi.mocked(db.analytics!.where).mockReturnValue({
         equals: vi.fn().mockReturnValue({
           toArray: vi.fn().mockResolvedValue([]),
@@ -292,7 +337,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should handle sync errors gracefully", async () => {
-      const consoleWarn = vi.spyOn(console, "warn");
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
+      const consoleWarn = vi.mocked(console.warn);
       const error = new Error("Sync failed");
       vi.mocked(db.analytics!.where).mockImplementation(() => {
         throw error;
@@ -307,6 +354,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should cancel pending debounced sync when manual sync is triggered", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       // Simulate a debounced sync being scheduled
       const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
 
@@ -328,6 +377,8 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should not create duplicate syncs from debounce and manual trigger", async () => {
+      analytics!.resumeAuthenticatedSession("test-user-123");
+
       const mockEvents = [
         {
           id: 1,
@@ -451,7 +502,9 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should trigger sync when coming online", async () => {
-      const syncSpy = vi.spyOn(analytics!, "syncEvents");
+      const syncSpy = vi
+        .spyOn(analytics!, "syncEvents")
+        .mockResolvedValue(undefined);
 
       // Simulate coming online
       window.dispatchEvent(new Event("online"));

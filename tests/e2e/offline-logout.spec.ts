@@ -170,6 +170,13 @@ test.describe("Offline Logout Privacy", () => {
       page.getByText(offlineLogoutMockUser.email).first()
     ).not.toBeVisible();
 
+    await page.goto("/settings").catch(() => undefined);
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.locator("#email")).toBeVisible();
+    await expect(page.locator("#password")).toBeVisible();
+
     await context.setOffline(false);
   });
 });

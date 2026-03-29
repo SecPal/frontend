@@ -284,6 +284,7 @@ describe("authApi", () => {
         expect.objectContaining({
           method: "POST",
           credentials: "include",
+          cache: "no-store",
         })
       );
 
@@ -335,6 +336,7 @@ describe("authApi", () => {
         expect.objectContaining({
           method: "POST",
           credentials: "include",
+          cache: "no-store",
         })
       );
 
@@ -394,6 +396,7 @@ describe("authApi", () => {
         expect.objectContaining({
           method: "GET",
           credentials: "include",
+          cache: "no-store",
         })
       );
 

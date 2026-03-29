@@ -16,6 +16,7 @@ import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
+import { analytics } from "../lib/analytics";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authTransport = useMemo(() => getAuthTransport(), []);
@@ -40,6 +41,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const resetAnalyticsState = useCallback(() => {
+    if (!analytics) {
+      return;
+    }
+
+    void analytics.resetForLogout().catch((error: unknown) => {
+      console.warn("Failed to reset analytics state during logout:", error);
+    });
+  }, []);
+
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
@@ -50,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isClearingSessionRef.current = true;
       hasLogoutBarrierRef.current = true;
       authStorage.clear();
+      resetAnalyticsState();
       setUser(null);
       setIsLoading(false);
       syncOfflineAuthState(false);
@@ -70,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isClearingSessionRef.current = false;
         });
     },
-    [invalidateBootstrapRevalidation, syncOfflineAuthState]
+    [invalidateBootstrapRevalidation, resetAnalyticsState, syncOfflineAuthState]
   );
 
   const login = useCallback(
@@ -128,6 +140,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasOrganizationalAccess = useCallback((): boolean => {
     return user?.hasOrganizationalScopes ?? false;
   }, [user]);
+
+  useEffect(() => {
+    if (!analytics) {
+      return;
+    }
+
+    if (!user) {
+      resetAnalyticsState();
+      return;
+    }
+
+    analytics.resumeAuthenticatedSession(String(user.id));
+  }, [resetAnalyticsState, user]);
 
   // Bootstrap: revalidate any stored session on app load/refresh when online.
   // Uses getCurrentUser() to confirm the session and clear it if invalid.
