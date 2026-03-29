@@ -1,57 +1,87 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "..");
+
+function readRepoFile(relativePath: string): string {
+  return readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
 /**
- * Build Output Tests
+ * Build Configuration and Source Verification Tests
  *
- * These tests verify that the build process produces the expected output,
- * including SPA routing configuration files.
- *
- * Note: These tests require a successful build (npm run build) to pass.
+ * These tests verify that the required source files and build configuration
+ * are present and contain the expected directives. They read repo source
+ * files directly and do not require a prior build step to pass.
  */
 describe("Build Output Verification", () => {
-  it("should document that .htaccess must be present in dist/", () => {
-    // This is a documentation test to ensure developers know about the requirement
-    const requiredFiles = {
-      ".htaccess": "Apache SPA routing configuration",
-      "index.html": "Entry point for React app",
-    };
-
-    expect(requiredFiles[".htaccess"]).toBe("Apache SPA routing configuration");
-    expect(requiredFiles["index.html"]).toBe("Entry point for React app");
+  it("keeps the Apache SPA routing file in the build inputs", () => {
+    expect(existsSync(path.join(repoRoot, "public/.htaccess"))).toBe(true);
+    expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
   });
 
-  it("should verify vite-plugin-static-copy is configured", () => {
-    // This test documents that vite-plugin-static-copy MUST be configured
-    // in vite.config.ts to copy .htaccess from public/ to dist/
-    const pluginConfig = {
-      name: "vite-plugin-static-copy",
-      purpose: "Copy .htaccess from public/ to dist/ during build",
-      requiredTarget: {
-        src: "public/.htaccess",
-        dest: ".",
-      },
-    };
+  it("keeps vite-plugin-static-copy configured for .htaccess", () => {
+    const viteConfig = readRepoFile("vite.config.ts");
 
-    expect(pluginConfig.name).toBe("vite-plugin-static-copy");
-    expect(pluginConfig.requiredTarget.src).toBe("public/.htaccess");
+    expect(viteConfig).toContain("vite-plugin-static-copy");
+    expect(viteConfig).toContain('src: "public/.htaccess"');
+    expect(viteConfig).toContain('dest: "."');
   });
 
-  it("should document required .htaccess directives", () => {
-    // Document the essential directives that MUST be in .htaccess
-    const requiredDirectives = [
-      "RewriteEngine On",
-      "RewriteCond %{REQUEST_FILENAME} !-f",
-      "RewriteCond %{REQUEST_FILENAME} !-d",
-      "RewriteRule . /index.html [L]",
+  it("hardens browser responses with the required security headers", () => {
+    const htaccess = readRepoFile("public/.htaccess");
+
+    const requiredHeaders = [
+      "Content-Security-Policy",
+      "Permissions-Policy",
+      "Strict-Transport-Security",
+      "Referrer-Policy",
+      "X-Frame-Options",
+      "X-Content-Type-Options",
+      "Cross-Origin-Opener-Policy",
+      "Cross-Origin-Resource-Policy",
+      "Origin-Agent-Cluster",
+      "X-Permitted-Cross-Domain-Policies",
     ];
 
-    // Verify we're documenting all essential directives
-    expect(requiredDirectives).toHaveLength(4);
-    expect(requiredDirectives[0]).toBe("RewriteEngine On");
-    expect(requiredDirectives[3]).toContain("index.html");
+    for (const header of requiredHeaders) {
+      expect(htaccess).toContain(header);
+    }
+  });
+
+  it("ships an enforceable CSP that fits the PWA runtime", () => {
+    const htaccess = readRepoFile("public/.htaccess");
+
+    expect(htaccess).toContain("default-src 'self'");
+    expect(htaccess).toContain("script-src 'self'");
+    expect(htaccess).toContain("object-src 'none'");
+    expect(htaccess).toContain("frame-ancestors 'none'");
+    expect(htaccess).toContain("worker-src 'self'");
+    expect(htaccess).toContain("manifest-src 'self'");
+    expect(htaccess).toContain("connect-src 'self'");
+  });
+
+  it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {
+    const indexHtml = readRepoFile("index.html");
+
+    expect(indexHtml).toContain('<script src="/theme-color.js"></script>');
+    expect(indexHtml).not.toContain("(function () {");
+    expect(existsSync(path.join(repoRoot, "public/theme-color.js"))).toBe(true);
+  });
+
+  it("adds dedicated delivery rules for service worker and manifest files", () => {
+    const htaccess = readRepoFile("public/.htaccess");
+
+    expect(htaccess).toContain('Files "sw.js"');
+    expect(htaccess).toContain("Service-Worker-Allowed");
+    expect(htaccess).toContain("application/manifest+json");
+    expect(htaccess).toContain("manifest.webmanifest");
   });
 });
 

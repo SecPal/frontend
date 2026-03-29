@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -24,6 +24,13 @@ When deploying a React SPA, users get 404 errors when refreshing the page on any
 ## Apache Configuration (Uberspace, Shared Hosting)
 
 The `.htaccess` file in `public/` handles SPA routing for Apache servers.
+
+It also now carries the baseline browser hardening for the shipped PWA:
+
+- enforcing a production CSP without inline scripts
+- explicitly denying unused browser capabilities via `Permissions-Policy`
+- setting `COOP` / `CORP` and related response headers consistently
+- keeping `index.html`, `sw.js`, and `manifest.webmanifest` on short cache rules so security and PWA updates land quickly
 
 **File:** `public/.htaccess`
 
@@ -95,12 +102,32 @@ server {
     add_header Cache-Control "public, immutable";
   }
 
-  # Security headers
+   # Security headers
+   add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; worker-src 'self'; upgrade-insecure-requests" always;
+   add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
+   add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
   add_header X-Content-Type-Options "nosniff" always;
   add_header X-Frame-Options "DENY" always;
-  add_header X-XSS-Protection "1; mode=block" always;
+   add_header X-XSS-Protection "0" always;
   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-  add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+   add_header Cross-Origin-Opener-Policy "same-origin" always;
+   add_header Cross-Origin-Resource-Policy "same-origin" always;
+   add_header Origin-Agent-Cluster "?1" always;
+   add_header X-Permitted-Cross-Domain-Policies "none" always;
+
+   location = /index.html {
+      add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+   }
+
+   location = /sw.js {
+      add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+      add_header Service-Worker-Allowed "/" always;
+   }
+
+   location = /manifest.webmanifest {
+      default_type application/manifest+json;
+      add_header Cache-Control "no-cache, must-revalidate" always;
+   }
 }
 ```
 
@@ -225,7 +252,8 @@ Before deploying to production:
 - ✅ `VITE_API_URL` points to the canonical `api.secpal.dev` production API
 - ✅ No `.env` files committed to Git
 - ✅ Service Worker registered (PWA functionality)
-- ✅ CSP headers if needed (restrict script sources)
+- ✅ CSP, permissions, and modern cross-origin headers enabled
+- ✅ `index.html`, `sw.js`, and `manifest.webmanifest` use short cache rules
 
 ---
 
@@ -251,7 +279,12 @@ After deployment, test these scenarios:
    - JS/CSS files should load with `200` status ✅
    - Images should load ✅
 
-5. **API connectivity:**
+5. **Security headers:**
+   - Check `Content-Security-Policy`, `Permissions-Policy`, and `Cross-Origin-*` headers on `/` ✅
+   - Check `Cache-Control` and `Service-Worker-Allowed` on `/sw.js` ✅
+   - Check `Content-Type: application/manifest+json` and `Cache-Control` on `/manifest.webmanifest` ✅
+
+6. **API connectivity:**
    - Login should work ✅
    - API requests should succeed ✅
    - Check CORS headers in Network tab ✅
@@ -293,6 +326,8 @@ export default defineConfig({
 
 1. Hard refresh: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
 2. Or unregister SW in DevTools: Application → Service Workers → Unregister
+
+The shipped config now sets `Cache-Control: no-cache, no-store, must-revalidate` on `sw.js` and `no-cache, must-revalidate` on `manifest.webmanifest`; if updates still lag, check your CDN or reverse proxy for overrides.
 
 ### Issue: `.htaccess` Rules Not Applied
 
