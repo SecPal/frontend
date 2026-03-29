@@ -7,6 +7,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -22,6 +23,10 @@ vi.mock("../services/authApi", async () => {
 
 vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../lib/serviceWorkerSession", () => ({
+  syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
 }));
 
 function createDeferredPromise<T>() {
@@ -46,6 +51,7 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
+    vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -283,5 +289,207 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it("clears auth state when another tab removes auth storage", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.removeItem("auth_user");
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: JSON.stringify(mockUser),
+          newValue: null,
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.removeItem("auth_user");
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("ignores storage events for keys other than auth_user", async () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "some_other_key",
+          newValue: null,
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("updates auth state when another tab logs in", async () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    const newUser = {
+      id: 2,
+      name: "Cross-Tab User",
+      email: "cross@secpal.dev",
+    };
+
+    act(() => {
+      localStorage.setItem("auth_user", JSON.stringify(newUser));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: null,
+          newValue: JSON.stringify(newUser),
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).toEqual(newUser);
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+  });
+
+  it("clears auth state when cross-tab auth storage contains invalid JSON", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: JSON.stringify(mockUser),
+          newValue: "{invalid json{{",
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+  });
+
+  it("reconciles stored user state when pageshow fires and user is still in storage", async () => {
+    // Use the same shape as the beforeEach bootstrap mock so that localStorage
+    // stays consistent after the bootstrap revalidation overwrites it.
+    const mockUser = {
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    vi.mocked(syncOfflineSessionAccess).mockClear();
+
+    // Simulate BFCache restore (persisted=true): pageshow triggers reconciliation with stored user still present.
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).not.toBeNull();
+    // The reconcile-path calls syncOfflineAuthState(true) which forwards to syncOfflineSessionAccess.
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("ignores pageshow that is not a BFCache restore (persisted=false)", () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: false })
+      );
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 });

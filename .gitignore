@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 # SPDX-License-Identifier: CC0-1.0
 
 # Dependencies
@@ -30,6 +30,7 @@ coverage/
 .nyc_output/
 .lighthouseci/
 test-results/
+test-results.json
 playwright-report/
 playwright/.cache/
 tests/e2e/.auth/

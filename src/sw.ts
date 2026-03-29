@@ -11,8 +11,86 @@ import {
 } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
 import { CacheFirst } from "workbox-strategies";
+import {
+  readOfflineSessionState,
+  writeOfflineSessionState,
+  type AuthSessionChangedMessage,
+} from "./lib/offlineSessionState";
 
 declare const self: ServiceWorkerGlobalScope;
+
+const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
+
+function isAuthSessionChangedMessage(
+  value: unknown
+): value is AuthSessionChangedMessage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return (
+    "type" in value &&
+    value.type === "AUTH_SESSION_CHANGED" &&
+    "isAuthenticated" in value &&
+    typeof value.isAuthenticated === "boolean"
+  );
+}
+
+function shouldRedirectLoggedOutNavigation(
+  pathname: string,
+  isAuthenticated: boolean | null
+): boolean {
+  if (isAuthenticated !== false) {
+    return false;
+  }
+
+  const normalizedPathname =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+
+  return !PUBLIC_LOGGED_OUT_PATHS.has(normalizedPathname);
+}
+
+async function redirectProtectedClientsToLogin(): Promise<void> {
+  const windowClients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  await Promise.all(
+    windowClients.map(async (client) => {
+      const pathname = new URL(client.url).pathname;
+
+      if (!shouldRedirectLoggedOutNavigation(pathname, false)) {
+        return;
+      }
+
+      await client.navigate(new URL("/login", self.location.origin).toString());
+    })
+  );
+}
+
+async function handleAuthSessionChanged(
+  message: AuthSessionChangedMessage
+): Promise<void> {
+  try {
+    await writeOfflineSessionState(message.isAuthenticated);
+  } catch (error) {
+    console.error("[SW] Failed to persist offline auth session state:", error);
+  }
+
+  if (!message.isAuthenticated) {
+    try {
+      await redirectProtectedClientsToLogin();
+    } catch (error) {
+      console.error(
+        "[SW] Failed to redirect protected clients to login:",
+        error
+      );
+    }
+  }
+}
 
 // Take control of all pages immediately
 clientsClaim();
@@ -40,10 +118,37 @@ registerRoute(
  * This enables offline navigation and page reloads
  */
 const navigationHandler = createHandlerBoundToURL("/index.html");
-const navigationRoute = new NavigationRoute(navigationHandler, {
-  // Exclude API routes and special paths
-  denylist: [/^\/v1\//, /^\/__/],
-});
+const navigationRoute = new NavigationRoute(
+  async (context) => {
+    let sessionState = null;
+
+    try {
+      sessionState = await readOfflineSessionState();
+    } catch {
+      // If the Cache API fails, default to allowing navigation (fail-open).
+    }
+
+    const pathname = new URL(context.request.url).pathname;
+
+    if (
+      shouldRedirectLoggedOutNavigation(
+        pathname,
+        sessionState?.isAuthenticated ?? null
+      )
+    ) {
+      return Response.redirect(
+        new URL("/login", self.location.origin).toString(),
+        302
+      );
+    }
+
+    return navigationHandler(context);
+  },
+  {
+    // Exclude API routes and special paths
+    denylist: [/^\/v1\//, /^\/__/],
+  }
+);
 registerRoute(navigationRoute);
 
 /**
@@ -175,5 +280,10 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
 self.addEventListener("message", (event: ExtendableMessageEvent) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+
+  if (isAuthSessionChangedMessage(event.data)) {
+    event.waitUntil(handleAuthSessionChanged(event.data));
   }
 });

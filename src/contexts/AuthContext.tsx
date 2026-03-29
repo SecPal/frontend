@@ -14,6 +14,7 @@ import { getCurrentUser } from "../services/authApi";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
+import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
@@ -30,6 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrapRequestVersionRef.current += 1;
   }, []);
 
+  const syncOfflineAuthState = useCallback((isAuthenticated: boolean) => {
+    void syncOfflineSessionAccess(isAuthenticated).catch((error: unknown) => {
+      console.warn("Failed to synchronize offline auth state:", error);
+    });
+  }, []);
+
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
@@ -41,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authStorage.clear();
       setUser(null);
       setIsLoading(false);
+      syncOfflineAuthState(false);
 
       if (!clearSensitiveState) {
         isClearingSessionRef.current = false;
@@ -58,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isClearingSessionRef.current = false;
         });
     },
-    [invalidateBootstrapRevalidation]
+    [invalidateBootstrapRevalidation, syncOfflineAuthState]
   );
 
   const login = useCallback(
@@ -67,8 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authStorage.setUser(newUser);
       setUser(newUser);
       setIsLoading(false);
+      syncOfflineAuthState(true);
     },
-    [invalidateBootstrapRevalidation]
+    [invalidateBootstrapRevalidation, syncOfflineAuthState]
   );
 
   const logout = useCallback(() => {
@@ -107,6 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Bootstrap: revalidate any stored session on app load/refresh when online.
   // Uses getCurrentUser() to confirm the session and clear it if invalid.
   useEffect(() => {
+    syncOfflineAuthState(authStorage.getUser() !== null);
+  }, [syncOfflineAuthState]);
+
+  useEffect(() => {
     const storedUser = authStorage.getUser();
 
     if (!storedUser || !isOnline()) {
@@ -129,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authStorage.setUser(currentUser);
         setUser(currentUser);
         setIsLoading(false);
+        syncOfflineAuthState(true);
       })
       .catch(() => {
         if (
@@ -144,7 +158,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isActive = false;
     };
-  }, [clearAuthenticatedState]);
+  }, [clearAuthenticatedState, syncOfflineAuthState]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage || event.key !== "auth_user") {
+        return;
+      }
+
+      if (event.newValue === null) {
+        clearAuthenticatedState(true);
+        return;
+      }
+
+      try {
+        const nextUser = JSON.parse(event.newValue) as User;
+
+        invalidateBootstrapRevalidation();
+        setUser(nextUser);
+        setIsLoading(false);
+        syncOfflineAuthState(true);
+      } catch (error) {
+        console.error("Failed to parse cross-tab auth state:", error);
+        clearAuthenticatedState(true);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [
+    clearAuthenticatedState,
+    invalidateBootstrapRevalidation,
+    syncOfflineAuthState,
+  ]);
+
+  useEffect(() => {
+    const reconcileRestoredPageState = (event: PageTransitionEvent) => {
+      if (!event.persisted) {
+        return;
+      }
+
+      const storedUser = authStorage.getUser();
+
+      if (!storedUser) {
+        if (user) {
+          clearAuthenticatedState(false);
+        }
+
+        return;
+      }
+
+      invalidateBootstrapRevalidation();
+      setUser(storedUser);
+      setIsLoading(false);
+      syncOfflineAuthState(true);
+    };
+
+    window.addEventListener("pageshow", reconcileRestoredPageState);
+
+    return () => {
+      window.removeEventListener("pageshow", reconcileRestoredPageState);
+    };
+  }, [
+    clearAuthenticatedState,
+    invalidateBootstrapRevalidation,
+    syncOfflineAuthState,
+    user,
+  ]);
 
   // Subscribe to session:expired events.
   // This handles 401 responses from API calls when online.
