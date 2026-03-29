@@ -155,4 +155,102 @@ describe("authTransport", () => {
       "Native auth login returned an invalid or unsafe auth user payload"
     );
   });
+
+  it("rejects invalid native getCurrentUser payloads before they enter auth state", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue({ token: "native-secret" }),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+
+    await expect(transport.getCurrentUser()).rejects.toThrow(
+      "Native auth current-user fetch returned an invalid or unsafe auth user payload"
+    );
+  });
+
+  it("delegates browser-session logout to the authApi", async () => {
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    const transport = getAuthTransport();
+    await transport.logout();
+
+    expect(mockBrowserLogout).toHaveBeenCalledOnce();
+  });
+
+  it("delegates browser-session logoutAll to the authApi", async () => {
+    mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
+
+    const transport = getAuthTransport();
+    await transport.logoutAll();
+
+    expect(mockBrowserLogoutAll).toHaveBeenCalledOnce();
+  });
+
+  it("delegates browser-session getCurrentUser to the authApi and sanitizes the payload", async () => {
+    mockBrowserGetCurrentUser.mockResolvedValueOnce({
+      id: 2,
+      name: "Session User",
+      email: "session@secpal.app",
+      roles: ["Viewer"],
+      token: "should-not-leak",
+    });
+
+    const transport = getAuthTransport();
+    const user = await transport.getCurrentUser();
+
+    expect(mockBrowserGetCurrentUser).toHaveBeenCalledOnce();
+    expect(user).toEqual({
+      id: 2,
+      name: "Session User",
+      email: "session@secpal.app",
+      roles: ["Viewer"],
+    });
+    expect(user).not.toHaveProperty("token");
+  });
+
+  it("delegates native bridge logout to the bridge", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      logoutAll: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+    await transport.logout();
+
+    expect(nativeBridge.logout).toHaveBeenCalledOnce();
+    expect(mockBrowserLogout).not.toHaveBeenCalled();
+  });
+
+  it("delegates native bridge logoutAll to the bridge when supported", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      logoutAll: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+    await transport.logoutAll();
+
+    expect(nativeBridge.logoutAll).toHaveBeenCalledOnce();
+    expect(mockBrowserLogoutAll).not.toHaveBeenCalled();
+  });
+
+  it("throws when native bridge logoutAll is not implemented", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+
+    await expect(transport.logoutAll()).rejects.toThrow(
+      "Native auth transport does not support logout-all"
+    );
+  });
 });
