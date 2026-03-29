@@ -10,6 +10,7 @@ class OfflineAnalytics {
   private sessionId: string;
   private userId?: string;
   private trackingEnabled: boolean;
+  private fallbackSessionSequence: number = 0;
   private isOnline: boolean;
   private syncInterval?: number;
   private syncTimeout?: number;
@@ -39,7 +40,7 @@ class OfflineAnalytics {
 
   /**
    * Generate a unique session ID using cryptographically secure random
-   * Falls back to timestamp + Math.random for older browsers
+   * Falls back to a deterministic unique suffix when Web Crypto is unavailable
    */
   private generateSessionId(): string {
     // Prefer crypto.randomUUID for cryptographic security
@@ -47,17 +48,24 @@ class OfflineAnalytics {
       return `session_${crypto.randomUUID()}`;
     }
 
-    // Fallback for older browsers using Math.random()
-    // SECURITY NOTE: This is acceptable because:
-    // 1. Session IDs are NOT used for authentication or authorization
-    // 2. They are only used for grouping analytics events (non-security context)
-    // 3. Collision risk is negligible (timestamp ensures uniqueness across sessions)
-    // 4. No PII is stored (privacy-first design)
-    // 5. Primary path uses crypto.randomUUID (cryptographically secure)
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const randomBytes = new Uint8Array(16);
+      crypto.getRandomValues(randomBytes);
+
+      const randomHex = Array.from(randomBytes, (byte) =>
+        byte.toString(16).padStart(2, "0")
+      ).join("");
+
+      return `session_${randomHex}`;
+    }
+
+    // Final fallback keeps IDs unique without using insecure randomness.
     console.warn(
-      "crypto.randomUUID not available, falling back to timestamp-based session ID"
+      "Web Crypto not available, falling back to deterministic session ID generation"
     );
-    return `session_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+
+    this.fallbackSessionSequence += 1;
+    return `session_${Date.now()}_${this.fallbackSessionSequence}`;
   }
 
   /**
