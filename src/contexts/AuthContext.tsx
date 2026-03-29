@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const isClearingSessionRef = useRef(false);
   const bootstrapRequestVersionRef = useRef(0);
-  const hasExplicitLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
+  const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
   const invalidateBootstrapRevalidation = useCallback(() => {
     bootstrapRequestVersionRef.current += 1;
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
-      hasExplicitLogoutBarrierRef.current = true;
+      hasLogoutBarrierRef.current = true;
       authStorage.clear();
       setUser(null);
       setIsLoading(false);
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       invalidateBootstrapRevalidation();
       authStorage.setUser(sanitizedUser);
-      hasExplicitLogoutBarrierRef.current = false;
+      hasLogoutBarrierRef.current = false;
       setUser(sanitizedUser);
       setIsLoading(false);
       syncOfflineAuthState(true);
@@ -152,13 +152,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (
           !isActive ||
           bootstrapRequestVersionRef.current !== requestVersion ||
-          hasExplicitLogoutBarrierRef.current
+          hasLogoutBarrierRef.current
         ) {
           return;
         }
 
         authStorage.setUser(currentUser);
-        hasExplicitLogoutBarrierRef.current = false;
+        hasLogoutBarrierRef.current = false;
         setUser(currentUser);
         setIsLoading(false);
         syncOfflineAuthState(true);
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        hasExplicitLogoutBarrierRef.current = false;
+        hasLogoutBarrierRef.current = false;
         invalidateBootstrapRevalidation();
         setUser(nextUser);
         setIsLoading(false);
@@ -236,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      hasExplicitLogoutBarrierRef.current = false;
+      hasLogoutBarrierRef.current = false;
       invalidateBootstrapRevalidation();
       setUser(storedUser);
       setIsLoading(false);
