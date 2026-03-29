@@ -14,14 +14,10 @@ import { CacheFirst } from "workbox-strategies";
 import {
   readOfflineSessionState,
   writeOfflineSessionState,
+  type AuthSessionChangedMessage,
 } from "./lib/offlineSessionState";
 
 declare const self: ServiceWorkerGlobalScope;
-
-interface AuthSessionChangedMessage {
-  type: "AUTH_SESSION_CHANGED";
-  isAuthenticated: boolean;
-}
 
 const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
 
@@ -78,10 +74,21 @@ async function redirectProtectedClientsToLogin(): Promise<void> {
 async function handleAuthSessionChanged(
   message: AuthSessionChangedMessage
 ): Promise<void> {
-  await writeOfflineSessionState(message.isAuthenticated);
+  try {
+    await writeOfflineSessionState(message.isAuthenticated);
+  } catch (error) {
+    console.error("[SW] Failed to persist offline auth session state:", error);
+  }
 
   if (!message.isAuthenticated) {
-    await redirectProtectedClientsToLogin();
+    try {
+      await redirectProtectedClientsToLogin();
+    } catch (error) {
+      console.error(
+        "[SW] Failed to redirect protected clients to login:",
+        error
+      );
+    }
   }
 }
 
@@ -113,7 +120,14 @@ registerRoute(
 const navigationHandler = createHandlerBoundToURL("/index.html");
 const navigationRoute = new NavigationRoute(
   async (context) => {
-    const sessionState = await readOfflineSessionState();
+    let sessionState = null;
+
+    try {
+      sessionState = await readOfflineSessionState();
+    } catch {
+      // If the Cache API fails, default to allowing navigation (fail-open).
+    }
+
     const pathname = new URL(context.request.url).pathname;
 
     if (

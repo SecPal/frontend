@@ -1,12 +1,10 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { writeOfflineSessionState } from "./offlineSessionState";
-
-interface AuthSessionChangedMessage {
-  type: "AUTH_SESSION_CHANGED";
-  isAuthenticated: boolean;
-}
+import {
+  writeOfflineSessionState,
+  type AuthSessionChangedMessage,
+} from "./offlineSessionState";
 
 async function postAuthSessionChangedMessage(
   message: AuthSessionChangedMessage

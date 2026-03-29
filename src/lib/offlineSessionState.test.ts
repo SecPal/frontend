@@ -73,6 +73,20 @@ describe("offlineSessionState", () => {
           expect.stringContaining(OFFLINE_SESSION_STATE_PATH)
         );
       });
+
+      it("deletes the entry and returns null when JSON shape is invalid", async () => {
+        // Valid JSON but wrong types — e.g. isAuthenticated is a string
+        mockMatch.mockResolvedValue(
+          new Response(JSON.stringify({ isAuthenticated: "yes", updatedAt: 0 }))
+        );
+
+        const result = await readOfflineSessionState();
+
+        expect(result).toBeNull();
+        expect(mockDelete).toHaveBeenCalledWith(
+          expect.stringContaining(OFFLINE_SESSION_STATE_PATH)
+        );
+      });
     });
 
     describe("writeOfflineSessionState", () => {

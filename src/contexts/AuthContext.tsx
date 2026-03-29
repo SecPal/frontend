@@ -196,7 +196,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
-    const reconcileRestoredPageState = () => {
+    const reconcileRestoredPageState = (event: PageTransitionEvent) => {
+      if (!event.persisted) {
+        return;
+      }
+
       const storedUser = authStorage.getUser();
 
       if (!storedUser) {

@@ -339,7 +339,9 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.removeItem("auth_user");
-      window.dispatchEvent(new Event("pageshow"));
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
     });
 
     await waitFor(() => {
@@ -457,9 +459,11 @@ describe("useAuth", () => {
 
     vi.mocked(syncOfflineSessionAccess).mockClear();
 
-    // Simulate bfcache restore: pageshow triggers reconciliation with stored user still present.
+    // Simulate BFCache restore (persisted=true): pageshow triggers reconciliation with stored user still present.
     act(() => {
-      window.dispatchEvent(new Event("pageshow"));
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
     });
 
     await waitFor(() => {
@@ -469,6 +473,23 @@ describe("useAuth", () => {
     expect(result.current.user).not.toBeNull();
     // The reconcile-path calls syncOfflineAuthState(true) which forwards to syncOfflineSessionAccess.
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("ignores pageshow that is not a BFCache restore (persisted=false)", () => {
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: false })
+      );
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 });

@@ -9,6 +9,11 @@ export interface OfflineSessionState {
   updatedAt: number;
 }
 
+export interface AuthSessionChangedMessage {
+  type: "AUTH_SESSION_CHANGED";
+  isAuthenticated: boolean;
+}
+
 function canUseSessionCache(): boolean {
   return "caches" in globalThis && "location" in globalThis;
 }
@@ -42,7 +47,20 @@ export async function readOfflineSessionState(): Promise<OfflineSessionState | n
   }
 
   try {
-    return (await response.json()) as OfflineSessionState;
+    const parsed: unknown = await response.json();
+
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      typeof (parsed as Record<string, unknown>).isAuthenticated !==
+        "boolean" ||
+      typeof (parsed as Record<string, unknown>).updatedAt !== "number"
+    ) {
+      await cache.delete(getOfflineSessionStateUrl());
+      return null;
+    }
+
+    return parsed as OfflineSessionState;
   } catch {
     await cache.delete(getOfflineSessionStateUrl());
     return null;

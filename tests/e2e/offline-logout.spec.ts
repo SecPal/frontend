@@ -154,9 +154,8 @@ test.describe("Offline Logout Privacy", () => {
     await page.waitForLoadState("networkidle");
 
     await expect(page).toHaveURL(/\/login/);
-    await expect(
-      page.getByRole("heading", { name: /^log in$/i })
-    ).toBeVisible();
+    await expect(page.locator("#email")).toBeVisible();
+    await expect(page.locator("#password")).toBeVisible();
     await expect(
       page.getByText(offlineLogoutMockUser.name).first()
     ).not.toBeVisible();
