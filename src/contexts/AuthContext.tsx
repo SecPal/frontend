@@ -186,7 +186,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const nextUser = JSON.parse(event.newValue) as User;
+        const nextUser = authStorage.getUser();
+
+        if (!nextUser) {
+          clearAuthenticatedState(true);
+          return;
+        }
 
         invalidateBootstrapRevalidation();
         setUser(nextUser);

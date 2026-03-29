@@ -30,9 +30,8 @@ vi.mock("./authApi", async () => {
 });
 
 describe("authTransport", () => {
-  const authTransportGlobal = globalThis as {
-    SecPalNativeAuthBridge?: NativeAuthBridge;
-  };
+  const authTransportGlobal = globalThis as Record<string, unknown>;
+  const hadNativeBridge = "SecPalNativeAuthBridge" in authTransportGlobal;
   const originalNativeBridge = authTransportGlobal.SecPalNativeAuthBridge;
 
   beforeEach(() => {
@@ -41,12 +40,11 @@ describe("authTransport", () => {
   });
 
   afterEach(() => {
-    if (originalNativeBridge) {
+    if (hadNativeBridge) {
       authTransportGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      return;
+    } else {
+      delete authTransportGlobal.SecPalNativeAuthBridge;
     }
-
-    delete authTransportGlobal.SecPalNativeAuthBridge;
   });
 
   it("defaults to the browser-session transport when no native bridge is present", async () => {

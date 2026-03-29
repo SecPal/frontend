@@ -134,7 +134,10 @@ function getNativeAuthBridge(): NativeAuthBridge | null {
 export function resolveAuthTransport(options?: {
   nativeBridge?: NativeAuthBridge | null;
 }): AuthTransport {
-  const nativeBridge = options?.nativeBridge ?? getNativeAuthBridge();
+  const nativeBridge =
+    options?.nativeBridge !== undefined
+      ? options.nativeBridge
+      : getNativeAuthBridge();
 
   return nativeBridge
     ? createNativeBridgeAuthTransport(nativeBridge)
