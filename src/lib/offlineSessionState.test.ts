@@ -55,7 +55,7 @@ describe("offlineSessionState", () => {
       });
 
       it("returns the parsed session state on a cache hit", async () => {
-        const state = { isAuthenticated: true, updatedAt: 1_000_000 };
+        const state = { isAuthenticated: true };
         mockMatch.mockResolvedValue(new Response(JSON.stringify(state)));
 
         const result = await readOfflineSessionState();
@@ -98,9 +98,7 @@ describe("offlineSessionState", () => {
       });
 
       it("writes the correct URL and authenticated=false payload", async () => {
-        const before = Date.now();
         await writeOfflineSessionState(false);
-        const after = Date.now();
 
         const [urlArg, responseArg] = mockPut.mock.calls[0] as unknown as [
           string,
@@ -110,11 +108,8 @@ describe("offlineSessionState", () => {
 
         const written = (await responseArg.json()) as {
           isAuthenticated: boolean;
-          updatedAt: number;
         };
-        expect(written.isAuthenticated).toBe(false);
-        expect(written.updatedAt).toBeGreaterThanOrEqual(before);
-        expect(written.updatedAt).toBeLessThanOrEqual(after);
+        expect(written).toEqual({ isAuthenticated: false });
       });
 
       it("writes authenticated=true when the user is logged in", async () => {

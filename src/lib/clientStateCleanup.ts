@@ -27,13 +27,25 @@ async function clearSensitiveCaches(): Promise<void> {
 }
 
 async function clearSensitiveIndexedDbState(): Promise<void> {
-  await Promise.all([
-    db.guards.clear(),
-    db.syncQueue.clear(),
-    db.apiCache.clear(),
-    db.analytics.clear(),
-    db.organizationalUnitCache.clear(),
-  ]);
+  try {
+    // Logout policy: remove the entire local session database because all
+    // stores in SecPalDB are session- or user-adjacent and unnecessary once
+    // the authenticated client state is cleared.
+    await db.delete();
+  } catch (error) {
+    console.warn(
+      "Failed to delete SecPalDB during logout, falling back to table clearing:",
+      error
+    );
+
+    await Promise.all([
+      db.guards.clear(),
+      db.syncQueue.clear(),
+      db.apiCache.clear(),
+      db.analytics.clear(),
+      db.organizationalUnitCache.clear(),
+    ]);
+  }
 }
 
 export async function clearSensitiveClientState(): Promise<void> {

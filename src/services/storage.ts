@@ -45,7 +45,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private setLogoutBarrier(): void {
-    localStorage.setItem(this.LOGOUT_BARRIER_KEY, String(Date.now()));
+    localStorage.setItem(this.LOGOUT_BARRIER_KEY, "1");
   }
 
   hasLogoutBarrier(): boolean {

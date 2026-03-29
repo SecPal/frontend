@@ -27,6 +27,8 @@ describe("clearSensitiveClientState", () => {
   });
 
   it("clears auth storage, sensitive caches, and IndexedDB tables", async () => {
+    const deleteSpy = vi.spyOn(db, "delete");
+
     localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
     localStorage.setItem("auth_token", "legacy-token");
     localStorage.setItem("locale", "de");
@@ -80,10 +82,20 @@ describe("clearSensitiveClientState", () => {
 
     await clearSensitiveClientState();
 
+    expect(deleteSpy).toHaveBeenCalledTimes(1);
+
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.length).toBe(0);
+
+    if (typeof indexedDB.databases === "function") {
+      const databases = await indexedDB.databases();
+
+      expect(databases.map((database) => database.name)).not.toContain(db.name);
+    }
+
+    await db.open();
 
     expect(await db.guards.count()).toBe(0);
     expect(await db.syncQueue.count()).toBe(0);

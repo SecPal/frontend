@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Minimized post-logout PWA persistence further by deleting `SecPalDB` instead of leaving cleared IndexedDB stores behind, reducing the service-worker offline auth cache to a bare `isAuthenticated` boolean, and preventing the logged-out sync-status UI from recreating offline session storage on the login screen.
+
 - Tightened the PWA post-logout cleanup path so authenticated analytics state is disabled and cleared on logout, `/v1/auth/*` and `/v1/me` requests explicitly bypass browser caches, and offline logout regressions now cover both `/profile` and `/settings` to prevent stale protected content from reappearing.
 
 - Tightened the PWA logout/offline privacy hardening by persisting an explicit logout barrier in local storage, scrubbing any stale `auth_user` payload that reappears after logout, and rejecting BFCache or cross-tab restoration paths until a fresh login writes a new authenticated state.

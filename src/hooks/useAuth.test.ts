@@ -234,6 +234,27 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
+  it("logout stores only the minimal logout barrier flag", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      result.current.logout();
+    });
+
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+  });
+
   it("updates isAuthenticated when user changes", () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -435,7 +456,7 @@ describe("useAuth", () => {
     const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(staleUser));
-    localStorage.setItem("auth_logout_barrier", String(Date.now()));
+    localStorage.setItem("auth_logout_barrier", "1");
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,

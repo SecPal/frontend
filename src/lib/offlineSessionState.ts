@@ -6,7 +6,6 @@ export const OFFLINE_SESSION_STATE_PATH = "/__session-state__";
 
 export interface OfflineSessionState {
   isAuthenticated: boolean;
-  updatedAt: number;
 }
 
 export interface AuthSessionChangedMessage {
@@ -52,15 +51,16 @@ export async function readOfflineSessionState(): Promise<OfflineSessionState | n
     if (
       typeof parsed !== "object" ||
       parsed === null ||
-      typeof (parsed as Record<string, unknown>).isAuthenticated !==
-        "boolean" ||
-      typeof (parsed as Record<string, unknown>).updatedAt !== "number"
+      typeof (parsed as Record<string, unknown>).isAuthenticated !== "boolean"
     ) {
       await cache.delete(getOfflineSessionStateUrl());
       return null;
     }
 
-    return parsed as OfflineSessionState;
+    return {
+      isAuthenticated: (parsed as Record<string, unknown>)
+        .isAuthenticated as boolean,
+    };
   } catch {
     await cache.delete(getOfflineSessionStateUrl());
     return null;
@@ -76,10 +76,9 @@ export async function writeOfflineSessionState(
     return;
   }
 
-  const state: OfflineSessionState = {
-    isAuthenticated,
-    updatedAt: Date.now(),
-  };
+  // Logout policy: keep only the minimum boolean auth state required for the
+  // service worker to gate offline navigation after logout.
+  const state: OfflineSessionState = { isAuthenticated };
 
   await cache.put(
     getOfflineSessionStateUrl(),
