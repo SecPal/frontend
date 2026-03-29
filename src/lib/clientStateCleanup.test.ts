@@ -26,7 +26,7 @@ describe("clearSensitiveClientState", () => {
     globalThis.caches = mockCaches;
   });
 
-  it("clears auth storage, sensitive caches, and IndexedDB tables", async () => {
+  it("clears auth storage, sensitive caches, and deletes the IndexedDB database", async () => {
     const deleteSpy = vi.spyOn(db, "delete");
 
     localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));

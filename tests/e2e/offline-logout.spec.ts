@@ -163,7 +163,10 @@ test.describe("Offline Logout Privacy", () => {
         const cacheNames = "caches" in globalThis ? await caches.keys() : [];
         let offlineSessionState: unknown = null;
 
-        if ("caches" in globalThis) {
+        if (
+          "caches" in globalThis &&
+          cacheNames.includes("auth-session-state")
+        ) {
           const cache = await caches.open("auth-session-state");
           const response = await cache.match(
             new URL(offlineSessionStatePath, window.location.origin).toString()
