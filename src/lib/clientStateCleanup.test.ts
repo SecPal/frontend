@@ -95,9 +95,7 @@ describe("clearSensitiveClientState", () => {
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
-    expect(
-      localStorage.getItem("secpal-notification-preferences")
-    ).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.length).toBe(0);
 
@@ -122,9 +120,7 @@ describe("clearSensitiveClientState", () => {
 
   it("falls back to clearing IndexedDB tables when deleting the database fails", async () => {
     const deleteError = new Error("Delete blocked by another connection");
-    const deleteSpy = vi
-      .spyOn(db, "delete")
-      .mockRejectedValueOnce(deleteError);
+    const deleteSpy = vi.spyOn(db, "delete").mockRejectedValueOnce(deleteError);
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
@@ -183,9 +179,7 @@ describe("clearSensitiveClientState", () => {
       deleteError
     );
     expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(
-      localStorage.getItem("secpal-notification-preferences")
-    ).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(sessionStorage.length).toBe(0);
     expect(await db.guards.count()).toBe(0);
     expect(await db.syncQueue.count()).toBe(0);
