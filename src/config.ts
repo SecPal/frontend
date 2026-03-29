@@ -20,8 +20,7 @@ export const apiConfig = {
    * - Development with DDEV: (empty string, Vite proxy handles routing)
    * - Development without proxy: http://localhost:8000
    * - Demo/Testing: https://api.secpal.dev
-   * - Production: https://api.secpal.dev (canonical production endpoint;
-   *   api.secpal.app was deprecated before deployment — see PR #632)
+   * - Production: https://api.secpal.dev (canonical production endpoint)
    * - Customer On-Premise: tenant-specific SecPal domain provided during deployment
    *
    * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
