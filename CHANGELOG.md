@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Tightened the PWA logout/offline privacy hardening by persisting an explicit logout barrier in local storage, scrubbing any stale `auth_user` payload that reappears after logout, and rejecting BFCache or cross-tab restoration paths until a fresh login writes a new authenticated state.
+
 - Hardened PWA logout/offline privacy by synchronizing explicit auth state to the service worker, redirecting logged-out offline navigation away from protected routes such as `/profile`, and reconciling restored or cross-tab client state so previously viewed user data cannot remain readable after logout.
 
 - Raised the frontend override floors for `brace-expansion` and `serialize-javascript` so `npm audit` now returns 0 vulnerabilities; the remaining install-time deprecation warnings still come from the upstream `vite-plugin-pwa` / `workbox-build` toolchain and remain documented as accepted build-time risk

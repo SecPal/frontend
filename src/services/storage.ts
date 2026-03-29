@@ -17,6 +17,7 @@ export interface AuthStorage {
   setUser(user: User): void;
   removeUser(): void;
   clear(): void;
+  hasLogoutBarrier(): boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export interface AuthStorage {
  */
 class LocalStorageAuthStorage implements AuthStorage {
   private readonly USER_KEY = "auth_user";
+  private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -38,7 +40,24 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.cleanupLegacyToken();
   }
 
+  private clearLogoutBarrier(): void {
+    localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
+  }
+
+  private setLogoutBarrier(): void {
+    localStorage.setItem(this.LOGOUT_BARRIER_KEY, String(Date.now()));
+  }
+
+  hasLogoutBarrier(): boolean {
+    return localStorage.getItem(this.LOGOUT_BARRIER_KEY) !== null;
+  }
+
   getUser(): User | null {
+    if (this.hasLogoutBarrier()) {
+      this.removeUser();
+      return null;
+    }
+
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (!storedUser) return null;
 
@@ -66,6 +85,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
+    this.clearLogoutBarrier();
     localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser));
   }
 
@@ -74,6 +94,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   clear(): void {
+    this.setLogoutBarrier();
     this.removeUser();
   }
 }

@@ -352,6 +352,83 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
+  it("ignores stale auth storage that reappears after explicit logout", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.logout();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    act(() => {
+      localStorage.setItem("auth_user", JSON.stringify(mockUser));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: null,
+          newValue: JSON.stringify(mockUser),
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("rejects BFCache-style auth restoration after explicit logout", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.logout();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    act(() => {
+      localStorage.setItem("auth_user", JSON.stringify(mockUser));
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
   it("ignores storage events for keys other than auth_user", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,

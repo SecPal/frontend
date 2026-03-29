@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const isClearingSessionRef = useRef(false);
   const bootstrapRequestVersionRef = useRef(0);
+  const hasExplicitLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
   const invalidateBootstrapRevalidation = useCallback(() => {
     bootstrapRequestVersionRef.current += 1;
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
+      hasExplicitLogoutBarrierRef.current = true;
       authStorage.clear();
       setUser(null);
       setIsLoading(false);
@@ -82,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       invalidateBootstrapRevalidation();
       authStorage.setUser(sanitizedUser);
+      hasExplicitLogoutBarrierRef.current = false;
       setUser(sanitizedUser);
       setIsLoading(false);
       syncOfflineAuthState(true);
@@ -148,12 +151,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((currentUser) => {
         if (
           !isActive ||
-          bootstrapRequestVersionRef.current !== requestVersion
+          bootstrapRequestVersionRef.current !== requestVersion ||
+          hasExplicitLogoutBarrierRef.current
         ) {
           return;
         }
 
         authStorage.setUser(currentUser);
+        hasExplicitLogoutBarrierRef.current = false;
         setUser(currentUser);
         setIsLoading(false);
         syncOfflineAuthState(true);
@@ -193,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        hasExplicitLogoutBarrierRef.current = false;
         invalidateBootstrapRevalidation();
         setUser(nextUser);
         setIsLoading(false);
@@ -230,6 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      hasExplicitLogoutBarrierRef.current = false;
       invalidateBootstrapRevalidation();
       setUser(storedUser);
       setIsLoading(false);

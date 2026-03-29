@@ -148,6 +148,13 @@ test.describe("Offline Logout Privacy", () => {
     await page.getByRole("menuitem", { name: /sign out|abmelden/i }).click();
 
     await expect(page).toHaveURL(/\/login/);
+    await expect(page.locator("#email")).toBeVisible();
+    await expect(page.locator("#password")).toBeVisible();
+    expect(
+      await page.evaluate(() => {
+        return localStorage.getItem("auth_user");
+      })
+    ).toBeNull();
 
     await context.setOffline(true);
     await page.goto("/profile").catch(() => undefined);
