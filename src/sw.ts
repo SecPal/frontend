@@ -11,7 +11,6 @@ import {
 } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
 import { CacheFirst } from "workbox-strategies";
-import { resolveOfflineProtectedRouteRedirect } from "./lib/offlineNavigationAccess";
 import {
   readOfflineSessionState,
   writeOfflineSessionState,
@@ -23,6 +22,8 @@ interface AuthSessionChangedMessage {
   type: "AUTH_SESSION_CHANGED";
   isAuthenticated: boolean;
 }
+
+const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
 
 function isAuthSessionChangedMessage(
   value: unknown
@@ -39,6 +40,22 @@ function isAuthSessionChangedMessage(
   );
 }
 
+function shouldRedirectLoggedOutNavigation(
+  pathname: string,
+  isAuthenticated: boolean | null
+): boolean {
+  if (isAuthenticated !== false) {
+    return false;
+  }
+
+  const normalizedPathname =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+
+  return !PUBLIC_LOGGED_OUT_PATHS.has(normalizedPathname);
+}
+
 async function redirectProtectedClientsToLogin(): Promise<void> {
   const windowClients = await self.clients.matchAll({
     type: "window",
@@ -49,7 +66,7 @@ async function redirectProtectedClientsToLogin(): Promise<void> {
     windowClients.map(async (client) => {
       const pathname = new URL(client.url).pathname;
 
-      if (!resolveOfflineProtectedRouteRedirect(pathname, false)) {
+      if (!shouldRedirectLoggedOutNavigation(pathname, false)) {
         return;
       }
 
@@ -98,14 +115,15 @@ const navigationRoute = new NavigationRoute(
   async (context) => {
     const sessionState = await readOfflineSessionState();
     const pathname = new URL(context.request.url).pathname;
-    const redirectTarget = resolveOfflineProtectedRouteRedirect(
-      pathname,
-      sessionState?.isAuthenticated ?? null
-    );
 
-    if (redirectTarget) {
+    if (
+      shouldRedirectLoggedOutNavigation(
+        pathname,
+        sessionState?.isAuthenticated ?? null
+      )
+    ) {
       return Response.redirect(
-        new URL(redirectTarget, self.location.origin).toString(),
+        new URL("/login", self.location.origin).toString(),
         302
       );
     }
