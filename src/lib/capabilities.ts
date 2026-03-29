@@ -5,22 +5,12 @@ import type { User } from "../contexts/auth-context";
 
 const ELEVATED_UI_ROLES = ["Admin", "Manager", "HR"] as const;
 
-const CUSTOMER_FEATURE_PERMISSIONS = [
+const CUSTOMER_FEATURE_VIEW_PERMISSIONS = [
   "customers.read",
-  "customers.create",
-  "customers.update",
-  "customers.delete",
   "customers.*",
-  "sites.read",
-  "sites.create",
-  "sites.update",
-  "sites.delete",
-  "sites.*",
-  "assignments.create",
-  "assignments.update",
-  "assignments.delete",
-  "assignments.*",
 ] as const;
+
+const SITE_FEATURE_VIEW_PERMISSIONS = ["sites.read", "sites.*"] as const;
 
 const EMPLOYEE_FEATURE_PERMISSIONS = [
   "employee.read",
@@ -244,12 +234,12 @@ export function getUserCapabilities(
       isAuthenticated &&
       (hasElevatedUiRole ||
         hasCustomerAccess ||
-        hasAnyUserPermission(user, CUSTOMER_FEATURE_PERMISSIONS)),
+        hasAnyUserPermission(user, CUSTOMER_FEATURE_VIEW_PERMISSIONS)),
     sites:
       isAuthenticated &&
       (hasElevatedUiRole ||
         hasSiteAccess ||
-        hasAnyUserPermission(user, CUSTOMER_FEATURE_PERMISSIONS)),
+        hasAnyUserPermission(user, SITE_FEATURE_VIEW_PERMISSIONS)),
     employees:
       isAuthenticated &&
       hasOrganizationalScopes &&
