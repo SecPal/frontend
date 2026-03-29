@@ -78,10 +78,9 @@ describe("App", () => {
     expect(screen.getByRole("combobox")).toBeInTheDocument();
   });
 
-  it("protects activity-logs route with permission check", async () => {
+  it("shows not found for activity-logs when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/activity-logs");
 
-    // Set authenticated user without activity_log.read permission
     localStorage.setItem(
       "auth_user",
       JSON.stringify({
@@ -95,11 +94,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
     ).toBeInTheDocument();
   });
 
-  it("shows access denied for the legacy organizational-units app route when the user lacks organizational access", async () => {
+  it("shows not found for the legacy organizational-units route when the user lacks organizational access", async () => {
     window.history.replaceState({}, "", "/organizational-units");
 
     localStorage.setItem(
@@ -115,11 +114,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
     ).toBeInTheDocument();
   });
 
-  it("shows access denied for organization routes when the user only has scopes but no elevated feature capability", async () => {
+  it("shows not found for organization routes when the user only has scopes but no elevated feature capability", async () => {
     window.history.replaceState({}, "", "/organization");
 
     localStorage.setItem(
@@ -137,8 +136,220 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("shows not found for customer routes when the user cannot discover that feature", async () => {
+    window.history.replaceState({}, "", "/customers");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("shows not found for site routes when the user cannot discover that feature", async () => {
+    window.history.replaceState({}, "", "/sites");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("shows not found for customer-scoped site routes when the user cannot discover that feature", async () => {
+    window.history.replaceState({}, "", "/sites/customer/123");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
+  it("shows access denied for known customer action routes when the user lacks create permission", async () => {
+    window.history.replaceState({}, "", "/customers/new");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: ["customers.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
       await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
     ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
+  });
+
+  it("shows access denied for known customer edit routes when the user lacks update permission", async () => {
+    window.history.replaceState({}, "", "/customers/123/edit");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: ["customers.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/123/edit");
+  });
+
+  it("shows access denied for known site action routes when the user lacks create permission", async () => {
+    window.history.replaceState({}, "", "/sites/new");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: ["sites.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/sites/new");
+  });
+
+  it("shows access denied for known site edit routes when the user lacks update permission", async () => {
+    window.history.replaceState({}, "", "/sites/123/edit");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        permissions: ["sites.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/sites/123/edit");
+  });
+
+  it("shows access denied for known employee action routes when the user lacks create permission", async () => {
+    window.history.replaceState({}, "", "/employees/create");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        hasOrganizationalScopes: true,
+        permissions: ["employees.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/employees/create");
+  });
+
+  it("shows access denied for known employee edit routes when the user lacks update permission", async () => {
+    window.history.replaceState({}, "", "/employees/123/edit");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        hasOrganizationalScopes: true,
+        permissions: ["employees.read"],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/employees/123/edit");
+  });
+
+  it("redirects the legacy organizational-units route to the canonical organization route for authorized users", async () => {
+    window.history.replaceState({}, "", "/organizational-units");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: ["Manager"],
+        permissions: [],
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/organization");
+    });
+
+    expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
 
   it("shows a not found state for authenticated users on unknown app routes", async () => {

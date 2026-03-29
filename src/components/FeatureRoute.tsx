@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Navigate } from "react-router-dom";
-import type { RestrictedFeature } from "../lib/capabilities";
+import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { RouteAccessDeniedState, RouteLoadingState } from "./RouteGuardState";
@@ -11,12 +11,18 @@ interface FeatureRouteProps {
   children: React.ReactNode;
   feature: RestrictedFeature;
   fallbackPath?: string;
+  missingFeatureElement?: React.ReactNode;
+  requiredAction?: (capabilities: UserCapabilities) => boolean;
+  deniedActionElement?: React.ReactNode;
 }
 
 export function FeatureRoute({
   children,
   feature,
   fallbackPath,
+  missingFeatureElement = <RouteAccessDeniedState />,
+  requiredAction,
+  deniedActionElement = <RouteAccessDeniedState />,
 }: FeatureRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const capabilities = useUserCapabilities();
@@ -34,7 +40,11 @@ export function FeatureRoute({
       return <Navigate to={fallbackPath} replace />;
     }
 
-    return <RouteAccessDeniedState />;
+    return <>{missingFeatureElement}</>;
+  }
+
+  if (requiredAction && !requiredAction(capabilities)) {
+    return <>{deniedActionElement}</>;
   }
 
   return <>{children}</>;

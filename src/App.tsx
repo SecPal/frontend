@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { OfflineIndicator } from "./components/OfflineIndicator";
@@ -95,6 +95,27 @@ function About() {
   );
 }
 
+function HiddenAppRouteState() {
+  return (
+    <ApplicationLayout>
+      <RouteNotFoundState />
+    </ApplicationLayout>
+  );
+}
+
+/**
+ * Authenticated app routing policy outside onboarding:
+ * - Self-service routes remain directly accessible to any authenticated user.
+ * - Hidden feature areas resolve to the same in-app not-found state as unknown URLs.
+ * - Action-specific routes inside a known feature show explicit access denied.
+ * - Legacy aliases redirect to the canonical route once the feature is available.
+ */
+function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
+  return (
+    <FeatureRoute {...props} missingFeatureElement={<HiddenAppRouteState />} />
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -132,163 +153,196 @@ function App() {
             <Route
               path="/customers"
               element={
-                <FeatureRoute feature="customers">
+                <AppFeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomersPage />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/customers/new"
               element={
-                <FeatureRoute feature="customers">
+                <AppFeatureRoute
+                  feature="customers"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.customers.create
+                  }
+                >
                   <ApplicationLayout>
                     <CustomerCreate />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/customers/:id"
               element={
-                <FeatureRoute feature="customers">
+                <AppFeatureRoute feature="customers">
                   <ApplicationLayout>
                     <CustomerDetail />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/customers/:id/edit"
               element={
-                <FeatureRoute feature="customers">
+                <AppFeatureRoute
+                  feature="customers"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.customers.update
+                  }
+                >
                   <ApplicationLayout>
                     <CustomerEdit />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SitesPage />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites/customer/:customerId"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SitesPage />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites/new"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute
+                  feature="sites"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.sites.create
+                  }
+                >
                   <ApplicationLayout>
                     <SiteCreate />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites/new/customer/:customerId"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute
+                  feature="sites"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.sites.create
+                  }
+                >
                   <ApplicationLayout>
                     <SiteCreate />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites/:id"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute feature="sites">
                   <ApplicationLayout>
                     <SiteDetail />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/sites/:id/edit"
               element={
-                <FeatureRoute feature="sites">
+                <AppFeatureRoute
+                  feature="sites"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.sites.update
+                  }
+                >
                   <ApplicationLayout>
                     <SiteEdit />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             {/* Organizational Unit Management Route - INTERNAL Company Structure */}
             <Route
               path="/organization"
               element={
-                <FeatureRoute feature="organization">
+                <AppFeatureRoute feature="organization">
                   <ApplicationLayout>
                     <OrganizationPage />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/organizational-units"
               element={
-                <FeatureRoute feature="organization">
-                  <ApplicationLayout>
-                    <OrganizationPage />
-                  </ApplicationLayout>
-                </FeatureRoute>
+                <AppFeatureRoute feature="organization">
+                  <Navigate to="/organization" replace />
+                </AppFeatureRoute>
               }
             />
             {/* Employee Management Routes - Requires Organizational Access */}
             <Route
               path="/employees"
               element={
-                <FeatureRoute feature="employees">
+                <AppFeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeList />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/employees/create"
               element={
-                <FeatureRoute feature="employees">
+                <AppFeatureRoute
+                  feature="employees"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.employees.create
+                  }
+                >
                   <ApplicationLayout>
                     <EmployeeCreate />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/employees/:id/edit"
               element={
-                <FeatureRoute feature="employees">
+                <AppFeatureRoute
+                  feature="employees"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.employees.update
+                  }
+                >
                   <ApplicationLayout>
                     <EmployeeEdit />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             <Route
               path="/employees/:id"
               element={
-                <FeatureRoute feature="employees">
+                <AppFeatureRoute feature="employees">
                   <ApplicationLayout>
                     <EmployeeDetail />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             {/* Onboarding Route */}
@@ -306,11 +360,11 @@ function App() {
             <Route
               path="/activity-logs"
               element={
-                <FeatureRoute feature="activityLogs">
+                <AppFeatureRoute feature="activityLogs">
                   <ApplicationLayout>
                     <ActivityLogList />
                   </ApplicationLayout>
-                </FeatureRoute>
+                </AppFeatureRoute>
               }
             />
             {/* User Routes */}
