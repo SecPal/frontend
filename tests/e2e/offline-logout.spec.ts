@@ -18,6 +18,8 @@ const offlineLogoutMockUser = {
   hasSiteAccess: false,
 };
 
+const OFFLINE_SESSION_STATE_PATH = "/__session-state__";
+
 async function installMockAuthRoutes(context: BrowserContext): Promise<void> {
   await context.route("**/health/ready", async (route) => {
     await route.fulfill({
@@ -155,6 +157,50 @@ test.describe("Offline Logout Privacy", () => {
         return localStorage.getItem("auth_user");
       })
     ).toBeNull();
+
+    const persistedState = await page.evaluate(
+      async (offlineSessionStatePath) => {
+        const cacheNames = "caches" in globalThis ? await caches.keys() : [];
+        let offlineSessionState: unknown = null;
+
+        if (
+          "caches" in globalThis &&
+          cacheNames.includes("auth-session-state")
+        ) {
+          const cache = await caches.open("auth-session-state");
+          const response = await cache.match(
+            new URL(offlineSessionStatePath, window.location.origin).toString()
+          );
+
+          offlineSessionState = response ? await response.json() : null;
+        }
+
+        const indexedDbNames =
+          typeof indexedDB.databases === "function"
+            ? (await indexedDB.databases()).map((database) => database.name)
+            : null;
+
+        return {
+          cacheNames,
+          indexedDbNames,
+          localStorageKeys: Object.keys(localStorage).sort(),
+          offlineSessionState,
+          sessionStorageKeys: Object.keys(sessionStorage).sort(),
+        };
+      },
+      OFFLINE_SESSION_STATE_PATH
+    );
+
+    expect(persistedState.localStorageKeys).toEqual(["auth_logout_barrier"]);
+    expect(persistedState.sessionStorageKeys).toEqual([]);
+    expect(persistedState.offlineSessionState).toEqual({
+      isAuthenticated: false,
+    });
+    expect(persistedState.cacheNames).toContain("auth-session-state");
+
+    if (persistedState.indexedDbNames !== null) {
+      expect(persistedState.indexedDbNames).not.toContain("SecPalDB");
+    }
 
     await context.setOffline(true);
     await page.goto("/profile").catch(() => undefined);

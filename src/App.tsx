@@ -9,6 +9,7 @@ import { OfflineIndicator } from "./components/OfflineIndicator";
 import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
@@ -114,6 +115,20 @@ function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
   return (
     <FeatureRoute {...props} missingFeatureElement={<HiddenAppRouteState />} />
   );
+}
+
+function AuthenticatedSyncStatusIndicator({
+  apiBaseUrl,
+}: {
+  apiBaseUrl: string;
+}) {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <SyncStatusIndicator apiBaseUrl={apiBaseUrl} />;
 }
 
 function App() {
@@ -401,7 +416,7 @@ function App() {
           </Routes>
         </Suspense>
         <OfflineIndicator />
-        <SyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
+        <AuthenticatedSyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
       </BrowserRouter>
     </AuthProvider>
   );
