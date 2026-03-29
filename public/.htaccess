@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 SecPal
+# SPDX-FileCopyrightText: 2025-2026 SecPal
 # SPDX-License-Identifier: CC0-1.0
 
 # Apache configuration for SPA routing
@@ -15,8 +15,19 @@
   RewriteRule . /index.html [L]
 </IfModule>
 
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
 # Security headers
 <IfModule mod_headers.c>
+  # Restrict script execution to same-origin assets. connect-src stays HTTPS-only
+  # because deployments may point at customer-specific API origins.
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; worker-src 'self'; upgrade-insecure-requests"
+
+  # Explicitly deny browser capabilities the app does not require.
+  Header always set Permissions-Policy "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
   # Enable HSTS (HTTP Strict Transport Security)
   # NOTE: The 'preload' directive requires manual submission to hstspreload.org
   # and only has effect if the domain is accepted into the preload list.
@@ -26,8 +37,8 @@
   # Prevent MIME type sniffing
   Header always set X-Content-Type-Options "nosniff"
 
-  # XSS Protection (legacy browsers)
-  Header always set X-XSS-Protection "1; mode=block"
+  # Disable the legacy XSS auditor. Modern browsers rely on CSP instead.
+  Header always set X-XSS-Protection "0"
 
   # Prevent clickjacking
   Header always set X-Frame-Options "DENY"
@@ -35,8 +46,26 @@
   # Referrer Policy
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-  # Permissions Policy (limit browser features)
-  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  # Modern cross-origin isolation defaults for the app shell and static assets.
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+  Header always set Origin-Agent-Cluster "?1"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+
+  # Keep the HTML shell, service worker, and manifest fresh so security and PWA
+  # updates activate quickly instead of sitting behind intermediary caches.
+  <Files "index.html">
+    Header always set Cache-Control "no-cache, no-store, must-revalidate"
+  </Files>
+
+  <Files "sw.js">
+    Header always set Cache-Control "no-cache, no-store, must-revalidate"
+    Header always set Service-Worker-Allowed "/"
+  </Files>
+
+  <Files "manifest.webmanifest">
+    Header always set Cache-Control "no-cache, must-revalidate"
+  </Files>
 </IfModule>
 
 # Enable compression for better performance
@@ -58,6 +87,7 @@
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType text/javascript "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType application/manifest+json "access plus 0 seconds"
 
   # Fonts
   ExpiresByType font/woff "access plus 1 year"
