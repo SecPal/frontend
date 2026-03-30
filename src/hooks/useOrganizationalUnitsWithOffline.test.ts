@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -29,6 +29,8 @@ describe("useOrganizationalUnitsWithOffline", () => {
       id: "unit-1",
       type: "branch",
       name: "Berlin Branch",
+      description: "Main branch in Berlin",
+      metadata: { timezone: "Europe/Berlin" },
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -58,6 +60,27 @@ describe("useOrganizationalUnitsWithOffline", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    vi.mocked(
+      organizationalUnitStore.buildOrganizationalUnitCacheEntry
+    ).mockImplementation((unit) => ({
+      id: unit.id,
+      type: unit.type,
+      name: unit.name,
+      custom_type_name: unit.custom_type_name ?? undefined,
+      parent_id: unit.parent?.id ?? null,
+      parent: unit.parent
+        ? {
+            id: unit.parent.id,
+            type: unit.parent.type,
+            name: unit.parent.name,
+          }
+        : null,
+      created_at: unit.created_at,
+      updated_at: unit.updated_at,
+      cachedAt: new Date("2025-01-10T00:00:00Z"),
+      lastSynced: new Date("2025-01-10T00:00:00Z"),
+    }));
 
     // Store original value
     originalOnLine = navigator.onLine;
@@ -96,6 +119,8 @@ describe("useOrganizationalUnitsWithOffline", () => {
     });
 
     it("should fetch organizational units from API and cache them", async () => {
+      const cachedUnits: OrganizationalUnitCacheEntry[] = [];
+
       vi.mocked(
         organizationalUnitApi.listOrganizationalUnits
       ).mockResolvedValue({
@@ -113,7 +138,9 @@ describe("useOrganizationalUnitsWithOffline", () => {
       ).mockResolvedValue([]);
       vi.mocked(
         organizationalUnitStore.saveOrganizationalUnit
-      ).mockResolvedValue();
+      ).mockImplementation(async (unit) => {
+        cachedUnits.push(unit);
+      });
 
       const { result } = renderHook(() => useOrganizationalUnitsWithOffline());
 
@@ -134,6 +161,9 @@ describe("useOrganizationalUnitsWithOffline", () => {
       expect(
         organizationalUnitStore.saveOrganizationalUnit
       ).toHaveBeenCalledTimes(2);
+      expect(cachedUnits[0]).toBeDefined();
+      expect(cachedUnits[0]).not.toHaveProperty("description");
+      expect(cachedUnits[0]).not.toHaveProperty("metadata");
     });
 
     it("should fall back to cache when API fails", async () => {

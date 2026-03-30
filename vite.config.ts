@@ -107,49 +107,10 @@ export default defineConfig(({ mode }) => {
           ],
           shortcuts: [
             {
-              name: "View Schedule",
-              short_name: "Schedule",
-              description: "View your current work schedule",
-              url: "/schedule",
-              icons: [
-                {
-                  src: "pwa-192x192.png",
-                  sizes: "192x192",
-                  type: "image/png",
-                },
-              ],
-            },
-            {
-              name: "Quick Report",
-              short_name: "Report",
-              description: "Create a new incident report",
-              url: "/reports/new",
-              icons: [
-                {
-                  src: "pwa-192x192.png",
-                  sizes: "192x192",
-                  type: "image/png",
-                },
-              ],
-            },
-            {
               name: "My Profile",
               short_name: "Profile",
               description: "View and edit your profile",
               url: "/profile",
-              icons: [
-                {
-                  src: "pwa-192x192.png",
-                  sizes: "192x192",
-                  type: "image/png",
-                },
-              ],
-            },
-            {
-              name: "Emergency Contact",
-              short_name: "Emergency",
-              description: "Quick access to emergency contacts",
-              url: "/emergency",
               icons: [
                 {
                   src: "pwa-192x192.png",

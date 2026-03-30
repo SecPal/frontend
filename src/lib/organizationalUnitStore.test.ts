@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -36,7 +36,6 @@ describe("OrganizationalUnitStore", () => {
         id: "unit-1",
         type: "branch",
         name: "Berlin Branch",
-        description: "Main branch in Berlin",
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
         cachedAt: new Date("2025-01-10T00:00:00Z"),

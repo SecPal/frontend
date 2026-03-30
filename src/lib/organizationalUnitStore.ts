@@ -1,8 +1,33 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { db } from "./db";
 import type { OrganizationalUnitCacheEntry } from "./db";
+import type { OrganizationalUnit } from "../types/organizational";
+
+export function buildOrganizationalUnitCacheEntry(
+  unit: OrganizationalUnit,
+  syncedAt: Date = new Date()
+): OrganizationalUnitCacheEntry {
+  return {
+    id: unit.id,
+    type: unit.type,
+    name: unit.name,
+    custom_type_name: unit.custom_type_name ?? undefined,
+    parent_id: unit.parent?.id ?? null,
+    parent: unit.parent
+      ? {
+          id: unit.parent.id,
+          type: unit.parent.type,
+          name: unit.parent.name,
+        }
+      : null,
+    created_at: unit.created_at,
+    updated_at: unit.updated_at,
+    cachedAt: syncedAt,
+    lastSynced: syncedAt,
+  };
+}
 
 /**
  * Save an organizational unit to IndexedDB cache
