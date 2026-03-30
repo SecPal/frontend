@@ -38,6 +38,10 @@ It also now carries the baseline browser hardening for the shipped PWA:
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+   # Never rewrite API/framework endpoints into the SPA shell.
+   RewriteRule ^(?:v1|sanctum)(?:/|$) - [R=404,L]
+   RewriteRule ^health(?:/|$) - [R=404,L]
+
   # Don't rewrite files or directories that actually exist
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
@@ -91,7 +95,16 @@ server {
   root /var/www/app.secpal.dev;
   index index.html;
 
-  # SPA routing: Serve index.html for all routes
+   # Never serve API/framework endpoints as the SPA shell.
+   location ~ ^/(v1|sanctum)(/|$) {
+      return 404;
+   }
+
+   location ~ ^/health(/|$) {
+      return 404;
+   }
+
+   # SPA routing: Serve index.html for all frontend routes only
   location / {
     try_files $uri $uri/ /index.html;
   }
@@ -222,13 +235,15 @@ server {
 
 **Build-time variables** (set before `npm run build`):
 
-- `VITE_API_URL` - Backend API URL (e.g., `https://api.secpal.dev`)
+- `VITE_API_URL` - Backend API URL as an absolute origin (for example `https://api.secpal.dev` or `https://api.customer.example`)
 
 **Example (.env.production):**
 
 ```env
 VITE_API_URL=https://api.secpal.dev
 ```
+
+`VITE_API_URL` is mandatory for production builds. Do not use `/`, `/api`, or any other relative value in production, because that allows `/v1/*` and `/sanctum/*` requests to fall back to the SPA host when the web server is misrouted.
 
 **Load environment:**
 
@@ -249,7 +264,7 @@ Before deploying to production:
 - ✅ HTTPS enabled (Let's Encrypt, Certbot)
 - ✅ Security headers configured (`.htaccess` includes them)
 - ✅ CORS configured on backend (API must allow frontend domain)
-- ✅ `VITE_API_URL` points to the canonical `api.secpal.dev` production API
+- ✅ `VITE_API_URL` is an absolute API origin for the current deployment (never a relative path)
 - ✅ No `.env` files committed to Git
 - ✅ Service Worker registered (PWA functionality)
 - ✅ CSP, permissions, and modern cross-origin headers enabled
@@ -288,6 +303,7 @@ After deployment, test these scenarios:
    - Login should work ✅
    - API requests should succeed ✅
    - Check CORS headers in Network tab ✅
+   - Check `https://app.secpal.dev/v1/me` no longer returns `200 text/html`; it must fail clearly on the app host and succeed only on `https://api.secpal.dev/v1/me` ✅
 
 ---
 
@@ -316,6 +332,44 @@ export default defineConfig({
 'allowed_origins' => [
     'https://app.secpal.dev',
 ],
+```
+
+### Issue: Production Build Uses the Wrong API Host
+
+**Cause:** `VITE_API_URL` is missing, relative, or points at the wrong origin.
+
+**Solution:** Set `VITE_API_URL` to the absolute API origin for that deployment before building. Examples:
+
+```bash
+VITE_API_URL=https://api.secpal.dev npm run build
+VITE_API_URL=https://api.customer.example npm run build
+```
+
+The frontend now fails fast on invalid production values instead of silently falling back to the SPA host.
+
+### Issue: API Routes Return the SPA HTML Shell
+
+**Cause:** Frontend rewrites catch `/v1/*`, `/sanctum/*`, or `/health*` and serve `index.html` instead of failing or proxying.
+
+**Solution:** Keep explicit guards ahead of the SPA fallback so API/framework paths never hit the app shell.
+
+For Apache/Uberspace:
+
+```apache
+RewriteRule ^(?:v1|sanctum)(?:/|$) - [R=404,L]
+RewriteRule ^health(?:/|$) - [R=404,L]
+```
+
+For Nginx:
+
+```nginx
+location ~ ^/(v1|sanctum)(/|$) {
+   return 404;
+}
+
+location ~ ^/health(/|$) {
+   return 404;
+}
 ```
 
 ### Issue: Service Worker Not Updating
