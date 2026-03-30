@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the stale `getPendingSyncUnits` helper and its dead organizational-unit store tests so the frontend no longer advertises an unused pending-sync browser path.
+
 - Removed the unused `StorageQuotaIndicator` component and its dead test coverage so the frontend no longer ships that dormant browser-storage UI surface.
 
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
