@@ -31,12 +31,12 @@ SPDX-License-Identifier: CC0-1.0
 4. **OrganizationalUnitTree** (`src/components/OrganizationalUnitTree.tsx`)
    - Replaced direct API calls with offline hook
    - Tree building works even without API metadata
-   - Optimistic UI preserved
+   - Cached read-only viewing stays available without API metadata
 
 5. **OrganizationPage** (`src/pages/Organization/OrganizationPage.tsx`)
    - Offline banner (yellow): "You're offline..."
    - Stale data banner (blue): "Viewing cached data..."
-   - Full functionality in offline mode
+   - Offline mode supports cached viewing; create, edit, and delete remain online-only
 
 6. **Documentation** (`frontend/docs/OFFLINE_ORGANIZATIONAL_UNITS.md`)
    - Complete implementation documentation

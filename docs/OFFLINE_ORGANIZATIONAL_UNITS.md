@@ -99,7 +99,7 @@ export interface UseOrganizationalUnitsWithOfflineResult {
 
 - **Offline Banner:** Displayed when user is offline
 - **Stale Data Banner:** Displayed when using cached data
-- **Functionality:** All CRUD operations work (optimistic UI)
+- **Functionality:** Cached organizational-unit reads remain available offline; create, edit, and delete flows stay online-only
 
 ## User Behavior
 
@@ -231,7 +231,7 @@ Follows **ADR-003: Offline-First Architecture**:
 - Service Worker for HTTP caching
 - NetworkFirst strategy for fresh data
 - Cache fallback when offline/error
-- Optimistic UI for fast feedback
+- Cache-backed read access for fast offline feedback
 
 ## Support
 
