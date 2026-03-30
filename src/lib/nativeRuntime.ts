@@ -48,9 +48,14 @@ export async function disableBrowserPwaStateForNativeRuntime(): Promise<boolean>
       didCleanup = true;
     }
 
-    await Promise.all(registrations.map((registration) => registration.unregister()));
+    await Promise.all(
+      registrations.map((registration) => registration.unregister())
+    );
   } catch (error) {
-    console.warn("[Native Runtime] Failed to unregister service workers:", error);
+    console.warn(
+      "[Native Runtime] Failed to unregister service workers:",
+      error
+    );
   }
 
   if (typeof caches === "undefined") {

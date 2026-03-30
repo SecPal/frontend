@@ -60,7 +60,10 @@ export function Login() {
       }
 
       try {
-        for (const [attempt, retryDelay] of HEALTH_CHECK_RETRY_DELAYS_MS.entries()) {
+        for (const [
+          attempt,
+          retryDelay,
+        ] of HEALTH_CHECK_RETRY_DELAYS_MS.entries()) {
           if (retryDelay > 0) {
             await new Promise((resolve) => setTimeout(resolve, retryDelay));
           }

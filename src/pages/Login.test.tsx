@@ -487,9 +487,7 @@ describe("Login", () => {
       expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
 
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /log in/i })
-        ).toBeEnabled();
+        expect(screen.getByRole("button", { name: /log in/i })).toBeEnabled();
       });
     });
   });
