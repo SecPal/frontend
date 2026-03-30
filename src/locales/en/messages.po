@@ -28,10 +28,6 @@ msgstr "\"{0}\" created successfully"
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" updated successfully"
 
-#: src/components/SyncStatusIndicator.tsx:168
-msgid "{errorOps} operation(s) failed"
-msgstr "{errorOps} operation(s) failed"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx:212
 msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
 msgstr "{fieldName} appears to be a minor correction ({similarity}% similar)."
@@ -56,12 +52,8 @@ msgstr "{label}: Pending"
 msgid "{label}: Valid"
 msgstr "{label}: Valid"
 
-#: src/components/SyncStatusIndicator.tsx:164
-msgid "{pendingOps} operation(s) pending"
-msgstr "{pendingOps} operation(s) pending"
-
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:247
+#: src/pages/Login.tsx:248
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
@@ -86,11 +78,11 @@ msgstr "✓ Notifications are enabled. You'll receive updates based on your pref
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
-#: src/App.tsx:69
+#: src/App.tsx:67
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:80
+#: src/App.tsx:78
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -144,8 +136,8 @@ msgstr "Activity Information"
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
 
-#: src/components/application-layout.tsx:224
-#: src/components/application-layout.tsx:306
+#: src/components/application-layout.tsx:226
+#: src/components/application-layout.tsx:308
 #: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Activity Logs"
@@ -193,10 +185,6 @@ msgstr "All logs"
 #: src/pages/Sites/SitesPage.tsx:156
 msgid "All Status"
 msgstr "All Status"
-
-#: src/components/SyncStatusIndicator.tsx:172
-msgid "All synced"
-msgstr "All synced"
 
 #: src/pages/Sites/SitesPage.tsx:134
 msgid "All Types"
@@ -268,7 +256,7 @@ msgstr "Back to Customers"
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
-#: src/App.tsx:91
+#: src/App.tsx:89
 #: src/components/RouteGuardState.tsx:54
 msgid "Back to Home"
 msgstr "Back to Home"
@@ -327,7 +315,7 @@ msgid "Certificate:"
 msgstr "Certificate:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:308
+#: src/pages/Login.tsx:309
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
@@ -527,8 +515,8 @@ msgstr "Customer not found"
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:208
-#: src/components/application-layout.tsx:284
+#: src/components/application-layout.tsx:210
+#: src/components/application-layout.tsx:286
 #: src/pages/Customers/CustomersPage.tsx:87
 msgid "Customers"
 msgstr "Customers"
@@ -670,7 +658,7 @@ msgid "Email"
 msgstr "Email"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:258
+#: src/pages/Login.tsx:259
 msgid "login.email"
 msgstr "Email address"
 
@@ -694,8 +682,8 @@ msgstr "Employee Management"
 msgid "Employee Number"
 msgstr "Employee Number"
 
-#: src/components/application-layout.tsx:216
-#: src/components/application-layout.tsx:295
+#: src/components/application-layout.tsx:218
+#: src/components/application-layout.tsx:297
 msgid "Employees"
 msgstr "Employees"
 
@@ -869,8 +857,8 @@ msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty fo
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:193
-#: src/components/application-layout.tsx:263
+#: src/components/application-layout.tsx:195
+#: src/components/application-layout.tsx:265
 msgid "Home"
 msgstr "Home"
 
@@ -941,11 +929,6 @@ msgstr "Last name is required"
 msgid "Last Name:"
 msgstr "Last Name:"
 
-#. placeholder {0}: lastSyncTime.toLocaleTimeString()
-#: src/components/SyncStatusIndicator.tsx:179
-msgid "Last sync: {0}"
-msgstr "Last sync: {0}"
-
 #. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
 #: src/components/OfflineDataBanner.tsx:111
 msgid "Last synced: {0}"
@@ -999,17 +982,17 @@ msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:310
+#: src/pages/Login.tsx:311
 msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:143
+#: src/pages/Login.tsx:144
 msgid "login.title"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:316
+#: src/pages/Login.tsx:317
 msgid "login.submit"
 msgstr "Log in"
 
@@ -1020,12 +1003,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:314
+#: src/pages/Login.tsx:315
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:170
+#: src/pages/Login.tsx:171
 msgid "login.offlineWarning.message"
 msgstr "Login requires an internet connection. Please check your connection and try again."
 
@@ -1160,7 +1143,7 @@ msgstr "Moving..."
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/components/application-layout.tsx:135
+#: src/components/application-layout.tsx:136
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
@@ -1220,10 +1203,6 @@ msgstr "New Site"
 msgid "Next"
 msgstr "Next"
 
-#: src/components/SyncStatusIndicator.tsx:185
-msgid "Next retry:"
-msgstr "Next retry:"
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:399
 msgid "No activity logs found."
 msgstr "No activity logs found."
@@ -1237,7 +1216,7 @@ msgid "No documents uploaded"
 msgstr "No documents uploaded"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:165
+#: src/pages/Login.tsx:166
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
@@ -1296,10 +1275,6 @@ msgstr "Notifications Enabled"
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 
-#: src/components/SyncStatusIndicator.tsx:211
-msgid "Offline - will sync when online"
-msgstr "Offline - will sync when online"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:177
 msgid "OK"
 msgstr "OK"
@@ -1332,8 +1307,8 @@ msgstr "Optional description for this unit."
 msgid "Optional description..."
 msgstr "Optional description..."
 
-#: src/components/application-layout.tsx:200
-#: src/components/application-layout.tsx:273
+#: src/components/application-layout.tsx:202
+#: src/components/application-layout.tsx:275
 msgid "Organization"
 msgstr "Organization"
 
@@ -1398,7 +1373,7 @@ msgid "Part Time"
 msgstr "Part Time"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:276
+#: src/pages/Login.tsx:277
 msgid "login.password"
 msgstr "Password"
 
@@ -1468,7 +1443,7 @@ msgid "Please try again in about 1 minute."
 msgstr "Please try again in about 1 minute."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:226
+#: src/pages/Login.tsx:227
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
@@ -1609,11 +1584,11 @@ msgstr "Search in descriptions..."
 msgid "Search sites..."
 msgstr "Search sites..."
 
-#: src/App.tsx:62
+#: src/App.tsx:60
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
-#: src/App.tsx:83
+#: src/App.tsx:81
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
@@ -1665,8 +1640,8 @@ msgstr "Send Test"
 msgid "Sent"
 msgstr "Sent"
 
-#: src/components/application-layout.tsx:141
-#: src/components/application-layout.tsx:321
+#: src/components/application-layout.tsx:142
+#: src/components/application-layout.tsx:323
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Settings"
@@ -1707,7 +1682,7 @@ msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
-#: src/components/application-layout.tsx:148
+#: src/components/application-layout.tsx:149
 msgid "Sign out"
 msgstr "Sign out"
 
@@ -1796,20 +1771,12 @@ msgstr "Subject"
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
-#: src/components/SyncStatusIndicator.tsx:204
-msgid "Sync"
-msgstr "Sync"
-
-#: src/components/SyncStatusIndicator.tsx:160
-msgid "Syncing..."
-msgstr "Syncing..."
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:446
 msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:194
+#: src/pages/Login.tsx:195
 msgid "login.healthWarning.title"
 msgstr "System not ready"
 
@@ -1857,7 +1824,7 @@ msgid "The page you requested does not exist or is no longer available."
 msgstr "The page you requested does not exist or is no longer available."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:197
+#: src/pages/Login.tsx:198
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
@@ -1899,12 +1866,8 @@ msgstr "To remove rank from employee, user must have permission to assign that r
 msgid "Too Many Attempts"
 msgstr "Too Many Attempts"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:437
-#~ msgid "Too many attempts. Please try again later."
-#~ msgstr "Too many attempts. Please try again later."
-
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:221
+#: src/pages/Login.tsx:222
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 
@@ -2022,7 +1985,7 @@ msgstr "View"
 msgid "View activity log information and verification status"
 msgstr "View activity log information and verification status"
 
-#: src/App.tsx:66
+#: src/App.tsx:64
 msgid "View Profile"
 msgstr "View Profile"
 
@@ -2047,7 +2010,7 @@ msgstr "Warning"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 
-#: src/App.tsx:59
+#: src/App.tsx:57
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
