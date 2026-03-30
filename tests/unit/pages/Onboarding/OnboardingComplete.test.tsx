@@ -289,7 +289,7 @@ describe("OnboardingComplete", () => {
       data: {
         token: "test-sanctum-token",
         user: {
-          id: 1,
+          id: "1",
           email: "john@secpal.dev",
           name: "John Doe",
         },
@@ -340,7 +340,7 @@ describe("OnboardingComplete", () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
-        id: 1,
+        id: "1",
         email: "john@secpal.dev",
         name: "John Doe",
       });

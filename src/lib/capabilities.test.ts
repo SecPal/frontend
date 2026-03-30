@@ -7,7 +7,7 @@ import { getUserCapabilities } from "./capabilities";
 describe("getUserCapabilities", () => {
   it("keeps scope-only users in self-service areas", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Scope User",
       email: "scope.user@secpal.dev",
       hasOrganizationalScopes: true,
@@ -30,7 +30,7 @@ describe("getUserCapabilities", () => {
 
   it("enables management areas for elevated organization roles", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Manager User",
       email: "manager.user@secpal.dev",
       hasOrganizationalScopes: true,
@@ -49,7 +49,7 @@ describe("getUserCapabilities", () => {
 
   it("enables customer and site features from explicit permissions", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Customer User",
       email: "customer.user@secpal.dev",
       roles: [],
@@ -66,7 +66,7 @@ describe("getUserCapabilities", () => {
 
   it("does not leak the site feature from customer-only read access", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Customer Reader",
       email: "customer.reader@secpal.dev",
       roles: [],
@@ -79,7 +79,7 @@ describe("getUserCapabilities", () => {
 
   it("does not unlock customer or site features from assignment mutation permissions alone", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Assignment Operator",
       email: "assignment.operator@secpal.dev",
       roles: [],
@@ -92,7 +92,7 @@ describe("getUserCapabilities", () => {
 
   it("enables customer and site features from backend scoped-access flags", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Scoped Access User",
       email: "scoped.access@secpal.dev",
       roles: [],
@@ -109,7 +109,7 @@ describe("getUserCapabilities", () => {
 
   it("grants action capabilities from explicit action permissions", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Action User",
       email: "action.user@secpal.dev",
       roles: [],
@@ -126,7 +126,7 @@ describe("getUserCapabilities", () => {
 
   it("grants employee action capabilities from explicit permissions with org scopes", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "Employee Manager",
       email: "emp.manager@secpal.dev",
       hasOrganizationalScopes: true,
@@ -141,7 +141,7 @@ describe("getUserCapabilities", () => {
 
   it("blocks employee action capabilities without org scopes even with matching permissions", () => {
     const capabilities = getUserCapabilities({
-      id: 1,
+      id: "1",
       name: "External User",
       email: "external.user@secpal.dev",
       hasOrganizationalScopes: false,

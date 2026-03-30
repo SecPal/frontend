@@ -74,7 +74,11 @@ describe("useAuth", () => {
   });
 
   it("revalidates a stored user before completing bootstrap", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
     const revalidatedUser = {
       ...mockUser,
       roles: ["Admin"],
@@ -106,7 +110,11 @@ describe("useAuth", () => {
   });
 
   it("does not restore auth state when bootstrap revalidation resolves after logout", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
     const revalidatedUser = {
       ...mockUser,
       roles: ["Admin"],
@@ -142,7 +150,11 @@ describe("useAuth", () => {
   });
 
   it("clears stale stored auth data when revalidation fails", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
     mockGetCurrentUser.mockRejectedValueOnce(new Error("Unauthorized"));
@@ -164,7 +176,11 @@ describe("useAuth", () => {
   });
 
   it("keeps stored auth when offline without revalidation", () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
@@ -200,7 +216,11 @@ describe("useAuth", () => {
       wrapper: AuthProvider,
     });
 
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
 
     act(() => {
       result.current.login(mockUser);
@@ -263,7 +283,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      result.current.login({ id: 1, name: "User", email: "u@e.com" });
+      result.current.login({ id: "1", name: "User", email: "u@e.com" });
     });
 
     expect(result.current.isAuthenticated).toBe(true);
@@ -498,7 +518,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     const newUser = {
-      id: 2,
+      id: "2",
       name: "Cross-Tab User",
       email: "cross@secpal.dev",
     };

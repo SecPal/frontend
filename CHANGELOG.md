@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.
 - Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
 - Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal.app` identifier-only for Android
 - Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host.

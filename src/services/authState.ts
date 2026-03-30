@@ -25,6 +25,19 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
+function sanitizeAuthUserId(value: unknown): User["id"] | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return null;
+}
+
 export function sanitizeAuthUser(
   value: unknown,
   options: SanitizeAuthUserOptions = {}
@@ -36,10 +49,10 @@ export function sanitizeAuthUser(
   const includeEmployee = options.includeEmployee ?? true;
 
   const candidate = value as Record<string, unknown>;
+  const sanitizedId = sanitizeAuthUserId(candidate.id);
 
   if (
-    typeof candidate.id !== "number" ||
-    !Number.isFinite(candidate.id) ||
+    sanitizedId === null ||
     typeof candidate.name !== "string" ||
     typeof candidate.email !== "string"
   ) {
@@ -47,7 +60,7 @@ export function sanitizeAuthUser(
   }
 
   const sanitizedUser: User = {
-    id: candidate.id,
+    id: sanitizedId,
     name: candidate.name,
     email: candidate.email,
   };

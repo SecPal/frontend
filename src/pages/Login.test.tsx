@@ -104,7 +104,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const mockResponse = {
       token: "test-token",
-      user: { id: 1, name: "Test User", email: "test@secpal.dev" },
+      user: { id: "1", name: "Test User", email: "test@secpal.dev" },
     };
     mockLogin.mockResolvedValueOnce(mockResponse);
 
@@ -294,7 +294,7 @@ describe("Login", () => {
 
     // Second call: success
     mockLogin.mockResolvedValueOnce({
-      user: { id: 1, name: "Test", email: "test@secpal.dev" },
+      user: { id: "1", name: "Test", email: "test@secpal.dev" },
     });
 
     // Second submission should clear error
@@ -632,7 +632,7 @@ describe("Login", () => {
 
       const mockLogin = vi.mocked(authApi.login);
       mockLogin.mockResolvedValueOnce({
-        user: { id: 1, name: "Test", email: "test@secpal.dev" },
+        user: { id: "1", name: "Test", email: "test@secpal.dev" },
       });
 
       renderLogin();

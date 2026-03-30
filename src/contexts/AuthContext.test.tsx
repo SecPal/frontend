@@ -335,7 +335,7 @@ describe("AuthContext", () => {
             <button
               onClick={() =>
                 auth.login({
-                  id: 1,
+                  id: "1",
                   name: "Test",
                   email: "test@test.com",
                   hasOrganizationalScopes: true,
