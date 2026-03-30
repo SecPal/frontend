@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the unused `StorageQuotaIndicator` component and its dead test coverage so the frontend no longer ships that dormant browser-storage UI surface.
+
 - Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
 - Removed the remaining legacy test suites, stale documentation, and outdated frontend schema/cache references that only existed for the deleted module
 - Removed the stale `docs/PERFORMANCE_NEXT_STEPS.md` and `docs/PERFORMANCE_README.md` planning summaries because they only captured temporary 2025 performance follow-up plans
