@@ -49,13 +49,23 @@ describe("buildOrganizationalUnitCacheEntry", () => {
   it("derives parent_id from unit.parent.id when parent is present", () => {
     const unitWithParent: OrganizationalUnit = {
       ...baseUnit,
-      parent: { id: "parent-1", type: "company", name: "HQ", created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+      parent: {
+        id: "parent-1",
+        type: "company",
+        name: "HQ",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+      },
     };
 
     const entry = buildOrganizationalUnitCacheEntry(unitWithParent);
 
     expect(entry.parent_id).toBe("parent-1");
-    expect(entry.parent).toEqual({ id: "parent-1", type: "company", name: "HQ" });
+    expect(entry.parent).toEqual({
+      id: "parent-1",
+      type: "company",
+      name: "HQ",
+    });
   });
 
   it("sets parent_id to null when unit has no parent", () => {
