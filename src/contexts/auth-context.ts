@@ -4,8 +4,10 @@
 import { createContext } from "react";
 import type { Employee } from "@/types/api";
 
+export type AuthUserId = string;
+
 export interface User {
-  id: number;
+  id: AuthUserId;
   name: string;
   email: string;
   roles?: string[];

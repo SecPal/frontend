@@ -71,13 +71,45 @@ describe("authTransport", () => {
     });
     expect(result).toEqual({
       user: {
-        id: 1,
+        id: "1",
         name: "Browser User",
         email: "browser@secpal.app",
         roles: ["Admin"],
       },
     });
     expect(result.user).not.toHaveProperty("token");
+  });
+
+  it("accepts a browser-session login payload with a UUID string id", async () => {
+    mockBrowserLogin.mockResolvedValueOnce({
+      user: {
+        id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
+        name: "Browser User",
+        email: "browser@secpal.app",
+        roles: [],
+        permissions: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      },
+    });
+
+    const transport = getAuthTransport();
+    const result = await transport.login({
+      email: "browser@secpal.app",
+      password: "password123",
+    });
+
+    expect(result).toEqual({
+      user: {
+        id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
+        name: "Browser User",
+        email: "browser@secpal.app",
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      },
+    });
   });
 
   it("uses a native bridge transport and strips raw token fields from auth state", async () => {
@@ -118,7 +150,7 @@ describe("authTransport", () => {
     expect(mockBrowserLogin).not.toHaveBeenCalled();
     expect(loginResult).toEqual({
       user: {
-        id: 7,
+        id: "7",
         name: "Native User",
         email: "native@secpal.app",
         permissions: ["profile.read"],
@@ -126,7 +158,7 @@ describe("authTransport", () => {
     });
     expect(loginResult.user).not.toHaveProperty("token");
     expect(currentUser).toEqual({
-      id: 7,
+      id: "7",
       name: "Native User",
       email: "native@secpal.app",
       permissions: ["profile.read"],
@@ -200,12 +232,37 @@ describe("authTransport", () => {
 
     expect(mockBrowserGetCurrentUser).toHaveBeenCalledOnce();
     expect(user).toEqual({
-      id: 2,
+      id: "2",
       name: "Session User",
       email: "session@secpal.app",
       roles: ["Viewer"],
     });
     expect(user).not.toHaveProperty("token");
+  });
+
+  it("accepts a browser-session current-user payload with a UUID string id", async () => {
+    mockBrowserGetCurrentUser.mockResolvedValueOnce({
+      id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
+      name: "Session User",
+      email: "session@secpal.app",
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
+
+    const transport = getAuthTransport();
+    const user = await transport.getCurrentUser();
+
+    expect(user).toEqual({
+      id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
+      name: "Session User",
+      email: "session@secpal.app",
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
   });
 
   it("delegates native bridge logout to the bridge", async () => {

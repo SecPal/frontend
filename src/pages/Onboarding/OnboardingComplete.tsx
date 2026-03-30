@@ -434,7 +434,7 @@ export function OnboardingComplete() {
 
       // Store authentication token and user data
       login({
-        id: response.data.user.id,
+        id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
       });

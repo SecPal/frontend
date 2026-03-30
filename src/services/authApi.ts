@@ -12,7 +12,7 @@ interface LoginCredentials {
 
 interface LoginResponse {
   user: {
-    id: number;
+    id: string;
     name: string;
     email: string;
     roles?: string[];

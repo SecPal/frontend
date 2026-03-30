@@ -16,7 +16,7 @@ const renderWithProviders = (
 ) => {
   const defaultAuthValue: AuthContextType = {
     user: {
-      id: 1,
+      id: "1",
       name: "John Doe",
       email: "john.doe@secpal.dev",
       roles: ["user"],
@@ -102,7 +102,7 @@ describe("ProfilePage", () => {
   it("handles user with single name", () => {
     renderWithProviders(<ProfilePage />, {
       user: {
-        id: 2,
+        id: "2",
         name: "Alice",
         email: "alice@secpal.dev",
       },
@@ -131,7 +131,7 @@ describe("ProfilePage", () => {
   it("handles user with empty name", () => {
     renderWithProviders(<ProfilePage />, {
       user: {
-        id: 3,
+        id: "3",
         name: "",
         email: "empty@secpal.dev",
       },
@@ -144,7 +144,7 @@ describe("ProfilePage", () => {
   it("handles user with whitespace-only name", () => {
     renderWithProviders(<ProfilePage />, {
       user: {
-        id: 4,
+        id: "4",
         name: "   ",
         email: "whitespace@secpal.dev",
       },
