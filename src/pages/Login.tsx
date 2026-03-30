@@ -17,6 +17,8 @@ import { Button } from "../components/button";
 import { Field, Label } from "../components/fieldset";
 import { Input } from "../components/input";
 
+const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
+
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -58,14 +60,33 @@ export function Login() {
       }
 
       try {
-        const status = await checkHealth();
-        if (isMounted) {
-          setHealthStatus(status);
-          setHealthCheckError(false);
-        }
-      } catch {
-        if (isMounted) {
-          setHealthCheckError(true);
+        for (const [attempt, retryDelay] of HEALTH_CHECK_RETRY_DELAYS_MS.entries()) {
+          if (retryDelay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          }
+
+          if (!isMounted) {
+            return;
+          }
+
+          try {
+            const status = await checkHealth();
+
+            if (isMounted) {
+              setHealthStatus(status);
+              setHealthCheckError(false);
+            }
+
+            return;
+          } catch {
+            const isLastAttempt =
+              attempt === HEALTH_CHECK_RETRY_DELAYS_MS.length - 1;
+
+            if (isMounted && isLastAttempt) {
+              setHealthStatus(null);
+              setHealthCheckError(true);
+            }
+          }
         }
       } finally {
         if (isMounted) {

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { useLingui } from "@lingui/react";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
+import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
 
 /**
  * UpdatePrompt Component
@@ -32,7 +33,7 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
  * }
  * ```
  */
-export function UpdatePrompt() {
+function BrowserUpdatePrompt() {
   const { _ } = useLingui();
   const { needRefresh, updateServiceWorker } = useServiceWorkerUpdate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -83,4 +84,12 @@ export function UpdatePrompt() {
       </div>
     </div>
   );
+}
+
+export function UpdatePrompt() {
+  if (isCapacitorNativeRuntime()) {
+    return null;
+  }
+
+  return <BrowserUpdatePrompt />;
 }

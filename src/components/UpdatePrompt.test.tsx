@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -8,9 +8,13 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { UpdatePrompt } from "./UpdatePrompt";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
+import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
 
 // Mock useServiceWorkerUpdate hook
 vi.mock("../hooks/useServiceWorkerUpdate");
+vi.mock("../lib/nativeRuntime", () => ({
+  isCapacitorNativeRuntime: vi.fn(() => false),
+}));
 
 describe("UpdatePrompt", () => {
   const mockUpdateServiceWorker = vi.fn();
@@ -28,6 +32,7 @@ describe("UpdatePrompt", () => {
       offlineReady: false,
       updateServiceWorker: mockUpdateServiceWorker,
     });
+    vi.mocked(isCapacitorNativeRuntime).mockReturnValue(false);
   });
 
   function renderWithI18n(component: React.ReactElement) {
@@ -35,6 +40,15 @@ describe("UpdatePrompt", () => {
   }
 
   describe("Visibility", () => {
+    it("should not render or register PWA updates in native runtime", () => {
+      vi.mocked(isCapacitorNativeRuntime).mockReturnValue(true);
+
+      const { container } = renderWithI18n(<UpdatePrompt />);
+
+      expect(container.firstChild).toBeNull();
+      expect(useServiceWorkerUpdate).not.toHaveBeenCalled();
+    });
+
     it("should not render when needRefresh is false", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       expect(container.firstChild).toBeNull();
