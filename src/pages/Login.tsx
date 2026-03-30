@@ -54,9 +54,11 @@ export function Login() {
         return;
       }
 
-      // Reset loading state when checking
+      // Reset loading state and stale results before (re)trying
       if (isMounted) {
         setIsHealthCheckLoading(true);
+        setHealthStatus(null);
+        setHealthCheckError(false);
       }
 
       try {

@@ -46,6 +46,7 @@ describe("nativeRuntime", () => {
     clearServiceWorker();
     sessionStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   afterEach(() => {
@@ -53,6 +54,7 @@ describe("nativeRuntime", () => {
     clearServiceWorker();
     sessionStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("isCapacitorNativeRuntime", () => {

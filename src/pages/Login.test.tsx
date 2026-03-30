@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
@@ -471,24 +477,27 @@ describe("Login", () => {
     });
 
     it("retries transient health-check failures before showing the warning", async () => {
-      vi.mocked(healthApi.checkHealth)
-        .mockRejectedValueOnce(new healthApi.HealthCheckError("Network error"))
-        .mockResolvedValueOnce(createHealthyResponse());
+      vi.useFakeTimers();
+      try {
+        vi.mocked(healthApi.checkHealth)
+          .mockRejectedValueOnce(
+            new healthApi.HealthCheckError("Network error")
+          )
+          .mockResolvedValueOnce(createHealthyResponse());
 
-      renderLogin();
+        renderLogin();
 
-      await waitFor(
-        () => {
-          expect(vi.mocked(healthApi.checkHealth)).toHaveBeenCalledTimes(2);
-        },
-        { timeout: 4000 }
-      );
+        // Flush the retry backoff timer(s) and React updates without waiting in real time.
+        await act(async () => {
+          await vi.runAllTimersAsync();
+        });
 
-      expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
-
-      await waitFor(() => {
+        expect(vi.mocked(healthApi.checkHealth)).toHaveBeenCalledTimes(2);
+        expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
         expect(screen.getByRole("button", { name: /log in/i })).toBeEnabled();
-      });
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

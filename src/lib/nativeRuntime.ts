@@ -6,7 +6,7 @@ interface CapacitorRuntime {
   getPlatform?: () => string;
 }
 
-const NATIVE_PWA_RELOAD_MARKER = "secpal.native-pwa-cleanup-reload";
+const NATIVE_PWA_RELOAD_MARKER = "secpal-native-pwa-cleanup-reload";
 
 function getCapacitorRuntime(): CapacitorRuntime | undefined {
   return (globalThis as { Capacitor?: CapacitorRuntime }).Capacitor;
@@ -79,17 +79,25 @@ export async function disableBrowserPwaStateForNativeRuntime(): Promise<boolean>
 
 export function shouldReloadAfterNativePwaCleanup(): boolean {
   if (typeof sessionStorage === "undefined") {
-    return true;
-  }
-
-  const reloadAlreadyTriggered =
-    sessionStorage.getItem(NATIVE_PWA_RELOAD_MARKER) === "1";
-
-  if (reloadAlreadyTriggered) {
-    sessionStorage.removeItem(NATIVE_PWA_RELOAD_MARKER);
     return false;
   }
 
-  sessionStorage.setItem(NATIVE_PWA_RELOAD_MARKER, "1");
-  return true;
+  try {
+    const reloadAlreadyTriggered =
+      sessionStorage.getItem(NATIVE_PWA_RELOAD_MARKER) === "1";
+
+    if (reloadAlreadyTriggered) {
+      sessionStorage.removeItem(NATIVE_PWA_RELOAD_MARKER);
+      return false;
+    }
+
+    sessionStorage.setItem(NATIVE_PWA_RELOAD_MARKER, "1");
+    return true;
+  } catch (error) {
+    console.warn(
+      "[Native Runtime] Failed to access sessionStorage for reload guard:",
+      error
+    );
+    return false;
+  }
 }
