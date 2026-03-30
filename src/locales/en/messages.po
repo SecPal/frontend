@@ -1683,8 +1683,8 @@ msgid "Showing cached data"
 msgstr "Showing cached data"
 
 #: src/components/application-layout.tsx:149
-msgid "Sign out"
-msgstr "Sign out"
+msgid "Log out"
+msgstr "Log out"
 
 #: src/pages/Sites/SiteCreate.tsx:245
 #: src/pages/Sites/SiteEdit.tsx:236

@@ -146,7 +146,7 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
       <DropdownItem onClick={onLogout}>
         <ArrowRightStartOnRectangleIcon />
         <DropdownLabel>
-          <Trans>Sign out</Trans>
+          <Trans>Log out</Trans>
         </DropdownLabel>
       </DropdownItem>
     </>

@@ -175,7 +175,7 @@ describe("ApplicationLayout", () => {
           )
         ).toBeInTheDocument();
         expect(
-          screen.getByRole("menuitem", { name: /sign out/i })
+          screen.getByRole("menuitem", { name: /log out/i })
         ).toBeInTheDocument();
       },
       SLOW_TEST_TIMEOUT
@@ -230,7 +230,7 @@ describe("ApplicationLayout", () => {
     );
 
     it(
-      "triggers logout when clicking sign out in navbar dropdown",
+      "triggers logout when clicking log out in navbar dropdown",
       async () => {
         const user = userEvent.setup();
 
@@ -242,12 +242,12 @@ describe("ApplicationLayout", () => {
 
         await openUserMenu();
 
-        const signOutItem = await screen.findByRole(
+        const logOutItem = await screen.findByRole(
           "menuitem",
-          { name: /sign out/i },
+          { name: /log out/i },
           { timeout: QUERY_TIMEOUT }
         );
-        await user.click(signOutItem);
+        await user.click(logOutItem);
 
         await waitFor(() => {
           expect(authApi.logout).toHaveBeenCalled();
@@ -260,7 +260,7 @@ describe("ApplicationLayout", () => {
   // Note: Sidebar footer with user info was removed - all user menu functionality is in the navbar.
 
   describe("logout functionality", () => {
-    it("calls logout API and clears auth on sign out click", async () => {
+    it("calls logout API and clears auth on log out click", async () => {
       const mockLogout = vi.mocked(authApi.logout);
       mockLogout.mockResolvedValue(undefined);
 
@@ -272,9 +272,11 @@ describe("ApplicationLayout", () => {
 
       await openUserMenu();
 
-      // Click sign out
-      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
-      fireEvent.click(signOutButton);
+      // Click log out
+      const logOutButton = screen.getByRole("menuitem", {
+        name: /log out/i,
+      });
+      fireEvent.click(logOutButton);
 
       await waitFor(() => {
         expect(mockLogout).toHaveBeenCalled();
@@ -302,9 +304,11 @@ describe("ApplicationLayout", () => {
 
       await openUserMenu();
 
-      // Click sign out
-      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
-      fireEvent.click(signOutButton);
+      // Click log out
+      const logOutButton = screen.getByRole("menuitem", {
+        name: /log out/i,
+      });
+      fireEvent.click(logOutButton);
 
       await waitFor(() => {
         expect(mockLogout).toHaveBeenCalled();
@@ -328,9 +332,11 @@ describe("ApplicationLayout", () => {
 
       await openUserMenu();
 
-      // Click sign out
-      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
-      fireEvent.click(signOutButton);
+      // Click log out
+      const logOutButton = screen.getByRole("menuitem", {
+        name: /log out/i,
+      });
+      fireEvent.click(logOutButton);
 
       await waitFor(() => {
         expect(mockLogout).toHaveBeenCalled();

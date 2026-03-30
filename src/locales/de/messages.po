@@ -1683,7 +1683,7 @@ msgid "Showing cached data"
 msgstr "Zeige zwischengespeicherte Daten"
 
 #: src/components/application-layout.tsx:149
-msgid "Sign out"
+msgid "Log out"
 msgstr "Abmelden"
 
 #: src/pages/Sites/SiteCreate.tsx:245
