@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -11,14 +11,14 @@ The `/organization` page is now fully offline-capable. Organizational units are 
 
 ## Implemented Changes
 
-### 1. IndexedDB Schema (v5)
+### 1. IndexedDB Schema
 
 **File:** `src/lib/db.ts`
 
 - New table: `organizationalUnitCache`
-- Schema version: 4 → 5
-- Fields: id, type, name, parent_id, created_at, updated_at, cachedAt, lastSynced, pendingSync
-- Indexes: `id, type, parent_id, updated_at, cachedAt, pendingSync`
+- Introduced in schema version 5; current live schema is version 10
+- Fields: id, type, name, parent_id, created_at, updated_at, cachedAt, lastSynced
+- Indexes: `id, type, parent_id, updated_at, cachedAt`
 
 ```typescript
 export interface OrganizationalUnitCacheEntry {
@@ -42,7 +42,6 @@ export interface OrganizationalUnitCacheEntry {
   // Offline-specific fields
   cachedAt: Date;
   lastSynced: Date;
-  pendingSync?: boolean;
 }
 ```
 
@@ -115,8 +114,8 @@ export interface UseOrganizationalUnitsWithOfflineResult {
 1. Open page → Cache loads data
 2. **Yellow Banner:** "You're offline. Viewing cached organizational units..."
 3. All data is loaded from cache
-4. Changes (Create/Edit/Delete) are saved locally
-5. Sync when connection is restored
+4. Cached read access remains available while offline
+5. Mutations stay online-only and are blocked by the UI until connectivity returns
 
 ### API Error (Online)
 
@@ -155,10 +154,10 @@ export interface UseOrganizationalUnitsWithOfflineResult {
 
 **Automatic:**
 
-- Dexie.js detects schema version 5
-- Automatically migrates from v4 → v5
-- Existing tables are preserved
-- New table `organizationalUnitCache` is created
+- Dexie.js migrates the IndexedDB schema automatically as `DB_VERSION` changes
+- The organizational-unit cache was introduced in v5
+- The current live schema is v10 and no longer keeps the stale `pendingSync` field or index
+- Existing cached records are preserved while the store definition is updated
 
 **No user action required!**
 
@@ -184,36 +183,12 @@ Implementation follows the exact pattern of `/secrets`:
 5. ✅ OrganizationPage with banners
 6. ✅ Tests for store and hook
 7. ⚠️ OrganizationalUnitTree tests need updating (mock adjustments)
-8. 📝 Service Worker: Cache strategy for `/v1/organizational-units`
+8. ✅ Authenticated organizational-unit HTTP responses remain uncached; offline reads rely on IndexedDB only
 
 ## Service Worker Integration
 
-**TODO:** Add cache strategy in `src/sw.ts`:
-
-```typescript
-// Cache organizational units list with NetworkFirst strategy
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin &&
-    url.pathname === "/v1/organizational-units" &&
-    url.search === "",
-  new NetworkFirst({
-    cacheName: "organizational-units-list-cache",
-    networkTimeoutSeconds: 5,
-  })
-);
-
-// Cache organizational unit details with NetworkFirst strategy
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin &&
-    url.pathname.match(/^\/v1\/organizational-units\/[a-f0-9-]+$/),
-  new NetworkFirst({
-    cacheName: "organizational-units-detail-cache",
-    networkTimeoutSeconds: 5,
-  })
-);
-```
+Authenticated organizational-unit API responses are intentionally not cached in the service worker.
+The supported offline path is the explicit IndexedDB cache populated from successful online reads.
 
 ## Maintenance
 
@@ -222,7 +197,7 @@ registerRoute(
 For future schema changes:
 
 1. Increment `DB_VERSION` in `db-constants.ts`
-2. Add new `db.version(X).stores({...})` in `db.ts`
+2. Update the current `db.version(DB_VERSION).stores({...})` block in `db.ts`
 3. Re-declare all existing tables
 4. Update tests
 
