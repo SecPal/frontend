@@ -58,7 +58,6 @@ export interface OrganizationalUnitCacheEntry {
   // Offline-specific fields
   cachedAt: Date;
   lastSynced: Date;
-  pendingSync?: boolean; // True if local changes haven't been synced
 }
 
 /**
@@ -73,10 +72,9 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
-// Schema version 9 - Current offline storage only
+// Schema version 10 - Current offline storage only
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
-  organizationalUnitCache:
-    "id, type, parent_id, updated_at, cachedAt, pendingSync",
+  organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
 });

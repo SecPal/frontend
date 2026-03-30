@@ -3,6 +3,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "./db";
+import { DB_VERSION } from "./db-constants";
 
 describe("IndexedDB Database", () => {
   beforeEach(async () => {
@@ -16,8 +17,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 9", () => {
-      expect(db.verno).toBe(9);
+    it(`should have version ${DB_VERSION}`, () => {
+      expect(db.verno).toBe(DB_VERSION);
     });
 
     it("keeps only the currently supported offline tables in the live schema", () => {

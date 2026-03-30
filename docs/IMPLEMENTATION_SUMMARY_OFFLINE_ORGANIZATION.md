@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -11,8 +11,9 @@ SPDX-License-Identifier: CC0-1.0
 
 1. **IndexedDB Schema v5** (`src/lib/db.ts`)
    - New table `organizationalUnitCache` with all necessary fields
-   - Indexes for performant queries (type, parent_id, pendingSync)
+   - Indexes for performant queries (type, parent_id)
    - DB_VERSION 4 → 5 (automatic migration)
+   - The current live schema later removed the unused `pendingSync` field and index
 
 2. **Store Functions** (`src/lib/organizationalUnitStore.ts`)
    - All CRUD operations for IndexedDB
@@ -30,12 +31,12 @@ SPDX-License-Identifier: CC0-1.0
 4. **OrganizationalUnitTree** (`src/components/OrganizationalUnitTree.tsx`)
    - Replaced direct API calls with offline hook
    - Tree building works even without API metadata
-   - Optimistic UI preserved
+   - Cached read-only viewing stays available without API metadata
 
 5. **OrganizationPage** (`src/pages/Organization/OrganizationPage.tsx`)
    - Offline banner (yellow): "You're offline..."
    - Stale data banner (blue): "Viewing cached data..."
-   - Full functionality in offline mode
+   - Offline mode supports cached viewing; create, edit, and delete remain online-only
 
 6. **Documentation** (`frontend/docs/OFFLINE_ORGANIZATIONAL_UNITS.md`)
    - Complete implementation documentation
