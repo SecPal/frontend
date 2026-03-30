@@ -1,8 +1,14 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
@@ -81,6 +87,10 @@ describe("Login", () => {
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
     // Default: user is online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders login form", async () => {
@@ -401,9 +411,12 @@ describe("Login", () => {
       renderLogin();
 
       // Wait for health check to complete and warning to appear
-      await waitFor(() => {
-        expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
+        },
+        { timeout: 8000 }
+      );
 
       // Button should be disabled
       const submitButton = screen.getByRole("button", { name: /log in/i });
@@ -461,6 +474,30 @@ describe("Login", () => {
         const warning = screen.getByRole("alert");
         expect(warning).toHaveAttribute("aria-live", "polite");
       });
+    });
+
+    it("retries transient health-check failures before showing the warning", async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(healthApi.checkHealth)
+          .mockRejectedValueOnce(
+            new healthApi.HealthCheckError("Network error")
+          )
+          .mockResolvedValueOnce(createHealthyResponse());
+
+        renderLogin();
+
+        // Flush the retry backoff timer(s) and React updates without waiting in real time.
+        await act(async () => {
+          await vi.runAllTimersAsync();
+        });
+
+        expect(vi.mocked(healthApi.checkHealth)).toHaveBeenCalledTimes(2);
+        expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /log in/i })).toBeEnabled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -891,9 +928,12 @@ describe("Login", () => {
       });
 
       // Should now show system not ready warning
-      await waitFor(() => {
-        expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
+        },
+        { timeout: 8000 }
+      );
 
       // Offline warning should be gone
       expect(
