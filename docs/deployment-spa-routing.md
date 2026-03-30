@@ -86,62 +86,25 @@ It also now carries the baseline browser hardening for the shipped PWA:
 
 ## Nginx Configuration
 
-For Nginx servers, add this to your server block:
+`app.secpal.dev` currently runs behind Nginx, so treat the versioned config in
+`deploy/nginx/app.secpal.dev.conf` as the source of truth for production header
+hardening and keep it aligned with the live VPS site file.
 
-```nginx
-server {
-  listen 80;
-  server_name app.secpal.dev;
-  root /var/www/app.secpal.dev;
-  index index.html;
+The file already covers:
 
-   # Never serve API/framework endpoints as the SPA shell.
-   location ~ ^/(v1|sanctum)(/|$) {
-      return 404;
-   }
+- the production CSP and `Permissions-Policy`
+- `Strict-Transport-Security`, `Referrer-Policy`, and framing protection
+- explicit `404` handling for `/v1/*`, `/sanctum/*`, and `/health*`
+- exact-match delivery rules for `/`, `/index.html`, `/sw.js`, and `/manifest.webmanifest`
+- the manifest MIME fix (`application/manifest+json`) and update-safe cache headers
 
-   location ~ ^/health(/|$) {
-      return 404;
-   }
+Use this file as your site config or merge its contents into the live server block:
 
-   # SPA routing: Serve index.html for all frontend routes only
-  location / {
-    try_files $uri $uri/ /index.html;
-  }
-
-  # Cache static assets
-  location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$ {
-    expires 1y;
-    add_header Cache-Control "public, immutable";
-  }
-
-   # Security headers
-   add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; worker-src 'self'; upgrade-insecure-requests" always;
-   add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
-   add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
-  add_header X-Content-Type-Options "nosniff" always;
-  add_header X-Frame-Options "DENY" always;
-   add_header X-XSS-Protection "0" always;
-  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-   add_header Cross-Origin-Opener-Policy "same-origin" always;
-   add_header Cross-Origin-Resource-Policy "same-origin" always;
-   add_header Origin-Agent-Cluster "?1" always;
-   add_header X-Permitted-Cross-Domain-Policies "none" always;
-
-   location = /index.html {
-      add_header Cache-Control "no-cache, no-store, must-revalidate" always;
-   }
-
-   location = /sw.js {
-      add_header Cache-Control "no-cache, no-store, must-revalidate" always;
-      add_header Service-Worker-Allowed "/" always;
-   }
-
-   location = /manifest.webmanifest {
-      default_type application/manifest+json;
-      add_header Cache-Control "no-cache, must-revalidate" always;
-   }
-}
+```bash
+sudo install -D -m 0644 deploy/nginx/app.secpal.dev.conf /etc/nginx/sites-available/app.secpal.dev.conf
+sudo ln -sf /etc/nginx/sites-available/app.secpal.dev.conf /etc/nginx/sites-enabled/app.secpal.dev.conf
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
 **Deployment Steps:**
@@ -152,17 +115,30 @@ server {
    npm run build
    ```
 
-2. Copy files to server:
+2. Build or update the live document root used by the current VPS config:
 
    ```bash
-   scp -r dist/* user@server:/var/www/app.secpal.dev/
+   npm run build
    ```
 
-3. Reload Nginx:
+3. Install or update the versioned Nginx site config:
+
+   ```bash
+   sudo install -D -m 0644 deploy/nginx/app.secpal.dev.conf /etc/nginx/sites-available/app.secpal.dev
+   sudo ln -sf /etc/nginx/sites-available/app.secpal.dev /etc/nginx/sites-enabled/app.secpal.dev
+   ```
+
+4. Reload Nginx:
 
    ```bash
    sudo nginx -t  # Test config
    sudo systemctl reload nginx
+   ```
+
+5. Verify the deployed headers:
+
+   ```bash
+   npm run test:live:pwa-headers
    ```
 
 ---

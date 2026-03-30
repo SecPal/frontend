@@ -26,6 +26,19 @@ describe("Build Output Verification", () => {
     expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
   });
 
+  it("ships a versioned Nginx config for app.secpal.dev", () => {
+    expect(
+      existsSync(path.join(repoRoot, "deploy/nginx/app.secpal.dev.conf"))
+    ).toBe(true);
+
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+
+    expect(nginxConfig).toContain("server_name app.secpal.dev;");
+    expect(nginxConfig).toContain("try_files $uri $uri/ /index.html;");
+    expect(nginxConfig).toContain("location ~ ^/(v1|sanctum)(/|$)");
+    expect(nginxConfig).toContain("location ~ ^/health(/|$)");
+  });
+
   it("keeps vite-plugin-static-copy configured for .htaccess", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
@@ -36,6 +49,7 @@ describe("Build Output Verification", () => {
 
   it("hardens browser responses with the required security headers", () => {
     const htaccess = readRepoFile("public/.htaccess");
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
 
     const requiredHeaders = [
       "Content-Security-Policy",
@@ -52,11 +66,13 @@ describe("Build Output Verification", () => {
 
     for (const header of requiredHeaders) {
       expect(htaccess).toContain(header);
+      expect(nginxConfig).toContain(header);
     }
   });
 
   it("ships an enforceable CSP that fits the PWA runtime", () => {
     const htaccess = readRepoFile("public/.htaccess");
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
 
     expect(htaccess).toContain("default-src 'self'");
     expect(htaccess).toContain("script-src 'self'");
@@ -65,6 +81,14 @@ describe("Build Output Verification", () => {
     expect(htaccess).toContain("worker-src 'self'");
     expect(htaccess).toContain("manifest-src 'self'");
     expect(htaccess).toContain("connect-src 'self'");
+
+    expect(nginxConfig).toContain("default-src 'self'");
+    expect(nginxConfig).toContain("script-src 'self'");
+    expect(nginxConfig).toContain("object-src 'none'");
+    expect(nginxConfig).toContain("frame-ancestors 'none'");
+    expect(nginxConfig).toContain("worker-src 'self'");
+    expect(nginxConfig).toContain("manifest-src 'self'");
+    expect(nginxConfig).toContain("connect-src 'self'");
   });
 
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {
@@ -77,11 +101,29 @@ describe("Build Output Verification", () => {
 
   it("adds dedicated delivery rules for service worker and manifest files", () => {
     const htaccess = readRepoFile("public/.htaccess");
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
 
     expect(htaccess).toContain('Files "sw.js"');
     expect(htaccess).toContain("Service-Worker-Allowed");
     expect(htaccess).toContain("application/manifest+json");
     expect(htaccess).toContain("manifest.webmanifest");
+
+    expect(nginxConfig).toContain("location = /sw.js");
+    expect(nginxConfig).toContain("Service-Worker-Allowed");
+    expect(nginxConfig).toContain("default_type application/manifest+json");
+    expect(nginxConfig).toContain("location = /manifest.webmanifest");
+  });
+
+  it("ships a live smoke check for deployed PWA security headers", () => {
+    expect(
+      existsSync(path.join(repoRoot, "scripts/check-live-pwa-headers.sh"))
+    ).toBe(true);
+
+    const packageJson = readRepoFile("package.json");
+
+    expect(packageJson).toContain(
+      '"test:live:pwa-headers": "bash ./scripts/check-live-pwa-headers.sh"'
+    );
   });
 
   it("keeps PWA shortcuts limited to live routes", () => {

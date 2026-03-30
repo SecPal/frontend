@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Added a versioned `deploy/nginx/app.secpal.dev.conf` production baseline plus a `test:live:pwa-headers` smoke check so the live PWA host can enforce CSP, Permissions-Policy, HSTS, Referrer-Policy, framing protection, and correct `sw.js` / `manifest.webmanifest` header delivery under Nginx instead of relying on Apache-only `.htaccess` rules.
 - Blocked the shipped Apache SPA fallback from answering `/v1/*`, `/sanctum/*`, and `/health*` with `index.html`, and documented the matching Nginx guard so API paths on `app.secpal.dev` now fail clearly instead of returning a misleading `200 text/html` shell.
 - Added a live frontend smoke script for auth-route separation so deployments can automatically fail when `app.secpal.dev/v1/me` regresses to the SPA shell or `api.secpal.dev/v1/me` stops returning JSON.
 - Hardened the browser/PWA response baseline by enforcing a production CSP without inline scripts, expanding `Permissions-Policy` and modern cross-origin headers, and serving `index.html`, `sw.js`, and `manifest.webmanifest` with update-safe cache rules so PWA security fixes propagate promptly.
