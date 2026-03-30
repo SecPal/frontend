@@ -28,10 +28,6 @@ msgstr "\"{0}\" erfolgreich erstellt"
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" erfolgreich aktualisiert"
 
-#: src/components/SyncStatusIndicator.tsx:168
-msgid "{errorOps} operation(s) failed"
-msgstr "{errorOps} Operation(en) fehlgeschlagen"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx:212
 msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
 msgstr "{fieldName} scheint eine geringfügige Korrektur zu sein ({similarity}% ähnlich)."
@@ -56,12 +52,8 @@ msgstr "{label}: Ausstehend"
 msgid "{label}: Valid"
 msgstr "{label}: Gültig"
 
-#: src/components/SyncStatusIndicator.tsx:164
-msgid "{pendingOps} operation(s) pending"
-msgstr "{pendingOps} ausstehende(r) Vorgang(e)"
-
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:247
+#: src/pages/Login.tsx:248
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
@@ -86,11 +78,11 @@ msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend au
 msgid "A new version of SecPal is available."
 msgstr "Eine neue Version von SecPal ist verfügbar."
 
-#: src/App.tsx:69
+#: src/App.tsx:67
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:80
+#: src/App.tsx:78
 msgid "About SecPal"
 msgstr "Über SecPal"
 
@@ -144,8 +136,8 @@ msgstr "Informationen zur Tätigkeit"
 msgid "Activity Log Details"
 msgstr "Details zum Aktivitätsprotokoll"
 
-#: src/components/application-layout.tsx:224
-#: src/components/application-layout.tsx:306
+#: src/components/application-layout.tsx:226
+#: src/components/application-layout.tsx:308
 #: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Aktivitätsprotokolle"
@@ -193,10 +185,6 @@ msgstr "Alle Protokolle"
 #: src/pages/Sites/SitesPage.tsx:156
 msgid "All Status"
 msgstr "Alle Status"
-
-#: src/components/SyncStatusIndicator.tsx:172
-msgid "All synced"
-msgstr "Alles synchronisiert"
 
 #: src/pages/Sites/SitesPage.tsx:134
 msgid "All Types"
@@ -268,7 +256,7 @@ msgstr "Zurück zu den Kunden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
-#: src/App.tsx:91
+#: src/App.tsx:89
 #: src/components/RouteGuardState.tsx:54
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
@@ -327,7 +315,7 @@ msgid "Certificate:"
 msgstr "Zertifikat:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:308
+#: src/pages/Login.tsx:309
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
@@ -527,8 +515,8 @@ msgstr "Kunde nicht gefunden"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
-#: src/components/application-layout.tsx:208
-#: src/components/application-layout.tsx:284
+#: src/components/application-layout.tsx:210
+#: src/components/application-layout.tsx:286
 #: src/pages/Customers/CustomersPage.tsx:87
 msgid "Customers"
 msgstr "Kunden"
@@ -670,7 +658,7 @@ msgid "Email"
 msgstr "E-Mail-Adresse"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:258
+#: src/pages/Login.tsx:259
 msgid "login.email"
 msgstr "E-Mail-Adresse"
 
@@ -694,8 +682,8 @@ msgstr "Mitarbeiter-Management"
 msgid "Employee Number"
 msgstr "Mitarbeiter Nummer"
 
-#: src/components/application-layout.tsx:216
-#: src/components/application-layout.tsx:295
+#: src/components/application-layout.tsx:218
+#: src/components/application-layout.tsx:297
 msgid "Employees"
 msgstr "Mitarbeiter"
 
@@ -869,8 +857,8 @@ msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder 
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:193
-#: src/components/application-layout.tsx:263
+#: src/components/application-layout.tsx:195
+#: src/components/application-layout.tsx:265
 msgid "Home"
 msgstr "Startseite"
 
@@ -941,11 +929,6 @@ msgstr "Nachname ist erforderlich"
 msgid "Last Name:"
 msgstr "Nachname:"
 
-#. placeholder {0}: lastSyncTime.toLocaleTimeString()
-#: src/components/SyncStatusIndicator.tsx:179
-msgid "Last sync: {0}"
-msgstr "Letzte Synchronisation: {0}"
-
 #. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
 #: src/components/OfflineDataBanner.tsx:111
 msgid "Last synced: {0}"
@@ -999,17 +982,17 @@ msgid "Loading..."
 msgstr "Laden..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:310
+#: src/pages/Login.tsx:311
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:143
+#: src/pages/Login.tsx:144
 msgid "login.title"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:316
+#: src/pages/Login.tsx:317
 msgid "login.submit"
 msgstr "Einloggen"
 
@@ -1020,12 +1003,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:314
+#: src/pages/Login.tsx:315
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:170
+#: src/pages/Login.tsx:171
 msgid "login.offlineWarning.message"
 msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
@@ -1160,7 +1143,7 @@ msgstr "Verschiebe..."
 msgid "My Organization"
 msgstr "Meine Organisation"
 
-#: src/components/application-layout.tsx:135
+#: src/components/application-layout.tsx:136
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "Mein Profil"
@@ -1220,10 +1203,6 @@ msgstr "Neuer Standort"
 msgid "Next"
 msgstr "Weiter"
 
-#: src/components/SyncStatusIndicator.tsx:185
-msgid "Next retry:"
-msgstr "Nächster Wiederholungsversuch:"
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:399
 msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
@@ -1237,7 +1216,7 @@ msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:165
+#: src/pages/Login.tsx:166
 msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
@@ -1296,10 +1275,6 @@ msgstr "Benachrichtigungen aktiviert"
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
 
-#: src/components/SyncStatusIndicator.tsx:211
-msgid "Offline - will sync when online"
-msgstr "Offline - wird synchronisiert, wenn online"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:177
 msgid "OK"
 msgstr "OK"
@@ -1332,8 +1307,8 @@ msgstr "Optionale Beschreibung für diese Einheit."
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
-#: src/components/application-layout.tsx:200
-#: src/components/application-layout.tsx:273
+#: src/components/application-layout.tsx:202
+#: src/components/application-layout.tsx:275
 msgid "Organization"
 msgstr "Organisation"
 
@@ -1398,7 +1373,7 @@ msgid "Part Time"
 msgstr "Teilzeit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:276
+#: src/pages/Login.tsx:277
 msgid "login.password"
 msgstr "Passwort"
 
@@ -1468,7 +1443,7 @@ msgid "Please try again in about 1 minute."
 msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:226
+#: src/pages/Login.tsx:227
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
@@ -1609,11 +1584,11 @@ msgstr "Suche in Beschreibungen..."
 msgid "Search sites..."
 msgstr "Standorte suchen..."
 
-#: src/App.tsx:62
+#: src/App.tsx:60
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
-#: src/App.tsx:83
+#: src/App.tsx:81
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal – A guard’s best friend. Eine offline-first progressive Web-App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management kombiniert."
 
@@ -1665,8 +1640,8 @@ msgstr "Test senden"
 msgid "Sent"
 msgstr "Gesendet"
 
-#: src/components/application-layout.tsx:141
-#: src/components/application-layout.tsx:321
+#: src/components/application-layout.tsx:142
+#: src/components/application-layout.tsx:323
 #: src/pages/Settings/SettingsPage.tsx:21
 msgid "Settings"
 msgstr "Einstellungen"
@@ -1707,7 +1682,7 @@ msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Standorten"
 msgid "Showing cached data"
 msgstr "Zeige zwischengespeicherte Daten"
 
-#: src/components/application-layout.tsx:148
+#: src/components/application-layout.tsx:149
 msgid "Sign out"
 msgstr "Abmelden"
 
@@ -1796,20 +1771,12 @@ msgstr "Thema"
 msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
 
-#: src/components/SyncStatusIndicator.tsx:204
-msgid "Sync"
-msgstr "Synchronisieren"
-
-#: src/components/SyncStatusIndicator.tsx:160
-msgid "Syncing..."
-msgstr "Synchronisieren..."
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:446
 msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:194
+#: src/pages/Login.tsx:195
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
@@ -1857,7 +1824,7 @@ msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:197
+#: src/pages/Login.tsx:198
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
@@ -1900,7 +1867,7 @@ msgid "Too Many Attempts"
 msgstr "Zu viele Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:221
+#: src/pages/Login.tsx:222
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
@@ -2018,7 +1985,7 @@ msgstr "Anzeigen"
 msgid "View activity log information and verification status"
 msgstr "Aktivitätsprotokollinformationen und Überprüfungsstatus anzeigen"
 
-#: src/App.tsx:66
+#: src/App.tsx:64
 msgid "View Profile"
 msgstr "Profil ansehen"
 
@@ -2043,7 +2010,7 @@ msgstr "Warnung"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
-#: src/App.tsx:59
+#: src/App.tsx:57
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
