@@ -16,8 +16,8 @@ describe("IndexedDB Database", () => {
       expect(db.name).toBe("SecPalDB");
     });
 
-    it("should have version 9", () => {
-      expect(db.verno).toBe(9);
+    it("should have version 10", () => {
+      expect(db.verno).toBe(10);
     });
 
     it("keeps only the currently supported offline tables in the live schema", () => {

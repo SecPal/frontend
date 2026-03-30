@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the stale `pendingSync` field and index from the offline organizational-unit schema so the reduced IndexedDB surface no longer carries leftover generic sync metadata.
+
 - Removed the stale `getPendingSyncUnits` helper and its dead organizational-unit store tests so the frontend no longer advertises an unused pending-sync browser path.
 
 - Removed the unused `StorageQuotaIndicator` component and its dead test coverage so the frontend no longer ships that dormant browser-storage UI surface.
