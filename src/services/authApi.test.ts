@@ -454,10 +454,12 @@ describe("authApi", () => {
         }),
       } as Partial<Response> as Response);
 
-      await expect(getCurrentUser()).rejects.toThrow(
+      const currentUserPromise = getCurrentUser();
+
+      await expect(currentUserPromise).rejects.toThrow(
         "Current user fetch failed: expected application/json response from API"
       );
-      await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
+      await expect(currentUserPromise).rejects.toBeInstanceOf(AuthApiError);
     });
   });
 

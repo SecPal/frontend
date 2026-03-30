@@ -54,4 +54,14 @@ describe("config", () => {
       "https://portal.customer.example/v1/auth/logout"
     );
   });
+
+  it("normalizes VITE_API_URL to its origin, stripping accidental path segments", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://api.customer.example/api");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("https://api.customer.example");
+    expect(buildApiUrl("/v1/me")).toBe("https://api.customer.example/v1/me");
+  });
 });

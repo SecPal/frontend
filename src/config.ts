@@ -66,7 +66,7 @@ export function resolveApiBaseUrl(options?: {
     );
   }
 
-  return normalizedConfiguredBaseUrl;
+  return new URL(normalizedConfiguredBaseUrl).origin;
 }
 
 export const apiConfig = {
