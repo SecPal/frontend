@@ -101,9 +101,6 @@ export interface OrganizationalUnitCacheEntry {
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
- * - Guards (employees)
- * - Sync queue (operations to sync when online)
- * - API cache (cached responses for offline access)
  * - Analytics (offline event tracking)
  * - Organizational unit cache (offline organizational structure)
  */
@@ -115,12 +112,9 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
-// Schema version 8 - Current offline storage only
+// Schema version 9 - Current offline storage only
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts, nextRetryAt",
-  apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache:
     "id, type, parent_id, updated_at, cachedAt, pendingSync",

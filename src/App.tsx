@@ -6,10 +6,8 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { SyncStatusIndicator } from "./components/SyncStatusIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
-import { useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
@@ -17,7 +15,6 @@ import { RouteNotFoundState } from "./components/RouteGuardState";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
-import { getApiBaseUrl } from "./config";
 
 // Lazy load route components for better performance
 // Login page is eagerly loaded as it's the first page users see
@@ -115,20 +112,6 @@ function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
   return (
     <FeatureRoute {...props} missingFeatureElement={<HiddenAppRouteState />} />
   );
-}
-
-function AuthenticatedSyncStatusIndicator({
-  apiBaseUrl,
-}: {
-  apiBaseUrl: string;
-}) {
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return <SyncStatusIndicator apiBaseUrl={apiBaseUrl} />;
 }
 
 function App() {
@@ -416,7 +399,6 @@ function App() {
           </Routes>
         </Suspense>
         <OfflineIndicator />
-        <AuthenticatedSyncStatusIndicator apiBaseUrl={getApiBaseUrl()} />
       </BrowserRouter>
     </AuthProvider>
   );

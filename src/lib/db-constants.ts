@@ -24,4 +24,4 @@ export const DB_NAME = "SecPalDB";
  * 1. Update this constant
  * 2. Update the single version() block in db.ts
  */
-export const DB_VERSION = 8;
+export const DB_VERSION = 9;

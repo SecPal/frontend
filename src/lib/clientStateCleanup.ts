@@ -45,9 +45,6 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
     );
 
     await Promise.all([
-      db.guards.clear(),
-      db.syncQueue.clear(),
-      db.apiCache.clear(),
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
     ]);
