@@ -62,7 +62,7 @@
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@lingui/core": "^5.9.3",
-    "@lingui/react": "^5.9.3",
+    "@lingui/react": "^5.9.4",
     "clsx": "^2.1.1",
     "dexie": "^4.4.1",
     "dexie-react-hooks": "^4.4.0",
