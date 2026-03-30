@@ -60,7 +60,6 @@ Similar to `secretStore.ts`:
 - `getOrganizationalUnitsByParent(parentId)` - Filters by parent
 - `searchOrganizationalUnits(query)` - Full-text search in names
 - `clearOrganizationalUnitCache()` - Clears entire cache
-- `getPendingSyncUnits()` - Units with unsynced changes
 
 ### 3. Offline Hook
 
