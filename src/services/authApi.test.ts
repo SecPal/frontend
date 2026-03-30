@@ -444,6 +444,23 @@ describe("authApi", () => {
       );
       await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
     });
+
+    it("fails fast when the current-user endpoint returns HTML instead of JSON", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "Content-Type": "text/html; charset=utf-8",
+        }),
+      } as Partial<Response> as Response);
+
+      const currentUserPromise = getCurrentUser();
+
+      await expect(currentUserPromise).rejects.toThrow(
+        "Current user fetch failed: expected application/json response from API"
+      );
+      await expect(currentUserPromise).rejects.toBeInstanceOf(AuthApiError);
+    });
   });
 
   describe("AuthApiError", () => {

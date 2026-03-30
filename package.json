@@ -47,6 +47,7 @@
     "test:e2e:staging": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev playwright test",
     "test:e2e:offline-logout": "cross-env CI=true PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
     "test:e2e:offline-logout:staging": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
+    "test:live:auth-routes": "bash ./scripts/check-live-auth-route-separation.sh",
     "format": "prettier --write --cache '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",

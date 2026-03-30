@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { getApiBaseUrl } from "../config";
+import { buildApiUrl } from "../config";
 import { sessionEvents, isOnline } from "./sessionEvents";
 
 /**
@@ -28,7 +28,7 @@ export class CsrfError extends Error {
  */
 export async function fetchCsrfToken(): Promise<void> {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/sanctum/csrf-cookie`, {
+    const response = await fetch(buildApiUrl("/sanctum/csrf-cookie"), {
       credentials: "include",
     });
 
@@ -102,10 +102,10 @@ const CSRF_REQUIRED_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
  * @example
  * ```ts
  * // GET request (no CSRF token needed)
- * const response = await apiFetch(`${apiConfig.baseUrl}/v1/me`);
+ * const response = await apiFetch(buildApiUrl("/v1/me"));
  *
  * // POST request (CSRF token added automatically)
- * const response = await apiFetch(`${apiConfig.baseUrl}/v1/organizational-units`, {
+ * const response = await apiFetch(buildApiUrl("/v1/organizational-units"), {
  *   method: "POST",
  *   headers: { "Content-Type": "application/json" },
  *   body: JSON.stringify(data),

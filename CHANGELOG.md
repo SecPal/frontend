@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
 - Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal.app` identifier-only for Android
 - Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host.
 - Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
@@ -48,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Blocked the shipped Apache SPA fallback from answering `/v1/*`, `/sanctum/*`, and `/health*` with `index.html`, and documented the matching Nginx guard so API paths on `app.secpal.dev` now fail clearly instead of returning a misleading `200 text/html` shell.
+- Added a live frontend smoke script for auth-route separation so deployments can automatically fail when `app.secpal.dev/v1/me` regresses to the SPA shell or `api.secpal.dev/v1/me` stops returning JSON.
 - Hardened the browser/PWA response baseline by enforcing a production CSP without inline scripts, expanding `Permissions-Policy` and modern cross-origin headers, and serving `index.html`, `sw.js`, and `manifest.webmanifest` with update-safe cache rules so PWA security fixes propagate promptly.
 
 - Reduced the shipped PWA client surface further by removing the dormant sync-status path from the runtime app shell and narrowing `SecPalDB` plus logout fallback cleanup to the currently supported offline tables so the frontend no longer ships the unused generic queue/cache runtime.

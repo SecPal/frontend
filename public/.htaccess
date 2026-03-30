@@ -7,6 +7,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # Never serve API/framework paths as the SPA shell. These routes must be
+  # handled by the canonical API host or fail clearly instead of returning HTML.
+  RewriteRule ^(?:v1|sanctum)(?:/|$) - [R=404,L]
+  RewriteRule ^health(?:/|$) - [R=404,L]
+
   # Don't rewrite files or directories that actually exist
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
