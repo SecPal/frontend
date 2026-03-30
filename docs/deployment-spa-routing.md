@@ -115,17 +115,18 @@ sudo systemctl reload nginx
    npm run build
    ```
 
-2. Build or update the live document root used by the current VPS config:
+2. Deploy the built assets to the Nginx document root configured in
+   `deploy/nginx/app.secpal.dev.conf` (adjust the path to match your server):
 
    ```bash
-   npm run build
+   rsync -av --delete dist/ /home/secpal/code/SecPal/frontend/dist/
    ```
 
 3. Install or update the versioned Nginx site config:
 
    ```bash
-   sudo install -D -m 0644 deploy/nginx/app.secpal.dev.conf /etc/nginx/sites-available/app.secpal.dev
-   sudo ln -sf /etc/nginx/sites-available/app.secpal.dev /etc/nginx/sites-enabled/app.secpal.dev
+   sudo install -D -m 0644 deploy/nginx/app.secpal.dev.conf /etc/nginx/sites-available/app.secpal.dev.conf
+   sudo ln -sf /etc/nginx/sites-available/app.secpal.dev.conf /etc/nginx/sites-enabled/app.secpal.dev.conf
    ```
 
 4. Reload Nginx:

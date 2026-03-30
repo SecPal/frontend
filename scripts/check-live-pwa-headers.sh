@@ -9,6 +9,18 @@ APP_ROOT_URL="${APP_URL%/}/"
 SERVICE_WORKER_URL="${APP_URL%/}/sw.js"
 MANIFEST_URL="${APP_URL%/}/manifest.webmanifest"
 
+# Extract headers from the last HTTP response block in a dump-header file.
+# When curl --location follows redirects, the file contains one block per
+# response; only the final block carries the headers we want to assert.
+last_response_headers() {
+    local raw="$1"
+    printf '%s\n' "$raw" | awk '
+        /^HTTP\/[0-9.]+ / { block = "" }
+        { block = block "\n" $0 }
+        END { print block }
+    '
+}
+
 get_header_value() {
     local headers="$1"
     local header_name="$2"
@@ -23,6 +35,11 @@ get_header_value() {
             exit
         }
     '
+}
+
+get_status_code() {
+    local headers="$1"
+    printf '%s\n' "$headers" | awk '/^HTTP\/[0-9.]+ / { code = $2 } END { if (code != "") print code }'
 }
 
 request_headers() {
@@ -65,6 +82,20 @@ assert_header_contains() {
     fi
 }
 
+assert_status_ok() {
+    local headers="$1"
+    local url="$2"
+    local status
+
+    status="$(get_status_code "$headers")"
+
+    if [[ "$status" != "200" ]]; then
+        echo "ERROR: expected HTTP 200 for ${url}"
+        echo "  actual status: ${status}"
+        exit 1
+    fi
+}
+
 assert_common_hardening() {
     local headers="$1"
     local label="$2"
@@ -81,20 +112,26 @@ assert_common_hardening() {
 
 echo "Checking live PWA hardening on ${APP_URL}"
 
-app_headers="$(request_headers "$APP_ROOT_URL")"
+app_raw="$(request_headers "$APP_ROOT_URL")"
+app_headers="$(last_response_headers "$app_raw")"
+assert_status_ok "$app_raw" "$APP_ROOT_URL"
 assert_common_hardening "$app_headers" "$APP_ROOT_URL"
 assert_header_contains "$app_headers" "Cache-Control" "no-cache"
 assert_header_contains "$app_headers" "Cache-Control" "no-store"
 assert_header_contains "$app_headers" "Cache-Control" "must-revalidate"
 
-sw_headers="$(request_headers "$SERVICE_WORKER_URL")"
+sw_raw="$(request_headers "$SERVICE_WORKER_URL")"
+sw_headers="$(last_response_headers "$sw_raw")"
+assert_status_ok "$sw_raw" "$SERVICE_WORKER_URL"
 assert_common_hardening "$sw_headers" "$SERVICE_WORKER_URL"
 assert_header_contains "$sw_headers" "Cache-Control" "no-cache"
 assert_header_contains "$sw_headers" "Cache-Control" "no-store"
 assert_header_contains "$sw_headers" "Cache-Control" "must-revalidate"
 assert_header_contains "$sw_headers" "Service-Worker-Allowed" "/"
 
-manifest_headers="$(request_headers "$MANIFEST_URL")"
+manifest_raw="$(request_headers "$MANIFEST_URL")"
+manifest_headers="$(last_response_headers "$manifest_raw")"
+assert_status_ok "$manifest_raw" "$MANIFEST_URL"
 assert_common_hardening "$manifest_headers" "$MANIFEST_URL"
 assert_header_contains "$manifest_headers" "Content-Type" "application/manifest+json"
 assert_header_contains "$manifest_headers" "Cache-Control" "no-cache"
