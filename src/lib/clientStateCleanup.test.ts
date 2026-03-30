@@ -43,27 +43,6 @@ describe("clearSensitiveClientState", () => {
     localStorage.setItem("locale", "de");
     sessionStorage.setItem("share-draft", "pending");
 
-    await db.guards.add({
-      id: "guard-1",
-      name: "Guard",
-      email: "guard@secpal.dev",
-      lastSynced: new Date(),
-    });
-    await db.syncQueue.add({
-      id: "sync-1",
-      type: "create",
-      entity: "organizational-unit",
-      data: { id: "org-1" },
-      status: "pending",
-      createdAt: new Date(),
-      attempts: 0,
-    });
-    await db.apiCache.put({
-      url: "/v1/organizational-units",
-      data: [{ id: "org-1" }],
-      cachedAt: new Date(),
-      expiresAt: new Date(Date.now() + 60_000),
-    });
     await db.analytics.add({
       type: "page_view",
       category: "navigation",
@@ -107,9 +86,6 @@ describe("clearSensitiveClientState", () => {
 
     await db.open();
 
-    expect(await db.guards.count()).toBe(0);
-    expect(await db.syncQueue.count()).toBe(0);
-    expect(await db.apiCache.count()).toBe(0);
     expect(await db.analytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(0);
 
@@ -130,27 +106,6 @@ describe("clearSensitiveClientState", () => {
     );
     sessionStorage.setItem("share-draft", "pending");
 
-    await db.guards.add({
-      id: "guard-1",
-      name: "Guard",
-      email: "guard@secpal.dev",
-      lastSynced: new Date(),
-    });
-    await db.syncQueue.add({
-      id: "sync-1",
-      type: "create",
-      entity: "organizational-unit",
-      data: { id: "org-1" },
-      status: "pending",
-      createdAt: new Date(),
-      attempts: 0,
-    });
-    await db.apiCache.put({
-      url: "/v1/organizational-units",
-      data: [{ id: "org-1" }],
-      cachedAt: new Date(),
-      expiresAt: new Date(Date.now() + 60_000),
-    });
     await db.analytics.add({
       type: "page_view",
       category: "navigation",
@@ -181,9 +136,6 @@ describe("clearSensitiveClientState", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(sessionStorage.length).toBe(0);
-    expect(await db.guards.count()).toBe(0);
-    expect(await db.syncQueue.count()).toBe(0);
-    expect(await db.apiCache.count()).toBe(0);
     expect(await db.analytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(0);
   });

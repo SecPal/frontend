@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Hardened the browser/PWA response baseline by enforcing a production CSP without inline scripts, expanding `Permissions-Policy` and modern cross-origin headers, and serving `index.html`, `sw.js`, and `manifest.webmanifest` with update-safe cache rules so PWA security fixes propagate promptly.
 
+- Reduced the shipped PWA client surface further by removing the dormant sync-status path from the runtime app shell and narrowing `SecPalDB` plus logout fallback cleanup to the currently supported offline tables so the frontend no longer ships the unused generic queue/cache runtime.
+
 - Reduced the shipped PWA client surface further by stripping offline organizational-unit cache entries down to route/tree fields and removing dead manifest shortcuts that pointed to non-existent routes.
 
 - Reduced shared-device post-logout bleed further by clearing stored notification preferences during logout cleanup, and added regression coverage for the IndexedDB table-clearing fallback when deleting `SecPalDB` is blocked.

@@ -4,42 +4,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import { DB_NAME, DB_VERSION } from "./db-constants";
 
-/**
- * Guard entity stored in IndexedDB
- */
-export interface Guard {
-  id: string;
-  name: string;
-  email: string;
-  lastSynced: Date;
-}
-
-/**
- * Sync operation for offline queue
- */
-export interface SyncOperation {
-  id: string;
-  type: "create" | "update" | "delete";
-  entity: string;
-  data: unknown;
-  status: "pending" | "synced" | "error";
-  createdAt: Date;
-  attempts: number;
-  lastAttemptAt?: Date;
-  nextRetryAt?: Date;
-  error?: string;
-}
-
-/**
- * API response cache entry
- */
-export interface ApiCacheEntry {
-  url: string;
-  data: unknown;
-  cachedAt: Date;
-  expiresAt: Date;
-}
-
 export type AnalyticsEventType =
   | "page_view"
   | "button_click"
@@ -101,26 +65,17 @@ export interface OrganizationalUnitCacheEntry {
  * SecPal IndexedDB database
  *
  * Provides offline-first storage for:
- * - Guards (employees)
- * - Sync queue (operations to sync when online)
- * - API cache (cached responses for offline access)
  * - Analytics (offline event tracking)
  * - Organizational unit cache (offline organizational structure)
  */
 export const db = new Dexie(DB_NAME) as Dexie & {
-  guards: EntityTable<Guard, "id">;
-  syncQueue: EntityTable<SyncOperation, "id">;
-  apiCache: EntityTable<ApiCacheEntry, "url">;
   analytics: EntityTable<AnalyticsEvent, "id">;
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
 };
 
-// Schema version 8 - Current offline storage only
+// Schema version 9 - Current offline storage only
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
-  guards: "id, email, lastSynced",
-  syncQueue: "id, entity, status, createdAt, attempts, nextRetryAt",
-  apiCache: "url, expiresAt",
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache:
     "id, type, parent_id, updated_at, cachedAt, pendingSync",
