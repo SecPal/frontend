@@ -170,24 +170,3 @@ export async function searchOrganizationalUnits(
 export async function clearOrganizationalUnitCache(): Promise<void> {
   await db.organizationalUnitCache.clear();
 }
-
-/**
- * Get organizational units with pending sync
- *
- * @returns Array of organizational units that have local changes not yet synced
- *
- * @example
- * ```ts
- * const pendingUnits = await getPendingSyncUnits();
- * console.log(`${pendingUnits.length} units need to be synced`);
- * ```
- */
-export async function getPendingSyncUnits(): Promise<
-  OrganizationalUnitCacheEntry[]
-> {
-  // Filter units where pendingSync is explicitly true
-  const allUnits = await db.organizationalUnitCache.toArray();
-  const units = allUnits.filter((unit) => unit.pendingSync === true);
-
-  return units.sort((a, b) => a.name.localeCompare(b.name));
-}

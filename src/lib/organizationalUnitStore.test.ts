@@ -13,7 +13,6 @@ import {
   getOrganizationalUnitsByParent,
   searchOrganizationalUnits,
   clearOrganizationalUnitCache,
-  getPendingSyncUnits,
 } from "./organizationalUnitStore";
 
 /**
@@ -397,57 +396,6 @@ describe("OrganizationalUnitStore", () => {
 
       await clearOrganizationalUnitCache();
       expect(await db.organizationalUnitCache.count()).toBe(0);
-    });
-  });
-
-  describe("getPendingSyncUnits", () => {
-    it("should return units with pendingSync flag", async () => {
-      const units: OrganizationalUnitCacheEntry[] = [
-        {
-          id: "unit-1",
-          type: "branch",
-          name: "Berlin Branch",
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-01T00:00:00Z",
-          cachedAt: new Date("2025-01-10T00:00:00Z"),
-          lastSynced: new Date("2025-01-10T00:00:00Z"),
-          pendingSync: true,
-        },
-        {
-          id: "unit-2",
-          type: "company",
-          name: "SecPal GmbH",
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-01T00:00:00Z",
-          cachedAt: new Date("2025-01-10T00:00:00Z"),
-          lastSynced: new Date("2025-01-10T00:00:00Z"),
-          pendingSync: false,
-        },
-        {
-          id: "unit-3",
-          type: "branch",
-          name: "Hamburg Branch",
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-01T00:00:00Z",
-          cachedAt: new Date("2025-01-10T00:00:00Z"),
-          lastSynced: new Date("2025-01-10T00:00:00Z"),
-          pendingSync: true,
-        },
-      ];
-
-      await Promise.all(
-        units.map((unit) => db.organizationalUnitCache.put(unit))
-      );
-
-      const pending = await getPendingSyncUnits();
-      expect(pending).toHaveLength(2);
-      expect(pending[0]!.name).toBe("Berlin Branch");
-      expect(pending[1]!.name).toBe("Hamburg Branch");
-    });
-
-    it("should return empty array when no pending units", async () => {
-      const pending = await getPendingSyncUnits();
-      expect(pending).toEqual([]);
     });
   });
 });
