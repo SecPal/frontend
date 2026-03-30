@@ -85,7 +85,7 @@ describe("authTransport", () => {
       user: {
         id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
         name: "Browser User",
-        email: "browser@secpal.app",
+        email: "uuid.browser@secpal.dev",
         roles: [],
         permissions: [],
         hasOrganizationalScopes: false,
@@ -96,7 +96,7 @@ describe("authTransport", () => {
 
     const transport = getAuthTransport();
     const result = await transport.login({
-      email: "browser@secpal.app",
+      email: "uuid.browser@secpal.dev",
       password: "password123",
     });
 
@@ -104,7 +104,7 @@ describe("authTransport", () => {
       user: {
         id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
         name: "Browser User",
-        email: "browser@secpal.app",
+        email: "uuid.browser@secpal.dev",
         hasOrganizationalScopes: false,
         hasCustomerAccess: false,
         hasSiteAccess: false,
@@ -244,7 +244,7 @@ describe("authTransport", () => {
     mockBrowserGetCurrentUser.mockResolvedValueOnce({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Session User",
-      email: "session@secpal.app",
+      email: "uuid.session@secpal.dev",
       roles: [],
       permissions: [],
       hasOrganizationalScopes: false,
@@ -258,7 +258,7 @@ describe("authTransport", () => {
     expect(user).toEqual({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Session User",
-      email: "session@secpal.app",
+      email: "uuid.session@secpal.dev",
       hasOrganizationalScopes: false,
       hasCustomerAccess: false,
       hasSiteAccess: false,

@@ -9,7 +9,7 @@ describe("authState", () => {
     const sanitizedUser = sanitizeAuthUser({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
       roles: [],
       permissions: [],
       hasOrganizationalScopes: false,
@@ -20,7 +20,7 @@ describe("authState", () => {
     expect(sanitizedUser).toEqual({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
       hasOrganizationalScopes: false,
       hasCustomerAccess: false,
       hasSiteAccess: false,
@@ -70,13 +70,13 @@ describe("authState", () => {
     const sanitizedUser = sanitizePersistedAuthUser({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Persisted User",
-      email: "persisted@secpal.app",
+      email: "persisted@secpal.dev",
     });
 
     expect(sanitizedUser).toEqual({
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Persisted User",
-      email: "persisted@secpal.app",
+      email: "persisted@secpal.dev",
     });
   });
 });

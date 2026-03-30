@@ -27,7 +27,8 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
 
 function sanitizeAuthUserId(value: unknown): User["id"] | null {
   if (typeof value === "string") {
-    return value.trim().length > 0 ? value : null;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
   }
 
   if (typeof value === "number" && Number.isFinite(value)) {
