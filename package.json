@@ -78,7 +78,7 @@
     "@fontsource/inter": "^5.2.8",
     "@lingui/babel-plugin-lingui-macro": "^5.9.3",
     "@lingui/cli": "^5.9.1",
-    "@lingui/macro": "^5.9.3",
+    "@lingui/macro": "^5.9.4",
     "@lingui/vite-plugin": "^5.9.4",
     "@playwright/test": "^1.58.2",
     "@rolldown/plugin-babel": "^0.2.2",
