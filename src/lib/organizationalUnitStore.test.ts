@@ -1,10 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { db } from "./db";
 import type { OrganizationalUnitCacheEntry } from "./db";
+import type { OrganizationalUnit } from "../types/organizational";
 import {
+  buildOrganizationalUnitCacheEntry,
   saveOrganizationalUnit,
   getOrganizationalUnit,
   listOrganizationalUnits,
@@ -14,6 +16,83 @@ import {
   searchOrganizationalUnits,
   clearOrganizationalUnitCache,
 } from "./organizationalUnitStore";
+
+describe("buildOrganizationalUnitCacheEntry", () => {
+  const baseUnit: OrganizationalUnit = {
+    id: "unit-1",
+    type: "branch",
+    name: "Berlin Branch",
+    custom_type_name: null,
+    description: "A description that must not be cached",
+    metadata: { key: "value" },
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-02T00:00:00Z",
+  };
+
+  it("maps route/tree fields correctly", () => {
+    const entry = buildOrganizationalUnitCacheEntry(baseUnit);
+
+    expect(entry.id).toBe("unit-1");
+    expect(entry.type).toBe("branch");
+    expect(entry.name).toBe("Berlin Branch");
+    expect(entry.created_at).toBe("2025-01-01T00:00:00Z");
+    expect(entry.updated_at).toBe("2025-01-02T00:00:00Z");
+  });
+
+  it("omits description and metadata fields from the cache entry", () => {
+    const entry = buildOrganizationalUnitCacheEntry(baseUnit);
+
+    expect(entry).not.toHaveProperty("description");
+    expect(entry).not.toHaveProperty("metadata");
+  });
+
+  it("derives parent_id from unit.parent.id when parent is present", () => {
+    const unitWithParent: OrganizationalUnit = {
+      ...baseUnit,
+      parent: {
+        id: "parent-1",
+        type: "company",
+        name: "HQ",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
+      },
+    };
+
+    const entry = buildOrganizationalUnitCacheEntry(unitWithParent);
+
+    expect(entry.parent_id).toBe("parent-1");
+    expect(entry.parent).toEqual({
+      id: "parent-1",
+      type: "company",
+      name: "HQ",
+    });
+  });
+
+  it("sets parent_id to null when unit has no parent", () => {
+    const entry = buildOrganizationalUnitCacheEntry(baseUnit);
+
+    expect(entry.parent_id).toBeNull();
+    expect(entry.parent).toBeNull();
+  });
+
+  it("defaults cachedAt and lastSynced to current time when syncedAt is omitted", () => {
+    const before = new Date();
+    const entry = buildOrganizationalUnitCacheEntry(baseUnit);
+    const after = new Date();
+
+    expect(entry.cachedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(entry.cachedAt.getTime()).toBeLessThanOrEqual(after.getTime());
+    expect(entry.lastSynced).toEqual(entry.cachedAt);
+  });
+
+  it("uses explicit syncedAt when provided", () => {
+    const syncedAt = new Date("2026-01-15T10:00:00Z");
+    const entry = buildOrganizationalUnitCacheEntry(baseUnit, syncedAt);
+
+    expect(entry.cachedAt).toBe(syncedAt);
+    expect(entry.lastSynced).toBe(syncedAt);
+  });
+});
 
 /**
  * Test suite for OrganizationalUnitStore (IndexedDB organizational unit caching)
@@ -36,7 +115,6 @@ describe("OrganizationalUnitStore", () => {
         id: "unit-1",
         type: "branch",
         name: "Berlin Branch",
-        description: "Main branch in Berlin",
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
         cachedAt: new Date("2025-01-10T00:00:00Z"),

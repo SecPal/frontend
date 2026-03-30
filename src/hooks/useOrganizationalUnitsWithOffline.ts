@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -8,6 +8,7 @@ import {
   saveOrganizationalUnit,
   listOrganizationalUnits as listCachedOrganizationalUnits,
   clearOrganizationalUnitCache,
+  buildOrganizationalUnitCacheEntry,
 } from "../lib/organizationalUnitStore";
 import type { OrganizationalUnitCacheEntry } from "../lib/db";
 import { useOnlineStatus } from "./useOnlineStatus";
@@ -45,8 +46,6 @@ function cacheEntryToOrganizationalUnit(
     type: entry.type,
     name: entry.name,
     custom_type_name: entry.custom_type_name ?? undefined,
-    description: entry.description ?? undefined,
-    metadata: entry.metadata,
     parent: entry.parent
       ? {
           id: entry.parent.id,
@@ -58,35 +57,6 @@ function cacheEntryToOrganizationalUnit(
       : undefined,
     created_at: entry.created_at,
     updated_at: entry.updated_at,
-  };
-}
-
-/**
- * Convert OrganizationalUnit to OrganizationalUnitCacheEntry for storage
- */
-function organizationalUnitToCacheEntry(
-  unit: OrganizationalUnit
-): OrganizationalUnitCacheEntry {
-  const now = new Date();
-  return {
-    id: unit.id,
-    type: unit.type,
-    name: unit.name,
-    custom_type_name: unit.custom_type_name ?? undefined,
-    description: unit.description ?? undefined,
-    metadata: unit.metadata,
-    parent_id: unit.parent?.id ?? null,
-    parent: unit.parent
-      ? {
-          id: unit.parent.id,
-          type: unit.parent.type,
-          name: unit.parent.name,
-        }
-      : null,
-    created_at: unit.created_at,
-    updated_at: unit.updated_at,
-    cachedAt: now,
-    lastSynced: now,
   };
 }
 
@@ -169,7 +139,7 @@ export function useOrganizationalUnitsWithOffline(): UseOrganizationalUnitsWithO
     // Cache all units for offline access
     await Promise.all(
       response.data.map((unit) =>
-        saveOrganizationalUnit(organizationalUnitToCacheEntry(unit))
+        saveOrganizationalUnit(buildOrganizationalUnitCacheEntry(unit))
       )
     );
 

@@ -83,6 +83,15 @@ describe("Build Output Verification", () => {
     expect(htaccess).toContain("application/manifest+json");
     expect(htaccess).toContain("manifest.webmanifest");
   });
+
+  it("keeps PWA shortcuts limited to live routes", () => {
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).toContain('url: "/profile"');
+    expect(viteConfig).not.toContain('url: "/schedule"');
+    expect(viteConfig).not.toContain('url: "/reports/new"');
+    expect(viteConfig).not.toContain('url: "/emergency"');
+  });
 });
 
 /**
