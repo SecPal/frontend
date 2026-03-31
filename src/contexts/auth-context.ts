@@ -5,6 +5,7 @@ import { createContext } from "react";
 import type { Employee } from "@/types/api";
 
 export type AuthUserId = string;
+export type AuthBootstrapRecoveryReason = "timeout" | "network";
 
 export interface User {
   id: AuthUserId;
@@ -22,8 +23,10 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  bootstrapRecoveryReason: AuthBootstrapRecoveryReason | null;
   login: (user: User) => void;
   logout: () => void;
+  retryBootstrap: () => void;
   /**
    * Check if user has a specific role
    */

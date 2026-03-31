@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -110,7 +110,11 @@ describe("ProtectedRoute", () => {
   });
 
   it("redirects to login after stored auth revalidation fails", async () => {
-    mockGetCurrentUser.mockRejectedValueOnce(new Error("Unauthorized"));
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(new Error("Unauthorized"), {
+        code: "HTTP_401",
+      })
+    );
 
     localStorage.setItem(
       "auth_user",
@@ -126,6 +130,77 @@ describe("ProtectedRoute", () => {
     });
 
     expect(screen.getByText(/redirected to \/login/i)).toBeInTheDocument();
+  });
+
+  it("shows a retry recovery state instead of spinning forever when bootstrap stalls", async () => {
+    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+    vi.useFakeTimers();
+
+    try {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+      );
+
+      renderProtectedRoute();
+
+      await act(async () => {
+        vi.advanceTimersByTime(3500);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("heading", {
+          name: /still loading your secure session/i,
+        })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /go to login/i })).toBeInTheDocument();
+      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries bootstrap recovery when the user requests it", async () => {
+    const pendingBootstrap = new Promise(() => undefined);
+
+    mockGetCurrentUser
+      .mockReturnValueOnce(pendingBootstrap)
+      .mockResolvedValueOnce({
+        id: 1,
+        name: "Recovered User",
+        email: "recovered@secpal.dev",
+      });
+
+    vi.useFakeTimers();
+
+    try {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+      );
+
+      renderProtectedRoute();
+
+      await act(async () => {
+        vi.advanceTimersByTime(3500);
+        await Promise.resolve();
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+      expect(mockNavigate).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows loading state initially", () => {

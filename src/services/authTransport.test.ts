@@ -80,6 +80,20 @@ describe("authTransport", () => {
     expect(result.user).not.toHaveProperty("token");
   });
 
+  it("reports browser network availability from navigator.onLine", async () => {
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(false);
+
+    try {
+      const transport = getAuthTransport();
+
+      await expect(transport.isNetworkAvailable()).resolves.toBe(false);
+    } finally {
+      onLineSpy.mockRestore();
+    }
+  });
+
   it("accepts a browser-session login payload with a UUID string id", async () => {
     mockBrowserLogin.mockResolvedValueOnce({
       user: {
@@ -133,6 +147,7 @@ describe("authTransport", () => {
         permissions: ["profile.read"],
         token: "native-secret",
       }),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
@@ -164,6 +179,8 @@ describe("authTransport", () => {
       permissions: ["profile.read"],
     });
     expect(currentUser).not.toHaveProperty("token");
+    await expect(transport.isNetworkAvailable()).resolves.toBe(true);
+    expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledOnce();
   });
 
   it("rejects invalid native payloads before they can become auth state", async () => {
@@ -172,6 +189,7 @@ describe("authTransport", () => {
       logout: vi.fn().mockResolvedValue(undefined),
       logoutAll: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockResolvedValue({ token: "native-secret" }),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
@@ -191,6 +209,7 @@ describe("authTransport", () => {
       login: vi.fn().mockResolvedValue(undefined),
       logout: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockResolvedValue({ token: "native-secret" }),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
@@ -271,6 +290,7 @@ describe("authTransport", () => {
       logout: vi.fn().mockResolvedValue(undefined),
       logoutAll: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockResolvedValue(undefined),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
@@ -286,6 +306,7 @@ describe("authTransport", () => {
       logout: vi.fn().mockResolvedValue(undefined),
       logoutAll: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockResolvedValue(undefined),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
@@ -307,5 +328,24 @@ describe("authTransport", () => {
     await expect(transport.logoutAll()).rejects.toThrow(
       "Native auth transport does not support logout-all"
     );
+  });
+
+  it("falls back to navigator.onLine when a native bridge does not expose connectivity status", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(false);
+
+    try {
+      const transport = resolveAuthTransport({ nativeBridge });
+
+      await expect(transport.isNetworkAvailable()).resolves.toBe(false);
+    } finally {
+      onLineSpy.mockRestore();
+    }
   });
 });

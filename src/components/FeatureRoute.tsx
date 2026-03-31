@@ -5,7 +5,11 @@ import { Navigate } from "react-router-dom";
 import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
-import { RouteAccessDeniedState, RouteLoadingState } from "./RouteGuardState";
+import {
+  RouteAccessDeniedState,
+  RouteBootstrapRecoveryState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface FeatureRouteProps {
   children: React.ReactNode;
@@ -24,11 +28,27 @@ export function FeatureRoute({
   requiredAction,
   deniedActionElement = <RouteAccessDeniedState />,
 }: FeatureRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isLoading,
+    logout,
+    retryBootstrap,
+  } = useAuth();
   const capabilities = useUserCapabilities();
 
   if (isLoading) {
     return <RouteLoadingState />;
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
+    );
   }
 
   if (!isAuthenticated) {
