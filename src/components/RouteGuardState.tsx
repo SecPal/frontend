@@ -32,7 +32,7 @@ export function RouteBootstrapRecoveryState({
 }: RouteBootstrapRecoveryStateProps) {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="max-w-md text-center" role="alert" aria-live="polite">
+      <div className="max-w-md text-center" role="status" aria-live="polite">
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Still loading your secure session</Trans>
         </h1>

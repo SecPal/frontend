@@ -3,7 +3,10 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { AuthProvider } from "../contexts/AuthContext";
+import {
+  AuthProvider,
+  BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
+} from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
@@ -304,7 +307,7 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(true);
 
       await act(async () => {
-        vi.advanceTimersByTime(3500);
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
         await Promise.resolve();
       });
 
