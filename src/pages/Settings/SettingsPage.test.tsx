@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -8,6 +8,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SettingsPage } from "./SettingsPage";
 import * as i18nModule from "../../i18n";
+import * as authApi from "../../services/authApi";
 
 // Mock the i18n module
 vi.mock("../../i18n", async () => {
@@ -20,6 +21,16 @@ vi.mock("../../i18n", async () => {
   };
 });
 
+vi.mock("../../services/authApi", async () => {
+  const actual = await vi.importActual("../../services/authApi");
+  return {
+    ...actual,
+    getMfaStatus: vi.fn(),
+    regenerateRecoveryCodes: vi.fn(),
+    disableMfa: vi.fn(),
+  };
+});
+
 // Helper to render with all required providers
 const renderWithProviders = (component: React.ReactNode) => {
   return render(
@@ -29,24 +40,77 @@ const renderWithProviders = (component: React.ReactNode) => {
   );
 };
 
+async function renderSettingsPage() {
+  renderWithProviders(<SettingsPage />);
+  await screen.findByText(/not enabled/i);
+}
+
+function createDisabledMfaStatusResponse() {
+  return {
+    data: {
+      enabled: false,
+      method: null,
+      recovery_codes_remaining: 0,
+      recovery_codes_generated_at: null,
+      enrolled_at: null,
+    },
+  };
+}
+
+function createEnabledMfaStatusResponse() {
+  return {
+    data: {
+      enabled: true,
+      method: "totp" as const,
+      recovery_codes_remaining: 10,
+      recovery_codes_generated_at: "2026-04-01T09:12:00Z",
+      enrolled_at: "2026-04-01T09:10:00Z",
+    },
+  };
+}
+
+function createRecoveryRevealResponse() {
+  return {
+    data: {
+      status: createEnabledMfaStatusResponse().data,
+      recovery_codes: {
+        codes: [
+          "B6F4-2Q8P",
+          "F9LM-7N2R",
+          "HT4V-3KQ1",
+          "J8PW-6CX5",
+          "M2TR-9DZ7",
+          "Q4YS-8LB2",
+          "V7NK-5HF9",
+          "X3CE-1RM6",
+        ],
+        generated_at: "2026-04-01T09:12:00Z",
+      },
+    },
+  };
+}
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup i18n with English locale
     i18n.load("en", {});
     i18n.activate("en");
+    vi.mocked(authApi.getMfaStatus).mockResolvedValue(
+      createDisabledMfaStatusResponse()
+    );
   });
 
-  it("renders the settings page with heading", () => {
-    renderWithProviders(<SettingsPage />);
+  it("renders the settings page with heading", async () => {
+    await renderSettingsPage();
 
     expect(
       screen.getByRole("heading", { name: /settings/i })
     ).toBeInTheDocument();
   });
 
-  it("displays language selection section", () => {
-    renderWithProviders(<SettingsPage />);
+  it("displays language selection section", async () => {
+    await renderSettingsPage();
 
     // Language heading should exist
     expect(
@@ -57,8 +121,8 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows current language as selected", () => {
-    renderWithProviders(<SettingsPage />);
+  it("shows current language as selected", async () => {
+    await renderSettingsPage();
 
     const select = screen.getByRole("combobox", { name: /select language/i });
     expect(select).toHaveValue("en");
@@ -69,7 +133,7 @@ describe("SettingsPage", () => {
     const mockSetLocalePreference = vi.mocked(i18nModule.setLocalePreference);
     mockActivateLocale.mockResolvedValueOnce(undefined);
 
-    renderWithProviders(<SettingsPage />);
+    await renderSettingsPage();
 
     const select = screen.getByRole("combobox", { name: /select language/i });
     fireEvent.change(select, { target: { value: "de" } });
@@ -80,16 +144,16 @@ describe("SettingsPage", () => {
     });
   });
 
-  it("displays description text for language setting", () => {
-    renderWithProviders(<SettingsPage />);
+  it("displays description text for language setting", async () => {
+    await renderSettingsPage();
 
     expect(
       screen.getByText(/choose.*preferred.*language/i)
     ).toBeInTheDocument();
   });
 
-  it("has proper heading hierarchy", () => {
-    renderWithProviders(<SettingsPage />);
+  it("has proper heading hierarchy", async () => {
+    await renderSettingsPage();
 
     // Main heading should be h1 (via Heading component)
     const mainHeading = screen.getByRole("heading", { name: /settings/i });
@@ -98,5 +162,79 @@ describe("SettingsPage", () => {
     // Language section heading should be h2
     const languageHeading = screen.getByRole("heading", { name: /language/i });
     expect(languageHeading.tagName).toBe("H2");
+  });
+
+  it("regenerates recovery codes for an enabled MFA account", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    vi.mocked(authApi.regenerateRecoveryCodes).mockResolvedValueOnce(
+      createRecoveryRevealResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /regenerate recovery codes/i })
+    );
+
+    await screen.findByRole("heading", {
+      name: /regenerate recovery codes/i,
+    });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /^regenerate codes$/i })
+    );
+
+    await waitFor(() => {
+      expect(authApi.regenerateRecoveryCodes).toHaveBeenCalledWith({
+        method: "totp",
+        code: "123456",
+      });
+    });
+    expect(
+      await screen.findByRole("heading", {
+        name: /store your recovery codes now/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("disables MFA after code confirmation", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    vi.mocked(authApi.disableMfa).mockResolvedValueOnce(
+      createDisabledMfaStatusResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(screen.getByRole("button", { name: /disable mfa/i }));
+
+    await screen.findByRole("heading", { name: /disable mfa/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^disable mfa$/i }));
+
+    await waitFor(() => {
+      expect(authApi.disableMfa).toHaveBeenCalledWith({
+        method: "totp",
+        code: "123456",
+      });
+    });
+    expect(await screen.findByText(/not enabled/i)).toBeInTheDocument();
   });
 });
