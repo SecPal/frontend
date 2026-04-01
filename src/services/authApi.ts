@@ -1,6 +1,16 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+  CompletedLoginResponse,
+  LoginMfaChallengeResponse,
+  MfaRecoveryCodeRevealResponse,
+  MfaStatusResponse,
+  MfaTotpEnrollmentResponse,
+  MfaVerificationCodeRequest,
+  SessionLoginResponse,
+  TotpCodeRequest,
+} from "@/types/api";
 import { buildApiUrl } from "../config";
 import { fetchCsrfToken, apiFetch } from "./csrf";
 
@@ -10,22 +20,14 @@ interface LoginCredentials {
   device_name?: string;
 }
 
-interface LoginResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    roles?: string[];
-    permissions?: string[];
-    hasOrganizationalScopes?: boolean;
-    hasCustomerAccess?: boolean;
-    hasSiteAccess?: boolean;
-  };
-}
+export type BrowserLoginResponse =
+  | SessionLoginResponse
+  | LoginMfaChallengeResponse;
 
 interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
+  code?: string;
 }
 
 function hasJsonContentType(response: Response): boolean {
@@ -74,11 +76,32 @@ async function parseJsonError(response: Response): Promise<ApiError | null> {
 export class AuthApiError extends Error {
   constructor(
     message: string,
-    public errors?: Record<string, string[]>
+    public errors?: Record<string, string[]>,
+    public status?: number,
+    public code?: string
   ) {
     super(message);
     this.name = "AuthApiError";
   }
+}
+
+async function createAuthApiError(
+  response: Response,
+  defaultMessage: string,
+  nonJsonMessage = `${defaultMessage}: ${response.status} ${response.statusText}`
+): Promise<AuthApiError> {
+  const error = await parseJsonError(response);
+
+  if (!error) {
+    return new AuthApiError(nonJsonMessage, undefined, response.status);
+  }
+
+  return new AuthApiError(
+    error.message || defaultMessage,
+    error.errors,
+    response.status,
+    error.code
+  );
 }
 
 /**
@@ -87,7 +110,7 @@ export class AuthApiError extends Error {
  */
 export async function login(
   credentials: LoginCredentials
-): Promise<LoginResponse> {
+): Promise<BrowserLoginResponse> {
   // Fetch CSRF token before login
   await fetchCsrfToken();
 
@@ -106,19 +129,39 @@ export async function login(
   });
 
   if (!response.ok) {
-    const error = await parseJsonError(response);
-
-    if (!error) {
-      // Fallback if response is not JSON (e.g., HTML error page)
-      throw new AuthApiError(
-        `Login failed: ${response.status} ${response.statusText}`
-      );
-    }
-
-    throw new AuthApiError(error?.message || "Login failed", error?.errors);
+    throw await createAuthApiError(response, "Login failed");
   }
 
-  return parseJsonResponse<LoginResponse>(response, "Login failed");
+  return parseJsonResponse<BrowserLoginResponse>(response, "Login failed");
+}
+
+export async function verifyMfaChallenge(
+  challengeId: string,
+  payload: MfaVerificationCodeRequest
+): Promise<CompletedLoginResponse> {
+  await fetchCsrfToken();
+
+  const response = await apiFetch(
+    buildApiUrl(`/v1/auth/mfa-challenges/${challengeId}/verify`),
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "MFA verification failed");
+  }
+
+  return parseJsonResponse<CompletedLoginResponse>(
+    response,
+    "MFA verification failed"
+  );
 }
 
 /**
@@ -135,13 +178,7 @@ export async function logout(): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await parseJsonError(response);
-
-    if (!error) {
-      throw new AuthApiError("Logout failed");
-    }
-
-    throw new AuthApiError(error?.message || "Logout failed", error?.errors);
+    throw await createAuthApiError(response, "Logout failed", "Logout failed");
   }
 }
 
@@ -159,15 +196,10 @@ export async function logoutAll(): Promise<void> {
   });
 
   if (!response.ok) {
-    const error = await parseJsonError(response);
-
-    if (!error) {
-      throw new AuthApiError("Logout all devices failed");
-    }
-
-    throw new AuthApiError(
-      error?.message || "Logout all devices failed",
-      error?.errors
+    throw await createAuthApiError(
+      response,
+      "Logout all devices failed",
+      "Logout all devices failed"
     );
   }
 }
@@ -176,7 +208,7 @@ export async function logoutAll(): Promise<void> {
  * Fetch the currently authenticated user for bootstrap revalidation.
  * @throws {AuthApiError} If the session is invalid or the request fails
  */
-export async function getCurrentUser(): Promise<LoginResponse["user"]> {
+export async function getCurrentUser(): Promise<SessionLoginResponse["user"]> {
   let response: Response;
   try {
     response = await apiFetch(buildApiUrl("/v1/me"), {
@@ -195,22 +227,127 @@ export async function getCurrentUser(): Promise<LoginResponse["user"]> {
   }
 
   if (!response.ok) {
-    const error = await parseJsonError(response);
-
-    if (!error) {
-      throw new AuthApiError(
-        `Current user fetch failed: ${response.status} ${response.statusText}`
-      );
-    }
-
-    throw new AuthApiError(
-      error?.message || "Current user fetch failed",
-      error?.errors
-    );
+    throw await createAuthApiError(response, "Current user fetch failed");
   }
 
-  return parseJsonResponse<LoginResponse["user"]>(
+  return parseJsonResponse<SessionLoginResponse["user"]>(
     response,
     "Current user fetch failed"
   );
+}
+
+export async function getMfaStatus(): Promise<MfaStatusResponse> {
+  const response = await apiFetch(buildApiUrl("/v1/me/mfa"), {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "MFA status fetch failed");
+  }
+
+  return parseJsonResponse<MfaStatusResponse>(
+    response,
+    "MFA status fetch failed"
+  );
+}
+
+export async function startTotpEnrollment(): Promise<MfaTotpEnrollmentResponse> {
+  const response = await apiFetch(buildApiUrl("/v1/me/mfa/totp/enrollment"), {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "TOTP enrollment start failed");
+  }
+
+  return parseJsonResponse<MfaTotpEnrollmentResponse>(
+    response,
+    "TOTP enrollment start failed"
+  );
+}
+
+export async function confirmTotpEnrollment(
+  payload: TotpCodeRequest
+): Promise<MfaRecoveryCodeRevealResponse> {
+  const response = await apiFetch(
+    buildApiUrl("/v1/me/mfa/totp/enrollment/confirm"),
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(
+      response,
+      "TOTP enrollment confirmation failed"
+    );
+  }
+
+  return parseJsonResponse<MfaRecoveryCodeRevealResponse>(
+    response,
+    "TOTP enrollment confirmation failed"
+  );
+}
+
+export async function regenerateRecoveryCodes(
+  payload: MfaVerificationCodeRequest
+): Promise<MfaRecoveryCodeRevealResponse> {
+  const response = await apiFetch(
+    buildApiUrl("/v1/me/mfa/recovery-codes/regenerate"),
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(
+      response,
+      "Recovery code regeneration failed"
+    );
+  }
+
+  return parseJsonResponse<MfaRecoveryCodeRevealResponse>(
+    response,
+    "Recovery code regeneration failed"
+  );
+}
+
+export async function disableMfa(
+  payload: MfaVerificationCodeRequest
+): Promise<MfaStatusResponse> {
+  const response = await apiFetch(buildApiUrl("/v1/me/mfa"), {
+    method: "DELETE",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "MFA disable failed");
+  }
+
+  return parseJsonResponse<MfaStatusResponse>(response, "MFA disable failed");
 }

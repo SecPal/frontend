@@ -7,10 +7,24 @@ import {
   logout,
   logoutAll,
   getCurrentUser,
+  getMfaStatus,
   AuthApiError,
+  verifyMfaChallenge,
 } from "./authApi";
 
 const mockFetch = vi.fn();
+
+const createAuthenticatedUser = (overrides?: Record<string, unknown>) => ({
+  id: 1,
+  name: "Test User",
+  email: "test@secpal.dev",
+  roles: [],
+  permissions: [],
+  hasOrganizationalScopes: false,
+  hasCustomerAccess: false,
+  hasSiteAccess: false,
+  ...overrides,
+});
 
 describe("authApi", () => {
   beforeEach(() => {
@@ -29,7 +43,7 @@ describe("authApi", () => {
   describe("login", () => {
     it("sends POST request to /v1/auth/login with credentials", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test User", email: "test@secpal.dev" },
+        user: createAuthenticatedUser(),
       };
 
       // Mock CSRF token fetch
@@ -115,16 +129,43 @@ describe("authApi", () => {
         password: "password123",
       });
 
-      expect(result.user.roles).toEqual(["Admin"]);
-      expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
-      expect(result.user.hasOrganizationalScopes).toBe(true);
-      expect(result.user.hasCustomerAccess).toBe(true);
-      expect(result.user.hasSiteAccess).toBe(true);
+      expect("user" in result).toBe(true);
+      if ("user" in result) {
+        expect(result.user.roles).toEqual(["Admin"]);
+        expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
+        expect(result.user.hasOrganizationalScopes).toBe(true);
+        expect(result.user.hasCustomerAccess).toBe(true);
+        expect(result.user.hasSiteAccess).toBe(true);
+      }
+    });
+
+    it("returns an MFA challenge when the backend requires a second factor", async () => {
+      const mockResponse = {
+        challenge: {
+          id: "550e8400-e29b-41d4-a716-446655440099",
+          purpose: "login",
+          login_context: "session",
+          primary_method: "totp",
+          available_methods: ["totp", "recovery_code"],
+          expires_at: "2026-04-01T09:30:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 202,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(
+        login({ email: "test@secpal.dev", password: "password123" })
+      ).resolves.toEqual(mockResponse);
     });
 
     it("sends login request with email and password only (no device_name for SPA)", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test", email: "test@secpal.dev" },
+        user: createAuthenticatedUser({ name: "Test" }),
       };
 
       // Mock CSRF token fetch
@@ -463,6 +504,103 @@ describe("authApi", () => {
     });
   });
 
+  describe("verifyMfaChallenge", () => {
+    it("posts the verification code to the MFA challenge endpoint", async () => {
+      const mockResponse = {
+        user: createAuthenticatedUser(),
+        authentication: {
+          mode: "session",
+          mfa_completed: true,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await verifyMfaChallenge(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "totp",
+          code: "123456",
+        }
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining(
+          "/v1/auth/mfa-challenges/550e8400-e29b-41d4-a716-446655440099/verify"
+        ),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({
+            method: "totp",
+            code: "123456",
+          }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("surfaces JSON verification errors with status metadata", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          message: "The login challenge has expired.",
+          code: "CONFLICT",
+        }),
+      } as Response);
+
+      try {
+        await verifyMfaChallenge("550e8400-e29b-41d4-a716-446655440099", {
+          method: "totp",
+          code: "123456",
+        });
+        expect.fail("Expected verifyMfaChallenge to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(409);
+        expect((error as AuthApiError).code).toBe("CONFLICT");
+      }
+    });
+  });
+
+  describe("getMfaStatus", () => {
+    it("fetches MFA status from /v1/me/mfa", async () => {
+      const mockResponse = {
+        data: {
+          enabled: true,
+          method: "totp",
+          recovery_codes_remaining: 8,
+          recovery_codes_generated_at: "2026-04-01T09:12:00Z",
+          enrolled_at: "2026-04-01T09:10:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(getMfaStatus()).resolves.toEqual(mockResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa"),
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+  });
+
   describe("AuthApiError", () => {
     it("creates error with message and errors", () => {
       const errors = { email: ["Invalid email"] };
@@ -478,6 +616,13 @@ describe("authApi", () => {
 
       expect(error.message).toBe("Test error");
       expect(error.errors).toBeUndefined();
+    });
+
+    it("stores optional status and code metadata", () => {
+      const error = new AuthApiError("Conflict", undefined, 409, "CONFLICT");
+
+      expect(error.status).toBe(409);
+      expect(error.code).toBe("CONFLICT");
     });
   });
 });

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, and extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices.
 - Reduced the repo-local Copilot always-on context by replacing the long runtime baseline and removing the auto-loaded overlay fallback, which lowers request size in large VS Code workspaces without dropping the frontend-specific governance rules
 
 - Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.

@@ -113,8 +113,16 @@ describe("Login", () => {
   it("submits login form with email and password", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const mockResponse = {
-      token: "test-token",
-      user: { id: "1", name: "Test User", email: "test@secpal.dev" },
+      user: {
+        id: "1",
+        name: "Test User",
+        email: "test@secpal.dev",
+        roles: [],
+        permissions: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      },
     };
     mockLogin.mockResolvedValueOnce(mockResponse);
 
@@ -304,7 +312,16 @@ describe("Login", () => {
 
     // Second call: success
     mockLogin.mockResolvedValueOnce({
-      user: { id: "1", name: "Test", email: "test@secpal.dev" },
+      user: {
+        id: "1",
+        name: "Test",
+        email: "test@secpal.dev",
+        roles: [],
+        permissions: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      },
     });
 
     // Second submission should clear error
@@ -669,7 +686,16 @@ describe("Login", () => {
 
       const mockLogin = vi.mocked(authApi.login);
       mockLogin.mockResolvedValueOnce({
-        user: { id: "1", name: "Test", email: "test@secpal.dev" },
+        user: {
+          id: "1",
+          name: "Test",
+          email: "test@secpal.dev",
+          roles: [],
+          permissions: [],
+          hasOrganizationalScopes: false,
+          hasCustomerAccess: false,
+          hasSiteAccess: false,
+        },
       });
 
       renderLogin();
