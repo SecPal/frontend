@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- reduced the repo-local Copilot always-on context by replacing the long runtime baseline and removing the auto-loaded overlay fallback, which lowers request size in large VS Code workspaces without dropping the frontend-specific governance rules
+- Reduced the repo-local Copilot always-on context by replacing the long runtime baseline and removing the auto-loaded overlay fallback, which lowers request size in large VS Code workspaces without dropping the frontend-specific governance rules
 
 - Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.
 - Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
@@ -134,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sync status UI now surfaces the next scheduled offline retry time and hides the manual sync trigger while pending operations are still in their backoff window
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
 - `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
-- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol) auto-loaded for all files via `applyTo: "**"`
+- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol); `applyTo: "**"` auto-loading was later removed during governance context cleanup
 - `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` - deferred Phase 2 design notes for future encrypted offline data protection with device-bound key options
 
 ### Changed

@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 name: Frontend Runtime Overlay
 description: Provides additional frontend governance context when a task needs more than the repo baseline.
+# applyTo is intentionally omitted — this file is NOT auto-loaded.
+# Reference it explicitly in a prompt or task description when extra governance context is needed.
 ---
 
 # Frontend Runtime Overlay
