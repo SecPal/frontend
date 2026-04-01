@@ -7,10 +7,28 @@ import {
   logout,
   logoutAll,
   getCurrentUser,
+  getMfaStatus,
+  startTotpEnrollment,
+  confirmTotpEnrollment,
+  regenerateRecoveryCodes,
+  disableMfa,
   AuthApiError,
+  verifyMfaChallenge,
 } from "./authApi";
 
 const mockFetch = vi.fn();
+
+const createAuthenticatedUser = (overrides?: Record<string, unknown>) => ({
+  id: 1,
+  name: "Test User",
+  email: "test@secpal.dev",
+  roles: [],
+  permissions: [],
+  hasOrganizationalScopes: false,
+  hasCustomerAccess: false,
+  hasSiteAccess: false,
+  ...overrides,
+});
 
 describe("authApi", () => {
   beforeEach(() => {
@@ -29,7 +47,7 @@ describe("authApi", () => {
   describe("login", () => {
     it("sends POST request to /v1/auth/login with credentials", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test User", email: "test@secpal.dev" },
+        user: createAuthenticatedUser(),
       };
 
       // Mock CSRF token fetch
@@ -115,16 +133,43 @@ describe("authApi", () => {
         password: "password123",
       });
 
-      expect(result.user.roles).toEqual(["Admin"]);
-      expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
-      expect(result.user.hasOrganizationalScopes).toBe(true);
-      expect(result.user.hasCustomerAccess).toBe(true);
-      expect(result.user.hasSiteAccess).toBe(true);
+      expect("user" in result).toBe(true);
+      if ("user" in result) {
+        expect(result.user.roles).toEqual(["Admin"]);
+        expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
+        expect(result.user.hasOrganizationalScopes).toBe(true);
+        expect(result.user.hasCustomerAccess).toBe(true);
+        expect(result.user.hasSiteAccess).toBe(true);
+      }
+    });
+
+    it("returns an MFA challenge when the backend requires a second factor", async () => {
+      const mockResponse = {
+        challenge: {
+          id: "550e8400-e29b-41d4-a716-446655440099",
+          purpose: "login",
+          login_context: "session",
+          primary_method: "totp",
+          available_methods: ["totp", "recovery_code"],
+          expires_at: "2026-04-01T09:30:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 202,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(
+        login({ email: "test@secpal.dev", password: "password123" })
+      ).resolves.toEqual(mockResponse);
     });
 
     it("sends login request with email and password only (no device_name for SPA)", async () => {
       const mockResponse = {
-        user: { id: 1, name: "Test", email: "test@secpal.dev" },
+        user: createAuthenticatedUser({ name: "Test" }),
       };
 
       // Mock CSRF token fetch
@@ -463,6 +508,325 @@ describe("authApi", () => {
     });
   });
 
+  describe("verifyMfaChallenge", () => {
+    it("posts the verification code to the MFA challenge endpoint", async () => {
+      const mockResponse = {
+        user: createAuthenticatedUser(),
+        authentication: {
+          mode: "session",
+          mfa_completed: true,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await verifyMfaChallenge(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "totp",
+          code: "123456",
+        }
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining(
+          "/v1/auth/mfa-challenges/550e8400-e29b-41d4-a716-446655440099/verify"
+        ),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({
+            method: "totp",
+            code: "123456",
+          }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("surfaces JSON verification errors with status metadata", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          message: "The login challenge has expired.",
+          code: "CONFLICT",
+        }),
+      } as Response);
+
+      try {
+        await verifyMfaChallenge("550e8400-e29b-41d4-a716-446655440099", {
+          method: "totp",
+          code: "123456",
+        });
+        expect.fail("Expected verifyMfaChallenge to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(409);
+        expect((error as AuthApiError).code).toBe("CONFLICT");
+      }
+    });
+  });
+
+  describe("getMfaStatus", () => {
+    it("fetches MFA status from /v1/me/mfa", async () => {
+      const mockResponse = {
+        data: {
+          enabled: true,
+          method: "totp",
+          recovery_codes_remaining: 8,
+          recovery_codes_generated_at: "2026-04-01T09:12:00Z",
+          enrolled_at: "2026-04-01T09:10:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(getMfaStatus()).resolves.toEqual(mockResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa"),
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+  });
+
+  describe("startTotpEnrollment", () => {
+    it("posts to /v1/me/mfa/totp/enrollment and returns enrollment data", async () => {
+      const mockResponse = {
+        data: {
+          issuer: "SecPal",
+          account_name: "test@secpal.dev",
+          manual_entry_key: "JBSWY3DPEHPK3PXP",
+          otpauth_uri:
+            "otpauth://totp/SecPal:test@secpal.dev?secret=JBSWY3DPEHPK3PXP&issuer=SecPal",
+          expires_at: "2026-04-01T09:25:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(startTotpEnrollment()).resolves.toEqual(mockResponse);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa/totp/enrollment"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("throws AuthApiError with status and code on JSON error response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          message: "MFA is already enabled.",
+          code: "CONFLICT",
+        }),
+      } as Response);
+
+      try {
+        await startTotpEnrollment();
+        expect.fail("Expected startTotpEnrollment to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(409);
+        expect((error as AuthApiError).code).toBe("CONFLICT");
+      }
+    });
+  });
+
+  describe("confirmTotpEnrollment", () => {
+    it("posts TOTP code to /v1/me/mfa/totp/enrollment/confirm and returns recovery codes", async () => {
+      const mockResponse = {
+        data: {
+          status: {
+            enabled: true,
+            method: "totp",
+            recovery_codes_remaining: 8,
+            recovery_codes_generated_at: "2026-04-01T09:12:00Z",
+            enrolled_at: "2026-04-01T09:10:00Z",
+          },
+          recovery_codes: {
+            codes: ["B6F4-2Q8P", "F9LM-7N2R"],
+            generated_at: "2026-04-01T09:12:00Z",
+          },
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await confirmTotpEnrollment({ code: "123456" });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa/totp/enrollment/confirm"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ code: "123456" }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("throws AuthApiError with status and code on JSON error response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        json: async () => ({
+          message: "The provided code is invalid.",
+          code: "VALIDATION_ERROR",
+        }),
+      } as Response);
+
+      try {
+        await confirmTotpEnrollment({ code: "000000" });
+        expect.fail("Expected confirmTotpEnrollment to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(422);
+        expect((error as AuthApiError).code).toBe("VALIDATION_ERROR");
+      }
+    });
+  });
+
+  describe("regenerateRecoveryCodes", () => {
+    it("posts to /v1/me/mfa/recovery-codes/regenerate and returns new codes", async () => {
+      const mockResponse = {
+        data: {
+          status: {
+            enabled: true,
+            method: "totp",
+            recovery_codes_remaining: 8,
+            recovery_codes_generated_at: "2026-04-01T10:00:00Z",
+            enrolled_at: "2026-04-01T09:10:00Z",
+          },
+          recovery_codes: {
+            codes: ["X3CE-1RM6", "V7NK-5HF9"],
+            generated_at: "2026-04-01T10:00:00Z",
+          },
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await regenerateRecoveryCodes({
+        method: "totp",
+        code: "654321",
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa/recovery-codes/regenerate"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ method: "totp", code: "654321" }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("throws AuthApiError with status and code on JSON error response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: async () => ({
+          message: "The login challenge has expired.",
+          code: "CONFLICT",
+        }),
+      } as Response);
+
+      try {
+        await regenerateRecoveryCodes({ method: "totp", code: "000000" });
+        expect.fail("Expected regenerateRecoveryCodes to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(409);
+        expect((error as AuthApiError).code).toBe("CONFLICT");
+      }
+    });
+  });
+
+  describe("disableMfa", () => {
+    it("sends DELETE to /v1/me/mfa with verification code and returns updated status", async () => {
+      const mockResponse = {
+        data: {
+          enabled: false,
+          method: null,
+          recovery_codes_remaining: 0,
+          recovery_codes_generated_at: null,
+          enrolled_at: null,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      const result = await disableMfa({ method: "totp", code: "123456" });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/mfa"),
+        expect.objectContaining({
+          method: "DELETE",
+          credentials: "include",
+          body: JSON.stringify({ method: "totp", code: "123456" }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("throws AuthApiError with status and code on JSON error response", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        json: async () => ({
+          message: "The provided code is invalid.",
+          code: "VALIDATION_ERROR",
+        }),
+      } as Response);
+
+      try {
+        await disableMfa({ method: "totp", code: "000000" });
+        expect.fail("Expected disableMfa to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).status).toBe(422);
+        expect((error as AuthApiError).code).toBe("VALIDATION_ERROR");
+      }
+    });
+  });
+
   describe("AuthApiError", () => {
     it("creates error with message and errors", () => {
       const errors = { email: ["Invalid email"] };
@@ -478,6 +842,13 @@ describe("authApi", () => {
 
       expect(error.message).toBe("Test error");
       expect(error.errors).toBeUndefined();
+    });
+
+    it("stores optional status and code metadata", () => {
+      const error = new AuthApiError("Conflict", undefined, 409, "CONFLICT");
+
+      expect(error.status).toBe(409);
+      expect(error.code).toBe("CONFLICT");
     });
   });
 });
