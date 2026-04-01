@@ -70,6 +70,7 @@ describe("authTransport", () => {
       password: "password123",
     });
     expect(result).toEqual({
+      status: "authenticated",
       user: {
         id: "1",
         name: "Browser User",
@@ -77,7 +78,10 @@ describe("authTransport", () => {
         roles: ["Admin"],
       },
     });
-    expect(result.user).not.toHaveProperty("token");
+    expect(result.status).toBe("authenticated");
+    if (result.status === "authenticated") {
+      expect(result.user).not.toHaveProperty("token");
+    }
   });
 
   it("reports browser network availability from navigator.onLine", async () => {
@@ -92,6 +96,27 @@ describe("authTransport", () => {
     } finally {
       onLineSpy.mockRestore();
     }
+  });
+
+  it("surfaces an MFA challenge from the browser-session transport", async () => {
+    const mfaChallenge = {
+      id: "550e8400-e29b-41d4-a716-446655440099",
+      purpose: "login",
+      login_context: "session",
+      primary_method: "totp",
+      available_methods: ["totp", "recovery_code"],
+      expires_at: "2026-04-01T09:30:00Z",
+    };
+
+    mockBrowserLogin.mockResolvedValueOnce({ challenge: mfaChallenge });
+
+    const transport = getAuthTransport();
+    const result = await transport.login({
+      email: "mfa@secpal.dev",
+      password: "password123",
+    });
+
+    expect(result).toEqual({ status: "mfa_required", challenge: mfaChallenge });
   });
 
   it("accepts a browser-session login payload with a UUID string id", async () => {
@@ -115,6 +140,7 @@ describe("authTransport", () => {
     });
 
     expect(result).toEqual({
+      status: "authenticated",
       user: {
         id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
         name: "Browser User",
@@ -164,6 +190,7 @@ describe("authTransport", () => {
     });
     expect(mockBrowserLogin).not.toHaveBeenCalled();
     expect(loginResult).toEqual({
+      status: "authenticated",
       user: {
         id: "7",
         name: "Native User",
@@ -171,7 +198,10 @@ describe("authTransport", () => {
         permissions: ["profile.read"],
       },
     });
-    expect(loginResult.user).not.toHaveProperty("token");
+    expect(loginResult.status).toBe("authenticated");
+    if (loginResult.status === "authenticated") {
+      expect(loginResult.user).not.toHaveProperty("token");
+    }
     expect(currentUser).toEqual({
       id: "7",
       name: "Native User",

@@ -136,6 +136,16 @@ export function Login() {
     try {
       const response = await authTransport.login({ email, password });
       resetAttempts(); // Clear rate limit state on successful login
+
+      if (response.status === "mfa_required") {
+        // MFA challenge UI is handled in an upcoming feature slice.
+        // Reaching this branch means the account has MFA enabled.
+        setError(
+          "Multi-factor authentication is required. Please use the MFA-enabled login flow."
+        );
+        return;
+      }
+
       login(response.user);
       navigate("/");
     } catch (err) {

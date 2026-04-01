@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type { LoginMfaChallengeResponse, MfaChallenge } from "@/types/api";
 import type { User } from "../contexts/auth-context";
 import {
   AuthApiError,
@@ -19,9 +20,17 @@ export interface AuthCredentials {
   password: string;
 }
 
-export interface AuthLoginResult {
+export interface AuthenticatedLoginResult {
+  status: "authenticated";
   user: User;
 }
+
+export interface MfaRequiredLoginResult {
+  status: "mfa_required";
+  challenge: MfaChallenge;
+}
+
+export type AuthLoginResult = AuthenticatedLoginResult | MfaRequiredLoginResult;
 
 export type AuthTransportKind = "browser-session" | "native-bridge";
 
@@ -40,6 +49,18 @@ export interface AuthTransport {
   logoutAll(): Promise<void>;
   getCurrentUser(): Promise<User>;
   isNetworkAvailable(): Promise<boolean>;
+}
+
+function isMfaChallengeResponse(
+  payload: unknown
+): payload is LoginMfaChallengeResponse {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "challenge" in payload &&
+    typeof (payload as { challenge?: unknown }).challenge === "object" &&
+    (payload as { challenge?: unknown }).challenge !== null
+  );
 }
 
 function sanitizeAuthPayload(payload: unknown, operation: string): User {
@@ -64,7 +85,15 @@ const browserSessionAuthTransport: AuthTransport = {
   async login(credentials): Promise<AuthLoginResult> {
     const result = await loginWithBrowserSession(credentials);
 
+    if (isMfaChallengeResponse(result)) {
+      return {
+        status: "mfa_required",
+        challenge: result.challenge,
+      };
+    }
+
     return {
+      status: "authenticated",
       user: sanitizeAuthPayload(result, "Browser-session login"),
     };
   },
@@ -93,6 +122,7 @@ function createNativeBridgeAuthTransport(
       const result = await nativeAuthBridge.login(credentials);
 
       return {
+        status: "authenticated",
         user: sanitizeAuthPayload(result, "Native auth login"),
       };
     },
