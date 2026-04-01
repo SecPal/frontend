@@ -3,7 +3,11 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { RouteAccessDeniedState, RouteLoadingState } from "./RouteGuardState";
+import {
+  RouteAccessDeniedState,
+  RouteBootstrapRecoveryState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;
@@ -14,10 +18,27 @@ interface OrganizationalRouteProps {
  * It checks both authentication and organizational permissions.
  */
 export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
-  const { isAuthenticated, isLoading, hasOrganizationalAccess } = useAuth();
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isLoading,
+    hasOrganizationalAccess,
+    logout,
+    retryBootstrap,
+  } = useAuth();
 
   if (isLoading) {
     return <RouteLoadingState />;
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
+    );
   }
 
   if (!isAuthenticated) {

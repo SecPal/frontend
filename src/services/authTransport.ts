@@ -10,6 +10,7 @@ import {
   logoutAll as logoutAllBrowserSessions,
 } from "./authApi";
 import { sanitizeAuthUser } from "./authState";
+import { isOnline } from "./sessionEvents";
 
 export { AuthApiError } from "./authApi";
 
@@ -29,6 +30,7 @@ export interface NativeAuthBridge {
   logout(): Promise<void>;
   logoutAll?(): Promise<void>;
   getCurrentUser(): Promise<unknown>;
+  isNetworkAvailable?(): Promise<boolean>;
 }
 
 export interface AuthTransport {
@@ -37,6 +39,7 @@ export interface AuthTransport {
   logout(): Promise<void>;
   logoutAll(): Promise<void>;
   getCurrentUser(): Promise<User>;
+  isNetworkAvailable(): Promise<boolean>;
 }
 
 function sanitizeAuthPayload(payload: unknown, operation: string): User {
@@ -76,6 +79,9 @@ const browserSessionAuthTransport: AuthTransport = {
 
     return sanitizeAuthPayload(user, "Browser-session current-user fetch");
   },
+  async isNetworkAvailable(): Promise<boolean> {
+    return isOnline();
+  },
 };
 
 function createNativeBridgeAuthTransport(
@@ -106,6 +112,17 @@ function createNativeBridgeAuthTransport(
       const user = await nativeAuthBridge.getCurrentUser();
 
       return sanitizeAuthPayload(user, "Native auth current-user fetch");
+    },
+    async isNetworkAvailable(): Promise<boolean> {
+      if (typeof nativeAuthBridge.isNetworkAvailable !== "function") {
+        return isOnline();
+      }
+
+      try {
+        return (await nativeAuthBridge.isNetworkAvailable()) === true;
+      } catch {
+        return isOnline();
+      }
     },
   };
 }

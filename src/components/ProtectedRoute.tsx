@@ -3,17 +3,36 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { RouteLoadingState } from "./RouteGuardState";
+import {
+  RouteBootstrapRecoveryState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isLoading,
+    logout,
+    retryBootstrap,
+  } = useAuth();
 
   if (isLoading) {
     return <RouteLoadingState />;
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
+    );
   }
 
   if (!isAuthenticated) {

@@ -3,7 +3,10 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { AuthProvider } from "../contexts/AuthContext";
+import {
+  AuthProvider,
+  BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
+} from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
@@ -157,7 +160,11 @@ describe("useAuth", () => {
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
-    mockGetCurrentUser.mockRejectedValueOnce(new Error("Unauthorized"));
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(new Error("Unauthorized"), {
+        code: "HTTP_401",
+      })
+    );
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -173,6 +180,144 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps cached auth state when bootstrap revalidation fails for a transient error", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    mockGetCurrentUser.mockRejectedValueOnce(new Error("Network down"));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toEqual(mockUser);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBe("network");
+    expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("keeps cached auth state when Android bootstrap reports missing connectivity", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(
+        new Error("Android auth requires an active internet connection"),
+        {
+          code: "NETWORK_OFFLINE",
+        }
+      )
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toEqual(mockUser);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("skips stored-session revalidation when the native bridge reports the device offline", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+    const nativeBridge = {
+      login: vi.fn(),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+      isNetworkAvailable: vi.fn().mockResolvedValue(false),
+    };
+    const authGlobal = globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: typeof nativeBridge;
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledTimes(1);
+      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("stops blocking protected routes when bootstrap revalidation exceeds the startup deadline", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+    const deferred = createDeferredPromise<typeof mockUser>();
+
+    vi.useFakeTimers();
+
+    try {
+      localStorage.setItem("auth_user", JSON.stringify(mockUser));
+      mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps stored auth when offline without revalidation", () => {

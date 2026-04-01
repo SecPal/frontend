@@ -53,7 +53,7 @@ msgid "{label}: Valid"
 msgstr "{label}: Gültig"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:248
+#: src/pages/Login.tsx:274
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
@@ -74,19 +74,19 @@ msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivit�
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
 
-#: src/components/UpdatePrompt.tsx:71
+#: src/components/UpdatePrompt.tsx:72
 msgid "A new version of SecPal is available."
 msgstr "Eine neue Version von SecPal ist verfügbar."
 
-#: src/App.tsx:67
+#: src/App.tsx:68
 msgid "About"
 msgstr "Über uns"
 
-#: src/App.tsx:78
+#: src/App.tsx:79
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/components/RouteGuardState.tsx:27
+#: src/components/RouteGuardState.tsx:70
 msgid "Access Denied"
 msgstr "Zugang verweigert"
 
@@ -256,8 +256,8 @@ msgstr "Zurück zu den Kunden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
-#: src/App.tsx:89
-#: src/components/RouteGuardState.tsx:54
+#: src/App.tsx:90
+#: src/components/RouteGuardState.tsx:97
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -315,7 +315,7 @@ msgid "Certificate:"
 msgstr "Zertifikat:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:309
+#: src/pages/Login.tsx:335
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
@@ -658,7 +658,7 @@ msgid "Email"
 msgstr "E-Mail-Adresse"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:259
+#: src/pages/Login.tsx:285
 msgid "login.email"
 msgstr "E-Mail-Adresse"
 
@@ -826,6 +826,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Global"
 msgstr "Global"
 
+#: src/components/RouteGuardState.tsx:57
 #: src/pages/Onboarding/OnboardingComplete.tsx:621
 msgid "Go to Login"
 msgstr "Zum Login gehen"
@@ -968,7 +969,7 @@ msgstr "Onboarding laden..."
 msgid "Loading qualifications..."
 msgstr "Qualifikationen laden..."
 
-#: src/components/RouteGuardState.tsx:16
+#: src/components/RouteGuardState.tsx:22
 #: src/pages/Customers/CustomerDetail.tsx:82
 #: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:145
@@ -982,17 +983,17 @@ msgid "Loading..."
 msgstr "Laden..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:311
+#: src/pages/Login.tsx:337
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:144
+#: src/pages/Login.tsx:170
 msgid "login.title"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:317
+#: src/pages/Login.tsx:343
 msgid "login.submit"
 msgstr "Einloggen"
 
@@ -1003,12 +1004,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:315
+#: src/pages/Login.tsx:341
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:171
+#: src/pages/Login.tsx:197
 msgid "login.offlineWarning.message"
 msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
@@ -1216,7 +1217,7 @@ msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:166
+#: src/pages/Login.tsx:192
 msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
@@ -1356,7 +1357,7 @@ msgstr "Verwaiste Genesis"
 msgid "Page {0} of {1}"
 msgstr "Seite {0} von {1}"
 
-#: src/components/RouteGuardState.tsx:45
+#: src/components/RouteGuardState.tsx:88
 msgid "Page Not Found"
 msgstr "Seite nicht gefunden"
 
@@ -1373,7 +1374,7 @@ msgid "Part Time"
 msgstr "Teilzeit"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:277
+#: src/pages/Login.tsx:303
 msgid "login.password"
 msgstr "Passwort"
 
@@ -1443,7 +1444,7 @@ msgid "Please try again in about 1 minute."
 msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:227
+#: src/pages/Login.tsx:253
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
@@ -1535,6 +1536,7 @@ msgid "Remove"
 msgstr "Entfernen"
 
 #: src/components/OrganizationalUnitTree.tsx:797
+#: src/components/RouteGuardState.tsx:54
 msgid "Retry"
 msgstr "Wiederholen"
 
@@ -1584,13 +1586,29 @@ msgstr "Suche in Beschreibungen..."
 msgid "Search sites..."
 msgstr "Standorte suchen..."
 
-#: src/App.tsx:60
+#: src/App.tsx:61
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
-#: src/App.tsx:81
+#: src/App.tsx:82
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal – A guard’s best friend. Eine offline-first progressive Web-App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management kombiniert."
+
+#: src/components/RouteGuardState.tsx:46
+#~ msgid "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
+#~ msgstr ""
+
+#: src/components/RouteGuardState.tsx:41
+#~ msgid "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
+#~ msgstr ""
+
+#: src/components/RouteGuardState.tsx:46
+msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung aufgrund eines Fehlers nicht bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
+
+#: src/components/RouteGuardState.tsx:41
+msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -1754,6 +1772,10 @@ msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 msgid "Step 3: Self-access control"
 msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 
+#: src/components/RouteGuardState.tsx:37
+msgid "Still loading your secure session"
+msgstr "Ihre sichere Sitzung wird noch geladen"
+
 #: src/pages/Customers/CustomerCreate.tsx:152
 #: src/pages/Customers/CustomerDetail.tsx:126
 #: src/pages/Customers/CustomerEdit.tsx:168
@@ -1776,7 +1798,7 @@ msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:195
+#: src/pages/Login.tsx:221
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
@@ -1819,12 +1841,12 @@ msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einfü
 msgid "The new unit will be created under this parent."
 msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 
-#: src/components/RouteGuardState.tsx:48
+#: src/components/RouteGuardState.tsx:91
 msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:198
+#: src/pages/Login.tsx:224
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
@@ -1867,7 +1889,7 @@ msgid "Too Many Attempts"
 msgstr "Zu viele Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:222
+#: src/pages/Login.tsx:248
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
@@ -1897,11 +1919,11 @@ msgstr "Typ ist erforderlich"
 msgid "Unit"
 msgstr "Einheit"
 
-#: src/components/UpdatePrompt.tsx:77
+#: src/components/UpdatePrompt.tsx:78
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
 
-#: src/components/UpdatePrompt.tsx:79
+#: src/components/UpdatePrompt.tsx:80
 msgid "Update now"
 msgstr "Jetzt aktualisieren"
 
@@ -1909,7 +1931,7 @@ msgstr "Jetzt aktualisieren"
 msgid "Update the organizational unit details."
 msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 
-#: src/components/UpdatePrompt.tsx:65
+#: src/components/UpdatePrompt.tsx:66
 msgid "Updating..."
 msgstr "Aktualisiere ..."
 
@@ -1985,7 +2007,7 @@ msgstr "Anzeigen"
 msgid "View activity log information and verification status"
 msgstr "Aktivitätsprotokollinformationen und Überprüfungsstatus anzeigen"
 
-#: src/App.tsx:64
+#: src/App.tsx:65
 msgid "View Profile"
 msgstr "Profil ansehen"
 
@@ -2010,7 +2032,7 @@ msgstr "Warnung"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
-#: src/App.tsx:57
+#: src/App.tsx:58
 msgid "Welcome to SecPal"
 msgstr "Willkommen zu SecPal"
 
@@ -2038,7 +2060,7 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/components/RouteGuardState.tsx:30
+#: src/components/RouteGuardState.tsx:73
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 

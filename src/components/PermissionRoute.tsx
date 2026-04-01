@@ -3,7 +3,11 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { RouteAccessDeniedState, RouteLoadingState } from "./RouteGuardState";
+import {
+  RouteAccessDeniedState,
+  RouteBootstrapRecoveryState,
+  RouteLoadingState,
+} from "./RouteGuardState";
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -28,10 +32,27 @@ export function PermissionRoute({
   permission,
   fallbackPath,
 }: PermissionRouteProps) {
-  const { hasPermission, isAuthenticated, isLoading } = useAuth();
+  const {
+    bootstrapRecoveryReason,
+    hasPermission,
+    isAuthenticated,
+    isLoading,
+    logout,
+    retryBootstrap,
+  } = useAuth();
 
   if (isLoading) {
     return <RouteLoadingState />;
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
+    );
   }
 
   if (!isAuthenticated) {
