@@ -215,9 +215,12 @@ describe("useAuth", () => {
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
     mockGetCurrentUser.mockRejectedValueOnce(
-      Object.assign(new Error("Android auth requires an active internet connection"), {
-        code: "NETWORK_OFFLINE",
-      })
+      Object.assign(
+        new Error("Android auth requires an active internet connection"),
+        {
+          code: "NETWORK_OFFLINE",
+        }
+      )
     );
 
     const { result } = renderHook(() => useAuth(), {

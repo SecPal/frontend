@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -154,8 +160,12 @@ describe("ProtectedRoute", () => {
           name: /still loading your secure session/i,
         })
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /go to login/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /retry/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /go to login/i })
+      ).toBeInTheDocument();
       expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
       expect(mockNavigate).not.toHaveBeenCalled();
     } finally {

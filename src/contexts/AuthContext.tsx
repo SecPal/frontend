@@ -415,7 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       hasLogoutBarrierRef.current = false;
-        setBootstrapRecoveryReason(null);
+      setBootstrapRecoveryReason(null);
       invalidateBootstrapRevalidation();
       setUser(storedUser);
       setIsLoading(false);
