@@ -18,7 +18,7 @@ import { hasUserPermission, hasUserRole } from "../lib/capabilities";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
 
-const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
+export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 
 function getBootstrapErrorCode(error: unknown): string | null {
   if (typeof error !== "object" || error === null || !("code" in error)) {

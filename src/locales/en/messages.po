@@ -86,7 +86,7 @@ msgstr "About"
 msgid "About SecPal"
 msgstr "About SecPal"
 
-#: src/components/RouteGuardState.tsx:71
+#: src/components/RouteGuardState.tsx:70
 msgid "Access Denied"
 msgstr "Access Denied"
 
@@ -257,7 +257,7 @@ msgid "Back to Employees"
 msgstr "Back to Employees"
 
 #: src/App.tsx:90
-#: src/components/RouteGuardState.tsx:98
+#: src/components/RouteGuardState.tsx:97
 msgid "Back to Home"
 msgstr "Back to Home"
 
@@ -826,7 +826,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Global"
 msgstr "Global"
 
-#: src/components/RouteGuardState.tsx:58
+#: src/components/RouteGuardState.tsx:57
 #: src/pages/Onboarding/OnboardingComplete.tsx:621
 msgid "Go to Login"
 msgstr "Go to Login"
@@ -1357,7 +1357,7 @@ msgstr "Orphaned Genesis"
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
-#: src/components/RouteGuardState.tsx:89
+#: src/components/RouteGuardState.tsx:88
 msgid "Page Not Found"
 msgstr "Page Not Found"
 
@@ -1536,7 +1536,7 @@ msgid "Remove"
 msgstr "Remove"
 
 #: src/components/OrganizationalUnitTree.tsx:797
-#: src/components/RouteGuardState.tsx:55
+#: src/components/RouteGuardState.tsx:54
 msgid "Retry"
 msgstr "Retry"
 
@@ -1595,12 +1595,20 @@ msgid "SecPal – A guard’s best friend. An offline-first progressive web app 
 msgstr "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
 #: src/components/RouteGuardState.tsx:46
-msgid "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
-msgstr "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
+#~ msgid "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
+#~ msgstr "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
 
 #: src/components/RouteGuardState.tsx:41
-msgid "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
-msgstr "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
+#~ msgid "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
+#~ msgstr "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
+
+#: src/components/RouteGuardState.tsx:46
+msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+msgstr "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+
+#: src/components/RouteGuardState.tsx:41
+msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
+msgstr "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -1833,7 +1841,7 @@ msgstr "The new employee will receive an onboarding email immediately after crea
 msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
-#: src/components/RouteGuardState.tsx:92
+#: src/components/RouteGuardState.tsx:91
 msgid "The page you requested does not exist or is no longer available."
 msgstr "The page you requested does not exist or is no longer available."
 
@@ -2052,7 +2060,7 @@ msgstr "Who can this user VIEW?"
 msgid "Yes"
 msgstr "Yes"
 
-#: src/components/RouteGuardState.tsx:74
+#: src/components/RouteGuardState.tsx:73
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 

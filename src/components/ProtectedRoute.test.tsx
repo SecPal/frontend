@@ -13,7 +13,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { AuthProvider } from "../contexts/AuthContext";
+import {
+  AuthProvider,
+  BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
+} from "../contexts/AuthContext";
 
 const mockNavigate = vi.fn();
 const { mockGetCurrentUser } = vi.hoisted(() => ({
@@ -151,7 +154,7 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       await act(async () => {
-        vi.advanceTimersByTime(3500);
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
         await Promise.resolve();
       });
 
@@ -195,7 +198,7 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       await act(async () => {
-        vi.advanceTimersByTime(3500);
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
         await Promise.resolve();
       });
 

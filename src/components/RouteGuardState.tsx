@@ -39,14 +39,13 @@ export function RouteBootstrapRecoveryState({
         <Text className="text-zinc-500 dark:text-zinc-400">
           {reason === "timeout" ? (
             <Trans>
-              SecPal could not confirm your Android session quickly enough.
-              Retry the secure session check or return to the login screen.
+              SecPal could not confirm your session quickly enough. Retry the
+              session check or return to the login screen.
             </Trans>
           ) : (
             <Trans>
-              SecPal could not confirm your Android session because the session
-              check failed. Retry the secure session check or return to the
-              login screen.
+              SecPal could not confirm your session because the session check
+              failed. Retry the session check or return to the login screen.
             </Trans>
           )}
         </Text>

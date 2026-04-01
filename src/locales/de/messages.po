@@ -86,7 +86,7 @@ msgstr "Über uns"
 msgid "About SecPal"
 msgstr "Über SecPal"
 
-#: src/components/RouteGuardState.tsx:71
+#: src/components/RouteGuardState.tsx:70
 msgid "Access Denied"
 msgstr "Zugang verweigert"
 
@@ -257,7 +257,7 @@ msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
 #: src/App.tsx:90
-#: src/components/RouteGuardState.tsx:98
+#: src/components/RouteGuardState.tsx:97
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -826,7 +826,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Global"
 msgstr "Global"
 
-#: src/components/RouteGuardState.tsx:58
+#: src/components/RouteGuardState.tsx:57
 #: src/pages/Onboarding/OnboardingComplete.tsx:621
 msgid "Go to Login"
 msgstr "Zum Login gehen"
@@ -1357,7 +1357,7 @@ msgstr "Verwaiste Genesis"
 msgid "Page {0} of {1}"
 msgstr "Seite {0} von {1}"
 
-#: src/components/RouteGuardState.tsx:89
+#: src/components/RouteGuardState.tsx:88
 msgid "Page Not Found"
 msgstr "Seite nicht gefunden"
 
@@ -1536,7 +1536,7 @@ msgid "Remove"
 msgstr "Entfernen"
 
 #: src/components/OrganizationalUnitTree.tsx:797
-#: src/components/RouteGuardState.tsx:55
+#: src/components/RouteGuardState.tsx:54
 msgid "Retry"
 msgstr "Wiederholen"
 
@@ -1595,12 +1595,20 @@ msgid "SecPal – A guard’s best friend. An offline-first progressive web app 
 msgstr "SecPal – A guard’s best friend. Eine offline-first progressive Web-App für Sicherheitspersonal, die digitale Wachbücher mit modernem Service-Management kombiniert."
 
 #: src/components/RouteGuardState.tsx:46
-msgid "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
-msgstr ""
+#~ msgid "SecPal could not confirm your Android session because the session check failed. Retry the secure session check or return to the login screen."
+#~ msgstr ""
 
 #: src/components/RouteGuardState.tsx:41
-msgid "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
-msgstr ""
+#~ msgid "SecPal could not confirm your Android session quickly enough. Retry the secure session check or return to the login screen."
+#~ msgstr ""
+
+#: src/components/RouteGuardState.tsx:46
+msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung aufgrund eines Fehlers nicht bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
+
+#: src/components/RouteGuardState.tsx:41
+msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
 #: src/components/NotificationPreferences.tsx:41
 msgid "Security Alerts"
@@ -1766,7 +1774,7 @@ msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 
 #: src/components/RouteGuardState.tsx:37
 msgid "Still loading your secure session"
-msgstr ""
+msgstr "Ihre sichere Sitzung wird noch geladen"
 
 #: src/pages/Customers/CustomerCreate.tsx:152
 #: src/pages/Customers/CustomerDetail.tsx:126
@@ -1833,7 +1841,7 @@ msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einfü
 msgid "The new unit will be created under this parent."
 msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 
-#: src/components/RouteGuardState.tsx:92
+#: src/components/RouteGuardState.tsx:91
 msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
@@ -2052,7 +2060,7 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/components/RouteGuardState.tsx:74
+#: src/components/RouteGuardState.tsx:73
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
