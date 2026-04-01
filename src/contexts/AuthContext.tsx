@@ -8,7 +8,11 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { AuthContext, type AuthBootstrapRecoveryReason, type User } from "./auth-context";
+import {
+  AuthContext,
+  type AuthBootstrapRecoveryReason,
+  type User,
+} from "./auth-context";
 import { getAuthTransport } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
@@ -82,7 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [isLoading, setIsLoading] = useState(() => {
-    return authStorage.getUser() !== null && isOnline();
+    if (authStorage.getUser() === null) return false;
+    // For browser-session, only revalidate when online at initialization.
+    // A very narrow race (online at mount → offline before effect) is accepted.
+    if (authTransport.kind === "browser-session" && !isOnline()) return false;
+    return true;
   });
   const [bootstrapRecoveryReason, setBootstrapRecoveryReason] =
     useState<AuthBootstrapRecoveryReason | null>(null);
@@ -240,8 +248,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (authTransport.kind === "browser-session" && !isOnline()) {
-      setIsLoading(false);
-      setBootstrapRecoveryReason(null);
       return;
     }
 
