@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added PWA offline persistence security and privacy [audit document](PWA_OFFLINE_PERSISTENCE_AUDIT.md) covering all client-side storage mechanisms (localStorage, sessionStorage, IndexedDB, Cache API, Service Worker state) with 10 findings, issue overlap analysis, and prioritized remediation recommendations.
 - Added a platform-aware frontend auth transport boundary that keeps browser/PWA flows on Sanctum session auth, sanitizes auth state before it enters React or local storage, and creates the explicit seam Android can later wire to a native bearer-token bridge without exposing raw tokens to JavaScript.
 - Added the first MFA settings management slice with live status loading plus self-service recovery-code regeneration and MFA disablement flows for accounts that already have MFA enabled.
+- Added the phase-1 browser-session MFA login challenge flow so the login page can pause after primary credentials, collect the second factor, and complete the session only after the backend challenge verification succeeds.
 
 ### Changed
 

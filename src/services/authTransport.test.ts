@@ -213,6 +213,37 @@ describe("authTransport", () => {
     expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledOnce();
   });
 
+  it("passes browser-session MFA challenges through without sanitizing them as users", async () => {
+    mockBrowserLogin.mockResolvedValueOnce({
+      challenge: {
+        id: "550e8400-e29b-41d4-a716-446655440099",
+        purpose: "login",
+        login_context: "session",
+        primary_method: "totp",
+        available_methods: ["totp", "recovery_code"],
+        expires_at: "2026-04-01T09:30:00Z",
+      },
+    });
+
+    const transport = getAuthTransport();
+    const result = await transport.login({
+      email: "mfa@secpal.dev",
+      password: "password123",
+    });
+
+    expect(result).toEqual({
+      status: "mfa_required",
+      challenge: {
+        id: "550e8400-e29b-41d4-a716-446655440099",
+        purpose: "login",
+        login_context: "session",
+        primary_method: "totp",
+        available_methods: ["totp", "recovery_code"],
+        expires_at: "2026-04-01T09:30:00Z",
+      },
+    });
+  });
+
   it("rejects invalid native payloads before they can become auth state", async () => {
     const nativeBridge: NativeAuthBridge = {
       login: vi.fn().mockResolvedValue({ token: "native-secret" }),
