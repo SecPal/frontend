@@ -12,7 +12,7 @@ import {
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
-import type { AuthenticatedUser } from "@/types/api";
+import type { AuthenticatedUser, MfaVerificationMethod } from "@/types/api";
 import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
@@ -90,6 +90,31 @@ const createAuthUser = (overrides?: Partial<AuthenticatedUser>) => ({
   hasSiteAccess: false,
   ...overrides,
 });
+
+const mfaChallengeFixture = {
+  id: "550e8400-e29b-41d4-a716-446655440099",
+  purpose: "login" as const,
+  login_context: "session" as const,
+  primary_method: "totp" as const,
+  available_methods: ["totp", "recovery_code"] as MfaVerificationMethod[],
+  expires_at: "2026-04-01T09:30:00Z",
+};
+
+async function openMfaDialog() {
+  vi.mocked(authApi.login).mockResolvedValueOnce({
+    challenge: mfaChallengeFixture,
+  });
+  renderLogin();
+  await screen.findByRole("button", { name: /log in/i });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@secpal.dev" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+  await screen.findByRole("heading", { name: /second factor required/i });
+}
 
 describe("Login", () => {
   beforeEach(() => {
@@ -321,6 +346,55 @@ describe("Login", () => {
       await screen.findByText(/the login challenge has expired/i)
     ).toBeInTheDocument();
 
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("closes the MFA dialog when the cancel button is clicked", async () => {
+    await openMfaDialog();
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+  });
+
+  it("switches to the recovery code input when the recovery code method is selected", async () => {
+    await openMfaDialog();
+    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+    expect(
+      screen.getByRole("textbox", { name: /recovery code/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /authenticator code/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an error when MFA challenge response has an unexpected mode", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "token" as unknown as "session",
+        mfa_completed: true,
+      },
+    });
+    await openMfaDialog();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      { target: { value: "123456" } }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+    expect(
+      await screen.findByText(
+        /the mfa challenge completed with an unsupported login mode/i
+      )
+    ).toBeInTheDocument();
     consoleErrorSpy.mockRestore();
   });
 
