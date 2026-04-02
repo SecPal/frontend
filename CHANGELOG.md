@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
 - Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices, updated the browser-session auth transport to surface the discriminated `authenticated | mfa_required` result, and added full unit coverage for all new API client methods and transport branches.
 - Reduced the repo-local Copilot always-on context by replacing the long runtime baseline and removing the auto-loaded overlay fallback, which lowers request size in large VS Code workspaces without dropping the frontend-specific governance rules
 

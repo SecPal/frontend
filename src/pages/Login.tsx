@@ -18,6 +18,8 @@ import { Field, Label } from "../components/fieldset";
 import { Input } from "../components/input";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
+const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
+  "Login is temporarily unavailable. Please try again later.";
 
 export function Login() {
   const navigate = useNavigate();
@@ -150,12 +152,19 @@ export function Login() {
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
-      recordFailedAttempt(); // Record failed attempt for rate limiting
       if (err instanceof AuthApiError) {
+        if ((err.status ?? 0) >= 500) {
+          setError(TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE);
+          return;
+        }
+
+        recordFailedAttempt(); // Record failed attempt for rate limiting
         setError(err.message);
       } else if (err instanceof Error) {
+        recordFailedAttempt();
         setError(err.message);
       } else {
+        recordFailedAttempt();
         setError(
           "An unexpected error occurred. Please try again or contact support."
         );
