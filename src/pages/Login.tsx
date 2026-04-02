@@ -37,14 +37,20 @@ const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
 
 function formatDateTime(value: string): string {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function getMfaMethodLabel(method: MfaVerificationMethod): string {
-  return method === "recovery_code" ? "Recovery code" : "Authenticator code";
+  }).format(date);
 }
 
 export function Login() {
@@ -516,7 +522,15 @@ export function Login() {
                       className="mt-1"
                     />
                     <span>
-                      {getMfaMethodLabel(method)}
+                      {method === "recovery_code" ? (
+                        <Trans id="login.mfa.method.recovery_code">
+                          Recovery code
+                        </Trans>
+                      ) : (
+                        <Trans id="login.mfa.method.totp">
+                          Authenticator code
+                        </Trans>
+                      )}
                       {method === pendingMfaChallenge.primary_method ? (
                         <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
                           <Trans id="login.mfa.preferred">recommended</Trans>
@@ -561,8 +575,13 @@ export function Login() {
                     mfaMethod === "recovery_code" ? "B6F4-2Q8P" : "123456"
                   }
                   disabled={isVerifyingMfa}
+                  aria-invalid={mfaError ? true : undefined}
+                  data-invalid={mfaError ? true : undefined}
+                  aria-describedby={mfaError ? "mfa-code-error" : undefined}
                 />
-                {mfaError ? <ErrorMessage>{mfaError}</ErrorMessage> : null}
+                {mfaError ? (
+                  <ErrorMessage id="mfa-code-error">{mfaError}</ErrorMessage>
+                ) : null}
               </Field>
 
               <DialogActions>
