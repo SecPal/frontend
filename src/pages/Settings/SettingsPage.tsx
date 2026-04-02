@@ -1,7 +1,14 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Trans } from "@lingui/macro";
 import type {
   MfaRecoveryCodeReveal,
@@ -36,33 +43,45 @@ import {
 
 type SensitiveMfaAction = "disable" | "regenerate";
 
-function getStatusLabel(status: MfaStatus | null): string {
+function getStatusLabel(status: MfaStatus | null): ReactNode {
   if (!status?.enabled) {
-    return "Not enabled";
+    return <Trans>Not enabled</Trans>;
   }
 
-  return status.method === "totp" ? "Authenticator app" : "Enabled";
+  return status.method === "totp" ? (
+    <Trans>Authenticator app</Trans>
+  ) : (
+    <Trans>Enabled</Trans>
+  );
 }
 
 function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
-  title: string;
-  description: string;
-  submit: string;
+  title: ReactNode;
+  description: ReactNode;
+  submit: ReactNode;
 } {
   if (action === "disable") {
     return {
-      title: "Disable MFA",
-      description:
-        "Confirm with your authenticator app or one recovery code to disable MFA for this account.",
-      submit: "Disable MFA",
+      title: <Trans>Disable MFA</Trans>,
+      description: (
+        <Trans>
+          Confirm with your authenticator app or one recovery code to disable
+          MFA for this account.
+        </Trans>
+      ),
+      submit: <Trans>Disable MFA</Trans>,
     };
   }
 
   return {
-    title: "Regenerate recovery codes",
-    description:
-      "Confirm with your authenticator app or one recovery code to replace every existing recovery code.",
-    submit: "Regenerate codes",
+    title: <Trans>Regenerate recovery codes</Trans>,
+    description: (
+      <Trans>
+        Confirm with your authenticator app or one recovery code to replace
+        every existing recovery code.
+      </Trans>
+    ),
+    submit: <Trans>Regenerate codes</Trans>,
   };
 }
 
@@ -88,7 +107,7 @@ export function SettingsPage() {
     [sensitiveAction]
   );
 
-  const loadMfaStatus = async () => {
+  const loadMfaStatus = useCallback(async () => {
     setIsLoadingMfaStatus(true);
     setMfaStatusError(null);
 
@@ -106,11 +125,11 @@ export function SettingsPage() {
     } finally {
       setIsLoadingMfaStatus(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadMfaStatus();
-  }, []);
+  }, [loadMfaStatus]);
 
   const handleSensitiveActionSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -207,6 +226,10 @@ export function SettingsPage() {
           {isLoadingMfaStatus ? (
             <Text className="text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>Loading MFA status...</Trans>
+            </Text>
+          ) : mfaStatusError ? (
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>MFA status could not be loaded.</Trans>
             </Text>
           ) : (
             <div className="space-y-6">
