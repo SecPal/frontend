@@ -12,6 +12,7 @@ import {
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
+import type { AuthenticatedUser, MfaVerificationMethod } from "@/types/api";
 import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
@@ -24,6 +25,7 @@ vi.mock("../services/authApi", async () => {
   return {
     ...actual,
     login: vi.fn(),
+    verifyMfaChallenge: vi.fn(),
     logout: vi.fn(),
     logoutAll: vi.fn(),
   };
@@ -77,6 +79,43 @@ const createUnhealthyResponse = (): healthApi.HealthStatus => ({
   timestamp: "2025-11-29T10:00:00Z",
 });
 
+const createAuthUser = (overrides?: Partial<AuthenticatedUser>) => ({
+  id: "1",
+  name: "Test User",
+  email: "test@secpal.dev",
+  roles: [],
+  permissions: [],
+  hasOrganizationalScopes: false,
+  hasCustomerAccess: false,
+  hasSiteAccess: false,
+  ...overrides,
+});
+
+const mfaChallengeFixture = {
+  id: "550e8400-e29b-41d4-a716-446655440099",
+  purpose: "login" as const,
+  login_context: "session" as const,
+  primary_method: "totp" as const,
+  available_methods: ["totp", "recovery_code"] as MfaVerificationMethod[],
+  expires_at: "2026-04-01T09:30:00Z",
+};
+
+async function openMfaDialog() {
+  vi.mocked(authApi.login).mockResolvedValueOnce({
+    challenge: mfaChallengeFixture,
+  });
+  renderLogin();
+  await screen.findByRole("button", { name: /log in/i });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@secpal.dev" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+  await screen.findByRole("heading", { name: /second factor required/i });
+}
+
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -114,16 +153,7 @@ describe("Login", () => {
   it("submits login form with email and password", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const mockResponse = {
-      user: {
-        id: "1",
-        name: "Test User",
-        email: "test@secpal.dev",
-        roles: [],
-        permissions: [],
-        hasOrganizationalScopes: false,
-        hasCustomerAccess: false,
-        hasSiteAccess: false,
-      },
+      user: createAuthUser(),
     };
     mockLogin.mockResolvedValueOnce(mockResponse);
 
@@ -154,6 +184,218 @@ describe("Login", () => {
         password: "password123",
       });
     });
+  });
+
+  it("shows an MFA challenge dialog when the backend requires a second factor", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockResolvedValueOnce({
+      challenge: {
+        id: "550e8400-e29b-41d4-a716-446655440099",
+        purpose: "login",
+        login_context: "session",
+        primary_method: "totp",
+        available_methods: ["totp", "recovery_code"],
+        expires_at: "2026-04-01T09:30:00Z",
+      },
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /second factor required/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /authenticator code/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /recovery code/i })
+    ).toBeInTheDocument();
+  });
+
+  it("verifies an MFA challenge and continues the session login flow", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: {
+        id: "550e8400-e29b-41d4-a716-446655440099",
+        purpose: "login",
+        login_context: "session",
+        primary_method: "totp",
+        available_methods: ["totp", "recovery_code"],
+        expires_at: "2026-04-01T09:30:00Z",
+      },
+    });
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyMfaChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "totp",
+          code: "123456",
+        }
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows MFA verification errors inline inside the challenge dialog", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: {
+        id: "550e8400-e29b-41d4-a716-446655440099",
+        purpose: "login",
+        login_context: "session",
+        primary_method: "totp",
+        available_methods: ["totp", "recovery_code"],
+        expires_at: "2026-04-01T09:30:00Z",
+      },
+    });
+    mockVerifyMfaChallenge.mockRejectedValueOnce(
+      new authApi.AuthApiError("The login challenge has expired.")
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    expect(
+      await screen.findByText(/the login challenge has expired/i)
+    ).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("closes the MFA dialog when the cancel button is clicked", async () => {
+    await openMfaDialog();
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+  });
+
+  it("switches to the recovery code input when the recovery code method is selected", async () => {
+    await openMfaDialog();
+    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+    expect(
+      screen.getByRole("textbox", { name: /recovery code/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /authenticator code/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an error when MFA challenge response has an unexpected mode", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "token" as unknown as "session",
+        mfa_completed: true,
+      },
+    });
+    await openMfaDialog();
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      { target: { value: "123456" } }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+    expect(
+      await screen.findByText(
+        /the mfa challenge completed with an unsupported login mode/i
+      )
+    ).toBeInTheDocument();
+    consoleErrorSpy.mockRestore();
   });
 
   it("displays error message on login failure", async () => {
@@ -353,16 +595,7 @@ describe("Login", () => {
 
     // Second call: success
     mockLogin.mockResolvedValueOnce({
-      user: {
-        id: "1",
-        name: "Test",
-        email: "test@secpal.dev",
-        roles: [],
-        permissions: [],
-        hasOrganizationalScopes: false,
-        hasCustomerAccess: false,
-        hasSiteAccess: false,
-      },
+      user: createAuthUser({ name: "Test" }),
     });
 
     // Second submission should clear error
@@ -727,16 +960,7 @@ describe("Login", () => {
 
       const mockLogin = vi.mocked(authApi.login);
       mockLogin.mockResolvedValueOnce({
-        user: {
-          id: "1",
-          name: "Test",
-          email: "test@secpal.dev",
-          roles: [],
-          permissions: [],
-          hasOrganizationalScopes: false,
-          hasCustomerAccess: false,
-          hasSiteAccess: false,
-        },
+        user: createAuthUser({ name: "Test" }),
       });
 
       renderLogin();
