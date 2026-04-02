@@ -91,6 +91,7 @@ describe("Login", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("renders login form", async () => {
@@ -190,7 +191,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -214,7 +215,7 @@ describe("Login", () => {
 
     expect(
       await screen.findByText(
-        /login ist derzeit vorübergehend nicht verfügbar\. bitte versuche es später erneut\./i
+        /login is temporarily unavailable\. please try again later\./i
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/^server error$/i)).not.toBeInTheDocument();
@@ -230,7 +231,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -264,7 +265,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
