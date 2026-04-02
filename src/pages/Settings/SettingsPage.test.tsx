@@ -237,4 +237,147 @@ describe("SettingsPage", () => {
     });
     expect(await screen.findByText(/not enabled/i)).toBeInTheDocument();
   });
+
+  it("shows error message when MFA status fails to load", async () => {
+    vi.mocked(authApi.getMfaStatus).mockRejectedValueOnce(
+      new Error("Network error")
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    expect(await screen.findByText(/network error/i)).toBeInTheDocument();
+  });
+
+  it("shows API error in dialog when disabling MFA fails", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    vi.mocked(authApi.disableMfa).mockRejectedValueOnce(
+      new Error("Invalid authenticator code")
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(screen.getByRole("button", { name: /disable mfa/i }));
+
+    await screen.findByRole("heading", { name: /disable mfa/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      { target: { value: "000000" } }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^disable mfa$/i }));
+
+    expect(
+      await screen.findByText(/invalid authenticator code/i)
+    ).toBeInTheDocument();
+  });
+
+  it("requires acknowledgment before closing recovery codes dialog", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    vi.mocked(authApi.regenerateRecoveryCodes).mockResolvedValueOnce(
+      createRecoveryRevealResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /regenerate recovery codes/i })
+    );
+
+    await screen.findByRole("heading", { name: /regenerate recovery codes/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      { target: { value: "123456" } }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /^regenerate codes$/i })
+    );
+
+    await screen.findByRole("heading", {
+      name: /store your recovery codes now/i,
+    });
+
+    const doneButton = screen.getByRole("button", { name: /^done$/i });
+    expect(doneButton).toBeDisabled();
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: /i stored these recovery codes/i,
+    });
+    fireEvent.click(checkbox);
+
+    expect(doneButton).not.toBeDisabled();
+
+    fireEvent.click(doneButton);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", {
+          name: /store your recovery codes now/i,
+        })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("cancels the sensitive action dialog without submitting", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(screen.getByRole("button", { name: /disable mfa/i }));
+
+    await screen.findByRole("heading", { name: /disable mfa/i });
+
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /disable mfa/i })
+      ).not.toBeInTheDocument();
+    });
+    expect(authApi.disableMfa).not.toHaveBeenCalled();
+  });
+
+  it("shows processing state while a sensitive action is submitting", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    let resolveDisable!: (
+      value: ReturnType<typeof createDisabledMfaStatusResponse>
+    ) => void;
+    vi.mocked(authApi.disableMfa).mockReturnValueOnce(
+      new Promise<ReturnType<typeof createDisabledMfaStatusResponse>>((res) => {
+        resolveDisable = res;
+      })
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(screen.getByRole("button", { name: /disable mfa/i }));
+
+    await screen.findByRole("heading", { name: /disable mfa/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      { target: { value: "123456" } }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^disable mfa$/i }));
+
+    expect(await screen.findByText(/processing\.\.\./i)).toBeInTheDocument();
+
+    resolveDisable(createDisabledMfaStatusResponse());
+
+    await waitFor(() => {
+      expect(screen.queryByText(/processing\.\.\./i)).not.toBeInTheDocument();
+    });
+  });
 });
