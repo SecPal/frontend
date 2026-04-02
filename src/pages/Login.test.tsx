@@ -186,6 +186,46 @@ describe("Login", () => {
     expect(errorElement).toBeInTheDocument();
   });
 
+  it("replaces raw 5xx login errors with a controlled temporary-unavailable message", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockLogin.mockRejectedValueOnce(
+      new authApi.AuthApiError("Server Error", undefined, 500)
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByText(
+        /login ist derzeit vorübergehend nicht verfügbar\. bitte versuche es später erneut\./i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^server error$/i)).not.toBeInTheDocument();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Login error:",
+      expect.any(authApi.AuthApiError)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("displays generic error message for non-AuthApiError", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
