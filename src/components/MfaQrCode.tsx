@@ -62,10 +62,9 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
 
   if (qrState.value === value && qrState.hasError) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+      <div className="flex min-h-48 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
         <Text className="text-sm text-amber-800 dark:text-amber-200">
-          QR code generation is unavailable in this browser. Use the manual
-          setup key below.
+          Unable to generate QR code. Use the manual setup key below.
         </Text>
       </div>
     );
@@ -73,7 +72,11 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
 
   if (qrState.value !== value || !qrState.dataUrl) {
     return (
-      <div className="flex min-h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex min-h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60"
+      >
         <Text className="text-sm text-zinc-500 dark:text-zinc-400">
           Generating QR code...
         </Text>

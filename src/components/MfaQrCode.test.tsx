@@ -51,9 +51,7 @@ describe("MfaQrCode", () => {
     expect(screen.getByText(/generating qr code/i)).toBeInTheDocument();
 
     expect(
-      await screen.findByText(
-        /qr code generation is unavailable in this browser/i
-      )
+      await screen.findByText(/unable to generate qr code/i)
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("img", { name: /mfa setup qr code/i })
