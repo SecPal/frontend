@@ -191,7 +191,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -231,7 +231,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -265,7 +265,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
