@@ -22,13 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.
 - Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
 - Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices, updated the browser-session auth transport to surface the discriminated `authenticated | mfa_required` result, and added full unit coverage for all new API client methods and transport branches.
 - Reduced the repo-local Copilot always-on context by replacing the long runtime baseline and removing the auto-loaded overlay fallback, which lowers request size in large VS Code workspaces without dropping the frontend-specific governance rules
 
 - Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.
 - Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
-- Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal.app` identifier-only for Android
+- Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping the Android application identifier identifier-only
 - Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host.
 - Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
 - Aligned customer and site feature gating with the backend collection policy by honoring explicit `hasCustomerAccess` and `hasSiteAccess` auth-context flags, so scoped-assignment users can enter the same areas the API intentionally exposes while users without any effective access continue to see the shared access-denied state.
