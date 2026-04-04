@@ -382,4 +382,24 @@ describe("ProtectedRoute", () => {
 
     expect(await screen.findByText(/too many requests\./i)).toBeInTheDocument();
   });
+
+  it("shows a generic error when resend rejects with a non-Error value", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce(unverifiedUser);
+    mockSendVerificationNotification.mockRejectedValueOnce("network-failed");
+    persistAuthUser();
+
+    renderProtectedRoute();
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: /send verification email again/i,
+      })
+    );
+
+    expect(
+      await screen.findByText(
+        /we could not send a new verification email\. please try again\./i
+      )
+    ).toBeInTheDocument();
+  });
 });
