@@ -62,11 +62,14 @@ See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing gui
 
 ## 🔐 Client-Side File Encryption
 
-SecPal implements **end-to-end client-side file encryption** using the Web Crypto API with **AES-GCM-256**. Files are encrypted on the client before upload, ensuring a **zero-knowledge architecture** where the backend cannot decrypt file contents.
+SecPal implements **end-to-end client-side file encryption** for file attachments using the Web Crypto API with **AES-GCM-256**. Attachment contents are encrypted on the client before upload, giving those files a **zero-knowledge** path where the backend cannot decrypt file contents.
+
+Employee and tenant data outside attachment contents use server-side encryption at rest, not zero-knowledge encryption, and attachment metadata such as filenames and sizes remains visible to the server.
 
 **Key Features:**
 
 - 🔒 **Zero-Knowledge Architecture**: Backend cannot decrypt files
+- 🔒 **Zero-Knowledge File Contents**: Backend cannot decrypt attachment contents
 - 🔑 **AES-GCM-256**: Industry-standard authenticated encryption
 - 🧬 **HKDF-SHA-256**: Secure key derivation per file
 - ✅ **Integrity Verification**: SHA-256 checksums detect tampering

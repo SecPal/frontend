@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Scoped the frontend zero-knowledge documentation to attachment contents only, clarifying in `README.md` and `CRYPTO_ARCHITECTURE.md` that broader application data uses server-side encryption at rest and that file metadata is still visible to the server.
 - Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
 - Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
 - Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.

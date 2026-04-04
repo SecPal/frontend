@@ -7,7 +7,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 ## 📋 Overview
 
-SecPal implements **end-to-end client-side file encryption** for attachments using the Web Crypto API with **AES-GCM-256**. This ensures a **zero-knowledge architecture** where the backend server cannot decrypt file contents.
+SecPal implements **end-to-end client-side file encryption** for attachments using the Web Crypto API with **AES-GCM-256**. Attachment contents follow a **zero-knowledge** path where the backend server cannot decrypt file contents.
+
+This zero-knowledge property applies only to attachment contents. Other application data is encrypted at rest on the server with server-held keys, and attachment metadata such as filenames and sizes is not encrypted.
 
 **Key Principle:** Files are encrypted on the client before upload and can only be decrypted by authorized users with access to the Secret's master key.
 
