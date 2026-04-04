@@ -31,7 +31,7 @@ describe("authState", () => {
     const sanitizedUser = sanitizeAuthUser({
       id: 1,
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
       employee: {
         management_level: 7,
       },
@@ -40,7 +40,7 @@ describe("authState", () => {
     expect(sanitizedUser).toEqual({
       id: "1",
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
       employee: {
         management_level: 7,
       },
@@ -51,7 +51,7 @@ describe("authState", () => {
     const sanitizedUser = sanitizePersistedAuthUser({
       id: 1,
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
       employee: {
         management_level: 7,
         personnel_number: "EMP-12345",
@@ -61,7 +61,7 @@ describe("authState", () => {
     expect(sanitizedUser).toEqual({
       id: "1",
       name: "Test User",
-      email: "test@secpal.app",
+      email: "test@secpal.dev",
     });
     expect(sanitizedUser).not.toHaveProperty("employee");
   });

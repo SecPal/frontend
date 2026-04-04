@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
 - Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.
 - Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
 - Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices, updated the browser-session auth transport to surface the discriminated `authenticated | mfa_required` result, and added full unit coverage for all new API client methods and transport branches.
