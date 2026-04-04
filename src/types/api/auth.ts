@@ -14,6 +14,7 @@ export interface AuthenticatedUser {
   id: AuthenticatedUserId;
   name: string;
   email: string;
+  emailVerified: boolean;
   roles: string[];
   permissions: string[];
   hasOrganizationalScopes: boolean;
@@ -28,6 +29,10 @@ export interface SessionLoginResponse {
 export interface TokenLoginResponse {
   token: string;
   user: AuthenticatedUser;
+}
+
+export interface VerificationNotificationResponse {
+  message: string;
 }
 
 export type MfaLoginPurpose = "login";

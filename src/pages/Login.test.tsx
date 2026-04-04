@@ -83,6 +83,7 @@ const createAuthUser = (overrides?: Partial<AuthenticatedUser>) => ({
   id: "1",
   name: "Test User",
   email: "test@secpal.dev",
+  emailVerified: true,
   roles: [],
   permissions: [],
   hasOrganizationalScopes: false,

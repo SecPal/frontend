@@ -11,6 +11,7 @@ export interface User {
   id: AuthUserId;
   name: string;
   email: string;
+  emailVerified?: boolean;
   roles?: string[];
   permissions?: string[];
   hasOrganizationalScopes?: boolean;

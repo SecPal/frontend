@@ -53,6 +53,7 @@ describe("authTransport", () => {
         id: 1,
         name: "Browser User",
         email: "browser@secpal.dev",
+        emailVerified: true,
         roles: ["Admin"],
         token: "should-not-leak",
       },
@@ -75,6 +76,7 @@ describe("authTransport", () => {
         id: "1",
         name: "Browser User",
         email: "browser@secpal.dev",
+        emailVerified: true,
         roles: ["Admin"],
       },
     });
@@ -125,6 +127,7 @@ describe("authTransport", () => {
         id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
         name: "Browser User",
         email: "uuid.browser@secpal.dev",
+        emailVerified: false,
         roles: [],
         permissions: [],
         hasOrganizationalScopes: false,
@@ -145,6 +148,7 @@ describe("authTransport", () => {
         id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
         name: "Browser User",
         email: "uuid.browser@secpal.dev",
+        emailVerified: false,
         hasOrganizationalScopes: false,
         hasCustomerAccess: false,
         hasSiteAccess: false,
@@ -195,6 +199,7 @@ describe("authTransport", () => {
         id: "7",
         name: "Native User",
         email: "native@secpal.dev",
+        emailVerified: false,
         permissions: ["profile.read"],
       },
     });
@@ -206,6 +211,7 @@ describe("authTransport", () => {
       id: "7",
       name: "Native User",
       email: "native@secpal.dev",
+      emailVerified: false,
       permissions: ["profile.read"],
     });
     expect(currentUser).not.toHaveProperty("token");
@@ -303,6 +309,7 @@ describe("authTransport", () => {
       id: 2,
       name: "Session User",
       email: "session@secpal.dev",
+      emailVerified: true,
       roles: ["Viewer"],
       token: "should-not-leak",
     });
@@ -315,6 +322,7 @@ describe("authTransport", () => {
       id: "2",
       name: "Session User",
       email: "session@secpal.dev",
+      emailVerified: true,
       roles: ["Viewer"],
     });
     expect(user).not.toHaveProperty("token");
@@ -325,6 +333,7 @@ describe("authTransport", () => {
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Session User",
       email: "uuid.session@secpal.dev",
+      emailVerified: false,
       roles: [],
       permissions: [],
       hasOrganizationalScopes: false,
@@ -339,6 +348,7 @@ describe("authTransport", () => {
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Session User",
       email: "uuid.session@secpal.dev",
+      emailVerified: false,
       hasOrganizationalScopes: false,
       hasCustomerAccess: false,
       hasSiteAccess: false,

@@ -124,4 +124,47 @@ describe("OrganizationalRoute", () => {
 
     expect(screen.getByText("Login Page")).toBeInTheDocument();
   });
+
+  it("shows the email verification gate before organizational access checks", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: false,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: false,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
+    expect(screen.queryByText("Access Denied")).not.toBeInTheDocument();
+  });
 });

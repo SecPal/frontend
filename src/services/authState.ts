@@ -63,6 +63,7 @@ export function sanitizeAuthUser(
     id: sanitizedId,
     name: candidate.name,
     email: candidate.email,
+    emailVerified: sanitizeBoolean(candidate.emailVerified) ?? false,
   };
 
   const roles = sanitizeStringArray(candidate.roles);
@@ -118,6 +119,7 @@ export function sanitizePersistedAuthUser(
     id: sanitizedUser.id,
     name: sanitizedUser.name,
     email: sanitizedUser.email,
+    emailVerified: sanitizedUser.emailVerified,
   };
 
   if (sanitizedUser.roles) {

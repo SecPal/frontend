@@ -21,6 +21,7 @@ describe("authState", () => {
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
       hasOrganizationalScopes: false,
       hasCustomerAccess: false,
       hasSiteAccess: false,
@@ -41,6 +42,7 @@ describe("authState", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
       employee: {
         management_level: 7,
       },
@@ -62,6 +64,7 @@ describe("authState", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     });
     expect(sanitizedUser).not.toHaveProperty("employee");
   });
@@ -77,6 +80,51 @@ describe("authState", () => {
       id: "019d30f1-767e-7210-bc31-2b8c1985bb61",
       name: "Persisted User",
       email: "persisted@secpal.dev",
+      emailVerified: false,
     });
+  });
+
+  it("keeps email verification state in ephemeral and persisted auth data", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+    const persistedUser = sanitizePersistedAuthUser({
+      id: 1,
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+
+    expect(sanitizedUser).toEqual({
+      id: "1",
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+    expect(persistedUser).toEqual({
+      id: "1",
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+  });
+
+  it("defaults emailVerified to false when the field is absent from source data", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Old User",
+      email: "old@secpal.dev",
+    });
+    const persistedUser = sanitizePersistedAuthUser({
+      id: 1,
+      name: "Old User",
+      email: "old@secpal.dev",
+    });
+
+    expect(sanitizedUser?.emailVerified).toBe(false);
+    expect(persistedUser?.emailVerified).toBe(false);
   });
 });

@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
+  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -25,6 +26,7 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
     hasOrganizationalAccess,
     logout,
     retryBootstrap,
+    user,
   } = useAuth();
 
   if (isLoading) {
@@ -43,6 +45,16 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.emailVerified === false) {
+    return (
+      <RouteEmailVerificationState
+        email={user.email}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      />
+    );
   }
 
   if (!hasOrganizationalAccess()) {

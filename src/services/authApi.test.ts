@@ -7,6 +7,7 @@ import {
   logout,
   logoutAll,
   getCurrentUser,
+  sendVerificationNotification,
   getMfaStatus,
   startTotpEnrollment,
   confirmTotpEnrollment,
@@ -22,6 +23,7 @@ const createAuthenticatedUser = (overrides?: Record<string, unknown>) => ({
   id: 1,
   name: "Test User",
   email: "test@secpal.dev",
+  emailVerified: true,
   roles: [],
   permissions: [],
   hasOrganizationalScopes: false,
@@ -505,6 +507,49 @@ describe("authApi", () => {
         "Current user fetch failed: expected application/json response from API"
       );
       await expect(currentUserPromise).rejects.toBeInstanceOf(AuthApiError);
+    });
+  });
+
+  describe("sendVerificationNotification", () => {
+    it("posts to the verification notification endpoint and returns the API message", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 202,
+        json: async () => ({ message: "Verification link sent successfully." }),
+      } as Response);
+
+      await expect(sendVerificationNotification()).resolves.toEqual({
+        message: "Verification link sent successfully.",
+      });
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("/v1/auth/email/verification-notification"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("surfaces JSON verification-notification errors with status metadata", async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          message: "Too many requests.",
+          code: "TOO_MANY_REQUESTS",
+        }),
+      } as Response);
+
+      await expect(sendVerificationNotification()).rejects.toMatchObject({
+        message: "Too many requests.",
+        status: 429,
+        code: "TOO_MANY_REQUESTS",
+      });
     });
   });
 
