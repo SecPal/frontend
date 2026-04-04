@@ -230,4 +230,47 @@ describe("PermissionRoute", () => {
     expect(screen.getByText("Login Page")).toBeInTheDocument();
     expect(screen.queryByText("Access Denied")).not.toBeInTheDocument();
   });
+
+  it("should show the email verification gate before checking permissions", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(() => true),
+      isLoading: false,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: false,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/test"]}>
+          <Routes>
+            <Route
+              path="/test"
+              element={
+                <PermissionRoute permission="test.read">
+                  <div>Protected Content</div>
+                </PermissionRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(screen.queryByText("Access Denied")).not.toBeInTheDocument();
+  });
 });

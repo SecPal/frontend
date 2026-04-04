@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added a dedicated email-verification gate for protected routes, wired it to the backend resend-verification endpoint, and stopped surfacing the raw backend `Your email address is not verified.` error inside arbitrary app pages after login.
 - Scoped the frontend zero-knowledge documentation to attachment contents only, clarifying in `README.md` and `docs/CRYPTO_ARCHITECTURE.md` that broader application data uses server-side encryption at rest and that file metadata is still visible to the server.
 - Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
 - Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.

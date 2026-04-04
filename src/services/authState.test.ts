@@ -79,4 +79,32 @@ describe("authState", () => {
       email: "persisted@secpal.dev",
     });
   });
+
+  it("keeps email verification state in ephemeral and persisted auth data", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+    const persistedUser = sanitizePersistedAuthUser({
+      id: 1,
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+
+    expect(sanitizedUser).toEqual({
+      id: "1",
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+    expect(persistedUser).toEqual({
+      id: "1",
+      name: "Verified User",
+      email: "verified@secpal.dev",
+      emailVerified: false,
+    });
+  });
 });

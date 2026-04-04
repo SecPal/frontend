@@ -85,11 +85,17 @@ describe("ProtectedRoute", () => {
       id: 1,
       name: "Test",
       email: "test@secpal.dev",
+      emailVerified: true,
     });
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+      JSON.stringify({
+        id: 1,
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: true,
+      })
     );
 
     renderProtectedRoute();
@@ -108,7 +114,12 @@ describe("ProtectedRoute", () => {
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+      JSON.stringify({
+        id: 1,
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: true,
+      })
     );
 
     renderProtectedRoute();
@@ -127,7 +138,12 @@ describe("ProtectedRoute", () => {
 
     localStorage.setItem(
       "auth_user",
-      JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+      JSON.stringify({
+        id: 1,
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: true,
+      })
     );
 
     renderProtectedRoute();
@@ -148,7 +164,12 @@ describe("ProtectedRoute", () => {
     try {
       localStorage.setItem(
         "auth_user",
-        JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+        JSON.stringify({
+          id: 1,
+          name: "Test",
+          email: "test@secpal.dev",
+          emailVerified: true,
+        })
       );
 
       renderProtectedRoute();
@@ -185,6 +206,7 @@ describe("ProtectedRoute", () => {
         id: 1,
         name: "Recovered User",
         email: "recovered@secpal.dev",
+        emailVerified: true,
       });
 
     vi.useFakeTimers();
@@ -192,7 +214,12 @@ describe("ProtectedRoute", () => {
     try {
       localStorage.setItem(
         "auth_user",
-        JSON.stringify({ id: 1, name: "Test", email: "test@secpal.dev" })
+        JSON.stringify({
+          id: 1,
+          name: "Test",
+          email: "test@secpal.dev",
+          emailVerified: true,
+        })
       );
 
       renderProtectedRoute();
@@ -270,5 +297,40 @@ describe("ProtectedRoute", () => {
         expect(loadingText.className).not.toContain("sr-only");
       }
     });
+  });
+
+  it("shows the dedicated email verification gate for authenticated unverified users", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    });
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: false,
+      })
+    );
+
+    renderProtectedRoute();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /verify your email address/i })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/test@secpal\.dev/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /i have verified my email/i }))
+      .toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /send verification email again/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
 });

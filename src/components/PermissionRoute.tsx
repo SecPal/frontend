@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
+  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -39,6 +40,7 @@ export function PermissionRoute({
     isLoading,
     logout,
     retryBootstrap,
+    user,
   } = useAuth();
 
   if (isLoading) {
@@ -57,6 +59,16 @@ export function PermissionRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.emailVerified === false) {
+    return (
+      <RouteEmailVerificationState
+        email={user.email}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      />
+    );
   }
 
   if (!hasPermission(permission)) {

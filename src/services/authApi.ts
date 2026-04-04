@@ -10,6 +10,7 @@ import type {
   MfaVerificationCodeRequest,
   SessionLoginResponse,
   TotpCodeRequest,
+  VerificationNotificationResponse,
 } from "@/types/api";
 import { buildApiUrl } from "../config";
 import { fetchCsrfToken, apiFetch } from "./csrf";
@@ -233,6 +234,33 @@ export async function getCurrentUser(): Promise<SessionLoginResponse["user"]> {
   return parseJsonResponse<SessionLoginResponse["user"]>(
     response,
     "Current user fetch failed"
+  );
+}
+
+export async function sendVerificationNotification(): Promise<VerificationNotificationResponse> {
+  await fetchCsrfToken();
+
+  const response = await apiFetch(
+    buildApiUrl("/v1/auth/email/verification-notification"),
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(
+      response,
+      "Verification email request failed"
+    );
+  }
+
+  return parseJsonResponse<VerificationNotificationResponse>(
+    response,
+    "Verification email request failed"
   );
 }
 

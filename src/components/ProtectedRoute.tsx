@@ -5,6 +5,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
   RouteBootstrapRecoveryState,
+  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -19,6 +20,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     isLoading,
     logout,
     retryBootstrap,
+    user,
   } = useAuth();
 
   if (isLoading) {
@@ -37,6 +39,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.emailVerified === false) {
+    return (
+      <RouteEmailVerificationState
+        email={user.email}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      />
+    );
   }
 
   return <>{children}</>;

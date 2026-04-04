@@ -8,6 +8,7 @@ import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
+  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -34,6 +35,7 @@ export function FeatureRoute({
     isLoading,
     logout,
     retryBootstrap,
+    user,
   } = useAuth();
   const capabilities = useUserCapabilities();
 
@@ -53,6 +55,16 @@ export function FeatureRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.emailVerified === false) {
+    return (
+      <RouteEmailVerificationState
+        email={user.email}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      />
+    );
   }
 
   if (!capabilities[feature]) {

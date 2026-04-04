@@ -83,6 +83,7 @@ const createAuthUser = (overrides?: Partial<AuthenticatedUser>) => ({
   id: "1",
   name: "Test User",
   email: "test@secpal.dev",
+  emailVerified: true,
   roles: [],
   permissions: [],
   hasOrganizationalScopes: false,
@@ -298,7 +299,7 @@ describe("Login", () => {
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockResolvedValueOnce({
       challenge: {
@@ -374,7 +375,7 @@ describe("Login", () => {
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
       user: createAuthUser(),
       authentication: {
@@ -433,7 +434,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -473,7 +474,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -507,7 +508,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
