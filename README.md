@@ -68,7 +68,6 @@ Employee and tenant data outside attachment contents use server-side encryption 
 
 **Key Features:**
 
-- 🔒 **Zero-Knowledge Architecture**: Backend cannot decrypt files
 - 🔒 **Zero-Knowledge File Contents**: Backend cannot decrypt attachment contents
 - 🔑 **AES-GCM-256**: Industry-standard authenticated encryption
 - 🧬 **HKDF-SHA-256**: Secure key derivation per file
