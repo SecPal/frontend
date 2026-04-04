@@ -17,17 +17,22 @@ import {
   AuthProvider,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
+import { AuthApiError } from "../services/authApi";
 
 const mockNavigate = vi.fn();
-const { mockGetCurrentUser } = vi.hoisted(() => ({
-  mockGetCurrentUser: vi.fn(),
-}));
+const { mockGetCurrentUser, mockSendVerificationNotification } = vi.hoisted(
+  () => ({
+    mockGetCurrentUser: vi.fn(),
+    mockSendVerificationNotification: vi.fn(),
+  })
+);
 
 vi.mock("../services/authApi", async () => {
   const actual = await vi.importActual("../services/authApi");
   return {
     ...actual,
     getCurrentUser: mockGetCurrentUser,
+    sendVerificationNotification: mockSendVerificationNotification,
   };
 });
 
@@ -43,6 +48,12 @@ vi.mock("react-router-dom", async () => {
 });
 
 const TestComponent = () => <div>Protected Content</div>;
+const unverifiedUser = {
+  id: 1,
+  name: "Test",
+  email: "test@secpal.dev",
+  emailVerified: false,
+};
 
 const renderProtectedRoute = () => {
   return render(
@@ -63,6 +74,10 @@ const renderProtectedRoute = () => {
       </I18nProvider>
     </BrowserRouter>
   );
+};
+
+const persistAuthUser = (user = unverifiedUser) => {
+  localStorage.setItem("auth_user", JSON.stringify(user));
 };
 
 describe("ProtectedRoute", () => {
@@ -300,22 +315,8 @@ describe("ProtectedRoute", () => {
   });
 
   it("shows the dedicated email verification gate for authenticated unverified users", async () => {
-    mockGetCurrentUser.mockResolvedValueOnce({
-      id: 1,
-      name: "Test",
-      email: "test@secpal.dev",
-      emailVerified: false,
-    });
-
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Test",
-        email: "test@secpal.dev",
-        emailVerified: false,
-      })
-    );
+    mockGetCurrentUser.mockResolvedValueOnce(unverifiedUser);
+    persistAuthUser();
 
     renderProtectedRoute();
 
@@ -333,5 +334,52 @@ describe("ProtectedRoute", () => {
       screen.getByRole("button", { name: /send verification email again/i })
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+  });
+
+  it("resends the verification email and retries bootstrap from the dedicated gate", async () => {
+    mockGetCurrentUser
+      .mockResolvedValueOnce(unverifiedUser)
+      .mockResolvedValueOnce({ ...unverifiedUser, emailVerified: true });
+    mockSendVerificationNotification.mockResolvedValueOnce({
+      message: "Verification link sent successfully.",
+    });
+    persistAuthUser();
+
+    renderProtectedRoute();
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: /send verification email again/i,
+      })
+    );
+
+    expect(
+      await screen.findByText(/verification link sent successfully\./i)
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: /i have verified my email/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+  });
+
+  it("shows resend failures from the dedicated gate", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce(unverifiedUser);
+    mockSendVerificationNotification.mockRejectedValueOnce(
+      new AuthApiError("Too many requests.")
+    );
+    persistAuthUser();
+
+    renderProtectedRoute();
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: /send verification email again/i,
+      })
+    );
+
+    expect(await screen.findByText(/too many requests\./i)).toBeInTheDocument();
   });
 });

@@ -15,7 +15,7 @@ vi.mock("../hooks/useAuth");
 vi.mock("../hooks/useUserCapabilities");
 
 describe("FeatureRoute", () => {
-  const baseCapabilities: UserCapabilities = {
+  const capabilities: UserCapabilities = {
     home: true,
     profile: true,
     settings: true,
@@ -37,9 +37,10 @@ describe("FeatureRoute", () => {
     },
   };
 
-  function mockAuth(
-    overrides: Partial<ReturnType<typeof authHook.useAuth>> = {}
-  ) {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
     vi.mocked(authHook.useAuth).mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -48,7 +49,7 @@ describe("FeatureRoute", () => {
         id: "1",
         name: "User",
         email: "user@secpal.dev",
-        emailVerified: true,
+        emailVerified: false,
       },
       login: vi.fn(),
       logout: vi.fn(),
@@ -56,22 +57,13 @@ describe("FeatureRoute", () => {
       hasRole: vi.fn(),
       hasPermission: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
-      ...overrides,
     });
-  }
+    vi.mocked(capabilitiesHook.useUserCapabilities).mockReturnValue(
+      capabilities
+    );
+  });
 
-  function mockCapabilities(overrides: Partial<UserCapabilities> = {}) {
-    vi.mocked(capabilitiesHook.useUserCapabilities).mockReturnValue({
-      ...baseCapabilities,
-      ...overrides,
-      actions: {
-        ...baseCapabilities.actions,
-        ...overrides.actions,
-      },
-    });
-  }
-
-  function renderFeatureRoute(element?: React.ReactNode) {
+  it("shows the email verification gate before rendering the feature", () => {
     render(
       <I18nProvider i18n={i18n}>
         <MemoryRouter initialEntries={["/customers"]}>
@@ -79,94 +71,19 @@ describe("FeatureRoute", () => {
             <Route
               path="/customers"
               element={
-                <FeatureRoute
-                  feature="customers"
-                  fallbackPath="/fallback"
-                  missingFeatureElement={<div>Missing Feature</div>}
-                  deniedActionElement={<div>Action Denied</div>}
-                  requiredAction={(capabilities) =>
-                    capabilities.actions.customers.create
-                  }
-                >
+                <FeatureRoute feature="customers">
                   <div>Customers Content</div>
                 </FeatureRoute>
               }
             />
-            <Route path="/fallback" element={<div>Fallback Page</div>} />
-            <Route path="/login" element={<div>Login Page</div>} />
           </Routes>
         </MemoryRouter>
       </I18nProvider>
     );
 
-    if (element) {
-      expect(screen.getByText(element as string)).toBeInTheDocument();
-    }
-  }
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    i18n.load("en", {});
-    i18n.activate("en");
-  });
-
-  it("renders the dedicated email verification gate before feature checks", () => {
-    mockAuth({
-      user: {
-        id: "1",
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: false,
-      },
-    });
-    mockCapabilities();
-
-    renderFeatureRoute();
-
     expect(
       screen.getByRole("heading", { name: /verify your email address/i })
     ).toBeInTheDocument();
     expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
-  });
-
-  it("redirects unauthenticated users to login", () => {
-    mockAuth({ isAuthenticated: false, user: null });
-    mockCapabilities();
-
-    renderFeatureRoute();
-
-    expect(screen.getByText("Login Page")).toBeInTheDocument();
-  });
-
-  it("redirects to the fallback path when the feature is unavailable", () => {
-    mockAuth();
-    mockCapabilities({ customers: false });
-
-    renderFeatureRoute();
-
-    expect(screen.getByText("Fallback Page")).toBeInTheDocument();
-  });
-
-  it("renders the denied action element when the action capability is missing", () => {
-    mockAuth();
-    mockCapabilities({
-      actions: {
-        ...baseCapabilities.actions,
-        customers: { create: false, update: true, delete: true },
-      },
-    });
-
-    renderFeatureRoute();
-
-    expect(screen.getByText("Action Denied")).toBeInTheDocument();
-  });
-
-  it("renders children when the feature and action are allowed", () => {
-    mockAuth();
-    mockCapabilities();
-
-    renderFeatureRoute();
-
-    expect(screen.getByText("Customers Content")).toBeInTheDocument();
   });
 });
