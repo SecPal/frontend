@@ -512,7 +512,9 @@ For security issues or vulnerabilities, please report to:
 
 **PGP Key:** TBD (will be published on keys.openpgp.org)
 
-**Please DO NOT open public GitHub issues for security vulnerabilities.**---
+**Please DO NOT open public GitHub issues for security vulnerabilities.**
+
+---
 
 **Document Version:** 1.0
 **Last Updated:** 2025-11-21
