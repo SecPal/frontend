@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- restored explicit repo-local Copilot governance by making TDD-first, quality-first, one-topic-per-PR, immediate issue creation for out-of-scope findings, and EPIC-plus-sub-issue requirements always-on again; the frontend runtime overlay now auto-loads repo-wide so these rules remain present while working
+- clarified the repo-local PR workflow so finished frontend work must be self-reviewed, committed, and pushed before any PR exists, and the first PR state must always be draft until the final PR-view self-review is clean
 - Scoped the frontend zero-knowledge documentation to attachment contents only, clarifying in `README.md` and `docs/CRYPTO_ARCHITECTURE.md` that broader application data uses server-side encryption at rest and that file metadata is still visible to the server.
 - Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
 - Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
