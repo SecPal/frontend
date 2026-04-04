@@ -326,8 +326,9 @@ describe("ProtectedRoute", () => {
     });
 
     expect(screen.getByText(/test@secpal\.dev/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /i have verified my email/i }))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /i have verified my email/i })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /send verification email again/i })
     ).toBeInTheDocument();
