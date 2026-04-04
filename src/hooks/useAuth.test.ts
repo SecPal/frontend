@@ -81,6 +81,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
     const revalidatedUser = {
       ...mockUser,
@@ -187,6 +188,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
@@ -214,6 +216,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
@@ -248,6 +251,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
     const nativeBridge = {
       login: vi.fn(),
@@ -291,6 +295,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
     const deferred = createDeferredPromise<typeof mockUser>();
 
@@ -325,6 +330,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
@@ -365,6 +371,7 @@ describe("useAuth", () => {
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
+      emailVerified: false,
     };
 
     act(() => {
@@ -666,6 +673,7 @@ describe("useAuth", () => {
       id: "2",
       name: "Cross-Tab User",
       email: "cross@secpal.dev",
+      emailVerified: false,
     };
 
     act(() => {
