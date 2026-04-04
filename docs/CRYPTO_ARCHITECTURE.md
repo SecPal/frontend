@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2026 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
@@ -31,7 +31,7 @@ Encrypted File Blob
 2. **File Encryption Key**: Derived using HKDF-SHA-256:
    - Input: Secret's master key (32 bytes)
    - Salt: Filename as UTF-8 bytes
-   - Info: "file-encryption" string
+   - Info: Empty byte string (`new Uint8Array(0)`)
    - Output: 256-bit key for AES-GCM
 
 **Why HKDF?**
@@ -508,7 +508,7 @@ const checksum = await calculateChecksum(fileData);
 
 For security issues or vulnerabilities, please report to:
 
-**Email:** <security@secpal.app>  
+**Email:** <security@secpal.app>
 **PGP Key:** TBD (will be published on keys.openpgp.org)
 
 **Please DO NOT open public GitHub issues for security vulnerabilities.**---

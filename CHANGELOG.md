@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
 - Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
 - Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.
 - Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
