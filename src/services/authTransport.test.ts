@@ -52,7 +52,7 @@ describe("authTransport", () => {
       user: {
         id: 1,
         name: "Browser User",
-        email: "browser@secpal.app",
+        email: "browser@secpal.dev",
         roles: ["Admin"],
         token: "should-not-leak",
       },
@@ -60,13 +60,13 @@ describe("authTransport", () => {
 
     const transport = getAuthTransport();
     const result = await transport.login({
-      email: "browser@secpal.app",
+      email: "browser@secpal.dev",
       password: "password123",
     });
 
     expect(transport.kind).toBe("browser-session");
     expect(mockBrowserLogin).toHaveBeenCalledWith({
-      email: "browser@secpal.app",
+      email: "browser@secpal.dev",
       password: "password123",
     });
     expect(result).toEqual({
@@ -74,7 +74,7 @@ describe("authTransport", () => {
       user: {
         id: "1",
         name: "Browser User",
-        email: "browser@secpal.app",
+        email: "browser@secpal.dev",
         roles: ["Admin"],
       },
     });
@@ -158,7 +158,7 @@ describe("authTransport", () => {
         user: {
           id: 7,
           name: "Native User",
-          email: "native@secpal.app",
+          email: "native@secpal.dev",
           permissions: ["profile.read"],
           token: "native-secret",
           refreshToken: "native-refresh-secret",
@@ -169,7 +169,7 @@ describe("authTransport", () => {
       getCurrentUser: vi.fn().mockResolvedValue({
         id: 7,
         name: "Native User",
-        email: "native@secpal.app",
+        email: "native@secpal.dev",
         permissions: ["profile.read"],
         token: "native-secret",
       }),
@@ -178,14 +178,14 @@ describe("authTransport", () => {
 
     const transport = resolveAuthTransport({ nativeBridge });
     const loginResult = await transport.login({
-      email: "native@secpal.app",
+      email: "native@secpal.dev",
       password: "password123",
     });
     const currentUser = await transport.getCurrentUser();
 
     expect(transport.kind).toBe("native-bridge");
     expect(nativeBridge.login).toHaveBeenCalledWith({
-      email: "native@secpal.app",
+      email: "native@secpal.dev",
       password: "password123",
     });
     expect(mockBrowserLogin).not.toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe("authTransport", () => {
       user: {
         id: "7",
         name: "Native User",
-        email: "native@secpal.app",
+        email: "native@secpal.dev",
         permissions: ["profile.read"],
       },
     });
@@ -205,7 +205,7 @@ describe("authTransport", () => {
     expect(currentUser).toEqual({
       id: "7",
       name: "Native User",
-      email: "native@secpal.app",
+      email: "native@secpal.dev",
       permissions: ["profile.read"],
     });
     expect(currentUser).not.toHaveProperty("token");
@@ -257,7 +257,7 @@ describe("authTransport", () => {
 
     await expect(
       transport.login({
-        email: "native@secpal.app",
+        email: "native@secpal.dev",
         password: "password123",
       })
     ).rejects.toThrow(
@@ -302,7 +302,7 @@ describe("authTransport", () => {
     mockBrowserGetCurrentUser.mockResolvedValueOnce({
       id: 2,
       name: "Session User",
-      email: "session@secpal.app",
+      email: "session@secpal.dev",
       roles: ["Viewer"],
       token: "should-not-leak",
     });
@@ -314,7 +314,7 @@ describe("authTransport", () => {
     expect(user).toEqual({
       id: "2",
       name: "Session User",
-      email: "session@secpal.app",
+      email: "session@secpal.dev",
       roles: ["Viewer"],
     });
     expect(user).not.toHaveProperty("token");
