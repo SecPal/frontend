@@ -105,7 +105,7 @@ export function RouteEmailVerificationState({
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="max-w-xl text-center" role="status" aria-live="polite">
+      <div className="max-w-xl text-center">
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Verify your email address</Trans>
         </h1>
@@ -122,17 +122,19 @@ export function RouteEmailVerificationState({
           </Trans>
         </Text>
 
-        {statusMessage ? (
-          <p className="mt-4 text-sm text-emerald-600 dark:text-emerald-400">
-            {statusMessage}
-          </p>
-        ) : null}
+        <div role="status" aria-live="polite">
+          {statusMessage ? (
+            <p className="mt-4 text-sm text-emerald-600 dark:text-emerald-400">
+              {statusMessage}
+            </p>
+          ) : null}
 
-        {errorMessage ? (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {errorMessage}
-          </p>
-        ) : null}
+          {errorMessage ? (
+            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {errorMessage}
+            </p>
+          ) : null}
+        </div>
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button onClick={onRetry} type="button">

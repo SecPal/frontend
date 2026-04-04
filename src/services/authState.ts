@@ -63,12 +63,8 @@ export function sanitizeAuthUser(
     id: sanitizedId,
     name: candidate.name,
     email: candidate.email,
+    emailVerified: sanitizeBoolean(candidate.emailVerified) ?? false,
   };
-
-  const emailVerified = sanitizeBoolean(candidate.emailVerified);
-  if (emailVerified !== undefined) {
-    sanitizedUser.emailVerified = emailVerified;
-  }
 
   const roles = sanitizeStringArray(candidate.roles);
   if (roles) {
@@ -123,11 +119,8 @@ export function sanitizePersistedAuthUser(
     id: sanitizedUser.id,
     name: sanitizedUser.name,
     email: sanitizedUser.email,
+    emailVerified: sanitizedUser.emailVerified,
   };
-
-  if (sanitizedUser.emailVerified !== undefined) {
-    persistedAuthUser.emailVerified = sanitizedUser.emailVerified;
-  }
 
   if (sanitizedUser.roles) {
     persistedAuthUser.roles = sanitizedUser.roles;

@@ -199,6 +199,7 @@ describe("authTransport", () => {
         id: "7",
         name: "Native User",
         email: "native@secpal.dev",
+        emailVerified: false,
         permissions: ["profile.read"],
       },
     });
@@ -210,6 +211,7 @@ describe("authTransport", () => {
       id: "7",
       name: "Native User",
       email: "native@secpal.dev",
+      emailVerified: false,
       permissions: ["profile.read"],
     });
     expect(currentUser).not.toHaveProperty("token");
