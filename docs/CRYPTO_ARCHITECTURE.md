@@ -509,6 +509,7 @@ const checksum = await calculateChecksum(fileData);
 For security issues or vulnerabilities, please report to:
 
 **Email:** <security@secpal.app>
+
 **PGP Key:** TBD (will be published on keys.openpgp.org)
 
 **Please DO NOT open public GitHub issues for security vulnerabilities.**---
