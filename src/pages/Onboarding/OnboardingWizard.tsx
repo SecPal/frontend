@@ -157,11 +157,18 @@ export function OnboardingWizard() {
     void loadOnboardingSteps();
   }, [loadOnboardingSteps]);
 
+  // Re-fetch the template only when the user navigates to a different step or
+  // when steps first arrive — not on every draft-save that updates steps content.
   useEffect(() => {
     if (steps.length > 0) {
       void loadCurrentTemplate();
     }
-  }, [loadCurrentTemplate, steps.length]);
+    // Intentionally omitting `loadCurrentTemplate` from deps: including it would
+    // retrigger this effect on every setSteps call (e.g. after saving a draft),
+    // causing an unnecessary API round-trip. The effect should only run when
+    // the active step index or the step count changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepIndex, steps.length]);
 
   function updateCurrentStep(
     savedSubmission: OnboardingSubmission,

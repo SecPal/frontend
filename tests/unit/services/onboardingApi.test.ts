@@ -452,7 +452,7 @@ describe("createOnboardingSubmission", () => {
         template_id: "template-9",
         form_data: { tax_id: "DE123" },
         status: "draft",
-      } as Parameters<typeof createOnboardingSubmission>[0])
+      })
     ).resolves.toEqual(
       expect.objectContaining({
         id: "submission-2",

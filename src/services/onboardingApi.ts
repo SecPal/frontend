@@ -71,7 +71,7 @@ export interface OnboardingSubmission {
  */
 export interface OnboardingSubmissionData {
   template_id?: string;
-  form_template_id: string;
+  form_template_id?: string;
   form_data: Record<string, unknown>;
   status?: "draft" | "submitted";
 }
@@ -258,7 +258,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
 
       return {
         step_number: index + 1,
-        title: template.name,
+        title: template.title ?? template.name,
         description: template.description ?? undefined,
         template_id: template.id,
         is_completed:

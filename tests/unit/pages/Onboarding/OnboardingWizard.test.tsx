@@ -59,7 +59,7 @@ function renderWizard() {
 
 describe("OnboardingWizard", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.stubGlobal("alert", vi.fn());
 
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
