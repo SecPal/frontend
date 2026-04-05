@@ -14,3 +14,7 @@ applyTo: "src/**/*.ts,src/**/*.tsx,tests/**/*.ts,tests/**/*.tsx,vite.config.ts"
 - Test user-visible behavior with Testing Library. Prefer MSW for API boundaries.
 - Run the smallest relevant validation for each change: tests, typecheck, and lint.
 - Maintain accessibility, semantic markup, and responsive behavior.
+- Default boolean security flags (e.g. `emailVerified`) to `false` in sanitization layers; never leave them
+  `undefined` on authenticated state.
+- Scope `role="status"` and `aria-live` to the exact dynamic content region, not to wider containers that
+  also hold headings or interactive controls.
