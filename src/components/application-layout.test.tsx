@@ -22,9 +22,9 @@ const QUERY_TIMEOUT = 15000;
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+    observe() { }
+    unobserve() { }
+    disconnect() { }
   };
 });
 
@@ -104,6 +104,25 @@ describe("ApplicationLayout", () => {
 
       expect(screen.getByTestId("test-content")).toBeInTheDocument();
       expect(screen.getByText("Test Content")).toBeInTheDocument();
+    });
+
+    it("renders the desktop content surface without an inset frame", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const main = screen.getByRole("main");
+      expect(main).not.toHaveClass("pb-2");
+      expect(main.className).not.toContain("lg:px-2");
+
+      const contentSurface = main.firstElementChild as HTMLDivElement | null;
+
+      expect(contentSurface).not.toBeNull();
+      expect(contentSurface?.className).not.toContain("lg:rounded-lg");
+      expect(contentSurface?.className).not.toContain("lg:shadow-xs");
+      expect(contentSurface?.className).not.toContain("lg:ring-1");
     });
 
     it("renders navigation links", () => {
@@ -318,7 +337,7 @@ describe("ApplicationLayout", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => { });
 
       renderWithProviders(
         <ApplicationLayout>
