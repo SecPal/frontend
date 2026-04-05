@@ -377,6 +377,78 @@ describe("EmployeeDetail", () => {
     vi.restoreAllMocks();
   });
 
+  it("should display Error failures from confirm onboarding", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockRejectedValueOnce(
+      new Error("Confirm failed")
+    );
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm onboarding/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Confirm failed")).toBeInTheDocument();
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  it("should display object-message failures from confirm onboarding", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockRejectedValueOnce({
+      message: "Object confirm failure",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm onboarding/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Object confirm failure")).toBeInTheDocument();
+    });
+
+    vi.restoreAllMocks();
+  });
+
   it("should show terminate button for on-leave employees", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
       ...mockEmployee,

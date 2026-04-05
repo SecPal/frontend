@@ -271,6 +271,31 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         })
       );
     });
+
+    it("should throw an error when the confirmation success response cannot be parsed", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockRejectedValue(new Error("Unexpected token '<'")),
+      });
+
+      await expect(confirmEmployeeOnboarding("emp-1")).rejects.toThrow(
+        "Failed to parse employee response"
+      );
+    });
+
+    it("should fall back to statusText when the confirmation error body is not JSON", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: "Bad Gateway",
+        json: vi.fn().mockRejectedValue(new Error("Unexpected token '<'")),
+      });
+
+      await expect(confirmEmployeeOnboarding("emp-1")).rejects.toThrow(
+        "Bad Gateway"
+      );
+    });
   });
 
   describe("Error response handling", () => {
