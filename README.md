@@ -218,7 +218,7 @@ import { SecretDetail } from "@/pages/Secrets/SecretDetail";
 
 ## 🌍 Internationalization (i18n)
 
-SecPal supports multiple languages using [Lingui](https://lingui.dev/) and [Translation.io](https://translation.io/).
+SecPal supports multiple languages using [Lingui](https://lingui.dev/) with checked-in `.po` catalogs.
 
 **Supported Languages:**
 
@@ -234,41 +234,16 @@ npm run lingui:extract
 # Compile translation catalogs for production
 npm run lingui:compile
 
-# Extract, compile, and sync against Translation.io
+# Extract and compile the checked-in `.po` catalogs
 npm run sync
 
-# Extract, compile, sync against Translation.io, and remove unused translations
+# Extract, compile, and remove unused translations
 npm run sync:purge
-
-# Local-only extract and compile without contacting Translation.io
-npm run sync:local
-
-# Local-only extract and compile with deprecated-string cleanup
-npm run sync:local:purge
-
-# Explicit Translation.io sync alias (requires TRANSLATION_IO_API_KEY in .env.local)
-npm run sync:translationio
-
-# Explicit Translation.io purge sync alias
-npm run sync:translationio:purge
 ```
 
-**Translation.io Integration:**
+**Workflow:**
 
-This project uses [Translation.io](https://translation.io/) for collaborative translation management.
-
-**Setup for Contributors:**
-
-1. Copy `.env.example` to `.env.local`
-2. Get the Translation.io API key from a maintainer or from the project's Translation.io account
-3. Add the key to `.env.local`: `TRANSLATION_IO_API_KEY=your_key_here`
-4. Run `npm run sync` to synchronize translations against Translation.io
-
-Translation.io provides free, unlimited accounts for open-source projects.
-
-**Authority and conflict policy:** The checked-in Lingui catalogs remain the shipped runtime artifacts, but Translation.io is the authoritative source when catalog content conflicts. Use `npm run sync` / `npm run sync:purge` as the default maintenance path so local catalogs are refreshed from Translation.io before they are committed.
-
-**Local-only fallback:** `npm run sync:local` and `npm run sync:local:purge` remain available for emergency local extraction/compile work when Translation.io cannot be reached, but those commands are not the default reconciliation path.
+The checked-in Lingui `.po` catalogs are the source of truth. Update source strings with `npm run sync` or `npm run sync:purge`, then review and edit the resulting `.po` files directly or in a gettext editor such as POedit.
 
 **Adding Translations:**
 
@@ -281,8 +256,6 @@ import { Trans } from "@lingui/macro";
 // With variables
 <Trans>Welcome, {userName}</Trans>
 ```
-
-**Translation Service:** This project uses [Translation.io](https://translation.io/) for collaborative translation management. Translation.io provides a free, unlimited account for open-source projects. Thank you, Translation.io! 🙏
 
 ## 🎨 UI Components & Design System
 
