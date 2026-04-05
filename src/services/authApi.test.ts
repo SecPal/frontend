@@ -713,7 +713,7 @@ describe("authApi", () => {
             enrolled_at: "2026-04-01T09:10:00Z",
           },
           recovery_codes: {
-            codes: ["B6F4-2Q8P", "F9LM-7N2R"],
+            codes: ["B6F42Q8P", "F9LM7N2R"],
             generated_at: "2026-04-01T09:12:00Z",
           },
         },
@@ -771,7 +771,7 @@ describe("authApi", () => {
             enrolled_at: "2026-04-01T09:10:00Z",
           },
           recovery_codes: {
-            codes: ["X3CE-1RM6", "V7NK-5HF9"],
+            codes: ["X3CE1RM6", "V7NK5HF9"],
             generated_at: "2026-04-01T10:00:00Z",
           },
         },

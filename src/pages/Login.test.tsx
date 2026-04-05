@@ -366,7 +366,7 @@ describe("Login", () => {
     fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
     expect(
       screen.getByRole("textbox", { name: /recovery code/i })
-    ).toBeInTheDocument();
+    ).toHaveAttribute("placeholder", "B6F42Q8P");
     expect(
       screen.queryByRole("textbox", { name: /authenticator code/i })
     ).not.toBeInTheDocument();

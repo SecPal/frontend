@@ -572,7 +572,7 @@ export function Login() {
                   value={mfaCode}
                   onChange={(event) => setMfaCode(event.target.value)}
                   placeholder={
-                    mfaMethod === "recovery_code" ? "B6F4-2Q8P" : "123456"
+                    mfaMethod === "recovery_code" ? "B6F42Q8P" : "123456"
                   }
                   disabled={isVerifyingMfa}
                   aria-invalid={mfaError ? true : undefined}

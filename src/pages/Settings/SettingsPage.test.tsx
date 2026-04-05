@@ -85,14 +85,14 @@ function createRecoveryRevealResponse() {
       status: createEnabledMfaStatusResponse().data,
       recovery_codes: {
         codes: [
-          "B6F4-2Q8P",
-          "F9LM-7N2R",
-          "HT4V-3KQ1",
-          "J8PW-6CX5",
-          "M2TR-9DZ7",
-          "Q4YS-8LB2",
-          "V7NK-5HF9",
-          "X3CE-1RM6",
+          "B6F42Q8P",
+          "F9LM7N2R",
+          "HT4V3KQ1",
+          "J8PW6CX5",
+          "M2TR9DZ7",
+          "Q4YS8LB2",
+          "V7NK5HF9",
+          "X3CE1RM6",
         ],
         generated_at: "2026-04-01T09:12:00Z",
       },
@@ -378,6 +378,10 @@ describe("SettingsPage", () => {
 
     await screen.findByRole("heading", { name: /disable mfa/i });
 
+    expect(
+      screen.getByRole("textbox", { name: /^authenticator code$/i })
+    ).toHaveAttribute("placeholder", "123456");
+
     fireEvent.change(
       screen.getByRole("textbox", { name: /^authenticator code$/i }),
       {
@@ -429,6 +433,26 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByText(/invalid authenticator code/i)
     ).toBeInTheDocument();
+  });
+
+  it("shows the canonical raw recovery-code placeholder for sensitive MFA actions", async () => {
+    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /regenerate recovery codes/i })
+    );
+
+    await screen.findByRole("heading", { name: /regenerate recovery codes/i });
+    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+
+    expect(
+      screen.getByRole("textbox", { name: /^recovery code$/i })
+    ).toHaveAttribute("placeholder", "B6F42Q8P");
   });
 
   it("requires acknowledgment before closing recovery codes dialog", async () => {
