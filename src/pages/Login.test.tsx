@@ -299,7 +299,7 @@ describe("Login", () => {
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
 
     mockLogin.mockResolvedValueOnce({
       challenge: {
@@ -364,10 +364,9 @@ describe("Login", () => {
   it("switches to the recovery code input when the recovery code method is selected", async () => {
     await openMfaDialog();
     fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
-    expect(screen.getByRole("textbox", { name: /recovery code/i })).toHaveAttribute(
-      "placeholder",
-      "B6F42Q8P"
-    );
+    expect(
+      screen.getByRole("textbox", { name: /recovery code/i })
+    ).toHaveAttribute("placeholder", "B6F42Q8P");
     expect(
       screen.queryByRole("textbox", { name: /authenticator code/i })
     ).not.toBeInTheDocument();
@@ -376,7 +375,7 @@ describe("Login", () => {
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
     vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
       user: createAuthUser(),
       authentication: {
@@ -435,7 +434,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -475,7 +474,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -509,7 +508,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => { });
+      .mockImplementation(() => {});
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
