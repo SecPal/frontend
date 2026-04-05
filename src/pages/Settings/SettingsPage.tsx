@@ -654,7 +654,7 @@ export function SettingsPage() {
                   value={sensitiveCode}
                   onChange={(event) => setSensitiveCode(event.target.value)}
                   placeholder={
-                    sensitiveMethod === "totp" ? "123456" : "B6F4-2Q8P"
+                    sensitiveMethod === "totp" ? "123456" : "B6F42Q8P"
                   }
                   disabled={isSubmittingSensitiveAction}
                 />

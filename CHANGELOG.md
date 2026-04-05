@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned MFA recovery-code placeholders, frontend fixtures, and service mocks with the canonical API payload shape of raw 8-character uppercase alphanumeric codes so the browser UI no longer teaches a grouped `XXXX-XXXX` format that differs from what the backend stores and returns.
 - Made the checked-in Lingui `.po` catalogs the only frontend translation authority, removing the Translation.io-specific sync overlay so catalog maintenance now stays entirely repo-local.
 - Refreshed the shipped MFA/login locale artifacts from the repo-local Lingui catalogs so the new MFA settings UI no longer falls back to raw Lingui message IDs in production.
 - Removed the inset desktop content frame beneath the top navigation so the page surface now spans edge to edge without the previous side and bottom border effect.
