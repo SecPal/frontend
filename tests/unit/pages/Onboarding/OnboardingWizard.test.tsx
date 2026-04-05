@@ -132,9 +132,7 @@ describe("OnboardingWizard", () => {
       });
     });
 
-    expect(globalThis.alert).toHaveBeenCalledWith(
-      "Draft saved successfully!"
-    );
+    expect(globalThis.alert).toHaveBeenCalledWith("Draft saved successfully!");
   });
 
   it("submits the active step using the existing submission payload fallback", async () => {
@@ -179,16 +177,16 @@ describe("OnboardingWizard", () => {
       expect(screen.getByText("Tax Details")).toBeInTheDocument();
     });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /submit for review/i })
-    );
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
     await waitFor(() => {
-      expect(onboardingApi.createOnboardingSubmission).toHaveBeenLastCalledWith({
-        form_template_id: "template-2",
-        form_data: { legal_name: "Jane Doe" },
-        status: "submitted",
-      });
+      expect(onboardingApi.createOnboardingSubmission).toHaveBeenLastCalledWith(
+        {
+          form_template_id: "template-2",
+          form_data: { legal_name: "Jane Doe" },
+          status: "submitted",
+        }
+      );
     });
 
     expect(globalThis.alert).toHaveBeenCalledWith(

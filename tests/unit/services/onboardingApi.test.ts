@@ -14,9 +14,9 @@ import {
 import { apiFetch } from "../../../src/services/csrf";
 
 vi.mock("../../../src/services/csrf", async () => {
-  const actual = await vi.importActual<typeof import("../../../src/services/csrf")>(
-    "../../../src/services/csrf"
-  );
+  const actual = await vi.importActual<
+    typeof import("../../../src/services/csrf")
+  >("../../../src/services/csrf");
 
   return {
     ...actual,
