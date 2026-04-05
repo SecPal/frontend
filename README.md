@@ -266,8 +266,6 @@ This project uses [Translation.io](https://translation.io/) for collaborative tr
 
 Translation.io provides free, unlimited accounts for open-source projects.
 
-**For maintainers:** The API key is also configured as a GitHub Secret for automated CI translation syncs.
-
 **Authority and conflict policy:** The checked-in Lingui catalogs remain the shipped runtime artifacts, but Translation.io is the authoritative source when catalog content conflicts. Use `npm run sync` / `npm run sync:purge` as the default maintenance path so local catalogs are refreshed from Translation.io before they are committed.
 
 **Local-only fallback:** `npm run sync:local` and `npm run sync:local:purge` remain available for emergency local extraction/compile work when Translation.io cannot be reached, but those commands are not the default reconciliation path.
