@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Corrected the authenticated onboarding template fetch path from `/v1/onboarding/forms/{template}` to the backend runtime route `/v1/onboarding/templates/{template}`, so the onboarding wizard no longer requests a non-existent endpoint when loading a form step.
 - Replaced the protected-route startup dead-end on Android with a bounded auth-bootstrap recovery flow, so cached sessions no longer sit on an indefinite `Laden...` spinner when native session revalidation is slow or transiently fails; SecPal now shows an explicit retry/login recovery state and only clears auth immediately for real invalid-session errors.
 - Stopped Android cached-session bootstrap from blocking protected routes when the native layer reports the device offline, so the shared frontend now checks native connectivity before `GET /v1/me` and preserves cached access instead of falling back into repeated recovery loops driven by stale `navigator.onLine` state.
 - Disabled PWA service-worker registration inside the native Capacitor runtime and added native-runtime cleanup of stale browser service workers and cache storage so Android app updates no longer stay pinned to an outdated cached app shell that misses the injected native auth bridge.

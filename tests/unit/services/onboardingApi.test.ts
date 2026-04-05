@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   validateOnboardingToken,
   completeOnboarding,
+  fetchOnboardingTemplate,
 } from "../../../src/services/onboardingApi";
 
 function makeFetchResponse(
@@ -180,5 +181,34 @@ describe("completeOnboarding", () => {
         },
       },
     });
+  });
+});
+
+describe("fetchOnboardingTemplate", () => {
+  it("uses the runtime templates endpoint", async () => {
+    const template = {
+      id: "template-1",
+      title: "Personal Details",
+      step_number: 1,
+      form_schema: {},
+      is_system_template: true,
+    };
+
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValue(makeFetchResponse(200, { data: template }));
+
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await fetchOnboardingTemplate("template-1");
+
+    expect(result).toEqual(template);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/v1/onboarding/templates/template-1"),
+      expect.objectContaining({
+        method: "GET",
+        credentials: "include",
+      })
+    );
   });
 });
