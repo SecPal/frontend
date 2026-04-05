@@ -66,8 +66,6 @@ export interface OnboardingCompleteData {
   first_name: string;
   last_name: string;
   password: string;
-  password_confirmation: string;
-  photo?: File;
 }
 
 /**
@@ -87,14 +85,13 @@ export interface OnboardingTokenValidationResponse {
 export interface OnboardingCompleteResponse {
   message: string;
   data: {
-    token: string;
     user: {
-      id: string;
+      id: string | number;
       email: string;
       name: string;
     };
     employee: {
-      id: number;
+      id: string | number;
       first_name: string;
       last_name: string;
       status: string;
@@ -200,8 +197,8 @@ export async function validateOnboardingToken(
  *
  * POST /v1/onboarding/complete (public endpoint, no auth)
  *
- * @param data - Onboarding completion data including token, credentials, and optional photo
- * @returns Response containing Sanctum token and user/employee data
+ * @param data - Onboarding completion data for the public bootstrap flow
+ * @returns Response containing user and employee data for the new session
  * @throws {OnboardingApiError} with response.status (422 for validation errors, 429 for rate limit) and optional retryAfterSeconds
  */
 export async function completeOnboarding(
@@ -216,27 +213,17 @@ export async function completeOnboarding(
     throw new Error("Failed to fetch CSRF token");
   }
 
-  const formData = new FormData();
-
-  formData.append("token", data.token);
-  formData.append("email", data.email);
-  formData.append("first_name", data.first_name);
-  formData.append("last_name", data.last_name);
-  formData.append("password", data.password);
-  formData.append("password_confirmation", data.password_confirmation);
-
-  if (data.photo) {
-    formData.append("photo", data.photo);
-  }
-
   // Get CSRF token from cookie using centralized utility
   const token = getCsrfTokenFromCookie();
 
   const response = await fetch(`${apiConfig.baseUrl}/v1/onboarding/complete`, {
     method: "POST",
-    body: formData,
+    body: JSON.stringify(data),
     credentials: "include",
-    headers: token ? { "X-XSRF-TOKEN": token } : {},
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-XSRF-TOKEN": token } : {}),
+    },
   });
 
   if (!response.ok) {

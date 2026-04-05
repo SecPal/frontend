@@ -114,6 +114,69 @@ describe("validateOnboardingToken", () => {
 });
 
 describe("completeOnboarding", () => {
+  it("posts the documented JSON payload to the onboarding completion endpoint", async () => {
+    const successfulCsrf = makeFetchResponse(204, {});
+    const successfulCompletion = makeFetchResponse(200, {
+      message: "Onboarding completed successfully",
+      data: {
+        user: {
+          id: 1,
+          email: "user@secpal.dev",
+          name: "User Example",
+        },
+        employee: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          first_name: "User",
+          last_name: "Example",
+          status: "pre_contract",
+        },
+      },
+    });
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(successfulCsrf)
+      .mockResolvedValueOnce(successfulCompletion);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      completeOnboarding({
+        token: "tok",
+        email: "user@secpal.dev",
+        first_name: "User",
+        last_name: "Example",
+        password: "secret123",
+      })
+    ).resolves.toMatchObject({
+      data: {
+        user: {
+          id: 1,
+          email: "user@secpal.dev",
+        },
+      },
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("/v1/onboarding/complete"),
+      expect.objectContaining({
+        method: "POST",
+        credentials: "include",
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          token: "tok",
+          email: "user@secpal.dev",
+          first_name: "User",
+          last_name: "Example",
+          password: "secret123",
+        }),
+      })
+    );
+  });
+
   it("throws OnboardingApiError with retryAfterSeconds on 429 with Retry-After", async () => {
     const successfulCsrf = makeFetchResponse(200, {});
     const rateLimitedComplete = makeFetchResponse(
@@ -137,7 +200,6 @@ describe("completeOnboarding", () => {
         first_name: "John",
         last_name: "Doe",
         password: "secret123",
-        password_confirmation: "secret123",
       })
     ).rejects.toMatchObject({
       response: {
@@ -170,7 +232,6 @@ describe("completeOnboarding", () => {
         first_name: "",
         last_name: "Doe",
         password: "secret123",
-        password_confirmation: "secret123",
       })
     ).rejects.toMatchObject({
       response: {
