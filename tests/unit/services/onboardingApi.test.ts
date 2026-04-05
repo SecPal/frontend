@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   validateOnboardingToken,
   completeOnboarding,
+  fetchOnboardingTemplate,
 } from "../../../src/services/onboardingApi";
 
 function makeFetchResponse(
@@ -180,5 +181,30 @@ describe("completeOnboarding", () => {
         },
       },
     });
+  });
+});
+
+describe("fetchOnboardingTemplate", () => {
+  it("fetches from /v1/onboarding/templates/{id} not /v1/onboarding/forms/{id}", async () => {
+    const template = {
+      id: "tpl-1",
+      title: "Employee Details",
+      step_number: 1,
+      form_schema: {},
+      is_system_template: true,
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeFetchResponse(200, { data: template })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchOnboardingTemplate("tpl-1");
+
+    expect(result).toEqual(template);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const calledUrl: string = fetchMock.mock.calls[0][0] as string;
+    expect(calledUrl).toContain("/v1/onboarding/templates/tpl-1");
+    expect(calledUrl).not.toContain("/v1/onboarding/forms/");
   });
 });

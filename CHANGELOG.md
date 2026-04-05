@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Corrected the authenticated onboarding template fetch path from `/v1/onboarding/forms/{template}` to the backend runtime route `/v1/onboarding/templates/{template}` so the wizard no longer returns 404 when loading form templates for pre-contract employees.
+
 ### Added
 
 - Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
