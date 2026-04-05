@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useRef, FormEvent, ChangeEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -37,7 +37,6 @@ interface FormData {
   last_name: string;
   password: string;
   password_confirmation: string;
-  photo?: File;
 }
 
 interface ValidationErrors {
@@ -45,7 +44,6 @@ interface ValidationErrors {
   last_name?: string;
   password?: string;
   password_confirmation?: string;
-  photo?: string;
   general?: string;
 }
 
@@ -64,14 +62,13 @@ interface TokenValidationState {
  * Flow:
  * 1. User receives email with magic link
  * 2. Clicks link → Lands on this page with token & email in URL
- * 3. Fills form (first name, last name, password, optional photo)
+ * 3. Fills form (first name, last name, password)
  * 4. Submits → Backend validates token & creates account
- * 5. Success → Receives Sanctum token → Auto-login → Redirect to /onboarding wizard
+ * 5. Success → Browser session is established → Redirect to /onboarding wizard
  *
  * Security:
  * - Token is single-use and expires after 7 days (backend enforced)
  * - Client-side validation mirrors backend Password::defaults()
- * - Photo upload limited to 2MB and image types only
  */
 export function OnboardingComplete() {
   const [searchParams] = useSearchParams();
@@ -95,7 +92,6 @@ export function OnboardingComplete() {
     last_name: string;
   }>({ first_name: "", last_name: "" });
 
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [tokenValidationState, setTokenValidationState] =
     useState<TokenValidationState>(
@@ -117,8 +113,6 @@ export function OnboardingComplete() {
       similarity: number;
     } | null;
   }>({ firstName: null, lastName: null });
-  const fileReaderRef = useRef<FileReader | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isOnboardingApiError = (err: unknown): err is OnboardingApiError => {
     return (
@@ -301,87 +295,6 @@ export function OnboardingComplete() {
     validateAndPrefill();
   }, [token, email, _, validationAttempt]);
 
-  // Cleanup FileReader on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (fileReaderRef.current) {
-        fileReaderRef.current.abort();
-      }
-    };
-  }, []);
-
-  /**
-   * Handle photo file selection
-   */
-  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    // Abort previous FileReader if ongoing (cleanup)
-    if (fileReaderRef.current) {
-      fileReaderRef.current.abort();
-      fileReaderRef.current = null;
-    }
-
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors((prev) => ({
-        ...prev,
-        photo: _(msg`Photo must be smaller than 2MB`),
-      }));
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setErrors((prev) => ({
-        ...prev,
-        photo: _(msg`File must be an image`),
-      }));
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, photo: file }));
-
-    // Generate preview with cleanup
-    const reader = new FileReader();
-    fileReaderRef.current = reader;
-
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result as string);
-      fileReaderRef.current = null; // Clear ref after successful read
-    };
-
-    reader.onerror = () => {
-      fileReaderRef.current = null;
-      setErrors((prev) => ({
-        ...prev,
-        photo: _(msg`Failed to read file`),
-      }));
-    };
-
-    reader.readAsDataURL(file);
-
-    // Clear photo error
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.photo;
-      return newErrors;
-    });
-  };
-
-  /**
-   * Remove uploaded photo
-   */
-  const handleRemovePhoto = () => {
-    setFormData((prev) => ({ ...prev, photo: undefined }));
-    setPhotoPreview(null);
-    // Reset file input using ref
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   /**
    * Client-side form validation
    */
@@ -426,15 +339,13 @@ export function OnboardingComplete() {
         first_name: formData.first_name,
         last_name: formData.last_name,
         password: formData.password,
-        password_confirmation: formData.password_confirmation,
-        photo: formData.photo,
       };
 
       const response = await completeOnboarding(data);
 
-      // Store authentication token and user data
+      // Store the new authenticated session user data
       login({
-        id: response.data.user.id,
+        id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
       });
@@ -892,44 +803,6 @@ export function OnboardingComplete() {
                 {errors.password_confirmation}
               </Text>
             )}
-          </Field>
-
-          {/* Profile Photo (Optional) */}
-          <Field>
-            <Label>
-              <Trans>Profile Photo (optional)</Trans>
-            </Label>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              disabled={loading}
-              invalid={!!errors.photo}
-            />
-            {errors.photo && (
-              <Text className="text-sm text-red-600 mt-1">{errors.photo}</Text>
-            )}
-            {photoPreview && (
-              <div className="mt-3 flex items-center gap-3">
-                <img
-                  src={photoPreview}
-                  alt="Preview"
-                  className="w-20 h-20 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700"
-                />
-                <Button
-                  type="button"
-                  plain
-                  onClick={handleRemovePhoto}
-                  disabled={loading}
-                >
-                  <Trans>Remove</Trans>
-                </Button>
-              </div>
-            )}
-            <Text className="text-sm text-zinc-500 mt-1">
-              <Trans>Max 2MB, JPG or PNG</Trans>
-            </Text>
           </Field>
 
           {/* Submit Button */}

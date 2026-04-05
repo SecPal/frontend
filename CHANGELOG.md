@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned the public onboarding completion flow with the current backend runtime by removing the unsupported profile-photo bootstrap field, submitting the documented JSON payload to `POST /v1/onboarding/complete`, and accepting the session-based completion response without a frontend token assumption
 - Made browser-session login prefer the canonical `GET /v1/me` user payload immediately after authentication, so capability-gated navigation no longer comes up incomplete until the first manual refresh.
 - Aligned MFA recovery-code placeholders, frontend fixtures, and service mocks with the canonical API payload shape of raw 8-character uppercase alphanumeric codes so the browser UI no longer teaches a grouped `XXXX-XXXX` format that differs from what the backend stores and returns.
 - Made the checked-in Lingui `.po` catalogs the only frontend translation authority, removing the Translation.io-specific sync overlay so catalog maintenance now stays entirely repo-local.

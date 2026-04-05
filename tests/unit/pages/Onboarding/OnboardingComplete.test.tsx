@@ -77,7 +77,7 @@ describe("OnboardingComplete", () => {
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(document.querySelector('input[name="password"]')).toBeTruthy();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/profile photo/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/profile photo/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /complete account setup/i })
     ).toBeInTheDocument();
@@ -233,68 +233,17 @@ describe("OnboardingComplete", () => {
     expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
   });
 
-  it("validates photo file size (max 2MB)", async () => {
-    renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    const largeFile = new File(["a".repeat(3 * 1024 * 1024)], "photo.jpg", {
-      type: "image/jpeg",
-    });
-
-    const photoInput = screen.getByLabelText(/profile photo/i);
-    Object.defineProperty(photoInput, "files", {
-      value: [largeFile],
-      writable: false,
-    });
-
-    fireEvent.change(photoInput);
-
-    await waitFor(() => {
-      expect(screen.getByText(/smaller than 2MB/i)).toBeInTheDocument();
-    });
-  });
-
-  it("validates photo file type (images only)", async () => {
-    renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    const pdfFile = new File(["test"], "document.pdf", {
-      type: "application/pdf",
-    });
-
-    const photoInput = screen.getByLabelText(/profile photo/i);
-    Object.defineProperty(photoInput, "files", {
-      value: [pdfFile],
-      writable: false,
-    });
-
-    fireEvent.change(photoInput);
-
-    await waitFor(() => {
-      expect(screen.getByText(/file must be an image/i)).toBeInTheDocument();
-    });
-  });
-
   it("successfully completes onboarding with valid data", async () => {
     const mockResponse = {
       message: "Onboarding completed successfully",
       data: {
-        token: "test-sanctum-token",
         user: {
-          id: "1",
+          id: 1,
           email: "john@secpal.dev",
           name: "John Doe",
         },
         employee: {
-          id: 1,
+          id: "550e8400-e29b-41d4-a716-446655440000",
           first_name: "John",
           last_name: "Doe",
           status: "pre_contract",
@@ -334,7 +283,6 @@ describe("OnboardingComplete", () => {
         first_name: "John",
         last_name: "Doe",
         password: "password123",
-        password_confirmation: "password123",
       });
     });
 
@@ -567,217 +515,5 @@ describe("OnboardingComplete", () => {
     // Verify button is interactive and clickable
     fireEvent.click(loginButton);
     expect(loginButton).toBeEnabled();
-  });
-
-  it("cleans up FileReader on unmount during active file read", async () => {
-    // Mock FileReader to track abort calls
-    const mockAbort = vi.fn();
-    const originalFileReader = globalThis.FileReader;
-
-    class MockFileReader {
-      onloadend: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      result: string | null = null;
-      abort = mockAbort;
-
-      readAsDataURL() {
-        // Simulate async read - don't complete immediately
-        setTimeout(() => {
-          if (this.onloadend) {
-            this.result = "data:image/png;base64,fake";
-            this.onloadend();
-          }
-        }, 100);
-      }
-    }
-
-    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
-
-    const { unmount } = renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    // Upload a file
-    const file = new File(["fake-image"], "photo.jpg", {
-      type: "image/jpeg",
-    });
-    const photoInput = screen.getByLabelText(/profile photo/i);
-    Object.defineProperty(photoInput, "files", {
-      value: [file],
-      writable: false,
-    });
-
-    fireEvent.change(photoInput);
-
-    // Unmount before read completes
-    unmount();
-
-    // FileReader abort should have been called
-    await waitFor(() => {
-      expect(mockAbort).toHaveBeenCalled();
-    });
-
-    // Restore original FileReader
-    globalThis.FileReader = originalFileReader;
-  });
-
-  it("handles FileReader error during photo read", async () => {
-    // Mock FileReader to trigger error
-    const originalFileReader = globalThis.FileReader;
-
-    class MockFileReader {
-      onloadend: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      result: string | null = null;
-      abort = vi.fn();
-
-      readAsDataURL() {
-        // Simulate error immediately
-        setTimeout(() => {
-          if (this.onerror) {
-            this.onerror();
-          }
-        }, 10);
-      }
-    }
-
-    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
-
-    renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    // Upload a file
-    const file = new File(["fake-image"], "photo.jpg", {
-      type: "image/jpeg",
-    });
-    const photoInput = screen.getByLabelText(/profile photo/i);
-    Object.defineProperty(photoInput, "files", {
-      value: [file],
-      writable: false,
-    });
-
-    fireEvent.change(photoInput);
-
-    // Should show error message
-    await waitFor(() => {
-      expect(screen.getByText(/failed to read file/i)).toBeInTheDocument();
-    });
-
-    // Restore original FileReader
-    globalThis.FileReader = originalFileReader;
-  });
-
-  it("aborts previous FileReader when selecting new file", async () => {
-    // Mock FileReader to track multiple reads
-    const mockAbort = vi.fn();
-    const originalFileReader = globalThis.FileReader;
-
-    class MockFileReader {
-      onloadend: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      result: string | null = null;
-      abort = mockAbort;
-
-      readAsDataURL() {
-        setTimeout(() => {
-          if (this.onloadend) {
-            this.result = "data:image/png;base64,fake";
-            this.onloadend();
-          }
-        }, 50);
-      }
-    }
-
-    globalThis.FileReader = MockFileReader as unknown as typeof FileReader;
-
-    renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    const photoInput = screen.getByLabelText(/profile photo/i);
-
-    // Upload first file
-    const file1 = new File(["fake-image-1"], "photo1.jpg", {
-      type: "image/jpeg",
-    });
-    Object.defineProperty(photoInput, "files", {
-      value: [file1],
-      configurable: true,
-    });
-    fireEvent.change(photoInput);
-
-    // Clear previous mock call
-    mockAbort.mockClear();
-
-    // Immediately upload second file (before first completes)
-    const file2 = new File(["fake-image-2"], "photo2.jpg", {
-      type: "image/jpeg",
-    });
-    Object.defineProperty(photoInput, "files", {
-      value: [file2],
-      configurable: true,
-    });
-    fireEvent.change(photoInput);
-
-    // First FileReader should have been aborted
-    await waitFor(() => {
-      expect(mockAbort).toHaveBeenCalled();
-    });
-
-    // Restore original FileReader
-    globalThis.FileReader = originalFileReader;
-  });
-
-  it("clears photo error when uploading valid file after error", async () => {
-    renderWithProviders(
-      <OnboardingComplete />,
-      "/onboarding/complete?token=abc&email=test@secpal.dev"
-    );
-
-    await waitForFormReady();
-
-    const photoInput = screen.getByLabelText(/profile photo/i);
-
-    // First: Upload file that's too large
-    const largeFile = new File(["a".repeat(3 * 1024 * 1024)], "large.jpg", {
-      type: "image/jpeg",
-    });
-    Object.defineProperty(photoInput, "files", {
-      value: [largeFile],
-      writable: false,
-      configurable: true,
-    });
-    fireEvent.change(photoInput);
-
-    // Error should be shown
-    await waitFor(() => {
-      expect(screen.getByText(/smaller than 2MB/i)).toBeInTheDocument();
-    });
-
-    // Now upload valid file
-    const validFile = new File(["small"], "valid.jpg", {
-      type: "image/jpeg",
-    });
-    Object.defineProperty(photoInput, "files", {
-      value: [validFile],
-      writable: false,
-      configurable: true,
-    });
-    fireEvent.change(photoInput);
-
-    // Error should be cleared
-    await waitFor(() => {
-      expect(screen.queryByText(/smaller than 2MB/i)).not.toBeInTheDocument();
-    });
   });
 });
