@@ -183,7 +183,7 @@ export function SettingsPage() {
   };
 
   const handleCloseEnrollment = () => {
-    if (isPreparingEnrollment || isSubmittingEnrollment) {
+    if (isSubmittingEnrollment) {
       return;
     }
 
@@ -548,9 +548,15 @@ export function SettingsPage() {
                   onChange={(event) => setEnrollmentCode(event.target.value)}
                   placeholder="123456"
                   disabled={isSubmittingEnrollment}
+                  aria-invalid={enrollmentCodeError ? true : undefined}
+                  aria-describedby={
+                    enrollmentCodeError ? "enrollment-code-error" : undefined
+                  }
                 />
                 {enrollmentCodeError ? (
-                  <ErrorMessage>{enrollmentCodeError}</ErrorMessage>
+                  <ErrorMessage id="enrollment-code-error">
+                    {enrollmentCodeError}
+                  </ErrorMessage>
                 ) : null}
               </Field>
 
