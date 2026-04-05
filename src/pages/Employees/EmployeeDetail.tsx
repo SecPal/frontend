@@ -516,14 +516,17 @@ export function EmployeeDetail() {
             </div>
             <div className="flex gap-2">
               {canConfirmOnboarding && (
-                <Button onClick={handleConfirmOnboarding} disabled={actionLoading}>
+                <Button
+                  onClick={handleConfirmOnboarding}
+                  disabled={actionLoading}
+                >
                   <Trans>Confirm Onboarding</Trans>
                 </Button>
               )}
               {canActivateEmployee && (
-                  <Button onClick={handleActivate} disabled={actionLoading}>
-                    <Trans>Activate</Trans>
-                  </Button>
+                <Button onClick={handleActivate} disabled={actionLoading}>
+                  <Trans>Activate</Trans>
+                </Button>
               )}
               {(employee.status === "active" ||
                 employee.status === "on_leave") &&
