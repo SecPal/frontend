@@ -9,7 +9,8 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import type {
   MfaRecoveryCodeReveal,
   MfaStatus,
@@ -44,6 +45,7 @@ import {
   startTotpEnrollment,
 } from "../../services/authApi";
 import { MfaQrCode } from "../../components/MfaQrCode";
+import { formatDateTime } from "../../lib/dateUtils";
 
 type SensitiveMfaAction = "disable" | "regenerate";
 
@@ -90,6 +92,7 @@ function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
 }
 
 export function SettingsPage() {
+  const { _, i18n } = useLingui();
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
@@ -506,7 +509,7 @@ export function SettingsPage() {
             <form className="space-y-6" onSubmit={handleEnrollmentSubmit}>
               <MfaQrCode
                 value={enrollmentPreparation.otpauth_uri}
-                alt="Authenticator app QR code"
+                alt={_(msg`Authenticator app QR code`)}
               />
 
               <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -521,7 +524,12 @@ export function SettingsPage() {
               <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
                 <Text className="text-sm text-zinc-700 dark:text-zinc-300">
                   <Trans>
-                    This setup expires at {enrollmentPreparation.expires_at}.
+                    This setup expires at{" "}
+                    {formatDateTime(
+                      enrollmentPreparation.expires_at,
+                      i18n.locale
+                    )}
+                    .
                   </Trans>
                 </Text>
               </div>
