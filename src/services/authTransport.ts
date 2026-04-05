@@ -92,10 +92,25 @@ const browserSessionAuthTransport: AuthTransport = {
       };
     }
 
-    return {
-      status: "authenticated",
-      user: sanitizeAuthPayload(result, "Browser-session login"),
-    };
+    const loginUser = sanitizeAuthPayload(result, "Browser-session login");
+
+    try {
+      const currentUser = await getBrowserSessionCurrentUser();
+
+      return {
+        status: "authenticated",
+        user: sanitizeAuthPayload(
+          currentUser,
+          "Browser-session current-user fetch"
+        ),
+      };
+    } catch {
+      return {
+        status: "authenticated",
+        user: loginUser,
+      };
+    }
+
   },
   async logout(): Promise<void> {
     await logoutBrowserSession();

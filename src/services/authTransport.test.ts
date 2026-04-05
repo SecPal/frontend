@@ -86,6 +86,55 @@ describe("authTransport", () => {
     }
   });
 
+  it("prefers the canonical current-user payload after a browser-session login", async () => {
+    mockBrowserLogin.mockResolvedValueOnce({
+      user: {
+        id: 1,
+        name: "Customer User",
+        email: "customer@secpal.dev",
+        emailVerified: true,
+        hasCustomerAccess: true,
+      },
+    });
+    mockBrowserGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Manager User",
+      email: "manager@secpal.dev",
+      emailVerified: true,
+      roles: ["Manager"],
+      permissions: ["employees.read", "activity_log.read"],
+      hasOrganizationalScopes: true,
+      hasCustomerAccess: true,
+      hasSiteAccess: true,
+    });
+
+    const transport = getAuthTransport();
+    const result = await transport.login({
+      email: "customer@secpal.dev",
+      password: "password123",
+    });
+
+    expect(mockBrowserLogin).toHaveBeenCalledWith({
+      email: "customer@secpal.dev",
+      password: "password123",
+    });
+    expect(mockBrowserGetCurrentUser).toHaveBeenCalledOnce();
+    expect(result).toEqual({
+      status: "authenticated",
+      user: {
+        id: "1",
+        name: "Manager User",
+        email: "manager@secpal.dev",
+        emailVerified: true,
+        roles: ["Manager"],
+        permissions: ["employees.read", "activity_log.read"],
+        hasOrganizationalScopes: true,
+        hasCustomerAccess: true,
+        hasSiteAccess: true,
+      },
+    });
+  });
+
   it("reports browser network availability from navigator.onLine", async () => {
     const onLineSpy = vi
       .spyOn(window.navigator, "onLine", "get")
