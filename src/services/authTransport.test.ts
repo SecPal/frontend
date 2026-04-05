@@ -3,7 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NativeAuthBridge } from "./authTransport";
-import { getAuthTransport, resolveAuthTransport } from "./authTransport";
+import { AuthApiError, getAuthTransport, resolveAuthTransport } from "./authTransport";
 
 const {
   mockBrowserLogin,
@@ -131,6 +131,37 @@ describe("authTransport", () => {
         hasOrganizationalScopes: true,
         hasCustomerAccess: true,
         hasSiteAccess: true,
+      },
+    });
+  });
+
+  it("falls back to the login payload when the current-user fetch fails", async () => {
+    mockBrowserLogin.mockResolvedValueOnce({
+      user: {
+        id: 1,
+        name: "Login User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+    });
+    mockBrowserGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError("Unauthorized")
+    );
+
+    const transport = getAuthTransport();
+    const result = await transport.login({
+      email: "user@secpal.dev",
+      password: "password123",
+    });
+
+    expect(mockBrowserGetCurrentUser).toHaveBeenCalledOnce();
+    expect(result).toEqual({
+      status: "authenticated",
+      user: {
+        id: "1",
+        name: "Login User",
+        email: "user@secpal.dev",
+        emailVerified: true,
       },
     });
   });

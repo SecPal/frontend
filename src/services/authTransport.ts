@@ -104,11 +104,14 @@ const browserSessionAuthTransport: AuthTransport = {
           "Browser-session current-user fetch"
         ),
       };
-    } catch {
-      return {
-        status: "authenticated",
-        user: loginUser,
-      };
+    } catch (err) {
+      if (err instanceof Error) {
+        return {
+          status: "authenticated",
+          user: loginUser,
+        };
+      }
+      throw err;
     }
   },
   async logout(): Promise<void> {
