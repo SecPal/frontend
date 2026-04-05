@@ -17,9 +17,9 @@ describe("Lingui configuration", () => {
   });
 
   it("does not ship a Translation.io-specific config overlay", () => {
-    expect(existsSync(join(process.cwd(), "lingui.translationio.config.cjs"))).toBe(
-      false
-    );
+    expect(
+      existsSync(join(process.cwd(), "lingui.translationio.config.cjs"))
+    ).toBe(false);
   });
 
   it("uses local Lingui sync commands as the only catalog maintenance path", () => {
