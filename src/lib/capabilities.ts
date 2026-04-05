@@ -93,6 +93,11 @@ const EMPLOYEE_TERMINATE_PERMISSIONS = [
   "employees.*",
 ] as const;
 
+const EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS = [
+  "onboarding.confirm",
+  "onboarding.*",
+] as const;
+
 export interface ResourceActionCapabilities {
   create: boolean;
   update: boolean;
@@ -101,6 +106,7 @@ export interface ResourceActionCapabilities {
 
 export interface EmployeeActionCapabilities extends ResourceActionCapabilities {
   activate: boolean;
+  confirmOnboarding: boolean;
   terminate: boolean;
 }
 
@@ -223,6 +229,11 @@ export function getUserCapabilities(
     hasOrganizationalScopes &&
     (hasElevatedUiRole ||
       hasAnyUserPermission(user, EMPLOYEE_TERMINATE_PERMISSIONS));
+  const canConfirmEmployeeOnboarding =
+    isAuthenticated &&
+    hasOrganizationalScopes &&
+    (hasElevatedUiRole ||
+      hasAnyUserPermission(user, EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS));
 
   return {
     home: isAuthenticated,
@@ -264,6 +275,7 @@ export function getUserCapabilities(
         update: canUpdateEmployees,
         delete: canDeleteEmployees,
         activate: canActivateEmployees,
+        confirmOnboarding: canConfirmEmployeeOnboarding,
         terminate: canTerminateEmployees,
       },
     },

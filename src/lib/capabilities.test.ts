@@ -131,11 +131,16 @@ describe("getUserCapabilities", () => {
       email: "emp.manager@secpal.dev",
       hasOrganizationalScopes: true,
       roles: [],
-      permissions: ["employees.activate", "employees.terminate"],
+      permissions: [
+        "employees.activate",
+        "employees.terminate",
+        "onboarding.confirm",
+      ],
     });
 
     expect(capabilities.actions.employees.activate).toBe(true);
     expect(capabilities.actions.employees.terminate).toBe(true);
+    expect(capabilities.actions.employees.confirmOnboarding).toBe(true);
     expect(capabilities.actions.employees.create).toBe(false);
   });
 

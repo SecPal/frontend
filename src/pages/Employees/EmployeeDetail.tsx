@@ -10,6 +10,7 @@ import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
   fetchEmployee,
   activateEmployee,
+  confirmEmployeeOnboarding,
   terminateEmployee,
 } from "../../services/employeeApi";
 import {
@@ -431,6 +432,29 @@ export function EmployeeDetail() {
     }
   }
 
+  async function handleConfirmOnboarding() {
+    if (!id || !confirm("Confirm this onboarding dossier?")) return;
+
+    try {
+      setActionLoading(true);
+      await confirmEmployeeOnboarding(id, undefined);
+      await loadEmployee();
+    } catch (err) {
+      console.error("Failed to confirm onboarding:", err);
+      let errorMessage = "Failed to confirm onboarding";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        errorMessage = String(err.message);
+      }
+
+      setError(errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -462,6 +486,17 @@ export function EmployeeDetail() {
     );
   }
 
+  const onboardingWorkflowStatus = employee.onboarding_workflow?.status;
+  const canConfirmOnboarding =
+    employee.status === "pre_contract" &&
+    employee.onboarding_completed === true &&
+    onboardingWorkflowStatus === "submitted_for_review" &&
+    capabilities.actions.employees.confirmOnboarding;
+  const canActivateEmployee =
+    employee.status === "pre_contract" &&
+    onboardingWorkflowStatus === "ready_for_activation" &&
+    capabilities.actions.employees.activate;
+
   return (
     <div>
       <div className="mb-6">
@@ -480,12 +515,16 @@ export function EmployeeDetail() {
               </Text>
             </div>
             <div className="flex gap-2">
-              {employee.status === "pre_contract" &&
-                capabilities.actions.employees.activate && (
+              {canConfirmOnboarding && (
+                <Button onClick={handleConfirmOnboarding} disabled={actionLoading}>
+                  <Trans>Confirm Onboarding</Trans>
+                </Button>
+              )}
+              {canActivateEmployee && (
                   <Button onClick={handleActivate} disabled={actionLoading}>
                     <Trans>Activate</Trans>
                   </Button>
-                )}
+              )}
               {(employee.status === "active" ||
                 employee.status === "on_leave") &&
                 capabilities.actions.employees.terminate && (
