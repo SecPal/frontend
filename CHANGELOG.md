@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Made the checked-in Lingui `.po` catalogs the only frontend translation authority, removing the Translation.io-specific sync overlay so catalog maintenance now stays entirely repo-local.
-- Made Translation.io-backed catalog refresh the default frontend sync path, keeping local-only Lingui extraction as an explicit fallback while refreshing the shipped MFA/login locale artifacts with a purge sync so the new MFA settings UI no longer falls back to raw Lingui message IDs in production.
+- Refreshed the shipped MFA/login locale artifacts from the repo-local Lingui catalogs so the new MFA settings UI no longer falls back to raw Lingui message IDs in production.
 - Removed the inset desktop content frame beneath the top navigation so the page surface now spans edge to edge without the previous side and bottom border effect.
 - Clarified the repo-local branch-start and post-merge readiness workflow so new frontend work must start from a clean, updated local `main`, and post-merge cleanup now explicitly returns the repo to `main`, refreshes dependencies with `npm ci` where applicable, runs `npm run build` when available, and confirms a clean working tree
 - Added a dedicated email-verification gate for protected routes, wired it to the backend resend-verification endpoint, and stopped surfacing the raw backend `Your email address is not verified.` error inside arbitrary app pages after login.
