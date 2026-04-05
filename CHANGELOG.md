@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
 - Added a reusable MFA QR-code component with browser-safe fallback messaging and focused component coverage so upcoming enrollment UI slices can render authenticator setup material without duplicating QR generation logic.
 - Added PWA offline persistence security and privacy [audit document](PWA_OFFLINE_PERSISTENCE_AUDIT.md) covering all client-side storage mechanisms (localStorage, sessionStorage, IndexedDB, Cache API, Service Worker state) with 10 findings, issue overlap analysis, and prioritized remediation recommendations.
 - Added a platform-aware frontend auth transport boundary that keeps browser/PWA flows on Sanctum session auth, sanitizes auth state before it enters React or local storage, and creates the explicit seam Android can later wire to a native bearer-token bridge without exposing raw tokens to JavaScript.
