@@ -1,17 +1,13 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { execFileSync, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import packageJson from "../package.json";
 import { describe, expect, it } from "vitest";
 
 describe("Lingui configuration", () => {
   const baseConfigPath = join(process.cwd(), "lingui.config.cjs");
-  const translationConfigPath = join(
-    process.cwd(),
-    "lingui.translationio.config.cjs"
-  );
 
   it("keeps the default sync config local-only", () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,61 +16,20 @@ describe("Lingui configuration", () => {
     expect(config.service).toBeUndefined();
   });
 
-  it("enables Translation.io only when an API key is provided", () => {
-    const stdout = execFileSync(
-      process.execPath,
-      [
-        "-e",
-        `const config = require(${JSON.stringify(translationConfigPath)}); process.stdout.write(JSON.stringify(config.service));`,
-      ],
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          TRANSLATION_IO_API_KEY: "test-translation-io-key",
-        },
-        encoding: "utf8",
-      }
-    );
-
-    expect(JSON.parse(stdout)).toEqual({
-      name: "TranslationIO",
-      apiKey: "test-translation-io-key",
-    });
-  });
-
-  it("fails fast when Translation.io sync is requested without an API key", () => {
-    const result = spawnSync(
-      process.execPath,
-      ["-e", `require(${JSON.stringify(translationConfigPath)});`],
-      {
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          TRANSLATION_IO_API_KEY: "",
-        },
-        encoding: "utf8",
-      }
-    );
-
-    expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain(
-      "Translation.io sync requires TRANSLATION_IO_API_KEY"
+  it("does not ship a Translation.io-specific config overlay", () => {
+    expect(existsSync(join(process.cwd(), "lingui.translationio.config.cjs"))).toBe(
+      false
     );
   });
 
-  it("uses Translation.io as the default sync authority", () => {
-    expect(packageJson.scripts.sync).toContain(
-      "lingui.translationio.config.cjs"
+  it("uses local Lingui sync commands as the only catalog maintenance path", () => {
+    expect(packageJson.scripts.sync).toBe(
+      'cross-env-shell "lingui extract --overwrite && lingui compile --namespace es"'
     );
-    expect(packageJson.scripts["sync:purge"]).toContain(
-      "lingui.translationio.config.cjs"
+    expect(packageJson.scripts["sync:purge"]).toBe(
+      'cross-env-shell "lingui extract --overwrite --clean && lingui compile --namespace es"'
     );
-    expect(packageJson.scripts["sync:local"]).not.toContain(
-      "lingui.translationio.config.cjs"
-    );
-    expect(packageJson.scripts["sync:local:purge"]).not.toContain(
-      "lingui.translationio.config.cjs"
-    );
+    expect(packageJson.scripts["sync:translationio"]).toBeUndefined();
+    expect(packageJson.scripts["sync:translationio:purge"]).toBeUndefined();
   });
 });
