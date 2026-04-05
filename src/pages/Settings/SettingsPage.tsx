@@ -97,10 +97,13 @@ export function SettingsPage() {
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
   const [enrollmentPreparation, setEnrollmentPreparation] =
     useState<TotpEnrollmentPreparation | null>(null);
-  const [enrollmentPreparationError, setEnrollmentPreparationError] =
-    useState<string | null>(null);
+  const [enrollmentPreparationError, setEnrollmentPreparationError] = useState<
+    string | null
+  >(null);
   const [enrollmentCode, setEnrollmentCode] = useState("");
-  const [enrollmentCodeError, setEnrollmentCodeError] = useState<string | null>(null);
+  const [enrollmentCodeError, setEnrollmentCodeError] = useState<string | null>(
+    null
+  );
   const [isSubmittingEnrollment, setIsSubmittingEnrollment] = useState(false);
   const [revealedRecoveryCodes, setRevealedRecoveryCodes] =
     useState<MfaRecoveryCodeReveal | null>(null);
@@ -458,7 +461,11 @@ export function SettingsPage() {
         </DialogBody>
       </Dialog>
 
-      <Dialog open={isEnrollmentDialogOpen} onClose={handleCloseEnrollment} size="2xl">
+      <Dialog
+        open={isEnrollmentDialogOpen}
+        onClose={handleCloseEnrollment}
+        size="2xl"
+      >
         <DialogTitle>
           <Trans>Set up MFA</Trans>
         </DialogTitle>
@@ -486,7 +493,11 @@ export function SettingsPage() {
                 <Button type="button" outline onClick={handleCloseEnrollment}>
                   <Trans>Cancel</Trans>
                 </Button>
-                <Button type="button" color="blue" onClick={() => void loadEnrollmentPreparation()}>
+                <Button
+                  type="button"
+                  color="blue"
+                  onClick={() => void loadEnrollmentPreparation()}
+                >
                   <Trans>Try again</Trans>
                 </Button>
               </DialogActions>
