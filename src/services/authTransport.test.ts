@@ -3,7 +3,11 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NativeAuthBridge } from "./authTransport";
-import { AuthApiError, getAuthTransport, resolveAuthTransport } from "./authTransport";
+import {
+  AuthApiError,
+  getAuthTransport,
+  resolveAuthTransport,
+} from "./authTransport";
 
 const {
   mockBrowserLogin,
