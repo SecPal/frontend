@@ -331,9 +331,7 @@ describe("SettingsPage", () => {
     await screen.findByText(/not enabled/i);
     fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
 
-    expect(
-      await screen.findByText(/service unavailable/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/service unavailable/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /try again/i }));
 
