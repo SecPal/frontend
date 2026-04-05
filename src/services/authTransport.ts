@@ -110,7 +110,6 @@ const browserSessionAuthTransport: AuthTransport = {
         user: loginUser,
       };
     }
-
   },
   async logout(): Promise<void> {
     await logoutBrowserSession();
