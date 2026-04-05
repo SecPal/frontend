@@ -61,6 +61,10 @@ const mockEmployee: Employee = {
   status: "active",
   contract_type: "full_time",
   management_level: 0,
+  onboarding_completed: false,
+  onboarding_workflow: {
+    status: "invited",
+  },
   onboarding_invitation: {
     status: "sent",
     requested_at: "2025-01-01T09:00:00Z",
@@ -87,6 +91,7 @@ describe("EmployeeDetail", () => {
           update: true,
           delete: true,
           activate: true,
+          confirmOnboarding: true,
           terminate: true,
         },
       },
@@ -280,6 +285,10 @@ describe("EmployeeDetail", () => {
     const preContractEmployee = {
       ...mockEmployee,
       status: "pre_contract" as const,
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "ready_for_activation" as const,
+      },
     };
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(preContractEmployee);
 
@@ -295,6 +304,149 @@ describe("EmployeeDetail", () => {
     expect(
       screen.queryByRole("button", { name: /terminate/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("should show confirm onboarding button for submitted onboarding dossiers", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should confirm onboarding dossier and reload the employee", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    vi.mocked(employeeApi.fetchEmployee)
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        status: "pre_contract",
+        onboarding_completed: true,
+        onboarding_workflow: {
+          status: "submitted_for_review",
+        },
+      })
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        status: "pre_contract",
+        onboarding_completed: true,
+        onboarding_workflow: {
+          status: "ready_for_activation",
+        },
+      });
+
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "ready_for_activation",
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm onboarding/i })
+    );
+
+    await waitFor(() => {
+      expect(employeeApi.confirmEmployeeOnboarding).toHaveBeenCalledWith(
+        "emp-1",
+        undefined
+      );
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  it("should display Error failures from confirm onboarding", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockRejectedValueOnce(
+      new Error("Confirm failed")
+    );
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm onboarding/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Confirm failed")).toBeInTheDocument();
+    });
+
+    vi.restoreAllMocks();
+  });
+
+  it("should display object-message failures from confirm onboarding", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockRejectedValueOnce({
+      message: "Object confirm failure",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /confirm onboarding/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm onboarding/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Object confirm failure")).toBeInTheDocument();
+    });
+
+    vi.restoreAllMocks();
   });
 
   it("should show terminate button for on-leave employees", async () => {
@@ -417,6 +569,10 @@ describe("EmployeeDetail", () => {
     const preContractEmployee = {
       ...mockEmployee,
       status: "pre_contract" as const,
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "ready_for_activation" as const,
+      },
     };
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(preContractEmployee);
 
@@ -511,6 +667,7 @@ describe("EmployeeDetail", () => {
           update: false,
           delete: false,
           activate: false,
+          confirmOnboarding: false,
           terminate: false,
         },
       },

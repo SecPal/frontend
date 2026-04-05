@@ -12,6 +12,10 @@ import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
 import { ApiError } from "./ApiError";
 
+export interface ConfirmEmployeeOnboardingPayload {
+  notes?: string;
+}
+
 /**
  * Fetch paginated list of employees
  */
@@ -221,6 +225,41 @@ export async function activateEmployee(id: string): Promise<Employee> {
       .catch(() => ({ message: response.statusText }));
     throw new ApiError(
       error.message || "Failed to activate employee",
+      response.status,
+      response
+    );
+  }
+
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse employee response");
+  }
+  return data.data;
+}
+
+/**
+ * Confirm onboarding dossier for a pre-contract employee.
+ */
+export async function confirmEmployeeOnboarding(
+  id: string,
+  payload?: ConfirmEmployeeOnboardingPayload
+): Promise<Employee> {
+  const url = `${apiConfig.baseUrl}/v1/admin/onboarding/employees/${id}/confirm`;
+  const response = await apiFetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload ?? {}),
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new ApiError(
+      error.message || "Failed to confirm onboarding",
       response.status,
       response
     );

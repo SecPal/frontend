@@ -39,6 +39,20 @@ export type EmployeeOnboardingInvitationStatus =
   | "created_not_sent"
   | "failed";
 
+export type EmployeeOnboardingWorkflowStatus =
+  | "invited"
+  | "account_initialized"
+  | "in_progress"
+  | "submitted_for_review"
+  | "changes_requested"
+  | "contract_confirmed"
+  | "ready_for_activation"
+  | "active";
+
+export interface EmployeeOnboardingWorkflow {
+  status: EmployeeOnboardingWorkflowStatus;
+}
+
 export interface EmployeeOnboardingInvitation {
   status: EmployeeOnboardingInvitationStatus;
   available?: boolean;
@@ -75,6 +89,7 @@ export interface Employee {
   user_id?: string | null;
   user_account_active?: boolean;
   onboarding_completed?: boolean;
+  onboarding_workflow?: EmployeeOnboardingWorkflow | null;
   onboarding_invitation?: EmployeeOnboardingInvitation;
   created_at: string;
   updated_at: string;

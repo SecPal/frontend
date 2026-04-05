@@ -8,6 +8,7 @@ import {
   updateEmployee,
   fetchEmployee,
   activateEmployee,
+  confirmEmployeeOnboarding,
   terminateEmployee,
 } from "./employeeApi";
 
@@ -222,6 +223,77 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
 
       await expect(terminateEmployee("emp-1")).rejects.toThrow(
         "Failed to parse employee response"
+      );
+    });
+  });
+
+  describe("confirmEmployeeOnboarding", () => {
+    it("should post the onboarding confirmation action and return the updated employee", async () => {
+      const expectedEmployee = {
+        id: "emp-1",
+        employee_number: "E001",
+        first_name: "Jane",
+        last_name: "Doe",
+        full_name: "Jane Doe",
+        email: "jane@secpal.dev",
+        position: "Developer",
+        date_of_birth: "1990-01-01",
+        contract_start_date: "2025-01-01",
+        status: "pre_contract" as const,
+        contract_type: "full_time" as const,
+        management_level: 0,
+        phone: null,
+        organizational_unit: { id: "unit-1", name: "Engineering" },
+        onboarding_completed: true,
+        onboarding_workflow: {
+          status: "ready_for_activation" as const,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue({ data: expectedEmployee }),
+      });
+
+      const result = await confirmEmployeeOnboarding("emp-1", {
+        notes: "Contract signed and reviewed.",
+      });
+
+      expect(result.onboarding_workflow?.status).toBe("ready_for_activation");
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        expect.stringContaining("/v1/admin/onboarding/employees/emp-1/confirm"),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ notes: "Contract signed and reviewed." }),
+        })
+      );
+    });
+
+    it("should throw an error when the confirmation success response cannot be parsed", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockRejectedValue(new Error("Unexpected token '<'")),
+      });
+
+      await expect(confirmEmployeeOnboarding("emp-1")).rejects.toThrow(
+        "Failed to parse employee response"
+      );
+    });
+
+    it("should fall back to statusText when the confirmation error body is not JSON", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: "Bad Gateway",
+        json: vi.fn().mockRejectedValue(new Error("Unexpected token '<'")),
+      });
+
+      await expect(confirmEmployeeOnboarding("emp-1")).rejects.toThrow(
+        "Bad Gateway"
       );
     });
   });

@@ -32,6 +32,7 @@ describe("FeatureRoute", () => {
         update: true,
         delete: true,
         activate: true,
+        confirmOnboarding: true,
         terminate: true,
       },
     },
