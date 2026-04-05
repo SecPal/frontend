@@ -10,6 +10,14 @@ import { SettingsPage } from "./SettingsPage";
 import * as i18nModule from "../../i18n";
 import * as authApi from "../../services/authApi";
 
+vi.mock("../../components/MfaQrCode", () => ({
+  MfaQrCode: ({ value, alt }: { value: string; alt: string }) => (
+    <div data-testid="mfa-qr-code" aria-label={alt}>
+      {value}
+    </div>
+  ),
+}));
+
 // Mock the i18n module
 vi.mock("../../i18n", async () => {
   const actual = await vi.importActual("../../i18n");
@@ -26,6 +34,8 @@ vi.mock("../../services/authApi", async () => {
   return {
     ...actual,
     getMfaStatus: vi.fn(),
+    startTotpEnrollment: vi.fn(),
+    confirmTotpEnrollment: vi.fn(),
     regenerateRecoveryCodes: vi.fn(),
     disableMfa: vi.fn(),
   };
@@ -86,6 +96,19 @@ function createRecoveryRevealResponse() {
         ],
         generated_at: "2026-04-01T09:12:00Z",
       },
+    },
+  };
+}
+
+function createTotpEnrollmentPreparationResponse() {
+  return {
+    data: {
+      issuer: "SecPal",
+      account_name: "mfa@secpal.dev",
+      manual_entry_key: "JBSWY3DPEHPK3PXP",
+      otpauth_uri:
+        "otpauth://totp/SecPal:mfa@secpal.dev?secret=JBSWY3DPEHPK3PXP&issuer=SecPal",
+      expires_at: "2026-04-05T12:30:00Z",
     },
   };
 }
@@ -203,6 +226,98 @@ describe("SettingsPage", () => {
       await screen.findByRole("heading", {
         name: /store your recovery codes now/i,
       })
+    ).toBeInTheDocument();
+  });
+
+  it("starts MFA enrollment for a disabled account and shows QR plus manual setup details", async () => {
+    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+      createTotpEnrollmentPreparationResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    await waitFor(() => {
+      expect(authApi.startTotpEnrollment).toHaveBeenCalledTimes(1);
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /set up mfa/i })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("mfa-qr-code")).toHaveTextContent(
+      /otpauth:\/\/totp/i
+    );
+    expect(screen.getByText(/manual setup key/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/jbswy3dpehpk3pxp/i)).toHaveLength(2);
+  });
+
+  it("confirms MFA enrollment and reveals recovery codes", async () => {
+    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+      createTotpEnrollmentPreparationResponse()
+    );
+    vi.mocked(authApi.confirmTotpEnrollment).mockResolvedValueOnce(
+      createRecoveryRevealResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    await screen.findByRole("heading", { name: /set up mfa/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm and enable mfa/i })
+    );
+
+    await waitFor(() => {
+      expect(authApi.confirmTotpEnrollment).toHaveBeenCalledWith({
+        code: "123456",
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /store your recovery codes now/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("shows inline error when MFA enrollment confirmation fails", async () => {
+    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+      createTotpEnrollmentPreparationResponse()
+    );
+    vi.mocked(authApi.confirmTotpEnrollment).mockRejectedValueOnce(
+      new Error("Invalid authenticator code")
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    await screen.findByRole("heading", { name: /set up mfa/i });
+
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /authenticator code/i }),
+      {
+        target: { value: "000000" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm and enable mfa/i })
+    );
+
+    expect(
+      await screen.findByText(/invalid authenticator code/i)
     ).toBeInTheDocument();
   });
 

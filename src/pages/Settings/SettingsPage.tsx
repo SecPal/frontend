@@ -13,6 +13,7 @@ import { Trans } from "@lingui/macro";
 import type {
   MfaRecoveryCodeReveal,
   MfaStatus,
+  TotpEnrollmentPreparation,
   MfaVerificationMethod,
 } from "@/types/api";
 import { Heading } from "../../components/heading";
@@ -36,10 +37,13 @@ import {
 } from "../../components/description-list";
 import {
   AuthApiError,
+  confirmTotpEnrollment,
   disableMfa,
   getMfaStatus,
   regenerateRecoveryCodes,
+  startTotpEnrollment,
 } from "../../services/authApi";
+import { MfaQrCode } from "../../components/MfaQrCode";
 
 type SensitiveMfaAction = "disable" | "regenerate";
 
@@ -89,6 +93,15 @@ export function SettingsPage() {
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
+  const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
+  const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
+  const [enrollmentPreparation, setEnrollmentPreparation] =
+    useState<TotpEnrollmentPreparation | null>(null);
+  const [enrollmentPreparationError, setEnrollmentPreparationError] =
+    useState<string | null>(null);
+  const [enrollmentCode, setEnrollmentCode] = useState("");
+  const [enrollmentCodeError, setEnrollmentCodeError] = useState<string | null>(null);
+  const [isSubmittingEnrollment, setIsSubmittingEnrollment] = useState(false);
   const [revealedRecoveryCodes, setRevealedRecoveryCodes] =
     useState<MfaRecoveryCodeReveal | null>(null);
   const [hasAcknowledgedRecoveryCodes, setHasAcknowledgedRecoveryCodes] =
@@ -130,6 +143,80 @@ export function SettingsPage() {
   useEffect(() => {
     void loadMfaStatus();
   }, [loadMfaStatus]);
+
+  const loadEnrollmentPreparation = useCallback(async () => {
+    setIsPreparingEnrollment(true);
+    setEnrollmentPreparationError(null);
+    setEnrollmentCodeError(null);
+
+    try {
+      const response = await startTotpEnrollment();
+      setEnrollmentPreparation(response.data);
+    } catch (error) {
+      setEnrollmentPreparation(null);
+
+      if (error instanceof AuthApiError) {
+        setEnrollmentPreparationError(error.message);
+      } else if (error instanceof Error) {
+        setEnrollmentPreparationError(error.message);
+      } else {
+        setEnrollmentPreparationError("Failed to prepare MFA enrollment.");
+      }
+    } finally {
+      setIsPreparingEnrollment(false);
+    }
+  }, []);
+
+  const handleOpenEnrollment = () => {
+    setIsEnrollmentDialogOpen(true);
+    setEnrollmentPreparation(null);
+    setEnrollmentPreparationError(null);
+    setEnrollmentCode("");
+    setEnrollmentCodeError(null);
+    void loadEnrollmentPreparation();
+  };
+
+  const handleCloseEnrollment = () => {
+    if (isPreparingEnrollment || isSubmittingEnrollment) {
+      return;
+    }
+
+    setIsEnrollmentDialogOpen(false);
+    setEnrollmentPreparation(null);
+    setEnrollmentPreparationError(null);
+    setEnrollmentCode("");
+    setEnrollmentCodeError(null);
+  };
+
+  const handleEnrollmentSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    setEnrollmentCodeError(null);
+    setIsSubmittingEnrollment(true);
+
+    try {
+      const response = await confirmTotpEnrollment({
+        code: enrollmentCode.trim(),
+      });
+
+      setMfaStatus(response.data.status);
+      setIsEnrollmentDialogOpen(false);
+      setEnrollmentPreparation(null);
+      setEnrollmentCode("");
+      setRevealedRecoveryCodes(response.data.recovery_codes);
+      setHasAcknowledgedRecoveryCodes(false);
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        setEnrollmentCodeError(error.message);
+      } else if (error instanceof Error) {
+        setEnrollmentCodeError(error.message);
+      } else {
+        setEnrollmentCodeError("Failed to confirm MFA enrollment.");
+      }
+    } finally {
+      setIsSubmittingEnrollment(false);
+    }
+  };
 
   const handleSensitiveActionSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -265,12 +352,18 @@ export function SettingsPage() {
                   </Button>
                 </div>
               ) : (
-                <Text className="text-sm text-zinc-600 dark:text-zinc-300">
-                  <Trans>
-                    MFA is currently off for this account. Enrollment support
-                    follows in the next rollout slice.
-                  </Trans>
-                </Text>
+                <div className="space-y-4">
+                  <Text className="text-sm text-zinc-600 dark:text-zinc-300">
+                    <Trans>
+                      MFA is currently off for this account. Set up an
+                      authenticator app now to require a second factor at sign
+                      in.
+                    </Trans>
+                  </Text>
+                  <Button color="blue" onClick={handleOpenEnrollment}>
+                    <Trans>Set up MFA</Trans>
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -361,6 +454,112 @@ export function SettingsPage() {
                 </Button>
               </DialogActions>
             </div>
+          ) : null}
+        </DialogBody>
+      </Dialog>
+
+      <Dialog open={isEnrollmentDialogOpen} onClose={handleCloseEnrollment} size="2xl">
+        <DialogTitle>
+          <Trans>Set up MFA</Trans>
+        </DialogTitle>
+        <DialogDescription>
+          <Trans>
+            Scan this QR code with your authenticator app, or enter the setup
+            key manually, then confirm the current code to enable MFA.
+          </Trans>
+        </DialogDescription>
+
+        <DialogBody>
+          {isPreparingEnrollment ? (
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>Preparing MFA setup...</Trans>
+            </Text>
+          ) : enrollmentPreparationError ? (
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                <Text className="text-sm text-red-800 dark:text-red-200">
+                  {enrollmentPreparationError}
+                </Text>
+              </div>
+
+              <DialogActions>
+                <Button type="button" outline onClick={handleCloseEnrollment}>
+                  <Trans>Cancel</Trans>
+                </Button>
+                <Button type="button" color="blue" onClick={() => void loadEnrollmentPreparation()}>
+                  <Trans>Try again</Trans>
+                </Button>
+              </DialogActions>
+            </div>
+          ) : enrollmentPreparation ? (
+            <form className="space-y-6" onSubmit={handleEnrollmentSubmit}>
+              <MfaQrCode
+                value={enrollmentPreparation.otpauth_uri}
+                alt="Authenticator app QR code"
+              />
+
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                <Text className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Trans>Manual setup key</Trans>
+                </Text>
+                <code className="mt-3 block break-all rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm tracking-[0.18em] text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white">
+                  {enrollmentPreparation.manual_entry_key}
+                </code>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+                <Text className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Trans>
+                    This setup expires at {enrollmentPreparation.expires_at}.
+                  </Trans>
+                </Text>
+              </div>
+
+              <Field>
+                <Label htmlFor="enrollment-code">
+                  <Trans>Authenticator code</Trans>
+                </Label>
+                <Input
+                  id="enrollment-code"
+                  name="enrollment-code"
+                  type="text"
+                  autoComplete="one-time-code"
+                  required
+                  value={enrollmentCode}
+                  onChange={(event) => setEnrollmentCode(event.target.value)}
+                  placeholder="123456"
+                  disabled={isSubmittingEnrollment}
+                />
+                {enrollmentCodeError ? (
+                  <ErrorMessage>{enrollmentCodeError}</ErrorMessage>
+                ) : null}
+              </Field>
+
+              <DialogActions>
+                <Button
+                  type="button"
+                  outline
+                  onClick={handleCloseEnrollment}
+                  disabled={isSubmittingEnrollment}
+                >
+                  <Trans>Cancel</Trans>
+                </Button>
+                <Button
+                  type="submit"
+                  color="blue"
+                  disabled={
+                    isSubmittingEnrollment || enrollmentCode.trim().length === 0
+                  }
+                  aria-busy={isSubmittingEnrollment}
+                >
+                  {isSubmittingEnrollment ? (
+                    <Trans>Processing...</Trans>
+                  ) : (
+                    <Trans>Confirm and enable MFA</Trans>
+                  )}
+                </Button>
+              </DialogActions>
+            </form>
           ) : null}
         </DialogBody>
       </Dialog>
