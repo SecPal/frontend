@@ -13,6 +13,7 @@ export interface OnboardingStep {
   description?: string;
   template_id: string;
   is_completed: boolean;
+  submission?: OnboardingSubmission | null;
 }
 
 /**
@@ -20,11 +21,19 @@ export interface OnboardingStep {
  */
 export interface OnboardingFormTemplate {
   id: string;
-  title: string;
-  description?: string;
-  step_number: number;
+  tenant_id?: number | null;
+  name: string;
+  title?: string;
+  description?: string | null;
+  step_number?: number;
   form_schema: Record<string, unknown>;
+  is_required: boolean;
   is_system_template: boolean;
+  sort_order: number;
+  can_be_deleted: boolean;
+  can_be_edited: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 /**
@@ -33,17 +42,26 @@ export interface OnboardingFormTemplate {
 export interface OnboardingSubmission {
   id: string;
   employee_id: string;
-  template_id: string;
-  template: OnboardingFormTemplate;
-  form_data: Record<string, unknown>;
+  form_template_id: string;
+  template_id?: string;
+  form_data: Record<string, unknown> | null;
   status: "draft" | "submitted" | "approved" | "rejected";
-  submitted_at?: string;
-  approved_at?: string;
+  submitted_at?: string | null;
+  approved_at?: string | null;
   approved_by?: {
     id: string;
     name: string;
-  };
-  rejection_reason?: string;
+  } | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  rejection_reason?: string | null;
+  review_notes?: string | null;
+  form_template?: OnboardingFormTemplate | null;
+  template?: OnboardingFormTemplate | null;
+  reviewer?: {
+    id: string;
+    name: string;
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,7 +70,8 @@ export interface OnboardingSubmission {
  * Onboarding submission create/update request
  */
 export interface OnboardingSubmissionData {
-  template_id: string;
+  template_id?: string;
+  form_template_id: string;
   form_data: Record<string, unknown>;
   status?: "draft" | "submitted";
 }
@@ -138,27 +157,14 @@ function buildOnboardingApiError(
   };
 }
 
-/**
- * Get onboarding steps for current pre-contract user
- */
-export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
-  const url = `${apiConfig.baseUrl}/v1/onboarding/steps`;
-  const response = await apiFetch(url, {
-    method: "GET",
-  });
-
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch onboarding steps");
-  }
-
-  const data = await response.json().catch(() => ({ data: [] }));
-  if (!data.data) {
-    throw new Error("Failed to parse onboarding steps response");
-  }
-  return data.data;
+function normalizeOnboardingTemplate(
+  template: OnboardingFormTemplate
+): OnboardingFormTemplate {
+  return {
+    ...template,
+    title: template.title ?? template.name,
+    step_number: template.step_number ?? template.sort_order,
+  };
 }
 
 /**
@@ -235,12 +241,67 @@ export async function completeOnboarding(
 }
 
 /**
+ * Get onboarding steps for current pre-contract user
+ */
+export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
+  const [templates, submissions] = await Promise.all([
+    fetchOnboardingTemplates(),
+    fetchOnboardingSubmissions(),
+  ]);
+
+  return [...templates]
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((template, index) => {
+      const submission =
+        submissions.find((entry) => entry.form_template_id === template.id) ??
+        null;
+
+      return {
+        step_number: index + 1,
+        title: template.name,
+        description: template.description ?? undefined,
+        template_id: template.id,
+        is_completed:
+          submission !== null &&
+          ["submitted", "approved"].includes(submission.status),
+        submission,
+      };
+    });
+}
+
+/**
+ * List onboarding form templates for the current employee
+ */
+export async function fetchOnboardingTemplates(): Promise<
+  OnboardingFormTemplate[]
+> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/templates`;
+  const response = await apiFetch(url, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || "Failed to fetch onboarding templates");
+  }
+
+  const data = await response.json().catch(() => ({ data: [] }));
+  if (!Array.isArray(data.data)) {
+    throw new Error("Failed to parse onboarding templates response");
+  }
+
+  return data.data.map(normalizeOnboardingTemplate);
+}
+
+/**
  * Get onboarding form template
  */
 export async function fetchOnboardingTemplate(
   templateId: string
 ): Promise<OnboardingFormTemplate> {
-  const url = `${apiConfig.baseUrl}/v1/onboarding/forms/${templateId}`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding/templates/${templateId}`;
   const response = await apiFetch(url, {
     method: "GET",
   });
@@ -256,6 +317,32 @@ export async function fetchOnboardingTemplate(
   if (!data.data) {
     throw new Error("Failed to parse onboarding template response");
   }
+  return normalizeOnboardingTemplate(data.data);
+}
+
+/**
+ * List onboarding form submissions for the current employee
+ */
+export async function fetchOnboardingSubmissions(): Promise<
+  OnboardingSubmission[]
+> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/submissions`;
+  const response = await apiFetch(url, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || "Failed to fetch onboarding submissions");
+  }
+
+  const data = await response.json().catch(() => ({ data: [] }));
+  if (!Array.isArray(data.data)) {
+    throw new Error("Failed to parse onboarding submissions response");
+  }
+
   return data.data;
 }
 
@@ -265,13 +352,23 @@ export async function fetchOnboardingTemplate(
 export async function createOnboardingSubmission(
   data: OnboardingSubmissionData
 ): Promise<OnboardingSubmission> {
+  const formTemplateId = data.form_template_id ?? data.template_id;
+
+  if (!formTemplateId) {
+    throw new Error("Missing onboarding form template identifier");
+  }
+
   const url = `${apiConfig.baseUrl}/v1/onboarding/submissions`;
   const response = await apiFetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({
+      form_template_id: formTemplateId,
+      form_data: data.form_data,
+      status: data.status,
+    }),
   });
 
   if (!response.ok) {
@@ -286,7 +383,7 @@ export async function createOnboardingSubmission(
 }
 
 /**
- * Update onboarding submission (draft only)
+ * Update onboarding submission (legacy helper)
  */
 export async function updateOnboardingSubmission(
   submissionId: string,
@@ -313,7 +410,7 @@ export async function updateOnboardingSubmission(
 }
 
 /**
- * Upload file to onboarding submission
+ * Upload file to onboarding submission (legacy helper)
  */
 export async function uploadOnboardingFile(
   submissionId: string,

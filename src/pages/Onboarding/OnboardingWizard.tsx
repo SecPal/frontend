@@ -1,25 +1,20 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 import {
+  createOnboardingSubmission,
   fetchOnboardingSteps,
   fetchOnboardingTemplate,
-  createOnboardingSubmission,
-  updateOnboardingSubmission,
-  uploadOnboardingFile,
-  type OnboardingStep,
   type OnboardingFormTemplate,
+  type OnboardingStep,
   type OnboardingSubmission,
 } from "../../services/onboardingApi";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 
-/**
- * Progress indicator
- */
 function ProgressIndicator({
   currentStep,
   totalSteps,
@@ -31,7 +26,7 @@ function ProgressIndicator({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <Text className="text-sm font-medium text-gray-700">
           <Trans>
             Step {currentStep} of {totalSteps}
@@ -41,9 +36,9 @@ function ProgressIndicator({
           {Math.round(percentage)}%
         </Text>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div className="h-2.5 w-full rounded-full bg-gray-200">
         <div
-          className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
+          className="h-2.5 rounded-full bg-indigo-600 transition-all duration-300"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -51,9 +46,6 @@ function ProgressIndicator({
   );
 }
 
-/**
- * Step navigation
- */
 function StepNavigation({
   currentStep,
   totalSteps,
@@ -75,7 +67,7 @@ function StepNavigation({
   const isLastStep = currentStep === totalSteps;
 
   return (
-    <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+    <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
       <div>
         {!isFirstStep && (
           <Button onClick={onPrevious} outline>
@@ -103,56 +95,6 @@ function StepNavigation({
   );
 }
 
-/**
- * File upload component
- */
-function FileUpload({
-  label,
-  documentType,
-  onFileUpload,
-  uploading,
-  uploadedFile,
-}: {
-  label: string;
-  documentType: string;
-  onFileUpload: (file: File, type: string) => Promise<void>;
-  uploading: boolean;
-  uploadedFile?: { id: string; filename: string };
-}) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  async function handleUpload() {
-    if (!selectedFile) return;
-    await onFileUpload(selectedFile, documentType);
-    setSelectedFile(null);
-  }
-
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <div className="flex items-center gap-4">
-        <input
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-        />
-        <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
-          {uploading ? <Trans>Uploading...</Trans> : <Trans>Upload</Trans>}
-        </Button>
-      </div>
-      {uploadedFile && (
-        <Text className="text-sm text-green-600">
-          <Trans>Uploaded: {uploadedFile.filename}</Trans>
-        </Text>
-      )}
-    </div>
-  );
-}
-
-/**
- * Onboarding Wizard Page
- */
 export function OnboardingWizard() {
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -164,9 +106,6 @@ export function OnboardingWizard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Record<string, { id: string; filename: string }>
-  >({});
 
   const loadOnboardingSteps = useCallback(async () => {
     try {
@@ -184,14 +123,27 @@ export function OnboardingWizard() {
   }, []);
 
   const loadCurrentTemplate = useCallback(async () => {
-    if (!steps[currentStepIndex]) return;
+    const currentStep = steps[currentStepIndex];
+
+    if (!currentStep) {
+      return;
+    }
 
     try {
       setLoading(true);
       const templateData = await fetchOnboardingTemplate(
-        steps[currentStepIndex].template_id
+        currentStep.template_id
       );
+      const currentSubmission = currentStep.submission ?? null;
+
       setTemplate(templateData);
+      setSubmission(currentSubmission);
+      setFormData(
+        currentSubmission?.form_data &&
+          typeof currentSubmission.form_data === "object"
+          ? currentSubmission.form_data
+          : {}
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load form template"
@@ -199,109 +151,104 @@ export function OnboardingWizard() {
     } finally {
       setLoading(false);
     }
-  }, [steps, currentStepIndex]);
+  }, [currentStepIndex, steps]);
 
   useEffect(() => {
-    loadOnboardingSteps();
+    void loadOnboardingSteps();
   }, [loadOnboardingSteps]);
 
   useEffect(() => {
     if (steps.length > 0) {
-      loadCurrentTemplate();
+      void loadCurrentTemplate();
     }
   }, [loadCurrentTemplate, steps.length]);
 
-  async function handleSaveDraft() {
-    if (!template) return;
+  function updateCurrentStep(
+    savedSubmission: OnboardingSubmission,
+    status: "draft" | "submitted"
+  ) {
+    setSteps((currentSteps) =>
+      currentSteps.map((step, index) =>
+        index === currentStepIndex
+          ? {
+              ...step,
+              is_completed: status === "submitted" ? true : step.is_completed,
+              submission: savedSubmission,
+            }
+          : step
+      )
+    );
+  }
+
+  async function persistCurrentStep(
+    status: "draft" | "submitted"
+  ): Promise<boolean> {
+    if (!template) {
+      return false;
+    }
 
     try {
       setSaving(true);
       setError(null);
 
-      if (submission) {
-        await updateOnboardingSubmission(submission.id, {
-          form_data: formData,
-          status: "draft",
-        });
-      } else {
-        const newSubmission = await createOnboardingSubmission({
-          template_id: template.id,
-          form_data: formData,
-          status: "draft",
-        });
-        setSubmission(newSubmission);
-      }
+      const savedSubmission = await createOnboardingSubmission({
+        form_template_id: template.id,
+        form_data:
+          Object.keys(formData).length > 0
+            ? formData
+            : ((submission?.form_data as Record<string, unknown> | null) ?? {}),
+        status,
+      });
 
-      alert("Draft saved successfully!");
+      setSubmission(savedSubmission);
+      updateCurrentStep(savedSubmission, status);
+      return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save draft");
+      setError(
+        err instanceof Error
+          ? err.message
+          : status === "draft"
+            ? "Failed to save draft"
+            : "Failed to submit"
+      );
+      return false;
     } finally {
       setSaving(false);
     }
   }
 
+  async function handleSaveDraft() {
+    if (await persistCurrentStep("draft")) {
+      alert("Draft saved successfully!");
+    }
+  }
+
   async function handleNext() {
-    await handleSaveDraft();
-    if (currentStepIndex < steps.length - 1) {
+    if (
+      (await persistCurrentStep("draft")) &&
+      currentStepIndex < steps.length - 1
+    ) {
       setCurrentStepIndex(currentStepIndex + 1);
-      setFormData({});
     }
   }
 
   function handlePrevious() {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1);
-      setFormData({});
     }
   }
 
   async function handleSubmit() {
-    if (!template || !submission) return;
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      await updateOnboardingSubmission(submission.id, {
-        form_data: formData,
-        status: "submitted",
-      });
-
+    if (await persistCurrentStep("submitted")) {
       alert(
         "Onboarding submitted successfully! HR will review your submission."
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleFileUpload(file: File, documentType: string) {
-    if (!submission) {
-      await handleSaveDraft();
-    }
-
-    if (!submission) return;
-
-    try {
-      const result = await uploadOnboardingFile(
-        submission.id,
-        file,
-        documentType
-      );
-      setUploadedFiles({
-        ...uploadedFiles,
-        [documentType]: result,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload file");
     }
   }
 
   if (loading && steps.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <Text>
           <Trans>Loading onboarding...</Trans>
         </Text>
@@ -311,17 +258,15 @@ export function OnboardingWizard() {
 
   if (error && steps.length === 0) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
         <Text className="text-red-800">{error}</Text>
       </div>
     );
   }
 
-  const currentStep = steps[currentStepIndex];
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white shadow-sm rounded-lg p-6">
+    <div className="mx-auto max-w-4xl">
+      <div className="rounded-lg bg-white p-6 shadow-sm">
         <Heading className="mb-6">
           <Trans>Welcome to SecPal Onboarding</Trans>
         </Heading>
@@ -332,53 +277,24 @@ export function OnboardingWizard() {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
             <Text className="text-red-800">{error}</Text>
           </div>
         )}
 
-        {currentStep && template && (
+        {template && (
           <div>
             <Heading level={2} className="mb-4">
-              {template.title}
+              {template.title ?? template.name}
             </Heading>
 
             {template.description && (
               <Text className="mb-6 text-gray-600">{template.description}</Text>
             )}
 
-            {/* Dynamic form fields based on schema */}
             <div className="space-y-6">
-              {/* Document Upload Section */}
-              {currentStep.step_number === 3 && (
-                <div className="space-y-4">
-                  <FileUpload
-                    label="Contract Document"
-                    documentType="contract"
-                    onFileUpload={handleFileUpload}
-                    uploading={saving}
-                    uploadedFile={uploadedFiles["contract"]}
-                  />
-                  <FileUpload
-                    label="ID Document"
-                    documentType="id_document"
-                    onFileUpload={handleFileUpload}
-                    uploading={saving}
-                    uploadedFile={uploadedFiles["id_document"]}
-                  />
-                  <FileUpload
-                    label="Banking Details"
-                    documentType="banking_details"
-                    onFileUpload={handleFileUpload}
-                    uploading={saving}
-                    uploadedFile={uploadedFiles["banking_details"]}
-                  />
-                </div>
-              )}
-
-              {/* Placeholder for other form fields based on schema */}
-              <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg">
-                <Text className="text-gray-500 text-center">
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
+                <Text className="text-center text-gray-500">
                   <Trans>Form fields will be rendered based on schema</Trans>
                 </Text>
               </div>
@@ -391,7 +307,7 @@ export function OnboardingWizard() {
               onNext={handleNext}
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
-              canGoNext={true}
+              canGoNext={!saving}
             />
           </div>
         )}
