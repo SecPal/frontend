@@ -3,6 +3,7 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { join } from "node:path";
+import packageJson from "../package.json";
 import { describe, expect, it } from "vitest";
 
 describe("Lingui configuration", () => {
@@ -59,6 +60,21 @@ describe("Lingui configuration", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain(
       "Translation.io sync requires TRANSLATION_IO_API_KEY"
+    );
+  });
+
+  it("uses Translation.io as the default sync authority", () => {
+    expect(packageJson.scripts.sync).toContain(
+      "lingui.translationio.config.cjs"
+    );
+    expect(packageJson.scripts["sync:purge"]).toContain(
+      "lingui.translationio.config.cjs"
+    );
+    expect(packageJson.scripts["sync:local"]).not.toContain(
+      "lingui.translationio.config.cjs"
+    );
+    expect(packageJson.scripts["sync:local:purge"]).not.toContain(
+      "lingui.translationio.config.cjs"
     );
   });
 });
