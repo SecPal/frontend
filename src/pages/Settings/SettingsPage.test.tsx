@@ -321,6 +321,50 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows enrollment preparation error and retries on demand", async () => {
+    vi.mocked(authApi.startTotpEnrollment)
+      .mockRejectedValueOnce(new Error("Service unavailable"))
+      .mockResolvedValueOnce(createTotpEnrollmentPreparationResponse());
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    expect(
+      await screen.findByText(/service unavailable/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /set up mfa/i })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("mfa-qr-code")).toBeInTheDocument();
+  });
+
+  it("cancels the enrollment dialog without submitting", async () => {
+    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+      createTotpEnrollmentPreparationResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    await screen.findByRole("heading", { name: /set up mfa/i });
+
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /set up mfa/i })
+      ).not.toBeInTheDocument();
+    });
+    expect(authApi.confirmTotpEnrollment).not.toHaveBeenCalled();
+  });
+
   it("disables MFA after code confirmation", async () => {
     vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
