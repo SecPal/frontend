@@ -477,11 +477,9 @@ export function EmployeeEdit() {
                     disabled={unitsLoading}
                   >
                     <option value="">
-                      {unitsLoading ? (
-                        <Trans>Loading...</Trans>
-                      ) : (
-                        <Trans>Select organizational unit</Trans>
-                      )}
+                      {unitsLoading
+                        ? i18n._(msg`Loading...`)
+                        : i18n._(msg`Select organizational unit`)}
                     </option>
                     {organizationalUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>

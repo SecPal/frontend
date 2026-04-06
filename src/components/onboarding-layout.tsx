@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans, msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 import type React from "react";
 import { AuthLayout } from "./auth-layout";
 import { Button } from "./button";
@@ -13,16 +15,23 @@ import { getAuthTransport } from "../services/authTransport";
 export function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useLingui();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   const handleLogout = async () => {
-    logout();
+    setLogoutError(null);
 
     try {
       await getAuthTransport().logout();
+      logout();
+      navigate("/login");
     } catch (error) {
       console.error("Logout API call failed:", error);
-    } finally {
-      navigate("/login");
+      setLogoutError(
+        i18n._(
+          msg`We could not complete the sign out request. Please try again.`
+        )
+      );
     }
   };
 
@@ -34,6 +43,11 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
           <Trans>Sign out</Trans>
         </Button>
       </div>
+      {logoutError && (
+        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+          {logoutError}
+        </p>
+      )}
       <div className="pt-8">{children}</div>
     </AuthLayout>
   );
