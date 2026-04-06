@@ -16,38 +16,22 @@ import { Text } from "../../components/text";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
+import {
+  ANDROID_RELEASE_CHANNELS,
+  type AndroidCreateSessionResponse,
+  type AndroidEnrollmentSession,
+  type AndroidEnrollmentStatus,
+  type AndroidReleaseChannel,
+  type AndroidSessionListResponse,
+  type ApiEnvelope,
+} from "../../types/api/android-enrollment";
 
-const CHANNELS = [
-  "managed_device",
-  "direct_apk",
-  "github_release",
-  "obtainium",
-] as const;
-
-type AndroidReleaseChannel = (typeof CHANNELS)[number];
-type AndroidEnrollmentStatus = "pending" | "exchanged" | "revoked" | "expired";
-
-type AndroidEnrollmentSession = {
-  id: string;
-  device_label: string | null;
-  status: AndroidEnrollmentStatus;
-  update_channel: AndroidReleaseChannel;
-  bootstrap_token_expires_at: string;
-  revoked_at: string | null;
-  revocation_reason: string | null;
-};
+const CHANNELS = ANDROID_RELEASE_CHANNELS;
 
 type CreateFormState = {
   device_label: string;
   update_channel: AndroidReleaseChannel;
 };
-
-type ApiEnvelope<T> = { data: T };
-type SessionListResponse = ApiEnvelope<AndroidEnrollmentSession[]>;
-type CreateSessionResponse = ApiEnvelope<{
-  session: AndroidEnrollmentSession;
-  provisioning_qr_payload: Record<string, unknown>;
-}>;
 
 const INITIAL_FORM: CreateFormState = {
   device_label: "",
@@ -89,9 +73,12 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const { headers: initHeaders, ...requestInit } = init ?? {};
+  const headers = new Headers(initHeaders as HeadersInit | undefined);
+  headers.set("Accept", "application/json");
   const response = await apiFetch(`${apiConfig.baseUrl}${path}`, {
-    headers: { Accept: "application/json" },
-    ...init,
+    ...requestInit,
+    headers,
   });
 
   if (!response.ok) {
@@ -136,7 +123,7 @@ export default function AndroidProvisioningPage() {
     setLoadError(null);
 
     try {
-      const response = await requestJson<SessionListResponse>(
+      const response = await requestJson<AndroidSessionListResponse>(
         "/v1/admin/android-enrollment-sessions?per_page=15"
       );
       setSessions(response.data);
@@ -159,7 +146,7 @@ export default function AndroidProvisioningPage() {
     setSubmitError(null);
 
     try {
-      const response = await requestJson<CreateSessionResponse>(
+      const response = await requestJson<AndroidCreateSessionResponse>(
         "/v1/admin/android-enrollment-sessions",
         {
           method: "POST",

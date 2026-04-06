@@ -83,8 +83,10 @@ describe("AndroidProvisioningPage", () => {
     ).toBeInTheDocument();
     expect(apiFetch).toHaveBeenCalledWith(
       `${apiConfig.baseUrl}/v1/admin/android-enrollment-sessions?per_page=15`,
-      expect.objectContaining({ headers: { Accept: "application/json" } })
+      expect.objectContaining({ headers: expect.any(Headers) })
     );
+    const [, init] = vi.mocked(apiFetch).mock.calls[0]!;
+    expect((init!.headers as Headers).get("Accept")).toBe("application/json");
   });
 
   it("shows a load error when sessions cannot be fetched", async () => {
@@ -114,7 +116,14 @@ describe("AndroidProvisioningPage", () => {
               revoked_at: null,
               revocation_reason: null,
             },
-            provisioning_qr_payload: "qr-payload",
+            provisioning_qr_payload: {
+              "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME":
+                "app.secpal/.SecPalDeviceAdminReceiver",
+              "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+                bootstrap_token: "tok-abc",
+                enrollment_session_id: "session-2",
+              },
+            },
           },
         }),
       } as Response);
