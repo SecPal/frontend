@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   startPasskeyAuthenticationChallenge,
   verifyPasskeyAuthenticationChallenge,
+  deletePasskey,
   startPasskeyRegistrationChallenge,
   verifyPasskeyRegistrationChallenge,
   getPasskeys,
@@ -863,6 +864,56 @@ describe("authApi", () => {
         credentials: "include",
         body: JSON.stringify(payload),
       });
+    });
+  });
+
+  describe("deletePasskey", () => {
+    it("deletes an enrolled passkey with DELETE /v1/me/passkeys/:credentialId", async () => {
+      const mockResponse = {
+        message: "Passkey deleted successfully.",
+        data: { remaining_passkeys: 0 },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(deletePasskey("credential-id")).resolves.toEqual(
+        mockResponse
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/passkeys/credential-id"),
+        expect.objectContaining({
+          method: "DELETE",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("surfaces JSON errors when passkey deletion fails", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          message: "Passkey deletion failed.",
+          code: "NOT_FOUND",
+        }),
+      } as Response);
+
+      try {
+        await deletePasskey("missing-credential-id");
+        expect.fail("Expected deletePasskey to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).message).toBe(
+          "Passkey deletion failed."
+        );
+        expect((error as AuthApiError).status).toBe(404);
+        expect((error as AuthApiError).code).toBe("NOT_FOUND");
+      }
     });
   });
 

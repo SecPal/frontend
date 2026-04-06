@@ -173,6 +173,13 @@ export interface PasskeyRegistrationChallengeResponse {
   };
 }
 
+export interface PasskeyDeletionResponse {
+  message: string;
+  data: {
+    remaining_passkeys: number;
+  };
+}
+
 export interface PasskeyCredentialDescriptor {
   type: "public-key";
   id: string;

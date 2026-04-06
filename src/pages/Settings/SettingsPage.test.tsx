@@ -34,6 +34,7 @@ vi.mock("../../services/authApi", async () => {
   const actual = await vi.importActual("../../services/authApi");
   return {
     ...actual,
+    deletePasskey: vi.fn(),
     getPasskeys: vi.fn(),
     startPasskeyRegistrationChallenge: vi.fn(),
     verifyPasskeyRegistrationChallenge: vi.fn(),
@@ -359,6 +360,153 @@ describe("SettingsPage", () => {
         }),
       })
     );
+  });
+
+  it("removes an enrolled passkey and refreshes the list", async () => {
+    vi.mocked(authApi.deletePasskey).mockResolvedValueOnce({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 0 },
+    });
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    await waitFor(() => {
+      expect(authApi.deletePasskey).toHaveBeenCalledWith("credential-id");
+      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByText(/work macbook touch id/i)
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+    });
+  });
+
+  it("disables all remove buttons while any removal is in flight", async () => {
+    let resolveDeletion:
+      | ((value: {
+          message: string;
+          data: { remaining_passkeys: number };
+        }) => void)
+      | undefined;
+
+    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDeletion = resolve;
+        })
+    );
+    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({
+      data: [
+        {
+          id: "credential-id",
+          label: "Work MacBook Touch ID",
+          created_at: "2026-04-06T09:12:00Z",
+          last_used_at: null,
+          transports: ["internal" as const],
+        },
+        {
+          id: "credential-id-2",
+          label: "iPhone Face ID",
+          created_at: "2026-04-07T09:12:00Z",
+          last_used_at: null,
+          transports: ["internal" as const],
+        },
+      ],
+    });
+
+    await renderSettingsPage();
+
+    const removeButtons = screen.getAllByRole("button", { name: /remove/i });
+    expect(removeButtons).toHaveLength(2);
+    fireEvent.click(removeButtons[0]!);
+
+    // ALL remove buttons must be disabled while any deletion is in flight
+    for (const button of screen.getAllByRole("button", {
+      name: /remove|removing/i,
+    })) {
+      expect(button).toBeDisabled();
+    }
+
+    resolveDeletion?.({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 1 },
+    });
+  });
+
+  it("shows a busy state while passkey removal is in flight", async () => {
+    let resolveDeletion:
+      | ((value: {
+          message: string;
+          data: { remaining_passkeys: number };
+        }) => void)
+      | undefined;
+
+    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDeletion = resolve;
+        })
+    );
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
+
+    resolveDeletion?.({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 0 },
+    });
+
+    expect(
+      await screen.findByText(/no passkeys enrolled yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows generic Error removal failures inline", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
+      new Error("Deletion exploded.")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(await screen.findByText(/deletion exploded/i)).toBeInTheDocument();
+  });
+
+  it("shows fallback removal errors for unexpected failures", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce("unexpected");
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(
+      await screen.findByText(/failed to delete passkey/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows passkey removal errors inline", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
+      new authApi.AuthApiError("Passkey deletion failed.")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(
+      await screen.findByText(/passkey deletion failed/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
   });
 
   it("displays language selection section", async () => {
