@@ -138,7 +138,12 @@ describe("OnboardingAccessRoute", () => {
   it("redirects to /onboarding from app routes when employee status is unknown (offline/stale user)", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,
-      user: { id: "1", name: "User", email: "user@secpal.dev", emailVerified: true },
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
     });
 
     renderWithProviders(
@@ -154,7 +159,12 @@ describe("OnboardingAccessRoute", () => {
   it("allows access to onboarding routes when employee status is unknown (offline/stale user)", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,
-      user: { id: "1", name: "User", email: "user@secpal.dev", emailVerified: true },
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
     });
 
     renderWithProviders(
