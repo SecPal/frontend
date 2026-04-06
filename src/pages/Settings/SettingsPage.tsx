@@ -52,7 +52,7 @@ import { MfaQrCode } from "../../components/MfaQrCode";
 import { formatDateTime } from "../../lib/dateUtils";
 import {
   getPasskeyAttestation,
-  isPasskeySupported,
+  isPasskeyRegistrationSupported,
 } from "../../services/passkeyBrowser";
 
 type SensitiveMfaAction = "disable" | "regenerate";
@@ -101,7 +101,7 @@ function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
 
 export function SettingsPage() {
   const { _, i18n } = useLingui();
-  const supportsPasskeys = useMemo(() => isPasskeySupported(), []);
+  const supportsPasskeys = useMemo(() => isPasskeyRegistrationSupported(), []);
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);

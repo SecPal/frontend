@@ -90,6 +90,20 @@ function normalizeMediation(
   }
 }
 
+function normalizeAttestation(
+  value: string | undefined
+): AttestationConveyancePreference | undefined {
+  switch (value) {
+    case "direct":
+    case "enterprise":
+    case "indirect":
+    case "none":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
 function createAuthenticationOptions(
   options: PasskeyAuthenticationPublicKeyOptions,
   mediation: string
@@ -126,6 +140,8 @@ function createRegistrationOptions(
       }
     : undefined;
 
+  const attestation = normalizeAttestation(options.attestation);
+
   return {
     publicKey: {
       challenge: fromBase64Url(options.challenge),
@@ -142,9 +158,7 @@ function createRegistrationOptions(
       timeout: options.timeout,
       excludeCredentials: options.exclude_credentials?.map(mapDescriptor),
       authenticatorSelection,
-      attestation: options.attestation as
-        | AttestationConveyancePreference
-        | undefined,
+      ...(attestation !== undefined ? { attestation } : {}),
     },
   };
 }
@@ -176,6 +190,13 @@ export function isPasskeySupported(): boolean {
     typeof window.PublicKeyCredential !== "undefined" &&
     typeof navigator !== "undefined" &&
     typeof navigator.credentials?.get === "function"
+  );
+}
+
+export function isPasskeyRegistrationSupported(): boolean {
+  return (
+    isPasskeySupported() &&
+    typeof navigator.credentials?.create === "function"
   );
 }
 
