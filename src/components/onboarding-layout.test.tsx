@@ -119,8 +119,12 @@ describe("OnboardingLayout", () => {
   it("still navigates to login when transport logout fails", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
-    const transportLogout = vi.fn().mockRejectedValue(new Error("Network down"));
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const transportLogout = vi
+      .fn()
+      .mockRejectedValue(new Error("Network down"));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     vi.mocked(authHook.useAuth).mockReturnValue({
       user: null,
