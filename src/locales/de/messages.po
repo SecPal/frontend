@@ -31,7 +31,7 @@ msgstr "\"{0}\" erfolgreich aktualisiert"
 #. placeholder {0}: customer.sites_count || 0
 #: src/pages/Customers/CustomerDetail.tsx:222
 msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr ""
+msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx:206
 msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
@@ -62,7 +62,7 @@ msgstr "{label}: Gültig"
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
-#: src/pages/Employees/EmployeeEdit.tsx:298
+#: src/pages/Employees/EmployeeEdit.tsx:299
 msgid "← Back to Employee"
 msgstr "← Zurück zum Mitarbeiter"
 
@@ -227,7 +227,7 @@ msgid "Applicant"
 msgstr "Bewerber"
 
 #: src/pages/Employees/EmployeeCreate.tsx:841
-#: src/pages/Employees/EmployeeEdit.tsx:573
+#: src/pages/Employees/EmployeeEdit.tsx:572
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
 
@@ -285,7 +285,7 @@ msgid "Back to Customers"
 msgstr "Zurück zu den Kunden"
 
 #: src/pages/Employees/EmployeeDetail.tsx:481
-#: src/pages/Employees/EmployeeEdit.tsx:286
+#: src/pages/Employees/EmployeeEdit.tsx:287
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
@@ -331,7 +331,7 @@ msgstr "Abbrechen"
 #: src/pages/Customers/CustomerDetail.tsx:285
 #: src/pages/Customers/CustomerEdit.tsx:311
 #: src/pages/Employees/EmployeeCreate.tsx:962
-#: src/pages/Employees/EmployeeEdit.tsx:594
+#: src/pages/Employees/EmployeeEdit.tsx:593
 #: src/pages/Onboarding/OnboardingComplete.tsx:653
 #: src/pages/Settings/SettingsPage.tsx:497
 #: src/pages/Settings/SettingsPage.tsx:570
@@ -458,7 +458,7 @@ msgstr "Kontaktperson"
 
 #: src/pages/Employees/EmployeeCreate.tsx:639
 #: src/pages/Employees/EmployeeDetail.tsx:147
-#: src/pages/Employees/EmployeeEdit.tsx:432
+#: src/pages/Employees/EmployeeEdit.tsx:433
 msgid "Contract Start Date"
 msgstr "Datum des Vertragsbeginns"
 
@@ -580,7 +580,7 @@ msgstr "Kunden"
 
 #: src/pages/Employees/EmployeeCreate.tsx:522
 #: src/pages/Employees/EmployeeDetail.tsx:138
-#: src/pages/Employees/EmployeeEdit.tsx:343
+#: src/pages/Employees/EmployeeEdit.tsx:344
 msgid "Date of Birth"
 msgstr "Geburtsdatum"
 
@@ -691,7 +691,7 @@ msgstr "Bearbeiten"
 msgid "Edit Customer"
 msgstr "Kunde bearbeiten"
 
-#: src/pages/Employees/EmployeeEdit.tsx:304
+#: src/pages/Employees/EmployeeEdit.tsx:305
 msgid "Edit Employee"
 msgstr "Mitarbeiter bearbeiten"
 
@@ -716,7 +716,7 @@ msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht m�
 #: src/pages/Customers/CustomerEdit.tsx:251
 #: src/pages/Employees/EmployeeCreate.tsx:570
 #: src/pages/Employees/EmployeeDetail.tsx:101
-#: src/pages/Employees/EmployeeEdit.tsx:384
+#: src/pages/Employees/EmployeeEdit.tsx:385
 #: src/pages/Profile/ProfilePage.tsx:67
 #: src/pages/Sites/SiteCreate.tsx:389
 #: src/pages/Sites/SiteDetail.tsx:196
@@ -741,6 +741,14 @@ msgstr "Mitarbeiter"
 msgid "Employee #"
 msgstr "Mitarbeiter #"
 
+#: src/pages/Employees/EmployeeEdit.tsx:169
+msgid "Employee ID is missing."
+msgstr "Mitarbeiter-ID fehlt."
+
+#: src/pages/Employees/EmployeeEdit.tsx:234
+msgid "Employee ID is missing. Cannot submit form."
+msgstr "Mitarbeiter-ID fehlt. Das Formular kann nicht abgeschickt werden."
+
 #: src/pages/Employees/EmployeeList.tsx:153
 msgid "Employee Management"
 msgstr "Mitarbeiter-Management"
@@ -755,7 +763,7 @@ msgid "Employees"
 msgstr "Mitarbeiter"
 
 #: src/pages/Employees/EmployeeCreate.tsx:610
-#: src/pages/Employees/EmployeeEdit.tsx:413
+#: src/pages/Employees/EmployeeEdit.tsx:414
 msgid "Employment Details"
 msgstr "Details zur Beschäftigung"
 
@@ -798,7 +806,7 @@ msgid "Error"
 msgstr "Fehler"
 
 #: src/pages/Employees/EmployeeDetail.tsx:474
-#: src/pages/Employees/EmployeeEdit.tsx:281
+#: src/pages/Employees/EmployeeEdit.tsx:282
 msgid "Error Loading Employee"
 msgstr "Fehler beim Laden eines Mitarbeiters"
 
@@ -861,7 +869,7 @@ msgid "Filter by organizational unit"
 msgstr "nach Organisationseinheit filtern"
 
 #: src/pages/Employees/EmployeeCreate.tsx:476
-#: src/pages/Employees/EmployeeEdit.tsx:317
+#: src/pages/Employees/EmployeeEdit.tsx:318
 msgid "First Name"
 msgstr "Vorname"
 
@@ -974,10 +982,10 @@ msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitneh
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
 
-#: src/pages/Employees/EmployeeEdit.tsx:370
+#: src/pages/Employees/EmployeeEdit.tsx:371
 #: src/pages/Employees/EmployeeEdit.tsx:460
 msgid "Invalid date. Please use format {format}"
-msgstr ""
+msgstr "Ungültiges Datum. Bitte verwenden Sie das Format {format}"
 
 #: src/pages/Employees/EmployeeEdit.tsx:458
 #~ msgid "Invalid date. Please use format MM/DD/YYYY"
@@ -1005,7 +1013,7 @@ msgstr "Einladung angefordert"
 
 #: src/pages/Employees/EmployeeCreate.tsx:852
 #: src/pages/Employees/EmployeeCreate.tsx:910
-#: src/pages/Employees/EmployeeEdit.tsx:578
+#: src/pages/Employees/EmployeeEdit.tsx:577
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
 
@@ -1014,7 +1022,7 @@ msgid "Language"
 msgstr "Sprache"
 
 #: src/pages/Employees/EmployeeCreate.tsx:499
-#: src/pages/Employees/EmployeeEdit.tsx:330
+#: src/pages/Employees/EmployeeEdit.tsx:331
 #: src/pages/Onboarding/OnboardingComplete.tsx:720
 msgid "Last Name"
 msgstr "Nachname"
@@ -1038,7 +1046,7 @@ msgid "Last Updated"
 msgstr "Zuletzt aktualisiert"
 
 #: src/pages/Employees/EmployeeCreate.tsx:742
-#: src/pages/Employees/EmployeeEdit.tsx:502
+#: src/pages/Employees/EmployeeEdit.tsx:501
 msgid "Leadership Position"
 msgstr "Führungskraft"
 
@@ -1051,7 +1059,7 @@ msgid "Loading documents..."
 msgstr "Dokumente laden..."
 
 #: src/pages/Employees/EmployeeDetail.tsx:462
-#: src/pages/Employees/EmployeeEdit.tsx:269
+#: src/pages/Employees/EmployeeEdit.tsx:270
 msgid "Loading employee..."
 msgstr "Mitarbeiter laden..."
 
@@ -1076,7 +1084,7 @@ msgstr "Qualifikationen laden..."
 #: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:145
 #: src/pages/Employees/EmployeeCreate.tsx:719
-#: src/pages/Employees/EmployeeEdit.tsx:488
+#: src/pages/Employees/EmployeeEdit.tsx:487
 #: src/pages/Sites/SiteCreate.tsx:171
 #: src/pages/Sites/SiteDetail.tsx:98
 #: src/pages/Sites/SiteEdit.tsx:146
@@ -1227,7 +1235,7 @@ msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail
 
 #: src/pages/Employees/EmployeeCreate.tsx:768
 #: src/pages/Employees/EmployeeDetail.tsx:116
-#: src/pages/Employees/EmployeeEdit.tsx:525
+#: src/pages/Employees/EmployeeEdit.tsx:524
 #: src/pages/Employees/EmployeeList.tsx:287
 msgid "ML"
 msgstr "FE"
@@ -1341,7 +1349,7 @@ msgstr "Keine Internetverbindung"
 
 #: src/pages/Employees/EmployeeCreate.tsx:780
 #: src/pages/Employees/EmployeeDetail.tsx:120
-#: src/pages/Employees/EmployeeEdit.tsx:536
+#: src/pages/Employees/EmployeeEdit.tsx:535
 msgid "No management position"
 msgstr "Keine Führungsposition"
 
@@ -1452,7 +1460,7 @@ msgstr "Organisatorische Struktur"
 #: src/pages/ActivityLog/ActivityLogList.tsx:420
 #: src/pages/Employees/EmployeeCreate.tsx:693
 #: src/pages/Employees/EmployeeDetail.tsx:156
-#: src/pages/Employees/EmployeeEdit.tsx:475
+#: src/pages/Employees/EmployeeEdit.tsx:474
 #: src/pages/Employees/EmployeeList.tsx:182
 #: src/pages/Sites/SiteCreate.tsx:219
 #: src/pages/Sites/SiteDetail.tsx:313
@@ -1533,7 +1541,7 @@ msgid "Permissions"
 msgstr "Berechtigungen"
 
 #: src/pages/Employees/EmployeeCreate.tsx:470
-#: src/pages/Employees/EmployeeEdit.tsx:311
+#: src/pages/Employees/EmployeeEdit.tsx:312
 msgid "Personal Information"
 msgstr "Persönliche Informationen"
 
@@ -1542,7 +1550,7 @@ msgstr "Persönliche Informationen"
 #: src/pages/Customers/CustomerEdit.tsx:264
 #: src/pages/Employees/EmployeeCreate.tsx:593
 #: src/pages/Employees/EmployeeDetail.tsx:106
-#: src/pages/Employees/EmployeeEdit.tsx:397
+#: src/pages/Employees/EmployeeEdit.tsx:398
 #: src/pages/Sites/SiteCreate.tsx:402
 #: src/pages/Sites/SiteDetail.tsx:212
 #: src/pages/Sites/SiteEdit.tsx:373
@@ -1576,7 +1584,7 @@ msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut
 
 #: src/pages/Employees/EmployeeCreate.tsx:616
 #: src/pages/Employees/EmployeeDetail.tsx:126
-#: src/pages/Employees/EmployeeEdit.tsx:419
+#: src/pages/Employees/EmployeeEdit.tsx:420
 #: src/pages/Employees/EmployeeList.tsx:254
 #: src/pages/Sites/SiteDetail.tsx:228
 msgid "Position"
@@ -1714,7 +1722,7 @@ msgstr "Speichern"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:380
 #: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:597
+#: src/pages/Employees/EmployeeEdit.tsx:596
 #: src/pages/Sites/SiteEdit.tsx:460
 msgid "Save Changes"
 msgstr "Änderungen speichern"
@@ -1726,7 +1734,7 @@ msgstr "Entwurf speichern"
 #: src/components/OrganizationalUnitFormDialog.tsx:376
 #: src/components/ScopeAssignmentForm.tsx:608
 #: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:597
+#: src/pages/Employees/EmployeeEdit.tsx:596
 #: src/pages/Sites/SiteEdit.tsx:460
 msgid "Saving..."
 msgstr "Speichern..."
@@ -1806,7 +1814,7 @@ msgstr "neue übergeordnete Einheit auswählen"
 
 #: src/components/OrganizationalUnitPicker.tsx:238
 #: src/pages/Employees/EmployeeCreate.tsx:721
-#: src/pages/Employees/EmployeeEdit.tsx:489
+#: src/pages/Employees/EmployeeEdit.tsx:488
 msgid "Select organizational unit"
 msgstr "Organisationseinheit auswählen"
 
@@ -1931,7 +1939,7 @@ msgstr "Quelltext"
 #: src/pages/Customers/CustomersPage.tsx:171
 #: src/pages/Employees/EmployeeCreate.tsx:818
 #: src/pages/Employees/EmployeeDetail.tsx:131
-#: src/pages/Employees/EmployeeEdit.tsx:560
+#: src/pages/Employees/EmployeeEdit.tsx:559
 #: src/pages/Employees/EmployeeList.tsx:196
 #: src/pages/Employees/EmployeeList.tsx:257
 #: src/pages/Settings/SettingsPage.tsx:331

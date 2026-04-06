@@ -166,6 +166,7 @@ export function EmployeeEdit() {
   const loadEmployee = useCallback(async () => {
     setFetchLoading(true);
     if (!id) {
+      setError(i18n._(msg`Employee ID is missing.`));
       setFetchLoading(false);
       return;
     }
@@ -220,7 +221,7 @@ export function EmployeeEdit() {
     } finally {
       setFetchLoading(false);
     }
-  }, [id, i18n.locale]);
+  }, [id, i18n]);
 
   useEffect(() => {
     loadEmployee();
@@ -230,7 +231,7 @@ export function EmployeeEdit() {
     e.preventDefault();
     if (!id) {
       console.error("Cannot submit employee form: missing employee ID.");
-      setError("Employee ID is missing. Cannot submit form.");
+      setError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
       return;
     }
 
