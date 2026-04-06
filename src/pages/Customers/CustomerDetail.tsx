@@ -235,7 +235,10 @@ export default function CustomerDetail() {
           {capabilities.actions.customers.delete && (
             <Button
               outline
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => {
+                setDeleteError(null);
+                setShowDeleteDialog(true);
+              }}
               disabled={deleting}
             >
               <Trans>Delete</Trans>
