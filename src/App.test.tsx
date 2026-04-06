@@ -387,4 +387,106 @@ describe("App", () => {
 
     expect(window.location.pathname).toBe("/dashboard");
   });
+
+  it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
+    window.history.replaceState({}, "", "/");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "Pre-Contract User",
+        email: "new.hire@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-1",
+          status: "pre_contract",
+          onboarding_workflow: {
+            status: "account_initialized",
+          },
+        },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/onboarding");
+    });
+  });
+
+  it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {
+    window.history.replaceState({}, "", "/onboarding");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "Pre-Contract User",
+        email: "new.hire@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-1",
+          status: "pre_contract",
+          onboarding_workflow: {
+            status: "changes_requested",
+          },
+        },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/onboarding");
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /sign out/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /home/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("redirects active authenticated users away from onboarding-only routes", async () => {
+    window.history.replaceState({}, "", "/onboarding");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "Active User",
+        email: "guard@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-2",
+          status: "active",
+          onboarding_workflow: {
+            status: "active",
+          },
+        },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/");
+    });
+  });
+
+  it("redirects unauthenticated users from the protected onboarding route to login", async () => {
+    window.history.replaceState({}, "", "/onboarding");
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/login");
+    });
+
+    expect(
+      screen.getByRole("heading", { name: /log in/i })
+    ).toBeInTheDocument();
+  });
 });
