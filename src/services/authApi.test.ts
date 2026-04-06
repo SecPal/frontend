@@ -3,6 +3,8 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  startPasskeyAuthenticationChallenge,
+  verifyPasskeyAuthenticationChallenge,
   getPasskeys,
   login,
   logout,
@@ -618,6 +620,96 @@ describe("authApi", () => {
         expect((error as AuthApiError).status).toBe(409);
         expect((error as AuthApiError).code).toBe("CONFLICT");
       }
+    });
+  });
+
+  describe("passkey authentication", () => {
+    it("starts a browser passkey authentication challenge", async () => {
+      const mockResponse = {
+        data: {
+          challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+          public_key: {
+            challenge: "Zm9vYmFy",
+            rp_id: "app.secpal.dev",
+            timeout: 60000,
+            user_verification: "preferred",
+          },
+          mediation: "conditional",
+          expires_at: "2026-04-06T12:00:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(startPasskeyAuthenticationChallenge()).resolves.toEqual(
+        mockResponse
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("/v1/auth/passkeys/challenges"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
+    });
+
+    it("verifies a browser passkey authentication challenge", async () => {
+      const mockResponse = {
+        user: createAuthenticatedUser(),
+        authentication: {
+          mode: "session",
+          method: "passkey",
+          mfa_completed: true,
+        },
+      };
+
+      const payload = {
+        credential: {
+          id: "credential-id",
+          raw_id: "credential-id",
+          type: "public-key" as const,
+          response: {
+            client_data_json: "Y2xpZW50",
+            authenticator_data: "YXV0aA",
+            signature: "c2lnbmF0dXJl",
+          },
+          client_extension_results: {},
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(
+        verifyPasskeyAuthenticationChallenge(
+          "550e8400-e29b-41d4-a716-446655440099",
+          payload
+        )
+      ).resolves.toEqual(mockResponse);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining(
+          "/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440099/verify"
+        ),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify(payload),
+        })
+      );
     });
   });
 

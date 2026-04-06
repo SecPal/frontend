@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added browser passkey sign-in to the login flow, including the WebAuthn challenge client and focused frontend coverage for supported browsers and failure handling.
 - Added passkey visibility to the settings page, including enrolled-passkey listing and an unsupported-browser notice that does not hide existing server-side passkey data.
 - Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
 - Added a reusable MFA QR-code component with browser-safe fallback messaging and focused component coverage so upcoming enrollment UI slices can render authenticator setup material without duplicating QR generation logic.

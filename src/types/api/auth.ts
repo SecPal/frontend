@@ -55,6 +55,7 @@ export interface LoginMfaChallengeResponse {
 
 export interface SessionAuthenticationResult {
   mode: "session";
+  method?: "passkey";
   mfa_completed: true;
 }
 
@@ -139,4 +140,46 @@ export interface PasskeyCredentialSummary {
 
 export interface PasskeyListResponse {
   data: PasskeyCredentialSummary[];
+}
+
+export interface PasskeyCredentialDescriptor {
+  type: "public-key";
+  id: string;
+  transports?: PasskeyTransport[];
+}
+
+export interface PasskeyAuthenticationPublicKeyOptions {
+  challenge: string;
+  rp_id: string;
+  timeout?: number;
+  user_verification?: "discouraged" | "preferred" | "required";
+  allow_credentials?: PasskeyCredentialDescriptor[];
+}
+
+export interface PasskeyAuthenticationChallengeResponse {
+  data: {
+    challenge_id: string;
+    public_key: PasskeyAuthenticationPublicKeyOptions;
+    mediation: "conditional" | "optional" | "required" | "silent" | string;
+    expires_at: string;
+  };
+}
+
+export interface PasskeyAssertionResponsePayload {
+  client_data_json: string;
+  authenticator_data: string;
+  signature: string;
+  user_handle?: string | null;
+}
+
+export interface PasskeyAuthenticationCredential {
+  id: string;
+  raw_id: string;
+  type: "public-key";
+  response: PasskeyAssertionResponsePayload;
+  client_extension_results?: Record<string, unknown>;
+}
+
+export interface PasskeyAuthenticationVerificationRequest {
+  credential: PasskeyAuthenticationCredential;
 }
