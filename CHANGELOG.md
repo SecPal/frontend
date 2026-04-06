@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Strengthened Copilot governance: require test-impact analysis and same-commit test updates when a fix alters observable behavior, explicitly recommend `PREFLIGHT_RUN_TESTS=1` for behavioral or security changes, and mandate `--body-file` for programmatic PR creation to prevent shell escaping issues.
+- Added a behavior-change reminder to the preflight skip-tests hint so the pre-push hook explicitly warns about enabling tests for security or state-lifecycle fixes.
+
 ### Added
 
 - Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
