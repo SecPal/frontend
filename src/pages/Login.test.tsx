@@ -109,6 +109,12 @@ const mfaChallengeFixture = {
   expires_at: "2026-04-01T09:30:00Z",
 };
 
+const textBytes = (value: string) => Uint8Array.from(Buffer.from(value)).buffer;
+const loadPasskeyBrowser = () =>
+  vi.importActual<typeof import("../services/passkeyBrowser")>(
+    "../services/passkeyBrowser"
+  );
+
 async function openMfaDialog() {
   vi.mocked(authApi.login).mockResolvedValueOnce({
     challenge: mfaChallengeFixture,
@@ -244,6 +250,64 @@ describe("Login", () => {
     expect(
       await screen.findByRole("button", { name: /sign in with passkey/i })
     ).toBeInTheDocument();
+  });
+
+  it("maps real browser passkey assertions into the API payload", async () => {
+    const actualPasskeyBrowser = await loadPasskeyBrowser();
+
+    Object.defineProperty(window, "isSecureContext", {
+      configurable: true,
+      value: true,
+    });
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn() },
+    });
+
+    await expect(
+      actualPasskeyBrowser.getPasskeyAssertion(
+        { challenge: "Zm9vYmFy", rp_id: "app.secpal.dev" },
+        "conditional"
+      )
+    ).rejects.toThrow("Passkeys are not available in this browser.");
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: {
+        get: vi.fn().mockResolvedValue({
+          id: "credential-id",
+          rawId: textBytes("raw-id"),
+          response: {
+            clientDataJSON: textBytes("client-data"),
+            authenticatorData: textBytes("authenticator-data"),
+            signature: textBytes("signature"),
+            userHandle: textBytes("user-handle"),
+          },
+          getClientExtensionResults: () => ({ credProps: { rk: true } }),
+        }),
+      },
+    });
+
+    await expect(
+      actualPasskeyBrowser.getPasskeyAssertion(
+        {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+        },
+        "conditional"
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        raw_id: "cmF3LWlk",
+        response: expect.objectContaining({
+          client_data_json: "Y2xpZW50LWRhdGE",
+          authenticator_data: "YXV0aGVudGljYXRvci1kYXRh",
+          signature: "c2lnbmF0dXJl",
+          user_handle: "dXNlci1oYW5kbGU",
+        }),
+      })
+    );
   });
 
   it("completes passkey sign-in with the browser WebAuthn flow", async () => {
