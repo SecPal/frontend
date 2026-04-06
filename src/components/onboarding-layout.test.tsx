@@ -106,7 +106,7 @@ describe("OnboardingLayout", () => {
     });
   });
 
-  it("still navigates to login when transport logout fails", async () => {
+  it("does not navigate to login when transport logout fails", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     const transportLogout = vi
@@ -134,7 +134,7 @@ describe("OnboardingLayout", () => {
         "Logout API call failed:",
         expect.any(Error)
       );
-      expect(mockNavigate).toHaveBeenCalledWith("/login");
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
 
     consoleError.mockRestore();
@@ -166,7 +166,7 @@ describe("OnboardingLayout", () => {
     consoleError.mockRestore();
   });
 
-  it("calls logout() in the finally block so client state is cleared even on API failure", async () => {
+  it("calls logout() after the API attempt so client state is cleared even on API failure", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     const transportLogout = vi
@@ -191,9 +191,10 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     await waitFor(() => {
-      // logout() must have been called (in finally) after the API attempt
+      // logout() must have been called after the API attempt settles
       expect(logout).toHaveBeenCalledTimes(1);
-      expect(mockNavigate).toHaveBeenCalledWith("/login");
+      // on API failure the user stays on the page so the error is visible
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
 
     consoleError.mockRestore();

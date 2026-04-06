@@ -23,16 +23,16 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
 
     try {
       await getAuthTransport().logout();
+      logout();
+      navigate("/login");
     } catch (error) {
       console.error("Logout API call failed:", error);
+      logout();
       setLogoutError(
         i18n._(
           msg`We could not complete the sign out request. You have been signed out locally.`
         )
       );
-    } finally {
-      logout();
-      navigate("/login");
     }
   };
 
