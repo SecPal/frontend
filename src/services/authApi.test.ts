@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  getPasskeys,
   login,
   logout,
   logoutAll,
@@ -647,6 +648,30 @@ describe("authApi", () => {
           cache: "no-store",
         })
       );
+    });
+  });
+
+  describe("getPasskeys", () => {
+    it("fetches enrolled passkeys from /v1/me/passkeys", async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: "credential-id",
+            label: "Work MacBook Touch ID",
+            created_at: "2026-04-06T09:12:00Z",
+            last_used_at: null,
+            transports: ["internal"],
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(getPasskeys()).resolves.toEqual(mockResponse);
     });
   });
 

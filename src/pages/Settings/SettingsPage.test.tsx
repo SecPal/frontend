@@ -33,6 +33,7 @@ vi.mock("../../services/authApi", async () => {
   const actual = await vi.importActual("../../services/authApi");
   return {
     ...actual,
+    getPasskeys: vi.fn(),
     getMfaStatus: vi.fn(),
     startTotpEnrollment: vi.fn(),
     confirmTotpEnrollment: vi.fn(),
@@ -113,6 +114,20 @@ function createTotpEnrollmentPreparationResponse() {
   };
 }
 
+function createPasskeyListResponse() {
+  return {
+    data: [
+      {
+        id: "credential-id",
+        label: "Work MacBook Touch ID",
+        created_at: "2026-04-06T09:12:00Z",
+        last_used_at: null,
+        transports: ["internal" as const],
+      },
+    ],
+  };
+}
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,6 +137,18 @@ describe("SettingsPage", () => {
     vi.mocked(authApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
+    vi.mocked(authApi.getPasskeys).mockResolvedValue(
+      createPasskeyListResponse()
+    );
+    Object.defineProperty(window, "PublicKeyCredential", {
+      configurable: true,
+      writable: true,
+      value: function PublicKeyCredential() {},
+    });
+    Object.defineProperty(window, "isSecureContext", {
+      configurable: true,
+      value: true,
+    });
   });
 
   it("renders the settings page with heading", async () => {
@@ -129,6 +156,66 @@ describe("SettingsPage", () => {
 
     expect(
       screen.getByRole("heading", { name: /settings/i })
+    ).toBeInTheDocument();
+  });
+
+  it("lists enrolled passkeys", async () => {
+    await renderSettingsPage();
+
+    expect(
+      await screen.findByRole("heading", { name: /passkeys/i })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/work macbook touch id/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows an empty passkey state when no credentials are enrolled", async () => {
+    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+
+    expect(
+      await screen.findByText(/no passkeys enrolled yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows passkey loading errors returned by the API", async () => {
+    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce(
+      new authApi.AuthApiError("Failed to load passkeys.")
+    );
+
+    await renderSettingsPage();
+
+    expect(
+      await screen.findByText(/failed to load passkeys/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows a fallback passkey loading error for unexpected failures", async () => {
+    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce("unexpected");
+
+    await renderSettingsPage();
+
+    expect(
+      await screen.findByText(/failed to load passkeys/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows an unsupported passkey message without hiding the enrolled list", async () => {
+    Object.defineProperty(window, "PublicKeyCredential", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+
+    await renderSettingsPage();
+
+    expect(
+      screen.getByText(/this browser does not support passkeys/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/work macbook touch id/i)
     ).toBeInTheDocument();
   });
 

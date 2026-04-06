@@ -8,6 +8,7 @@ import type {
   MfaStatusResponse,
   MfaTotpEnrollmentResponse,
   MfaVerificationCodeRequest,
+  PasskeyListResponse,
   SessionLoginResponse,
   TotpCodeRequest,
   VerificationNotificationResponse,
@@ -280,6 +281,25 @@ export async function getMfaStatus(): Promise<MfaStatusResponse> {
   return parseJsonResponse<MfaStatusResponse>(
     response,
     "MFA status fetch failed"
+  );
+}
+
+export async function getPasskeys(): Promise<PasskeyListResponse> {
+  const response = await apiFetch(buildApiUrl("/v1/me/passkeys"), {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "Passkey list fetch failed");
+  }
+
+  return parseJsonResponse<PasskeyListResponse>(
+    response,
+    "Passkey list fetch failed"
   );
 }
 
