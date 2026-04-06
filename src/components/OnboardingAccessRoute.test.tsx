@@ -135,7 +135,7 @@ describe("OnboardingAccessRoute", () => {
     expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
   });
 
-  it("redirects to /onboarding from app routes when employee status is unknown (offline/stale user)", () => {
+  it("allows access to app routes when employee status is unknown (offline/stale user)", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,
       user: {
@@ -152,8 +152,12 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
-    expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
-    expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
+    // AppAccessRoute does not fail-closed for unknown employee status: the
+    // persisted auth user omits employee data after bootstrap. Access is
+    // permitted until bootstrap revalidation can confirm pre-contract status.
+    // A follow-up issue tracks persisting employee lifecycle state to close
+    // this narrow offline window (see #743).
+    expect(screen.getByText("Protected App Content")).toBeInTheDocument();
   });
 
   it("allows access to onboarding routes when employee status is unknown (offline/stale user)", () => {

@@ -28,11 +28,7 @@ function hasKnownEmployeeStatus(
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
 
-  // Redirect pre-contract users AND users whose employee status is not yet
-  // known to /onboarding. This prevents a pre-contract user from accessing
-  // normal app routes in an offline or bootstrap-timeout scenario where
-  // the persisted user lacks employee data.
-  if (!hasKnownEmployeeStatus(user) || isPreContractUser(user)) {
+  if (isPreContractUser(user)) {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -42,9 +38,9 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
 export function OnboardingOnlyRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
 
-  // Allow access when status is unknown (offline / stale persisted user) as
-  // a safe default: a pre-contract user who cannot reach the API should
-  // stay at /onboarding rather than be bounced to /.
+  // Allow access when employee status is unknown (offline / stale persisted
+  // user): a pre-contract user who cannot reach the API should stay at
+  // /onboarding rather than be bounced to /.
   if (!hasKnownEmployeeStatus(user) || isPreContractUser(user)) {
     return <>{children}</>;
   }
