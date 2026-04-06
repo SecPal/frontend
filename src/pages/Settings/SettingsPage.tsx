@@ -442,7 +442,7 @@ export function SettingsPage() {
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                 <Trans>Loading passkeys...</Trans>
               </Text>
-            ) : passkeys.length === 0 ? (
+            ) : !passkeyError && passkeys.length === 0 ? (
               <Text className="text-sm text-zinc-600 dark:text-zinc-300">
                 <Trans>No passkeys enrolled yet.</Trans>
               </Text>

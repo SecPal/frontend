@@ -165,7 +165,9 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByRole("heading", { name: /passkeys/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/work macbook touch id/i)
+    ).toBeInTheDocument();
   });
 
   it("shows an empty passkey state when no credentials are enrolled", async () => {
@@ -173,7 +175,9 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/no passkeys enrolled yet/i)
+    ).toBeInTheDocument();
   });
 
   it("shows passkey loading errors returned by the API", async () => {
@@ -183,7 +187,9 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    expect(screen.getByText(/failed to load passkeys/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/failed to load passkeys/i)
+    ).toBeInTheDocument();
   });
 
   it("shows a fallback passkey loading error for unexpected failures", async () => {
@@ -191,7 +197,9 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    expect(screen.getByText(/failed to load passkeys/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/failed to load passkeys/i)
+    ).toBeInTheDocument();
   });
 
   it("shows an unsupported passkey message without hiding the enrolled list", async () => {
@@ -206,7 +214,9 @@ describe("SettingsPage", () => {
     expect(
       screen.getByText(/this browser does not support passkeys/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/work macbook touch id/i)
+    ).toBeInTheDocument();
   });
 
   it("displays language selection section", async () => {
