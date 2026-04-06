@@ -456,9 +456,7 @@ export function EmployeeEdit() {
                         const format =
                           i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
                         setContractDateError(
-                          i18n._(
-                            msg`Invalid date. Please use format ${format}`
-                          )
+                          i18n._(msg`Invalid date. Please use format ${format}`)
                         );
                       }
                     }}
