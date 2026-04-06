@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
 - Aligned the public onboarding completion flow with the current backend runtime by removing the unsupported profile-photo bootstrap field, submitting the documented JSON payload to `POST /v1/onboarding/complete`, and accepting the session-based completion response without a frontend token assumption
 - Made browser-session login prefer the canonical `GET /v1/me` user payload immediately after authentication, so capability-gated navigation no longer comes up incomplete until the first manual refresh.
 - Aligned MFA recovery-code placeholders, frontend fixtures, and service mocks with the canonical API payload shape of raw 8-character uppercase alphanumeric codes so the browser UI no longer teaches a grouped `XXXX-XXXX` format that differs from what the backend stores and returns.

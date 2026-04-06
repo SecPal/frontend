@@ -9,10 +9,15 @@ import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
+import {
+  AppAccessRoute,
+  OnboardingOnlyRoute,
+} from "./components/OnboardingAccessRoute";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { RouteNotFoundState } from "./components/RouteGuardState";
+import { OnboardingLayout } from "./components/onboarding-layout";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
 import { Button } from "./components/button";
@@ -102,6 +107,16 @@ function HiddenAppRouteState() {
   );
 }
 
+function AppLayoutRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <AppAccessRoute>
+        <ApplicationLayout>{children}</ApplicationLayout>
+      </AppAccessRoute>
+    </ProtectedRoute>
+  );
+}
+
 /**
  * Authenticated app routing policy outside onboarding:
  * - Self-service routes remain directly accessible to any authenticated user.
@@ -111,7 +126,12 @@ function HiddenAppRouteState() {
  */
 function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
   return (
-    <FeatureRoute {...props} missingFeatureElement={<HiddenAppRouteState />} />
+    <AppAccessRoute>
+      <FeatureRoute
+        {...props}
+        missingFeatureElement={<HiddenAppRouteState />}
+      />
+    </AppAccessRoute>
   );
 }
 
@@ -132,21 +152,17 @@ function App() {
             <Route
               path="/"
               element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <Home />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                <AppLayoutRoute>
+                  <Home />
+                </AppLayoutRoute>
               }
             />
             <Route
               path="/about"
               element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <About />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                <AppLayoutRoute>
+                  <About />
+                </AppLayoutRoute>
               }
             />
             {/* Customer & Site Management Routes - NEW (Epic #210) */}
@@ -350,9 +366,11 @@ function App() {
               path="/onboarding"
               element={
                 <ProtectedRoute>
-                  <ApplicationLayout>
-                    <OnboardingWizard />
-                  </ApplicationLayout>
+                  <OnboardingOnlyRoute>
+                    <OnboardingLayout>
+                      <OnboardingWizard />
+                    </OnboardingLayout>
+                  </OnboardingOnlyRoute>
                 </ProtectedRoute>
               }
             />
@@ -371,31 +389,25 @@ function App() {
             <Route
               path="/settings"
               element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <SettingsPage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                <AppLayoutRoute>
+                  <SettingsPage />
+                </AppLayoutRoute>
               }
             />
             <Route
               path="/profile"
               element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <ProfilePage />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                <AppLayoutRoute>
+                  <ProfilePage />
+                </AppLayoutRoute>
               }
             />
             <Route
               path="*"
               element={
-                <ProtectedRoute>
-                  <ApplicationLayout>
-                    <RouteNotFoundState />
-                  </ApplicationLayout>
-                </ProtectedRoute>
+                <AppLayoutRoute>
+                  <RouteNotFoundState />
+                </AppLayoutRoute>
               }
             />
           </Routes>
