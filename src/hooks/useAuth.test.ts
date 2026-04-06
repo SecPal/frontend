@@ -570,14 +570,12 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: null,
-          newValue: JSON.stringify(mockUser),
-          storageArea: localStorage,
-        })
-      );
+      const storageEvent = new StorageEvent("storage");
+      (storageEvent as any).key = "auth_user";
+      (storageEvent as any).oldValue = null;
+      (storageEvent as any).newValue = JSON.stringify(mockUser);
+      (storageEvent as any).storageArea = localStorage;
+      window.dispatchEvent(storageEvent);
     });
 
     await waitFor(() => {
