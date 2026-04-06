@@ -119,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed the unreachable inline error panel from `EmployeeEdit` that duplicated the full-screen error view already returned by the early-return guard, eliminating a logically dead conditional branch.
 - Aligned the employee detail actions with the onboarding runtime workflow so HR/compliance users can confirm submitted onboarding dossiers via the dedicated admin endpoint and activation is only offered once the backend marks the employee `ready_for_activation`.
 - Aligned the authenticated onboarding wizard with the documented runtime API surface so it now loads ordered templates from `/v1/onboarding/templates`, reuses existing submissions from `/v1/onboarding/submissions`, saves and submits through the backend's POST upsert flow with `form_template_id`, and no longer exposes the stale PATCH-only or file-upload paths that the current runtime does not provide.
 - Replaced the protected-route startup dead-end on Android with a bounded auth-bootstrap recovery flow, so cached sessions no longer sit on an indefinite `Laden...` spinner when native session revalidation is slow or transiently fails; SecPal now shows an explicit retry/login recovery state and only clears auth immediately for real invalid-session errors.
