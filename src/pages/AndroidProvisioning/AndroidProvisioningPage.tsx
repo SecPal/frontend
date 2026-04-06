@@ -46,7 +46,7 @@ type ApiEnvelope<T> = { data: T };
 type SessionListResponse = ApiEnvelope<AndroidEnrollmentSession[]>;
 type CreateSessionResponse = ApiEnvelope<{
   session: AndroidEnrollmentSession;
-  provisioning_qr_payload: string;
+  provisioning_qr_payload: Record<string, unknown>;
 }>;
 
 const INITIAL_FORM: CreateFormState = {
@@ -176,7 +176,7 @@ export default function AndroidProvisioningPage() {
         response.data.session,
         ...current.filter((session) => session.id !== response.data.session.id),
       ]);
-      setLatestQrPayload(response.data.provisioning_qr_payload);
+      setLatestQrPayload(JSON.stringify(response.data.provisioning_qr_payload));
       setLatestSession(response.data.session);
       setFormState(INITIAL_FORM);
     } catch (error) {
