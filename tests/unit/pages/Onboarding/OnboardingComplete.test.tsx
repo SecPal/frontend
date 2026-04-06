@@ -383,6 +383,103 @@ describe("OnboardingComplete", () => {
     expect(screen.queryByText(/^invalid link$/i)).not.toBeInTheDocument();
   });
 
+  it("shows inline retry guidance when submit-time rate limiting includes Retry-After", async () => {
+    const mockError = {
+      response: {
+        status: 429,
+        data: {
+          message: "Too many requests",
+        },
+        retryAfterSeconds: 120,
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    const passwordInput = document.querySelector('input[name="password"]')!;
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const submitButton = screen.getByRole("button", {
+      name: /complete account setup/i,
+    });
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "password123" },
+    });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /too many onboarding attempts\. please try again later\./i
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/please try again in about 2 minutes/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^invalid link$/i)).not.toBeInTheDocument();
+  });
+
+  it("uses onboarding-specific fallback wording for submit-time rate limits without Retry-After", async () => {
+    const mockError = {
+      response: {
+        status: 429,
+        data: {
+          message: "Too many requests",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    const firstNameInput = screen.getByLabelText(/first name/i);
+    const lastNameInput = screen.getByLabelText(/last name/i);
+    const passwordInput = document.querySelector('input[name="password"]')!;
+    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+    const submitButton = screen.getByRole("button", {
+      name: /complete account setup/i,
+    });
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "password123" },
+    });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /^too many onboarding attempts\. please try again later\.$/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/^too many requests$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^invalid link$/i)).not.toBeInTheDocument();
+  });
+
   it("handles API validation errors from backend", async () => {
     const mockError = {
       response: {
