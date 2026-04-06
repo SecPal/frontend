@@ -12,16 +12,16 @@ import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
 
-const LOGOUT_TIMEOUT_MS = 8000;
+export const LOGOUT_TIMEOUT_MS = 8000;
 
-async function logoutWithTimeout(logoutRequest: Promise<void>) {
+async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   try {
-    return await Promise.race([
-      logoutRequest.then(() => "completed" as const),
-      new Promise<"timed-out">((resolve) => {
-        timeoutId = setTimeout(() => resolve("timed-out"), LOGOUT_TIMEOUT_MS);
+    await Promise.race([
+      logoutRequest,
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(resolve, LOGOUT_TIMEOUT_MS);
       }),
     ]);
   } finally {

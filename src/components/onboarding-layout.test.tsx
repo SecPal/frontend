@@ -15,7 +15,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../locales/de/messages.mjs";
 import { messages as enMessages } from "../locales/en/messages.mjs";
-import { OnboardingLayout } from "./onboarding-layout";
+import { OnboardingLayout, LOGOUT_TIMEOUT_MS } from "./onboarding-layout";
 import * as authHook from "../hooks/useAuth";
 import * as authTransport from "../services/authTransport";
 
@@ -240,7 +240,7 @@ describe("OnboardingLayout", () => {
     vi.useFakeTimers();
 
     const logout = vi.fn();
-    const transportLogout = vi.fn(() => new Promise(() => undefined));
+    const transportLogout = vi.fn(() => new Promise<void>(() => {}));
 
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,
@@ -258,7 +258,7 @@ describe("OnboardingLayout", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(8000);
+      await vi.advanceTimersByTimeAsync(LOGOUT_TIMEOUT_MS);
     });
 
     expect(logout).toHaveBeenCalledTimes(1);
