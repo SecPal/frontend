@@ -240,14 +240,14 @@ describe("authTransport", () => {
     });
   });
 
-  it("uses a native bridge transport and strips raw token fields from auth state", async () => {
+  it("prefers the canonical current-user payload after a native login", async () => {
     const nativeBridge: NativeAuthBridge = {
       login: vi.fn().mockResolvedValue({
         user: {
           id: 7,
-          name: "Native User",
-          email: "native@secpal.dev",
-          permissions: ["profile.read"],
+          name: "Customer User",
+          email: "customer@secpal.dev",
+          hasCustomerAccess: true,
           token: "native-secret",
           refreshToken: "native-refresh-secret",
         },
@@ -256,9 +256,14 @@ describe("authTransport", () => {
       logoutAll: vi.fn().mockResolvedValue(undefined),
       getCurrentUser: vi.fn().mockResolvedValue({
         id: 7,
-        name: "Native User",
-        email: "native@secpal.dev",
-        permissions: ["profile.read"],
+        name: "Native Manager",
+        email: "manager@secpal.dev",
+        emailVerified: true,
+        roles: ["Manager"],
+        permissions: ["employees.read", "activity_log.read"],
+        hasOrganizationalScopes: true,
+        hasCustomerAccess: true,
+        hasSiteAccess: true,
         token: "native-secret",
       }),
       isNetworkAvailable: vi.fn().mockResolvedValue(true),
@@ -276,8 +281,67 @@ describe("authTransport", () => {
       email: "native@secpal.dev",
       password: "password123",
     });
+    expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
     expect(mockBrowserLogin).not.toHaveBeenCalled();
     expect(loginResult).toEqual({
+      status: "authenticated",
+      user: {
+        id: "7",
+        name: "Native Manager",
+        email: "manager@secpal.dev",
+        emailVerified: true,
+        roles: ["Manager"],
+        permissions: ["employees.read", "activity_log.read"],
+        hasOrganizationalScopes: true,
+        hasCustomerAccess: true,
+        hasSiteAccess: true,
+      },
+    });
+    expect(loginResult.status).toBe("authenticated");
+    if (loginResult.status === "authenticated") {
+      expect(loginResult.user).not.toHaveProperty("token");
+    }
+    expect(currentUser).toEqual({
+      id: "7",
+      name: "Native Manager",
+      email: "manager@secpal.dev",
+      emailVerified: true,
+      roles: ["Manager"],
+      permissions: ["employees.read", "activity_log.read"],
+      hasOrganizationalScopes: true,
+      hasCustomerAccess: true,
+      hasSiteAccess: true,
+    });
+    expect(currentUser).not.toHaveProperty("token");
+    await expect(transport.isNetworkAvailable()).resolves.toBe(true);
+    expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledOnce();
+  });
+
+  it("falls back to the native login payload when the canonical current-user fetch fails", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue({
+        user: {
+          id: 7,
+          name: "Native User",
+          email: "native@secpal.dev",
+          permissions: ["profile.read"],
+          token: "native-secret",
+        },
+      }),
+      logout: vi.fn().mockResolvedValue(undefined),
+      logoutAll: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockRejectedValue(new AuthApiError("Unauthorized")),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+    const result = await transport.login({
+      email: "native@secpal.dev",
+      password: "password123",
+    });
+
+    expect(nativeBridge.getCurrentUser).toHaveBeenCalledOnce();
+    expect(result).toEqual({
       status: "authenticated",
       user: {
         id: "7",
@@ -287,20 +351,6 @@ describe("authTransport", () => {
         permissions: ["profile.read"],
       },
     });
-    expect(loginResult.status).toBe("authenticated");
-    if (loginResult.status === "authenticated") {
-      expect(loginResult.user).not.toHaveProperty("token");
-    }
-    expect(currentUser).toEqual({
-      id: "7",
-      name: "Native User",
-      email: "native@secpal.dev",
-      emailVerified: false,
-      permissions: ["profile.read"],
-    });
-    expect(currentUser).not.toHaveProperty("token");
-    await expect(transport.isNetworkAvailable()).resolves.toBe(true);
-    expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledOnce();
   });
 
   it("passes browser-session MFA challenges through without sanitizing them as users", async () => {
