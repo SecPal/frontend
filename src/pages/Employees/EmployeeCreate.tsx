@@ -715,11 +715,9 @@ export function EmployeeCreate() {
                     disabled={unitsLoading}
                   >
                     <option value="">
-                      {unitsLoading ? (
-                        <Trans>Loading...</Trans>
-                      ) : (
-                        <Trans>Select organizational unit</Trans>
-                      )}
+                      {unitsLoading
+                        ? i18n._(msg`Loading...`)
+                        : i18n._(msg`Select organizational unit`)}
                     </option>
                     {organizationalUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
@@ -874,18 +872,10 @@ export function EmployeeCreate() {
                       handleChange("contract_type", e.target.value)
                     }
                   >
-                    <option value="full_time">
-                      <Trans>Full Time</Trans>
-                    </option>
-                    <option value="part_time">
-                      <Trans>Part Time</Trans>
-                    </option>
-                    <option value="minijob">
-                      <Trans>Minijob</Trans>
-                    </option>
-                    <option value="freelance">
-                      <Trans>Freelance</Trans>
-                    </option>
+                    <option value="full_time">{i18n._(msg`Full Time`)}</option>
+                    <option value="part_time">{i18n._(msg`Part Time`)}</option>
+                    <option value="minijob">{i18n._(msg`Minijob`)}</option>
+                    <option value="freelance">{i18n._(msg`Freelance`)}</option>
                   </Select>
                   {fieldErrors.contract_type && (
                     <ErrorMessage id={getFieldErrorId("contract_type")}>
