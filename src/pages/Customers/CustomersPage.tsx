@@ -118,15 +118,9 @@ export default function CustomersPage() {
             }
             onChange={(e) => handleStatusFilter(e.target.value)}
           >
-            <option value="">
-              <Trans>All Status</Trans>
-            </option>
-            <option value="true">
-              <Trans>Active</Trans>
-            </option>
-            <option value="false">
-              <Trans>Inactive</Trans>
-            </option>
+            <option value="">{_(msg`All Status`)}</option>
+            <option value="true">{_(msg`Active`)}</option>
+            <option value="false">{_(msg`Inactive`)}</option>
           </Select>
         </Field>
       </div>

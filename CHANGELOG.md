@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced `<Trans>` component usage inside `<option>` elements in `EmployeeStatusOptions`, `EmployeeCreate` (contract type and org-unit placeholder), `SiteCreate`, `SiteEdit`, `ActivityLogList` (log-name filter), `CustomersPage` (status filter), `EmployeeList` (status filter), and `SitesPage` (type and status filters) with `_(msg\`...\`)`string calls to produce valid HTML, because`<Trans>`renders a wrapper element that is invalid inside`<option>` elements.
 - Fixed remaining CodeQL "superfluous trailing arguments" alerts in `useAuth` tests by consolidating `otherKeyEvent`, `crossTabLoginEvent`, and `invalidJsonEvent` constructors to use the full `StorageEventInit` dictionary, removing all residual `Object.defineProperty` boilerplate and making the test file consistent throughout.
 - Fixed a race condition in the `OnboardingLayout` sign-out handler where `logout()` was called before the API request; `logout()` and navigation to `/login` now happen only after a successful API logout call so local auth state is not prematurely cleared.
 - Added a user-facing inline error message in `OnboardingLayout` when the sign-out API call fails; local auth state is preserved so the user can retry, and an inline alert notifies them the server request did not complete.
