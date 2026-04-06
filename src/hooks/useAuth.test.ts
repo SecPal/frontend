@@ -501,14 +501,18 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.removeItem("auth_user");
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: JSON.stringify(mockUser),
-          newValue: null,
-          storageArea: localStorage,
-        })
-      );
+      const crossTabLogoutEvent = new StorageEvent("storage");
+      Object.defineProperty(crossTabLogoutEvent, "key", {
+        value: "auth_user",
+      });
+      Object.defineProperty(crossTabLogoutEvent, "oldValue", {
+        value: JSON.stringify(mockUser),
+      });
+      Object.defineProperty(crossTabLogoutEvent, "newValue", { value: null });
+      Object.defineProperty(crossTabLogoutEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(crossTabLogoutEvent);
     });
 
     await waitFor(() => {
@@ -570,14 +574,16 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: null,
-          newValue: JSON.stringify(mockUser),
-          storageArea: localStorage,
-        })
-      );
+      const staleAuthEvent = new StorageEvent("storage");
+      Object.defineProperty(staleAuthEvent, "key", { value: "auth_user" });
+      Object.defineProperty(staleAuthEvent, "oldValue", { value: null });
+      Object.defineProperty(staleAuthEvent, "newValue", {
+        value: JSON.stringify(mockUser),
+      });
+      Object.defineProperty(staleAuthEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(staleAuthEvent);
     });
 
     await waitFor(() => {
@@ -649,13 +655,14 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "some_other_key",
-          newValue: null,
-          storageArea: localStorage,
-        })
-      );
+      const otherKeyEvent = new StorageEvent("storage", {
+        key: "some_other_key",
+        newValue: null,
+      });
+      Object.defineProperty(otherKeyEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(otherKeyEvent);
     });
 
     expect(result.current.isAuthenticated).toBe(false);
@@ -678,14 +685,15 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(newUser));
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: null,
-          newValue: JSON.stringify(newUser),
-          storageArea: localStorage,
-        })
-      );
+      const crossTabLoginEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: null,
+        newValue: JSON.stringify(newUser),
+      });
+      Object.defineProperty(crossTabLoginEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(crossTabLoginEvent);
     });
 
     await waitFor(() => {
@@ -713,14 +721,18 @@ describe("useAuth", () => {
       // Write the corrupt value so localStorage matches the event (real browser
       // cross-tab writes keep newValue and the actual storage in sync).
       localStorage.setItem("auth_user", "{invalid json{{");
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: JSON.stringify(mockUser),
-          newValue: "{invalid json{{",
-          storageArea: localStorage,
-        })
-      );
+      const invalidJsonEvent = new StorageEvent("storage");
+      Object.defineProperty(invalidJsonEvent, "key", { value: "auth_user" });
+      Object.defineProperty(invalidJsonEvent, "oldValue", {
+        value: JSON.stringify(mockUser),
+      });
+      Object.defineProperty(invalidJsonEvent, "newValue", {
+        value: "{invalid json{{",
+      });
+      Object.defineProperty(invalidJsonEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(invalidJsonEvent);
     });
 
     await waitFor(() => {
