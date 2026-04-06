@@ -36,22 +36,66 @@ function fromBase64Url(value: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+const KNOWN_TRANSPORTS = new Set<AuthenticatorTransport>([
+  "ble",
+  "hybrid",
+  "internal",
+  "nfc",
+  "usb",
+]);
+
+function toAuthenticatorTransports(
+  transports: PasskeyCredentialDescriptor["transports"]
+): AuthenticatorTransport[] | undefined {
+  if (!transports?.length) {
+    return undefined;
+  }
+
+  const filtered = transports.filter((t): t is AuthenticatorTransport =>
+    KNOWN_TRANSPORTS.has(t as AuthenticatorTransport)
+  );
+
+  return filtered.length > 0 ? filtered : undefined;
+}
+
 function mapDescriptor(
   descriptor: PasskeyCredentialDescriptor
 ): globalThis.PublicKeyCredentialDescriptor {
+  const transports = toAuthenticatorTransports(descriptor.transports);
+
   return {
     type: descriptor.type,
     id: fromBase64Url(descriptor.id),
-    transports: descriptor.transports as AuthenticatorTransport[] | undefined,
+    ...(transports ? { transports } : {}),
   };
+}
+
+function normalizeMediation(
+  mediation: string
+): CredentialMediationRequirement | undefined {
+  const normalized = mediation.trim();
+
+  switch (normalized) {
+    case "conditional":
+    case "optional":
+    case "required":
+    case "silent":
+      return normalized;
+    default:
+      return undefined;
+  }
 }
 
 function createAuthenticationOptions(
   options: PasskeyAuthenticationPublicKeyOptions,
   mediation: string
 ): CredentialRequestOptions {
+  const normalizedMediation = normalizeMediation(mediation);
+
   return {
-    mediation: mediation as CredentialMediationRequirement,
+    ...(normalizedMediation !== undefined
+      ? { mediation: normalizedMediation }
+      : {}),
     publicKey: {
       challenge: fromBase64Url(options.challenge),
       rpId: options.rp_id,
