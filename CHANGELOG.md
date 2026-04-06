@@ -23,8 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed a race condition in the `OnboardingLayout` sign-out handler where `logout()` was called before the API request; it now runs inside the `finally` block so client state is cleared only after the API call completes (or fails).
-- Added a user-facing inline error message in `OnboardingLayout` when the sign-out API call fails, so users know the server request did not complete even though they have been signed out locally.
+- Fixed a race condition in the `OnboardingLayout` sign-out handler where `logout()` was called before the API request; `logout()` and navigation to `/login` now happen only after a successful API logout call so local auth state is not prematurely cleared.
+- Added a user-facing inline error message in `OnboardingLayout` when the sign-out API call fails; local auth state is preserved so the user can retry, and an inline alert notifies them the server request did not complete.
 - Replaced invalid `<Trans>` component usage inside `<option>` elements in `EmployeeEdit` with `i18n._(msg\`...\`)` calls to produce valid HTML and avoid rendering issues with the organisational unit dropdown placeholder.
 
 ### Changed

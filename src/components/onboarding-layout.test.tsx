@@ -106,7 +106,7 @@ describe("OnboardingLayout", () => {
     });
   });
 
-  it("does not navigate to login when transport logout fails", async () => {
+  it("does not call logout or navigate when transport logout fails", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     const transportLogout = vi
@@ -128,12 +128,13 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     await waitFor(() => {
-      expect(logout).toHaveBeenCalledTimes(1);
       expect(transportLogout).toHaveBeenCalledTimes(1);
       expect(consoleError).toHaveBeenCalledWith(
         "Logout API call failed:",
         expect.any(Error)
       );
+      // auth state must be preserved so the user can retry
+      expect(logout).not.toHaveBeenCalled();
       expect(mockNavigate).not.toHaveBeenCalled();
     });
 
@@ -164,15 +165,10 @@ describe("OnboardingLayout", () => {
     consoleError.mockRestore();
   });
 
-  it("calls logout() after the API attempt so client state is cleared even on API failure", async () => {
+  it("does not call logout before the API attempt", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
-    const transportLogout = vi
-      .fn()
-      .mockRejectedValue(new Error("Network down"));
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const transportLogout = vi.fn().mockResolvedValue(undefined);
 
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,
@@ -183,18 +179,15 @@ describe("OnboardingLayout", () => {
 
     renderLayout();
 
-    // logout() must NOT be called before the API attempt
+    // logout() must NOT be called before the button is clicked
     expect(logout).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     await waitFor(() => {
-      // logout() must have been called after the API attempt settles
+      // logout() is called exactly once after the successful API call
       expect(logout).toHaveBeenCalledTimes(1);
-      // on API failure the user stays on the page so the error is visible
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
-
-    consoleError.mockRestore();
   });
 });
