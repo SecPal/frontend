@@ -35,7 +35,8 @@ export default function CustomerDetail() {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -43,12 +44,12 @@ export default function CustomerDetail() {
     async function loadCustomer() {
       if (!id) return;
       setLoading(true);
-      setError(null);
+      setLoadError(null);
       try {
         const data = await getCustomer(id);
         setCustomer(data);
       } catch (err) {
-        setError(
+        setLoadError(
           err instanceof Error ? err.message : "Failed to load customer"
         );
       } finally {
@@ -62,13 +63,13 @@ export default function CustomerDetail() {
     if (!customer) return;
 
     setDeleting(true);
-    setError(null);
+    setDeleteError(null);
 
     try {
       await deleteCustomer(customer.id);
       navigate("/customers");
     } catch (err) {
-      setError(
+      setDeleteError(
         err instanceof Error ? err.message : "Failed to delete customer"
       );
       setDeleting(false);
@@ -84,11 +85,11 @@ export default function CustomerDetail() {
     );
   }
 
-  if (error || !customer) {
+  if (loadError || !customer) {
     return (
       <div className="text-center py-12">
         <Text className="text-red-600">
-          {error || <Trans>Customer not found</Trans>}
+          {loadError || <Trans>Customer not found</Trans>}
         </Text>
         <Button href="/customers" outline className="mt-4">
           <Trans>Back to Customers</Trans>
@@ -262,7 +263,9 @@ export default function CustomerDetail() {
             </Trans>
           </DialogDescription>
           <DialogBody>
-            {error && <Text className="text-red-600 mb-4">{error}</Text>}
+            {deleteError && (
+              <Text className="text-red-600 mb-4">{deleteError}</Text>
+            )}
           </DialogBody>
           <DialogActions>
             <Button
