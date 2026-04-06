@@ -24,7 +24,9 @@ describe("FeatureRoute", () => {
     sites: true,
     employees: true,
     activityLogs: true,
+    androidProvisioning: true,
     actions: {
+      androidProvisioning: { create: true, revoke: true },
       customers: { create: true, update: true, delete: true },
       sites: { create: true, update: true, delete: true },
       employees: {

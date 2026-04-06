@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
 - Added browser passkey sign-in to the login flow, including the WebAuthn challenge client and focused frontend coverage for supported browsers and failure handling.
 - Added passkey visibility to the settings page, including enrolled-passkey listing and an unsupported-browser notice that does not hide existing server-side passkey data.
 - Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Aligned the frontend repo-local domain policy and validation script with the canonical Android artifact host `apk.secpal.app` so Android provisioning fixtures and runtime URLs pass governance checks.
 - Strengthened Copilot governance: require test-impact analysis and same-commit test updates when a fix alters observable behavior, explicitly recommend `PREFLIGHT_RUN_TESTS=1` in preflight guidance for behavioral, security, or state-lifecycle changes, and mandate `--body-file` for programmatic PR creation to prevent shell escaping issues.
 - Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
 - Aligned the public onboarding completion flow with the current backend runtime by removing the unsupported profile-photo bootstrap field, submitting the documented JSON payload to `POST /v1/onboarding/complete`, and accepting the session-based completion response without a frontend token assumption
