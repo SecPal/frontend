@@ -1,48 +1,55 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
-import { Trans, msg } from "@lingui/macro";
+import { msg, Trans } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
+import { useEffect, useState, type FormEvent } from "react";
+import { apiConfig } from "../../config";
 import { Badge } from "../../components/badge";
 import { Button } from "../../components/button";
-import {
-  Dialog,
-  DialogActions,
-  DialogBody,
-  DialogDescription,
-  DialogTitle,
-} from "../../components/dialog";
 import { Field, Label } from "../../components/fieldset";
 import { Heading } from "../../components/heading";
 import { Input } from "../../components/input";
 import { MfaQrCode } from "../../components/MfaQrCode";
 import { Select } from "../../components/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/table";
 import { Text } from "../../components/text";
-import { Textarea } from "../../components/textarea";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
-import type {
-  AndroidEnrollmentSession,
-  AndroidProvisioningProfile,
-  AndroidReleaseChannel,
-  CreateAndroidEnrollmentSessionRequest,
-} from "@/types/api";
 import { ApiError } from "../../services/ApiError";
-import {
-  createAndroidEnrollmentSession,
-  listAndroidEnrollmentSessions,
-  revokeAndroidEnrollmentSession,
-} from "../../services/androidEnrollmentApi";
+import { apiFetch } from "../../services/csrf";
 
-const DEFAULT_PROVISIONING_PROFILE: AndroidProvisioningProfile = {
+const CHANNELS = ["managed_device", "direct_apk", "github_release", "obtainium"] as const;
+
+type AndroidReleaseChannel = (typeof CHANNELS)[number];
+type AndroidEnrollmentStatus = "pending" | "exchanged" | "revoked" | "expired";
+
+type AndroidEnrollmentSession = {
+  id: string;
+  device_label: string | null;
+  status: AndroidEnrollmentStatus;
+  update_channel: AndroidReleaseChannel;
+  bootstrap_token_expires_at: string;
+  revoked_at: string | null;
+  revocation_reason: string | null;
+};
+
+type CreateFormState = {
+  device_label: string;
+  update_channel: AndroidReleaseChannel;
+};
+
+type ApiEnvelope<T> = { data: T };
+type SessionListResponse = ApiEnvelope<AndroidEnrollmentSession[]>;
+type CreateSessionResponse = ApiEnvelope<{
+  session: AndroidEnrollmentSession;
+  provisioning_qr_payload: string;
+}>;
+
+const INITIAL_FORM: CreateFormState = {
+  device_label: "",
+  update_channel: "managed_device",
+};
+
+const DEFAULT_PROVISIONING_PROFILE = {
   kiosk_mode_enabled: true,
   lock_task_enabled: true,
   allow_phone: false,
@@ -51,29 +58,11 @@ const DEFAULT_PROVISIONING_PROFILE: AndroidProvisioningProfile = {
   allowed_packages: ["app.secpal"],
 };
 
-type CreateFormState = {
-  device_label: string;
-  update_channel: AndroidReleaseChannel;
-  expires_in_minutes: number;
-  notes: string;
-};
-
-const INITIAL_FORM_STATE: CreateFormState = {
-  device_label: "",
-  update_channel: "managed_device",
-  expires_in_minutes: 15,
-  notes: "",
-};
-
 function formatDateTime(value: string | null): string {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString();
+  return value ? new Date(value).toLocaleString() : "-";
 }
 
-function getStatusBadgeColor(status: AndroidEnrollmentSession["status"]) {
+function getStatusColor(status: AndroidEnrollmentStatus) {
   switch (status) {
     case "pending":
       return "sky" as const;
@@ -94,271 +83,141 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await apiFetch(`${apiConfig.baseUrl}${path}`, {
+    headers: { Accept: "application/json" },
+    ...init,
+  });
+
+  if (!response.ok) {
+    const payload = (await response
+      .json()
+      .catch(() => ({ message: response.statusText }))) as {
+      errors?: Record<string, string[]>;
+      message?: string;
+    };
+
+    throw new ApiError(
+      payload.message || response.statusText || "Android provisioning request failed",
+      response.status,
+      payload.errors,
+      response
+    );
+  }
+
+  return (await response.json()) as T;
+}
+
 export default function AndroidProvisioningPage() {
   const { _ } = useLingui();
   const capabilities = useUserCapabilities();
-  const [formState, setFormState] =
-    useState<CreateFormState>(INITIAL_FORM_STATE);
+  const [formState, setFormState] = useState(INITIAL_FORM);
   const [sessions, setSessions] = useState<AndroidEnrollmentSession[]>([]);
+  const [latestQrPayload, setLatestQrPayload] = useState<string | null>(null);
+  const [latestSession, setLatestSession] = useState<AndroidEnrollmentSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [revokeError, setRevokeError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [revoking, setRevoking] = useState(false);
-  const [revocationReason, setRevocationReason] = useState("");
-  const [sessionToRevoke, setSessionToRevoke] =
-    useState<AndroidEnrollmentSession | null>(null);
-  const [latestProvisioningQrPayload, setLatestProvisioningQrPayload] =
-    useState<string | null>(null);
-  const [latestProvisioningSession, setLatestProvisioningSession] =
-    useState<AndroidEnrollmentSession | null>(null);
+
+  const canCreate = capabilities.actions.androidProvisioning.create;
+  const canRevoke = capabilities.actions.androidProvisioning.revoke;
+
+  async function loadSessions() {
+    setLoading(true);
+    setLoadError(null);
+
+    try {
+      const response = await requestJson<SessionListResponse>(
+        "/v1/admin/android-enrollment-sessions?per_page=15"
+      );
+      setSessions(response.data);
+    } catch (error) {
+      setLoadError(getErrorMessage(error, "Failed to load Android enrollment sessions"));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let isActive = true;
-
-    async function loadSessions() {
-      setLoading(true);
-      setLoadError(null);
-
-      try {
-        const response = await listAndroidEnrollmentSessions({ per_page: 15 });
-
-        if (!isActive) {
-          return;
-        }
-
-        setSessions(response.data);
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setLoadError(
-          getErrorMessage(error, "Failed to load Android enrollment sessions")
-        );
-      } finally {
-        if (isActive) {
-          setLoading(false);
-        }
-      }
-    }
-
     void loadSessions();
-
-    return () => {
-      isActive = false;
-    };
   }, []);
 
-  async function handleCreateSession(event: React.FormEvent<HTMLFormElement>) {
+  async function handleCreateSession(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    const payload: CreateAndroidEnrollmentSessionRequest = {
-      device_label: formState.device_label.trim() || undefined,
-      update_channel: formState.update_channel,
-      expires_in_minutes: formState.expires_in_minutes,
-      notes: formState.notes.trim() || undefined,
-      provisioning_profile: DEFAULT_PROVISIONING_PROFILE,
-    };
-
     setCreating(true);
     setSubmitError(null);
 
     try {
-      const created = await createAndroidEnrollmentSession(payload);
-      setSessions((current) => [created.session, ...current]);
-      setLatestProvisioningSession(created.session);
-      setLatestProvisioningQrPayload(created.provisioning_qr_payload);
-      setFormState(INITIAL_FORM_STATE);
-    } catch (error) {
-      setSubmitError(
-        getErrorMessage(error, "Failed to create Android enrollment session")
+      const response = await requestJson<CreateSessionResponse>(
+        "/v1/admin/android-enrollment-sessions",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            device_label: formState.device_label.trim() || undefined,
+            provisioning_profile: DEFAULT_PROVISIONING_PROFILE,
+            update_channel: formState.update_channel,
+          }),
+        }
       );
+
+      setSessions((current) => [
+        response.data.session,
+        ...current.filter((session) => session.id !== response.data.session.id),
+      ]);
+      setLatestQrPayload(response.data.provisioning_qr_payload);
+      setLatestSession(response.data.session);
+      setFormState(INITIAL_FORM);
+    } catch (error) {
+      setSubmitError(getErrorMessage(error, "Failed to create Android enrollment session"));
     } finally {
       setCreating(false);
     }
   }
 
-  async function handleConfirmRevoke() {
-    if (!sessionToRevoke) {
+  async function handleRevoke(session: AndroidEnrollmentSession) {
+    const reason = window.prompt(_(msg`Revocation reason`), "");
+
+    if (!reason || reason.trim().length === 0) {
       return;
     }
 
-    setRevoking(true);
-    setRevokeError(null);
-
     try {
-      const revokedSession = await revokeAndroidEnrollmentSession(
-        sessionToRevoke.id,
+      const response = await requestJson<ApiEnvelope<AndroidEnrollmentSession>>(
+        `/v1/admin/android-enrollment-sessions/${session.id}/revoke`,
         {
-          reason: revocationReason,
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: reason.trim() }),
         }
       );
 
       setSessions((current) =>
-        current.map((session) =>
-          session.id === revokedSession.id ? revokedSession : session
-        )
+        current.map((entry) => (entry.id === response.data.id ? response.data : entry))
       );
-      setLatestProvisioningSession((current) =>
-        current?.id === revokedSession.id ? revokedSession : current
-      );
-      setSessionToRevoke(null);
-      setRevocationReason("");
+      setLatestSession((current) => (current?.id === response.data.id ? response.data : current));
+      setLoadError(null);
     } catch (error) {
-      setRevokeError(
-        getErrorMessage(error, "Failed to revoke Android enrollment session")
-      );
-    } finally {
-      setRevoking(false);
+      setLoadError(getErrorMessage(error, "Failed to revoke Android enrollment session"));
     }
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <Heading>
-            <Trans>Android Provisioning</Trans>
-          </Heading>
-          <Text className="mt-2 max-w-3xl text-zinc-600 dark:text-zinc-300">
-            <Trans>
-              Generate short-lived enrollment sessions, display the
-              backend-issued provisioning QR code, and revoke unused Android
-              bootstrap sessions.
-            </Trans>
-          </Text>
+    <div className="space-y-6">
+      <Heading>
+        <Trans>Android Provisioning</Trans>
+      </Heading>
+
+      {loadError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+          {loadError}
         </div>
-      </div>
+      ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
-        <section className="space-y-6 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Heading level={2}>
-                <Trans>Enrollment Sessions</Trans>
-              </Heading>
-              <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                <Trans>
-                  Pending sessions stay revocable until the bootstrap token is
-                  exchanged, revoked, or expires.
-                </Trans>
-              </Text>
-            </div>
-          </div>
-
-          {loadError && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-              {loadError}
-            </div>
-          )}
-
-          {loading ? (
-            <div
-              role="status"
-              aria-live="polite"
-              className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/60"
-            >
-              <Text>
-                <Trans>Loading enrollment sessions...</Trans>
-              </Text>
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/40">
-              <Text className="text-zinc-600 dark:text-zinc-300">
-                <Trans>
-                  No Android enrollment sessions have been created yet.
-                </Trans>
-              </Text>
-            </div>
-          ) : (
-            <Table className="[--gutter:--spacing(5)] lg:[--gutter:--spacing(6)]">
-              <TableHead>
-                <TableRow>
-                  <TableHeader>
-                    <Trans>Device</Trans>
-                  </TableHeader>
-                  <TableHeader>
-                    <Trans>Status</Trans>
-                  </TableHeader>
-                  <TableHeader>
-                    <Trans>Channel</Trans>
-                  </TableHeader>
-                  <TableHeader>
-                    <Trans>Expires</Trans>
-                  </TableHeader>
-                  <TableHeader>
-                    <Trans>Actions</Trans>
-                  </TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sessions.map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium">
-                          {session.device_label ||
-                            _(msg`Unnamed Android enrollment session`)}
-                        </div>
-                        {session.bootstrap_token_last_eight && (
-                          <Text className="text-xs text-zinc-500 dark:text-zinc-400">
-                            <Trans>Token suffix:</Trans>{" "}
-                            {session.bootstrap_token_last_eight}
-                          </Text>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge color={getStatusBadgeColor(session.status)}>
-                        {session.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{session.update_channel}</TableCell>
-                    <TableCell>
-                      {formatDateTime(session.bootstrap_token_expires_at)}
-                    </TableCell>
-                    <TableCell>
-                      {capabilities.actions.androidProvisioning.revoke &&
-                      session.status === "pending" ? (
-                        <Button
-                          outline
-                          onClick={() => {
-                            setSessionToRevoke(session);
-                            setRevocationReason("");
-                            setRevokeError(null);
-                          }}
-                        >
-                          <Trans>Revoke</Trans>
-                        </Button>
-                      ) : (
-                        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                          <Trans>No action available</Trans>
-                        </Text>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </section>
-
-        <section className="space-y-6 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <div>
-            <Heading level={2}>
-              <Trans>Create Enrollment Session</Trans>
-            </Heading>
-            <Text className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              <Trans>
-                Each QR code is issued by the backend and tied to a short-lived,
-                revocable bootstrap token.
-              </Trans>
-            </Text>
-          </div>
-
-          {capabilities.actions.androidProvisioning.create ? (
+      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+        <section className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+          {canCreate ? (
             <form className="space-y-4" onSubmit={handleCreateSession}>
               <Field>
                 <Label>
@@ -368,10 +227,7 @@ export default function AndroidProvisioningPage() {
                   name="device_label"
                   value={formState.device_label}
                   onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      device_label: event.target.value,
-                    }))
+                    setFormState((current) => ({ ...current, device_label: event.target.value }))
                   }
                   placeholder={_(msg`Front desk tablet`)}
                 />
@@ -387,177 +243,102 @@ export default function AndroidProvisioningPage() {
                   onChange={(event) =>
                     setFormState((current) => ({
                       ...current,
-                      update_channel: event.target
-                        .value as AndroidReleaseChannel,
+                      update_channel: event.target.value as AndroidReleaseChannel,
                     }))
                   }
                 >
-                  <option value="managed_device">managed_device</option>
-                  <option value="direct_apk">direct_apk</option>
-                  <option value="github_release">github_release</option>
-                  <option value="obtainium">obtainium</option>
+                  {CHANNELS.map((channel) => (
+                    <option key={channel} value={channel}>
+                      {channel}
+                    </option>
+                  ))}
                 </Select>
               </Field>
 
-              <Field>
-                <Label>
-                  <Trans>Revocation and expiry guidance</Trans>
-                </Label>
-                <Text className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
-                  <Trans>
-                    Revoke unused QR sessions immediately after a device handoff
-                    changes. The default bootstrap lifetime is 15 minutes.
-                  </Trans>
-                </Text>
-              </Field>
-
-              <Field>
-                <Label>
-                  <Trans>Notes</Trans>
-                </Label>
-                <Textarea
-                  name="notes"
-                  value={formState.notes}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      notes: event.target.value,
-                    }))
-                  }
-                  rows={4}
-                />
-              </Field>
-
-              {submitError && (
+              {submitError ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
                   {submitError}
                 </div>
-              )}
+              ) : null}
 
               <Button type="submit" disabled={creating}>
-                {creating ? (
-                  <Trans>Creating enrollment session...</Trans>
-                ) : (
-                  <Trans>Create enrollment session</Trans>
-                )}
+                {creating ? <Trans>Creating enrollment session...</Trans> : <Trans>Create enrollment session</Trans>}
               </Button>
             </form>
           ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300">
-              <Trans>
-                You can inspect Android enrollment status, but creating or
-                revoking sessions requires write permission.
-              </Trans>
-            </div>
+            <Text>
+              <Trans>You can inspect Android enrollment status, but write permission is required to create or revoke sessions.</Trans>
+            </Text>
           )}
 
-          {latestProvisioningQrPayload && latestProvisioningSession && (
-            <div className="space-y-4 rounded-3xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
-              <div>
-                <Heading level={3}>
-                  <Trans>Provisioning QR code</Trans>
-                </Heading>
-                <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-                  <Trans>
-                    This QR payload was issued by the backend for the latest
-                    enrollment session you created.
-                  </Trans>
-                </Text>
-              </div>
-
-              <MfaQrCode
-                value={latestProvisioningQrPayload}
-                alt={_(msg`Android provisioning QR code`)}
-              />
-
-              <div className="grid gap-3 rounded-2xl bg-white/80 p-4 text-sm dark:bg-zinc-950/70 md:grid-cols-2">
-                <div>
-                  <Text className="font-medium text-zinc-900 dark:text-zinc-50">
-                    {latestProvisioningSession.device_label ||
-                      _(msg`Unnamed Android enrollment session`)}
-                  </Text>
-                  <Text className="text-zinc-500 dark:text-zinc-400">
-                    {latestProvisioningSession.update_channel}
-                  </Text>
-                </div>
-                <div>
-                  <Text className="font-medium text-zinc-900 dark:text-zinc-50">
-                    <Trans>Expires</Trans>
-                  </Text>
-                  <Text className="text-zinc-500 dark:text-zinc-400">
-                    {formatDateTime(
-                      latestProvisioningSession.bootstrap_token_expires_at
-                    )}
-                  </Text>
-                </div>
-              </div>
+          {latestQrPayload && latestSession ? (
+            <div className="space-y-3 rounded-3xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
+              <Heading level={3}>
+                <Trans>Provisioning QR code</Trans>
+              </Heading>
+              <MfaQrCode value={latestQrPayload} alt={_(msg`Android provisioning QR code`)} />
+              <Text>{latestSession.device_label || _(msg`Unnamed Android enrollment session`)}</Text>
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                <Trans>Expires</Trans>: {formatDateTime(latestSession.bootstrap_token_expires_at)}
+              </Text>
             </div>
-          )}
+          ) : null}
+        </section>
+
+        <section className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+          <Heading level={2}>
+            <Trans>Enrollment Sessions</Trans>
+          </Heading>
+
+          {loading ? <Text><Trans>Loading enrollment sessions...</Trans></Text> : null}
+          {!loading && sessions.length === 0 ? (
+            <Text>
+              <Trans>No Android enrollment sessions have been created yet.</Trans>
+            </Text>
+          ) : null}
+
+          {!loading ? (
+            <div className="space-y-3">
+              {sessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="space-y-1">
+                    <Text className="font-medium text-zinc-950 dark:text-zinc-50">
+                      {session.device_label || _(msg`Unnamed Android enrollment session`)}
+                    </Text>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge color={getStatusColor(session.status)}>{session.status}</Badge>
+                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                        <Trans>Expires</Trans>: {formatDateTime(session.bootstrap_token_expires_at)}
+                      </Text>
+                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {session.update_channel}
+                      </Text>
+                    </div>
+                    {session.revocation_reason ? (
+                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                        <Trans>Reason</Trans>: {session.revocation_reason}
+                      </Text>
+                    ) : null}
+                  </div>
+
+                  {canRevoke && session.status === "pending" ? (
+                    <Button outline onClick={() => void handleRevoke(session)}>
+                      <Trans>Revoke</Trans>
+                    </Button>
+                  ) : (
+                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {session.revoked_at ? <Trans>Revoked</Trans> : <Trans>No action available</Trans>}
+                    </Text>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </section>
       </div>
-
-      <Dialog
-        open={sessionToRevoke !== null}
-        onClose={(open) => {
-          if (!open) {
-            setSessionToRevoke(null);
-            setRevocationReason("");
-            setRevokeError(null);
-          }
-        }}
-      >
-        <DialogTitle>
-          <Trans>Revoke Android enrollment session</Trans>
-        </DialogTitle>
-        <DialogDescription>
-          <Trans>
-            Revoke the selected bootstrap token so the provisioning QR code can
-            no longer be exchanged.
-          </Trans>
-        </DialogDescription>
-        <DialogBody>
-          <div className="space-y-4">
-            {revokeError && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-                {revokeError}
-              </div>
-            )}
-            <Field>
-              <Label>
-                <Trans>Revocation reason</Trans>
-              </Label>
-              <Textarea
-                name="revocation_reason"
-                value={revocationReason}
-                onChange={(event) => setRevocationReason(event.target.value)}
-                rows={4}
-              />
-            </Field>
-          </div>
-        </DialogBody>
-        <DialogActions>
-          <Button
-            outline
-            onClick={() => {
-              setSessionToRevoke(null);
-              setRevocationReason("");
-              setRevokeError(null);
-            }}
-          >
-            <Trans>Cancel</Trans>
-          </Button>
-          <Button
-            onClick={handleConfirmRevoke}
-            disabled={revoking || revocationReason.trim().length === 0}
-          >
-            {revoking ? (
-              <Trans>Revoking...</Trans>
-            ) : (
-              <Trans>Confirm revoke</Trans>
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 }
