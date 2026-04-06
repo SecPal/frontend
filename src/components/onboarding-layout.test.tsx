@@ -251,7 +251,7 @@ describe("OnboardingLayout", () => {
 
     renderLayout();
 
-  fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
 
     expect(transportLogout).toHaveBeenCalledTimes(1);
     expect(logout).not.toHaveBeenCalled();
