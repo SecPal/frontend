@@ -429,7 +429,7 @@ msgstr "Bestätigen und Aktivieren von MFA"
 
 #: src/pages/Employees/EmployeeDetail.tsx:523
 msgid "Confirm Onboarding"
-msgstr ""
+msgstr "Onboarding bestätigen"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx:786
 msgid "Confirm Password"
@@ -2270,7 +2270,7 @@ msgstr "Warnung"
 
 #: src/components/onboarding-layout.tsx:32
 msgid "We could not complete the sign out request. Please try again."
-msgstr ""
+msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeCreate.tsx:402
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
