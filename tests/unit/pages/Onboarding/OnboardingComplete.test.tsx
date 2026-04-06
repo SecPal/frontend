@@ -405,7 +405,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
@@ -430,6 +430,7 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByText(/please try again in about 2 minutes/i)
     ).toBeInTheDocument();
+    expect(screen.queryByText(/^too many requests$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^invalid link$/i)).not.toBeInTheDocument();
   });
 
@@ -454,7 +455,7 @@ describe("OnboardingComplete", () => {
 
     const firstNameInput = screen.getByLabelText(/first name/i);
     const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole("button", {
       name: /complete account setup/i,
