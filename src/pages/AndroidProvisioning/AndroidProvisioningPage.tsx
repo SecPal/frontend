@@ -17,7 +17,12 @@ import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
 
-const CHANNELS = ["managed_device", "direct_apk", "github_release", "obtainium"] as const;
+const CHANNELS = [
+  "managed_device",
+  "direct_apk",
+  "github_release",
+  "obtainium",
+] as const;
 
 type AndroidReleaseChannel = (typeof CHANNELS)[number];
 type AndroidEnrollmentStatus = "pending" | "exchanged" | "revoked" | "expired";
@@ -98,7 +103,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     };
 
     throw new ApiError(
-      payload.message || response.statusText || "Android provisioning request failed",
+      payload.message ||
+        response.statusText ||
+        "Android provisioning request failed",
       response.status,
       payload.errors,
       response
@@ -114,7 +121,8 @@ export default function AndroidProvisioningPage() {
   const [formState, setFormState] = useState(INITIAL_FORM);
   const [sessions, setSessions] = useState<AndroidEnrollmentSession[]>([]);
   const [latestQrPayload, setLatestQrPayload] = useState<string | null>(null);
-  const [latestSession, setLatestSession] = useState<AndroidEnrollmentSession | null>(null);
+  const [latestSession, setLatestSession] =
+    useState<AndroidEnrollmentSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -133,7 +141,9 @@ export default function AndroidProvisioningPage() {
       );
       setSessions(response.data);
     } catch (error) {
-      setLoadError(getErrorMessage(error, "Failed to load Android enrollment sessions"));
+      setLoadError(
+        getErrorMessage(error, "Failed to load Android enrollment sessions")
+      );
     } finally {
       setLoading(false);
     }
@@ -170,7 +180,9 @@ export default function AndroidProvisioningPage() {
       setLatestSession(response.data.session);
       setFormState(INITIAL_FORM);
     } catch (error) {
-      setSubmitError(getErrorMessage(error, "Failed to create Android enrollment session"));
+      setSubmitError(
+        getErrorMessage(error, "Failed to create Android enrollment session")
+      );
     } finally {
       setCreating(false);
     }
@@ -194,12 +206,18 @@ export default function AndroidProvisioningPage() {
       );
 
       setSessions((current) =>
-        current.map((entry) => (entry.id === response.data.id ? response.data : entry))
+        current.map((entry) =>
+          entry.id === response.data.id ? response.data : entry
+        )
       );
-      setLatestSession((current) => (current?.id === response.data.id ? response.data : current));
+      setLatestSession((current) =>
+        current?.id === response.data.id ? response.data : current
+      );
       setLoadError(null);
     } catch (error) {
-      setLoadError(getErrorMessage(error, "Failed to revoke Android enrollment session"));
+      setLoadError(
+        getErrorMessage(error, "Failed to revoke Android enrollment session")
+      );
     }
   }
 
@@ -227,7 +245,10 @@ export default function AndroidProvisioningPage() {
                   name="device_label"
                   value={formState.device_label}
                   onChange={(event) =>
-                    setFormState((current) => ({ ...current, device_label: event.target.value }))
+                    setFormState((current) => ({
+                      ...current,
+                      device_label: event.target.value,
+                    }))
                   }
                   placeholder={_(msg`Front desk tablet`)}
                 />
@@ -243,7 +264,8 @@ export default function AndroidProvisioningPage() {
                   onChange={(event) =>
                     setFormState((current) => ({
                       ...current,
-                      update_channel: event.target.value as AndroidReleaseChannel,
+                      update_channel: event.target
+                        .value as AndroidReleaseChannel,
                     }))
                   }
                 >
@@ -262,12 +284,19 @@ export default function AndroidProvisioningPage() {
               ) : null}
 
               <Button type="submit" disabled={creating}>
-                {creating ? <Trans>Creating enrollment session...</Trans> : <Trans>Create enrollment session</Trans>}
+                {creating ? (
+                  <Trans>Creating enrollment session...</Trans>
+                ) : (
+                  <Trans>Create enrollment session</Trans>
+                )}
               </Button>
             </form>
           ) : (
             <Text>
-              <Trans>You can inspect Android enrollment status, but write permission is required to create or revoke sessions.</Trans>
+              <Trans>
+                You can inspect Android enrollment status, but write permission
+                is required to create or revoke sessions.
+              </Trans>
             </Text>
           )}
 
@@ -276,10 +305,17 @@ export default function AndroidProvisioningPage() {
               <Heading level={3}>
                 <Trans>Provisioning QR code</Trans>
               </Heading>
-              <MfaQrCode value={latestQrPayload} alt={_(msg`Android provisioning QR code`)} />
-              <Text>{latestSession.device_label || _(msg`Unnamed Android enrollment session`)}</Text>
+              <MfaQrCode
+                value={latestQrPayload}
+                alt={_(msg`Android provisioning QR code`)}
+              />
+              <Text>
+                {latestSession.device_label ||
+                  _(msg`Unnamed Android enrollment session`)}
+              </Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                <Trans>Expires</Trans>: {formatDateTime(latestSession.bootstrap_token_expires_at)}
+                <Trans>Expires</Trans>:{" "}
+                {formatDateTime(latestSession.bootstrap_token_expires_at)}
               </Text>
             </div>
           ) : null}
@@ -290,10 +326,16 @@ export default function AndroidProvisioningPage() {
             <Trans>Enrollment Sessions</Trans>
           </Heading>
 
-          {loading ? <Text><Trans>Loading enrollment sessions...</Trans></Text> : null}
+          {loading ? (
+            <Text>
+              <Trans>Loading enrollment sessions...</Trans>
+            </Text>
+          ) : null}
           {!loading && sessions.length === 0 ? (
             <Text>
-              <Trans>No Android enrollment sessions have been created yet.</Trans>
+              <Trans>
+                No Android enrollment sessions have been created yet.
+              </Trans>
             </Text>
           ) : null}
 
@@ -306,12 +348,16 @@ export default function AndroidProvisioningPage() {
                 >
                   <div className="space-y-1">
                     <Text className="font-medium text-zinc-950 dark:text-zinc-50">
-                      {session.device_label || _(msg`Unnamed Android enrollment session`)}
+                      {session.device_label ||
+                        _(msg`Unnamed Android enrollment session`)}
                     </Text>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge color={getStatusColor(session.status)}>{session.status}</Badge>
+                      <Badge color={getStatusColor(session.status)}>
+                        {session.status}
+                      </Badge>
                       <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        <Trans>Expires</Trans>: {formatDateTime(session.bootstrap_token_expires_at)}
+                        <Trans>Expires</Trans>:{" "}
+                        {formatDateTime(session.bootstrap_token_expires_at)}
                       </Text>
                       <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                         {session.update_channel}
@@ -330,7 +376,11 @@ export default function AndroidProvisioningPage() {
                     </Button>
                   ) : (
                     <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {session.revoked_at ? <Trans>Revoked</Trans> : <Trans>No action available</Trans>}
+                      {session.revoked_at ? (
+                        <Trans>Revoked</Trans>
+                      ) : (
+                        <Trans>No action available</Trans>
+                      )}
                     </Text>
                   )}
                 </div>

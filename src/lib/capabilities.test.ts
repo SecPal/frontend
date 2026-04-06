@@ -158,5 +158,4 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.employees.terminate).toBe(false);
     expect(capabilities.employees).toBe(false);
   });
-
 });
