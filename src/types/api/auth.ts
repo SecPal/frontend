@@ -142,6 +142,13 @@ export interface PasskeyListResponse {
   data: PasskeyCredentialSummary[];
 }
 
+export interface PasskeyDeletionResponse {
+  message: string;
+  data: {
+    remaining_passkeys: number;
+  };
+}
+
 export interface PasskeyCredentialDescriptor {
   type: "public-key";
   id: string;

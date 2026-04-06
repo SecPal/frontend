@@ -8,6 +8,7 @@ import type {
   MfaStatusResponse,
   MfaTotpEnrollmentResponse,
   MfaVerificationCodeRequest,
+  PasskeyDeletionResponse,
   PasskeyAuthenticationChallengeResponse,
   PasskeyAuthenticationVerificationRequest,
   PasskeyListResponse,
@@ -352,6 +353,30 @@ export async function getPasskeys(): Promise<PasskeyListResponse> {
   return parseJsonResponse<PasskeyListResponse>(
     response,
     "Passkey list fetch failed"
+  );
+}
+
+export async function deletePasskey(
+  credentialId: string
+): Promise<PasskeyDeletionResponse> {
+  const response = await apiFetch(
+    buildApiUrl(`/v1/me/passkeys/${credentialId}`),
+    {
+      method: "DELETE",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "Passkey deletion failed");
+  }
+
+  return parseJsonResponse<PasskeyDeletionResponse>(
+    response,
+    "Passkey deletion failed"
   );
 }
 

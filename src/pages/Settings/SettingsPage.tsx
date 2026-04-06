@@ -40,6 +40,7 @@ import {
 import {
   AuthApiError,
   confirmTotpEnrollment,
+  deletePasskey,
   disableMfa,
   getPasskeys,
   getMfaStatus,
@@ -108,6 +109,9 @@ export function SettingsPage() {
   const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
   const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [removingPasskeyId, setRemovingPasskeyId] = useState<string | null>(
+    null
+  );
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
   const [enrollmentPreparation, setEnrollmentPreparation] =
@@ -185,6 +189,26 @@ export function SettingsPage() {
   useEffect(() => {
     void loadPasskeys();
   }, [loadPasskeys]);
+
+  const handlePasskeyRemoval = async (credentialId: string) => {
+    setPasskeyError(null);
+    setRemovingPasskeyId(credentialId);
+
+    try {
+      await deletePasskey(credentialId);
+      await loadPasskeys();
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        setPasskeyError(error.message);
+      } else if (error instanceof Error) {
+        setPasskeyError(error.message);
+      } else {
+        setPasskeyError("Failed to delete passkey.");
+      }
+    } finally {
+      setRemovingPasskeyId(null);
+    }
+  };
 
   const loadEnrollmentPreparation = useCallback(async () => {
     setIsPreparingEnrollment(true);
@@ -453,14 +477,31 @@ export function SettingsPage() {
                     key={passkey.id}
                     className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
                   >
-                    <p className="text-sm font-medium text-zinc-950 dark:text-white">
-                      {passkey.label}
-                    </p>
-                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                      <Trans>
-                        Added {formatDateTime(passkey.created_at, i18n.locale)}
-                      </Trans>
-                    </Text>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                          {passkey.label}
+                        </p>
+                        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                          <Trans>
+                            Added{" "}
+                            {formatDateTime(passkey.created_at, i18n.locale)}
+                          </Trans>
+                        </Text>
+                      </div>
+                      <Button
+                        type="button"
+                        color="red"
+                        disabled={removingPasskeyId === passkey.id}
+                        onClick={() => void handlePasskeyRemoval(passkey.id)}
+                      >
+                        {removingPasskeyId === passkey.id ? (
+                          <Trans>Removing...</Trans>
+                        ) : (
+                          <Trans>Remove</Trans>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

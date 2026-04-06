@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   startPasskeyAuthenticationChallenge,
   verifyPasskeyAuthenticationChallenge,
+  deletePasskey,
   getPasskeys,
   login,
   logout,
@@ -764,6 +765,31 @@ describe("authApi", () => {
       } as Response);
 
       await expect(getPasskeys()).resolves.toEqual(mockResponse);
+    });
+
+    it("deletes an enrolled passkey with DELETE /v1/me/passkeys/:credentialId", async () => {
+      const mockResponse = {
+        message: "Passkey deleted successfully.",
+        data: { remaining_passkeys: 0 },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(deletePasskey("credential-id")).resolves.toEqual(
+        mockResponse
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/v1/me/passkeys/credential-id"),
+        expect.objectContaining({
+          method: "DELETE",
+          credentials: "include",
+          cache: "no-store",
+        })
+      );
     });
   });
 

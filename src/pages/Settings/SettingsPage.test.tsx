@@ -33,6 +33,7 @@ vi.mock("../../services/authApi", async () => {
   const actual = await vi.importActual("../../services/authApi");
   return {
     ...actual,
+    deletePasskey: vi.fn(),
     getPasskeys: vi.fn(),
     getMfaStatus: vi.fn(),
     startTotpEnrollment: vi.fn(),
@@ -217,6 +218,45 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByText(/work macbook touch id/i)
     ).toBeInTheDocument();
+  });
+
+  it("removes an enrolled passkey and refreshes the list", async () => {
+    vi.mocked(authApi.deletePasskey).mockResolvedValueOnce({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 0 },
+    });
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    await waitFor(() => {
+      expect(authApi.deletePasskey).toHaveBeenCalledWith("credential-id");
+      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+    });
+
+    expect(
+      screen.queryByText(/work macbook touch id/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+  });
+
+  it("shows passkey removal errors inline", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
+      new authApi.AuthApiError("Passkey deletion failed.")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(
+      await screen.findByText(/passkey deletion failed/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
   });
 
   it("displays language selection section", async () => {
