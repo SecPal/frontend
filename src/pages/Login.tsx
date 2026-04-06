@@ -9,9 +9,17 @@ import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
-import { verifyMfaChallenge } from "../services/authApi";
+import {
+  startPasskeyAuthenticationChallenge,
+  verifyMfaChallenge,
+  verifyPasskeyAuthenticationChallenge,
+} from "../services/authApi";
 import { sanitizeAuthUser } from "../services/authState";
 import { checkHealth, HealthStatus } from "../services/healthApi";
+import {
+  getPasskeyAssertion,
+  isPasskeySupported,
+} from "../services/passkeyBrowser";
 import { AuthLayout } from "../components/auth-layout";
 import { Footer } from "../components/Footer";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
@@ -57,6 +65,7 @@ export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const authTransport = useMemo(() => getAuthTransport(), []);
+  const supportsPasskeys = useMemo(() => isPasskeySupported(), []);
   const {
     remainingAttempts,
     isLocked,
@@ -69,6 +78,7 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
     useState<MfaChallenge | null>(null);
@@ -219,6 +229,57 @@ export function Login() {
     setPendingMfaChallenge(null);
     setMfaCode("");
     setMfaError(null);
+  };
+
+  const handlePasskeySignIn = async () => {
+    setError(null);
+    setIsSubmittingPasskey(true);
+
+    try {
+      const challengeResponse = await startPasskeyAuthenticationChallenge();
+      const credential = await getPasskeyAssertion(
+        challengeResponse.data.public_key,
+        challengeResponse.data.mediation
+      );
+      const response = await verifyPasskeyAuthenticationChallenge(
+        challengeResponse.data.challenge_id,
+        {
+          credential,
+        }
+      );
+
+      if (response.authentication.mode !== "session") {
+        throw new Error(
+          "The passkey sign-in completed with an unsupported login mode."
+        );
+      }
+
+      const sanitizedUser = sanitizeAuthUser(response.user);
+
+      if (!sanitizedUser) {
+        throw new Error(
+          "The passkey sign-in completed with an invalid user payload."
+        );
+      }
+
+      resetAttempts();
+      login(sanitizedUser);
+      navigate("/");
+    } catch (err) {
+      console.error("Passkey sign-in error:", err);
+
+      if (err instanceof AuthApiError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(
+          "An unexpected passkey sign-in error occurred. Please try again."
+        );
+      }
+    } finally {
+      setIsSubmittingPasskey(false);
+    }
   };
 
   const handleVerifyMfa = async (e: FormEvent) => {
@@ -448,6 +509,7 @@ export function Login() {
           disabled={
             !isOnline ||
             isSubmitting ||
+            isSubmittingPasskey ||
             isSystemNotReady ||
             isHealthCheckLoading ||
             isLocked ||
@@ -457,6 +519,7 @@ export function Login() {
           aria-busy={isSubmitting}
           aria-disabled={
             !isOnline ||
+            isSubmittingPasskey ||
             isSystemNotReady ||
             isHealthCheckLoading ||
             isLocked ||
@@ -475,6 +538,31 @@ export function Login() {
             <Trans id="login.submit">Log in</Trans>
           )}
         </Button>
+
+        {supportsPasskeys ? (
+          <Button
+            type="button"
+            outline
+            onClick={() => void handlePasskeySignIn()}
+            disabled={
+              !isOnline ||
+              isSubmitting ||
+              isSubmittingPasskey ||
+              isSystemNotReady ||
+              isHealthCheckLoading ||
+              isLocked ||
+              pendingMfaChallenge !== null
+            }
+            className="w-full"
+            aria-busy={isSubmittingPasskey}
+          >
+            {isSubmittingPasskey ? (
+              <Trans>Signing in with passkey...</Trans>
+            ) : (
+              <Trans>Sign in with passkey</Trans>
+            )}
+          </Button>
+        ) : null}
       </form>
 
       <Dialog

@@ -8,6 +8,8 @@ import type {
   MfaStatusResponse,
   MfaTotpEnrollmentResponse,
   MfaVerificationCodeRequest,
+  PasskeyAuthenticationChallengeResponse,
+  PasskeyAuthenticationVerificationRequest,
   PasskeyListResponse,
   SessionLoginResponse,
   TotpCodeRequest,
@@ -163,6 +165,56 @@ export async function verifyMfaChallenge(
   return parseJsonResponse<CompletedLoginResponse>(
     response,
     "MFA verification failed"
+  );
+}
+
+export async function startPasskeyAuthenticationChallenge(): Promise<PasskeyAuthenticationChallengeResponse> {
+  await fetchCsrfToken();
+
+  const response = await apiFetch(buildApiUrl("/v1/auth/passkeys/challenges"), {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "Passkey challenge start failed");
+  }
+
+  return parseJsonResponse<PasskeyAuthenticationChallengeResponse>(
+    response,
+    "Passkey challenge start failed"
+  );
+}
+
+export async function verifyPasskeyAuthenticationChallenge(
+  challengeId: string,
+  payload: PasskeyAuthenticationVerificationRequest
+): Promise<CompletedLoginResponse> {
+  await fetchCsrfToken();
+
+  const response = await apiFetch(
+    buildApiUrl(`/v1/auth/passkeys/challenges/${challengeId}/verify`),
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    throw await createAuthApiError(response, "Passkey verification failed");
+  }
+
+  return parseJsonResponse<CompletedLoginResponse>(
+    response,
+    "Passkey verification failed"
   );
 }
 

@@ -17,6 +17,7 @@ import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
+import * as passkeyBrowser from "../services/passkeyBrowser";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 // Mock only the API functions, not AuthApiError class
@@ -25,6 +26,8 @@ vi.mock("../services/authApi", async () => {
   return {
     ...actual,
     login: vi.fn(),
+    startPasskeyAuthenticationChallenge: vi.fn(),
+    verifyPasskeyAuthenticationChallenge: vi.fn(),
     verifyMfaChallenge: vi.fn(),
     logout: vi.fn(),
     logoutAll: vi.fn(),
@@ -43,6 +46,11 @@ vi.mock("../services/healthApi", async () => {
 // Mock useOnlineStatus hook
 vi.mock("../hooks/useOnlineStatus", () => ({
   useOnlineStatus: vi.fn(),
+}));
+
+vi.mock("../services/passkeyBrowser", () => ({
+  isPasskeySupported: vi.fn(),
+  getPasskeyAssertion: vi.fn(),
 }));
 
 const renderLogin = () => {
@@ -127,6 +135,7 @@ describe("Login", () => {
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
     // Default: user is online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -224,6 +233,96 @@ describe("Login", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("radio", { name: /recovery code/i })
+    ).toBeInTheDocument();
+  });
+
+  it("shows a passkey sign-in action when the browser supports passkeys", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+
+    renderLogin();
+
+    expect(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    ).toBeInTheDocument();
+  });
+
+  it("completes passkey sign-in with the browser WebAuthn flow", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "conditional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockResolvedValueOnce({
+      id: "credential-id",
+      raw_id: "credential-id",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        authenticator_data: "YXV0aA",
+        signature: "c2lnbmF0dXJl",
+      },
+      client_extension_results: {},
+    });
+    vi.mocked(
+      authApi.verifyPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        method: "passkey",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    await waitFor(() => {
+      expect(authApi.startPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
+        1
+      );
+      expect(passkeyBrowser.getPasskeyAssertion).toHaveBeenCalledTimes(1);
+      expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        expect.objectContaining({
+          credential: expect.objectContaining({
+            id: "credential-id",
+          }),
+        })
+      );
+    });
+  });
+
+  it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockRejectedValueOnce(
+      new authApi.AuthApiError("Passkey sign-in is temporarily unavailable.")
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    expect(
+      await screen.findByText(/passkey sign-in is temporarily unavailable/i)
     ).toBeInTheDocument();
   });
 
