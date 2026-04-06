@@ -66,14 +66,14 @@ export interface TokenAuthenticationResult {
 
 export type CompletedLoginResponse =
   | {
-      user: AuthenticatedUser;
-      authentication: SessionAuthenticationResult;
-    }
+    user: AuthenticatedUser;
+    authentication: SessionAuthenticationResult;
+  }
   | {
-      token: string;
-      user: AuthenticatedUser;
-      authentication: TokenAuthenticationResult;
-    };
+    token: string;
+    user: AuthenticatedUser;
+    authentication: TokenAuthenticationResult;
+  };
 
 export interface MfaStatus {
   enabled: boolean;
@@ -142,6 +142,37 @@ export interface PasskeyListResponse {
   data: PasskeyCredentialSummary[];
 }
 
+export interface PasskeyCredentialParameter {
+  type: "public-key";
+  alg: number;
+}
+
+export interface PasskeyAuthenticatorSelection {
+  authenticator_attachment?: "cross-platform" | "platform";
+  resident_key?: "discouraged" | "preferred" | "required";
+  require_resident_key?: boolean;
+  user_verification?: "discouraged" | "preferred" | "required";
+}
+
+export interface PasskeyRegistrationPublicKeyOptions {
+  challenge: string;
+  rp: { id: string; name: string };
+  user: { id: string; name: string; display_name: string };
+  pub_key_cred_params: PasskeyCredentialParameter[];
+  timeout?: number;
+  exclude_credentials?: PasskeyCredentialDescriptor[];
+  authenticator_selection?: PasskeyAuthenticatorSelection;
+  attestation?: "direct" | "enterprise" | "indirect" | "none" | (string & {});
+}
+
+export interface PasskeyRegistrationChallengeResponse {
+  data: {
+    challenge_id: string;
+    public_key: PasskeyRegistrationPublicKeyOptions;
+    expires_at?: string;
+  };
+}
+
 export interface PasskeyDeletionResponse {
   message: string;
   data: {
@@ -189,4 +220,30 @@ export interface PasskeyAuthenticationCredential {
 
 export interface PasskeyAuthenticationVerificationRequest {
   credential: PasskeyAuthenticationCredential;
+}
+
+export interface PasskeyAttestationResponsePayload {
+  client_data_json: string;
+  attestation_object: string;
+  transports?: PasskeyTransport[];
+}
+
+export interface PasskeyRegistrationCredential {
+  id: string;
+  raw_id: string;
+  type: "public-key";
+  response: PasskeyAttestationResponsePayload;
+  client_extension_results?: Record<string, unknown>;
+}
+
+export interface PasskeyRegistrationVerificationRequest {
+  credential: PasskeyRegistrationCredential;
+  label?: string;
+}
+
+export interface PasskeyRegistrationResponse {
+  data: {
+    credential: PasskeyCredentialSummary;
+    total_passkeys: number;
+  };
 }

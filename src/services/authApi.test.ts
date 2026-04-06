@@ -6,6 +6,8 @@ import {
   startPasskeyAuthenticationChallenge,
   verifyPasskeyAuthenticationChallenge,
   deletePasskey,
+  startPasskeyRegistrationChallenge,
+  verifyPasskeyRegistrationChallenge,
   getPasskeys,
   login,
   logout,
@@ -765,6 +767,103 @@ describe("authApi", () => {
       } as Response);
 
       await expect(getPasskeys()).resolves.toEqual(mockResponse);
+    });
+  });
+
+  describe("passkey registration", () => {
+    it("starts a passkey registration challenge", async () => {
+      const mockResponse = {
+        data: {
+          challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+          public_key: {
+            challenge: "Zm9vYmFy",
+            rp: {
+              id: "app.secpal.dev",
+              name: "SecPal",
+            },
+            user: {
+              id: "dXNlci1pZA",
+              name: "test@secpal.dev",
+              display_name: "Test User",
+            },
+            pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+          },
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(startPasskeyRegistrationChallenge()).resolves.toEqual(
+        mockResponse
+      );
+
+      expect(mockFetch.mock.calls[1]?.[0]).toEqual(
+        expect.stringContaining("/v1/me/passkeys/challenges/registration")
+      );
+      expect(mockFetch.mock.calls[1]?.[1]).toMatchObject({
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
+    });
+
+    it("verifies a passkey registration challenge", async () => {
+      const payload = {
+        label: "Work MacBook Touch ID",
+        credential: {
+          id: "credential-id",
+          raw_id: "credential-raw-id",
+          type: "public-key" as const,
+          response: {
+            client_data_json: "Y2xpZW50",
+            attestation_object: "YXR0ZXN0YXRpb24",
+            transports: ["internal" as const],
+          },
+          client_extension_results: {},
+        },
+      };
+      const mockResponse = {
+        data: {
+          credential: {
+            id: "credential-id",
+            label: "Work MacBook Touch ID",
+            created_at: "2026-04-06T09:12:00Z",
+            last_used_at: null,
+            transports: ["internal"],
+          },
+          total_passkeys: 1,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(
+        verifyPasskeyRegistrationChallenge(
+          "550e8400-e29b-41d4-a716-446655440099",
+          payload
+        )
+      ).resolves.toEqual(mockResponse);
+
+      expect(mockFetch.mock.calls[1]?.[0]).toEqual(
+        expect.stringContaining(
+          "/v1/me/passkeys/challenges/registration/550e8400-e29b-41d4-a716-446655440099/verify"
+        )
+      );
+      expect(mockFetch.mock.calls[1]?.[1]).toMatchObject({
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
     });
   });
 
