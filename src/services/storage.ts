@@ -86,6 +86,13 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     this.clearLogoutBarrier();
+    // codeql[js/clear-text-storage-of-sensitive-data] -- Auth state (name, email,
+    // capability flags, and employee lifecycle fields) is stored as cleartext by
+    // design: the persisted record intentionally omits the full employee record
+    // and only retains the minimal subset required for offline route gating.  The
+    // same-origin XSS risk profile is accepted for the same reason existing PII
+    // (name, email) is already stored here.  Full at-rest encryption of the
+    // persisted auth state is tracked in issue #784.
     localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser));
   }
 
