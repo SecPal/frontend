@@ -501,18 +501,13 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.removeItem("auth_user");
-      const storageEvent = document.createEvent("StorageEvent");
-      storageEvent.initStorageEvent(
-        "storage",
-        false,
-        false,
-        "auth_user",
-        JSON.stringify(mockUser),
-        null,
-        window.location.href,
-        localStorage
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "auth_user",
+          oldValue: JSON.stringify(mockUser),
+          newValue: null,
+        })
       );
-      window.dispatchEvent(storageEvent);
     });
 
     await waitFor(() => {
