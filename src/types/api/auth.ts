@@ -162,12 +162,7 @@ export interface PasskeyRegistrationPublicKeyOptions {
   timeout?: number;
   exclude_credentials?: PasskeyCredentialDescriptor[];
   authenticator_selection?: PasskeyAuthenticatorSelection;
-  attestation?:
-    | "direct"
-    | "enterprise"
-    | "indirect"
-    | "none"
-    | (string & {});
+  attestation?: "direct" | "enterprise" | "indirect" | "none" | (string & {});
 }
 
 export interface PasskeyRegistrationChallengeResponse {

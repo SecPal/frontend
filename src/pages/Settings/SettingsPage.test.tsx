@@ -180,7 +180,9 @@ describe("SettingsPage", () => {
     // Setup i18n with English locale
     i18n.load("en", {});
     i18n.activate("en");
-    vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(true);
+    vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
+      true
+    );
     vi.mocked(authApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
@@ -241,7 +243,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows an unsupported passkey message without hiding the enrolled list", async () => {
-    vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(false);
+    vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
+      false
+    );
 
     await renderSettingsPage();
 

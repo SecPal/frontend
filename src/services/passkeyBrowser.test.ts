@@ -414,8 +414,8 @@ describe("passkeyBrowser", () => {
 
     await getPasskeyAttestation(registrationOptions);
 
-    const callOptions =
-      createCredential.mock.calls[0]![0]! as CredentialCreationOptions;
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
     expect(callOptions.publicKey).not.toHaveProperty("attestation");
   });
 
@@ -452,8 +452,8 @@ describe("passkeyBrowser", () => {
 
     await getPasskeyAttestation(registrationOptions);
 
-    const callOptions =
-      createCredential.mock.calls[0]![0]! as CredentialCreationOptions;
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
     expect(callOptions.publicKey).toHaveProperty("attestation", "none");
   });
 });

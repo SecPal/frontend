@@ -195,8 +195,7 @@ export function isPasskeySupported(): boolean {
 
 export function isPasskeyRegistrationSupported(): boolean {
   return (
-    isPasskeySupported() &&
-    typeof navigator.credentials?.create === "function"
+    isPasskeySupported() && typeof navigator.credentials?.create === "function"
   );
 }
 
