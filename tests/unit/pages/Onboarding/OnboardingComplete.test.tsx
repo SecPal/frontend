@@ -48,6 +48,34 @@ async function waitForFormReady() {
   });
 }
 
+function fillValidFormAndSubmit({
+  firstName = "John",
+  lastName = "Doe",
+  password = "password123",
+  confirmPassword = password,
+}: {
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+  confirmPassword?: string;
+} = {}) {
+  const firstNameInput = screen.getByLabelText(/first name/i);
+  const lastNameInput = screen.getByLabelText(/last name/i);
+  const passwordInput = screen.getByLabelText(/^password$/i);
+  const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+  const submitButton = screen.getByRole("button", {
+    name: /complete account setup/i,
+  });
+
+  fireEvent.change(firstNameInput, { target: { value: firstName } });
+  fireEvent.change(lastNameInput, { target: { value: lastName } });
+  fireEvent.change(passwordInput, { target: { value: password } });
+  fireEvent.change(confirmPasswordInput, {
+    target: { value: confirmPassword },
+  });
+  fireEvent.click(submitButton);
+}
+
 describe("OnboardingComplete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -185,17 +213,10 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
+    fillValidFormAndSubmit({
+      password: "short",
+      confirmPassword: "short",
     });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "short" } });
-    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(screen.getByText(/at least 8 characters/i)).toBeInTheDocument();
@@ -212,19 +233,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, { target: { value: "different" } });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit({ confirmPassword: "different" });
 
     await waitFor(() => {
       expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
@@ -260,21 +269,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(onboardingApi.completeOnboarding).toHaveBeenCalledWith({
@@ -314,21 +309,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(
@@ -358,21 +339,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(
@@ -403,21 +370,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(
@@ -453,21 +406,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = screen.getByLabelText(/^password$/i);
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(
@@ -504,21 +443,10 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
+    fillValidFormAndSubmit({
+      password: "validPassword123",
+      confirmPassword: "validPassword123",
     });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "validPassword123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "validPassword123" },
-    });
-    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(
@@ -546,21 +474,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(screen.getByText(/internal server error/i)).toBeInTheDocument();
@@ -581,21 +495,7 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    const passwordInput = document.querySelector('input[name="password"]')!;
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const submitButton = screen.getByRole("button", {
-      name: /complete account setup/i,
-    });
-
-    fireEvent.change(firstNameInput, { target: { value: "John" } });
-    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.change(confirmPasswordInput, {
-      target: { value: "password123" },
-    });
-    fireEvent.click(submitButton);
+    fillValidFormAndSubmit();
 
     await waitFor(() => {
       expect(
