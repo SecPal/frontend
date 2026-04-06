@@ -120,3 +120,23 @@ export interface MfaRecoveryCodeRevealPayload {
 export interface MfaRecoveryCodeRevealResponse {
   data: MfaRecoveryCodeRevealPayload;
 }
+
+export type PasskeyTransport =
+  | "ble"
+  | "hybrid"
+  | "internal"
+  | "nfc"
+  | "usb"
+  | (string & {});
+
+export interface PasskeyCredentialSummary {
+  id: string;
+  label: string;
+  created_at: string;
+  last_used_at: string | null;
+  transports: PasskeyTransport[];
+}
+
+export interface PasskeyListResponse {
+  data: PasskeyCredentialSummary[];
+}

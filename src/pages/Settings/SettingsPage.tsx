@@ -14,6 +14,7 @@ import { useLingui } from "@lingui/react";
 import type {
   MfaRecoveryCodeReveal,
   MfaStatus,
+  PasskeyCredentialSummary,
   TotpEnrollmentPreparation,
   MfaVerificationMethod,
 } from "@/types/api";
@@ -40,6 +41,7 @@ import {
   AuthApiError,
   confirmTotpEnrollment,
   disableMfa,
+  getPasskeys,
   getMfaStatus,
   regenerateRecoveryCodes,
   startTotpEnrollment,
@@ -93,9 +95,19 @@ function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
 
 export function SettingsPage() {
   const { _, i18n } = useLingui();
+  const supportsPasskeys = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      window.isSecureContext &&
+      typeof window.PublicKeyCredential !== "undefined",
+    []
+  );
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
+  const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
+  const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
   const [enrollmentPreparation, setEnrollmentPreparation] =
@@ -149,6 +161,30 @@ export function SettingsPage() {
   useEffect(() => {
     void loadMfaStatus();
   }, [loadMfaStatus]);
+
+  const loadPasskeys = useCallback(async () => {
+    setIsLoadingPasskeys(true);
+    setPasskeyError(null);
+
+    try {
+      const response = await getPasskeys();
+      setPasskeys(response.data);
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        setPasskeyError(error.message);
+      } else if (error instanceof Error) {
+        setPasskeyError(error.message);
+      } else {
+        setPasskeyError("Failed to load passkeys.");
+      }
+    } finally {
+      setIsLoadingPasskeys(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPasskeys();
+  }, [loadPasskeys]);
 
   const loadEnrollmentPreparation = useCallback(async () => {
     setIsPreparingEnrollment(true);
@@ -373,6 +409,63 @@ export function SettingsPage() {
               )}
             </div>
           )}
+        </div>
+      </section>
+
+      <Divider />
+
+      <section className="space-y-6">
+        <div>
+          <Heading level={2}>
+            <Trans>Passkeys</Trans>
+          </Heading>
+          <Text className="mt-1">
+            <Trans>
+              Review the passkeys currently enrolled for this account.
+            </Trans>
+          </Text>
+        </div>
+
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+          <div className="space-y-4">
+            {!supportsPasskeys ? (
+              <Text className="text-sm text-zinc-600 dark:text-zinc-300">
+                <Trans>This browser does not support passkeys.</Trans>
+              </Text>
+            ) : null}
+            {passkeyError ? (
+              <Text className="text-sm text-red-700 dark:text-red-300">
+                {passkeyError}
+              </Text>
+            ) : null}
+            {isLoadingPasskeys ? (
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                <Trans>Loading passkeys...</Trans>
+              </Text>
+            ) : passkeys.length === 0 ? (
+              <Text className="text-sm text-zinc-600 dark:text-zinc-300">
+                <Trans>No passkeys enrolled yet.</Trans>
+              </Text>
+            ) : (
+              <div className="space-y-3">
+                {passkeys.map((passkey) => (
+                  <div
+                    key={passkey.id}
+                    className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                  >
+                    <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                      {passkey.label}
+                    </p>
+                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                      <Trans>
+                        Added {formatDateTime(passkey.created_at, i18n.locale)}
+                      </Trans>
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
