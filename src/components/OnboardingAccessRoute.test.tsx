@@ -134,4 +134,35 @@ describe("OnboardingAccessRoute", () => {
     expect(screen.getByText("Redirected to /")).toBeInTheDocument();
     expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
   });
+
+  it("redirects to /onboarding from app routes when employee status is unknown (offline/stale user)", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      user: { id: "1", name: "User", email: "user@secpal.dev", emailVerified: true },
+    });
+
+    renderWithProviders(
+      <AppAccessRoute>
+        <div>Protected App Content</div>
+      </AppAccessRoute>
+    );
+
+    expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
+    expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
+  });
+
+  it("allows access to onboarding routes when employee status is unknown (offline/stale user)", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      user: { id: "1", name: "User", email: "user@secpal.dev", emailVerified: true },
+    });
+
+    renderWithProviders(
+      <OnboardingOnlyRoute>
+        <div>Onboarding Content</div>
+      </OnboardingOnlyRoute>
+    );
+
+    expect(screen.getByText("Onboarding Content")).toBeInTheDocument();
+  });
 });
