@@ -66,14 +66,14 @@ export interface TokenAuthenticationResult {
 
 export type CompletedLoginResponse =
   | {
-    user: AuthenticatedUser;
-    authentication: SessionAuthenticationResult;
-  }
+      user: AuthenticatedUser;
+      authentication: SessionAuthenticationResult;
+    }
   | {
-    token: string;
-    user: AuthenticatedUser;
-    authentication: TokenAuthenticationResult;
-  };
+      token: string;
+      user: AuthenticatedUser;
+      authentication: TokenAuthenticationResult;
+    };
 
 export interface MfaStatus {
   enabled: boolean;
