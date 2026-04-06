@@ -492,7 +492,7 @@ export function SettingsPage() {
                       <Button
                         type="button"
                         color="red"
-                        disabled={removingPasskeyId === passkey.id}
+                        disabled={removingPasskeyId !== null}
                         onClick={() => void handlePasskeyRemoval(passkey.id)}
                       >
                         {removingPasskeyId === passkey.id ? (

@@ -235,12 +235,65 @@ describe("SettingsPage", () => {
     await waitFor(() => {
       expect(authApi.deletePasskey).toHaveBeenCalledWith("credential-id");
       expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByText(/work macbook touch id/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText(/no passkeys enrolled yet/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("disables all remove buttons while any removal is in flight", async () => {
+    let resolveDeletion:
+      | ((value: {
+          message: string;
+          data: { remaining_passkeys: number };
+        }) => void)
+      | undefined;
+
+    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDeletion = resolve;
+        })
+    );
+    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({
+      data: [
+        {
+          id: "credential-id",
+          label: "Work MacBook Touch ID",
+          created_at: "2026-04-06T09:12:00Z",
+          last_used_at: null,
+          transports: ["internal" as const],
+        },
+        {
+          id: "credential-id-2",
+          label: "iPhone Face ID",
+          created_at: "2026-04-07T09:12:00Z",
+          last_used_at: null,
+          transports: ["internal" as const],
+        },
+      ],
     });
 
-    expect(
-      screen.queryByText(/work macbook touch id/i)
-    ).not.toBeInTheDocument();
-    expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+    await renderSettingsPage();
+
+    const removeButtons = screen.getAllByRole("button", { name: /remove/i });
+    expect(removeButtons).toHaveLength(2);
+    fireEvent.click(removeButtons[0]!);
+
+    // ALL remove buttons must be disabled while any deletion is in flight
+    for (const button of screen.getAllByRole("button", {
+      name: /remove|removing/i,
+    })) {
+      expect(button).toBeDisabled();
+    }
+
+    resolveDeletion?.({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 1 },
+    });
   });
 
   it("shows a busy state while passkey removal is in flight", async () => {

@@ -766,7 +766,9 @@ describe("authApi", () => {
 
       await expect(getPasskeys()).resolves.toEqual(mockResponse);
     });
+  });
 
+  describe("deletePasskey", () => {
     it("deletes an enrolled passkey with DELETE /v1/me/passkeys/:credentialId", async () => {
       const mockResponse = {
         message: "Passkey deleted successfully.",
