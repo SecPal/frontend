@@ -55,6 +55,9 @@ const SiteEdit = lazy(() => import("./pages/Sites/SiteEdit"));
 const ActivityLogList = lazy(
   () => import("./pages/ActivityLog/ActivityLogList")
 );
+const AndroidProvisioningPage = lazy(
+  () => import("./pages/AndroidProvisioning/AndroidProvisioningPage")
+);
 
 function Home() {
   return (
@@ -262,6 +265,16 @@ function App() {
                 >
                   <ApplicationLayout>
                     <SiteCreate />
+                  </ApplicationLayout>
+                </AppFeatureRoute>
+              }
+            />
+            <Route
+              path="/android-provisioning"
+              element={
+                <AppFeatureRoute feature="androidProvisioning">
+                  <ApplicationLayout>
+                    <AndroidProvisioningPage />
                   </ApplicationLayout>
                 </AppFeatureRoute>
               }

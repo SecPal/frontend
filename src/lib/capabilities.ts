@@ -31,6 +31,12 @@ const EMPLOYEE_FEATURE_PERMISSIONS = [
 
 const ACTIVITY_LOG_FEATURE_PERMISSIONS = ["activity_log.read"] as const;
 
+const ANDROID_PROVISIONING_FEATURE_PERMISSIONS = [
+  "android_enrollment.read",
+  "android_enrollment.write",
+  "android_enrollment.*",
+] as const;
+
 const CUSTOMER_CREATE_PERMISSIONS = [
   "customers.create",
   "customers.*",
@@ -98,6 +104,16 @@ const EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS = [
   "onboarding.*",
 ] as const;
 
+const ANDROID_PROVISIONING_CREATE_PERMISSIONS = [
+  "android_enrollment.write",
+  "android_enrollment.*",
+] as const;
+
+const ANDROID_PROVISIONING_REVOKE_PERMISSIONS = [
+  "android_enrollment.write",
+  "android_enrollment.*",
+] as const;
+
 export interface ResourceActionCapabilities {
   create: boolean;
   update: boolean;
@@ -110,7 +126,13 @@ export interface EmployeeActionCapabilities extends ResourceActionCapabilities {
   terminate: boolean;
 }
 
+export interface AndroidProvisioningActionCapabilities {
+  create: boolean;
+  revoke: boolean;
+}
+
 export interface UserActionCapabilities {
+  androidProvisioning: AndroidProvisioningActionCapabilities;
   customers: ResourceActionCapabilities;
   sites: ResourceActionCapabilities;
   employees: EmployeeActionCapabilities;
@@ -125,6 +147,7 @@ export interface UserCapabilities {
   sites: boolean;
   employees: boolean;
   activityLogs: boolean;
+  androidProvisioning: boolean;
   actions: UserActionCapabilities;
 }
 
@@ -234,6 +257,21 @@ export function getUserCapabilities(
     hasOrganizationalScopes &&
     (hasElevatedUiRole ||
       hasAnyUserPermission(user, EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS));
+  const canAccessAndroidProvisioning =
+    isAuthenticated &&
+    hasOrganizationalScopes &&
+    (hasElevatedUiRole ||
+      hasAnyUserPermission(user, ANDROID_PROVISIONING_FEATURE_PERMISSIONS));
+  const canCreateAndroidProvisioningSessions =
+    isAuthenticated &&
+    hasOrganizationalScopes &&
+    (hasElevatedUiRole ||
+      hasAnyUserPermission(user, ANDROID_PROVISIONING_CREATE_PERMISSIONS));
+  const canRevokeAndroidProvisioningSessions =
+    isAuthenticated &&
+    hasOrganizationalScopes &&
+    (hasElevatedUiRole ||
+      hasAnyUserPermission(user, ANDROID_PROVISIONING_REVOKE_PERMISSIONS));
 
   return {
     home: isAuthenticated,
@@ -259,7 +297,12 @@ export function getUserCapabilities(
     activityLogs:
       isAuthenticated &&
       hasAnyUserPermission(user, ACTIVITY_LOG_FEATURE_PERMISSIONS),
+    androidProvisioning: canAccessAndroidProvisioning,
     actions: {
+      androidProvisioning: {
+        create: canCreateAndroidProvisioningSessions,
+        revoke: canRevokeAndroidProvisioningSessions,
+      },
       customers: {
         create: canCreateCustomers,
         update: canUpdateCustomers,

@@ -186,6 +186,28 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows not found for android provisioning routes when the user cannot discover that feature", async () => {
+    window.history.replaceState({}, "", "/android-provisioning");
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+        permissions: [],
+        hasOrganizationalScopes: true,
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+    ).toBeInTheDocument();
+  });
+
   it("shows not found for customer-scoped site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites/customer/123");
 

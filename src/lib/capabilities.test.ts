@@ -158,4 +158,19 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.employees.terminate).toBe(false);
     expect(capabilities.employees).toBe(false);
   });
+
+  it("enables android provisioning for organizational users with matching permissions", () => {
+    const capabilities = getUserCapabilities({
+      id: "1",
+      name: "Android Operator",
+      email: "android.operator@secpal.dev",
+      hasOrganizationalScopes: true,
+      roles: [],
+      permissions: ["android_enrollment.read", "android_enrollment.write"],
+    });
+
+    expect(capabilities.androidProvisioning).toBe(true);
+    expect(capabilities.actions.androidProvisioning.create).toBe(true);
+    expect(capabilities.actions.androidProvisioning.revoke).toBe(true);
+  });
 });

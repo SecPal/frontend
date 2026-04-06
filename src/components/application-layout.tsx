@@ -123,6 +123,14 @@ function ShieldCheckIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function DevicePhoneMobileIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg data-slot="icon" viewBox="0 0 20 20" fill="currentColor" {...props}>
+      <path d="M7.75 2A1.75 1.75 0 0 0 6 3.75v12.5C6 17.216 6.784 18 7.75 18h4.5A1.75 1.75 0 0 0 14 16.25V3.75A1.75 1.75 0 0 0 12.25 2h-4.5ZM8 4.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 8 4.25Zm2 11.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+    </svg>
+  );
+}
+
 /**
  * Shared user menu items for both navbar and sidebar dropdowns.
  * Extracted to maintain DRY principles and ensure consistency.
@@ -224,6 +232,14 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <Trans>Activity Logs</Trans>
               </NavbarItem>
             )}
+            {capabilities.androidProvisioning && (
+              <NavbarItem
+                href="/android-provisioning"
+                current={isCurrentPath("/android-provisioning")}
+              >
+                <Trans>Android Provisioning</Trans>
+              </NavbarItem>
+            )}
           </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
@@ -304,6 +320,17 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   <ShieldCheckIcon />
                   <SidebarLabel>
                     <Trans>Activity Logs</Trans>
+                  </SidebarLabel>
+                </SidebarItem>
+              )}
+              {capabilities.androidProvisioning && (
+                <SidebarItem
+                  href="/android-provisioning"
+                  current={isCurrentPath("/android-provisioning")}
+                >
+                  <DevicePhoneMobileIcon />
+                  <SidebarLabel>
+                    <Trans>Android Provisioning</Trans>
                   </SidebarLabel>
                 </SidebarItem>
               )}

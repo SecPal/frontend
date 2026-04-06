@@ -172,6 +172,42 @@ describe("ApplicationLayout", () => {
       const homeLink = screen.getByRole("link", { name: /home/i });
       expect(homeLink).toHaveAttribute("data-current", "true");
     });
+
+    it("shows the Android provisioning navigation entry for authorized users", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: "1",
+          name: "John Doe",
+          email: "john@secpal.dev",
+          emailVerified: true,
+          hasOrganizationalScopes: true,
+          permissions: ["android_enrollment.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.getAllByRole("link", { name: /android provisioning/i }).length
+      ).toBeGreaterThan(0);
+    });
+
+    it("hides the Android provisioning navigation entry without feature access", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.queryByRole("link", { name: /android provisioning/i })
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("navbar user dropdown", () => {
