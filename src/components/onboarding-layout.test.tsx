@@ -1,8 +1,14 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -76,6 +82,10 @@ describe("OnboardingLayout", () => {
 
     vi.mocked(authHook.useAuth).mockReturnValue(authContext);
     mockTransport();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders children and a dedicated sign-out action", () => {
@@ -224,5 +234,34 @@ describe("OnboardingLayout", () => {
       expect(logout).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
+  });
+
+  it("completes client-side logout when the logout API hangs past the timeout", async () => {
+    vi.useFakeTimers();
+
+    const logout = vi.fn();
+    const transportLogout = vi.fn(() => new Promise(() => undefined));
+
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      logout,
+    });
+
+    mockTransport(transportLogout);
+
+    renderLayout();
+
+  fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+
+    expect(transportLogout).toHaveBeenCalledTimes(1);
+    expect(logout).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000);
+    });
+
+    expect(logout).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 });
