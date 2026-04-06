@@ -92,9 +92,7 @@ describe("AndroidProvisioningPage", () => {
 
     renderPage();
 
-    expect(
-      await screen.findByText("network down")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("network down")).toBeInTheDocument();
   });
 
   it("creates a session and renders the provisioning QR state", async () => {
@@ -165,7 +163,9 @@ describe("AndroidProvisioningPage", () => {
         ok: true,
         json: async () => ({ data: [] }),
       } as Response)
-      .mockRejectedValueOnce(new ApiError("create failed", 422, {}, new Response()));
+      .mockRejectedValueOnce(
+        new ApiError("create failed", 422, {}, new Response())
+      );
 
     renderPage();
 
