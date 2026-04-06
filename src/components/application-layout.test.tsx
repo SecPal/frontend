@@ -304,7 +304,7 @@ describe("ApplicationLayout", () => {
       expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
     });
 
-    it("clears local state after API call completes (finally block)", async () => {
+    it("does not clear local state before API call completes, then clears it in finally (ordering guarantee)", async () => {
       let wasLocalStorageClearedBeforeApiCall = false;
 
       const mockLogout = vi.mocked(authApi.logout);
@@ -330,6 +330,8 @@ describe("ApplicationLayout", () => {
         // Local state should NOT be cleared before the API call —
         // logout() now runs in the finally block after authTransport.logout()
         expect(wasLocalStorageClearedBeforeApiCall).toBe(false);
+        // Local state IS cleared after the API call settles (finally block ran)
+        expect(vi.mocked(clearSensitiveClientState)).toHaveBeenCalledTimes(1);
       });
     });
 
