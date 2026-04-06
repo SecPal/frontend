@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { createContext } from "react";
-import type { Employee } from "@/types/api";
+import type {
+  Employee,
+  EmployeeOnboardingWorkflowStatus,
+  EmployeeStatus,
+} from "@/types/api";
 
 export type AuthUserId = string;
 export type AuthBootstrapRecoveryReason = "timeout" | "network";
@@ -17,6 +21,8 @@ export interface User {
   hasOrganizationalScopes?: boolean;
   hasCustomerAccess?: boolean;
   hasSiteAccess?: boolean;
+  employeeStatus?: EmployeeStatus;
+  onboardingWorkflowStatus?: EmployeeOnboardingWorkflowStatus;
   employee?: Employee | null; // User's employee record (if they are an employee)
 }
 

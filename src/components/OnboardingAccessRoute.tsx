@@ -9,20 +9,24 @@ interface OnboardingAccessRouteProps {
 }
 
 function isPreContractUser(user: ReturnType<typeof useAuth>["user"]): boolean {
-  return user?.employee?.status === "pre_contract";
+  return (
+    user?.employee?.status === "pre_contract" ||
+    user?.employeeStatus === "pre_contract"
+  );
 }
 
 /**
- * Returns false when employee status is not yet known (e.g. offline with a
- * stale persisted user that has no employee record loaded). The persisted
- * auth user intentionally omits employee data; bootstrap revalidation
- * populates it. Until then, employee === undefined, which is distinct from
- * null (confirmed non-employee).
+ * Returns false only when employee lifecycle state is still unknown. Persisted
+ * auth users may omit the full employee record offline, but they retain the
+ * minimal employeeStatus field needed for route gating.
  */
 function hasKnownEmployeeStatus(
   user: ReturnType<typeof useAuth>["user"]
 ): boolean {
-  return user != null && user.employee !== undefined;
+  return (
+    user != null &&
+    (user.employee !== undefined || user.employeeStatus !== undefined)
+  );
 }
 
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {

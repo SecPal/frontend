@@ -49,6 +49,30 @@ describe("authState", () => {
     });
   });
 
+  it("persists minimal employee lifecycle state for offline route gating", () => {
+    const sanitizedUser = sanitizePersistedAuthUser({
+      id: 1,
+      name: "Test User",
+      email: "test@secpal.dev",
+      employee: {
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "submitted_for_review",
+        },
+      },
+    });
+
+    expect(sanitizedUser).toEqual({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+      employeeStatus: "pre_contract",
+      onboardingWorkflowStatus: "submitted_for_review",
+    });
+    expect(sanitizedUser).not.toHaveProperty("employee");
+  });
+
   it("drops employee data when building persisted auth state", () => {
     const sanitizedUser = sanitizePersistedAuthUser({
       id: 1,
@@ -81,6 +105,25 @@ describe("authState", () => {
       name: "Persisted User",
       email: "persisted@secpal.dev",
       emailVerified: false,
+    });
+  });
+
+  it("keeps persisted lifecycle fields when re-sanitizing stored auth data", () => {
+    const persistedUser = sanitizePersistedAuthUser({
+      id: 1,
+      name: "Persisted User",
+      email: "persisted@secpal.dev",
+      employeeStatus: "pre_contract",
+      onboardingWorkflowStatus: "submitted_for_review",
+    });
+
+    expect(persistedUser).toEqual({
+      id: "1",
+      name: "Persisted User",
+      email: "persisted@secpal.dev",
+      emailVerified: false,
+      employeeStatus: "pre_contract",
+      onboardingWorkflowStatus: "submitted_for_review",
     });
   });
 

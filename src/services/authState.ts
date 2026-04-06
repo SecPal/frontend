@@ -25,6 +25,45 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
+const EMPLOYEE_STATUSES = new Set<NonNullable<User["employeeStatus"]>>([
+  "applicant",
+  "pre_contract",
+  "active",
+  "on_leave",
+  "terminated",
+]);
+
+const ONBOARDING_WORKFLOW_STATUSES = new Set<
+  NonNullable<User["onboardingWorkflowStatus"]>
+>([
+  "invited",
+  "account_initialized",
+  "in_progress",
+  "submitted_for_review",
+  "changes_requested",
+  "contract_confirmed",
+  "ready_for_activation",
+  "active",
+]);
+
+function sanitizeEmployeeStatus(value: unknown): User["employeeStatus"] {
+  return typeof value === "string" &&
+    EMPLOYEE_STATUSES.has(value as NonNullable<User["employeeStatus"]>)
+    ? (value as User["employeeStatus"])
+    : undefined;
+}
+
+function sanitizeOnboardingWorkflowStatus(
+  value: unknown
+): User["onboardingWorkflowStatus"] {
+  return typeof value === "string" &&
+    ONBOARDING_WORKFLOW_STATUSES.has(
+      value as NonNullable<User["onboardingWorkflowStatus"]>
+    )
+    ? (value as User["onboardingWorkflowStatus"])
+    : undefined;
+}
+
 function sanitizeAuthUserId(value: unknown): User["id"] | null {
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -93,6 +132,26 @@ export function sanitizeAuthUser(
     sanitizedUser.hasSiteAccess = hasSiteAccess;
   }
 
+  const employeeStatus = sanitizeEmployeeStatus(
+    candidate.employeeStatus ??
+      (candidate.employee as { status?: unknown } | undefined)?.status
+  );
+  if (employeeStatus !== undefined) {
+    sanitizedUser.employeeStatus = employeeStatus;
+  }
+
+  const onboardingWorkflowStatus = sanitizeOnboardingWorkflowStatus(
+    candidate.onboardingWorkflowStatus ??
+      (
+        candidate.employee as
+          | { onboarding_workflow?: { status?: unknown } }
+          | undefined
+      )?.onboarding_workflow?.status
+  );
+  if (onboardingWorkflowStatus !== undefined) {
+    sanitizedUser.onboardingWorkflowStatus = onboardingWorkflowStatus;
+  }
+
   if (
     includeEmployee &&
     "employee" in candidate &&
@@ -141,6 +200,15 @@ export function sanitizePersistedAuthUser(
 
   if (sanitizedUser.hasSiteAccess !== undefined) {
     persistedAuthUser.hasSiteAccess = sanitizedUser.hasSiteAccess;
+  }
+
+  if (sanitizedUser.employeeStatus !== undefined) {
+    persistedAuthUser.employeeStatus = sanitizedUser.employeeStatus;
+  }
+
+  if (sanitizedUser.onboardingWorkflowStatus !== undefined) {
+    persistedAuthUser.onboardingWorkflowStatus =
+      sanitizedUser.onboardingWorkflowStatus;
   }
 
   return persistedAuthUser;
