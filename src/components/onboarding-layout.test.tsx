@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../locales/de/messages.mjs";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 import { OnboardingLayout } from "./onboarding-layout";
 import * as authHook from "../hooks/useAuth";
 import * as authTransport from "../services/authTransport";
@@ -68,7 +70,8 @@ function renderWithProviders(component: React.ReactNode) {
 describe("OnboardingLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    i18n.load("en", {});
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
     i18n.activate("en");
 
     vi.mocked(authHook.useAuth).mockReturnValue(authContext);
@@ -163,6 +166,38 @@ describe("OnboardingLayout", () => {
     });
 
     consoleError.mockRestore();
+  });
+
+  it("shows the sign-out error message in German", async () => {
+    const user = userEvent.setup();
+    const transportLogout = vi
+      .fn()
+      .mockRejectedValue(new Error("Network down"));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    await act(async () => {
+      i18n.activate("de");
+    });
+    mockTransport(transportLogout);
+
+    renderLayout();
+
+    await user.click(screen.getByRole("button", { name: /abmelden/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /wir konnten die abmeldung nicht abschließen\. bitte versuchen sie es erneut\./i
+        )
+      ).toBeInTheDocument();
+    });
+
+    consoleError.mockRestore();
+    await act(async () => {
+      i18n.activate("en");
+    });
   });
 
   it("does not call logout before the API attempt", async () => {
