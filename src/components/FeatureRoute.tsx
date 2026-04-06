@@ -5,10 +5,10 @@ import { Navigate } from "react-router-dom";
 import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
+import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
-  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -57,27 +57,27 @@ export function FeatureRoute({
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.emailVerified === false) {
-    return (
-      <RouteEmailVerificationState
-        email={user.email}
-        onRetry={retryBootstrap}
-        onSignInAgain={logout}
-      />
-    );
-  }
+  return (
+    <EmailVerificationGate
+      user={user}
+      onRetry={retryBootstrap}
+      onSignInAgain={logout}
+    >
+      {() => {
+        if (!capabilities[feature]) {
+          if (fallbackPath) {
+            return <Navigate to={fallbackPath} replace />;
+          }
 
-  if (!capabilities[feature]) {
-    if (fallbackPath) {
-      return <Navigate to={fallbackPath} replace />;
-    }
+          return <>{missingFeatureElement}</>;
+        }
 
-    return <>{missingFeatureElement}</>;
-  }
+        if (requiredAction && !requiredAction(capabilities)) {
+          return <>{deniedActionElement}</>;
+        }
 
-  if (requiredAction && !requiredAction(capabilities)) {
-    return <>{deniedActionElement}</>;
-  }
-
-  return <>{children}</>;
+        return <>{children}</>;
+      }}
+    </EmailVerificationGate>
+  );
 }

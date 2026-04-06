@@ -3,9 +3,9 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   RouteBootstrapRecoveryState,
-  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -41,15 +41,13 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.emailVerified === false) {
-    return (
-      <RouteEmailVerificationState
-        email={user.email}
-        onRetry={retryBootstrap}
-        onSignInAgain={logout}
-      />
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <EmailVerificationGate
+      user={user}
+      onRetry={retryBootstrap}
+      onSignInAgain={logout}
+    >
+      {children}
+    </EmailVerificationGate>
+  );
 }
