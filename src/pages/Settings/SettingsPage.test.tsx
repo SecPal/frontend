@@ -9,6 +9,7 @@ import { i18n } from "@lingui/core";
 import { SettingsPage } from "./SettingsPage";
 import * as i18nModule from "../../i18n";
 import * as authApi from "../../services/authApi";
+import * as passkeyBrowser from "../../services/passkeyBrowser";
 
 vi.mock("../../components/MfaQrCode", () => ({
   MfaQrCode: ({ value, alt }: { value: string; alt: string }) => (
@@ -34,6 +35,8 @@ vi.mock("../../services/authApi", async () => {
   return {
     ...actual,
     getPasskeys: vi.fn(),
+    startPasskeyRegistrationChallenge: vi.fn(),
+    verifyPasskeyRegistrationChallenge: vi.fn(),
     getMfaStatus: vi.fn(),
     startTotpEnrollment: vi.fn(),
     confirmTotpEnrollment: vi.fn(),
@@ -41,6 +44,11 @@ vi.mock("../../services/authApi", async () => {
     disableMfa: vi.fn(),
   };
 });
+
+vi.mock("../../services/passkeyBrowser", () => ({
+  isPasskeySupported: vi.fn(),
+  getPasskeyAttestation: vi.fn(),
+}));
 
 // Helper to render with all required providers
 const renderWithProviders = (component: React.ReactNode) => {
@@ -128,27 +136,57 @@ function createPasskeyListResponse() {
   };
 }
 
+function createPasskeyRegistrationChallengeResponse() {
+  return {
+    data: {
+      challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+      public_key: {
+        challenge: "Zm9vYmFy",
+        rp: {
+          id: "app.secpal.dev",
+          name: "SecPal",
+        },
+        user: {
+          id: "dXNlci1pZA",
+          name: "test@secpal.dev",
+          display_name: "Test User",
+        },
+        pub_key_cred_params: [{ type: "public-key" as const, alg: -7 }],
+      },
+    },
+  };
+}
+
+function createPasskeyRegistrationVerificationResponse() {
+  return {
+    data: {
+      credential: {
+        id: "new-credential-id",
+        label: "Security Key",
+        created_at: "2026-04-06T09:12:00Z",
+        last_used_at: null,
+        transports: ["usb" as const],
+      },
+      total_passkeys: 2,
+    },
+  };
+}
+
+const textBytes = (value: string) => Uint8Array.from(Buffer.from(value)).buffer;
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup i18n with English locale
     i18n.load("en", {});
     i18n.activate("en");
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(authApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
     vi.mocked(authApi.getPasskeys).mockResolvedValue(
       createPasskeyListResponse()
     );
-    Object.defineProperty(window, "PublicKeyCredential", {
-      configurable: true,
-      writable: true,
-      value: function PublicKeyCredential() {},
-    });
-    Object.defineProperty(window, "isSecureContext", {
-      configurable: true,
-      value: true,
-    });
   });
 
   it("renders the settings page with heading", async () => {
@@ -203,11 +241,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows an unsupported passkey message without hiding the enrolled list", async () => {
-    Object.defineProperty(window, "PublicKeyCredential", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
 
     await renderSettingsPage();
 
@@ -217,6 +251,110 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByText(/work macbook touch id/i)
     ).toBeInTheDocument();
+  });
+
+  it("registers a passkey and appends it to the enrolled list", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
+      id: "new-credential-id",
+      raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        attestation_object: "YXR0ZXN0YXRpb24",
+        transports: ["usb"],
+      },
+      client_extension_results: {},
+    });
+    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationVerificationResponse()
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    await waitFor(() => {
+      expect(authApi.startPasskeyRegistrationChallenge).toHaveBeenCalledTimes(
+        1
+      );
+      expect(passkeyBrowser.getPasskeyAttestation).toHaveBeenCalledTimes(1);
+      expect(authApi.verifyPasskeyRegistrationChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        expect.objectContaining({
+          label: "Security Key",
+          credential: expect.objectContaining({ id: "new-credential-id" }),
+        })
+      );
+    });
+
+    expect(await screen.findByText(/security key/i)).toBeInTheDocument();
+  });
+
+  it("shows passkey enrollment errors inline", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError("Passkey registration failed.")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/passkey registration failed/i)
+    ).toBeInTheDocument();
+  });
+
+  it("maps a real browser passkey attestation into the API payload", async () => {
+    const actualPasskeyBrowser = await vi.importActual<
+      typeof import("../../services/passkeyBrowser")
+    >("../../services/passkeyBrowser");
+
+    Object.defineProperty(window, "isSecureContext", {
+      configurable: true,
+      value: true,
+    });
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: {
+        get: vi.fn(),
+        create: vi.fn().mockResolvedValue({
+          id: "credential-id",
+          rawId: textBytes("raw-id"),
+          type: "public-key",
+          response: {
+            clientDataJSON: textBytes("client-data"),
+            attestationObject: textBytes("attestation-object"),
+            getTransports: () => ["internal"],
+          },
+          getClientExtensionResults: () => ({ credProps: { rk: true } }),
+        }),
+      },
+    });
+
+    await expect(
+      actualPasskeyBrowser.getPasskeyAttestation(
+        createPasskeyRegistrationChallengeResponse().data.public_key
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        raw_id: "cmF3LWlk",
+        response: expect.objectContaining({
+          client_data_json: "Y2xpZW50LWRhdGE",
+          attestation_object: "YXR0ZXN0YXRpb24tb2JqZWN0",
+          transports: ["internal"],
+        }),
+      })
+    );
   });
 
   it("displays language selection section", async () => {

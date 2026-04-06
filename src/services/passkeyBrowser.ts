@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
+  PasskeyAttestationResponsePayload,
   PasskeyAssertionResponsePayload,
   PasskeyAuthenticationCredential,
   PasskeyAuthenticationPublicKeyOptions,
   PasskeyCredentialDescriptor,
+  PasskeyRegistrationCredential,
+  PasskeyRegistrationPublicKeyOptions,
+  PasskeyTransport,
 } from "@/types/api";
 
 function toBase64Url(value: ArrayBuffer | ArrayBufferView): string {
@@ -108,6 +112,43 @@ function createAuthenticationOptions(
   };
 }
 
+function createRegistrationOptions(
+  options: PasskeyRegistrationPublicKeyOptions
+): CredentialCreationOptions {
+  const authenticatorSelection = options.authenticator_selection
+    ? {
+        authenticatorAttachment:
+          options.authenticator_selection.authenticator_attachment,
+        residentKey: options.authenticator_selection.resident_key,
+        requireResidentKey:
+          options.authenticator_selection.require_resident_key,
+        userVerification: options.authenticator_selection.user_verification,
+      }
+    : undefined;
+
+  return {
+    publicKey: {
+      challenge: fromBase64Url(options.challenge),
+      rp: options.rp,
+      user: {
+        id: fromBase64Url(options.user.id),
+        name: options.user.name,
+        displayName: options.user.display_name,
+      },
+      pubKeyCredParams: options.pub_key_cred_params.map((parameter) => ({
+        type: parameter.type,
+        alg: parameter.alg,
+      })),
+      timeout: options.timeout,
+      excludeCredentials: options.exclude_credentials?.map(mapDescriptor),
+      authenticatorSelection,
+      attestation: options.attestation as
+        | AttestationConveyancePreference
+        | undefined,
+    },
+  };
+}
+
 function normalizeExtensionResults(
   credential: PublicKeyCredential
 ): Record<string, unknown> {
@@ -183,6 +224,65 @@ export async function getPasskeyAssertion(
   if (userHandle !== undefined) {
     payload.user_handle = userHandle;
   }
+
+  return {
+    id: publicKeyCredential.id,
+    raw_id: toBase64Url(publicKeyCredential.rawId),
+    type: "public-key",
+    response: payload,
+    client_extension_results: normalizeExtensionResults(publicKeyCredential),
+  };
+}
+
+export async function getPasskeyAttestation(
+  options: PasskeyRegistrationPublicKeyOptions
+): Promise<PasskeyRegistrationCredential> {
+  assertPasskeySupport();
+
+  if (typeof navigator.credentials?.create !== "function") {
+    throw new Error("Passkeys are not available in this browser.");
+  }
+
+  const credential = await navigator.credentials.create(
+    createRegistrationOptions(options)
+  );
+
+  if (
+    !credential ||
+    typeof credential !== "object" ||
+    !("rawId" in credential) ||
+    !("response" in credential)
+  ) {
+    throw new Error("The browser did not return a passkey attestation.");
+  }
+
+  const publicKeyCredential = credential as PublicKeyCredential;
+  const response = publicKeyCredential.response;
+
+  if (
+    !response ||
+    !("clientDataJSON" in response) ||
+    !("attestationObject" in response)
+  ) {
+    throw new Error(
+      "The browser returned an invalid passkey attestation response."
+    );
+  }
+
+  const attestationResponse = response as AuthenticatorAttestationResponse;
+  const transports =
+    typeof attestationResponse.getTransports === "function"
+      ? attestationResponse
+          .getTransports()
+          .filter((transport): transport is PasskeyTransport =>
+            KNOWN_TRANSPORTS.has(transport as AuthenticatorTransport)
+          )
+      : undefined;
+  const payload: PasskeyAttestationResponsePayload = {
+    client_data_json: toBase64Url(attestationResponse.clientDataJSON),
+    attestation_object: toBase64Url(attestationResponse.attestationObject),
+    ...(transports?.length ? { transports } : {}),
+  };
 
   return {
     id: publicKeyCredential.id,

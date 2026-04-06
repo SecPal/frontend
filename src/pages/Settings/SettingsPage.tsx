@@ -44,10 +44,16 @@ import {
   getPasskeys,
   getMfaStatus,
   regenerateRecoveryCodes,
+  startPasskeyRegistrationChallenge,
   startTotpEnrollment,
+  verifyPasskeyRegistrationChallenge,
 } from "../../services/authApi";
 import { MfaQrCode } from "../../components/MfaQrCode";
 import { formatDateTime } from "../../lib/dateUtils";
+import {
+  getPasskeyAttestation,
+  isPasskeySupported,
+} from "../../services/passkeyBrowser";
 
 type SensitiveMfaAction = "disable" | "regenerate";
 
@@ -95,19 +101,15 @@ function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
 
 export function SettingsPage() {
   const { _, i18n } = useLingui();
-  const supportsPasskeys = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.isSecureContext &&
-      typeof window.PublicKeyCredential !== "undefined",
-    []
-  );
+  const supportsPasskeys = useMemo(() => isPasskeySupported(), []);
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
   const [passkeys, setPasskeys] = useState<PasskeyCredentialSummary[]>([]);
   const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeyLabel, setPasskeyLabel] = useState("");
+  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
   const [enrollmentPreparation, setEnrollmentPreparation] =
@@ -185,6 +187,53 @@ export function SettingsPage() {
   useEffect(() => {
     void loadPasskeys();
   }, [loadPasskeys]);
+
+  const handlePasskeyRegistration = async (event: FormEvent) => {
+    event.preventDefault();
+
+    const trimmedLabel = passkeyLabel.trim();
+
+    if (!trimmedLabel) {
+      setPasskeyError("Enter a label for this passkey.");
+      return;
+    }
+
+    setPasskeyError(null);
+    setIsRegisteringPasskey(true);
+
+    try {
+      const challengeResponse = await startPasskeyRegistrationChallenge();
+      const credential = await getPasskeyAttestation(
+        challengeResponse.data.public_key
+      );
+      const response = await verifyPasskeyRegistrationChallenge(
+        challengeResponse.data.challenge_id,
+        {
+          label: trimmedLabel,
+          credential,
+        }
+      );
+
+      setPasskeys((current) => [
+        response.data.credential,
+        ...current.filter(
+          (registeredCredential) =>
+            registeredCredential.id !== response.data.credential.id
+        ),
+      ]);
+      setPasskeyLabel("");
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        setPasskeyError(error.message);
+      } else if (error instanceof Error) {
+        setPasskeyError(error.message);
+      } else {
+        setPasskeyError("Failed to register passkey.");
+      }
+    } finally {
+      setIsRegisteringPasskey(false);
+    }
+  };
 
   const loadEnrollmentPreparation = useCallback(async () => {
     setIsPreparingEnrollment(true);
@@ -428,11 +477,41 @@ export function SettingsPage() {
 
         <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
           <div className="space-y-4">
-            {!supportsPasskeys ? (
+            {supportsPasskeys ? (
+              <form
+                className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+                onSubmit={handlePasskeyRegistration}
+              >
+                <Field>
+                  <Label htmlFor="passkey-label">
+                    <Trans>Passkey label</Trans>
+                  </Label>
+                  <Input
+                    id="passkey-label"
+                    type="text"
+                    value={passkeyLabel}
+                    onChange={(event) => setPasskeyLabel(event.target.value)}
+                    disabled={isRegisteringPasskey}
+                    maxLength={100}
+                  />
+                </Field>
+                <Button
+                  type="submit"
+                  color="blue"
+                  disabled={isRegisteringPasskey}
+                >
+                  {isRegisteringPasskey ? (
+                    <Trans>Adding passkey...</Trans>
+                  ) : (
+                    <Trans>Add passkey</Trans>
+                  )}
+                </Button>
+              </form>
+            ) : (
               <Text className="text-sm text-zinc-600 dark:text-zinc-300">
                 <Trans>This browser does not support passkeys.</Trans>
               </Text>
-            ) : null}
+            )}
             {passkeyError ? (
               <Text className="text-sm text-red-700 dark:text-red-300">
                 {passkeyError}
