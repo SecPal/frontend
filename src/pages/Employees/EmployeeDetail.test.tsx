@@ -2,10 +2,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee } from "@/types/api";
 import { EmployeeDetail } from "./EmployeeDetail";
 import * as employeeApi from "../../services/employeeApi";
@@ -84,6 +92,9 @@ const mockEmployee: Employee = {
 describe("EmployeeDetail", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+    i18n.activate("en");
     mockUseUserCapabilities.mockReturnValue({
       actions: {
         employees: {
@@ -322,6 +333,33 @@ describe("EmployeeDetail", () => {
       expect(
         screen.getByRole("button", { name: /confirm onboarding/i })
       ).toBeInTheDocument();
+    });
+  });
+
+  it("should translate confirm onboarding button text to German", async () => {
+    await act(async () => {
+      i18n.activate("de");
+    });
+
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: {
+        status: "submitted_for_review",
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /onboarding bestätigen/i })
+      ).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      i18n.activate("en");
     });
   });
 
