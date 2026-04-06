@@ -61,4 +61,77 @@ describe("EmailVerificationGate", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
+
+  it("shows the email verification state when emailVerified is undefined (fail-closed)", () => {
+    const user = {
+      id: "1",
+      name: "User",
+      email: "user@secpal.dev",
+    } as Parameters<typeof EmailVerificationGate>[0]["user"];
+
+    renderGate(
+      <EmailVerificationGate
+        user={user}
+        onRetry={vi.fn()}
+        onSignInAgain={vi.fn()}
+      >
+        <div>Protected Content</div>
+      </EmailVerificationGate>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+  });
+
+  it("renders children via render-prop function when email is verified", () => {
+    const renderChildren = vi.fn(() => <div>Render Prop Content</div>);
+
+    renderGate(
+      <EmailVerificationGate
+        user={{
+          id: "1",
+          name: "User",
+          email: "user@secpal.dev",
+          emailVerified: true,
+        }}
+        onRetry={vi.fn()}
+        onSignInAgain={vi.fn()}
+      >
+        {renderChildren}
+      </EmailVerificationGate>
+    );
+
+    expect(renderChildren).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Render Prop Content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /verify your email address/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not invoke render-prop function when email is unverified", () => {
+    const renderChildren = vi.fn(() => <div>Render Prop Content</div>);
+
+    renderGate(
+      <EmailVerificationGate
+        user={{
+          id: "1",
+          name: "User",
+          email: "user@secpal.dev",
+          emailVerified: false,
+        }}
+        onRetry={vi.fn()}
+        onSignInAgain={vi.fn()}
+      >
+        {renderChildren}
+      </EmailVerificationGate>
+    );
+
+    expect(renderChildren).not.toHaveBeenCalled();
+    expect(screen.queryByText("Render Prop Content")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+  });
 });

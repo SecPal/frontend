@@ -18,7 +18,7 @@ export function EmailVerificationGate({
   onSignInAgain,
   user,
 }: EmailVerificationGateProps) {
-  if (user?.emailVerified === false) {
+  if (user != null && user.emailVerified !== true) {
     return (
       <RouteEmailVerificationState
         email={user.email}
