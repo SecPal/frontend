@@ -238,9 +238,7 @@ describe("SettingsPage", () => {
       expect(
         screen.queryByText(/work macbook touch id/i)
       ).not.toBeInTheDocument();
-      expect(
-        screen.getByText(/no passkeys enrolled yet/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
     });
   });
 
