@@ -97,7 +97,8 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export default function AndroidProvisioningPage() {
   const { _ } = useLingui();
   const capabilities = useUserCapabilities();
-  const [formState, setFormState] = useState<CreateFormState>(INITIAL_FORM_STATE);
+  const [formState, setFormState] =
+    useState<CreateFormState>(INITIAL_FORM_STATE);
   const [sessions, setSessions] = useState<AndroidEnrollmentSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -106,8 +107,10 @@ export default function AndroidProvisioningPage() {
   const [creating, setCreating] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [revocationReason, setRevocationReason] = useState("");
-  const [sessionToRevoke, setSessionToRevoke] = useState<AndroidEnrollmentSession | null>(null);
-  const [latestProvisioningQrPayload, setLatestProvisioningQrPayload] = useState<string | null>(null);
+  const [sessionToRevoke, setSessionToRevoke] =
+    useState<AndroidEnrollmentSession | null>(null);
+  const [latestProvisioningQrPayload, setLatestProvisioningQrPayload] =
+    useState<string | null>(null);
   const [latestProvisioningSession, setLatestProvisioningSession] =
     useState<AndroidEnrollmentSession | null>(null);
 
@@ -221,8 +224,9 @@ export default function AndroidProvisioningPage() {
           </Heading>
           <Text className="mt-2 max-w-3xl text-zinc-600 dark:text-zinc-300">
             <Trans>
-              Generate short-lived enrollment sessions, display the backend-issued
-              provisioning QR code, and revoke unused Android bootstrap sessions.
+              Generate short-lived enrollment sessions, display the
+              backend-issued provisioning QR code, and revoke unused Android
+              bootstrap sessions.
             </Trans>
           </Text>
         </div>
@@ -251,7 +255,11 @@ export default function AndroidProvisioningPage() {
           )}
 
           {loading ? (
-            <div role="status" aria-live="polite" className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/60">
+            <div
+              role="status"
+              aria-live="polite"
+              className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/60"
+            >
               <Text>
                 <Trans>Loading enrollment sessions...</Trans>
               </Text>
@@ -259,7 +267,9 @@ export default function AndroidProvisioningPage() {
           ) : sessions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-900/40">
               <Text className="text-zinc-600 dark:text-zinc-300">
-                <Trans>No Android enrollment sessions have been created yet.</Trans>
+                <Trans>
+                  No Android enrollment sessions have been created yet.
+                </Trans>
               </Text>
             </div>
           ) : (
@@ -289,9 +299,8 @@ export default function AndroidProvisioningPage() {
                     <TableCell>
                       <div className="space-y-1">
                         <div className="font-medium">
-                          {session.device_label || _(
-                            msg`Unnamed Android enrollment session`
-                          )}
+                          {session.device_label ||
+                            _(msg`Unnamed Android enrollment session`)}
                         </div>
                         {session.bootstrap_token_last_eight && (
                           <Text className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -307,7 +316,9 @@ export default function AndroidProvisioningPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>{session.update_channel}</TableCell>
-                    <TableCell>{formatDateTime(session.bootstrap_token_expires_at)}</TableCell>
+                    <TableCell>
+                      {formatDateTime(session.bootstrap_token_expires_at)}
+                    </TableCell>
                     <TableCell>
                       {capabilities.actions.androidProvisioning.revoke &&
                       session.status === "pending" ? (
@@ -539,7 +550,11 @@ export default function AndroidProvisioningPage() {
             onClick={handleConfirmRevoke}
             disabled={revoking || revocationReason.trim().length === 0}
           >
-            {revoking ? <Trans>Revoking...</Trans> : <Trans>Confirm revoke</Trans>}
+            {revoking ? (
+              <Trans>Revoking...</Trans>
+            ) : (
+              <Trans>Confirm revoke</Trans>
+            )}
           </Button>
         </DialogActions>
       </Dialog>

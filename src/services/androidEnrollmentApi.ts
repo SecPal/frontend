@@ -27,7 +27,9 @@ async function parseError(response: Response): Promise<ApiError> {
     .catch(() => ({ message: response.statusText }))) as ApiErrorPayload;
 
   return new ApiError(
-    error.message || response.statusText || "Android provisioning request failed",
+    error.message ||
+      response.statusText ||
+      "Android provisioning request failed",
     response.status,
     error.errors,
     response
@@ -89,7 +91,8 @@ export async function createAndroidEnrollmentSession(
     throw await parseError(response);
   }
 
-  const data = (await response.json()) as ApiEnvelope<CreateAndroidEnrollmentSessionResponse>;
+  const data =
+    (await response.json()) as ApiEnvelope<CreateAndroidEnrollmentSessionResponse>;
   return data.data;
 }
 

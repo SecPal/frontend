@@ -38,7 +38,8 @@ const mockSession: AndroidEnrollmentSession = {
   status: "pending",
   enrollment_mode: "device_owner",
   update_channel: "managed_device",
-  release_metadata_url: "https://apk.secpal.app/android/channels/managed_device/latest.json",
+  release_metadata_url:
+    "https://apk.secpal.app/android/channels/managed_device/latest.json",
   provisioning_profile: {
     kiosk_mode_enabled: true,
     lock_task_enabled: true,
@@ -99,9 +100,9 @@ describe("AndroidProvisioningPage", () => {
     i18n.load("en", {});
     i18n.activate("en");
 
-    vi.mocked(androidEnrollmentApi.listAndroidEnrollmentSessions).mockResolvedValue(
-      mockListResponse
-    );
+    vi.mocked(
+      androidEnrollmentApi.listAndroidEnrollmentSessions
+    ).mockResolvedValue(mockListResponse);
     vi.mocked(
       androidEnrollmentApi.createAndroidEnrollmentSession
     ).mockResolvedValue({
