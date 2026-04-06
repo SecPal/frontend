@@ -655,9 +655,9 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      const otherKeyEvent = new StorageEvent("storage", {
-        key: "some_other_key",
-        newValue: null,
+      const otherKeyEvent = new StorageEvent("storage");
+      Object.defineProperty(otherKeyEvent, "key", {
+        value: "some_other_key",
       });
       Object.defineProperty(otherKeyEvent, "storageArea", {
         value: localStorage,
@@ -685,10 +685,15 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(newUser));
-      const crossTabLoginEvent = new StorageEvent("storage", {
-        key: "auth_user",
-        oldValue: null,
-        newValue: JSON.stringify(newUser),
+      const crossTabLoginEvent = new StorageEvent("storage");
+      Object.defineProperty(crossTabLoginEvent, "key", {
+        value: "auth_user",
+      });
+      Object.defineProperty(crossTabLoginEvent, "oldValue", {
+        value: null,
+      });
+      Object.defineProperty(crossTabLoginEvent, "newValue", {
+        value: JSON.stringify(newUser),
       });
       Object.defineProperty(crossTabLoginEvent, "storageArea", {
         value: localStorage,
