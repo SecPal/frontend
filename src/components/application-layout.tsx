@@ -161,14 +161,12 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   const handleLogout = async () => {
-    // Clear local state FIRST to prevent race conditions
-    logout();
-
     try {
       await authTransport.logout();
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
+      logout();
       navigate("/login");
     }
   };
