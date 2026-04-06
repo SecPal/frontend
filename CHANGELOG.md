@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the first MFA settings management slice with live status loading plus self-service recovery-code regeneration and MFA disablement flows for accounts that already have MFA enabled.
 - Added the phase-1 browser-session MFA login challenge flow so the login page can pause after primary credentials, collect the second factor, and complete the session only after the backend challenge verification succeeds.
 
+### Fixed
+
+- Fixed a race condition in the `OnboardingLayout` sign-out handler where `logout()` was called before the API request; it now runs inside the `finally` block so client state is cleared only after the API call completes (or fails).
+- Added a user-facing inline error message in `OnboardingLayout` when the sign-out API call fails, so users know the server request did not complete even though they have been signed out locally.
+- Replaced invalid `<Trans>` component usage inside `<option>` elements in `EmployeeEdit` with `i18n._(msg\`...\`)` calls to produce valid HTML and avoid rendering issues with the organisational unit dropdown placeholder.
+
 ### Changed
 
 - Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
