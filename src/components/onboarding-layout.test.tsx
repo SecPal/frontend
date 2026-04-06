@@ -157,9 +157,7 @@ describe("OnboardingLayout", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          /we could not complete the sign out request/i
-        )
+        screen.getByText(/we could not complete the sign out request/i)
       ).toBeInTheDocument();
     });
 
