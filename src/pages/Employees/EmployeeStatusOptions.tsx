@@ -1,26 +1,18 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Trans } from "@lingui/macro";
+import { msg } from "@lingui/macro";
+import { useLingui } from "@lingui/react";
 
 export function EmployeeStatusOptions() {
+  const { _ } = useLingui();
   return (
     <>
-      <option value="applicant">
-        <Trans>Applicant</Trans>
-      </option>
-      <option value="pre_contract">
-        <Trans>Pre-Contract</Trans>
-      </option>
-      <option value="active">
-        <Trans>Active</Trans>
-      </option>
-      <option value="on_leave">
-        <Trans>On Leave</Trans>
-      </option>
-      <option value="terminated">
-        <Trans>Terminated</Trans>
-      </option>
+      <option value="applicant">{_(msg`Applicant`)}</option>
+      <option value="pre_contract">{_(msg`Pre-Contract`)}</option>
+      <option value="active">{_(msg`Active`)}</option>
+      <option value="on_leave">{_(msg`On Leave`)}</option>
+      <option value="terminated">{_(msg`Terminated`)}</option>
     </>
   );
 }

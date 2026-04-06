@@ -268,12 +268,8 @@ export default function SiteCreate() {
               value={formData.type}
               onChange={(e) => updateField("type", e.target.value as SiteType)}
             >
-              <option value="permanent">
-                <Trans>Permanent</Trans>
-              </option>
-              <option value="temporary">
-                <Trans>Temporary</Trans>
-              </option>
+              <option value="permanent">{_(msg`Permanent`)}</option>
+              <option value="temporary">{_(msg`Temporary`)}</option>
             </Select>
           </Field>
         </FieldGroup>
