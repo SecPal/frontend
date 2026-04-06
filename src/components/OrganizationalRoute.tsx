@@ -3,10 +3,10 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
-  RouteEmailVerificationState,
   RouteLoadingState,
 } from "./RouteGuardState";
 
@@ -47,19 +47,19 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.emailVerified === false) {
-    return (
-      <RouteEmailVerificationState
-        email={user.email}
-        onRetry={retryBootstrap}
-        onSignInAgain={logout}
-      />
-    );
-  }
+  return (
+    <EmailVerificationGate
+      user={user}
+      onRetry={retryBootstrap}
+      onSignInAgain={logout}
+    >
+      {() => {
+        if (!hasOrganizationalAccess()) {
+          return <RouteAccessDeniedState />;
+        }
 
-  if (!hasOrganizationalAccess()) {
-    return <RouteAccessDeniedState />;
-  }
-
-  return <>{children}</>;
+        return <>{children}</>;
+      }}
+    </EmailVerificationGate>
+  );
 }
