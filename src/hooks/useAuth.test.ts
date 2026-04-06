@@ -384,7 +384,7 @@ describe("useAuth", () => {
   });
 
   it("logout clears user", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
@@ -407,7 +407,7 @@ describe("useAuth", () => {
   });
 
   it("logout stores only the minimal logout barrier flag", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 
@@ -487,7 +487,7 @@ describe("useAuth", () => {
   });
 
   it("clears auth state when another tab removes auth storage", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
 

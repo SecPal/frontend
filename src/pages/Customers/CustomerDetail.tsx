@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans, Plural } from "@lingui/macro";
 import { getCustomer, deleteCustomer } from "../../services/customersApi";
 import type { Customer } from "../../types/customers";
 import { Heading } from "../../components/heading";
@@ -42,9 +42,12 @@ export default function CustomerDetail() {
 
   useEffect(() => {
     async function loadCustomer() {
-      if (!id) return;
       setLoading(true);
       setLoadError(null);
+      if (!id) {
+        setLoading(false);
+        return;
+      }
       try {
         const data = await getCustomer(id);
         setCustomer(data);
@@ -216,9 +219,12 @@ export default function CustomerDetail() {
             <Trans>Sites</Trans>
           </Heading>
           <Text className="mb-4">
-            <Trans>
-              This customer has {customer.sites_count || 0} site(s).
-            </Trans>
+            <Plural
+              value={customer.sites_count || 0}
+              zero="This customer has no sites."
+              one="This customer has # site."
+              other="This customer has # sites."
+            />
           </Text>
           <Button href={`/sites/customer/${customer.id}`} outline>
             <Trans>View Sites</Trans>
