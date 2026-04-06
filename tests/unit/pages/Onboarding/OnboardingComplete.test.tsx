@@ -215,7 +215,7 @@ describe("OnboardingComplete", () => {
 
     fillValidFormAndSubmit({
       password: "short",
-      confirmPassword: "short",
+      confirmPassword: "",
     });
 
     await waitFor(() => {
