@@ -149,6 +149,7 @@ if [ -f pnpm-lock.yaml ] && command -v pnpm >/dev/null 2>&1; then
     pnpm run --if-present test:run
   else
     echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   ⚠️  Enable for behavior, security, or state-lifecycle changes" >&2
     echo "   Tests will run in CI pipeline" >&2
   fi
 elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
@@ -170,6 +171,7 @@ elif [ -f package-lock.json ] && command -v npm >/dev/null 2>&1; then
     npm run --if-present test:run
   else
     echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   ⚠️  Enable for behavior, security, or state-lifecycle changes" >&2
     echo "   Tests will run in CI pipeline" >&2
   fi
 elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
@@ -206,6 +208,7 @@ elif [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
     fi
   else
     echo "ℹ️  Skipping tests in pre-push hook (enable via PREFLIGHT_RUN_TESTS=1)" >&2
+    echo "   ⚠️  Enable for behavior, security, or state-lifecycle changes" >&2
     echo "   Tests will run in CI pipeline" >&2
   fi
 fi
