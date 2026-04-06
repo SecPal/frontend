@@ -501,16 +501,11 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.removeItem("auth_user");
-      const crossTabLogoutEvent = new StorageEvent("storage");
-      Object.defineProperty(crossTabLogoutEvent, "key", {
-        value: "auth_user",
-      });
-      Object.defineProperty(crossTabLogoutEvent, "oldValue", {
-        value: JSON.stringify(mockUser),
-      });
-      Object.defineProperty(crossTabLogoutEvent, "newValue", { value: null });
-      Object.defineProperty(crossTabLogoutEvent, "storageArea", {
-        value: localStorage,
+      const crossTabLogoutEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: JSON.stringify(mockUser),
+        newValue: null,
+        storageArea: localStorage,
       });
       window.dispatchEvent(crossTabLogoutEvent);
     });
@@ -574,14 +569,11 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      const staleAuthEvent = new StorageEvent("storage");
-      Object.defineProperty(staleAuthEvent, "key", { value: "auth_user" });
-      Object.defineProperty(staleAuthEvent, "oldValue", { value: null });
-      Object.defineProperty(staleAuthEvent, "newValue", {
-        value: JSON.stringify(mockUser),
-      });
-      Object.defineProperty(staleAuthEvent, "storageArea", {
-        value: localStorage,
+      const staleAuthEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: null,
+        newValue: JSON.stringify(mockUser),
+        storageArea: localStorage,
       });
       window.dispatchEvent(staleAuthEvent);
     });
@@ -658,9 +650,7 @@ describe("useAuth", () => {
       const otherKeyEvent = new StorageEvent("storage", {
         key: "some_other_key",
         newValue: null,
-      });
-      Object.defineProperty(otherKeyEvent, "storageArea", {
-        value: localStorage,
+        storageArea: localStorage,
       });
       window.dispatchEvent(otherKeyEvent);
     });
@@ -689,9 +679,7 @@ describe("useAuth", () => {
         key: "auth_user",
         oldValue: null,
         newValue: JSON.stringify(newUser),
-      });
-      Object.defineProperty(crossTabLoginEvent, "storageArea", {
-        value: localStorage,
+        storageArea: localStorage,
       });
       window.dispatchEvent(crossTabLoginEvent);
     });
@@ -721,16 +709,11 @@ describe("useAuth", () => {
       // Write the corrupt value so localStorage matches the event (real browser
       // cross-tab writes keep newValue and the actual storage in sync).
       localStorage.setItem("auth_user", "{invalid json{{");
-      const invalidJsonEvent = new StorageEvent("storage");
-      Object.defineProperty(invalidJsonEvent, "key", { value: "auth_user" });
-      Object.defineProperty(invalidJsonEvent, "oldValue", {
-        value: JSON.stringify(mockUser),
-      });
-      Object.defineProperty(invalidJsonEvent, "newValue", {
-        value: "{invalid json{{",
-      });
-      Object.defineProperty(invalidJsonEvent, "storageArea", {
-        value: localStorage,
+      const invalidJsonEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: JSON.stringify(mockUser),
+        newValue: "{invalid json{{",
+        storageArea: localStorage,
       });
       window.dispatchEvent(invalidJsonEvent);
     });
