@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a race condition in the `OnboardingLayout` sign-out handler where `logout()` was called before the API request; `logout()` and navigation to `/login` now happen only after a successful API logout call so local auth state is not prematurely cleared.
 - Added a user-facing inline error message in `OnboardingLayout` when the sign-out API call fails; local auth state is preserved so the user can retry, and an inline alert notifies them the server request did not complete.
 - Replaced invalid `<Trans>` component usage inside `<option>` elements in `EmployeeEdit` with `i18n._(msg\`...\`)` calls to produce valid HTML and avoid rendering issues with the organisational unit dropdown placeholder.
+- Fixed inconsistent mock user `id` type (number vs string) in specific `useAuth.test.ts` assertions affected by sanitizer coercion; the updated expectations now reflect the sanitizer's string-coercion behavior.
+- Fixed perpetual loading state in `CustomerDetail` when route `id` param is absent; `setLoading(false)` is now called on the early-return path.
+- Replaced hardcoded `site(s)` pluralization in `CustomerDetail` with Lingui `<Plural>` for correct singular/plural handling.
+- Extracted duplicated date-part computation in `EmployeeEdit.formatDateForDisplay` so `day`, `month`, and `year` are derived once before the locale branch.
+- Fixed perpetual `fetchLoading` state in `EmployeeEdit` when `id` param is absent; `setFetchLoading(false)` is now called before the early return.
+- Added user-visible error message in `EmployeeEdit` when the form is submitted without a route `id`; previously the submission silently no-oped.
+- Replaced hardcoded locale-switched date validation error strings in `EmployeeEdit` with `i18n._(msg\`...\`)` calls so messages are properly translatable.
 
 ### Changed
 

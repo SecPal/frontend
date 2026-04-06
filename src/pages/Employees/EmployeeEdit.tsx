@@ -65,15 +65,13 @@ export function EmployeeEdit() {
   const formatDateForDisplay = (isoDate: string, locale: string): string => {
     if (!isoDate) return "";
     const date = new Date(isoDate);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+
     if (locale === "de") {
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
       return `${day}.${month}.${year}`;
     } else {
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
       return `${month}/${day}/${year}`;
     }
   };
@@ -166,10 +164,14 @@ export function EmployeeEdit() {
   }, []);
 
   const loadEmployee = useCallback(async () => {
-    if (!id) return;
+    setFetchLoading(true);
+    if (!id) {
+      setError(i18n._(msg`Employee ID is missing.`));
+      setFetchLoading(false);
+      return;
+    }
 
     try {
-      setFetchLoading(true);
       setError(null);
       const employee: Employee = await fetchEmployee(id);
 
@@ -219,7 +221,7 @@ export function EmployeeEdit() {
     } finally {
       setFetchLoading(false);
     }
-  }, [id, i18n.locale]);
+  }, [id, i18n]);
 
   useEffect(() => {
     loadEmployee();
@@ -227,7 +229,11 @@ export function EmployeeEdit() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!id) return;
+    if (!id) {
+      console.error("Cannot submit employee form: missing employee ID.");
+      setError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
+      return;
+    }
 
     try {
       setLoading(true);
@@ -359,10 +365,10 @@ export function EmployeeEdit() {
                         handleChange("date_of_birth", result.iso);
                         setBirthDateError(null);
                       } else if (e.target.value) {
+                        const format =
+                          i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
                         setBirthDateError(
-                          i18n.locale === "de"
-                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
-                            : "Invalid date. Please use format MM/DD/YYYY"
+                          i18n._(msg`Invalid date. Please use format ${format}`)
                         );
                       }
                     }}
@@ -448,10 +454,10 @@ export function EmployeeEdit() {
                         handleChange("contract_start_date", result.iso);
                         setContractDateError(null);
                       } else if (e.target.value) {
+                        const format =
+                          i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
                         setContractDateError(
-                          i18n.locale === "de"
-                            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
-                            : "Invalid date. Please use format MM/DD/YYYY"
+                          i18n._(msg`Invalid date. Please use format ${format}`)
                         );
                       }
                     }}
