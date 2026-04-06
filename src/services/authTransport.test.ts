@@ -330,7 +330,9 @@ describe("authTransport", () => {
       }),
       logout: vi.fn().mockResolvedValue(undefined),
       logoutAll: vi.fn().mockResolvedValue(undefined),
-      getCurrentUser: vi.fn().mockRejectedValue(new AuthApiError("Unauthorized")),
+      getCurrentUser: vi
+        .fn()
+        .mockRejectedValue(new AuthApiError("Unauthorized")),
       isNetworkAvailable: vi.fn().mockResolvedValue(true),
     };
 
