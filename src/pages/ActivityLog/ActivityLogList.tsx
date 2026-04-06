@@ -350,21 +350,11 @@ export function ActivityLogList() {
                   handleLogNameFilter(e.target.value || undefined)
                 }
               >
-                <option value="">
-                  <Trans>All logs</Trans>
-                </option>
-                <option value="default">
-                  <Trans>Default</Trans>
-                </option>
-                <option value="auth">
-                  <Trans>Authentication</Trans>
-                </option>
-                <option value="permission">
-                  <Trans>Permissions</Trans>
-                </option>
-                <option value="hr_access">
-                  <Trans>HR Access</Trans>
-                </option>
+                <option value="">{_(msg`All logs`)}</option>
+                <option value="default">{_(msg`Default`)}</option>
+                <option value="auth">{_(msg`Authentication`)}</option>
+                <option value="permission">{_(msg`Permissions`)}</option>
+                <option value="hr_access">{_(msg`HR Access`)}</option>
               </Select>
             </Field>
 

@@ -130,15 +130,9 @@ export default function SitesPage() {
             value={filters.type || ""}
             onChange={(e) => handleTypeFilter(e.target.value)}
           >
-            <option value="">
-              <Trans>All Types</Trans>
-            </option>
-            <option value="permanent">
-              <Trans>Permanent</Trans>
-            </option>
-            <option value="temporary">
-              <Trans>Temporary</Trans>
-            </option>
+            <option value="">{_(msg`All Types`)}</option>
+            <option value="permanent">{_(msg`Permanent`)}</option>
+            <option value="temporary">{_(msg`Temporary`)}</option>
           </Select>
         </Field>
         <Field>
@@ -152,15 +146,9 @@ export default function SitesPage() {
             }
             onChange={(e) => handleStatusFilter(e.target.value)}
           >
-            <option value="">
-              <Trans>All Status</Trans>
-            </option>
-            <option value="true">
-              <Trans>Active</Trans>
-            </option>
-            <option value="false">
-              <Trans>Inactive</Trans>
-            </option>
+            <option value="">{_(msg`All Status`)}</option>
+            <option value="true">{_(msg`Active`)}</option>
+            <option value="false">{_(msg`Inactive`)}</option>
           </Select>
         </Field>
       </div>
