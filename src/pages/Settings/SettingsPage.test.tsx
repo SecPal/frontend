@@ -168,6 +168,32 @@ describe("SettingsPage", () => {
     expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
   });
 
+  it("shows an empty passkey state when no credentials are enrolled", async () => {
+    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+
+    expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+  });
+
+  it("shows passkey loading errors returned by the API", async () => {
+    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce(
+      new authApi.AuthApiError("Failed to load passkeys.")
+    );
+
+    await renderSettingsPage();
+
+    expect(screen.getByText(/failed to load passkeys/i)).toBeInTheDocument();
+  });
+
+  it("shows a fallback passkey loading error for unexpected failures", async () => {
+    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce("unexpected");
+
+    await renderSettingsPage();
+
+    expect(screen.getByText(/failed to load passkeys/i)).toBeInTheDocument();
+  });
+
   it("shows an unsupported passkey message without hiding the enrolled list", async () => {
     Object.defineProperty(window, "PublicKeyCredential", {
       configurable: true,
