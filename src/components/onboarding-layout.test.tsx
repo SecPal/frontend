@@ -12,6 +12,18 @@ import * as authHook from "../hooks/useAuth";
 import * as authTransport from "../services/authTransport";
 
 const mockNavigate = vi.fn();
+const authContext = {
+  user: null,
+  isAuthenticated: true,
+  isLoading: false,
+  bootstrapRecoveryReason: null,
+  login: vi.fn(),
+  logout: vi.fn(),
+  retryBootstrap: vi.fn(),
+  hasRole: vi.fn(),
+  hasPermission: vi.fn(),
+  hasOrganizationalAccess: vi.fn(),
+};
 
 vi.mock("../hooks/useAuth");
 vi.mock("../services/authTransport");
@@ -23,6 +35,27 @@ vi.mock("react-router-dom", async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+function mockTransport(logout = vi.fn().mockResolvedValue(undefined)) {
+  vi.mocked(authTransport.getAuthTransport).mockReturnValue({
+    kind: "browser-session",
+    login: vi.fn(),
+    logout,
+    logoutAll: vi.fn(),
+    getCurrentUser: vi.fn(),
+    isNetworkAvailable: vi.fn(),
+  });
+
+  return logout;
+}
+
+function renderLayout() {
+  return renderWithProviders(
+    <OnboardingLayout>
+      <div>Onboarding Wizard Content</div>
+    </OnboardingLayout>
+  );
+}
 
 function renderWithProviders(component: React.ReactNode) {
   return render(
@@ -38,35 +71,12 @@ describe("OnboardingLayout", () => {
     i18n.load("en", {});
     i18n.activate("en");
 
-    vi.mocked(authHook.useAuth).mockReturnValue({
-      user: null,
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
-    });
-
-    vi.mocked(authTransport.getAuthTransport).mockReturnValue({
-      kind: "browser-session",
-      login: vi.fn(),
-      logout: vi.fn().mockResolvedValue(undefined),
-      logoutAll: vi.fn(),
-      getCurrentUser: vi.fn(),
-      isNetworkAvailable: vi.fn(),
-    });
+    vi.mocked(authHook.useAuth).mockReturnValue(authContext);
+    mockTransport();
   });
 
   it("renders children and a dedicated sign-out action", () => {
-    renderWithProviders(
-      <OnboardingLayout>
-        <div>Onboarding Wizard Content</div>
-      </OnboardingLayout>
-    );
+    renderLayout();
 
     expect(screen.getByText("Onboarding Wizard Content")).toBeInTheDocument();
     expect(
@@ -77,35 +87,15 @@ describe("OnboardingLayout", () => {
   it("logs out and navigates to login when sign out succeeds", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
-    const transportLogout = vi.fn().mockResolvedValue(undefined);
 
     vi.mocked(authHook.useAuth).mockReturnValue({
-      user: null,
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
+      ...authContext,
       logout,
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
     });
 
-    vi.mocked(authTransport.getAuthTransport).mockReturnValue({
-      kind: "browser-session",
-      login: vi.fn(),
-      logout: transportLogout,
-      logoutAll: vi.fn(),
-      getCurrentUser: vi.fn(),
-      isNetworkAvailable: vi.fn(),
-    });
+    const transportLogout = mockTransport();
 
-    renderWithProviders(
-      <OnboardingLayout>
-        <div>Onboarding Wizard Content</div>
-      </OnboardingLayout>
-    );
+    renderLayout();
 
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
@@ -127,32 +117,13 @@ describe("OnboardingLayout", () => {
       .mockImplementation(() => {});
 
     vi.mocked(authHook.useAuth).mockReturnValue({
-      user: null,
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
+      ...authContext,
       logout,
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
     });
 
-    vi.mocked(authTransport.getAuthTransport).mockReturnValue({
-      kind: "browser-session",
-      login: vi.fn(),
-      logout: transportLogout,
-      logoutAll: vi.fn(),
-      getCurrentUser: vi.fn(),
-      isNetworkAvailable: vi.fn(),
-    });
+    mockTransport(transportLogout);
 
-    renderWithProviders(
-      <OnboardingLayout>
-        <div>Onboarding Wizard Content</div>
-      </OnboardingLayout>
-    );
+    renderLayout();
 
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 

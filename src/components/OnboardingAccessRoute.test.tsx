@@ -7,6 +7,7 @@ import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { AppAccessRoute, OnboardingOnlyRoute } from "./OnboardingAccessRoute";
+import type { User } from "../contexts/auth-context";
 import * as authHook from "../hooks/useAuth";
 
 vi.mock("../hooks/useAuth");
@@ -18,6 +19,56 @@ vi.mock("react-router-dom", async () => {
     Navigate: ({ to }: { to: string }) => <div>Redirected to {to}</div>,
   };
 });
+
+const authContext = {
+  isAuthenticated: true,
+  isLoading: false,
+  bootstrapRecoveryReason: null,
+  login: vi.fn(),
+  logout: vi.fn(),
+  retryBootstrap: vi.fn(),
+  hasRole: vi.fn(),
+  hasPermission: vi.fn(),
+  hasOrganizationalAccess: vi.fn(),
+};
+
+function buildUser(status: "pre_contract" | "active"): User {
+  const isPreContract = status === "pre_contract";
+  const email = isPreContract ? "new.hire@secpal.dev" : "guard@secpal.dev";
+
+  return {
+    id: "1",
+    name: isPreContract ? "Pre-Contract User" : "Active User",
+    email,
+    emailVerified: true,
+    employee: {
+      id: isPreContract ? "employee-1" : "employee-2",
+      employee_number: isPreContract ? "EMP-001" : "EMP-002",
+      first_name: isPreContract ? "New" : "Active",
+      last_name: isPreContract ? "Hire" : "User",
+      full_name: isPreContract ? "New Hire" : "Active User",
+      email,
+      date_of_birth: null,
+      contract_start_date: null,
+      status,
+      contract_type: "full_time",
+      organizational_unit: null,
+      management_level: 0,
+      created_at: "2026-04-06T00:00:00Z",
+      updated_at: "2026-04-06T00:00:00Z",
+      onboarding_workflow: {
+        status: isPreContract ? "account_initialized" : "active",
+      },
+    },
+  };
+}
+
+function mockAuthenticatedUser(status: "pre_contract" | "active") {
+  vi.mocked(authHook.useAuth).mockReturnValue({
+    ...authContext,
+    user: buildUser(status),
+  });
+}
 
 function renderWithProviders(component: React.ReactNode) {
   return render(
@@ -35,42 +86,7 @@ describe("OnboardingAccessRoute", () => {
   });
 
   it("redirects pre-contract users away from normal app routes", () => {
-    vi.mocked(authHook.useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          employee_number: "EMP-001",
-          first_name: "New",
-          last_name: "Hire",
-          full_name: "New Hire",
-          email: "new.hire@secpal.dev",
-          date_of_birth: null,
-          contract_start_date: null,
-          status: "pre_contract",
-          contract_type: "full_time",
-          organizational_unit: null,
-          management_level: 0,
-          created_at: "2026-04-06T00:00:00Z",
-          updated_at: "2026-04-06T00:00:00Z",
-          onboarding_workflow: {
-            status: "account_initialized",
-          },
-        },
-      },
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
-    });
+    mockAuthenticatedUser("pre_contract");
 
     renderWithProviders(
       <AppAccessRoute>
@@ -83,42 +99,7 @@ describe("OnboardingAccessRoute", () => {
   });
 
   it("renders normal app content for non pre-contract users", () => {
-    vi.mocked(authHook.useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        name: "Active User",
-        email: "guard@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-2",
-          employee_number: "EMP-002",
-          first_name: "Active",
-          last_name: "User",
-          full_name: "Active User",
-          email: "guard@secpal.dev",
-          date_of_birth: null,
-          contract_start_date: null,
-          status: "active",
-          contract_type: "full_time",
-          organizational_unit: null,
-          management_level: 0,
-          created_at: "2026-04-06T00:00:00Z",
-          updated_at: "2026-04-06T00:00:00Z",
-          onboarding_workflow: {
-            status: "active",
-          },
-        },
-      },
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
-    });
+    mockAuthenticatedUser("active");
 
     renderWithProviders(
       <AppAccessRoute>
@@ -130,42 +111,7 @@ describe("OnboardingAccessRoute", () => {
   });
 
   it("renders onboarding content for pre-contract users", () => {
-    vi.mocked(authHook.useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          employee_number: "EMP-001",
-          first_name: "New",
-          last_name: "Hire",
-          full_name: "New Hire",
-          email: "new.hire@secpal.dev",
-          date_of_birth: null,
-          contract_start_date: null,
-          status: "pre_contract",
-          contract_type: "full_time",
-          organizational_unit: null,
-          management_level: 0,
-          created_at: "2026-04-06T00:00:00Z",
-          updated_at: "2026-04-06T00:00:00Z",
-          onboarding_workflow: {
-            status: "changes_requested",
-          },
-        },
-      },
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
-    });
+    mockAuthenticatedUser("pre_contract");
 
     renderWithProviders(
       <OnboardingOnlyRoute>
@@ -177,42 +123,7 @@ describe("OnboardingAccessRoute", () => {
   });
 
   it("redirects non pre-contract users away from onboarding-only routes", () => {
-    vi.mocked(authHook.useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        name: "Active User",
-        email: "guard@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-2",
-          employee_number: "EMP-002",
-          first_name: "Active",
-          last_name: "User",
-          full_name: "Active User",
-          email: "guard@secpal.dev",
-          date_of_birth: null,
-          contract_start_date: null,
-          status: "active",
-          contract_type: "full_time",
-          organizational_unit: null,
-          management_level: 0,
-          created_at: "2026-04-06T00:00:00Z",
-          updated_at: "2026-04-06T00:00:00Z",
-          onboarding_workflow: {
-            status: "active",
-          },
-        },
-      },
-      isAuthenticated: true,
-      isLoading: false,
-      bootstrapRecoveryReason: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
-      hasPermission: vi.fn(),
-      hasOrganizationalAccess: vi.fn(),
-    });
+    mockAuthenticatedUser("active");
 
     renderWithProviders(
       <OnboardingOnlyRoute>
