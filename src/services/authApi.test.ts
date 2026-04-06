@@ -791,6 +791,29 @@ describe("authApi", () => {
         })
       );
     });
+
+    it("surfaces JSON errors when passkey deletion fails", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          message: "Passkey deletion failed.",
+          code: "NOT_FOUND",
+        }),
+      } as Response);
+
+      try {
+        await deletePasskey("missing-credential-id");
+        expect.fail("Expected deletePasskey to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthApiError);
+        expect((error as AuthApiError).message).toBe(
+          "Passkey deletion failed."
+        );
+        expect((error as AuthApiError).status).toBe(404);
+        expect((error as AuthApiError).code).toBe("NOT_FOUND");
+      }
+    });
   });
 
   describe("startTotpEnrollment", () => {

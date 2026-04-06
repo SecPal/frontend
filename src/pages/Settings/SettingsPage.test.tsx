@@ -230,7 +230,6 @@ describe("SettingsPage", () => {
       .mockResolvedValueOnce({ data: [] });
 
     await renderSettingsPage();
-
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
 
     await waitFor(() => {
@@ -242,6 +241,64 @@ describe("SettingsPage", () => {
       screen.queryByText(/work macbook touch id/i)
     ).not.toBeInTheDocument();
     expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+  });
+
+  it("shows a busy state while passkey removal is in flight", async () => {
+    let resolveDeletion:
+      | ((value: {
+          message: string;
+          data: { remaining_passkeys: number };
+        }) => void)
+      | undefined;
+
+    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveDeletion = resolve;
+        })
+    );
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockResolvedValueOnce({ data: [] });
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
+
+    resolveDeletion?.({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 0 },
+    });
+
+    expect(
+      await screen.findByText(/no passkeys enrolled yet/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows generic Error removal failures inline", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
+      new Error("Deletion exploded.")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(await screen.findByText(/deletion exploded/i)).toBeInTheDocument();
+  });
+
+  it("shows fallback removal errors for unexpected failures", async () => {
+    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce("unexpected");
+
+    await renderSettingsPage();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+
+    expect(
+      await screen.findByText(/failed to delete passkey/i)
+    ).toBeInTheDocument();
   });
 
   it("shows passkey removal errors inline", async () => {
