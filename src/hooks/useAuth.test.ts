@@ -655,9 +655,12 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      const otherKeyEvent = new StorageEvent("storage", {
-        key: "some_other_key",
-        newValue: null,
+      const otherKeyEvent = new StorageEvent("storage");
+      Object.defineProperty(otherKeyEvent, "key", {
+        value: "some_other_key",
+      });
+      Object.defineProperty(otherKeyEvent, "newValue", {
+        value: null,
       });
       Object.defineProperty(otherKeyEvent, "storageArea", {
         value: localStorage,
