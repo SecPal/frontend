@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from "vitest";
 import {
   act,
   render,
@@ -827,6 +835,10 @@ describe("ApplicationLayout", () => {
   });
 
   describe("Android Provisioning Navigation", () => {
+    afterEach(() => {
+      i18n.activate("en");
+    });
+
     it("renders the localized German label instead of the raw Lingui message id", () => {
       i18n.load("de", deMessages);
       i18n.activate("de");
