@@ -90,6 +90,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: [],
+        employee: null,
       })
     );
 
@@ -111,6 +112,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         hasOrganizationalScopes: false,
+        employee: null,
       })
     );
 
@@ -134,6 +136,7 @@ describe("App", () => {
         hasOrganizationalScopes: true,
         roles: [],
         permissions: [],
+        employee: null,
       })
     );
 
@@ -155,6 +158,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: [],
+        employee: null,
       })
     );
 
@@ -176,6 +180,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: [],
+        employee: null,
       })
     );
 
@@ -197,6 +202,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: [],
+        employee: null,
       })
     );
 
@@ -218,6 +224,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: ["customers.read"],
+        employee: null,
       })
     );
 
@@ -240,6 +247,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: ["customers.read"],
+        employee: null,
       })
     );
 
@@ -262,6 +270,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: ["sites.read"],
+        employee: null,
       })
     );
 
@@ -284,6 +293,7 @@ describe("App", () => {
         email: "user@secpal.dev",
         emailVerified: true,
         permissions: ["sites.read"],
+        employee: null,
       })
     );
 
@@ -307,6 +317,7 @@ describe("App", () => {
         emailVerified: true,
         hasOrganizationalScopes: true,
         permissions: ["employees.read"],
+        employee: null,
       })
     );
 
@@ -330,6 +341,7 @@ describe("App", () => {
         emailVerified: true,
         hasOrganizationalScopes: true,
         permissions: ["employees.read"],
+        employee: null,
       })
     );
 
@@ -354,6 +366,7 @@ describe("App", () => {
         hasOrganizationalScopes: true,
         roles: ["Manager"],
         permissions: [],
+        employee: null,
       })
     );
 
@@ -376,6 +389,7 @@ describe("App", () => {
         name: "User",
         email: "user@secpal.dev",
         emailVerified: true,
+        employee: null,
       })
     );
 
