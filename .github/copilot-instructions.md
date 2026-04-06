@@ -74,8 +74,8 @@ At minimum verify:
 - REUSE compliance was checked when changed files require it
 - when a fix alters observable behavior, state lifecycle, error handling, or security constraints,
   the corresponding tests were identified and updated in the same commit
-- before pushing behavioral or security-critical changes, affected tests were run locally
-  (`PREFLIGHT_RUN_TESTS=1 git push` or invoke the test runner directly)
+- before pushing changes that alter observable behavior, state lifecycle, error handling, or security constraints,
+  affected tests were run locally (`PREFLIGHT_RUN_TESTS=1 git push` or invoke the test runner directly)
 - the local 4-pass review was completed, including DRY, KISS, YAGNI, SOLID,
   quality-first, and issue-management checks
 - no bypass was used
