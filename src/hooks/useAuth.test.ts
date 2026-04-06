@@ -648,13 +648,14 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "some_other_key",
-          newValue: null,
-          storageArea: localStorage,
-        })
-      );
+      const otherKeyEvent = new StorageEvent("storage", {
+        key: "some_other_key",
+        newValue: null,
+      });
+      Object.defineProperty(otherKeyEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(otherKeyEvent);
     });
 
     expect(result.current.isAuthenticated).toBe(false);
@@ -677,14 +678,15 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(newUser));
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "auth_user",
-          oldValue: null,
-          newValue: JSON.stringify(newUser),
-          storageArea: localStorage,
-        })
-      );
+      const crossTabLoginEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: null,
+        newValue: JSON.stringify(newUser),
+      });
+      Object.defineProperty(crossTabLoginEvent, "storageArea", {
+        value: localStorage,
+      });
+      window.dispatchEvent(crossTabLoginEvent);
     });
 
     await waitFor(() => {
