@@ -653,7 +653,6 @@ describe("useAuth", () => {
         new StorageEvent("storage", {
           key: "some_other_key",
           newValue: null,
-          storageArea: localStorage,
         })
       );
     });
@@ -683,7 +682,6 @@ describe("useAuth", () => {
           key: "auth_user",
           oldValue: null,
           newValue: JSON.stringify(newUser),
-          storageArea: localStorage,
         })
       );
     });
