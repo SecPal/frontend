@@ -721,7 +721,7 @@ describe("useAuth", () => {
       // Write the corrupt value so localStorage matches the event (real browser
       // cross-tab writes keep newValue and the actual storage in sync).
       localStorage.setItem("auth_user", "{invalid json{{");
-      const invalidJsonEvent = new StorageEvent("storage");
+      const invalidJsonEvent = new StorageEvent();
       Object.defineProperty(invalidJsonEvent, "key", { value: "auth_user" });
       Object.defineProperty(invalidJsonEvent, "oldValue", {
         value: JSON.stringify(mockUser),
