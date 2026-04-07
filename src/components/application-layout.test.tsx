@@ -836,12 +836,16 @@ describe("ApplicationLayout", () => {
 
   describe("Android Provisioning Navigation", () => {
     afterEach(() => {
-      i18n.activate("en");
+      act(() => {
+        i18n.activate("en");
+      });
     });
 
     it("renders the localized German label instead of the raw Lingui message id", () => {
-      i18n.load("de", deMessages);
-      i18n.activate("de");
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
 
       localStorage.setItem(
         "auth_user",
