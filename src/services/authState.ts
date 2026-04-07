@@ -132,22 +132,24 @@ export function sanitizeAuthUser(
     sanitizedUser.hasSiteAccess = hasSiteAccess;
   }
 
-  const employeeStatus = sanitizeEmployeeStatus(
-    candidate.employeeStatus ??
+  const employeeStatus =
+    sanitizeEmployeeStatus(candidate.employeeStatus) ??
+    sanitizeEmployeeStatus(
       (candidate.employee as { status?: unknown } | undefined)?.status
-  );
+    );
   if (employeeStatus !== undefined) {
     sanitizedUser.employeeStatus = employeeStatus;
   }
 
-  const onboardingWorkflowStatus = sanitizeOnboardingWorkflowStatus(
-    candidate.onboardingWorkflowStatus ??
+  const onboardingWorkflowStatus =
+    sanitizeOnboardingWorkflowStatus(candidate.onboardingWorkflowStatus) ??
+    sanitizeOnboardingWorkflowStatus(
       (
         candidate.employee as
           | { onboarding_workflow?: { status?: unknown } }
           | undefined
       )?.onboarding_workflow?.status
-  );
+    );
   if (onboardingWorkflowStatus !== undefined) {
     sanitizedUser.onboardingWorkflowStatus = onboardingWorkflowStatus;
   }
