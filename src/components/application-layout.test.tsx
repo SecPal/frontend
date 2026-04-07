@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -367,6 +373,57 @@ describe("ApplicationLayout", () => {
       expect(localStorage.getItem("auth_user")).toBeNull();
 
       consoleSpy.mockRestore();
+    });
+
+    it("completes client-side logout when the logout API hangs past the timeout", async () => {
+      const mockLogout = vi.mocked(authApi.logout);
+      mockLogout.mockImplementation(() => new Promise(() => undefined));
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      await openUserMenu();
+
+      const signOutButton = screen.getByRole("menuitem", { name: /sign out/i });
+
+      vi.useFakeTimers();
+
+      try {
+        fireEvent.click(signOutButton);
+
+        expect(mockLogout).toHaveBeenCalledTimes(1);
+        expect(localStorage.getItem("auth_user")).not.toBeNull();
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(7999);
+        });
+        expect(localStorage.getItem("auth_user")).not.toBeNull();
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1);
+        });
+
+        expect(
+          consoleSpy.mock.calls.some(
+            ([message, error]) =>
+              message === "Logout API call failed:" &&
+              error instanceof Error &&
+              error.message.includes("timed out after 8000ms")
+          )
+        ).toBe(true);
+        expect(localStorage.getItem("auth_user")).toBeNull();
+        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+        consoleSpy.mockRestore();
+      }
     });
   });
 

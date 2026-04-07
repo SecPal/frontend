@@ -161,6 +161,29 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+const LOGOUT_TIMEOUT_MS = 8000;
+
+async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    await Promise.race([
+      logoutRequest,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error(`Logout request timed out after ${LOGOUT_TIMEOUT_MS}ms.`)
+          );
+        }, LOGOUT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const capabilities = useUserCapabilities();
@@ -170,7 +193,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      await authTransport.logout();
+      await logoutWithTimeout(authTransport.logout());
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
