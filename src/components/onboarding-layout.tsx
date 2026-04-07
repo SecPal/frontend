@@ -12,6 +12,25 @@ import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
 
+export const LOGOUT_TIMEOUT_MS = 8000;
+
+async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    await Promise.race([
+      logoutRequest,
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(resolve, LOGOUT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +41,7 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
     setLogoutError(null);
 
     try {
-      await getAuthTransport().logout();
+      await logoutWithTimeout(getAuthTransport().logout());
       logout();
       navigate("/login");
     } catch (error) {
