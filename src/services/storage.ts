@@ -92,8 +92,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     // route gating.  The same-origin XSS risk profile is accepted for the same
     // reason existing PII (name, email) is already stored here.  Full at-rest
     // encryption of the persisted auth state is tracked in issue #784.
-    // codeql[js/clear-text-storage-of-sensitive-data]
-    localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser));
+    localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser)); // codeql[js/clear-text-storage-of-sensitive-data]
   }
 
   removeUser(): void {
