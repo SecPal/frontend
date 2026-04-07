@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Aligned the frontend lint toolchain back to the ESLint 9 line so `eslint-plugin-react-hooks` no longer leaves the repository in an invalid peer-dependency state during installs.
+- Made native-bridge login prefer the canonical `GET /v1/me` user payload immediately after authentication, so Android capability-gated navigation no longer depends on the potentially narrower token-login payload during first render.
+- Refreshed the Lingui locale catalogs for the Android provisioning UI so the German navigation no longer falls back to the raw message id `62KQbc` in shipped builds.
 - Aligned the frontend repo-local domain policy and validation script with the canonical Android artifact host `apk.secpal.app` so Android provisioning fixtures and runtime URLs pass governance checks.
 - Strengthened Copilot governance: require test-impact analysis and same-commit test updates when a fix alters observable behavior, explicitly recommend `PREFLIGHT_RUN_TESTS=1` in preflight guidance for behavioral, security, or state-lifecycle changes, and mandate `--body-file` for programmatic PR creation to prevent shell escaping issues.
 - Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
