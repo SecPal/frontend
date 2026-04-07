@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from "vitest";
 import {
   act,
   render,
@@ -17,6 +25,7 @@ import { ApplicationLayout } from "./application-layout";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { messages as deMessages } from "../locales/de/messages.mjs";
 
 vi.mock("../services/authApi");
 vi.mock("../lib/clientStateCleanup", () => ({
@@ -822,6 +831,42 @@ describe("ApplicationLayout", () => {
 
       const activityLogsLink = screen.getByText("Activity Logs").closest("a");
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
+    });
+  });
+
+  describe("Android Provisioning Navigation", () => {
+    afterEach(() => {
+      act(() => {
+        i18n.activate("en");
+      });
+    });
+
+    it("renders the localized German label instead of the raw Lingui message id", () => {
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin User",
+          email: "admin@secpal.dev",
+          hasOrganizationalScopes: true,
+          roles: ["Manager"],
+          permissions: ["android_enrollment.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Android-Provisionierung")).toBeInTheDocument();
+      expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
     });
   });
 });

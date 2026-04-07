@@ -58,7 +58,7 @@ msgid "{label}: Valid"
 msgstr "{label}: Valid"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:391
+#: src/pages/Login.tsx:452
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
@@ -83,11 +83,11 @@ msgstr "✓ Notifications are enabled. You'll receive updates based on your pref
 msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
-#: src/App.tsx:73
+#: src/App.tsx:76
 msgid "About"
 msgstr "About"
 
-#: src/App.tsx:84
+#: src/App.tsx:87
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -95,15 +95,15 @@ msgstr "About SecPal"
 msgid "Access Denied"
 msgstr "Access Denied"
 
-#: src/pages/Sites/SiteCreate.tsx:451
+#: src/pages/Sites/SiteCreate.tsx:447
 #: src/pages/Sites/SiteDetail.tsx:275
-#: src/pages/Sites/SiteEdit.tsx:422
+#: src/pages/Sites/SiteEdit.tsx:418
 msgid "Access Instructions"
 msgstr "Access Instructions"
 
-#: src/pages/Customers/CustomersPage.tsx:174
-#: src/pages/Employees/EmployeeList.tsx:264
-#: src/pages/Sites/SitesPage.tsx:208
+#: src/pages/Customers/CustomersPage.tsx:168
+#: src/pages/Employees/EmployeeList.tsx:252
+#: src/pages/Sites/SitesPage.tsx:196
 msgid "Actions"
 msgstr "Actions"
 
@@ -119,17 +119,17 @@ msgstr "Activate"
 #: src/pages/Customers/CustomerCreate.tsx:281
 #: src/pages/Customers/CustomerDetail.tsx:114
 #: src/pages/Customers/CustomerEdit.tsx:297
-#: src/pages/Customers/CustomersPage.tsx:125
-#: src/pages/Customers/CustomersPage.tsx:194
+#: src/pages/Customers/CustomersPage.tsx:122
+#: src/pages/Customers/CustomersPage.tsx:188
 #: src/pages/Employees/EmployeeDetail.tsx:69
 #: src/pages/Employees/EmployeeList.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:219
-#: src/pages/Employees/EmployeeStatusOptions.tsx:16
-#: src/pages/Sites/SiteCreate.tsx:482
+#: src/pages/Employees/EmployeeList.tsx:212
+#: src/pages/Employees/EmployeeStatusOptions.tsx:13
+#: src/pages/Sites/SiteCreate.tsx:478
 #: src/pages/Sites/SiteDetail.tsx:134
-#: src/pages/Sites/SiteEdit.tsx:453
-#: src/pages/Sites/SitesPage.tsx:159
-#: src/pages/Sites/SitesPage.tsx:234
+#: src/pages/Sites/SiteEdit.tsx:449
+#: src/pages/Sites/SitesPage.tsx:150
+#: src/pages/Sites/SitesPage.tsx:222
 msgid "Active"
 msgstr "Active"
 
@@ -141,8 +141,8 @@ msgstr "Activity Information"
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
 
-#: src/components/application-layout.tsx:226
-#: src/components/application-layout.tsx:308
+#: src/components/application-layout.tsx:232
+#: src/components/application-layout.tsx:322
 #: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Activity Logs"
@@ -163,14 +163,19 @@ msgstr "Add Employee"
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
+#. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
+#: src/pages/Settings/SettingsPage.tsx:460
+msgid "Added {0}"
+msgstr "Added {0}"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
 msgid "Additional Properties"
 msgstr "Additional Properties"
 
-#: src/pages/Sites/SiteCreate.tsx:284
+#: src/pages/Sites/SiteCreate.tsx:280
 #: src/pages/Sites/SiteDetail.tsx:148
-#: src/pages/Sites/SiteEdit.tsx:275
-#: src/pages/Sites/SitesPage.tsx:202
+#: src/pages/Sites/SiteEdit.tsx:271
+#: src/pages/Sites/SitesPage.tsx:190
 msgid "Address"
 msgstr "Address"
 
@@ -178,24 +183,24 @@ msgstr "Address"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
-#: src/pages/Employees/EmployeeList.tsx:210
+#: src/pages/Employees/EmployeeList.tsx:209
 msgid "All"
 msgstr "All"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:354
+#: src/pages/ActivityLog/ActivityLogList.tsx:353
 msgid "All logs"
 msgstr "All logs"
 
-#: src/pages/Customers/CustomersPage.tsx:122
-#: src/pages/Sites/SitesPage.tsx:156
+#: src/pages/Customers/CustomersPage.tsx:121
+#: src/pages/Sites/SitesPage.tsx:149
 msgid "All Status"
 msgstr "All Status"
 
-#: src/pages/Sites/SitesPage.tsx:134
+#: src/pages/Sites/SitesPage.tsx:133
 msgid "All Types"
 msgstr "All Types"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:379
+#: src/pages/ActivityLog/ActivityLogList.tsx:369
 msgid "All units"
 msgstr "All units"
 
@@ -211,7 +216,17 @@ msgstr "Allow user to view/edit their own HR data"
 msgid "An unexpected error occurred"
 msgstr "An unexpected error occurred"
 
-#: src/pages/Settings/SettingsPage.tsx:417
+#: src/components/application-layout.tsx:240
+#: src/components/application-layout.tsx:333
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:214
+msgid "Android Provisioning"
+msgstr "Android Provisioning"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:297
+msgid "Android provisioning QR code"
+msgstr "Android provisioning QR code"
+
+#: src/pages/Settings/SettingsPage.tsx:510
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 msgstr "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 
@@ -221,12 +236,12 @@ msgstr "App updates and maintenance notifications"
 
 #: src/pages/Employees/EmployeeDetail.tsx:67
 #: src/pages/Employees/EmployeeList.tsx:42
-#: src/pages/Employees/EmployeeList.tsx:213
-#: src/pages/Employees/EmployeeStatusOptions.tsx:10
+#: src/pages/Employees/EmployeeList.tsx:210
+#: src/pages/Employees/EmployeeStatusOptions.tsx:11
 msgid "Applicant"
 msgstr "Applicant"
 
-#: src/pages/Employees/EmployeeCreate.tsx:841
+#: src/pages/Employees/EmployeeCreate.tsx:839
 #: src/pages/Employees/EmployeeEdit.tsx:572
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
@@ -244,31 +259,31 @@ msgstr "Are you sure you want to delete this site? This action cannot be undone.
 msgid "Assign Organizational Scope"
 msgstr "Assign Organizational Scope"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:360
+#: src/pages/ActivityLog/ActivityLogList.tsx:355
 msgid "Authentication"
 msgstr "Authentication"
 
-#: src/pages/Settings/SettingsPage.tsx:58
+#: src/pages/Settings/SettingsPage.tsx:60
 msgid "Authenticator app"
 msgstr "Authenticator app"
 
-#: src/pages/Settings/SettingsPage.tsx:512
+#: src/pages/Settings/SettingsPage.tsx:605
 msgid "Authenticator app QR code"
 msgstr "Authenticator app QR code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:530
+#: src/pages/Login.tsx:618
 msgid "login.mfa.method.totp"
 msgstr "Authenticator code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:549
+#: src/pages/Login.tsx:637
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator code"
 
-#: src/pages/Settings/SettingsPage.tsx:539
-#: src/pages/Settings/SettingsPage.tsx:631
-#: src/pages/Settings/SettingsPage.tsx:643
+#: src/pages/Settings/SettingsPage.tsx:632
+#: src/pages/Settings/SettingsPage.tsx:724
+#: src/pages/Settings/SettingsPage.tsx:736
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
@@ -289,7 +304,7 @@ msgstr "Back to Customers"
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
-#: src/App.tsx:95
+#: src/App.tsx:98
 #: src/components/RouteGuardState.tsx:197
 msgid "Back to Home"
 msgstr "Back to Home"
@@ -319,7 +334,7 @@ msgid "By default (unchecked), users cannot see or edit their own employee recor
 msgstr "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:594
+#: src/pages/Login.tsx:682
 msgid "login.mfa.cancel"
 msgstr "Cancel"
 
@@ -330,15 +345,15 @@ msgstr "Cancel"
 #: src/pages/Customers/CustomerCreate.tsx:295
 #: src/pages/Customers/CustomerDetail.tsx:285
 #: src/pages/Customers/CustomerEdit.tsx:311
-#: src/pages/Employees/EmployeeCreate.tsx:962
+#: src/pages/Employees/EmployeeCreate.tsx:952
 #: src/pages/Employees/EmployeeEdit.tsx:593
 #: src/pages/Onboarding/OnboardingComplete.tsx:653
-#: src/pages/Settings/SettingsPage.tsx:497
-#: src/pages/Settings/SettingsPage.tsx:570
-#: src/pages/Settings/SettingsPage.tsx:677
-#: src/pages/Sites/SiteCreate.tsx:492
+#: src/pages/Settings/SettingsPage.tsx:590
+#: src/pages/Settings/SettingsPage.tsx:663
+#: src/pages/Settings/SettingsPage.tsx:770
+#: src/pages/Sites/SiteCreate.tsx:488
 #: src/pages/Sites/SiteDetail.tsx:384
-#: src/pages/Sites/SiteEdit.tsx:463
+#: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -347,7 +362,7 @@ msgid "Cannot Delete \"{unitName}\""
 msgstr "Cannot Delete \"{unitName}\""
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:164
-#: src/pages/ActivityLog/ActivityLogList.tsx:417
+#: src/pages/ActivityLog/ActivityLogList.tsx:407
 msgid "Causer"
 msgstr "Causer"
 
@@ -356,7 +371,7 @@ msgid "Certificate:"
 msgstr "Certificate:"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:467
+#: src/pages/Login.tsx:530
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
@@ -372,16 +387,16 @@ msgstr "Choose a new parent unit or make this a root unit."
 msgid "Choose which notifications you want to receive"
 msgstr "Choose which notifications you want to receive"
 
-#: src/pages/Settings/SettingsPage.tsx:388
+#: src/pages/Settings/SettingsPage.tsx:481
 msgid "Choose your preferred language for the application."
 msgstr "Choose your preferred language for the application."
 
 #: src/pages/Customers/CustomerCreate.tsx:181
 #: src/pages/Customers/CustomerDetail.tsx:137
 #: src/pages/Customers/CustomerEdit.tsx:197
-#: src/pages/Sites/SiteCreate.tsx:308
+#: src/pages/Sites/SiteCreate.tsx:304
 #: src/pages/Sites/SiteDetail.tsx:157
-#: src/pages/Sites/SiteEdit.tsx:294
+#: src/pages/Sites/SiteEdit.tsx:290
 msgid "City"
 msgstr "City"
 
@@ -423,7 +438,7 @@ msgstr "Configure which rank range this user can view. Leave empty or set to 0 t
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
-#: src/pages/Settings/SettingsPage.tsx:583
+#: src/pages/Settings/SettingsPage.tsx:676
 msgid "Confirm and enable MFA"
 msgstr "Confirm and enable MFA"
 
@@ -435,24 +450,24 @@ msgstr "Confirm Onboarding"
 msgid "Confirm Password"
 msgstr "Confirm Password"
 
-#: src/pages/Settings/SettingsPage.tsx:73
+#: src/pages/Settings/SettingsPage.tsx:75
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 
-#: src/pages/Settings/SettingsPage.tsx:85
+#: src/pages/Settings/SettingsPage.tsx:87
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 
-#: src/pages/Customers/CustomersPage.tsx:165
+#: src/pages/Customers/CustomersPage.tsx:159
 msgid "Contact"
 msgstr "Contact"
 
 #: src/pages/Customers/CustomerCreate.tsx:217
 #: src/pages/Customers/CustomerDetail.tsx:157
 #: src/pages/Customers/CustomerEdit.tsx:233
-#: src/pages/Sites/SiteCreate.tsx:370
+#: src/pages/Sites/SiteCreate.tsx:366
 #: src/pages/Sites/SiteDetail.tsx:185
-#: src/pages/Sites/SiteEdit.tsx:341
+#: src/pages/Sites/SiteEdit.tsx:337
 msgid "Contact Person"
 msgstr "Contact Person"
 
@@ -466,7 +481,7 @@ msgstr "Contract Start Date"
 msgid "Contract start date is required"
 msgstr "Contract start date is required"
 
-#: src/pages/Employees/EmployeeCreate.tsx:862
+#: src/pages/Employees/EmployeeCreate.tsx:860
 msgid "Contract Type"
 msgstr "Contract Type"
 
@@ -481,9 +496,9 @@ msgstr "Coordinates"
 #: src/pages/Customers/CustomerCreate.tsx:196
 #: src/pages/Customers/CustomerDetail.tsx:145
 #: src/pages/Customers/CustomerEdit.tsx:212
-#: src/pages/Sites/SiteCreate.tsx:346
+#: src/pages/Sites/SiteCreate.tsx:342
 #: src/pages/Sites/SiteDetail.tsx:164
-#: src/pages/Sites/SiteEdit.tsx:322
+#: src/pages/Sites/SiteEdit.tsx:318
 msgid "Country"
 msgstr "Country"
 
@@ -503,9 +518,13 @@ msgstr "Create a new root organizational unit."
 msgid "Create Customer"
 msgstr "Create Customer"
 
-#: src/pages/Employees/EmployeeCreate.tsx:968
+#: src/pages/Employees/EmployeeCreate.tsx:958
 msgid "Create Employee"
 msgstr "Create Employee"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:277
+msgid "Create enrollment session"
+msgstr "Create enrollment session"
 
 #: src/pages/Employees/EmployeeCreate.tsx:451
 msgid "Create New Employee"
@@ -516,7 +535,7 @@ msgstr "Create New Employee"
 msgid "Create Organizational Unit"
 msgstr "Create Organizational Unit"
 
-#: src/pages/Sites/SiteCreate.tsx:489
+#: src/pages/Sites/SiteCreate.tsx:485
 msgid "Create Site"
 msgstr "Create Site"
 
@@ -529,13 +548,17 @@ msgstr "Created"
 msgid "Created, but not sent"
 msgstr "Created, but not sent"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:275
+msgid "Creating enrollment session..."
+msgstr "Creating enrollment session..."
+
 #: src/components/OrganizationalUnitFormDialog.tsx:260
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
 
 #: src/pages/Customers/CustomerCreate.tsx:289
-#: src/pages/Employees/EmployeeCreate.tsx:966
-#: src/pages/Sites/SiteCreate.tsx:489
+#: src/pages/Employees/EmployeeCreate.tsx:956
+#: src/pages/Sites/SiteCreate.tsx:485
 msgid "Creating..."
 msgstr "Creating..."
 
@@ -568,12 +591,12 @@ msgstr "Customer Name"
 msgid "Customer not found"
 msgstr "Customer not found"
 
-#: src/pages/Customers/CustomersPage.tsx:159
+#: src/pages/Customers/CustomersPage.tsx:153
 msgid "Customer Number"
 msgstr "Customer Number"
 
-#: src/components/application-layout.tsx:210
-#: src/components/application-layout.tsx:286
+#: src/components/application-layout.tsx:216
+#: src/components/application-layout.tsx:300
 #: src/pages/Customers/CustomersPage.tsx:87
 msgid "Customers"
 msgstr "Customers"
@@ -593,11 +616,11 @@ msgid "Date of birth must be in the past"
 msgstr "Date of birth must be in the past"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:155
-#: src/pages/ActivityLog/ActivityLogList.tsx:408
+#: src/pages/ActivityLog/ActivityLogList.tsx:398
 msgid "Date/Time"
 msgstr "Date/Time"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:357
+#: src/pages/ActivityLog/ActivityLogList.tsx:354
 msgid "Default"
 msgstr "Default"
 
@@ -639,7 +662,7 @@ msgstr "Department"
 
 #: src/components/OrganizationalUnitFormDialog.tsx:333
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:143
-#: src/pages/ActivityLog/ActivityLogList.tsx:411
+#: src/pages/ActivityLog/ActivityLogList.tsx:401
 #: src/pages/Organization/OrganizationPage.tsx:333
 msgid "Description"
 msgstr "Description"
@@ -652,9 +675,13 @@ msgstr "Description must be at most 1000 characters"
 msgid "Details"
 msgstr "Details"
 
-#: src/pages/Settings/SettingsPage.tsx:71
-#: src/pages/Settings/SettingsPage.tsx:78
-#: src/pages/Settings/SettingsPage.tsx:357
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:229
+msgid "Device label"
+msgstr "Device label"
+
+#: src/pages/Settings/SettingsPage.tsx:73
+#: src/pages/Settings/SettingsPage.tsx:80
+#: src/pages/Settings/SettingsPage.tsx:393
 msgid "Disable MFA"
 msgstr "Disable MFA"
 
@@ -667,7 +694,7 @@ msgstr "Division"
 msgid "Documents"
 msgstr "Documents"
 
-#: src/pages/Settings/SettingsPage.tsx:459
+#: src/pages/Settings/SettingsPage.tsx:552
 msgid "Done"
 msgstr "Done"
 
@@ -718,14 +745,14 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 #: src/pages/Employees/EmployeeDetail.tsx:101
 #: src/pages/Employees/EmployeeEdit.tsx:385
 #: src/pages/Profile/ProfilePage.tsx:67
-#: src/pages/Sites/SiteCreate.tsx:389
+#: src/pages/Sites/SiteCreate.tsx:385
 #: src/pages/Sites/SiteDetail.tsx:196
-#: src/pages/Sites/SiteEdit.tsx:360
+#: src/pages/Sites/SiteEdit.tsx:356
 msgid "Email"
 msgstr "Email"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:402
+#: src/pages/Login.tsx:463
 msgid "login.email"
 msgstr "Email address"
 
@@ -733,11 +760,11 @@ msgstr "Email address"
 msgid "Email address is required"
 msgstr "Email address is required"
 
-#: src/pages/Employees/EmployeeList.tsx:248
+#: src/pages/Employees/EmployeeList.tsx:236
 msgid "Employee"
 msgstr "Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:251
+#: src/pages/Employees/EmployeeList.tsx:239
 msgid "Employee #"
 msgstr "Employee #"
 
@@ -757,8 +784,8 @@ msgstr "Employee Management"
 msgid "Employee Number"
 msgstr "Employee Number"
 
-#: src/components/application-layout.tsx:218
-#: src/components/application-layout.tsx:297
+#: src/components/application-layout.tsx:224
+#: src/components/application-layout.tsx:311
 msgid "Employees"
 msgstr "Employees"
 
@@ -775,7 +802,7 @@ msgstr "Enable Notifications"
 msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 msgstr "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 
-#: src/pages/Settings/SettingsPage.tsx:60
+#: src/pages/Settings/SettingsPage.tsx:62
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -787,17 +814,21 @@ msgstr "Enabling..."
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:313
+msgid "Enrollment Sessions"
+msgstr "Enrollment Sessions"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx:687
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:556
+#: src/pages/Login.tsx:644
 msgid "login.mfa.recoveryHelp"
 msgstr "Enter one unused recovery code exactly as stored."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:560
+#: src/pages/Login.tsx:648
 msgid "login.mfa.totpHelp"
 msgstr "Enter the current 6-digit code from your authenticator app."
 
@@ -810,7 +841,7 @@ msgstr "Error"
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
-#: src/pages/Employees/EmployeeList.tsx:237
+#: src/pages/Employees/EmployeeList.tsx:225
 msgid "Error Loading Employees"
 msgstr "Error Loading Employees"
 
@@ -825,6 +856,11 @@ msgstr "Expand"
 #: src/pages/Sites/SiteDetail.tsx:138
 msgid "Expired"
 msgstr "Expired"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:304
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:346
+msgid "Expires"
+msgstr "Expires"
 
 #: src/pages/Employees/EmployeeDetail.tsx:272
 msgid "Expires:"
@@ -864,7 +900,7 @@ msgstr "Failed to validate onboarding link"
 #~ msgid "File must be an image"
 #~ msgstr "File must be an image"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:381
+#: src/pages/ActivityLog/ActivityLogList.tsx:371
 msgid "Filter by organizational unit"
 msgstr "Filter by organizational unit"
 
@@ -890,7 +926,7 @@ msgstr "First Names (all)"
 msgid "Form fields will be rendered based on schema"
 msgstr "Form fields will be rendered based on schema"
 
-#: src/pages/Employees/EmployeeCreate.tsx:887
+#: src/pages/Employees/EmployeeCreate.tsx:878
 msgid "Freelance"
 msgstr "Freelance"
 
@@ -898,11 +934,15 @@ msgstr "Freelance"
 msgid "From Date"
 msgstr "From Date"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:240
+msgid "Front desk tablet"
+msgstr "Front desk tablet"
+
 #: src/pages/Employees/EmployeeDetail.tsx:96
 msgid "Full Name"
 msgstr "Full Name"
 
-#: src/pages/Employees/EmployeeCreate.tsx:878
+#: src/pages/Employees/EmployeeCreate.tsx:875
 msgid "Full Time"
 msgstr "Full Time"
 
@@ -910,7 +950,7 @@ msgstr "Full Time"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:453
+#: src/pages/ActivityLog/ActivityLogList.tsx:443
 msgid "Global"
 msgstr "Global"
 
@@ -947,12 +987,12 @@ msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty fo
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:195
-#: src/components/application-layout.tsx:265
+#: src/components/application-layout.tsx:201
+#: src/components/application-layout.tsx:279
 msgid "Home"
 msgstr "Home"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:366
+#: src/pages/ActivityLog/ActivityLogList.tsx:357
 msgid "HR Access"
 msgstr "HR Access"
 
@@ -960,16 +1000,16 @@ msgstr "HR Access"
 msgid "I have verified my email"
 msgstr "I have verified my email"
 
-#: src/pages/Settings/SettingsPage.tsx:446
+#: src/pages/Settings/SettingsPage.tsx:539
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "I stored these recovery codes securely and understand they will not be shown again."
 
 #: src/pages/Customers/CustomerDetail.tsx:116
-#: src/pages/Customers/CustomersPage.tsx:128
-#: src/pages/Customers/CustomersPage.tsx:196
+#: src/pages/Customers/CustomersPage.tsx:123
+#: src/pages/Customers/CustomersPage.tsx:190
 #: src/pages/Sites/SiteDetail.tsx:134
-#: src/pages/Sites/SitesPage.tsx:162
-#: src/pages/Sites/SitesPage.tsx:236
+#: src/pages/Sites/SitesPage.tsx:151
+#: src/pages/Sites/SitesPage.tsx:224
 msgid "Inactive"
 msgstr "Inactive"
 
@@ -1011,13 +1051,13 @@ msgstr "Invitation Mail Sent"
 msgid "Invitation Requested"
 msgstr "Invitation Requested"
 
-#: src/pages/Employees/EmployeeCreate.tsx:852
-#: src/pages/Employees/EmployeeCreate.tsx:910
+#: src/pages/Employees/EmployeeCreate.tsx:850
+#: src/pages/Employees/EmployeeCreate.tsx:900
 #: src/pages/Employees/EmployeeEdit.tsx:577
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Invitations are only available for employees in pre-contract status."
 
-#: src/pages/Settings/SettingsPage.tsx:385
+#: src/pages/Settings/SettingsPage.tsx:478
 msgid "Language"
 msgstr "Language"
 
@@ -1045,7 +1085,7 @@ msgstr "Last synced: {0}"
 msgid "Last Updated"
 msgstr "Last Updated"
 
-#: src/pages/Employees/EmployeeCreate.tsx:742
+#: src/pages/Employees/EmployeeCreate.tsx:740
 #: src/pages/Employees/EmployeeEdit.tsx:501
 msgid "Leadership Position"
 msgstr "Leadership Position"
@@ -1067,13 +1107,21 @@ msgstr "Loading employee..."
 msgid "Loading employees..."
 msgstr "Loading employees..."
 
-#: src/pages/Settings/SettingsPage.tsx:321
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:318
+msgid "Loading enrollment sessions..."
+msgstr "Loading enrollment sessions..."
+
+#: src/pages/Settings/SettingsPage.tsx:357
 msgid "Loading MFA status..."
 msgstr "Loading MFA status..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx:260
 msgid "Loading onboarding..."
 msgstr "Loading onboarding..."
+
+#: src/pages/Settings/SettingsPage.tsx:443
+msgid "Loading passkeys..."
+msgstr "Loading passkeys..."
 
 #: src/pages/Employees/EmployeeDetail.tsx:239
 msgid "Loading qualifications..."
@@ -1082,44 +1130,44 @@ msgstr "Loading qualifications..."
 #: src/components/RouteGuardState.tsx:33
 #: src/pages/Customers/CustomerDetail.tsx:86
 #: src/pages/Customers/CustomerEdit.tsx:111
-#: src/pages/Customers/CustomersPage.tsx:145
+#: src/pages/Customers/CustomersPage.tsx:139
 #: src/pages/Employees/EmployeeCreate.tsx:719
 #: src/pages/Employees/EmployeeEdit.tsx:487
 #: src/pages/Sites/SiteCreate.tsx:171
 #: src/pages/Sites/SiteDetail.tsx:98
 #: src/pages/Sites/SiteEdit.tsx:146
-#: src/pages/Sites/SitesPage.tsx:179
+#: src/pages/Sites/SitesPage.tsx:167
 msgid "Loading..."
 msgstr "Loading..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:469
+#: src/pages/Login.tsx:532
 msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:287
+#: src/pages/Login.tsx:348
 msgid "login.title"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:475
+#: src/pages/Login.tsx:538
 msgid "login.submit"
 msgstr "Log in"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:148
 #: src/pages/ActivityLog/ActivityLogList.tsx:342
-#: src/pages/ActivityLog/ActivityLogList.tsx:414
+#: src/pages/ActivityLog/ActivityLogList.tsx:404
 msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:473
+#: src/pages/Login.tsx:536
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:314
+#: src/pages/Login.tsx:375
 msgid "login.offlineWarning.message"
 msgstr "Login requires an internet connection. Please check your connection and try again."
 
@@ -1135,7 +1183,7 @@ msgstr "Lowest rank number the user can view (1 = CEO, higher numbers = lower po
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
 
-#: src/pages/Settings/SettingsPage.tsx:295
+#: src/pages/Settings/SettingsPage.tsx:331
 msgid "Manage your application preferences."
 msgstr "Manage your application preferences."
 
@@ -1155,7 +1203,7 @@ msgstr "Management level is required when leadership position is enabled"
 msgid "Management level must be between 1 and 255"
 msgstr "Management level must be between 1 and 255"
 
-#: src/pages/Settings/SettingsPage.tsx:517
+#: src/pages/Settings/SettingsPage.tsx:610
 msgid "Manual setup key"
 msgstr "Manual setup key"
 
@@ -1188,15 +1236,15 @@ msgstr "Merkle Tree"
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
 
-#: src/pages/Settings/SettingsPage.tsx:363
+#: src/pages/Settings/SettingsPage.tsx:399
 msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 msgstr "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 
-#: src/pages/Settings/SettingsPage.tsx:325
+#: src/pages/Settings/SettingsPage.tsx:361
 msgid "MFA status could not be loaded."
 msgstr "MFA status could not be loaded."
 
-#: src/pages/Employees/EmployeeCreate.tsx:884
+#: src/pages/Employees/EmployeeCreate.tsx:877
 msgid "Minijob"
 msgstr "Minijob"
 
@@ -1233,10 +1281,10 @@ msgstr "Missing onboarding token. Please use the link from your email."
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Missing token and email. Please use the link from your email."
 
-#: src/pages/Employees/EmployeeCreate.tsx:768
+#: src/pages/Employees/EmployeeCreate.tsx:766
 #: src/pages/Employees/EmployeeDetail.tsx:116
 #: src/pages/Employees/EmployeeEdit.tsx:524
-#: src/pages/Employees/EmployeeList.tsx:287
+#: src/pages/Employees/EmployeeList.tsx:275
 msgid "ML"
 msgstr "ML"
 
@@ -1262,7 +1310,7 @@ msgstr "Moving organizational units is not possible while offline. Please reconn
 msgid "Moving..."
 msgstr "Moving..."
 
-#: src/pages/Settings/SettingsPage.tsx:305
+#: src/pages/Settings/SettingsPage.tsx:341
 msgid "Multi-factor authentication"
 msgstr "Multi-factor authentication"
 
@@ -1270,7 +1318,7 @@ msgstr "Multi-factor authentication"
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/components/application-layout.tsx:136
+#: src/components/application-layout.tsx:144
 #: src/pages/Profile/ProfilePage.tsx:30
 msgid "My profile"
 msgstr "My profile"
@@ -1279,12 +1327,12 @@ msgstr "My profile"
 #: src/pages/Customers/CustomerCreate.tsx:222
 #: src/pages/Customers/CustomerDetail.tsx:163
 #: src/pages/Customers/CustomerEdit.tsx:238
-#: src/pages/Customers/CustomersPage.tsx:162
+#: src/pages/Customers/CustomersPage.tsx:156
 #: src/pages/Profile/ProfilePage.tsx:62
-#: src/pages/Sites/SiteCreate.tsx:376
+#: src/pages/Sites/SiteCreate.tsx:372
 #: src/pages/Sites/SiteDetail.tsx:189
-#: src/pages/Sites/SiteEdit.tsx:347
-#: src/pages/Sites/SitesPage.tsx:196
+#: src/pages/Sites/SiteEdit.tsx:343
+#: src/pages/Sites/SitesPage.tsx:184
 msgid "Name"
 msgstr "Name"
 
@@ -1319,22 +1367,30 @@ msgid "New Site"
 msgstr "New Site"
 
 #: src/components/ScopeAssignmentForm.tsx:612
-#: src/pages/ActivityLog/ActivityLogList.tsx:489
-#: src/pages/Customers/CustomersPage.tsx:230
-#: src/pages/Customers/CustomersPage.tsx:272
-#: src/pages/Employees/EmployeeList.tsx:330
-#: src/pages/Employees/EmployeeList.tsx:372
+#: src/pages/ActivityLog/ActivityLogList.tsx:479
+#: src/pages/Customers/CustomersPage.tsx:224
+#: src/pages/Customers/CustomersPage.tsx:266
+#: src/pages/Employees/EmployeeList.tsx:318
+#: src/pages/Employees/EmployeeList.tsx:360
 #: src/pages/Onboarding/OnboardingWizard.tsx:90
-#: src/pages/Sites/SitesPage.tsx:270
-#: src/pages/Sites/SitesPage.tsx:312
+#: src/pages/Sites/SitesPage.tsx:258
+#: src/pages/Sites/SitesPage.tsx:300
 msgid "Next"
 msgstr "Next"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:399
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:369
+msgid "No action available"
+msgstr "No action available"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:389
 msgid "No activity logs found."
 msgstr "No activity logs found."
 
-#: src/pages/Customers/CustomersPage.tsx:151
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:323
+msgid "No Android enrollment sessions have been created yet."
+msgstr "No Android enrollment sessions have been created yet."
+
+#: src/pages/Customers/CustomersPage.tsx:145
 msgid "No customers found"
 msgstr "No customers found"
 
@@ -1343,11 +1399,11 @@ msgid "No documents uploaded"
 msgstr "No documents uploaded"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:309
+#: src/pages/Login.tsx:370
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
-#: src/pages/Employees/EmployeeCreate.tsx:780
+#: src/pages/Employees/EmployeeCreate.tsx:778
 #: src/pages/Employees/EmployeeDetail.tsx:120
 #: src/pages/Employees/EmployeeEdit.tsx:535
 msgid "No management position"
@@ -1361,11 +1417,15 @@ msgstr "No Organizational Units"
 msgid "No parent (root unit)"
 msgstr "No parent (root unit)"
 
+#: src/pages/Settings/SettingsPage.tsx:447
+msgid "No passkeys enrolled yet."
+msgstr "No passkeys enrolled yet."
+
 #: src/pages/Employees/EmployeeDetail.tsx:247
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
-#: src/pages/Sites/SitesPage.tsx:185
+#: src/pages/Sites/SitesPage.tsx:173
 msgid "No sites found"
 msgstr "No sites found"
 
@@ -1373,7 +1433,7 @@ msgstr "No sites found"
 msgid "No unit selected"
 msgstr "No unit selected"
 
-#: src/pages/Settings/SettingsPage.tsx:54
+#: src/pages/Settings/SettingsPage.tsx:56
 msgid "Not enabled"
 msgstr "Not enabled"
 
@@ -1384,9 +1444,9 @@ msgstr "Not requested"
 #: src/pages/Customers/CustomerCreate.tsx:264
 #: src/pages/Customers/CustomerDetail.tsx:210
 #: src/pages/Customers/CustomerEdit.tsx:280
-#: src/pages/Sites/SiteCreate.tsx:464
+#: src/pages/Sites/SiteCreate.tsx:460
 #: src/pages/Sites/SiteDetail.tsx:287
-#: src/pages/Sites/SiteEdit.tsx:435
+#: src/pages/Sites/SiteEdit.tsx:431
 msgid "Notes"
 msgstr "Notes"
 
@@ -1412,8 +1472,8 @@ msgstr "OK"
 
 #: src/pages/Employees/EmployeeDetail.tsx:70
 #: src/pages/Employees/EmployeeList.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:222
-#: src/pages/Employees/EmployeeStatusOptions.tsx:19
+#: src/pages/Employees/EmployeeList.tsx:213
+#: src/pages/Employees/EmployeeStatusOptions.tsx:14
 msgid "On Leave"
 msgstr "On Leave"
 
@@ -1442,8 +1502,8 @@ msgstr "Optional description for this unit."
 msgid "Optional description..."
 msgstr "Optional description..."
 
-#: src/components/application-layout.tsx:202
-#: src/components/application-layout.tsx:275
+#: src/components/application-layout.tsx:208
+#: src/components/application-layout.tsx:289
 msgid "Organization"
 msgstr "Organization"
 
@@ -1456,8 +1516,8 @@ msgid "Organizational structure"
 msgstr "Organizational structure"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:194
-#: src/pages/ActivityLog/ActivityLogList.tsx:373
-#: src/pages/ActivityLog/ActivityLogList.tsx:420
+#: src/pages/ActivityLog/ActivityLogList.tsx:363
+#: src/pages/ActivityLog/ActivityLogList.tsx:410
 #: src/pages/Employees/EmployeeCreate.tsx:693
 #: src/pages/Employees/EmployeeDetail.tsx:156
 #: src/pages/Employees/EmployeeEdit.tsx:474
@@ -1487,7 +1547,7 @@ msgstr "Orphaned Genesis"
 
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
-#: src/pages/ActivityLog/ActivityLogList.tsx:480
+#: src/pages/ActivityLog/ActivityLogList.tsx:470
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
@@ -1503,12 +1563,16 @@ msgstr "Parent"
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:881
+#: src/pages/Employees/EmployeeCreate.tsx:876
 msgid "Part Time"
 msgstr "Part Time"
 
+#: src/pages/Settings/SettingsPage.tsx:420
+msgid "Passkeys"
+msgstr "Passkeys"
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:425
+#: src/pages/Login.tsx:486
 msgid "login.password"
 msgstr "Password"
 
@@ -1528,15 +1592,15 @@ msgstr "Password must be at least 8 characters"
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
-#: src/pages/Sites/SiteCreate.tsx:272
+#: src/pages/Sites/SiteCreate.tsx:271
 #: src/pages/Sites/SiteDetail.tsx:128
-#: src/pages/Sites/SiteEdit.tsx:263
-#: src/pages/Sites/SitesPage.tsx:137
-#: src/pages/Sites/SitesPage.tsx:222
+#: src/pages/Sites/SiteEdit.tsx:262
+#: src/pages/Sites/SitesPage.tsx:134
+#: src/pages/Sites/SitesPage.tsx:210
 msgid "Permanent"
 msgstr "Permanent"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:363
+#: src/pages/ActivityLog/ActivityLogList.tsx:356
 msgid "Permissions"
 msgstr "Permissions"
 
@@ -1551,9 +1615,9 @@ msgstr "Personal Information"
 #: src/pages/Employees/EmployeeCreate.tsx:593
 #: src/pages/Employees/EmployeeDetail.tsx:106
 #: src/pages/Employees/EmployeeEdit.tsx:398
-#: src/pages/Sites/SiteCreate.tsx:402
+#: src/pages/Sites/SiteCreate.tsx:398
 #: src/pages/Sites/SiteDetail.tsx:212
-#: src/pages/Sites/SiteEdit.tsx:373
+#: src/pages/Sites/SiteEdit.tsx:369
 msgid "Phone"
 msgstr "Phone"
 
@@ -1578,14 +1642,14 @@ msgid "Please try again in about 1 minute."
 msgstr "Please try again in about 1 minute."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:370
+#: src/pages/Login.tsx:431
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
 #: src/pages/Employees/EmployeeCreate.tsx:616
 #: src/pages/Employees/EmployeeDetail.tsx:126
 #: src/pages/Employees/EmployeeEdit.tsx:420
-#: src/pages/Employees/EmployeeList.tsx:254
+#: src/pages/Employees/EmployeeList.tsx:242
 #: src/pages/Sites/SiteDetail.tsx:228
 msgid "Position"
 msgstr "Position"
@@ -1596,8 +1660,8 @@ msgstr "Position is required"
 
 #: src/pages/Customers/CustomerCreate.tsx:167
 #: src/pages/Customers/CustomerEdit.tsx:183
-#: src/pages/Sites/SiteCreate.tsx:327
-#: src/pages/Sites/SiteEdit.tsx:308
+#: src/pages/Sites/SiteCreate.tsx:323
+#: src/pages/Sites/SiteEdit.tsx:304
 msgid "Postal Code"
 msgstr "Postal Code"
 
@@ -1607,27 +1671,27 @@ msgstr "Powered by SecPal – A guard's best friend"
 
 #: src/pages/Employees/EmployeeDetail.tsx:68
 #: src/pages/Employees/EmployeeList.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:216
-#: src/pages/Employees/EmployeeStatusOptions.tsx:13
+#: src/pages/Employees/EmployeeList.tsx:211
+#: src/pages/Employees/EmployeeStatusOptions.tsx:12
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
 
-#: src/pages/Employees/EmployeeCreate.tsx:847
+#: src/pages/Employees/EmployeeCreate.tsx:845
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Pre-Contract is the only status that allows onboarding invitations."
 
-#: src/pages/Settings/SettingsPage.tsx:485
+#: src/pages/Settings/SettingsPage.tsx:578
 msgid "Preparing MFA setup..."
 msgstr "Preparing MFA setup..."
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:477
-#: src/pages/Customers/CustomersPage.tsx:223
-#: src/pages/Customers/CustomersPage.tsx:264
-#: src/pages/Employees/EmployeeList.tsx:323
-#: src/pages/Employees/EmployeeList.tsx:364
+#: src/pages/ActivityLog/ActivityLogList.tsx:467
+#: src/pages/Customers/CustomersPage.tsx:217
+#: src/pages/Customers/CustomersPage.tsx:258
+#: src/pages/Employees/EmployeeList.tsx:311
+#: src/pages/Employees/EmployeeList.tsx:352
 #: src/pages/Onboarding/OnboardingWizard.tsx:74
-#: src/pages/Sites/SitesPage.tsx:263
-#: src/pages/Sites/SitesPage.tsx:304
+#: src/pages/Sites/SitesPage.tsx:251
+#: src/pages/Sites/SitesPage.tsx:292
 msgid "Previous"
 msgstr "Previous"
 
@@ -1635,8 +1699,8 @@ msgstr "Previous"
 msgid "Previous Hash"
 msgstr "Previous Hash"
 
-#: src/pages/Settings/SettingsPage.tsx:581
-#: src/pages/Settings/SettingsPage.tsx:689
+#: src/pages/Settings/SettingsPage.tsx:674
+#: src/pages/Settings/SettingsPage.tsx:782
 msgid "Processing..."
 msgstr "Processing..."
 
@@ -1648,31 +1712,39 @@ msgstr "Profile"
 #~ msgid "Profile Photo (optional)"
 #~ msgstr "Profile Photo (optional)"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:293
+msgid "Provisioning QR code"
+msgstr "Provisioning QR code"
+
 #: src/pages/Employees/EmployeeDetail.tsx:573
 msgid "Qualifications"
 msgstr "Qualifications"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:355
+msgid "Reason"
+msgstr "Reason"
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:536
+#: src/pages/Login.tsx:624
 msgid "login.mfa.preferred"
 msgstr "recommended"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:526
+#: src/pages/Login.tsx:614
 msgid "login.mfa.method.recovery_code"
 msgstr "Recovery code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:547
+#: src/pages/Login.tsx:635
 msgid "login.mfa.recoveryCode"
 msgstr "Recovery code"
 
-#: src/pages/Settings/SettingsPage.tsx:633
-#: src/pages/Settings/SettingsPage.tsx:645
+#: src/pages/Settings/SettingsPage.tsx:726
+#: src/pages/Settings/SettingsPage.tsx:738
 msgid "Recovery code"
 msgstr "Recovery code"
 
-#: src/pages/Settings/SettingsPage.tsx:338
+#: src/pages/Settings/SettingsPage.tsx:374
 msgid "Recovery codes remaining"
 msgstr "Recovery codes remaining"
 
@@ -1689,12 +1761,12 @@ msgstr "Refresh activity logs"
 msgid "Refresh data"
 msgstr "Refresh data"
 
-#: src/pages/Settings/SettingsPage.tsx:90
+#: src/pages/Settings/SettingsPage.tsx:92
 msgid "Regenerate codes"
 msgstr "Regenerate codes"
 
-#: src/pages/Settings/SettingsPage.tsx:83
-#: src/pages/Settings/SettingsPage.tsx:351
+#: src/pages/Settings/SettingsPage.tsx:85
+#: src/pages/Settings/SettingsPage.tsx:387
 msgid "Regenerate recovery codes"
 msgstr "Regenerate recovery codes"
 
@@ -1716,6 +1788,22 @@ msgstr "Reminders about upcoming shifts and duties"
 msgid "Retry"
 msgstr "Retry"
 
+#: src/pages/Settings/SettingsPage.tsx:423
+msgid "Review the passkeys currently enrolled for this account."
+msgstr "Review the passkeys currently enrolled for this account."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:179
+msgid "Revocation reason"
+msgstr "Revocation reason"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:362
+msgid "Revoke"
+msgstr "Revoke"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
+msgid "Revoked"
+msgstr "Revoked"
+
 #: src/components/ScopeAssignmentForm.tsx:610
 msgid "Save"
 msgstr "Save"
@@ -1723,7 +1811,7 @@ msgstr "Save"
 #: src/components/OrganizationalUnitFormDialog.tsx:380
 #: src/pages/Customers/CustomerEdit.tsx:304
 #: src/pages/Employees/EmployeeEdit.tsx:596
-#: src/pages/Sites/SiteEdit.tsx:460
+#: src/pages/Sites/SiteEdit.tsx:456
 msgid "Save Changes"
 msgstr "Save Changes"
 
@@ -1735,11 +1823,11 @@ msgstr "Save Draft"
 #: src/components/ScopeAssignmentForm.tsx:608
 #: src/pages/Customers/CustomerEdit.tsx:304
 #: src/pages/Employees/EmployeeEdit.tsx:596
-#: src/pages/Sites/SiteEdit.tsx:460
+#: src/pages/Sites/SiteEdit.tsx:456
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/pages/Settings/SettingsPage.tsx:476
+#: src/pages/Settings/SettingsPage.tsx:569
 msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
 msgstr "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
 
@@ -1767,15 +1855,15 @@ msgid "Search sites..."
 msgstr "Search sites..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:485
+#: src/pages/Login.tsx:573
 msgid "login.mfa.title"
 msgstr "Second factor required"
 
-#: src/App.tsx:66
+#: src/App.tsx:69
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
-#: src/App.tsx:87
+#: src/App.tsx:90
 msgid "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 msgstr "SecPal – A guard’s best friend. An offline-first progressive web app for security personnel, combining digital guard books with modern service management."
 
@@ -1813,7 +1901,7 @@ msgid "Select new parent"
 msgstr "Select new parent"
 
 #: src/components/OrganizationalUnitPicker.tsx:238
-#: src/pages/Employees/EmployeeCreate.tsx:721
+#: src/pages/Employees/EmployeeCreate.tsx:720
 #: src/pages/Employees/EmployeeEdit.tsx:488
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
@@ -1827,7 +1915,7 @@ msgstr "Select organizational unit..."
 msgid "Self-Access Control Required"
 msgstr "Self-Access Control Required"
 
-#: src/pages/Employees/EmployeeCreate.tsx:901
+#: src/pages/Employees/EmployeeCreate.tsx:891
 msgid "Send Onboarding Invitation"
 msgstr "Send Onboarding Invitation"
 
@@ -1847,14 +1935,14 @@ msgstr "Sending verification email..."
 msgid "Sent"
 msgstr "Sent"
 
-#: src/pages/Settings/SettingsPage.tsx:370
-#: src/pages/Settings/SettingsPage.tsx:473
+#: src/pages/Settings/SettingsPage.tsx:406
+#: src/pages/Settings/SettingsPage.tsx:566
 msgid "Set up MFA"
 msgstr "Set up MFA"
 
-#: src/components/application-layout.tsx:142
-#: src/components/application-layout.tsx:323
-#: src/pages/Settings/SettingsPage.tsx:292
+#: src/components/application-layout.tsx:150
+#: src/components/application-layout.tsx:348
+#: src/pages/Settings/SettingsPage.tsx:328
 msgid "Settings"
 msgstr "Settings"
 
@@ -1872,21 +1960,21 @@ msgstr "Showing {0} to {1} of {2} logs"
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Customers/CustomersPage.tsx:236
+#: src/pages/Customers/CustomersPage.tsx:230
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:336
+#: src/pages/Employees/EmployeeList.tsx:324
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
-#: src/pages/Sites/SitesPage.tsx:276
+#: src/pages/Sites/SitesPage.tsx:264
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 
@@ -1894,10 +1982,18 @@ msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgid "Showing cached data"
 msgstr "Showing cached data"
 
-#: src/components/application-layout.tsx:149
+#: src/pages/Login.tsx:562
+msgid "Sign in with passkey"
+msgstr "Sign in with passkey"
+
+#: src/components/application-layout.tsx:157
 #: src/components/onboarding-layout.tsx:43
 msgid "Sign out"
 msgstr "Sign out"
+
+#: src/pages/Login.tsx:560
+msgid "Signing in with passkey..."
+msgstr "Signing in with passkey..."
 
 #: src/pages/Sites/SiteCreate.tsx:245
 #: src/pages/Sites/SiteEdit.tsx:236
@@ -1909,7 +2005,7 @@ msgstr "Site Name"
 msgid "Site not found"
 msgstr "Site not found"
 
-#: src/pages/Sites/SitesPage.tsx:193
+#: src/pages/Sites/SitesPage.tsx:181
 msgid "Site Number"
 msgstr "Site Number"
 
@@ -1922,7 +2018,7 @@ msgid "Site:"
 msgstr "Site:"
 
 #: src/pages/Customers/CustomerDetail.tsx:219
-#: src/pages/Customers/CustomersPage.tsx:168
+#: src/pages/Customers/CustomersPage.tsx:162
 #: src/pages/Sites/SitesPage.tsx:97
 msgid "Sites"
 msgstr "Sites"
@@ -1936,15 +2032,15 @@ msgid "Source Code"
 msgstr "Source Code"
 
 #: src/pages/Customers/CustomersPage.tsx:112
-#: src/pages/Customers/CustomersPage.tsx:171
-#: src/pages/Employees/EmployeeCreate.tsx:818
+#: src/pages/Customers/CustomersPage.tsx:165
+#: src/pages/Employees/EmployeeCreate.tsx:816
 #: src/pages/Employees/EmployeeDetail.tsx:131
 #: src/pages/Employees/EmployeeEdit.tsx:559
 #: src/pages/Employees/EmployeeList.tsx:196
-#: src/pages/Employees/EmployeeList.tsx:257
-#: src/pages/Settings/SettingsPage.tsx:331
-#: src/pages/Sites/SitesPage.tsx:146
-#: src/pages/Sites/SitesPage.tsx:205
+#: src/pages/Employees/EmployeeList.tsx:245
+#: src/pages/Settings/SettingsPage.tsx:367
+#: src/pages/Sites/SitesPage.tsx:140
+#: src/pages/Sites/SitesPage.tsx:193
 msgid "Status"
 msgstr "Status"
 
@@ -1972,16 +2068,16 @@ msgstr "Step 3: Self-access control"
 msgid "Still loading your secure session"
 msgstr "Still loading your secure session"
 
-#: src/pages/Settings/SettingsPage.tsx:403
+#: src/pages/Settings/SettingsPage.tsx:496
 msgid "Store your recovery codes now"
 msgstr "Store your recovery codes now"
 
 #: src/pages/Customers/CustomerCreate.tsx:152
 #: src/pages/Customers/CustomerDetail.tsx:130
 #: src/pages/Customers/CustomerEdit.tsx:168
-#: src/pages/Sites/SiteCreate.tsx:289
+#: src/pages/Sites/SiteCreate.tsx:285
 #: src/pages/Sites/SiteDetail.tsx:152
-#: src/pages/Sites/SiteEdit.tsx:280
+#: src/pages/Sites/SiteEdit.tsx:276
 msgid "Street"
 msgstr "Street"
 
@@ -1993,12 +2089,12 @@ msgstr "Subject"
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:446
+#: src/pages/ActivityLog/ActivityLogList.tsx:436
 msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:338
+#: src/pages/Login.tsx:399
 msgid "login.healthWarning.title"
 msgstr "System not ready"
 
@@ -2010,11 +2106,11 @@ msgstr "System Updates"
 msgid "Team Messages"
 msgstr "Team Messages"
 
-#: src/pages/Sites/SiteCreate.tsx:275
+#: src/pages/Sites/SiteCreate.tsx:272
 #: src/pages/Sites/SiteDetail.tsx:130
-#: src/pages/Sites/SiteEdit.tsx:266
-#: src/pages/Sites/SitesPage.tsx:140
-#: src/pages/Sites/SitesPage.tsx:224
+#: src/pages/Sites/SiteEdit.tsx:263
+#: src/pages/Sites/SitesPage.tsx:135
+#: src/pages/Sites/SitesPage.tsx:212
 msgid "Temporary"
 msgstr "Temporary"
 
@@ -2024,8 +2120,8 @@ msgstr "Terminate"
 
 #: src/pages/Employees/EmployeeDetail.tsx:71
 #: src/pages/Employees/EmployeeList.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:225
-#: src/pages/Employees/EmployeeStatusOptions.tsx:22
+#: src/pages/Employees/EmployeeList.tsx:214
+#: src/pages/Employees/EmployeeStatusOptions.tsx:15
 msgid "Terminated"
 msgstr "Terminated"
 
@@ -2033,7 +2129,7 @@ msgstr "Terminated"
 msgid "Test Notification"
 msgstr "Test Notification"
 
-#: src/pages/Employees/EmployeeCreate.tsx:905
+#: src/pages/Employees/EmployeeCreate.tsx:895
 msgid "The new employee will receive an onboarding email immediately after creation."
 msgstr "The new employee will receive an onboarding email immediately after creation."
 
@@ -2046,7 +2142,7 @@ msgid "The page you requested does not exist or is no longer available."
 msgstr "The page you requested does not exist or is no longer available."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:341
+#: src/pages/Login.tsx:402
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
@@ -2054,7 +2150,7 @@ msgstr "The system is not fully configured. Please contact your administrator."
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "The type determines the unit's role in the hierarchy."
 
-#: src/pages/Settings/SettingsPage.tsx:406
+#: src/pages/Settings/SettingsPage.tsx:499
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "These codes are shown only once. Store them securely before closing this dialog."
 
@@ -2067,6 +2163,10 @@ msgstr "This {0} change is too significant ({similarity}% similar). Please conta
 msgid "This action cannot be undone. The organizational unit will be permanently removed."
 msgstr "This action cannot be undone. The organizational unit will be permanently removed."
 
+#: src/pages/Settings/SettingsPage.tsx:433
+msgid "This browser does not support passkeys."
+msgstr "This browser does not support passkeys."
+
 #: src/pages/Customers/CustomerDetail.tsx:218
 #~ msgid "This customer has {0} site(s)."
 #~ msgstr "This customer has {0} site(s)."
@@ -2076,7 +2176,7 @@ msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
 
 #. placeholder {0}: formatDateTime( enrollmentPreparation.expires_at, i18n.locale )
-#: src/pages/Settings/SettingsPage.tsx:526
+#: src/pages/Settings/SettingsPage.tsx:619
 msgid "This setup expires at {0}."
 msgstr "This setup expires at {0}."
 
@@ -2086,7 +2186,7 @@ msgstr "This unit has {childCount} child unit(s). Please delete or move the chil
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx:498
+#: src/pages/Login.tsx:586
 msgid "login.mfa.expiry"
 msgstr "This verification step expires at {0}."
 
@@ -2103,7 +2203,7 @@ msgid "Too Many Attempts"
 msgstr "Too Many Attempts"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:365
+#: src/pages/Login.tsx:426
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 
@@ -2112,7 +2212,7 @@ msgstr "Too many failed attempts"
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Too many onboarding attempts. Please try again later."
 
-#: src/pages/Settings/SettingsPage.tsx:504
+#: src/pages/Settings/SettingsPage.tsx:597
 msgid "Try again"
 msgstr "Try again"
 
@@ -2125,7 +2225,7 @@ msgstr "Try Again"
 #: src/pages/Sites/SiteCreate.tsx:263
 #: src/pages/Sites/SiteEdit.tsx:254
 #: src/pages/Sites/SitesPage.tsx:126
-#: src/pages/Sites/SitesPage.tsx:199
+#: src/pages/Sites/SitesPage.tsx:187
 msgid "Type"
 msgstr "Type"
 
@@ -2133,13 +2233,22 @@ msgstr "Type"
 msgid "Type is required"
 msgstr "Type is required"
 
-#: src/pages/Employees/EmployeeList.tsx:260
+#: src/pages/Employees/EmployeeList.tsx:248
 msgid "Unit"
 msgstr "Unit"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:301
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:339
+msgid "Unnamed Android enrollment session"
+msgstr "Unnamed Android enrollment session"
 
 #: src/components/UpdatePrompt.tsx:78
 msgid "Update application now"
 msgstr "Update application now"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:246
+msgid "Update channel"
+msgstr "Update channel"
 
 #: src/components/UpdatePrompt.tsx:80
 msgid "Update now"
@@ -2179,15 +2288,15 @@ msgstr "User cannot assign OR remove ANY rank (prevents privilege escalation)."
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 msgstr "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 
-#: src/pages/Sites/SiteCreate.tsx:424
+#: src/pages/Sites/SiteCreate.tsx:420
 #: src/pages/Sites/SiteDetail.tsx:249
-#: src/pages/Sites/SiteEdit.tsx:395
+#: src/pages/Sites/SiteEdit.tsx:391
 msgid "Valid From"
 msgstr "Valid From"
 
-#: src/pages/Sites/SiteCreate.tsx:436
+#: src/pages/Sites/SiteCreate.tsx:432
 #: src/pages/Sites/SiteDetail.tsx:260
-#: src/pages/Sites/SiteEdit.tsx:407
+#: src/pages/Sites/SiteEdit.tsx:403
 msgid "Valid Until"
 msgstr "Valid Until"
 
@@ -2200,18 +2309,18 @@ msgstr "Validating your link..."
 msgid "Validation Error"
 msgstr "Validation Error"
 
-#: src/pages/Sites/SiteCreate.tsx:418
+#: src/pages/Sites/SiteCreate.tsx:414
 #: src/pages/Sites/SiteDetail.tsx:243
-#: src/pages/Sites/SiteEdit.tsx:389
+#: src/pages/Sites/SiteEdit.tsx:385
 msgid "Validity Period"
 msgstr "Validity Period"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:507
+#: src/pages/Login.tsx:595
 msgid "login.mfa.method"
 msgstr "Verification method"
 
-#: src/pages/Settings/SettingsPage.tsx:612
+#: src/pages/Settings/SettingsPage.tsx:705
 msgid "Verification method"
 msgstr "Verification method"
 
@@ -2220,7 +2329,7 @@ msgid "Verification Status"
 msgstr "Verification Status"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:605
+#: src/pages/Login.tsx:693
 msgid "login.mfa.submit"
 msgstr "Verify and continue"
 
@@ -2229,7 +2338,7 @@ msgid "Verify your email address"
 msgstr "Verify your email address"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:603
+#: src/pages/Login.tsx:691
 msgid "login.mfa.verifying"
 msgstr "Verifying..."
 
@@ -2237,9 +2346,9 @@ msgstr "Verifying..."
 msgid "Verifying..."
 msgstr "Verifying..."
 
-#: src/pages/Customers/CustomersPage.tsx:205
-#: src/pages/Employees/EmployeeList.tsx:305
-#: src/pages/Sites/SitesPage.tsx:245
+#: src/pages/Customers/CustomersPage.tsx:199
+#: src/pages/Employees/EmployeeList.tsx:293
+#: src/pages/Sites/SitesPage.tsx:233
 msgid "View"
 msgstr "View"
 
@@ -2247,7 +2356,7 @@ msgstr "View"
 msgid "View activity log information and verification status"
 msgstr "View activity log information and verification status"
 
-#: src/App.tsx:70
+#: src/App.tsx:73
 msgid "View Profile"
 msgstr "View Profile"
 
@@ -2276,7 +2385,7 @@ msgstr "We could not complete the sign out request. Please try again."
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 
-#: src/App.tsx:63
+#: src/App.tsx:66
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
@@ -2303,6 +2412,10 @@ msgstr "Who can this user VIEW?"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:298
 msgid "Yes"
 msgstr "Yes"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:283
+msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
+msgstr "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 
 #: src/components/RouteGuardState.tsx:173
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
@@ -2332,6 +2445,6 @@ msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:488
+#: src/pages/Login.tsx:576
 msgid "login.mfa.description"
 msgstr "Your password was accepted. Complete MFA to finish signing in."

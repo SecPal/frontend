@@ -138,10 +138,28 @@ function createNativeBridgeAuthTransport(
     async login(credentials): Promise<AuthLoginResult> {
       const result = await nativeAuthBridge.login(credentials);
 
-      return {
-        status: "authenticated",
-        user: sanitizeAuthPayload(result, "Native auth login"),
-      };
+      const loginUser = sanitizeAuthPayload(result, "Native auth login");
+
+      try {
+        const currentUser = await nativeAuthBridge.getCurrentUser();
+
+        return {
+          status: "authenticated",
+          user: sanitizeAuthPayload(
+            currentUser,
+            "Native auth current-user fetch"
+          ),
+        };
+      } catch (err) {
+        if (err instanceof Error) {
+          return {
+            status: "authenticated",
+            user: loginUser,
+          };
+        }
+
+        throw err;
+      }
     },
     async logout(): Promise<void> {
       await nativeAuthBridge.logout();
