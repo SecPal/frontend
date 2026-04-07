@@ -152,12 +152,32 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
-    // AppAccessRoute does not fail-closed for unknown employee status: the
-    // persisted auth user omits employee data after bootstrap. Access is
-    // permitted until bootstrap revalidation can confirm pre-contract status.
-    // A follow-up issue tracks persisting employee lifecycle state to close
-    // this narrow offline window (see #743).
+    // Truly unknown lifecycle state still stays fail-open: without even the
+    // persisted employeeStatus field we cannot prove the user is pre-contract.
     expect(screen.getByText("Protected App Content")).toBeInTheDocument();
+  });
+
+  it("redirects persisted pre-contract users away from app routes when only lifecycle state is known", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+        employeeStatus: "pre_contract",
+        onboardingWorkflowStatus: "submitted_for_review",
+      },
+    });
+
+    renderWithProviders(
+      <AppAccessRoute>
+        <div>Protected App Content</div>
+      </AppAccessRoute>
+    );
+
+    expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
+    expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });
 
   it("allows access to onboarding routes when employee status is unknown (offline/stale user)", () => {
