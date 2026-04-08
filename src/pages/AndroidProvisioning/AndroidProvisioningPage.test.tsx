@@ -89,6 +89,103 @@ describe("AndroidProvisioningPage", () => {
     expect((init!.headers as Headers).get("Accept")).toBe("application/json");
   });
 
+  it("renders human-readable session state and rollout guidance", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-1",
+            device_label: "Front desk tablet",
+            status: "pending",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+          {
+            id: "session-2",
+            device_label: "Warehouse spare device",
+            status: "revoked",
+            update_channel: "github_release",
+            bootstrap_token_expires_at: "2026-04-06T10:00:00Z",
+            revoked_at: "2026-04-06T09:00:00Z",
+            revocation_reason: "Token exposed",
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Managed device rollout")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ready for setup")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Use this QR code during Android setup before it expires."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("GitHub Releases").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        "This session was revoked and can no longer be used for device setup."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Token exposed/)).toBeInTheDocument();
+    expect(screen.queryByText("managed_device")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^pending$/i)).not.toBeInTheDocument();
+  });
+
+  it("renders exchanged and expired session guidance", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-1",
+            device_label: "Reception kiosk",
+            status: "exchanged",
+            update_channel: "direct_apk",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+          {
+            id: "session-2",
+            device_label: null,
+            status: "expired",
+            update_channel: "obtainium",
+            bootstrap_token_expires_at: "2026-04-06T10:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    expect(await screen.findByText("Direct APK sideload")).toBeInTheDocument();
+    expect(screen.getByText("Bootstrap completed")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This session has already been used to complete device bootstrap."
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Obtainium").length).toBeGreaterThan(0);
+    expect(screen.getByText("Expired")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This session expired before setup completed. Create a new session to continue."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Unnamed Android enrollment session")
+    ).toBeInTheDocument();
+  });
+
   it("shows a load error when sessions cannot be fetched", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("network down"));
 
@@ -137,6 +234,9 @@ describe("AndroidProvisioningPage", () => {
     fireEvent.change(screen.getByLabelText("Device label"), {
       target: { value: "Reception kiosk" },
     });
+    fireEvent.change(screen.getByLabelText("Update channel"), {
+      target: { value: "direct_apk" },
+    });
     fireEvent.click(
       screen.getByRole("button", { name: /create enrollment session/i })
     );
@@ -160,7 +260,7 @@ describe("AndroidProvisioningPage", () => {
             prefer_gesture_navigation: true,
             allowed_packages: ["app.secpal"],
           },
-          update_channel: "managed_device",
+          update_channel: "direct_apk",
         }),
       })
     );
@@ -237,6 +337,55 @@ describe("AndroidProvisioningPage", () => {
     promptSpy.mockRestore();
   });
 
+  it("does not revoke a session when no reason is provided", async () => {
+    const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("   ");
+
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke" }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledTimes(1);
+    });
+
+    promptSpy.mockRestore();
+  });
+
+  it("shows a fallback error when revoking a session fails unexpectedly", async () => {
+    const promptSpy = vi
+      .spyOn(window, "prompt")
+      .mockReturnValue("Device retired");
+
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: "session-1",
+              device_label: "Front desk tablet",
+              status: "pending",
+              update_channel: "managed_device",
+              bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+              revoked_at: null,
+              revocation_reason: null,
+            },
+          ],
+        }),
+      } as Response)
+      .mockRejectedValueOnce({});
+
+    renderPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Revoke" }));
+
+    expect(
+      await screen.findByText("Failed to revoke Android enrollment session")
+    ).toBeInTheDocument();
+
+    promptSpy.mockRestore();
+  });
+
   it("shows a read-only message when create permission is missing", async () => {
     vi.mocked(capabilitiesHook.useUserCapabilities).mockReturnValue({
       ...capabilities,
@@ -254,5 +403,37 @@ describe("AndroidProvisioningPage", () => {
     expect(
       screen.queryByRole("button", { name: /create enrollment session/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("renders defensive fallback labels for unknown channel and status values", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-future",
+            device_label: "Future device",
+            // Cast to bypass type checks: simulates a future API value this
+            // client version doesn't know about yet.
+            status: "future_status" as "pending",
+            update_channel: "future_channel" as "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Unknown channel (future_channel)")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Unknown status (future_status)")
+    ).toBeInTheDocument();
+    // Unknown statuses produce no operator guidance text.
+    expect(screen.queryByText(/use this qr code/i)).not.toBeInTheDocument();
   });
 });

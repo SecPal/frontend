@@ -141,8 +141,8 @@ msgstr "Informationen zur Tätigkeit"
 msgid "Activity Log Details"
 msgstr "Details zum Aktivitätsprotokoll"
 
-#: src/components/application-layout.tsx:232
-#: src/components/application-layout.tsx:322
+#: src/components/application-layout.tsx:255
+#: src/components/application-layout.tsx:345
 #: src/pages/ActivityLog/ActivityLogList.tsx:236
 msgid "Activity Logs"
 msgstr "Aktivitätsprotokolle"
@@ -159,14 +159,22 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
 
+#: src/pages/Settings/SettingsPage.tsx:530
+msgid "Add passkey"
+msgstr ""
+
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
 msgstr "Stammeinheit hinzufügen"
 
 #. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
-#: src/pages/Settings/SettingsPage.tsx:460
+#: src/pages/Settings/SettingsPage.tsx:565
 msgid "Added {0}"
 msgstr "Hinzugefügt am {0}"
+
+#: src/pages/Settings/SettingsPage.tsx:528
+msgid "Adding passkey..."
+msgstr ""
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
 msgid "Additional Properties"
@@ -216,17 +224,17 @@ msgstr "Benutzer können ihre eigenen HR-Daten anzeigen/bearbeiten"
 msgid "An unexpected error occurred"
 msgstr "Ein unerwarteter Fehler ist aufgetreten"
 
-#: src/components/application-layout.tsx:240
-#: src/components/application-layout.tsx:333
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:214
+#: src/components/application-layout.tsx:263
+#: src/components/application-layout.tsx:356
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:280
 msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:297
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:363
 msgid "Android provisioning QR code"
 msgstr "QR-Code zur Android-Provisionierung"
 
-#: src/pages/Settings/SettingsPage.tsx:510
+#: src/pages/Settings/SettingsPage.tsx:630
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
 
@@ -263,11 +271,11 @@ msgstr "Organisatorischen Umfang zuordnen"
 msgid "Authentication"
 msgstr "Authentifizierung"
 
-#: src/pages/Settings/SettingsPage.tsx:60
+#: src/pages/Settings/SettingsPage.tsx:67
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
-#: src/pages/Settings/SettingsPage.tsx:605
+#: src/pages/Settings/SettingsPage.tsx:725
 msgid "Authenticator app QR code"
 msgstr "QR-Code der Authenticator-App"
 
@@ -281,9 +289,9 @@ msgstr "Authenticator-Code"
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator-Code"
 
-#: src/pages/Settings/SettingsPage.tsx:632
-#: src/pages/Settings/SettingsPage.tsx:724
-#: src/pages/Settings/SettingsPage.tsx:736
+#: src/pages/Settings/SettingsPage.tsx:752
+#: src/pages/Settings/SettingsPage.tsx:844
+#: src/pages/Settings/SettingsPage.tsx:856
 msgid "Authenticator code"
 msgstr "Authenticator-Code"
 
@@ -324,6 +332,10 @@ msgstr "zurück zu den Standorten"
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
+msgid "Bootstrap completed"
+msgstr "Bootstrap abgeschlossen"
+
 #: src/lib/organizationalUnitUtils.ts:81
 #: src/lib/organizationalUnitUtils.ts:109
 msgid "Branch"
@@ -332,11 +344,6 @@ msgstr "Niederlassung"
 #: src/components/ScopeAssignmentForm.tsx:585
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:682
-msgid "login.mfa.cancel"
-msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
@@ -348,13 +355,18 @@ msgstr "Abbrechen"
 #: src/pages/Employees/EmployeeCreate.tsx:952
 #: src/pages/Employees/EmployeeEdit.tsx:593
 #: src/pages/Onboarding/OnboardingComplete.tsx:653
-#: src/pages/Settings/SettingsPage.tsx:590
-#: src/pages/Settings/SettingsPage.tsx:663
-#: src/pages/Settings/SettingsPage.tsx:770
+#: src/pages/Settings/SettingsPage.tsx:710
+#: src/pages/Settings/SettingsPage.tsx:783
+#: src/pages/Settings/SettingsPage.tsx:890
 #: src/pages/Sites/SiteCreate.tsx:488
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
+msgstr "Abbrechen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:682
+msgid "login.mfa.cancel"
 msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134
@@ -387,7 +399,7 @@ msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu ei
 msgid "Choose which notifications you want to receive"
 msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 
-#: src/pages/Settings/SettingsPage.tsx:481
+#: src/pages/Settings/SettingsPage.tsx:601
 msgid "Choose your preferred language for the application."
 msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 
@@ -438,7 +450,7 @@ msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen S
 msgid "Confirm and Continue"
 msgstr "Bestätigen und fortfahren"
 
-#: src/pages/Settings/SettingsPage.tsx:676
+#: src/pages/Settings/SettingsPage.tsx:796
 msgid "Confirm and enable MFA"
 msgstr "Bestätigen und Aktivieren von MFA"
 
@@ -450,11 +462,11 @@ msgstr "Onboarding bestätigen"
 msgid "Confirm Password"
 msgstr "Bestätigen Sie Ihr Passwort"
 
-#: src/pages/Settings/SettingsPage.tsx:75
+#: src/pages/Settings/SettingsPage.tsx:82
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren möchten."
 
-#: src/pages/Settings/SettingsPage.tsx:87
+#: src/pages/Settings/SettingsPage.tsx:94
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
 
@@ -522,7 +534,7 @@ msgstr "Kunde anlegen"
 msgid "Create Employee"
 msgstr "Mitarbeiter anlegen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:277
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:343
 msgid "Create enrollment session"
 msgstr "Enrollment-Sitzung erstellen"
 
@@ -548,7 +560,7 @@ msgstr "Erstellt"
 msgid "Created, but not sent"
 msgstr "Erstellt, aber nicht gesendet"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:275
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:341
 msgid "Creating enrollment session..."
 msgstr "Enrollment-Sitzung wird erstellt..."
 
@@ -595,8 +607,8 @@ msgstr "Kunde nicht gefunden"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
-#: src/components/application-layout.tsx:216
-#: src/components/application-layout.tsx:300
+#: src/components/application-layout.tsx:239
+#: src/components/application-layout.tsx:323
 #: src/pages/Customers/CustomersPage.tsx:87
 msgid "Customers"
 msgstr "Kunden"
@@ -675,13 +687,17 @@ msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 msgid "Details"
 msgstr "Details"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:229
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:295
 msgid "Device label"
 msgstr "Gerätebezeichnung"
 
-#: src/pages/Settings/SettingsPage.tsx:73
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:75
+msgid "Direct APK sideload"
+msgstr "Direktes APK-Sideloading"
+
 #: src/pages/Settings/SettingsPage.tsx:80
-#: src/pages/Settings/SettingsPage.tsx:393
+#: src/pages/Settings/SettingsPage.tsx:87
+#: src/pages/Settings/SettingsPage.tsx:466
 msgid "Disable MFA"
 msgstr "MFA deaktivieren"
 
@@ -694,7 +710,7 @@ msgstr "Abteilung"
 msgid "Documents"
 msgstr "Dokumente"
 
-#: src/pages/Settings/SettingsPage.tsx:552
+#: src/pages/Settings/SettingsPage.tsx:672
 msgid "Done"
 msgstr "Erledigt"
 
@@ -784,8 +800,8 @@ msgstr "Mitarbeiter-Management"
 msgid "Employee Number"
 msgstr "Mitarbeiter Nummer"
 
-#: src/components/application-layout.tsx:224
-#: src/components/application-layout.tsx:311
+#: src/components/application-layout.tsx:247
+#: src/components/application-layout.tsx:334
 msgid "Employees"
 msgstr "Mitarbeiter"
 
@@ -802,7 +818,7 @@ msgstr "Benachrichtigungen aktivieren"
 msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 msgstr "Aktivieren Sie Benachrichtigungen, um wichtige Updates zu Sicherheitswarnungen, Schichterinnerungen und Systembenachrichtigungen zu erhalten."
 
-#: src/pages/Settings/SettingsPage.tsx:62
+#: src/pages/Settings/SettingsPage.tsx:69
 msgid "Enabled"
 msgstr "Aktiviert"
 
@@ -814,7 +830,7 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:313
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:385
 msgid "Enrollment Sessions"
 msgstr "Enrollment-Sitzungen"
 
@@ -853,12 +869,13 @@ msgstr "Ereignis Hash"
 msgid "Expand"
 msgstr "Ausklappen"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:99
 #: src/pages/Sites/SiteDetail.tsx:138
 msgid "Expired"
 msgstr "Abgelaufen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:304
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:346
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:373
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:421
 msgid "Expires"
 msgstr "Läuft ab"
 
@@ -934,7 +951,7 @@ msgstr "Freiberuflich"
 msgid "From Date"
 msgstr "Von"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:240
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:306
 msgid "Front desk tablet"
 msgstr "Empfangstablet"
 
@@ -949,6 +966,10 @@ msgstr "Vollzeit"
 #: src/components/OrganizationalUnitTree.tsx:813
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:77
+msgid "GitHub Releases"
+msgstr "GitHub-Versionen"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:443
 msgid "Global"
@@ -987,8 +1008,8 @@ msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder 
 msgid "Holding"
 msgstr "Holding"
 
-#: src/components/application-layout.tsx:201
-#: src/components/application-layout.tsx:279
+#: src/components/application-layout.tsx:224
+#: src/components/application-layout.tsx:302
 msgid "Home"
 msgstr "Startseite"
 
@@ -1000,7 +1021,7 @@ msgstr "HR Zugang"
 msgid "I have verified my email"
 msgstr "Ich habe meine E-Mail verifiziert"
 
-#: src/pages/Settings/SettingsPage.tsx:539
+#: src/pages/Settings/SettingsPage.tsx:659
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, dass sie nicht mehr angezeigt werden."
 
@@ -1057,7 +1078,7 @@ msgstr "Einladung angefordert"
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
 
-#: src/pages/Settings/SettingsPage.tsx:478
+#: src/pages/Settings/SettingsPage.tsx:598
 msgid "Language"
 msgstr "Sprache"
 
@@ -1107,11 +1128,11 @@ msgstr "Mitarbeiter laden..."
 msgid "Loading employees..."
 msgstr "Mitarbeiter laden..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:318
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:390
 msgid "Loading enrollment sessions..."
 msgstr "Enrollment-Sitzungen werden geladen..."
 
-#: src/pages/Settings/SettingsPage.tsx:357
+#: src/pages/Settings/SettingsPage.tsx:430
 msgid "Loading MFA status..."
 msgstr "Laden des MFA-Status..."
 
@@ -1119,7 +1140,7 @@ msgstr "Laden des MFA-Status..."
 msgid "Loading onboarding..."
 msgstr "Onboarding laden..."
 
-#: src/pages/Settings/SettingsPage.tsx:443
+#: src/pages/Settings/SettingsPage.tsx:546
 msgid "Loading passkeys..."
 msgstr "Passkeys werden geladen..."
 
@@ -1183,13 +1204,17 @@ msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zah
 msgid "Make root unit (no parent)"
 msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 
-#: src/pages/Settings/SettingsPage.tsx:331
+#: src/pages/Settings/SettingsPage.tsx:404
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
 #: src/pages/Organization/OrganizationPage.tsx:259
 msgid "Manage your internal organizational units including departments, branches, and teams."
 msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:73
+msgid "Managed device rollout"
+msgstr "Rollout verwalteter Geräte"
 
 #: src/pages/Employees/EmployeeDetail.tsx:111
 msgid "Management Level"
@@ -1203,7 +1228,7 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 msgid "Management level must be between 1 and 255"
 msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 
-#: src/pages/Settings/SettingsPage.tsx:610
+#: src/pages/Settings/SettingsPage.tsx:730
 msgid "Manual setup key"
 msgstr "Taste für manuelle Einstellungen"
 
@@ -1236,11 +1261,11 @@ msgstr "Merkelbaum"
 msgid "Messages from team members and supervisors"
 msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 
-#: src/pages/Settings/SettingsPage.tsx:399
+#: src/pages/Settings/SettingsPage.tsx:472
 msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung zu verlangen."
 
-#: src/pages/Settings/SettingsPage.tsx:361
+#: src/pages/Settings/SettingsPage.tsx:434
 msgid "MFA status could not be loaded."
 msgstr "Der MFA-Status konnte nicht geladen werden."
 
@@ -1310,7 +1335,7 @@ msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Moving..."
 msgstr "Verschiebe..."
 
-#: src/pages/Settings/SettingsPage.tsx:341
+#: src/pages/Settings/SettingsPage.tsx:414
 msgid "Multi-factor authentication"
 msgstr "Multi-Faktor-Authentifizierung"
 
@@ -1378,7 +1403,7 @@ msgstr "Neuer Standort"
 msgid "Next"
 msgstr "Weiter"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:369
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:444
 msgid "No action available"
 msgstr "Keine Aktion verfügbar"
 
@@ -1386,7 +1411,7 @@ msgstr "Keine Aktion verfügbar"
 msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:323
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:395
 msgid "No Android enrollment sessions have been created yet."
 msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 
@@ -1417,7 +1442,7 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "No parent (root unit)"
 msgstr "Keine übergeordnete Einheit (Stammeinheit)"
 
-#: src/pages/Settings/SettingsPage.tsx:447
+#: src/pages/Settings/SettingsPage.tsx:550
 msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
 
@@ -1433,7 +1458,7 @@ msgstr "Keine Seiten gefunden"
 msgid "No unit selected"
 msgstr "Keine Einheit ausgewählt"
 
-#: src/pages/Settings/SettingsPage.tsx:56
+#: src/pages/Settings/SettingsPage.tsx:63
 msgid "Not enabled"
 msgstr "Nicht aktiviert"
 
@@ -1465,6 +1490,10 @@ msgstr "Benachrichtigungen aktiviert"
 #: src/components/NotificationPreferences.tsx:252
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:79
+msgid "Obtainium"
+msgstr "Obtainium"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:177
 msgid "OK"
@@ -1502,8 +1531,8 @@ msgstr "Optionale Beschreibung für diese Einheit."
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
-#: src/components/application-layout.tsx:208
-#: src/components/application-layout.tsx:289
+#: src/components/application-layout.tsx:231
+#: src/components/application-layout.tsx:312
 msgid "Organization"
 msgstr "Organisation"
 
@@ -1567,7 +1596,11 @@ msgstr "Übergeordnete Einheit"
 msgid "Part Time"
 msgstr "Teilzeit"
 
-#: src/pages/Settings/SettingsPage.tsx:420
+#: src/pages/Settings/SettingsPage.tsx:511
+msgid "Passkey label"
+msgstr ""
+
+#: src/pages/Settings/SettingsPage.tsx:493
 msgid "Passkeys"
 msgstr "Passkeys"
 
@@ -1680,7 +1713,7 @@ msgstr "Vorvertrag"
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
 
-#: src/pages/Settings/SettingsPage.tsx:578
+#: src/pages/Settings/SettingsPage.tsx:698
 msgid "Preparing MFA setup..."
 msgstr "MFA-Einrichtung vorbereiten..."
 
@@ -1699,8 +1732,8 @@ msgstr "Vorherige"
 msgid "Previous Hash"
 msgstr "Vorheriger Hash"
 
-#: src/pages/Settings/SettingsPage.tsx:674
-#: src/pages/Settings/SettingsPage.tsx:782
+#: src/pages/Settings/SettingsPage.tsx:794
+#: src/pages/Settings/SettingsPage.tsx:902
 msgid "Processing..."
 msgstr "Verarbeitung..."
 
@@ -1712,7 +1745,7 @@ msgstr "Profil"
 #~ msgid "Profile Photo (optional)"
 #~ msgstr "Profilfoto (optional)"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:293
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:359
 msgid "Provisioning QR code"
 msgstr "Provisionierungs-QR-Code"
 
@@ -1720,7 +1753,11 @@ msgstr "Provisionierungs-QR-Code"
 msgid "Qualifications"
 msgstr "Qualifikationen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:355
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
+msgid "Ready for setup"
+msgstr "Bereit zur Einrichtung"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
 msgid "Reason"
 msgstr "Grund"
 
@@ -1739,12 +1776,12 @@ msgstr "Wiederherstellungscode"
 msgid "login.mfa.recoveryCode"
 msgstr "Wiederherstellungscode"
 
-#: src/pages/Settings/SettingsPage.tsx:726
-#: src/pages/Settings/SettingsPage.tsx:738
+#: src/pages/Settings/SettingsPage.tsx:846
+#: src/pages/Settings/SettingsPage.tsx:858
 msgid "Recovery code"
 msgstr "Wiederherstellungscode"
 
-#: src/pages/Settings/SettingsPage.tsx:374
+#: src/pages/Settings/SettingsPage.tsx:447
 msgid "Recovery codes remaining"
 msgstr "Verbleibende Wiederherstellungscodes"
 
@@ -1761,12 +1798,12 @@ msgstr "Aktivitätsprotokolle aktualisieren"
 msgid "Refresh data"
 msgstr "Daten aktualisieren"
 
-#: src/pages/Settings/SettingsPage.tsx:92
+#: src/pages/Settings/SettingsPage.tsx:99
 msgid "Regenerate codes"
 msgstr "Codes neu generieren"
 
-#: src/pages/Settings/SettingsPage.tsx:85
-#: src/pages/Settings/SettingsPage.tsx:387
+#: src/pages/Settings/SettingsPage.tsx:92
+#: src/pages/Settings/SettingsPage.tsx:460
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
 
@@ -1779,28 +1816,33 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:926
-#~ msgid "Remove"
-#~ msgstr "Entfernen"
+#: src/pages/Settings/SettingsPage.tsx:580
+msgid "Remove"
+msgstr "Entfernen"
+
+#: src/pages/Settings/SettingsPage.tsx:578
+msgid "Removing..."
+msgstr ""
 
 #: src/components/OrganizationalUnitTree.tsx:797
 #: src/components/RouteGuardState.tsx:65
 msgid "Retry"
 msgstr "Wiederholen"
 
-#: src/pages/Settings/SettingsPage.tsx:423
+#: src/pages/Settings/SettingsPage.tsx:496
 msgid "Review the passkeys currently enrolled for this account."
 msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:179
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:245
 msgid "Revocation reason"
 msgstr "Widerrufsgrund"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:362
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:437
 msgid "Revoke"
 msgstr "Widerrufen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:97
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:442
 msgid "Revoked"
 msgstr "Widerrufen"
 
@@ -1827,7 +1869,7 @@ msgstr "Entwurf speichern"
 msgid "Saving..."
 msgstr "Speichern..."
 
-#: src/pages/Settings/SettingsPage.tsx:569
+#: src/pages/Settings/SettingsPage.tsx:689
 msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
 msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen Code, um MFA zu aktivieren."
 
@@ -1935,14 +1977,14 @@ msgstr "Senden einer Bestätigungs-E-Mail..."
 msgid "Sent"
 msgstr "Gesendet"
 
-#: src/pages/Settings/SettingsPage.tsx:406
-#: src/pages/Settings/SettingsPage.tsx:566
+#: src/pages/Settings/SettingsPage.tsx:479
+#: src/pages/Settings/SettingsPage.tsx:686
 msgid "Set up MFA"
 msgstr "MFA einrichten"
 
 #: src/components/application-layout.tsx:150
-#: src/components/application-layout.tsx:348
-#: src/pages/Settings/SettingsPage.tsx:328
+#: src/components/application-layout.tsx:371
+#: src/pages/Settings/SettingsPage.tsx:401
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -1987,7 +2029,7 @@ msgid "Sign in with passkey"
 msgstr "Mit Passkey anmelden"
 
 #: src/components/application-layout.tsx:157
-#: src/components/onboarding-layout.tsx:43
+#: src/components/onboarding-layout.tsx:62
 msgid "Sign out"
 msgstr "Abmelden"
 
@@ -2038,7 +2080,7 @@ msgstr "Quelltext"
 #: src/pages/Employees/EmployeeEdit.tsx:559
 #: src/pages/Employees/EmployeeList.tsx:196
 #: src/pages/Employees/EmployeeList.tsx:245
-#: src/pages/Settings/SettingsPage.tsx:367
+#: src/pages/Settings/SettingsPage.tsx:440
 #: src/pages/Sites/SitesPage.tsx:140
 #: src/pages/Sites/SitesPage.tsx:193
 msgid "Status"
@@ -2068,7 +2110,7 @@ msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 msgid "Still loading your secure session"
 msgstr "Ihre sichere Sitzung wird noch geladen"
 
-#: src/pages/Settings/SettingsPage.tsx:496
+#: src/pages/Settings/SettingsPage.tsx:616
 msgid "Store your recovery codes now"
 msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
@@ -2150,7 +2192,7 @@ msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
 
-#: src/pages/Settings/SettingsPage.tsx:499
+#: src/pages/Settings/SettingsPage.tsx:619
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
 
@@ -2163,7 +2205,7 @@ msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wen
 msgid "This action cannot be undone. The organizational unit will be permanently removed."
 msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
 
-#: src/pages/Settings/SettingsPage.tsx:433
+#: src/pages/Settings/SettingsPage.tsx:536
 msgid "This browser does not support passkeys."
 msgstr "Dieser Browser unterstützt keine Passkeys."
 
@@ -2175,8 +2217,20 @@ msgstr "Dieser Browser unterstützt keine Passkeys."
 msgid "This is a test notification from SecPal"
 msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:126
+msgid "This session expired before setup completed. Create a new session to continue."
+msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:118
+msgid "This session has already been used to complete device bootstrap."
+msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:122
+msgid "This session was revoked and can no longer be used for device setup."
+msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
+
 #. placeholder {0}: formatDateTime( enrollmentPreparation.expires_at, i18n.locale )
-#: src/pages/Settings/SettingsPage.tsx:619
+#: src/pages/Settings/SettingsPage.tsx:739
 msgid "This setup expires at {0}."
 msgstr "Diese Einstellung läuft am {0} ab."
 
@@ -2212,7 +2266,7 @@ msgstr "Zu viele gescheiterte Versuche"
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
 
-#: src/pages/Settings/SettingsPage.tsx:597
+#: src/pages/Settings/SettingsPage.tsx:717
 msgid "Try again"
 msgstr "Erneut versuchen"
 
@@ -2237,8 +2291,16 @@ msgstr "Typ ist erforderlich"
 msgid "Unit"
 msgstr "Einheit"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:301
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:339
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:82
+msgid "Unknown channel"
+msgstr "Unbekannter Kanal"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:102
+msgid "Unknown status"
+msgstr "Unbekannter Status"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:411
 msgid "Unnamed Android enrollment session"
 msgstr "Unbenannte Android-Enrollment-Sitzung"
 
@@ -2246,7 +2308,7 @@ msgstr "Unbenannte Android-Enrollment-Sitzung"
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:246
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:312
 msgid "Update channel"
 msgstr "Update-Kanal"
 
@@ -2273,6 +2335,10 @@ msgstr "Aktualisiere ..."
 #: src/pages/Onboarding/OnboardingWizard.tsx:141
 #~ msgid "Uploading..."
 #~ msgstr "Hochladen..."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:114
+msgid "Use this QR code during Android setup before it expires."
+msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
@@ -2320,7 +2386,7 @@ msgstr "Gültigkeitsdauer"
 msgid "login.mfa.method"
 msgstr "Methode zur Überprüfung"
 
-#: src/pages/Settings/SettingsPage.tsx:705
+#: src/pages/Settings/SettingsPage.tsx:825
 msgid "Verification method"
 msgstr "Methode zur Überprüfung"
 
@@ -2377,7 +2443,7 @@ msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein
 msgid "Warning"
 msgstr "Warnung"
 
-#: src/components/onboarding-layout.tsx:32
+#: src/components/onboarding-layout.tsx:51
 msgid "We could not complete the sign out request. Please try again."
 msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es erneut."
 
@@ -2413,7 +2479,7 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:283
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:349
 msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
 
