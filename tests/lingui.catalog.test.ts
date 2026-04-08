@@ -56,6 +56,8 @@ describe("Lingui German catalog", () => {
 
     for (const msgid of [
       "Added {0}",
+      "Add passkey",
+      "Adding passkey...",
       "Create enrollment session",
       "Creating enrollment session...",
       "Device label",
@@ -67,6 +69,7 @@ describe("Lingui German catalog", () => {
       "No action available",
       "No Android enrollment sessions have been created yet.",
       "No passkeys enrolled yet.",
+      "Passkey label",
       "Passkeys",
       "Provisioning QR code",
       "Reason",
@@ -80,6 +83,7 @@ describe("Lingui German catalog", () => {
       "Unnamed Android enrollment session",
       "Update channel",
       "You can inspect Android enrollment status, but write permission is required to create or revoke sessions.",
+      "Removing...",
     ]) {
       expect(entries.get(msgid), msgid).toBeTruthy();
     }
