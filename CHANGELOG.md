@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Removed a React `act(...)` warning from the `SettingsPage` passkey-removal test by wrapping the deferred `resolveDeletion` call in `act` and waiting for the post-deletion UI to settle, so the covered removal flow no longer leaks async state updates out of the test boundary.
+- Completed the missing German Lingui translations for current passkey and Android provisioning UI so security and enrollment screens no longer fall back to English in the shipped `de` locale.
 - Added the missing German translations for the EmployeeDetail "Confirm Onboarding" action and the onboarding sign-out failure message so those UI states no longer fall back to English.
 - Bounded `ApplicationLayout` sign-out with an 8-second timeout so a hung logout request still clears local auth state and returns the browser user to the login screen.
 - Bounded `OnboardingLayout` sign-out with an 8-second timeout so hung logout requests still clear local auth state and return the user to `/login`, while real API failures continue to show the inline retry message.
