@@ -161,7 +161,7 @@ msgstr "Mitarbeiter hinzufügen"
 
 #: src/pages/Settings/SettingsPage.tsx:530
 msgid "Add passkey"
-msgstr ""
+msgstr "Passkey hinzufügen"
 
 #: src/components/OrganizationalUnitTree.tsx:830
 msgid "Add Root Unit"
@@ -174,7 +174,7 @@ msgstr "Hinzugefügt am {0}"
 
 #: src/pages/Settings/SettingsPage.tsx:528
 msgid "Adding passkey..."
-msgstr ""
+msgstr "Passkey wird hinzugefügt..."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
 msgid "Additional Properties"
@@ -1598,7 +1598,7 @@ msgstr "Teilzeit"
 
 #: src/pages/Settings/SettingsPage.tsx:511
 msgid "Passkey label"
-msgstr ""
+msgstr "Passkey-Bezeichnung"
 
 #: src/pages/Settings/SettingsPage.tsx:493
 msgid "Passkeys"
@@ -1822,7 +1822,7 @@ msgstr "Entfernen"
 
 #: src/pages/Settings/SettingsPage.tsx:578
 msgid "Removing..."
-msgstr ""
+msgstr "Wird entfernt..."
 
 #: src/components/OrganizationalUnitTree.tsx:797
 #: src/components/RouteGuardState.tsx:65
