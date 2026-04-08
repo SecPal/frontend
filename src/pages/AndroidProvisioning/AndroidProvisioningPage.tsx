@@ -102,7 +102,9 @@ function getStatusGuidance(
 ): string {
   switch (status) {
     case "pending":
-      return translate(msg`Use this QR code during Android setup before it expires.`);
+      return translate(
+        msg`Use this QR code during Android setup before it expires.`
+      );
     case "exchanged":
       return translate(
         msg`This session has already been used to complete device bootstrap.`

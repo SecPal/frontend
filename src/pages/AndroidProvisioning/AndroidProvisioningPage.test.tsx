@@ -118,14 +118,20 @@ describe("AndroidProvisioningPage", () => {
 
     renderPage();
 
-    expect(await screen.findByText("Managed device rollout")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Managed device rollout")
+    ).toBeInTheDocument();
     expect(screen.getByText("Ready for setup")).toBeInTheDocument();
     expect(
-      screen.getByText("Use this QR code during Android setup before it expires.")
+      screen.getByText(
+        "Use this QR code during Android setup before it expires."
+      )
     ).toBeInTheDocument();
     expect(screen.getAllByText("GitHub Releases").length).toBeGreaterThan(0);
     expect(
-      screen.getByText("This session was revoked and can no longer be used for device setup.")
+      screen.getByText(
+        "This session was revoked and can no longer be used for device setup."
+      )
     ).toBeInTheDocument();
     expect(screen.getByText(/Token exposed/)).toBeInTheDocument();
     expect(screen.queryByText("managed_device")).not.toBeInTheDocument();
