@@ -439,27 +439,34 @@ describe("SettingsPage", () => {
       expect(button).toBeDisabled();
     }
 
-    await act(async () => {
-      resolveDeletion?.({
-        message: "Passkey deleted successfully.",
-        data: { remaining_passkeys: 1 },
+    try {
+      await act(async () => {
+        resolveDeletion?.({
+          message: "Passkey deleted successfully.",
+          data: { remaining_passkeys: 1 },
+        });
       });
-    });
 
-    await waitFor(() => {
-      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
-      expect(screen.getAllByRole("button", { name: /remove/i })).toHaveLength(
-        1
+      await waitFor(() => {
+        expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+        expect(screen.getAllByRole("button", { name: /remove/i })).toHaveLength(
+          1
+        );
+      });
+
+      expect(
+        consoleErrorSpy.mock.calls.some(([message]) =>
+          String(message).includes("not wrapped in act")
+        )
+      ).toBe(false);
+
+      const unexpectedErrors = consoleErrorSpy.mock.calls.filter(
+        ([message]) => !String(message).includes("not wrapped in act")
       );
-    });
-
-    expect(
-      consoleErrorSpy.mock.calls.some(([message]) =>
-        String(message).includes("not wrapped in act")
-      )
-    ).toBe(false);
-
-    consoleErrorSpy.mockRestore();
+      expect(unexpectedErrors).toHaveLength(0);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   it("shows a busy state while passkey removal is in flight", async () => {
