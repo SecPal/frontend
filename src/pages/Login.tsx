@@ -18,6 +18,7 @@ import { sanitizeAuthUser } from "../services/authState";
 import { checkHealth, HealthStatus } from "../services/healthApi";
 import {
   getPasskeyAssertion,
+  isConditionalMediationAvailable,
   isPasskeySupported,
 } from "../services/passkeyBrowser";
 import { AuthLayout } from "../components/auth-layout";
@@ -237,9 +238,18 @@ export function Login() {
 
     try {
       const challengeResponse = await startPasskeyAuthenticationChallenge();
+
+      let mediation = challengeResponse.data.mediation;
+      if (
+        mediation === "conditional" &&
+        !(await isConditionalMediationAvailable())
+      ) {
+        mediation = "optional";
+      }
+
       const credential = await getPasskeyAssertion(
         challengeResponse.data.public_key,
-        challengeResponse.data.mediation
+        mediation
       );
       const response = await verifyPasskeyAuthenticationChallenge(
         challengeResponse.data.challenge_id,
@@ -270,8 +280,24 @@ export function Login() {
 
       if (err instanceof AuthApiError) {
         setError(err.message);
+      } else if (
+        err instanceof DOMException &&
+        err.name === "NotAllowedError"
+      ) {
+        setError(
+          "Passkey sign-in was cancelled or not permitted by the browser."
+        );
       } else if (err instanceof Error) {
-        setError(err.message);
+        if (
+          err.message.includes("resident credentials") ||
+          err.message.includes("allowCredentials")
+        ) {
+          setError(
+            "Your browser does not support passkey sign-in. Please use your email and password instead."
+          );
+        } else {
+          setError(err.message);
+        }
       } else {
         setError(
           "An unexpected passkey sign-in error occurred. Please try again."

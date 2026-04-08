@@ -109,6 +109,9 @@ function createAuthenticationOptions(
   mediation: string
 ): CredentialRequestOptions {
   const normalizedMediation = normalizeMediation(mediation);
+  const mappedCredentials = options.allow_credentials?.length
+    ? options.allow_credentials.map(mapDescriptor)
+    : undefined;
 
   return {
     ...(normalizedMediation !== undefined
@@ -121,7 +124,9 @@ function createAuthenticationOptions(
       userVerification: options.user_verification as
         | UserVerificationRequirement
         | undefined,
-      allowCredentials: options.allow_credentials?.map(mapDescriptor),
+      ...(mappedCredentials !== undefined
+        ? { allowCredentials: mappedCredentials }
+        : {}),
     },
   };
 }
@@ -197,6 +202,27 @@ export function isPasskeyRegistrationSupported(): boolean {
   return (
     isPasskeySupported() && typeof navigator.credentials?.create === "function"
   );
+}
+
+export async function isConditionalMediationAvailable(): Promise<boolean> {
+  if (
+    typeof window === "undefined" ||
+    typeof window.PublicKeyCredential === "undefined"
+  ) {
+    return false;
+  }
+
+  if (
+    typeof PublicKeyCredential.isConditionalMediationAvailable !== "function"
+  ) {
+    return false;
+  }
+
+  try {
+    return await PublicKeyCredential.isConditionalMediationAvailable();
+  } catch {
+    return false;
+  }
 }
 
 export async function getPasskeyAssertion(
