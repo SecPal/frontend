@@ -51,6 +51,7 @@ vi.mock("../hooks/useOnlineStatus", () => ({
 vi.mock("../services/passkeyBrowser", () => ({
   isPasskeySupported: vi.fn(),
   getPasskeyAssertion: vi.fn(),
+  isConditionalMediationAvailable: vi.fn().mockResolvedValue(true),
 }));
 
 const renderLogin = () => {
