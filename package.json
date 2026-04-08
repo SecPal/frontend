@@ -77,7 +77,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@fontsource/inter": "^5.2.8",
     "@lingui/babel-plugin-lingui-macro": "^5.9.5",
     "@lingui/cli": "^5.9.5",
