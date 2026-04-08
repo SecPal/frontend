@@ -77,6 +77,10 @@ function getChannelLabel(
       return translate(msg`GitHub Releases`);
     case "obtainium":
       return translate(msg`Obtainium`);
+    default: {
+      const unknownChannel = channel as string;
+      return `${translate(msg`Unknown channel`)} (${unknownChannel})`;
+    }
   }
 }
 
@@ -93,6 +97,10 @@ function getStatusLabel(
       return translate(msg`Revoked`);
     case "expired":
       return translate(msg`Expired`);
+    default: {
+      const unknownStatus = status as string;
+      return `${translate(msg`Unknown status`)} (${unknownStatus})`;
+    }
   }
 }
 
@@ -117,6 +125,8 @@ function getStatusGuidance(
       return translate(
         msg`This session expired before setup completed. Create a new session to continue.`
       );
+    default:
+      return "";
   }
 }
 

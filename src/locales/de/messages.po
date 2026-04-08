@@ -226,11 +226,11 @@ msgstr "Ein unerwarteter Fehler ist aufgetreten"
 
 #: src/components/application-layout.tsx:263
 #: src/components/application-layout.tsx:356
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:268
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:280
 msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:351
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:363
 msgid "Android provisioning QR code"
 msgstr "QR-Code zur Android-Provisionierung"
 
@@ -332,7 +332,7 @@ msgstr "zurück zu den Standorten"
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:91
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
 msgid "Bootstrap completed"
 msgstr ""
 
@@ -344,11 +344,6 @@ msgstr "Niederlassung"
 #: src/components/ScopeAssignmentForm.tsx:585
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:682
-msgid "login.mfa.cancel"
-msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
@@ -367,6 +362,11 @@ msgstr "Abbrechen"
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
+msgstr "Abbrechen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:682
+msgid "login.mfa.cancel"
 msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134
@@ -534,7 +534,7 @@ msgstr "Kunde anlegen"
 msgid "Create Employee"
 msgstr "Mitarbeiter anlegen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:331
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:343
 msgid "Create enrollment session"
 msgstr "Enrollment-Sitzung erstellen"
 
@@ -560,7 +560,7 @@ msgstr "Erstellt"
 msgid "Created, but not sent"
 msgstr "Erstellt, aber nicht gesendet"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:329
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:341
 msgid "Creating enrollment session..."
 msgstr "Enrollment-Sitzung wird erstellt..."
 
@@ -687,7 +687,7 @@ msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 msgid "Details"
 msgstr "Details"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:283
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:295
 msgid "Device label"
 msgstr "Gerätebezeichnung"
 
@@ -830,7 +830,7 @@ msgstr "Aktiviere ..."
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:373
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:385
 msgid "Enrollment Sessions"
 msgstr "Enrollment-Sitzungen"
 
@@ -869,13 +869,13 @@ msgstr "Ereignis Hash"
 msgid "Expand"
 msgstr "Ausklappen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:99
 #: src/pages/Sites/SiteDetail.tsx:138
 msgid "Expired"
 msgstr "Abgelaufen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:361
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:409
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:373
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:421
 msgid "Expires"
 msgstr "Läuft ab"
 
@@ -951,7 +951,7 @@ msgstr "Freiberuflich"
 msgid "From Date"
 msgstr "Von"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:294
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:306
 msgid "Front desk tablet"
 msgstr "Empfangstablet"
 
@@ -1128,7 +1128,7 @@ msgstr "Mitarbeiter laden..."
 msgid "Loading employees..."
 msgstr "Mitarbeiter laden..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:378
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:390
 msgid "Loading enrollment sessions..."
 msgstr "Enrollment-Sitzungen werden geladen..."
 
@@ -1403,7 +1403,7 @@ msgstr "Neuer Standort"
 msgid "Next"
 msgstr "Weiter"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:432
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:444
 msgid "No action available"
 msgstr "Keine Aktion verfügbar"
 
@@ -1411,7 +1411,7 @@ msgstr "Keine Aktion verfügbar"
 msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:383
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:395
 msgid "No Android enrollment sessions have been created yet."
 msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 
@@ -1745,7 +1745,7 @@ msgstr "Profil"
 #~ msgid "Profile Photo (optional)"
 #~ msgstr "Profilfoto (optional)"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:347
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:359
 msgid "Provisioning QR code"
 msgstr "Provisionierungs-QR-Code"
 
@@ -1753,11 +1753,11 @@ msgstr "Provisionierungs-QR-Code"
 msgid "Qualifications"
 msgstr "Qualifikationen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:89
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
 msgid "Ready for setup"
 msgstr ""
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:418
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
 msgid "Reason"
 msgstr "Grund"
 
@@ -1833,16 +1833,16 @@ msgstr "Wiederholen"
 msgid "Review the passkeys currently enrolled for this account."
 msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:233
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:245
 msgid "Revocation reason"
 msgstr "Widerrufsgrund"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:425
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:437
 msgid "Revoke"
 msgstr "Widerrufen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:97
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:442
 msgid "Revoked"
 msgstr "Widerrufen"
 
@@ -2217,15 +2217,15 @@ msgstr "Dieser Browser unterstützt keine Passkeys."
 msgid "This is a test notification from SecPal"
 msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:116
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:126
 msgid "This session expired before setup completed. Create a new session to continue."
 msgstr ""
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:108
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:118
 msgid "This session has already been used to complete device bootstrap."
 msgstr ""
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:112
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:122
 msgid "This session was revoked and can no longer be used for device setup."
 msgstr ""
 
@@ -2291,8 +2291,16 @@ msgstr "Typ ist erforderlich"
 msgid "Unit"
 msgstr "Einheit"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:355
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:399
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:82
+msgid "Unknown channel"
+msgstr "Unbekannter Kanal"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:102
+msgid "Unknown status"
+msgstr "Unbekannter Status"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:411
 msgid "Unnamed Android enrollment session"
 msgstr "Unbenannte Android-Enrollment-Sitzung"
 
@@ -2300,7 +2308,7 @@ msgstr "Unbenannte Android-Enrollment-Sitzung"
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:300
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:312
 msgid "Update channel"
 msgstr "Update-Kanal"
 
@@ -2328,7 +2336,7 @@ msgstr "Aktualisiere ..."
 #~ msgid "Uploading..."
 #~ msgstr "Hochladen..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:105
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:114
 msgid "Use this QR code during Android setup before it expires."
 msgstr ""
 
@@ -2471,7 +2479,7 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:337
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:349
 msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
 
