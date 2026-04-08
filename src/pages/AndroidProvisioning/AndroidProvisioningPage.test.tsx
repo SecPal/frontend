@@ -404,4 +404,36 @@ describe("AndroidProvisioningPage", () => {
       screen.queryByRole("button", { name: /create enrollment session/i })
     ).not.toBeInTheDocument();
   });
+
+  it("renders defensive fallback labels for unknown channel and status values", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-future",
+            device_label: "Future device",
+            // Cast to bypass type checks: simulates a future API value this
+            // client version doesn't know about yet.
+            status: "future_status" as "pending",
+            update_channel: "future_channel" as "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Unknown channel (future_channel)")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Unknown status (future_status)")
+    ).toBeInTheDocument();
+    // Unknown statuses produce no operator guidance text.
+    expect(screen.queryByText(/use this qr code/i)).not.toBeInTheDocument();
+  });
 });

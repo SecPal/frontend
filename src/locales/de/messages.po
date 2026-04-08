@@ -334,7 +334,7 @@ msgstr "Rechnungsadresse"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
 msgid "Bootstrap completed"
-msgstr ""
+msgstr "Bootstrap abgeschlossen"
 
 #: src/lib/organizationalUnitUtils.ts:81
 #: src/lib/organizationalUnitUtils.ts:109
@@ -693,7 +693,7 @@ msgstr "Gerätebezeichnung"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:75
 msgid "Direct APK sideload"
-msgstr ""
+msgstr "Direktes APK-Sideloading"
 
 #: src/pages/Settings/SettingsPage.tsx:80
 #: src/pages/Settings/SettingsPage.tsx:87
@@ -969,7 +969,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:77
 msgid "GitHub Releases"
-msgstr ""
+msgstr "GitHub-Versionen"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:443
 msgid "Global"
@@ -1214,7 +1214,7 @@ msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Nied
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:73
 msgid "Managed device rollout"
-msgstr ""
+msgstr "Rollout verwalteter Geräte"
 
 #: src/pages/Employees/EmployeeDetail.tsx:111
 msgid "Management Level"
@@ -1493,7 +1493,7 @@ msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Ein
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:79
 msgid "Obtainium"
-msgstr ""
+msgstr "Obtainium"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:177
 msgid "OK"
@@ -1755,7 +1755,7 @@ msgstr "Qualifikationen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
 msgid "Ready for setup"
-msgstr ""
+msgstr "Bereit zur Einrichtung"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
 msgid "Reason"
@@ -2219,15 +2219,15 @@ msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:126
 msgid "This session expired before setup completed. Create a new session to continue."
-msgstr ""
+msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:118
 msgid "This session has already been used to complete device bootstrap."
-msgstr ""
+msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:122
 msgid "This session was revoked and can no longer be used for device setup."
-msgstr ""
+msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #. placeholder {0}: formatDateTime( enrollmentPreparation.expires_at, i18n.locale )
 #: src/pages/Settings/SettingsPage.tsx:739
@@ -2338,7 +2338,7 @@ msgstr "Aktualisiere ..."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:114
 msgid "Use this QR code during Android setup before it expires."
-msgstr ""
+msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
