@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added user-visible error message in `EmployeeEdit` when the form is submitted without a route `id`; previously the submission silently no-oped.
 - Replaced hardcoded locale-switched date validation error strings in `EmployeeEdit` with `i18n._(msg\`...\`)` calls so messages are properly translatable.
 
+- added targeted Android provisioning access-control regressions for hidden navigation and denied route access so the permission-gated provisioning UI in `frontend#751` stays covered end-to-end
+
 ### Changed
 
 - Replaced raw Android provisioning rollout-channel and session-status enum values with human-readable labels and operator guidance, so stale, revoked, and already-used enrollment sessions are easier to interpret in the frontend UI.
