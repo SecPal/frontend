@@ -166,7 +166,7 @@ msgstr "Stammeinheit hinzufügen"
 #. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
 #: src/pages/Settings/SettingsPage.tsx:460
 msgid "Added {0}"
-msgstr ""
+msgstr "Hinzugefügt am {0}"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
 msgid "Additional Properties"
@@ -524,7 +524,7 @@ msgstr "Mitarbeiter anlegen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:277
 msgid "Create enrollment session"
-msgstr ""
+msgstr "Enrollment-Sitzung erstellen"
 
 #: src/pages/Employees/EmployeeCreate.tsx:451
 msgid "Create New Employee"
@@ -550,7 +550,7 @@ msgstr "Erstellt, aber nicht gesendet"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:275
 msgid "Creating enrollment session..."
-msgstr ""
+msgstr "Enrollment-Sitzung wird erstellt..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx:260
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
@@ -677,7 +677,7 @@ msgstr "Details"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:229
 msgid "Device label"
-msgstr ""
+msgstr "Gerätebezeichnung"
 
 #: src/pages/Settings/SettingsPage.tsx:73
 #: src/pages/Settings/SettingsPage.tsx:80
@@ -816,7 +816,7 @@ msgstr "Dateien verschlüsseln..."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:313
 msgid "Enrollment Sessions"
-msgstr ""
+msgstr "Enrollment-Sitzungen"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx:687
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
@@ -860,7 +860,7 @@ msgstr "Abgelaufen"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:304
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:346
 msgid "Expires"
-msgstr ""
+msgstr "Läuft ab"
 
 #: src/pages/Employees/EmployeeDetail.tsx:272
 msgid "Expires:"
@@ -936,7 +936,7 @@ msgstr "Von"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:240
 msgid "Front desk tablet"
-msgstr ""
+msgstr "Empfangstablet"
 
 #: src/pages/Employees/EmployeeDetail.tsx:96
 msgid "Full Name"
@@ -1109,7 +1109,7 @@ msgstr "Mitarbeiter laden..."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:318
 msgid "Loading enrollment sessions..."
-msgstr ""
+msgstr "Enrollment-Sitzungen werden geladen..."
 
 #: src/pages/Settings/SettingsPage.tsx:357
 msgid "Loading MFA status..."
@@ -1121,7 +1121,7 @@ msgstr "Onboarding laden..."
 
 #: src/pages/Settings/SettingsPage.tsx:443
 msgid "Loading passkeys..."
-msgstr ""
+msgstr "Passkeys werden geladen..."
 
 #: src/pages/Employees/EmployeeDetail.tsx:239
 msgid "Loading qualifications..."
@@ -1380,7 +1380,7 @@ msgstr "Weiter"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:369
 msgid "No action available"
-msgstr ""
+msgstr "Keine Aktion verfügbar"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:389
 msgid "No activity logs found."
@@ -1388,7 +1388,7 @@ msgstr "Keine Aktivitätsprotokolle gefunden."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:323
 msgid "No Android enrollment sessions have been created yet."
-msgstr ""
+msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 
 #: src/pages/Customers/CustomersPage.tsx:145
 msgid "No customers found"
@@ -1419,7 +1419,7 @@ msgstr "Keine übergeordnete Einheit (Stammeinheit)"
 
 #: src/pages/Settings/SettingsPage.tsx:447
 msgid "No passkeys enrolled yet."
-msgstr ""
+msgstr "Es sind noch keine Passkeys eingerichtet."
 
 #: src/pages/Employees/EmployeeDetail.tsx:247
 msgid "No qualifications assigned"
@@ -1569,7 +1569,7 @@ msgstr "Teilzeit"
 
 #: src/pages/Settings/SettingsPage.tsx:420
 msgid "Passkeys"
-msgstr ""
+msgstr "Passkeys"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:486
@@ -1714,7 +1714,7 @@ msgstr "Profil"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:293
 msgid "Provisioning QR code"
-msgstr ""
+msgstr "Provisionierungs-QR-Code"
 
 #: src/pages/Employees/EmployeeDetail.tsx:573
 msgid "Qualifications"
@@ -1722,7 +1722,7 @@ msgstr "Qualifikationen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:355
 msgid "Reason"
-msgstr ""
+msgstr "Grund"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx:624
@@ -1790,19 +1790,19 @@ msgstr "Wiederholen"
 
 #: src/pages/Settings/SettingsPage.tsx:423
 msgid "Review the passkeys currently enrolled for this account."
-msgstr ""
+msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:179
 msgid "Revocation reason"
-msgstr ""
+msgstr "Widerrufsgrund"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:362
 msgid "Revoke"
-msgstr ""
+msgstr "Widerrufen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
 msgid "Revoked"
-msgstr ""
+msgstr "Widerrufen"
 
 #: src/components/ScopeAssignmentForm.tsx:610
 msgid "Save"
@@ -1984,7 +1984,7 @@ msgstr "Zeige zwischengespeicherte Daten"
 
 #: src/pages/Login.tsx:562
 msgid "Sign in with passkey"
-msgstr ""
+msgstr "Mit Passkey anmelden"
 
 #: src/components/application-layout.tsx:157
 #: src/components/onboarding-layout.tsx:43
@@ -1993,7 +1993,7 @@ msgstr "Abmelden"
 
 #: src/pages/Login.tsx:560
 msgid "Signing in with passkey..."
-msgstr ""
+msgstr "Anmeldung mit Passkey..."
 
 #: src/pages/Sites/SiteCreate.tsx:245
 #: src/pages/Sites/SiteEdit.tsx:236
@@ -2165,7 +2165,7 @@ msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationsei
 
 #: src/pages/Settings/SettingsPage.tsx:433
 msgid "This browser does not support passkeys."
-msgstr ""
+msgstr "Dieser Browser unterstützt keine Passkeys."
 
 #: src/pages/Customers/CustomerDetail.tsx:218
 #~ msgid "This customer has {0} site(s)."
@@ -2240,7 +2240,7 @@ msgstr "Einheit"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:301
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:339
 msgid "Unnamed Android enrollment session"
-msgstr ""
+msgstr "Unbenannte Android-Enrollment-Sitzung"
 
 #: src/components/UpdatePrompt.tsx:78
 msgid "Update application now"
@@ -2248,7 +2248,7 @@ msgstr "Anwendung jetzt aktualisieren"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:246
 msgid "Update channel"
-msgstr ""
+msgstr "Update-Kanal"
 
 #: src/components/UpdatePrompt.tsx:80
 msgid "Update now"
@@ -2415,7 +2415,7 @@ msgstr "Ja"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:283
 msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
-msgstr ""
+msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
 
 #: src/components/RouteGuardState.tsx:173
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
