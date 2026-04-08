@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced raw Android provisioning rollout-channel and session-status enum values with human-readable labels and operator guidance, so stale, revoked, and already-used enrollment sessions are easier to interpret in the frontend UI.
 - Aligned the frontend lint toolchain back to the ESLint 9 line so `eslint-plugin-react-hooks` no longer leaves the repository in an invalid peer-dependency state during installs.
 - Made native-bridge login prefer the canonical `GET /v1/me` user payload immediately after authentication, so Android capability-gated navigation no longer depends on the potentially narrower token-login payload during first render.
 - Refreshed the Lingui locale catalogs for the Android provisioning UI so the German navigation no longer falls back to the raw message id `62KQbc` in shipped builds.

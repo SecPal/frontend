@@ -89,6 +89,49 @@ describe("AndroidProvisioningPage", () => {
     expect((init!.headers as Headers).get("Accept")).toBe("application/json");
   });
 
+  it("renders human-readable session state and rollout guidance", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-1",
+            device_label: "Front desk tablet",
+            status: "pending",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+          {
+            id: "session-2",
+            device_label: "Warehouse spare device",
+            status: "revoked",
+            update_channel: "github_release",
+            bootstrap_token_expires_at: "2026-04-06T10:00:00Z",
+            revoked_at: "2026-04-06T09:00:00Z",
+            revocation_reason: "Token exposed",
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    expect(await screen.findByText("Managed device rollout")).toBeInTheDocument();
+    expect(screen.getByText("Ready for setup")).toBeInTheDocument();
+    expect(
+      screen.getByText("Use this QR code during Android setup before it expires.")
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("GitHub Releases").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("This session was revoked and can no longer be used for device setup.")
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Token exposed/)).toBeInTheDocument();
+    expect(screen.queryByText("managed_device")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^pending$/i)).not.toBeInTheDocument();
+  });
+
   it("shows a load error when sessions cannot be fetched", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("network down"));
 

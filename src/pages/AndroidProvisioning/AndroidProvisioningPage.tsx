@@ -64,6 +64,60 @@ function getStatusColor(status: AndroidEnrollmentStatus) {
   }
 }
 
+function getChannelLabel(
+  channel: AndroidReleaseChannel,
+  translate: ReturnType<typeof useLingui>["_"]
+): string {
+  switch (channel) {
+    case "managed_device":
+      return translate(msg`Managed device rollout`);
+    case "direct_apk":
+      return translate(msg`Direct APK sideload`);
+    case "github_release":
+      return translate(msg`GitHub Releases`);
+    case "obtainium":
+      return translate(msg`Obtainium`);
+  }
+}
+
+function getStatusLabel(
+  status: AndroidEnrollmentStatus,
+  translate: ReturnType<typeof useLingui>["_"]
+): string {
+  switch (status) {
+    case "pending":
+      return translate(msg`Ready for setup`);
+    case "exchanged":
+      return translate(msg`Bootstrap completed`);
+    case "revoked":
+      return translate(msg`Revoked`);
+    case "expired":
+      return translate(msg`Expired`);
+  }
+}
+
+function getStatusGuidance(
+  status: AndroidEnrollmentStatus,
+  translate: ReturnType<typeof useLingui>["_"]
+): string {
+  switch (status) {
+    case "pending":
+      return translate(msg`Use this QR code during Android setup before it expires.`);
+    case "exchanged":
+      return translate(
+        msg`This session has already been used to complete device bootstrap.`
+      );
+    case "revoked":
+      return translate(
+        msg`This session was revoked and can no longer be used for device setup.`
+      );
+    case "expired":
+      return translate(
+        msg`This session expired before setup completed. Create a new session to continue.`
+      );
+  }
+}
+
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError || error instanceof Error) {
     return error.message;
@@ -258,7 +312,7 @@ export default function AndroidProvisioningPage() {
                 >
                   {CHANNELS.map((channel) => (
                     <option key={channel} value={channel}>
-                      {channel}
+                      {getChannelLabel(channel, _)}
                     </option>
                   ))}
                 </Select>
@@ -301,8 +355,14 @@ export default function AndroidProvisioningPage() {
                   _(msg`Unnamed Android enrollment session`)}
               </Text>
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                {getChannelLabel(latestSession.update_channel, _)}
+              </Text>
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                 <Trans>Expires</Trans>:{" "}
                 {formatDateTime(latestSession.bootstrap_token_expires_at)}
+              </Text>
+              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                {getStatusGuidance(latestSession.status, _)}
               </Text>
             </div>
           ) : null}
@@ -340,16 +400,19 @@ export default function AndroidProvisioningPage() {
                     </Text>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge color={getStatusColor(session.status)}>
-                        {session.status}
+                        {getStatusLabel(session.status, _)}
                       </Badge>
+                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {getChannelLabel(session.update_channel, _)}
+                      </Text>
                       <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                         <Trans>Expires</Trans>:{" "}
                         {formatDateTime(session.bootstrap_token_expires_at)}
                       </Text>
-                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {session.update_channel}
-                      </Text>
                     </div>
+                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {getStatusGuidance(session.status, _)}
+                    </Text>
                     {session.revocation_reason ? (
                       <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                         <Trans>Reason</Trans>: {session.revocation_reason}
