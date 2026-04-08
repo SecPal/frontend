@@ -372,6 +372,62 @@ describe("Login", () => {
     });
   });
 
+  it("falls back to optional mediation when conditional mediation is unavailable", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      passkeyBrowser.isConditionalMediationAvailable
+    ).mockResolvedValueOnce(false);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "conditional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockResolvedValueOnce({
+      id: "credential-id",
+      raw_id: "credential-id",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        authenticator_data: "YXV0aA",
+        signature: "c2lnbmF0dXJl",
+      },
+      client_extension_results: {},
+    });
+    vi.mocked(
+      authApi.verifyPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        method: "passkey",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    await waitFor(() => {
+      expect(passkeyBrowser.getPasskeyAssertion).toHaveBeenCalledWith(
+        expect.anything(),
+        "optional"
+      );
+    });
+  });
+
   it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
