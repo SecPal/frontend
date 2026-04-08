@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -385,6 +391,9 @@ describe("SettingsPage", () => {
   });
 
   it("disables all remove buttons while any removal is in flight", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     let resolveDeletion:
       | ((value: {
           message: string;
@@ -430,10 +439,27 @@ describe("SettingsPage", () => {
       expect(button).toBeDisabled();
     }
 
-    resolveDeletion?.({
-      message: "Passkey deleted successfully.",
-      data: { remaining_passkeys: 1 },
+    await act(async () => {
+      resolveDeletion?.({
+        message: "Passkey deleted successfully.",
+        data: { remaining_passkeys: 1 },
+      });
     });
+
+    await waitFor(() => {
+      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(screen.getAllByRole("button", { name: /remove/i })).toHaveLength(
+        1
+      );
+    });
+
+    expect(
+      consoleErrorSpy.mock.calls.some(([message]) =>
+        String(message).includes("not wrapped in act")
+      )
+    ).toBe(false);
+
+    consoleErrorSpy.mockRestore();
   });
 
   it("shows a busy state while passkey removal is in flight", async () => {
