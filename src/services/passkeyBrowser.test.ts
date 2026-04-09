@@ -125,22 +125,31 @@ describe("passkeyBrowser", () => {
       "conditional"
     );
 
-    expect(getCredential).toHaveBeenCalledWith({
-      mediation: "conditional",
-      publicKey: {
-        challenge: toArrayBuffer("challenge"),
-        rpId: "app.secpal.dev",
-        timeout: 60000,
-        userVerification: "preferred",
-        allowCredentials: [
-          {
-            type: "public-key",
-            id: toArrayBuffer("credential-id"),
-            transports: ["internal", "usb"],
-          },
-        ],
-      },
-    });
+    expect(getCredential).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mediation: "conditional",
+        publicKey: {
+          challenge: toArrayBuffer("challenge"),
+          rpId: "app.secpal.dev",
+          timeout: 60000,
+          userVerification: "preferred",
+          allowCredentials: [
+            {
+              type: "public-key",
+              id: toArrayBuffer("credential-id"),
+              transports: ["internal", "usb"],
+            },
+          ],
+        },
+      })
+    );
+
+    const callOptions = getCredential.mock.calls[0]![0]! as Record<
+      string,
+      unknown
+    >;
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
 
     expect(credential).toEqual({
       id: "credential-id",
@@ -552,5 +561,212 @@ describe("passkeyBrowser", () => {
     });
 
     expect(await isConditionalMediationAvailable()).toBe(false);
+  });
+
+  it("strips null authenticatorAttachment from the registration options", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+      authenticator_selection: {
+        authenticator_attachment: null as unknown as "platform",
+        resident_key: "preferred",
+        require_resident_key: false,
+        user_verification: "preferred",
+      },
+    };
+
+    const createCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        attestationObject: toArrayBuffer("attestation-object"),
+        getTransports: () => [],
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    await getPasskeyAttestation(registrationOptions);
+
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
+    expect(callOptions.publicKey?.authenticatorSelection).toBeDefined();
+    expect(callOptions.publicKey?.authenticatorSelection).not.toHaveProperty(
+      "authenticatorAttachment"
+    );
+    expect(callOptions.publicKey?.authenticatorSelection?.residentKey).toBe(
+      "preferred"
+    );
+  });
+
+  it("only picks id and name from rp, excluding icon and other fields", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: {
+        id: "app.secpal.dev",
+        name: "SecPal",
+        icon: null as unknown as string,
+      } as PasskeyRegistrationPublicKeyOptions["rp"],
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+    };
+
+    const createCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        attestationObject: toArrayBuffer("attestation-object"),
+        getTransports: () => [],
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    await getPasskeyAttestation(registrationOptions);
+
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
+    expect(callOptions.publicKey?.rp).toEqual({
+      id: "app.secpal.dev",
+      name: "SecPal",
+    });
+    expect(callOptions.publicKey?.rp).not.toHaveProperty("icon");
+  });
+
+  it("omits excludeCredentials from the registration call when exclude_credentials is empty", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+      exclude_credentials: [],
+    };
+
+    const createCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        attestationObject: toArrayBuffer("attestation-object"),
+        getTransports: () => [],
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    await getPasskeyAttestation(registrationOptions);
+
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
+    expect(callOptions.publicKey).not.toHaveProperty("excludeCredentials");
+  });
+
+  it("passes an AbortSignal to navigator.credentials.create during attestation", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+      timeout: 30000,
+    };
+
+    const createCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        attestationObject: toArrayBuffer("attestation-object"),
+        getTransports: () => [],
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    await getPasskeyAttestation(registrationOptions);
+
+    const callOptions = createCredential.mock.calls[0]![0]! as Record<
+      string,
+      unknown
+    >;
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("passes an AbortSignal to navigator.credentials.get during assertion", async () => {
+    const getCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        authenticatorData: toArrayBuffer("authenticator-data"),
+        signature: toArrayBuffer("signature"),
+        userHandle: null,
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: getCredential },
+    });
+
+    await getPasskeyAssertion(authenticationOptions, "required");
+
+    const callOptions = getCredential.mock.calls[0]![0]! as Record<
+      string,
+      unknown
+    >;
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
   });
 });

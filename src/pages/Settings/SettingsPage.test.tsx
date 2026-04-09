@@ -350,6 +350,29 @@ describe("SettingsPage", () => {
     ).not.toBeDisabled();
   });
 
+  it("shows timeout message when passkey registration is aborted", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/passkey registration timed out/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add passkey/i })
+    ).not.toBeDisabled();
+  });
+
   it("shows generic error when browser attestation fails unexpectedly", async () => {
     vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
       createPasskeyRegistrationChallengeResponse()

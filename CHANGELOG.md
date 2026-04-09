@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed passkey enrollment hanging on "Adding passkey..." by stripping null `authenticatorAttachment` values from `AuthenticatorSelectionCriteria`, picking only `id` and `name` from the `rp` object (omitting deprecated `icon: null`), and omitting empty `excludeCredentials` arrays before passing options to `navigator.credentials.create()`.
+- Added an `AbortController` timeout safety net to both `getPasskeyAttestation` and `getPasskeyAssertion` so the WebAuthn ceremony is cancelled if the browser exceeds the server-specified timeout plus a 5-second grace period, preventing indefinite UI hangs.
+- Added explicit `AbortError` handling in the passkey sign-in and passkey registration error paths so timed-out WebAuthn ceremonies show a clear "timed out" message instead of a raw abort error.
 - Added a user-friendly cancellation message when the browser WebAuthn dialog is dismissed or denied during passkey registration.
 - Fixed passkey browser login failing with "Resident credentials or empty allowCredentials lists are not supported" by omitting empty `allowCredentials` from the WebAuthn options, checking conditional-mediation availability with a safe fallback to `optional`, and surfacing a user-friendly message when passkey sign-in encounters an unsupported-browser or cancelled-ceremony error.
 - Added the missing German translations for the remaining passkey action labels in Settings so add and remove flows no longer fall back to English in the shipped `de` locale.

@@ -287,6 +287,8 @@ export function Login() {
         setError(
           "Passkey sign-in was cancelled or not permitted by the browser."
         );
+      } else if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Passkey sign-in timed out. Please try again.");
       } else if (err instanceof Error) {
         if (
           err.message.includes("resident credentials") ||

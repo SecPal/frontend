@@ -256,6 +256,8 @@ export function SettingsPage() {
         setPasskeyError(
           "Passkey registration was cancelled or not permitted by the browser."
         );
+      } else if (error instanceof DOMException && error.name === "AbortError") {
+        setPasskeyError("Passkey registration timed out. Please try again.");
       } else if (error instanceof Error) {
         setPasskeyError(error.message);
       } else {
