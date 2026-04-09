@@ -608,8 +608,57 @@ describe("passkeyBrowser", () => {
     expect(callOptions.publicKey?.authenticatorSelection).not.toHaveProperty(
       "authenticatorAttachment"
     );
+    expect(callOptions.publicKey?.authenticatorSelection).not.toHaveProperty(
+      "requireResidentKey"
+    );
     expect(callOptions.publicKey?.authenticatorSelection?.residentKey).toBe(
       "preferred"
+    );
+  });
+
+  it("passes requireResidentKey through only when the server explicitly requires it", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+      authenticator_selection: {
+        resident_key: "required",
+        require_resident_key: true,
+        user_verification: "preferred",
+      },
+    };
+
+    const createCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        attestationObject: toArrayBuffer("attestation-object"),
+        getTransports: () => [],
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    await getPasskeyAttestation(registrationOptions);
+
+    const callOptions = createCredential.mock
+      .calls[0]![0]! as CredentialCreationOptions;
+    expect(callOptions.publicKey?.authenticatorSelection).toHaveProperty(
+      "requireResidentKey",
+      true
     );
   });
 
@@ -740,6 +789,42 @@ describe("passkeyBrowser", () => {
     expect(callOptions.signal).toBeInstanceOf(AbortSignal);
   });
 
+  it("times out attestation even when the browser ignores the abort signal", async () => {
+    vi.useFakeTimers();
+
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+      attestation: "none",
+      timeout: 25,
+    };
+
+    const createCredential = vi.fn(
+      () => new Promise<PublicKeyCredential | null>(() => {})
+    );
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: vi.fn(), create: createCredential },
+    });
+
+    const promise = getPasskeyAttestation(registrationOptions);
+    const expectation = expect(promise).rejects.toMatchObject({
+      name: "AbortError",
+    });
+
+    await vi.advanceTimersByTimeAsync(5_026);
+
+    await expectation;
+  });
+
   it("passes an AbortSignal to navigator.credentials.get during assertion", async () => {
     const getCredential = vi.fn().mockResolvedValue({
       id: "credential-id",
@@ -768,5 +853,34 @@ describe("passkeyBrowser", () => {
     >;
     expect(callOptions).toHaveProperty("signal");
     expect(callOptions.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("times out assertion even when the browser ignores the abort signal", async () => {
+    vi.useFakeTimers();
+
+    const getCredential = vi.fn(
+      () => new Promise<PublicKeyCredential | null>(() => {})
+    );
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: getCredential },
+    });
+
+    const promise = getPasskeyAssertion(
+      {
+        ...authenticationOptions,
+        timeout: 25,
+      },
+      "required"
+    );
+    const expectation = expect(promise).rejects.toMatchObject({
+      name: "AbortError",
+    });
+
+    await vi.advanceTimersByTimeAsync(5_026);
+
+    await expectation;
   });
 });

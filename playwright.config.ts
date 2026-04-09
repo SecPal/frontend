@@ -95,10 +95,6 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        // Enable CDP for Lighthouse integration
-        launchOptions: {
-          args: ["--remote-debugging-port=9222"],
-        },
       },
     },
     // Mobile Chrome for responsive testing
@@ -106,9 +102,6 @@ export default defineConfig({
       name: "mobile-chrome",
       use: {
         ...devices["Pixel 5"],
-        launchOptions: {
-          args: ["--remote-debugging-port=9223"],
-        },
       },
     },
   ],

@@ -149,7 +149,7 @@ function buildAuthenticatorSelection(
     result.residentKey = selection.resident_key;
   }
 
-  if (typeof selection.require_resident_key === "boolean") {
+  if (selection.require_resident_key === true) {
     result.requireResidentKey = selection.require_resident_key;
   }
 
@@ -218,6 +218,30 @@ function encodeUserHandle(
   return userHandle ? toBase64Url(userHandle) : null;
 }
 
+async function awaitCredentialOperation<T>(
+  operation: Promise<T>,
+  abortController: AbortController,
+  timeoutMs: number
+): Promise<T> {
+  return await new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      abortController.abort();
+      reject(new DOMException("The operation was aborted.", "AbortError"));
+    }, timeoutMs);
+
+    operation.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      }
+    );
+  });
+}
+
 export function isPasskeySupported(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -265,21 +289,14 @@ export async function getPasskeyAssertion(
 
   const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
-  const timeoutId = window.setTimeout(
-    () => abortController.abort(),
-    safetyTimeout
-  );
-
-  let credential: Credential | null;
-
-  try {
-    credential = await navigator.credentials.get({
+  const credential = await awaitCredentialOperation(
+    navigator.credentials.get({
       ...requestOptions,
       signal: abortController.signal,
-    });
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
+    }),
+    abortController,
+    safetyTimeout
+  );
 
   if (
     !credential ||
@@ -337,26 +354,16 @@ export async function getPasskeyAttestation(
 
   const creationOptions = createRegistrationOptions(options);
 
-  // Use an AbortController so the browser ceremony is cancelled if the
-  // WebAuthn timeout passes without user interaction.  This prevents the
-  // UI from staying stuck on "Adding passkey..." indefinitely.
   const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
-  const timeoutId = window.setTimeout(
-    () => abortController.abort(),
-    safetyTimeout
-  );
-
-  let credential: Credential | null;
-
-  try {
-    credential = await navigator.credentials.create({
+  const credential = await awaitCredentialOperation(
+    navigator.credentials.create({
       ...creationOptions,
       signal: abortController.signal,
-    });
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
+    }),
+    abortController,
+    safetyTimeout
+  );
 
   if (
     !credential ||

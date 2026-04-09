@@ -664,6 +664,49 @@ describe("authApi", () => {
       );
     });
 
+    it("starts an email-scoped browser passkey authentication challenge", async () => {
+      const mockResponse = {
+        data: {
+          challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+          public_key: {
+            challenge: "Zm9vYmFy",
+            rp_id: "app.secpal.dev",
+            timeout: 60000,
+            user_verification: "preferred",
+            allow_credentials: [
+              {
+                id: "credential-id",
+                type: "public-key",
+              },
+            ],
+          },
+          mediation: "optional",
+          expires_at: "2026-04-06T12:00:00Z",
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => mockResponse,
+      } as Response);
+
+      await expect(
+        startPasskeyAuthenticationChallenge({ email: "test@secpal.dev" })
+      ).resolves.toEqual(mockResponse);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("/v1/auth/passkeys/challenges"),
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify({ email: "test@secpal.dev" }),
+        })
+      );
+    });
+
     it("verifies a browser passkey authentication challenge", async () => {
       const mockResponse = {
         user: createAuthenticatedUser(),

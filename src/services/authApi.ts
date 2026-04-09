@@ -7,6 +7,7 @@ import type {
   MfaRecoveryCodeRevealResponse,
   MfaStatusResponse,
   MfaTotpEnrollmentResponse,
+  PasskeyAuthenticationChallengeRequest,
   MfaVerificationCodeRequest,
   PasskeyDeletionResponse,
   PasskeyAuthenticationChallengeResponse,
@@ -172,15 +173,21 @@ export async function verifyMfaChallenge(
   );
 }
 
-export async function startPasskeyAuthenticationChallenge(): Promise<PasskeyAuthenticationChallengeResponse> {
+export async function startPasskeyAuthenticationChallenge(
+  payload?: PasskeyAuthenticationChallengeRequest
+): Promise<PasskeyAuthenticationChallengeResponse> {
   await fetchCsrfToken();
+
+  const hasPayload = typeof payload?.email === "string" && payload.email !== "";
 
   const response = await apiFetch(buildApiUrl("/v1/auth/passkeys/challenges"), {
     method: "POST",
     cache: "no-store",
     headers: {
       Accept: "application/json",
+      ...(hasPayload ? { "Content-Type": "application/json" } : {}),
     },
+    ...(hasPayload ? { body: JSON.stringify(payload) } : {}),
   });
 
   if (!response.ok) {
