@@ -485,6 +485,42 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a timeout message when passkey sign-in is aborted", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "optional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    const abortError = new DOMException(
+      "The operation was aborted.",
+      "AbortError"
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockRejectedValueOnce(
+      abortError
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    expect(
+      await screen.findByText(/passkey sign-in timed out/i)
+    ).toBeInTheDocument();
+  });
+
   it("shows an unsupported-browser message when passkey sign-in fails with a resident-credentials error", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(

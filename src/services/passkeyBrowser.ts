@@ -131,26 +131,52 @@ function createAuthenticationOptions(
   };
 }
 
+function buildAuthenticatorSelection(
+  selection: NonNullable<
+    PasskeyRegistrationPublicKeyOptions["authenticator_selection"]
+  >
+): AuthenticatorSelectionCriteria {
+  const result: AuthenticatorSelectionCriteria = {};
+
+  if (
+    selection.authenticator_attachment === "platform" ||
+    selection.authenticator_attachment === "cross-platform"
+  ) {
+    result.authenticatorAttachment = selection.authenticator_attachment;
+  }
+
+  if (selection.resident_key) {
+    result.residentKey = selection.resident_key;
+  }
+
+  if (typeof selection.require_resident_key === "boolean") {
+    result.requireResidentKey = selection.require_resident_key;
+  }
+
+  if (selection.user_verification) {
+    result.userVerification = selection.user_verification;
+  }
+
+  return result;
+}
+
 function createRegistrationOptions(
   options: PasskeyRegistrationPublicKeyOptions
 ): CredentialCreationOptions {
   const authenticatorSelection = options.authenticator_selection
-    ? {
-        authenticatorAttachment:
-          options.authenticator_selection.authenticator_attachment,
-        residentKey: options.authenticator_selection.resident_key,
-        requireResidentKey:
-          options.authenticator_selection.require_resident_key,
-        userVerification: options.authenticator_selection.user_verification,
-      }
+    ? buildAuthenticatorSelection(options.authenticator_selection)
     : undefined;
 
   const attestation = normalizeAttestation(options.attestation);
 
+  const mappedExcludeCredentials = options.exclude_credentials?.length
+    ? options.exclude_credentials.map(mapDescriptor)
+    : undefined;
+
   return {
     publicKey: {
       challenge: fromBase64Url(options.challenge),
-      rp: options.rp,
+      rp: { id: options.rp.id, name: options.rp.name },
       user: {
         id: fromBase64Url(options.user.id),
         name: options.user.name,
@@ -161,8 +187,12 @@ function createRegistrationOptions(
         alg: parameter.alg,
       })),
       timeout: options.timeout,
-      excludeCredentials: options.exclude_credentials?.map(mapDescriptor),
-      authenticatorSelection,
+      ...(mappedExcludeCredentials !== undefined
+        ? { excludeCredentials: mappedExcludeCredentials }
+        : {}),
+      ...(authenticatorSelection !== undefined
+        ? { authenticatorSelection }
+        : {}),
       ...(attestation !== undefined ? { attestation } : {}),
     },
   };
@@ -231,9 +261,25 @@ export async function getPasskeyAssertion(
 ): Promise<PasskeyAuthenticationCredential> {
   assertPasskeySupport();
 
-  const credential = await navigator.credentials.get(
-    createAuthenticationOptions(options, mediation)
+  const requestOptions = createAuthenticationOptions(options, mediation);
+
+  const abortController = new AbortController();
+  const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
+  const timeoutId = window.setTimeout(
+    () => abortController.abort(),
+    safetyTimeout
   );
+
+  let credential: Credential | null;
+
+  try {
+    credential = await navigator.credentials.get({
+      ...requestOptions,
+      signal: abortController.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (
     !credential ||
@@ -289,9 +335,28 @@ export async function getPasskeyAttestation(
     throw new Error("Passkeys are not available in this browser.");
   }
 
-  const credential = await navigator.credentials.create(
-    createRegistrationOptions(options)
+  const creationOptions = createRegistrationOptions(options);
+
+  // Use an AbortController so the browser ceremony is cancelled if the
+  // WebAuthn timeout passes without user interaction.  This prevents the
+  // UI from staying stuck on "Adding passkey..." indefinitely.
+  const abortController = new AbortController();
+  const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
+  const timeoutId = window.setTimeout(
+    () => abortController.abort(),
+    safetyTimeout
   );
+
+  let credential: Credential | null;
+
+  try {
+    credential = await navigator.credentials.create({
+      ...creationOptions,
+      signal: abortController.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (
     !credential ||
