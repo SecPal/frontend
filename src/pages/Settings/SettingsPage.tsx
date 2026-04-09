@@ -249,6 +249,13 @@ export function SettingsPage() {
     } catch (error) {
       if (error instanceof AuthApiError) {
         setPasskeyError(error.message);
+      } else if (
+        error instanceof DOMException &&
+        error.name === "NotAllowedError"
+      ) {
+        setPasskeyError(
+          "Passkey registration was cancelled or not permitted by the browser."
+        );
       } else if (error instanceof Error) {
         setPasskeyError(error.message);
       } else {

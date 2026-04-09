@@ -324,6 +324,55 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
+      new DOMException(
+        "The operation either timed out or was not allowed.",
+        "NotAllowedError"
+      )
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/cancelled or not permitted/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add passkey/i })
+    ).not.toBeDisabled();
+  });
+
+  it("shows generic error when browser attestation fails unexpectedly", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
+      new Error("Unexpected credential error")
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/unexpected credential error/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add passkey/i })
+    ).not.toBeDisabled();
+  });
+
   it("maps a real browser passkey attestation into the API payload", async () => {
     const actualPasskeyBrowser = await vi.importActual<
       typeof import("../../services/passkeyBrowser")
