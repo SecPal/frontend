@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Added a user-friendly cancellation message when the browser WebAuthn dialog is dismissed or denied during passkey registration; the "Add passkey" button now recovers to its idle state instead of staying stuck on "Adding passkey..."
+- Added a user-friendly cancellation message when the browser WebAuthn dialog is dismissed or denied during passkey registration.
 - Fixed passkey browser login failing with "Resident credentials or empty allowCredentials lists are not supported" by omitting empty `allowCredentials` from the WebAuthn options, checking conditional-mediation availability with a safe fallback to `optional`, and surfacing a user-friendly message when passkey sign-in encounters an unsupported-browser or cancelled-ceremony error.
 - Added the missing German translations for the remaining passkey action labels in Settings so add and remove flows no longer fall back to English in the shipped `de` locale.
 - Removed a React `act(...)` warning from the `SettingsPage` passkey-removal test by wrapping the deferred `resolveDeletion` call in `act` and waiting for the post-deletion UI to settle, so the covered removal flow no longer leaks async state updates out of the test boundary.
