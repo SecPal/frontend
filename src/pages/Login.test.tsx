@@ -51,6 +51,7 @@ vi.mock("../hooks/useOnlineStatus", () => ({
 vi.mock("../services/passkeyBrowser", () => ({
   isPasskeySupported: vi.fn(),
   getPasskeyAssertion: vi.fn(),
+  isConditionalMediationAvailable: vi.fn().mockResolvedValue(true),
 }));
 
 const renderLogin = () => {
@@ -371,6 +372,62 @@ describe("Login", () => {
     });
   });
 
+  it("falls back to optional mediation when conditional mediation is unavailable", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      passkeyBrowser.isConditionalMediationAvailable
+    ).mockResolvedValueOnce(false);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "conditional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockResolvedValueOnce({
+      id: "credential-id",
+      raw_id: "credential-id",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        authenticator_data: "YXV0aA",
+        signature: "c2lnbmF0dXJl",
+      },
+      client_extension_results: {},
+    });
+    vi.mocked(
+      authApi.verifyPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        method: "passkey",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    await waitFor(() => {
+      expect(passkeyBrowser.getPasskeyAssertion).toHaveBeenCalledWith(
+        expect.anything(),
+        "optional"
+      );
+    });
+  });
+
   it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
@@ -387,6 +444,78 @@ describe("Login", () => {
 
     expect(
       await screen.findByText(/passkey sign-in is temporarily unavailable/i)
+    ).toBeInTheDocument();
+  });
+
+  it("shows a cancelled message when passkey sign-in is rejected with NotAllowedError", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "optional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    const notAllowed = new DOMException(
+      "The operation is not allowed.",
+      "NotAllowedError"
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockRejectedValueOnce(
+      notAllowed
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    expect(
+      await screen.findByText(
+        /passkey sign-in was cancelled or not permitted by the browser/i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("shows an unsupported-browser message when passkey sign-in fails with a resident-credentials error", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "optional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockRejectedValueOnce(
+      new Error(
+        "Resident credentials or empty allowCredentials lists are not supported"
+      )
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    expect(
+      await screen.findByText(/your browser does not support passkey sign-in/i)
     ).toBeInTheDocument();
   });
 

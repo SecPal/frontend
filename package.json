@@ -61,7 +61,7 @@
     "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.9",
+    "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
     "@lingui/core": "^5.9.3",
     "@lingui/react": "^5.9.3",
@@ -70,8 +70,8 @@
     "dexie-react-hooks": "^4.4.0",
     "motion": "^12.38.0",
     "qrcode": "^1.5.4",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.0",
     "web-vitals": "^5.2.0"
   },

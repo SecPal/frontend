@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getPasskeyAssertion,
   getPasskeyAttestation,
+  isConditionalMediationAvailable,
   isPasskeySupported,
   isPasskeyRegistrationSupported,
 } from "./passkeyBrowser";
@@ -455,5 +456,101 @@ describe("passkeyBrowser", () => {
     const callOptions = createCredential.mock
       .calls[0]![0]! as CredentialCreationOptions;
     expect(callOptions.publicKey).toHaveProperty("attestation", "none");
+  });
+
+  it("omits allowCredentials from the browser call when allow_credentials is empty", async () => {
+    const optionsWithEmptyCredentials: PasskeyAuthenticationPublicKeyOptions = {
+      ...authenticationOptions,
+      allow_credentials: [],
+    };
+
+    const getCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        authenticatorData: toArrayBuffer("authenticator-data"),
+        signature: toArrayBuffer("signature"),
+        userHandle: null,
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: getCredential },
+    });
+
+    await getPasskeyAssertion(optionsWithEmptyCredentials, "conditional");
+
+    const callOptions = getCredential.mock
+      .calls[0]![0]! as CredentialRequestOptions;
+    expect(callOptions.publicKey).not.toHaveProperty("allowCredentials");
+  });
+
+  it("omits allowCredentials from the browser call when allow_credentials is undefined", async () => {
+    const optionsWithoutCredentials: PasskeyAuthenticationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp_id: "app.secpal.dev",
+      timeout: 60000,
+      user_verification: "preferred",
+    };
+
+    const getCredential = vi.fn().mockResolvedValue({
+      id: "credential-id",
+      rawId: toArrayBuffer("raw-id"),
+      type: "public-key",
+      response: {
+        clientDataJSON: toArrayBuffer("client-data"),
+        authenticatorData: toArrayBuffer("authenticator-data"),
+        signature: toArrayBuffer("signature"),
+        userHandle: null,
+      },
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential);
+
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: { get: getCredential },
+    });
+
+    await getPasskeyAssertion(optionsWithoutCredentials, "optional");
+
+    const callOptions = getCredential.mock
+      .calls[0]![0]! as CredentialRequestOptions;
+    expect(callOptions.publicKey).not.toHaveProperty("allowCredentials");
+  });
+
+  it("returns true for isConditionalMediationAvailable when the browser supports it", async () => {
+    vi.stubGlobal("PublicKeyCredential", {
+      isConditionalMediationAvailable: vi.fn().mockResolvedValue(true),
+    });
+
+    expect(await isConditionalMediationAvailable()).toBe(true);
+  });
+
+  it("returns false for isConditionalMediationAvailable when the method is absent", async () => {
+    vi.stubGlobal("PublicKeyCredential", {});
+
+    expect(await isConditionalMediationAvailable()).toBe(false);
+  });
+
+  it("returns false for isConditionalMediationAvailable when PublicKeyCredential is undefined", async () => {
+    Reflect.deleteProperty(window, "PublicKeyCredential");
+
+    expect(await isConditionalMediationAvailable()).toBe(false);
+  });
+
+  it("returns false for isConditionalMediationAvailable when the check throws", async () => {
+    vi.stubGlobal("PublicKeyCredential", {
+      isConditionalMediationAvailable: vi
+        .fn()
+        .mockRejectedValue(new Error("not supported")),
+    });
+
+    expect(await isConditionalMediationAvailable()).toBe(false);
   });
 });
