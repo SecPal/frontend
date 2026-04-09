@@ -868,5 +868,29 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Android-Provisionierung")).toBeInTheDocument();
       expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
     });
+
+    it("hides the Android provisioning navigation entry without read access", () => {
+      localStorage.setItem(
+        "auth_user",
+        JSON.stringify({
+          id: 1,
+          name: "Admin User",
+          email: "admin@secpal.dev",
+          hasOrganizationalScopes: true,
+          roles: [],
+          permissions: ["activity_log.read"],
+        })
+      );
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.queryByRole("link", { name: "Android Provisioning" })
+      ).not.toBeInTheDocument();
+    });
   });
 });

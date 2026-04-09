@@ -89,4 +89,58 @@ describe("FeatureRoute", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
   });
+  it("renders access denied when Android provisioning read access is missing", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+    vi.mocked(capabilitiesHook.useUserCapabilities).mockReturnValue({
+      ...capabilities,
+      androidProvisioning: false,
+      actions: {
+        ...capabilities.actions,
+        androidProvisioning: { create: false, revoke: false },
+      },
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/android-provisioning"]}>
+          <Routes>
+            <Route
+              path="/android-provisioning"
+              element={
+                <FeatureRoute feature="androidProvisioning">
+                  <div>Android Provisioning Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /access denied/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/do not have permission to access this feature/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Android Provisioning Content")
+    ).not.toBeInTheDocument();
+  });
 });
