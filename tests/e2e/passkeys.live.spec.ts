@@ -22,6 +22,7 @@ interface RecordedExchange {
 interface PasskeyTraffic {
   registrationVerify: RecordedExchange[];
   loginVerify: RecordedExchange[];
+  sessionConfirmation: RecordedExchange[];
   passkeyList: RecordedExchange[];
 }
 
@@ -29,6 +30,7 @@ function createPasskeyTraffic(): PasskeyTraffic {
   return {
     registrationVerify: [],
     loginVerify: [],
+    sessionConfirmation: [],
     passkeyList: [],
   };
 }
@@ -73,6 +75,11 @@ function observePasskeyTraffic(page: Page, traffic: PasskeyTraffic) {
       url.endsWith("/verify")
     ) {
       traffic.loginVerify.push(exchange);
+      return;
+    }
+
+    if (url.endsWith("/v1/me") && method === "GET") {
+      traffic.sessionConfirmation.push(exchange);
       return;
     }
 
@@ -371,6 +378,17 @@ test.describe("Live passkey proof", () => {
             user: expect.objectContaining({
               email: TEST_USER.email,
             }),
+          })
+        );
+
+        // Verify the session confirmation request (getCurrentUser after verify)
+        const sessionConfirm = traffic.sessionConfirmation.find(
+          (exchange) => exchange.status === 200
+        );
+        expect(sessionConfirm).toBeDefined();
+        expect(sessionConfirm?.responseBody).toEqual(
+          expect.objectContaining({
+            email: TEST_USER.email,
           })
         );
 

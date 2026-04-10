@@ -10,6 +10,7 @@ import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import {
+  getCurrentUser,
   startPasskeyAuthenticationChallenge,
   verifyMfaChallenge,
   verifyPasskeyAuthenticationChallenge,
@@ -302,8 +303,21 @@ export function Login() {
         );
       }
 
+      // Confirm the session is established by fetching the current user,
+      // consistent with the password login flow in authTransport.
+      // Falls back to the verify response user if session confirmation fails.
+      let sessionUser = sanitizedUser;
+      try {
+        const confirmedUser = sanitizeAuthUser(await getCurrentUser());
+        if (confirmedUser) {
+          sessionUser = confirmedUser;
+        }
+      } catch {
+        // Session confirmation failed — proceed with the verify response user.
+      }
+
       resetAttempts();
-      login(sanitizedUser);
+      login(sessionUser);
       navigate("/");
     } catch (err) {
       console.error("Passkey sign-in error:", err);

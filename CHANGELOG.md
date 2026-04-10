@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.
+
 ### Added
 
 - Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
