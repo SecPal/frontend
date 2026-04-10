@@ -238,15 +238,14 @@ export function SettingsPage() {
         }
       );
 
-      const nextPasskeys = [
+      setPasskeys((current) => [
         response.data.credential,
-        ...passkeys.filter(
+        ...current.filter(
           (registeredCredential) =>
             registeredCredential.id !== response.data.credential.id
         ),
-      ];
+      ]);
 
-      setPasskeys(nextPasskeys);
       setPasskeyLabel("");
 
       setIsLoadingPasskeys(true);

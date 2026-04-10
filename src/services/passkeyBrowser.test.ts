@@ -823,6 +823,8 @@ describe("passkeyBrowser", () => {
     await vi.advanceTimersByTimeAsync(5_026);
 
     await expectation;
+
+    vi.useRealTimers();
   });
 
   it("passes an AbortSignal to navigator.credentials.get during assertion", async () => {
@@ -882,5 +884,7 @@ describe("passkeyBrowser", () => {
     await vi.advanceTimersByTimeAsync(5_026);
 
     await expectation;
+
+    vi.useRealTimers();
   });
 });

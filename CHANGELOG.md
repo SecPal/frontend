@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- fixed passkey sign-in on browsers that reject discoverable WebAuthn requests without an `allowCredentials` list by retrying the flow with the entered email address, requesting an account-scoped challenge from the API, and showing an explicit prompt to enter an email address when that fallback is required
+- Fixed passkey sign-in on browsers that reject discoverable WebAuthn requests without an `allowCredentials` list by retrying the flow with the entered email address, requesting an account-scoped challenge from the API, and showing an explicit prompt to enter an email address when that fallback is required.
 - Hardened the passkey browser ceremony helpers so both registration and sign-in now fail with a deterministic timeout even when the browser ignores the supplied `AbortSignal`, and the settings page now re-fetches `/v1/me/passkeys` after successful enrollment so the UI reflects persisted server state instead of relying only on optimistic local state.
 - Fixed passkey enrollment hanging on "Adding passkey..." by stripping null `authenticatorAttachment` values from `AuthenticatorSelectionCriteria`, picking only `id` and `name` from the `rp` object (omitting deprecated `icon: null`), and omitting empty `excludeCredentials` arrays before passing options to `navigator.credentials.create()`.
 - Added an `AbortController` timeout safety net to both `getPasskeyAttestation` and `getPasskeyAssertion` so the WebAuthn ceremony is cancelled if the browser exceeds the server-specified timeout plus a 5-second grace period, preventing indefinite UI hangs.
