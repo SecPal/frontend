@@ -653,6 +653,118 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a browser-check prompt while waiting for the WebAuthn credential", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "conditional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+
+    let resolveAssertion!: (value: unknown) => void;
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockReturnValue(
+      new Promise((resolve) => {
+        resolveAssertion = resolve as (value: unknown) => void;
+      })
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    // While waiting for WebAuthn, the button should tell the user to check their browser
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /check your browser/i })
+      ).toBeInTheDocument();
+    });
+
+    // Resolve to avoid dangling promise
+    resolveAssertion({
+      id: "credential-id",
+      raw_id: "credential-id",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        authenticator_data: "YXV0aA",
+        signature: "c2lnbmF0dXJl",
+      },
+      client_extension_results: {},
+    });
+  });
+
+  it("shows a verifying prompt while the passkey verify request is in progress", async () => {
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    vi.mocked(
+      authApi.startPasskeyAuthenticationChallenge
+    ).mockResolvedValueOnce({
+      data: {
+        challenge_id: "550e8400-e29b-41d4-a716-446655440099",
+        public_key: {
+          challenge: "Zm9vYmFy",
+          rp_id: "app.secpal.dev",
+          timeout: 60000,
+          user_verification: "preferred",
+        },
+        mediation: "conditional",
+        expires_at: "2026-04-06T12:00:00Z",
+      },
+    });
+    vi.mocked(passkeyBrowser.getPasskeyAssertion).mockResolvedValueOnce({
+      id: "credential-id",
+      raw_id: "credential-id",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        authenticator_data: "YXV0aA",
+        signature: "c2lnbmF0dXJl",
+      },
+      client_extension_results: {},
+    });
+
+    let resolveVerify!: (value: unknown) => void;
+    vi.mocked(authApi.verifyPasskeyAuthenticationChallenge).mockReturnValue(
+      new Promise((resolve) => {
+        resolveVerify = resolve as (value: unknown) => void;
+      })
+    );
+
+    renderLogin();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    );
+
+    // After WebAuthn succeeds, should show verifying
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /verifying passkey/i })
+      ).toBeInTheDocument();
+    });
+
+    // Resolve to avoid dangling promise
+    resolveVerify({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        method: "passkey",
+        mfa_completed: true,
+      },
+    });
+  });
+
   it("confirms the session with getCurrentUser after a successful passkey login", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(

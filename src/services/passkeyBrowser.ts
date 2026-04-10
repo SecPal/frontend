@@ -289,14 +289,30 @@ export async function getPasskeyAssertion(
 
   const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
-  const credential = await awaitCredentialOperation(
-    navigator.credentials.get({
-      ...requestOptions,
-      signal: abortController.signal,
-    }),
-    abortController,
+
+  console.info(
+    "[SecPal] Passkey assertion: calling navigator.credentials.get() with mediation=%s, rpId=%s, allowCredentials=%d, timeout=%dms",
+    mediation,
+    options.rp_id,
+    options.allow_credentials?.length ?? 0,
     safetyTimeout
   );
+
+  let credential: Credential | null;
+  try {
+    credential = await awaitCredentialOperation(
+      navigator.credentials.get({
+        ...requestOptions,
+        signal: abortController.signal,
+      }),
+      abortController,
+      safetyTimeout
+    );
+    console.info("[SecPal] Passkey assertion: browser returned credential");
+  } catch (error) {
+    console.error("[SecPal] Passkey assertion: browser rejected", error);
+    throw error;
+  }
 
   if (
     !credential ||
@@ -356,14 +372,29 @@ export async function getPasskeyAttestation(
 
   const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
-  const credential = await awaitCredentialOperation(
-    navigator.credentials.create({
-      ...creationOptions,
-      signal: abortController.signal,
-    }),
-    abortController,
+
+  console.info(
+    "[SecPal] Passkey attestation: calling navigator.credentials.create() with rpId=%s, excludeCredentials=%d, timeout=%dms",
+    options.rp.id,
+    options.exclude_credentials?.length ?? 0,
     safetyTimeout
   );
+
+  let credential: Credential | null;
+  try {
+    credential = await awaitCredentialOperation(
+      navigator.credentials.create({
+        ...creationOptions,
+        signal: abortController.signal,
+      }),
+      abortController,
+      safetyTimeout
+    );
+    console.info("[SecPal] Passkey attestation: browser returned credential");
+  } catch (error) {
+    console.error("[SecPal] Passkey attestation: browser rejected", error);
+    throw error;
+  }
 
   if (
     !credential ||

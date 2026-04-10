@@ -114,6 +114,9 @@ export function SettingsPage() {
   );
   const [passkeyLabel, setPasskeyLabel] = useState("");
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
+  const [registrationStep, setRegistrationStep] = useState<
+    "challenge" | "browser" | "saving" | null
+  >(null);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
   const [enrollmentPreparation, setEnrollmentPreparation] =
@@ -224,12 +227,15 @@ export function SettingsPage() {
 
     setPasskeyError(null);
     setIsRegisteringPasskey(true);
+    setRegistrationStep("challenge");
 
     try {
       const challengeResponse = await startPasskeyRegistrationChallenge();
+      setRegistrationStep("browser");
       const credential = await getPasskeyAttestation(
         challengeResponse.data.public_key
       );
+      setRegistrationStep("saving");
       const response = await verifyPasskeyRegistrationChallenge(
         challengeResponse.data.challenge_id,
         {
@@ -286,6 +292,7 @@ export function SettingsPage() {
       }
     } finally {
       setIsRegisteringPasskey(false);
+      setRegistrationStep(null);
     }
   };
 
@@ -555,7 +562,13 @@ export function SettingsPage() {
                   disabled={isRegisteringPasskey}
                 >
                   {isRegisteringPasskey ? (
-                    <Trans>Adding passkey...</Trans>
+                    registrationStep === "browser" ? (
+                      <Trans>Complete in your browser…</Trans>
+                    ) : registrationStep === "saving" ? (
+                      <Trans>Saving passkey…</Trans>
+                    ) : (
+                      <Trans>Adding passkey...</Trans>
+                    )
                   ) : (
                     <Trans>Add passkey</Trans>
                   )}

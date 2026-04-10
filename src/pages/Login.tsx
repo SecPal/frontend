@@ -88,6 +88,9 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
+  const [passkeyStep, setPasskeyStep] = useState<
+    "challenge" | "browser" | "verifying" | "confirming" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
     useState<MfaChallenge | null>(null);
@@ -243,6 +246,7 @@ export function Login() {
   const handlePasskeySignIn = async () => {
     setError(null);
     setIsSubmittingPasskey(true);
+    setPasskeyStep("challenge");
 
     const normalizedEmail = email.trim().toLowerCase();
     const initialChallengeEmail =
@@ -256,11 +260,13 @@ export function Login() {
       // Always use "optional" mediation for an explicit button click.
       // "conditional" is designed for passive autofill-based discovery and
       // would silently wait for an input-field interaction that never comes.
+      setPasskeyStep("browser");
       const credential = await getPasskeyAssertion(
         challengeResponse.data.public_key,
         "optional"
       );
 
+      setPasskeyStep("verifying");
       return verifyPasskeyAuthenticationChallenge(
         challengeResponse.data.challenge_id,
         {
@@ -306,6 +312,7 @@ export function Login() {
       // Confirm the session is established by fetching the current user,
       // consistent with the password login flow in authTransport.
       // Falls back to the verify response user if session confirmation fails.
+      setPasskeyStep("confirming");
       let sessionUser = sanitizedUser;
       try {
         const confirmedUser = sanitizeAuthUser(await getCurrentUser());
@@ -349,6 +356,7 @@ export function Login() {
       }
     } finally {
       setIsSubmittingPasskey(false);
+      setPasskeyStep(null);
     }
   };
 
@@ -627,7 +635,15 @@ export function Login() {
             aria-busy={isSubmittingPasskey}
           >
             {isSubmittingPasskey ? (
-              <Trans>Signing in with passkey...</Trans>
+              passkeyStep === "browser" ? (
+                <Trans>Check your browser…</Trans>
+              ) : passkeyStep === "verifying" ? (
+                <Trans>Verifying passkey…</Trans>
+              ) : passkeyStep === "confirming" ? (
+                <Trans>Confirming session…</Trans>
+              ) : (
+                <Trans>Signing in with passkey...</Trans>
+              )
             ) : (
               <Trans>Sign in with passkey</Trans>
             )}
