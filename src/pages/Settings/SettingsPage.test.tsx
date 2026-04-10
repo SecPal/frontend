@@ -265,6 +265,14 @@ describe("SettingsPage", () => {
   });
 
   it("registers a passkey and appends it to the enrolled list", async () => {
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockResolvedValueOnce({
+        data: [
+          ...createPasskeyListResponse().data,
+          createPasskeyRegistrationVerificationResponse().data.credential,
+        ],
+      });
     vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
       createPasskeyRegistrationChallengeResponse()
     );
@@ -302,6 +310,7 @@ describe("SettingsPage", () => {
           credential: expect.objectContaining({ id: "new-credential-id" }),
         })
       );
+      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
     });
 
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
@@ -394,6 +403,28 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("button", { name: /add passkey/i })
     ).not.toBeDisabled();
+  });
+
+  it("shows credential provider guidance when the platform reports a credential manager error", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
+      new Error(
+        "An unknown error occurred while talking to the credential manager."
+      )
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/no credential provider is available/i)
+    ).toBeInTheDocument();
   });
 
   it("maps a real browser passkey attestation into the API payload", async () => {

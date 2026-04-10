@@ -18,7 +18,6 @@ import { sanitizeAuthUser } from "../services/authState";
 import { checkHealth, HealthStatus } from "../services/healthApi";
 import {
   getPasskeyAssertion,
-  isConditionalMediationAvailable,
   isPasskeySupported,
 } from "../services/passkeyBrowser";
 import { AuthLayout } from "../components/auth-layout";
@@ -44,6 +43,14 @@ import { Input } from "../components/input";
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
+
+function isResidentCredentialError(error: unknown): error is Error {
+  return (
+    error instanceof Error &&
+    (error.message.includes("resident credentials") ||
+      error.message.includes("allowCredentials"))
+  );
+}
 
 function formatDateTime(value: string): string {
   if (!value) {
@@ -236,27 +243,50 @@ export function Login() {
     setError(null);
     setIsSubmittingPasskey(true);
 
-    try {
-      const challengeResponse = await startPasskeyAuthenticationChallenge();
+    const normalizedEmail = email.trim().toLowerCase();
+    const initialChallengeEmail =
+      normalizedEmail !== "" ? normalizedEmail : undefined;
 
-      let mediation = challengeResponse.data.mediation;
-      if (
-        mediation === "conditional" &&
-        !(await isConditionalMediationAvailable())
-      ) {
-        mediation = "optional";
-      }
+    const completePasskeySignIn = async (challengeEmail?: string) => {
+      const challengeResponse = await startPasskeyAuthenticationChallenge(
+        challengeEmail ? { email: challengeEmail } : undefined
+      );
 
+      // Always use "optional" mediation for an explicit button click.
+      // "conditional" is designed for passive autofill-based discovery and
+      // would silently wait for an input-field interaction that never comes.
       const credential = await getPasskeyAssertion(
         challengeResponse.data.public_key,
-        mediation
+        "optional"
       );
-      const response = await verifyPasskeyAuthenticationChallenge(
+
+      return verifyPasskeyAuthenticationChallenge(
         challengeResponse.data.challenge_id,
         {
           credential,
         }
       );
+    };
+
+    try {
+      let response;
+
+      try {
+        response = await completePasskeySignIn(initialChallengeEmail);
+      } catch (firstError) {
+        if (!isResidentCredentialError(firstError) || initialChallengeEmail) {
+          throw firstError;
+        }
+
+        if (normalizedEmail === "") {
+          throw new Error(
+            "This browser requires your email address for passkey sign-in. Enter your email address and try again.",
+            { cause: firstError }
+          );
+        }
+
+        response = await completePasskeySignIn(normalizedEmail);
+      }
 
       if (response.authentication.mode !== "session") {
         throw new Error(
@@ -289,17 +319,15 @@ export function Login() {
         );
       } else if (err instanceof DOMException && err.name === "AbortError") {
         setError("Passkey sign-in timed out. Please try again.");
+      } else if (
+        err instanceof Error &&
+        /credential.manager/i.test(err.message)
+      ) {
+        setError(
+          "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+        );
       } else if (err instanceof Error) {
-        if (
-          err.message.includes("resident credentials") ||
-          err.message.includes("allowCredentials")
-        ) {
-          setError(
-            "Your browser does not support passkey sign-in. Please use your email and password instead."
-          );
-        } else {
-          setError(err.message);
-        }
+        setError(err.message);
       } else {
         setError(
           "An unexpected passkey sign-in error occurred. Please try again."

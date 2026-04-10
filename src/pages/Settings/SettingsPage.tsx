@@ -245,7 +245,21 @@ export function SettingsPage() {
             registeredCredential.id !== response.data.credential.id
         ),
       ]);
+
       setPasskeyLabel("");
+
+      setIsLoadingPasskeys(true);
+
+      try {
+        const refreshedPasskeys = await getPasskeys();
+        setPasskeys(refreshedPasskeys.data);
+      } catch {
+        setPasskeyError(
+          "Passkey registered, but the enrolled passkey list could not be refreshed."
+        );
+      } finally {
+        setIsLoadingPasskeys(false);
+      }
     } catch (error) {
       if (error instanceof AuthApiError) {
         setPasskeyError(error.message);
@@ -258,6 +272,13 @@ export function SettingsPage() {
         );
       } else if (error instanceof DOMException && error.name === "AbortError") {
         setPasskeyError("Passkey registration timed out. Please try again.");
+      } else if (
+        error instanceof Error &&
+        /credential.manager/i.test(error.message)
+      ) {
+        setPasskeyError(
+          "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+        );
       } else if (error instanceof Error) {
         setPasskeyError(error.message);
       } else {
@@ -554,7 +575,9 @@ export function SettingsPage() {
               <Text className="text-sm text-zinc-500 dark:text-zinc-400">
                 <Trans>Loading passkeys...</Trans>
               </Text>
-            ) : !passkeyError && passkeys.length === 0 ? (
+            ) : !passkeyError &&
+              passkeys.length === 0 &&
+              !isRegisteringPasskey ? (
               <Text className="text-sm text-zinc-600 dark:text-zinc-300">
                 <Trans>No passkeys enrolled yet.</Trans>
               </Text>
