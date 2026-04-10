@@ -58,7 +58,7 @@ msgid "{label}: Valid"
 msgstr "{label}: Gültig"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:452
+#: src/pages/Login.tsx:530
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
@@ -159,7 +159,7 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
 
-#: src/pages/Settings/SettingsPage.tsx:530
+#: src/pages/Settings/SettingsPage.tsx:573
 msgid "Add passkey"
 msgstr "Passkey hinzufügen"
 
@@ -168,11 +168,11 @@ msgid "Add Root Unit"
 msgstr "Stammeinheit hinzufügen"
 
 #. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
-#: src/pages/Settings/SettingsPage.tsx:565
+#: src/pages/Settings/SettingsPage.tsx:610
 msgid "Added {0}"
 msgstr "Hinzugefügt am {0}"
 
-#: src/pages/Settings/SettingsPage.tsx:528
+#: src/pages/Settings/SettingsPage.tsx:570
 msgid "Adding passkey..."
 msgstr "Passkey wird hinzugefügt..."
 
@@ -234,7 +234,7 @@ msgstr "Android-Provisionierung"
 msgid "Android provisioning QR code"
 msgstr "QR-Code zur Android-Provisionierung"
 
-#: src/pages/Settings/SettingsPage.tsx:630
+#: src/pages/Settings/SettingsPage.tsx:675
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
 
@@ -275,23 +275,23 @@ msgstr "Authentifizierung"
 msgid "Authenticator app"
 msgstr "Authenticator-App"
 
-#: src/pages/Settings/SettingsPage.tsx:725
+#: src/pages/Settings/SettingsPage.tsx:770
 msgid "Authenticator app QR code"
 msgstr "QR-Code der Authenticator-App"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:618
+#: src/pages/Login.tsx:704
 msgid "login.mfa.method.totp"
 msgstr "Authenticator-Code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:637
+#: src/pages/Login.tsx:723
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator-Code"
 
-#: src/pages/Settings/SettingsPage.tsx:752
-#: src/pages/Settings/SettingsPage.tsx:844
-#: src/pages/Settings/SettingsPage.tsx:856
+#: src/pages/Settings/SettingsPage.tsx:797
+#: src/pages/Settings/SettingsPage.tsx:889
+#: src/pages/Settings/SettingsPage.tsx:901
 msgid "Authenticator code"
 msgstr "Authenticator-Code"
 
@@ -345,6 +345,11 @@ msgstr "Niederlassung"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
 
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:768
+msgid "login.mfa.cancel"
+msgstr "Abbrechen"
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
 #: src/components/OrganizationalUnitFormDialog.tsx:372
@@ -355,18 +360,13 @@ msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalak
 #: src/pages/Employees/EmployeeCreate.tsx:952
 #: src/pages/Employees/EmployeeEdit.tsx:593
 #: src/pages/Onboarding/OnboardingComplete.tsx:653
-#: src/pages/Settings/SettingsPage.tsx:710
-#: src/pages/Settings/SettingsPage.tsx:783
-#: src/pages/Settings/SettingsPage.tsx:890
+#: src/pages/Settings/SettingsPage.tsx:755
+#: src/pages/Settings/SettingsPage.tsx:828
+#: src/pages/Settings/SettingsPage.tsx:935
 #: src/pages/Sites/SiteCreate.tsx:488
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
-msgstr "Abbrechen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:682
-msgid "login.mfa.cancel"
 msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134
@@ -382,8 +382,12 @@ msgstr "Verursacher"
 msgid "Certificate:"
 msgstr "Zertifikat:"
 
+#: src/pages/Login.tsx:639
+msgid "Check your browser…"
+msgstr "Browser prüfen …"
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:530
+#: src/pages/Login.tsx:608
 msgid "login.checkingSystem"
 msgstr "Überprüfung des Systems..."
 
@@ -399,7 +403,7 @@ msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu ei
 msgid "Choose which notifications you want to receive"
 msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 
-#: src/pages/Settings/SettingsPage.tsx:601
+#: src/pages/Settings/SettingsPage.tsx:646
 msgid "Choose your preferred language for the application."
 msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 
@@ -434,6 +438,10 @@ msgstr "Unternehmen"
 msgid "Complete Account Setup"
 msgstr "Vollständige Kontoeinrichtung"
 
+#: src/pages/Settings/SettingsPage.tsx:566
+msgid "Complete in your browser…"
+msgstr "Im Browser abschließen …"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx:577
 msgid "Complete your account setup to get started"
 msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
@@ -450,7 +458,7 @@ msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen S
 msgid "Confirm and Continue"
 msgstr "Bestätigen und fortfahren"
 
-#: src/pages/Settings/SettingsPage.tsx:796
+#: src/pages/Settings/SettingsPage.tsx:841
 msgid "Confirm and enable MFA"
 msgstr "Bestätigen und Aktivieren von MFA"
 
@@ -469,6 +477,10 @@ msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellung
 #: src/pages/Settings/SettingsPage.tsx:94
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
+
+#: src/pages/Login.tsx:643
+msgid "Confirming session…"
+msgstr "Sitzung bestätigen …"
 
 #: src/pages/Customers/CustomersPage.tsx:159
 msgid "Contact"
@@ -697,7 +709,7 @@ msgstr "Direktes APK-Sideloading"
 
 #: src/pages/Settings/SettingsPage.tsx:80
 #: src/pages/Settings/SettingsPage.tsx:87
-#: src/pages/Settings/SettingsPage.tsx:466
+#: src/pages/Settings/SettingsPage.tsx:503
 msgid "Disable MFA"
 msgstr "MFA deaktivieren"
 
@@ -710,7 +722,7 @@ msgstr "Abteilung"
 msgid "Documents"
 msgstr "Dokumente"
 
-#: src/pages/Settings/SettingsPage.tsx:672
+#: src/pages/Settings/SettingsPage.tsx:717
 msgid "Done"
 msgstr "Erledigt"
 
@@ -768,7 +780,7 @@ msgid "Email"
 msgstr "E-Mail-Adresse"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:463
+#: src/pages/Login.tsx:541
 msgid "login.email"
 msgstr "E-Mail-Adresse"
 
@@ -839,12 +851,12 @@ msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedr
 msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:644
+#: src/pages/Login.tsx:730
 msgid "login.mfa.recoveryHelp"
 msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:648
+#: src/pages/Login.tsx:734
 msgid "login.mfa.totpHelp"
 msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App ein."
 
@@ -1021,7 +1033,7 @@ msgstr "HR Zugang"
 msgid "I have verified my email"
 msgstr "Ich habe meine E-Mail verifiziert"
 
-#: src/pages/Settings/SettingsPage.tsx:659
+#: src/pages/Settings/SettingsPage.tsx:704
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, dass sie nicht mehr angezeigt werden."
 
@@ -1078,7 +1090,7 @@ msgstr "Einladung angefordert"
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
 
-#: src/pages/Settings/SettingsPage.tsx:598
+#: src/pages/Settings/SettingsPage.tsx:643
 msgid "Language"
 msgstr "Sprache"
 
@@ -1132,7 +1144,7 @@ msgstr "Mitarbeiter laden..."
 msgid "Loading enrollment sessions..."
 msgstr "Enrollment-Sitzungen werden geladen..."
 
-#: src/pages/Settings/SettingsPage.tsx:430
+#: src/pages/Settings/SettingsPage.tsx:467
 msgid "Loading MFA status..."
 msgstr "Laden des MFA-Status..."
 
@@ -1140,7 +1152,7 @@ msgstr "Laden des MFA-Status..."
 msgid "Loading onboarding..."
 msgstr "Onboarding laden..."
 
-#: src/pages/Settings/SettingsPage.tsx:546
+#: src/pages/Settings/SettingsPage.tsx:589
 msgid "Loading passkeys..."
 msgstr "Passkeys werden geladen..."
 
@@ -1162,17 +1174,17 @@ msgid "Loading..."
 msgstr "Laden..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:532
+#: src/pages/Login.tsx:610
 msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:348
+#: src/pages/Login.tsx:426
 msgid "login.title"
 msgstr "Einloggen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:538
+#: src/pages/Login.tsx:616
 msgid "login.submit"
 msgstr "Einloggen"
 
@@ -1183,12 +1195,12 @@ msgid "Log Name"
 msgstr "Log Name"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:536
+#: src/pages/Login.tsx:614
 msgid "login.submitting"
 msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:375
+#: src/pages/Login.tsx:453
 msgid "login.offlineWarning.message"
 msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
@@ -1204,7 +1216,7 @@ msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zah
 msgid "Make root unit (no parent)"
 msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 
-#: src/pages/Settings/SettingsPage.tsx:404
+#: src/pages/Settings/SettingsPage.tsx:441
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
@@ -1228,7 +1240,7 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 msgid "Management level must be between 1 and 255"
 msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 
-#: src/pages/Settings/SettingsPage.tsx:730
+#: src/pages/Settings/SettingsPage.tsx:775
 msgid "Manual setup key"
 msgstr "Taste für manuelle Einstellungen"
 
@@ -1261,11 +1273,11 @@ msgstr "Merkelbaum"
 msgid "Messages from team members and supervisors"
 msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 
-#: src/pages/Settings/SettingsPage.tsx:472
+#: src/pages/Settings/SettingsPage.tsx:509
 msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung zu verlangen."
 
-#: src/pages/Settings/SettingsPage.tsx:434
+#: src/pages/Settings/SettingsPage.tsx:471
 msgid "MFA status could not be loaded."
 msgstr "Der MFA-Status konnte nicht geladen werden."
 
@@ -1335,7 +1347,7 @@ msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Moving..."
 msgstr "Verschiebe..."
 
-#: src/pages/Settings/SettingsPage.tsx:414
+#: src/pages/Settings/SettingsPage.tsx:451
 msgid "Multi-factor authentication"
 msgstr "Multi-Faktor-Authentifizierung"
 
@@ -1424,7 +1436,7 @@ msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:370
+#: src/pages/Login.tsx:448
 msgid "login.offlineWarning.title"
 msgstr "Keine Internetverbindung"
 
@@ -1442,7 +1454,7 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "No parent (root unit)"
 msgstr "Keine übergeordnete Einheit (Stammeinheit)"
 
-#: src/pages/Settings/SettingsPage.tsx:550
+#: src/pages/Settings/SettingsPage.tsx:595
 msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
 
@@ -1596,16 +1608,16 @@ msgstr "Übergeordnete Einheit"
 msgid "Part Time"
 msgstr "Teilzeit"
 
-#: src/pages/Settings/SettingsPage.tsx:511
+#: src/pages/Settings/SettingsPage.tsx:548
 msgid "Passkey label"
 msgstr "Passkey-Bezeichnung"
 
-#: src/pages/Settings/SettingsPage.tsx:493
+#: src/pages/Settings/SettingsPage.tsx:530
 msgid "Passkeys"
 msgstr "Passkeys"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:486
+#: src/pages/Login.tsx:564
 msgid "login.password"
 msgstr "Passwort"
 
@@ -1675,7 +1687,7 @@ msgid "Please try again in about 1 minute."
 msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:431
+#: src/pages/Login.tsx:509
 msgid "login.rateLimitLocked.message"
 msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
@@ -1713,7 +1725,7 @@ msgstr "Vorvertrag"
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
 
-#: src/pages/Settings/SettingsPage.tsx:698
+#: src/pages/Settings/SettingsPage.tsx:743
 msgid "Preparing MFA setup..."
 msgstr "MFA-Einrichtung vorbereiten..."
 
@@ -1732,8 +1744,8 @@ msgstr "Vorherige"
 msgid "Previous Hash"
 msgstr "Vorheriger Hash"
 
-#: src/pages/Settings/SettingsPage.tsx:794
-#: src/pages/Settings/SettingsPage.tsx:902
+#: src/pages/Settings/SettingsPage.tsx:839
+#: src/pages/Settings/SettingsPage.tsx:947
 msgid "Processing..."
 msgstr "Verarbeitung..."
 
@@ -1762,26 +1774,26 @@ msgid "Reason"
 msgstr "Grund"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:624
+#: src/pages/Login.tsx:710
 msgid "login.mfa.preferred"
 msgstr "empfohlen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:614
+#: src/pages/Login.tsx:700
 msgid "login.mfa.method.recovery_code"
 msgstr "Wiederherstellungscode"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:635
+#: src/pages/Login.tsx:721
 msgid "login.mfa.recoveryCode"
 msgstr "Wiederherstellungscode"
 
-#: src/pages/Settings/SettingsPage.tsx:846
-#: src/pages/Settings/SettingsPage.tsx:858
+#: src/pages/Settings/SettingsPage.tsx:891
+#: src/pages/Settings/SettingsPage.tsx:903
 msgid "Recovery code"
 msgstr "Wiederherstellungscode"
 
-#: src/pages/Settings/SettingsPage.tsx:447
+#: src/pages/Settings/SettingsPage.tsx:484
 msgid "Recovery codes remaining"
 msgstr "Verbleibende Wiederherstellungscodes"
 
@@ -1803,7 +1815,7 @@ msgid "Regenerate codes"
 msgstr "Codes neu generieren"
 
 #: src/pages/Settings/SettingsPage.tsx:92
-#: src/pages/Settings/SettingsPage.tsx:460
+#: src/pages/Settings/SettingsPage.tsx:497
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
 
@@ -1816,11 +1828,11 @@ msgstr "Region"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/pages/Settings/SettingsPage.tsx:580
+#: src/pages/Settings/SettingsPage.tsx:625
 msgid "Remove"
 msgstr "Entfernen"
 
-#: src/pages/Settings/SettingsPage.tsx:578
+#: src/pages/Settings/SettingsPage.tsx:623
 msgid "Removing..."
 msgstr "Wird entfernt..."
 
@@ -1829,7 +1841,7 @@ msgstr "Wird entfernt..."
 msgid "Retry"
 msgstr "Wiederholen"
 
-#: src/pages/Settings/SettingsPage.tsx:496
+#: src/pages/Settings/SettingsPage.tsx:533
 msgid "Review the passkeys currently enrolled for this account."
 msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 
@@ -1861,6 +1873,10 @@ msgstr "Änderungen speichern"
 msgid "Save Draft"
 msgstr "Entwurf speichern"
 
+#: src/pages/Settings/SettingsPage.tsx:568
+msgid "Saving passkey…"
+msgstr "Passkey speichern …"
+
 #: src/components/OrganizationalUnitFormDialog.tsx:376
 #: src/components/ScopeAssignmentForm.tsx:608
 #: src/pages/Customers/CustomerEdit.tsx:304
@@ -1869,7 +1885,7 @@ msgstr "Entwurf speichern"
 msgid "Saving..."
 msgstr "Speichern..."
 
-#: src/pages/Settings/SettingsPage.tsx:689
+#: src/pages/Settings/SettingsPage.tsx:734
 msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
 msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen Code, um MFA zu aktivieren."
 
@@ -1897,7 +1913,7 @@ msgid "Search sites..."
 msgstr "Standorte suchen..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:573
+#: src/pages/Login.tsx:659
 msgid "login.mfa.title"
 msgstr "Zweiter Faktor erforderlich"
 
@@ -1977,14 +1993,14 @@ msgstr "Senden einer Bestätigungs-E-Mail..."
 msgid "Sent"
 msgstr "Gesendet"
 
-#: src/pages/Settings/SettingsPage.tsx:479
-#: src/pages/Settings/SettingsPage.tsx:686
+#: src/pages/Settings/SettingsPage.tsx:516
+#: src/pages/Settings/SettingsPage.tsx:731
 msgid "Set up MFA"
 msgstr "MFA einrichten"
 
 #: src/components/application-layout.tsx:150
 #: src/components/application-layout.tsx:371
-#: src/pages/Settings/SettingsPage.tsx:401
+#: src/pages/Settings/SettingsPage.tsx:438
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -2024,7 +2040,7 @@ msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Standorten"
 msgid "Showing cached data"
 msgstr "Zeige zwischengespeicherte Daten"
 
-#: src/pages/Login.tsx:562
+#: src/pages/Login.tsx:648
 msgid "Sign in with passkey"
 msgstr "Mit Passkey anmelden"
 
@@ -2033,7 +2049,7 @@ msgstr "Mit Passkey anmelden"
 msgid "Sign out"
 msgstr "Abmelden"
 
-#: src/pages/Login.tsx:560
+#: src/pages/Login.tsx:645
 msgid "Signing in with passkey..."
 msgstr "Anmeldung mit Passkey..."
 
@@ -2080,7 +2096,7 @@ msgstr "Quelltext"
 #: src/pages/Employees/EmployeeEdit.tsx:559
 #: src/pages/Employees/EmployeeList.tsx:196
 #: src/pages/Employees/EmployeeList.tsx:245
-#: src/pages/Settings/SettingsPage.tsx:440
+#: src/pages/Settings/SettingsPage.tsx:477
 #: src/pages/Sites/SitesPage.tsx:140
 #: src/pages/Sites/SitesPage.tsx:193
 msgid "Status"
@@ -2110,7 +2126,7 @@ msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 msgid "Still loading your secure session"
 msgstr "Ihre sichere Sitzung wird noch geladen"
 
-#: src/pages/Settings/SettingsPage.tsx:616
+#: src/pages/Settings/SettingsPage.tsx:661
 msgid "Store your recovery codes now"
 msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
@@ -2136,7 +2152,7 @@ msgid "System"
 msgstr "System"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:399
+#: src/pages/Login.tsx:477
 msgid "login.healthWarning.title"
 msgstr "System nicht bereit"
 
@@ -2184,7 +2200,7 @@ msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:402
+#: src/pages/Login.tsx:480
 msgid "login.healthWarning.message"
 msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
@@ -2192,7 +2208,7 @@ msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
 
-#: src/pages/Settings/SettingsPage.tsx:619
+#: src/pages/Settings/SettingsPage.tsx:664
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
 
@@ -2205,7 +2221,7 @@ msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wen
 msgid "This action cannot be undone. The organizational unit will be permanently removed."
 msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
 
-#: src/pages/Settings/SettingsPage.tsx:536
+#: src/pages/Settings/SettingsPage.tsx:579
 msgid "This browser does not support passkeys."
 msgstr "Dieser Browser unterstützt keine Passkeys."
 
@@ -2230,7 +2246,7 @@ msgid "This session was revoked and can no longer be used for device setup."
 msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #. placeholder {0}: formatDateTime( enrollmentPreparation.expires_at, i18n.locale )
-#: src/pages/Settings/SettingsPage.tsx:739
+#: src/pages/Settings/SettingsPage.tsx:784
 msgid "This setup expires at {0}."
 msgstr "Diese Einstellung läuft am {0} ab."
 
@@ -2240,7 +2256,7 @@ msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte lösche
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx:586
+#: src/pages/Login.tsx:672
 msgid "login.mfa.expiry"
 msgstr "Dieser Überprüfungsschritt läuft um {0} ab."
 
@@ -2257,7 +2273,7 @@ msgid "Too Many Attempts"
 msgstr "Zu viele Versuche"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:426
+#: src/pages/Login.tsx:504
 msgid "login.rateLimitLocked.title"
 msgstr "Zu viele gescheiterte Versuche"
 
@@ -2266,7 +2282,7 @@ msgstr "Zu viele gescheiterte Versuche"
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
 
-#: src/pages/Settings/SettingsPage.tsx:717
+#: src/pages/Settings/SettingsPage.tsx:762
 msgid "Try again"
 msgstr "Erneut versuchen"
 
@@ -2382,11 +2398,11 @@ msgid "Validity Period"
 msgstr "Gültigkeitsdauer"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:595
+#: src/pages/Login.tsx:681
 msgid "login.mfa.method"
 msgstr "Methode zur Überprüfung"
 
-#: src/pages/Settings/SettingsPage.tsx:825
+#: src/pages/Settings/SettingsPage.tsx:870
 msgid "Verification method"
 msgstr "Methode zur Überprüfung"
 
@@ -2395,7 +2411,7 @@ msgid "Verification Status"
 msgstr "Status der Verifizierung"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:693
+#: src/pages/Login.tsx:779
 msgid "login.mfa.submit"
 msgstr "Überprüfen und fortfahren"
 
@@ -2403,8 +2419,12 @@ msgstr "Überprüfen und fortfahren"
 msgid "Verify your email address"
 msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 
+#: src/pages/Login.tsx:641
+msgid "Verifying passkey…"
+msgstr "Passkey wird überprüft …"
+
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:691
+#: src/pages/Login.tsx:777
 msgid "login.mfa.verifying"
 msgstr "Überprüfen..."
 
@@ -2511,6 +2531,6 @@ msgid "You're offline. Click for details."
 msgstr "Sie sind offline. Klicken Sie für Details."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:576
+#: src/pages/Login.tsx:662
 msgid "login.mfa.description"
 msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
