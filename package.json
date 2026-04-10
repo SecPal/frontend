@@ -115,7 +115,7 @@
     "tailwindcss": "^4.1.17",
     "typescript": "6.0.x",
     "typescript-eslint": "^8.58.1",
-    "vite": "^8.0.7",
+    "vite": "^8.0.8",
     "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-static-copy": "^4.0.1",
     "vitest": "^4.1.3",
