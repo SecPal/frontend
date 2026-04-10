@@ -98,8 +98,8 @@
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.3",
-    "@vitest/ui": "^4.1.3",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/ui": "^4.1.4",
     "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -115,10 +115,10 @@
     "tailwindcss": "^4.1.17",
     "typescript": "6.0.x",
     "typescript-eslint": "^8.58.1",
-    "vite": "^8.0.7",
+    "vite": "^8.0.8",
     "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-static-copy": "^4.0.1",
-    "vitest": "^4.1.3",
+    "vitest": "^4.1.4",
     "workbox-window": "^7.4.0"
   },
   "overrides": {
