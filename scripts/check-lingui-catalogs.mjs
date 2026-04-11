@@ -15,6 +15,20 @@ const scriptDirectory = dirname(scriptPath);
 const projectRoot = resolve(scriptDirectory, "..");
 const localesDirectory = join(projectRoot, "src", "locales");
 
+/**
+ * Normalize file content to match what the pre-commit hooks produce:
+ * strip trailing whitespace from every line and remove the trailing newline.
+ * This makes catalog comparisons invariant to the differences produced by
+ * `trim-trailing-whitespace` and `end-of-file-fixer` hooks.
+ */
+function normalizeContent(content) {
+  return content
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .trimEnd();
+}
+
 async function collectRelativeFiles(directory, prefix = "") {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
@@ -56,7 +70,7 @@ async function diffDirectories(previousDirectory, currentDirectory) {
       readFile(join(currentDirectory, relativePath), "utf8"),
     ]);
 
-    if (previousContent.trimEnd() !== currentContent.trimEnd()) {
+    if (normalizeContent(previousContent) !== normalizeContent(currentContent)) {
       changedFiles.push(relativePath);
     }
   }
