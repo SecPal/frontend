@@ -56,7 +56,7 @@ async function diffDirectories(previousDirectory, currentDirectory) {
       readFile(join(currentDirectory, relativePath), "utf8"),
     ]);
 
-    if (previousContent !== currentContent) {
+    if (previousContent.trimEnd() !== currentContent.trimEnd()) {
       changedFiles.push(relativePath);
     }
   }
