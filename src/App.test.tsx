@@ -25,7 +25,7 @@ vi.mock("./services/authApi", async () => {
 async function renderWithI18n(component: React.ReactElement) {
   const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
   // Wait for any async state updates to settle
-  await waitFor(() => { });
+  await waitFor(() => {});
   return result;
 }
 
