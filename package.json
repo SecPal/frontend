@@ -1,7 +1,7 @@
 {
   "name": "@secpal/frontend",
   "version": "0.0.1",
-  "description": "React/TypeScript frontend for SecPal platform",
+  "description": "React/TypeScript frontend for SecPal — operations software for German private security services.",
   "private": true,
   "type": "module",
   "author": "SecPal",

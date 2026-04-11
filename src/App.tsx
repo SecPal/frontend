@@ -88,9 +88,7 @@ function About() {
       </Heading>
       <Text className="mt-4">
         <Trans>
-          SecPal – A guard’s best friend. An offline-first progressive web app
-          for security personnel, combining digital guard books with modern
-          service management.
+          SecPal – operations software for German private security services.
         </Trans>
       </Text>
       <div className="mt-8">
