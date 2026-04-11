@@ -807,12 +807,10 @@ describe("passkeyBrowser", () => {
       timeout: 25,
     };
 
-    const createCredential = vi.fn(
-      (options: CredentialCreationOptions) => {
-        void options;
-        return new Promise<PublicKeyCredential | null>(() => {});
-      }
-    );
+    const createCredential = vi.fn((options: CredentialCreationOptions) => {
+      void options;
+      return new Promise<PublicKeyCredential | null>(() => {});
+    });
 
     vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
     Object.defineProperty(navigator, "credentials", {
@@ -875,12 +873,10 @@ describe("passkeyBrowser", () => {
   it("times out assertion and aborts the browser request after the wrapper timeout", async () => {
     vi.useFakeTimers();
 
-    const getCredential = vi.fn(
-      (options: CredentialRequestOptions) => {
-        void options;
-        return new Promise<PublicKeyCredential | null>(() => {});
-      }
-    );
+    const getCredential = vi.fn((options: CredentialRequestOptions) => {
+      void options;
+      return new Promise<PublicKeyCredential | null>(() => {});
+    });
 
     vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
     Object.defineProperty(navigator, "credentials", {
