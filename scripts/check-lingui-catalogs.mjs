@@ -2,13 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFile } from "node:child_process";
-import {
-  cp,
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
-} from "node:fs/promises";
+import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,7 +71,8 @@ async function restoreLocales(backupDirectory) {
 
 function formatSyncFailure(error) {
   if (typeof error === "object" && error !== null) {
-    const message = "message" in error ? String(error.message) : "Unknown error";
+    const message =
+      "message" in error ? String(error.message) : "Unknown error";
     const stderr = "stderr" in error ? String(error.stderr ?? "") : "";
     const stdout = "stdout" in error ? String(error.stdout ?? "") : "";
 
@@ -85,6 +80,22 @@ function formatSyncFailure(error) {
   }
 
   return String(error);
+}
+
+function buildSyncEnvironment() {
+  const syncEnvironment = { ...process.env };
+
+  delete syncEnvironment.NODE_ENV;
+
+  for (const environmentKey of Object.keys(syncEnvironment)) {
+    if (environmentKey.startsWith("VITEST")) {
+      delete syncEnvironment[environmentKey];
+    }
+  }
+
+  syncEnvironment.CI = process.env.CI ?? "1";
+
+  return syncEnvironment;
 }
 
 export async function checkLinguiCatalogs() {
@@ -96,22 +107,17 @@ export async function checkLinguiCatalogs() {
   await cp(localesDirectory, backupDirectory, { recursive: true });
 
   try {
-    await execFileAsync(
-      "npm",
-      ["run", "sync:purge"],
-      {
-        cwd: projectRoot,
-        env: {
-          ...process.env,
-          CI: process.env.CI ?? "1",
-        },
-        maxBuffer: 16 * 1024 * 1024,
-      }
-    );
+    await execFileAsync("npm", ["run", "sync:purge"], {
+      cwd: projectRoot,
+      env: buildSyncEnvironment(),
+      maxBuffer: 16 * 1024 * 1024,
+    });
 
     return await diffDirectories(backupDirectory, localesDirectory);
   } catch (error) {
-    throw new Error(`Lingui catalog sync check failed.\n${formatSyncFailure(error)}`);
+    throw new Error(
+      `Lingui catalog sync check failed.\n${formatSyncFailure(error)}`
+    );
   } finally {
     await restoreLocales(backupDirectory);
     await rm(temporaryDirectory, { recursive: true, force: true });
