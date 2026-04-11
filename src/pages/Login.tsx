@@ -256,6 +256,11 @@ export function Login() {
       const challengeResponse = await startPasskeyAuthenticationChallenge(
         challengeEmail ? { email: challengeEmail } : undefined
       );
+      console.info(
+        "[SecPal] Passkey login: challenge created id=%s credentials=%d",
+        challengeResponse.data.challenge_id,
+        challengeResponse.data.public_key.allow_credentials?.length ?? 0
+      );
 
       // Always use "optional" mediation for an explicit button click.
       // "conditional" is designed for passive autofill-based discovery and
@@ -265,6 +270,7 @@ export function Login() {
         challengeResponse.data.public_key,
         "optional"
       );
+      console.info("[SecPal] Passkey login: browser assertion complete");
 
       setPasskeyStep("verifying");
       return verifyPasskeyAuthenticationChallenge(
@@ -295,6 +301,11 @@ export function Login() {
         response = await completePasskeySignIn(normalizedEmail);
       }
 
+      console.info(
+        "[SecPal] Passkey login: verify succeeded mode=%s",
+        response.authentication.mode
+      );
+
       if (response.authentication.mode !== "session") {
         throw new Error(
           "The passkey sign-in completed with an unsupported login mode."
@@ -318,13 +329,19 @@ export function Login() {
         const confirmedUser = sanitizeAuthUser(await getCurrentUser());
         if (confirmedUser) {
           sessionUser = confirmedUser;
+          console.info(
+            "[SecPal] Passkey login: session confirmed via GET /v1/me"
+          );
         }
       } catch {
-        // Session confirmation failed — proceed with the verify response user.
+        console.info(
+          "[SecPal] Passkey login: session confirmation skipped, using verify response user"
+        );
       }
 
       resetAttempts();
       login(sessionUser);
+      console.info("[SecPal] Passkey login: complete, navigating to /");
       navigate("/");
     } catch (err) {
       console.error("Passkey sign-in error:", err);

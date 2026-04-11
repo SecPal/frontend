@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.
 - Passkey login and add-passkey buttons now show step-by-step progress (challenge → browser prompt → verifying → confirming) so users can tell exactly where the flow is and whether the browser is waiting for their interaction.
 - Added console diagnostics to WebAuthn browser calls for real-browser debugging.
+- Added step-by-step `[SecPal]` console diagnostics to the passkey login and registration flows so real-browser failures can be traced through DevTools.
 
 ### Added
 

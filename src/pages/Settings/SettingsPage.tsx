@@ -231,9 +231,16 @@ export function SettingsPage() {
 
     try {
       const challengeResponse = await startPasskeyRegistrationChallenge();
+      console.info(
+        "[SecPal] Passkey registration: challenge created id=%s",
+        challengeResponse.data.challenge_id
+      );
       setRegistrationStep("browser");
       const credential = await getPasskeyAttestation(
         challengeResponse.data.public_key
+      );
+      console.info(
+        "[SecPal] Passkey registration: browser attestation complete"
       );
       setRegistrationStep("saving");
       const response = await verifyPasskeyRegistrationChallenge(
@@ -242,6 +249,10 @@ export function SettingsPage() {
           label: trimmedLabel,
           credential,
         }
+      );
+      console.info(
+        "[SecPal] Passkey registration: verify succeeded id=%s",
+        response.data.credential.id
       );
 
       setPasskeys((current) => [
@@ -259,6 +270,10 @@ export function SettingsPage() {
       try {
         const refreshedPasskeys = await getPasskeys();
         setPasskeys(refreshedPasskeys.data);
+        console.info(
+          "[SecPal] Passkey registration: complete, %d passkey(s) enrolled",
+          refreshedPasskeys.data.length
+        );
       } catch {
         setPasskeyError(
           "Passkey registered, but the enrolled passkey list could not be refreshed."
@@ -267,6 +282,7 @@ export function SettingsPage() {
         setIsLoadingPasskeys(false);
       }
     } catch (error) {
+      console.error("[SecPal] Passkey registration error:", error);
       if (error instanceof AuthApiError) {
         setPasskeyError(error.message);
       } else if (
