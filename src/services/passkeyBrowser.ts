@@ -220,26 +220,38 @@ function encodeUserHandle(
 
 async function awaitCredentialOperation<T>(
   operation: Promise<T>,
-  abortController: AbortController,
   timeoutMs: number
 ): Promise<T> {
-  return await new Promise<T>((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      abortController.abort();
+  let timeoutId: number;
+
+  // Observe independently for diagnostics — does not affect Promise.race.
+  operation.then(
+    () => {
+      console.info("[SecPal] awaitCredentialOperation: promise resolved");
+    },
+    (error: unknown) => {
+      console.info(
+        "[SecPal] awaitCredentialOperation: promise rejected:",
+        error
+      );
+    }
+  );
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      console.info(
+        "[SecPal] awaitCredentialOperation: safety timeout at %dms",
+        timeoutMs
+      );
       reject(new DOMException("The operation was aborted.", "AbortError"));
     }, timeoutMs);
-
-    operation.then(
-      (value) => {
-        window.clearTimeout(timeoutId);
-        resolve(value);
-      },
-      (error: unknown) => {
-        window.clearTimeout(timeoutId);
-        reject(error);
-      }
-    );
   });
+
+  try {
+    return await Promise.race([operation, timeoutPromise]);
+  } finally {
+    window.clearTimeout(timeoutId!);
+  }
 }
 
 export function isPasskeySupported(): boolean {
@@ -287,7 +299,6 @@ export async function getPasskeyAssertion(
 
   const requestOptions = createAuthenticationOptions(options, mediation);
 
-  const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
 
   console.info(
@@ -301,11 +312,7 @@ export async function getPasskeyAssertion(
   let credential: Credential | null;
   try {
     credential = await awaitCredentialOperation(
-      navigator.credentials.get({
-        ...requestOptions,
-        signal: abortController.signal,
-      }),
-      abortController,
+      navigator.credentials.get(requestOptions),
       safetyTimeout
     );
     console.info("[SecPal] Passkey assertion: browser returned credential");
@@ -370,7 +377,6 @@ export async function getPasskeyAttestation(
 
   const creationOptions = createRegistrationOptions(options);
 
-  const abortController = new AbortController();
   const safetyTimeout = (options.timeout ?? 60_000) + 5_000;
 
   console.info(
@@ -383,11 +389,7 @@ export async function getPasskeyAttestation(
   let credential: Credential | null;
   try {
     credential = await awaitCredentialOperation(
-      navigator.credentials.create({
-        ...creationOptions,
-        signal: abortController.signal,
-      }),
-      abortController,
+      navigator.credentials.create(creationOptions),
       safetyTimeout
     );
     console.info("[SecPal] Passkey attestation: browser returned credential");
