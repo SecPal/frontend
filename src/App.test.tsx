@@ -36,7 +36,7 @@ vi.spyOn(globalThis, "fetch").mockRejectedValue(
 async function renderWithI18n(component: React.ReactElement) {
   const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
   // Wait for any async state updates to settle
-  await waitFor(() => { });
+  await waitFor(() => {});
   return result;
 }
 
@@ -485,7 +485,11 @@ describe("App", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: /welcome to secpal/i }, { timeout: 20000 })
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: 20000 }
+      )
     ).toBeInTheDocument();
   });
 
