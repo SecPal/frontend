@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stabilized `App` route test reliability by seeding `auth_user` localStorage fixture through the same `sanitizePersistedAuthUser` path the runtime uses, eliminating races on onboarding redirect assertions caused by stale or mismatched fixture shapes.
 - Passkey browser credential prompts are now aborted via `AbortController` when the frontend safety timeout fires, so the browser dismisses the credential picker instead of letting it remain open until the browser timeout elapses after a frontend timeout.
 - Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.
 - Passkey login and add-passkey buttons now show step-by-step progress so users can tell exactly where each flow is and whether the browser is waiting for their interaction: login uses challenge → browser prompt → verifying → confirming session, while add-passkey uses challenge → browser prompt → saving.

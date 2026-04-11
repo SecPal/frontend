@@ -7,6 +7,7 @@ import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+import { sanitizePersistedAuthUser } from "./services/authState";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -28,6 +29,18 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+function seedPersistedAuthUser(user: Record<string, unknown>) {
+  const persistedUser = sanitizePersistedAuthUser(user);
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed persisted auth user for test");
+  }
+
+  localStorage.setItem("auth_user", JSON.stringify(persistedUser)); // codeql[js/clear-text-storage-of-sensitive-data] -- test-only helper; same pattern used in src/services/storage.ts (dismissed)
+
+  return persistedUser;
+}
+
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,21 +51,23 @@ describe("App", () => {
     mockGetCurrentUser.mockImplementation(async () => {
       const storedUser = localStorage.getItem("auth_user");
 
-      return storedUser
-        ? (JSON.parse(storedUser) as {
-            id: number;
-            name: string;
-            email: string;
-            emailVerified?: boolean;
-            roles?: string[];
-            permissions?: string[];
-            hasOrganizationalScopes?: boolean;
-          })
-        : {
-            id: 1,
-            name: "Fallback User",
-            email: "fallback@secpal.dev",
-          };
+      if (!storedUser) {
+        throw new Error("No stored auth user available for bootstrap");
+      }
+
+      return JSON.parse(storedUser) as {
+        id: string;
+        name: string;
+        email: string;
+        emailVerified?: boolean;
+        roles?: string[];
+        permissions?: string[];
+        hasOrganizationalScopes?: boolean;
+        hasCustomerAccess?: boolean;
+        hasSiteAccess?: boolean;
+        employeeStatus?: string;
+        onboardingWorkflowStatus?: string;
+      };
     });
   });
 
@@ -82,16 +97,13 @@ describe("App", () => {
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/activity-logs");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -103,16 +115,13 @@ describe("App", () => {
   it("shows not found for the legacy organizational-units route when the user lacks organizational access", async () => {
     window.history.replaceState({}, "", "/organizational-units");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: false,
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: false,
+    });
 
     await renderWithI18n(<App />);
 
@@ -124,18 +133,15 @@ describe("App", () => {
   it("shows not found for organization routes when the user only has scopes but no elevated feature capability", async () => {
     window.history.replaceState({}, "", "/organization");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      roles: [],
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -147,16 +153,13 @@ describe("App", () => {
   it("shows not found for customer routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/customers");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -168,16 +171,13 @@ describe("App", () => {
   it("shows not found for site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -189,16 +189,13 @@ describe("App", () => {
   it("shows not found for customer-scoped site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites/customer/123");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -210,16 +207,13 @@ describe("App", () => {
   it("shows access denied for known customer action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/customers/new");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["customers.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["customers.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -232,16 +226,13 @@ describe("App", () => {
   it("shows access denied for known customer edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/customers/123/edit");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["customers.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["customers.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -254,16 +245,13 @@ describe("App", () => {
   it("shows access denied for known site action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/sites/new");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["sites.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["sites.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -276,16 +264,13 @@ describe("App", () => {
   it("shows access denied for known site edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/sites/123/edit");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["sites.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["sites.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -298,17 +283,14 @@ describe("App", () => {
   it("shows access denied for known employee action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/employees/create");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        permissions: ["employees.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      permissions: ["employees.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -321,17 +303,14 @@ describe("App", () => {
   it("shows access denied for known employee edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/employees/123/edit");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        permissions: ["employees.read"],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      permissions: ["employees.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -344,18 +323,15 @@ describe("App", () => {
   it("redirects the legacy organizational-units route to the canonical organization route for authorized users", async () => {
     window.history.replaceState({}, "", "/organizational-units");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        roles: ["Manager"],
-        permissions: [],
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      roles: ["Manager"],
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -369,15 +345,12 @@ describe("App", () => {
   it("shows a not found state for authenticated users on unknown app routes", async () => {
     window.history.replaceState({}, "", "/dashboard");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-      })
-    );
+    seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+    });
 
     await renderWithI18n(<App />);
 
@@ -391,22 +364,19 @@ describe("App", () => {
   it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
     window.history.replaceState({}, "", "/");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          status: "pre_contract",
-          onboarding_workflow: {
-            status: "account_initialized",
-          },
+    seedPersistedAuthUser({
+      id: 1,
+      name: "Pre-Contract User",
+      email: "new.hire@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "account_initialized",
         },
-      })
-    );
+      },
+    });
 
     await renderWithI18n(<App />);
 
@@ -418,22 +388,19 @@ describe("App", () => {
   it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {
     window.history.replaceState({}, "", "/onboarding");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          status: "pre_contract",
-          onboarding_workflow: {
-            status: "changes_requested",
-          },
+    seedPersistedAuthUser({
+      id: 1,
+      name: "Pre-Contract User",
+      email: "new.hire@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "changes_requested",
         },
-      })
-    );
+      },
+    });
 
     await renderWithI18n(<App />);
 
@@ -452,24 +419,25 @@ describe("App", () => {
   it("redirects active authenticated users away from onboarding-only routes", async () => {
     window.history.replaceState({}, "", "/onboarding");
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Active User",
-        email: "guard@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-2",
+    seedPersistedAuthUser({
+      id: 1,
+      name: "Active User",
+      email: "guard@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-2",
+        status: "active",
+        onboarding_workflow: {
           status: "active",
-          onboarding_workflow: {
-            status: "active",
-          },
         },
-      })
-    );
+      },
+    });
 
     await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /welcome to secpal/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(window.location.pathname).toBe("/");
