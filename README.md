@@ -11,7 +11,7 @@ SPDX-License-Identifier: CC0-1.0
 [![codecov](https://codecov.io/gh/SecPal/frontend/branch/main/graph/badge.svg)](https://codecov.io/gh/SecPal/frontend)
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-React/TypeScript frontend for the SecPal platform.
+React/TypeScript frontend for SecPal — operations software for German private security services.
 
 ## 📱 Progressive Web App (PWA)
 
