@@ -102,12 +102,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/activity-logs");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -120,12 +120,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/organizational-units");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: false,
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: false,
+    });
 
     await renderWithI18n(<App />);
 
@@ -138,14 +138,14 @@ describe("App", () => {
     window.history.replaceState({}, "", "/organization");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      roles: [],
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -158,12 +158,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/customers");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -176,12 +176,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/sites");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -194,12 +194,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/sites/customer/123");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -212,12 +212,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/customers/new");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["customers.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["customers.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -231,12 +231,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/customers/123/edit");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["customers.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["customers.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -250,12 +250,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/sites/new");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["sites.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["sites.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -269,12 +269,12 @@ describe("App", () => {
     window.history.replaceState({}, "", "/sites/123/edit");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        permissions: ["sites.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      permissions: ["sites.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -288,13 +288,13 @@ describe("App", () => {
     window.history.replaceState({}, "", "/employees/create");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        permissions: ["employees.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      permissions: ["employees.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -308,13 +308,13 @@ describe("App", () => {
     window.history.replaceState({}, "", "/employees/123/edit");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        permissions: ["employees.read"],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      permissions: ["employees.read"],
+    });
 
     await renderWithI18n(<App />);
 
@@ -328,14 +328,14 @@ describe("App", () => {
     window.history.replaceState({}, "", "/organizational-units");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-        hasOrganizationalScopes: true,
-        roles: ["Manager"],
-        permissions: [],
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      roles: ["Manager"],
+      permissions: [],
+    });
 
     await renderWithI18n(<App />);
 
@@ -350,11 +350,11 @@ describe("App", () => {
     window.history.replaceState({}, "", "/dashboard");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-      });
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+    });
 
     await renderWithI18n(<App />);
 
@@ -369,18 +369,18 @@ describe("App", () => {
     window.history.replaceState({}, "", "/");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          status: "pre_contract",
-          onboarding_workflow: {
-            status: "account_initialized",
-          },
+      id: 1,
+      name: "Pre-Contract User",
+      email: "new.hire@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "account_initialized",
         },
-      });
+      },
+    });
 
     await renderWithI18n(<App />);
 
@@ -393,18 +393,18 @@ describe("App", () => {
     window.history.replaceState({}, "", "/onboarding");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "Pre-Contract User",
-        email: "new.hire@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-1",
-          status: "pre_contract",
-          onboarding_workflow: {
-            status: "changes_requested",
-          },
+      id: 1,
+      name: "Pre-Contract User",
+      email: "new.hire@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "changes_requested",
         },
-      });
+      },
+    });
 
     await renderWithI18n(<App />);
 
@@ -424,18 +424,18 @@ describe("App", () => {
     window.history.replaceState({}, "", "/onboarding");
 
     seedPersistedAuthUser({
-        id: 1,
-        name: "Active User",
-        email: "guard@secpal.dev",
-        emailVerified: true,
-        employee: {
-          id: "employee-2",
+      id: 1,
+      name: "Active User",
+      email: "guard@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-2",
+        status: "active",
+        onboarding_workflow: {
           status: "active",
-          onboarding_workflow: {
-            status: "active",
-          },
         },
-      });
+      },
+    });
 
     await renderWithI18n(<App />);
 
