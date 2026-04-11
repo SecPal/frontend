@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -69,10 +69,6 @@ describe("App", () => {
         onboardingWorkflowStatus?: string;
       };
     });
-  });
-
-  afterEach(() => {
-    cleanup();
   });
 
   it("renders login page when not authenticated", async () => {
