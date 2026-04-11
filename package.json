@@ -45,7 +45,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ci": "cross-env CI=true playwright test",
     "test:e2e:staging": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev playwright test",
-    "test:e2e:live:passkeys": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_API_BASE_URL=https://api.secpal.dev PLAYWRIGHT_LIVE_PASSKEY=1 PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 TEST_USER_EMAIL=test@example.com TEST_USER_PASSWORD=password playwright test tests/e2e/passkeys.live.spec.ts --project=chromium",
+    "test:e2e:live:passkeys": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_API_BASE_URL=https://api.secpal.dev PLAYWRIGHT_LIVE_PASSKEY=1 PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/passkeys.live.spec.ts --project=chromium",
     "test:e2e:offline-logout": "cross-env CI=true PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
     "test:e2e:offline-logout:staging": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
     "test:live:auth-routes": "bash ./scripts/check-live-auth-route-separation.sh",
