@@ -345,11 +345,6 @@ msgstr "Branch"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:785
-msgid "login.mfa.cancel"
-msgstr "Cancel"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
 #: src/components/OrganizationalUnitFormDialog.tsx:372
@@ -367,6 +362,11 @@ msgstr "Cancel"
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
+msgstr "Cancel"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:785
+msgid "login.mfa.cancel"
 msgstr "Cancel"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134
