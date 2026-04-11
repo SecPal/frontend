@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Passkey browser credential prompts are now aborted via `AbortController` when the frontend safety timeout fires, so the browser dismisses the credential picker instead of leaving it open indefinitely after a timeout.
+- Passkey browser credential prompts are now aborted via `AbortController` when the frontend safety timeout fires, so the browser dismisses the credential picker instead of letting it remain open until the browser timeout elapses after a frontend timeout.
 - Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.
 - Passkey login and add-passkey buttons now show step-by-step progress so users can tell exactly where each flow is and whether the browser is waiting for their interaction: login uses challenge → browser prompt → verifying → confirming session, while add-passkey uses challenge → browser prompt → saving.
 - Added step-by-step `[SecPal]` console diagnostics to the passkey login and registration flows so real-browser failures can be traced through DevTools.
