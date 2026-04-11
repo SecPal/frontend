@@ -85,7 +85,7 @@ export default defineConfig(({ mode }) => {
           name: "SecPal",
           short_name: "SecPal",
           description:
-            "Offline-first platform for security personnel and service management",
+            "Operations software for German private security services.",
           theme_color: "#ffffff",
           background_color: "#52525b",
           display: "standalone",
