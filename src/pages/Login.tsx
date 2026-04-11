@@ -10,6 +10,7 @@ import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import {
+  getCurrentUser,
   startPasskeyAuthenticationChallenge,
   verifyMfaChallenge,
   verifyPasskeyAuthenticationChallenge,
@@ -87,6 +88,9 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
+  const [passkeyStep, setPasskeyStep] = useState<
+    "challenge" | "browser" | "verifying" | "confirming" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
     useState<MfaChallenge | null>(null);
@@ -242,6 +246,7 @@ export function Login() {
   const handlePasskeySignIn = async () => {
     setError(null);
     setIsSubmittingPasskey(true);
+    setPasskeyStep("challenge");
 
     const normalizedEmail = email.trim().toLowerCase();
     const initialChallengeEmail =
@@ -251,15 +256,23 @@ export function Login() {
       const challengeResponse = await startPasskeyAuthenticationChallenge(
         challengeEmail ? { email: challengeEmail } : undefined
       );
+      console.info(
+        "[SecPal] Passkey login: challenge created id=%s credentials=%d",
+        challengeResponse.data.challenge_id,
+        challengeResponse.data.public_key.allow_credentials?.length ?? 0
+      );
 
       // Always use "optional" mediation for an explicit button click.
       // "conditional" is designed for passive autofill-based discovery and
       // would silently wait for an input-field interaction that never comes.
+      setPasskeyStep("browser");
       const credential = await getPasskeyAssertion(
         challengeResponse.data.public_key,
         "optional"
       );
+      console.info("[SecPal] Passkey login: browser assertion complete");
 
+      setPasskeyStep("verifying");
       return verifyPasskeyAuthenticationChallenge(
         challengeResponse.data.challenge_id,
         {
@@ -288,6 +301,11 @@ export function Login() {
         response = await completePasskeySignIn(normalizedEmail);
       }
 
+      console.info(
+        "[SecPal] Passkey login: verify succeeded mode=%s",
+        response.authentication.mode
+      );
+
       if (response.authentication.mode !== "session") {
         throw new Error(
           "The passkey sign-in completed with an unsupported login mode."
@@ -302,8 +320,28 @@ export function Login() {
         );
       }
 
+      // Confirm the session is established by fetching the current user,
+      // consistent with the password login flow in authTransport.
+      // Falls back to the verify response user if session confirmation fails.
+      setPasskeyStep("confirming");
+      let sessionUser = sanitizedUser;
+      try {
+        const confirmedUser = sanitizeAuthUser(await getCurrentUser());
+        if (confirmedUser) {
+          sessionUser = confirmedUser;
+          console.info(
+            "[SecPal] Passkey login: session confirmed via GET /v1/me"
+          );
+        }
+      } catch {
+        console.info(
+          "[SecPal] Passkey login: session confirmation skipped, using verify response user"
+        );
+      }
+
       resetAttempts();
-      login(sanitizedUser);
+      login(sessionUser);
+      console.info("[SecPal] Passkey login: complete, navigating to /");
       navigate("/");
     } catch (err) {
       console.error("Passkey sign-in error:", err);
@@ -335,6 +373,7 @@ export function Login() {
       }
     } finally {
       setIsSubmittingPasskey(false);
+      setPasskeyStep(null);
     }
   };
 
@@ -613,7 +652,15 @@ export function Login() {
             aria-busy={isSubmittingPasskey}
           >
             {isSubmittingPasskey ? (
-              <Trans>Signing in with passkey...</Trans>
+              passkeyStep === "browser" ? (
+                <Trans>Check your browser…</Trans>
+              ) : passkeyStep === "verifying" ? (
+                <Trans>Verifying passkey…</Trans>
+              ) : passkeyStep === "confirming" ? (
+                <Trans>Confirming session…</Trans>
+              ) : (
+                <Trans>Signing in with passkey...</Trans>
+              )
             ) : (
               <Trans>Sign in with passkey</Trans>
             )}

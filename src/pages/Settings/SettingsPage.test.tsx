@@ -316,6 +316,44 @@ describe("SettingsPage", () => {
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
   });
 
+  it("shows a browser-check prompt while waiting for the credential provider", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+
+    let resolveAttestation!: (value: unknown) => void;
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockReturnValue(
+      new Promise((resolve) => {
+        resolveAttestation = resolve as (value: unknown) => void;
+      })
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /complete in your browser/i })
+      ).toBeInTheDocument();
+    });
+
+    // Resolve to avoid dangling promise
+    resolveAttestation({
+      id: "new-credential-id",
+      raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        attestation_object: "YXR0ZXN0YXRpb24",
+      },
+      client_extension_results: {},
+    });
+  });
+
   it("shows passkey enrollment errors inline", async () => {
     vi.mocked(authApi.startPasskeyRegistrationChallenge).mockRejectedValueOnce(
       new authApi.AuthApiError("Passkey registration failed.")
