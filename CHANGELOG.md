@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`IMPLEMENTATION_PLAN_ISSUE143.md`, `IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`PERFORMANCE_ANALYSIS_2025-12-06.md`, `PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `PERFORMANCE_TBT_ANALYSIS.md`)
+
 ### Fixed
 
 - Stabilized `App` route test reliability by seeding `auth_user` localStorage fixture through the same `sanitizePersistedAuthUser` path the runtime uses, eliminating races on onboarding redirect assertions caused by stale or mismatched fixture shapes.
