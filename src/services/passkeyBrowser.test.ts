@@ -148,7 +148,9 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).not.toHaveProperty("signal");
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeDefined();
+    expect((callOptions.signal as AbortSignal).aborted).toBe(false);
 
     expect(credential).toEqual({
       id: "credential-id",
@@ -746,7 +748,7 @@ describe("passkeyBrowser", () => {
     expect(callOptions.publicKey).not.toHaveProperty("excludeCredentials");
   });
 
-  it("does not pass an AbortSignal to navigator.credentials.create during attestation", async () => {
+  it("passes an AbortSignal to navigator.credentials.create during attestation", async () => {
     const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
       challenge: toBase64Url("challenge"),
       rp: { id: "app.secpal.dev", name: "SecPal" },
@@ -784,10 +786,12 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).not.toHaveProperty("signal");
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeDefined();
+    expect((callOptions.signal as AbortSignal).aborted).toBe(false);
   });
 
-  it("times out attestation even when the browser ignores the abort signal", async () => {
+  it("times out attestation and aborts the browser request after the wrapper timeout", async () => {
     vi.useFakeTimers();
 
     const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
@@ -804,7 +808,10 @@ describe("passkeyBrowser", () => {
     };
 
     const createCredential = vi.fn(
-      () => new Promise<PublicKeyCredential | null>(() => {})
+      (options: CredentialCreationOptions) => {
+        void options;
+        return new Promise<PublicKeyCredential | null>(() => {});
+      }
     );
 
     vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
@@ -814,18 +821,27 @@ describe("passkeyBrowser", () => {
     });
 
     const promise = getPasskeyAttestation(registrationOptions);
+    const callOptions = createCredential.mock.calls[0]![0]! as Record<
+      string,
+      unknown
+    >;
+    const signal = callOptions.signal as AbortSignal;
     const expectation = expect(promise).rejects.toMatchObject({
       name: "AbortError",
     });
+
+    expect(signal.aborted).toBe(false);
 
     await vi.advanceTimersByTimeAsync(5_026);
 
     await expectation;
 
+    expect(signal.aborted).toBe(true);
+
     vi.useRealTimers();
   });
 
-  it("does not pass an AbortSignal to navigator.credentials.get during assertion", async () => {
+  it("passes an AbortSignal to navigator.credentials.get during assertion", async () => {
     const getCredential = vi.fn().mockResolvedValue({
       id: "credential-id",
       rawId: toArrayBuffer("raw-id"),
@@ -851,14 +867,19 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).not.toHaveProperty("signal");
+    expect(callOptions).toHaveProperty("signal");
+    expect(callOptions.signal).toBeDefined();
+    expect((callOptions.signal as AbortSignal).aborted).toBe(false);
   });
 
-  it("times out assertion even when the browser ignores the abort signal", async () => {
+  it("times out assertion and aborts the browser request after the wrapper timeout", async () => {
     vi.useFakeTimers();
 
     const getCredential = vi.fn(
-      () => new Promise<PublicKeyCredential | null>(() => {})
+      (options: CredentialRequestOptions) => {
+        void options;
+        return new Promise<PublicKeyCredential | null>(() => {});
+      }
     );
 
     vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
@@ -874,13 +895,22 @@ describe("passkeyBrowser", () => {
       },
       "required"
     );
+    const callOptions = getCredential.mock.calls[0]![0]! as Record<
+      string,
+      unknown
+    >;
+    const signal = callOptions.signal as AbortSignal;
     const expectation = expect(promise).rejects.toMatchObject({
       name: "AbortError",
     });
 
+    expect(signal.aborted).toBe(false);
+
     await vi.advanceTimersByTimeAsync(5_026);
 
     await expectation;
+
+    expect(signal.aborted).toBe(true);
 
     vi.useRealTimers();
   });
