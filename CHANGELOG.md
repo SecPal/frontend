@@ -12,9 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.
+- Passkey login and add-passkey buttons now show step-by-step progress so users can tell exactly where each flow is and whether the browser is waiting for their interaction: login uses challenge → browser prompt → verifying → confirming session, while add-passkey uses challenge → browser prompt → saving.
+- Added step-by-step `[SecPal]` console diagnostics to the passkey login and registration flows so real-browser failures can be traced through DevTools.
+
 ### Added
 
 - Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
+- Added a live Playwright passkey proof that drives the real app.secpal.dev/api.secpal.dev stack through passkey registration, UI/API consistency checks, passkey removal, and a fresh email-first passkey login using a browser WebAuthn authenticator.
 - Added browser passkey sign-in to the login flow, including the WebAuthn challenge client and focused frontend coverage for supported browsers and failure handling.
 - Added passkey visibility to the settings page, including enrolled-passkey listing and an unsupported-browser notice that does not hide existing server-side passkey data.
 - Added passkey enrollment to the settings page, including user-provided credential labels, browser WebAuthn registration, server-side verification, and focused frontend coverage for successful and failing enrollment flows.

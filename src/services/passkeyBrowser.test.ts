@@ -148,8 +148,7 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).toHaveProperty("signal");
-    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
+    expect(callOptions).not.toHaveProperty("signal");
 
     expect(credential).toEqual({
       id: "credential-id",
@@ -747,7 +746,7 @@ describe("passkeyBrowser", () => {
     expect(callOptions.publicKey).not.toHaveProperty("excludeCredentials");
   });
 
-  it("passes an AbortSignal to navigator.credentials.create during attestation", async () => {
+  it("does not pass an AbortSignal to navigator.credentials.create during attestation", async () => {
     const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
       challenge: toBase64Url("challenge"),
       rp: { id: "app.secpal.dev", name: "SecPal" },
@@ -785,8 +784,7 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).toHaveProperty("signal");
-    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
+    expect(callOptions).not.toHaveProperty("signal");
   });
 
   it("times out attestation even when the browser ignores the abort signal", async () => {
@@ -827,7 +825,7 @@ describe("passkeyBrowser", () => {
     vi.useRealTimers();
   });
 
-  it("passes an AbortSignal to navigator.credentials.get during assertion", async () => {
+  it("does not pass an AbortSignal to navigator.credentials.get during assertion", async () => {
     const getCredential = vi.fn().mockResolvedValue({
       id: "credential-id",
       rawId: toArrayBuffer("raw-id"),
@@ -853,8 +851,7 @@ describe("passkeyBrowser", () => {
       string,
       unknown
     >;
-    expect(callOptions).toHaveProperty("signal");
-    expect(callOptions.signal).toBeInstanceOf(AbortSignal);
+    expect(callOptions).not.toHaveProperty("signal");
   });
 
   it("times out assertion even when the browser ignores the abort signal", async () => {
