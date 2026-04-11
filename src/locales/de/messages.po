@@ -345,6 +345,11 @@ msgstr "Niederlassung"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
 
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:785
+msgid "login.mfa.cancel"
+msgstr "Abbrechen"
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
 #: src/components/OrganizationalUnitFormDialog.tsx:372
@@ -362,11 +367,6 @@ msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalak
 #: src/pages/Sites/SiteDetail.tsx:384
 #: src/pages/Sites/SiteEdit.tsx:459
 msgid "Cancel"
-msgstr "Abbrechen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:785
-msgid "login.mfa.cancel"
 msgstr "Abbrechen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:134

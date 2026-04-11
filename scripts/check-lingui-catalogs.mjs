@@ -96,14 +96,44 @@ function formatSyncFailure(error) {
   return String(error);
 }
 
+const syncEnvironmentKeys = [
+  "APPDATA",
+  "CI",
+  "COLORTERM",
+  "ComSpec",
+  "HOME",
+  "http_proxy",
+  "HTTP_PROXY",
+  "https_proxy",
+  "HTTPS_PROXY",
+  "LANG",
+  "LC_ALL",
+  "LC_CTYPE",
+  "LOCALAPPDATA",
+  "no_proxy",
+  "NO_PROXY",
+  "NPM_CONFIG_CACHE",
+  "NPM_CONFIG_USERCONFIG",
+  "PATH",
+  "SHELL",
+  "SystemRoot",
+  "TEMP",
+  "TERM",
+  "TMP",
+  "TMPDIR",
+  "USERPROFILE",
+  "npm_config_cache",
+  "npm_config_userconfig",
+];
+
 function buildSyncEnvironment() {
-  const syncEnvironment = { ...process.env };
+  const syncEnvironment = {};
 
-  delete syncEnvironment.NODE_ENV;
+  for (const environmentKey of syncEnvironmentKeys) {
+    const environmentValue = process.env[environmentKey];
 
-  for (const environmentKey of Object.keys(syncEnvironment)) {
-    if (environmentKey.startsWith("VITEST")) {
-      delete syncEnvironment[environmentKey];
+    if (environmentValue !== undefined) {
+      syncEnvironment[environmentKey] = environmentValue;
     }
   }
 
