@@ -220,7 +220,8 @@ function encodeUserHandle(
 
 async function awaitCredentialOperation<T>(
   operation: Promise<T>,
-  timeoutMs: number
+  timeoutMs: number,
+  onTimeout?: () => void
 ): Promise<T> {
   let timeoutId: number;
 
@@ -244,6 +245,15 @@ async function awaitCredentialOperation<T>(
         timeoutMs
       );
       reject(new DOMException("The operation was aborted.", "AbortError"));
+
+      if (onTimeout) {
+        Promise.resolve().then(() => {
+          console.info(
+            "[SecPal] awaitCredentialOperation: aborting underlying browser request after timeout"
+          );
+          onTimeout();
+        });
+      }
     }, timeoutMs);
   });
 
@@ -311,11 +321,17 @@ export async function getPasskeyAssertion(
     safetyTimeout
   );
 
+  const abortController = new AbortController();
+
   let credential: Credential | null;
   try {
     credential = await awaitCredentialOperation(
-      navigator.credentials.get(requestOptions),
-      safetyTimeout
+      navigator.credentials.get({
+        ...requestOptions,
+        signal: abortController.signal,
+      }),
+      safetyTimeout,
+      () => abortController.abort()
     );
     console.info("[SecPal] Passkey assertion: browser returned credential");
   } catch (error) {
@@ -390,11 +406,17 @@ export async function getPasskeyAttestation(
     safetyTimeout
   );
 
+  const abortController = new AbortController();
+
   let credential: Credential | null;
   try {
     credential = await awaitCredentialOperation(
-      navigator.credentials.create(creationOptions),
-      safetyTimeout
+      navigator.credentials.create({
+        ...creationOptions,
+        signal: abortController.signal,
+      }),
+      safetyTimeout,
+      () => abortController.abort()
     );
     console.info("[SecPal] Passkey attestation: browser returned credential");
   } catch (error) {
