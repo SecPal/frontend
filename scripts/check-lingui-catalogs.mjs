@@ -2,7 +2,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFile } from "node:child_process";
-import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +22,13 @@ const scriptPath = fileURLToPath(import.meta.url);
 const scriptDirectory = dirname(scriptPath);
 const projectRoot = resolve(scriptDirectory, "..");
 const localesDirectory = join(projectRoot, "src", "locales");
+const syncWorkspaceEntries = [
+  "lingui.config.cjs",
+  "package.json",
+  "src",
+  "tsconfig.json",
+  "tsconfig.node.json",
+];
 
 /**
  * Normalize file content to match what the pre-commit hooks produce:
@@ -24,6 +39,7 @@ const localesDirectory = join(projectRoot, "src", "locales");
 function normalizeContent(content) {
   return content
     .split("\n")
+    .filter((line) => !line.startsWith('"POT-Creation-Date: '))
     .map((line) => line.trimEnd())
     .join("\n")
     .trimEnd();
@@ -78,11 +94,6 @@ async function diffDirectories(previousDirectory, currentDirectory) {
   return changedFiles;
 }
 
-async function restoreLocales(backupDirectory) {
-  await rm(localesDirectory, { recursive: true, force: true });
-  await cp(backupDirectory, localesDirectory, { recursive: true });
-}
-
 function formatSyncFailure(error) {
   if (typeof error === "object" && error !== null) {
     const message =
@@ -115,6 +126,7 @@ const syncEnvironmentKeys = [
   "NPM_CONFIG_CACHE",
   "NPM_CONFIG_USERCONFIG",
   "PATH",
+  "PATHEXT",
   "SHELL",
   "SystemRoot",
   "TEMP",
@@ -126,45 +138,89 @@ const syncEnvironmentKeys = [
   "npm_config_userconfig",
 ];
 
-function buildSyncEnvironment() {
+export function buildSyncEnvironment(environment = process.env) {
   const syncEnvironment = {};
 
   for (const environmentKey of syncEnvironmentKeys) {
-    const environmentValue = process.env[environmentKey];
+    const environmentValue = environment[environmentKey];
 
     if (environmentValue !== undefined) {
       syncEnvironment[environmentKey] = environmentValue;
     }
   }
 
-  syncEnvironment.CI = process.env.CI ?? "1";
+  syncEnvironment.CI = environment.CI ?? "1";
 
   return syncEnvironment;
 }
 
-export async function checkLinguiCatalogs() {
-  const temporaryDirectory = await mkdtemp(
+function getNpmCommand(platform = process.platform) {
+  return platform === "win32" ? "npm.cmd" : "npm";
+}
+
+async function pathExists(path) {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function createIsolatedWorkspace(rootDirectory) {
+  const workspaceRoot = await mkdtemp(
     join(tmpdir(), "secpal-lingui-catalog-check-")
   );
-  const backupDirectory = join(temporaryDirectory, "locales-backup");
 
-  await cp(localesDirectory, backupDirectory, { recursive: true });
+  await Promise.all(
+    syncWorkspaceEntries.map(async (entry) => {
+      const sourcePath = join(rootDirectory, entry);
+
+      if (!(await pathExists(sourcePath))) {
+        return;
+      }
+
+      await cp(sourcePath, join(workspaceRoot, entry), {
+        recursive: true,
+      });
+    })
+  );
+
+  await symlink(
+    join(rootDirectory, "node_modules"),
+    join(workspaceRoot, "node_modules"),
+    process.platform === "win32" ? "junction" : "dir"
+  );
+
+  return workspaceRoot;
+}
+
+export async function checkLinguiCatalogs({
+  execFileAsyncImpl = execFileAsync,
+  environment = process.env,
+  rootDirectory = projectRoot,
+} = {}) {
+  const isolatedWorkspaceRoot = await createIsolatedWorkspace(rootDirectory);
+  const isolatedLocalesDirectory = join(
+    isolatedWorkspaceRoot,
+    "src",
+    "locales"
+  );
 
   try {
-    await execFileAsync("npm", ["run", "sync:purge"], {
-      cwd: projectRoot,
-      env: buildSyncEnvironment(),
+    await execFileAsyncImpl(getNpmCommand(), ["run", "sync:purge"], {
+      cwd: isolatedWorkspaceRoot,
+      env: buildSyncEnvironment(environment),
       maxBuffer: 16 * 1024 * 1024,
     });
 
-    return await diffDirectories(backupDirectory, localesDirectory);
+    return await diffDirectories(localesDirectory, isolatedLocalesDirectory);
   } catch (error) {
     throw new Error(
       `Lingui catalog sync check failed.\n${formatSyncFailure(error)}`
     );
   } finally {
-    await restoreLocales(backupDirectory);
-    await rm(temporaryDirectory, { recursive: true, force: true });
+    await rm(isolatedWorkspaceRoot, { recursive: true, force: true });
   }
 }
 
