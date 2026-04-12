@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Isolated the Lingui catalog guard's nested `sync:purge` environment from parent Vitest and npm runner variables, and refreshed the checked-in locale artifacts so the guard no longer reports false drift in CI while still catching real catalog changes.
+- Added a Lingui catalog sync guard that re-runs the checked-in extract/compile flow during frontend test validation, restores the workspace afterward, and fails CI when new translatable strings were added without committing the resulting catalog updates.
 - Stabilized `App` route test reliability by seeding `auth_user` localStorage fixture through the same `sanitizePersistedAuthUser` path the runtime uses, eliminating races on onboarding redirect assertions caused by stale or mismatched fixture shapes.
 - Passkey browser credential prompts are now aborted via `AbortController` when the frontend safety timeout fires, so the browser dismisses the credential picker instead of letting it remain open until the browser timeout elapses after a frontend timeout.
 - Passkey login now confirms the session with a follow-up GET /v1/me after the verify endpoint succeeds, aligning with the password login flow and catching silent session establishment failures.

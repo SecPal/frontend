@@ -23,6 +23,9 @@ describe("Lingui configuration", () => {
   });
 
   it("uses local Lingui sync commands as the only catalog maintenance path", () => {
+    expect(packageJson.scripts["i18n:check"]).toBe(
+      "node ./scripts/check-lingui-catalogs.mjs"
+    );
     expect(packageJson.scripts.sync).toBe(
       'cross-env-shell "lingui extract --overwrite && lingui compile --namespace es"'
     );

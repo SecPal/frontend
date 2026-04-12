@@ -54,6 +54,7 @@
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",
     "lingui:compile": "lingui compile --namespace es",
+    "i18n:check": "node ./scripts/check-lingui-catalogs.mjs",
     "sync": "cross-env-shell \"lingui extract --overwrite && lingui compile --namespace es\"",
     "sync:purge": "cross-env-shell \"lingui extract --overwrite --clean && lingui compile --namespace es\"",
     "sync:local": "cross-env-shell \"lingui extract --overwrite && lingui compile --namespace es\"",

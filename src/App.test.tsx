@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
@@ -20,6 +20,17 @@ vi.mock("./services/authApi", async () => {
     getCurrentUser: mockGetCurrentUser,
   };
 });
+
+// Block all real network requests: lazy-loaded page components call their
+// data APIs on mount, and those pending fetch Promises accumulate in the
+// Node.js event loop, stalling the microtask queue and pushing the auth
+// bootstrap past BOOTSTRAP_REVALIDATION_TIMEOUT_MS. Failing immediately
+// prevents that backlog without affecting the auth behaviour under test.
+// Using spyOn (not stubGlobal) so it is not undone by unstubGlobals: true
+// between tests.
+vi.spyOn(globalThis, "fetch").mockRejectedValue(
+  new TypeError("fetch is not available in App.test.tsx")
+);
 
 // Helper to render with I18n and wait for async updates
 async function renderWithI18n(component: React.ReactElement) {
@@ -42,6 +53,35 @@ function seedPersistedAuthUser(user: Record<string, unknown>) {
 }
 
 describe("App", () => {
+  // Pre-load all lazily-imported route modules once before any test runs.
+  // Without this, each test that renders a route with a lazy component creates
+  // a pending Suspense thenable. Over 19+ tests these accumulate in the
+  // microtask queue and can delay the auth-bootstrap Promise resolution past
+  // BOOTSTRAP_REVALIDATION_TIMEOUT_MS, causing redirect tests to time out.
+  beforeAll(async () => {
+    await Promise.all([
+      import("./pages/Settings/SettingsPage"),
+      import("./pages/Profile/ProfilePage"),
+      import("./pages/Employees/EmployeeList"),
+      import("./pages/Employees/EmployeeDetail"),
+      import("./pages/Employees/EmployeeCreate"),
+      import("./pages/Employees/EmployeeEdit"),
+      import("./pages/Onboarding/OnboardingWizard"),
+      import("./pages/Onboarding/OnboardingComplete"),
+      import("./pages/Organization/OrganizationPage"),
+      import("./pages/Customers/CustomersPage"),
+      import("./pages/Customers/CustomerCreate"),
+      import("./pages/Customers/CustomerDetail"),
+      import("./pages/Customers/CustomerEdit"),
+      import("./pages/Sites/SitesPage"),
+      import("./pages/Sites/SiteCreate"),
+      import("./pages/Sites/SiteDetail"),
+      import("./pages/Sites/SiteEdit"),
+      import("./pages/ActivityLog/ActivityLogList"),
+      import("./pages/AndroidProvisioning/AndroidProvisioningPage"),
+    ]);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
@@ -408,9 +448,11 @@ describe("App", () => {
       expect(window.location.pathname).toBe("/onboarding");
     });
 
-    expect(
-      await screen.findByRole("button", { name: /sign out/i })
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /sign out/i })
+      ).toBeInTheDocument();
+    });
     expect(
       screen.queryByRole("link", { name: /home/i })
     ).not.toBeInTheDocument();
@@ -435,13 +477,20 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    expect(
-      await screen.findByRole("heading", { name: /welcome to secpal/i })
-    ).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: 20000 }
+    );
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/");
-    });
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: 20000 }
+      )
+    ).toBeInTheDocument();
   });
 
   it("redirects unauthenticated users from the protected onboarding route to login", async () => {

@@ -239,11 +239,15 @@ npm run sync
 
 # Extract, compile, and remove unused translations
 npm run sync:purge
+
+# Verify that the checked-in catalogs are fully in sync
+npm run i18n:check
 ```
 
 **Workflow:**
 
 The checked-in Lingui `.po` catalogs are the source of truth. Update source strings with `npm run sync` or `npm run sync:purge`, then review and edit the resulting `.po` files directly or in a gettext editor such as POedit.
+Use `npm run i18n:check` before opening a PR when you touched translatable strings; the frontend test suite runs the same guard in CI so stale catalogs cannot merge silently.
 
 **Adding Translations:**
 
