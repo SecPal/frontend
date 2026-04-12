@@ -237,6 +237,5 @@ Follows **ADR-003: Offline-First Architecture**:
 
 For questions or issues:
 
-- See: `frontend/docs/PWA_PHASE3_TESTING.md`
 - See: `.github/docs/adr/20251027-offline-first-architecture.md`
 - Issue #283: Epic - Organizational Structure Management (CRUD)
