@@ -58,7 +58,7 @@ try {
 }
 ```
 
-See [PWA_PHASE3_TESTING.md](PWA_PHASE3_TESTING.md) for comprehensive testing guide.
+See the project's `CONTRIBUTING.md` for development guides and testing instructions.
 
 ## 🔐 Client-Side File Encryption
 
