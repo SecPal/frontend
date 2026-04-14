@@ -804,7 +804,7 @@ describe("passkeyBrowser", () => {
       },
       pub_key_cred_params: [{ type: "public-key", alg: -7 }],
       attestation: "none",
-      timeout: 25,
+      timeout: 25_000,
     };
 
     const createCredential = vi.fn((options: CredentialCreationOptions) => {
@@ -827,10 +827,23 @@ describe("passkeyBrowser", () => {
     const expectation = expect(promise).rejects.toMatchObject({
       name: "AbortError",
     });
+    let settled = false;
+    promise.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      }
+    );
 
     expect(signal.aborted).toBe(false);
 
-    await vi.advanceTimersByTimeAsync(5_026);
+    await vi.advanceTimersByTimeAsync(20_001);
+    expect(signal.aborted).toBe(false);
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(10_000);
 
     await expectation;
 
@@ -887,7 +900,7 @@ describe("passkeyBrowser", () => {
     const promise = getPasskeyAssertion(
       {
         ...authenticationOptions,
-        timeout: 25,
+        timeout: 25_000,
       },
       "required"
     );
@@ -899,10 +912,23 @@ describe("passkeyBrowser", () => {
     const expectation = expect(promise).rejects.toMatchObject({
       name: "AbortError",
     });
+    let settled = false;
+    promise.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
 
     expect(signal.aborted).toBe(false);
 
-    await vi.advanceTimersByTimeAsync(5_026);
+    await vi.advanceTimersByTimeAsync(20_001);
+    expect(signal.aborted).toBe(false);
+    expect(settled).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(10_000);
 
     await expectation;
 
