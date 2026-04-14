@@ -147,8 +147,8 @@ export interface UseOrganizationalUnitsWithOfflineResult {
 
 ### OrganizationalUnitTree.test.tsx
 
-- Existing tests need to be updated for hook usage
-- Status: ⚠️ In progress (mock updates required)
+- Tests were updated for hook usage
+- Status: ✅ Complete
 
 ## End User Migration
 
@@ -156,7 +156,7 @@ export interface UseOrganizationalUnitsWithOfflineResult {
 
 - Dexie.js migrates the IndexedDB schema automatically as `DB_VERSION` changes
 - The organizational-unit cache was introduced in v5
-- The current live schema is v10 and no longer keeps the stale `pendingSync` field or index
+- The current live schema is v10; removal of the stale `pendingSync` field and index is currently unreleased
 - Existing cached records are preserved while the store definition is updated
 
 **No user action required!**
@@ -182,7 +182,7 @@ Implementation follows the exact pattern of `/secrets`:
 4. ✅ OrganizationalUnitTree adapted
 5. ✅ OrganizationPage with banners
 6. ✅ Tests for store and hook
-7. ⚠️ OrganizationalUnitTree tests need updating (mock adjustments)
+7. ✅ OrganizationalUnitTree tests updated for hook-based mocking
 8. ✅ Authenticated organizational-unit HTTP responses remain uncached; offline reads rely on IndexedDB only
 
 ## Service Worker Integration

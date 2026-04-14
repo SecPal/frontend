@@ -310,7 +310,7 @@ export async function getPasskeyAssertion(
   const requestOptions = createAuthenticationOptions(options, mediation);
 
   const webAuthnTimeout = options.timeout ?? 60_000;
-  const safetyTimeout = Math.min(webAuthnTimeout + 5_000, 20_000);
+  const safetyTimeout = webAuthnTimeout + 5_000;
 
   console.info(
     "[SecPal] Passkey assertion: calling navigator.credentials.get() with mediation=%s, rpId=%s, allowCredentials=%d, webAuthnTimeout=%dms, wrapperTimeout=%dms",
@@ -396,7 +396,7 @@ export async function getPasskeyAttestation(
   const creationOptions = createRegistrationOptions(options);
 
   const webAuthnTimeout = options.timeout ?? 60_000;
-  const safetyTimeout = Math.min(webAuthnTimeout + 5_000, 20_000);
+  const safetyTimeout = webAuthnTimeout + 5_000;
 
   console.info(
     "[SecPal] Passkey attestation: calling navigator.credentials.create() with rpId=%s, excludeCredentials=%d, webAuthnTimeout=%dms, wrapperTimeout=%dms",
