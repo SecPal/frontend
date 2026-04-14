@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFile } from "node:child_process";
-import { resolve as resolvePath } from "node:path";
+import { resolve as resolvePath, sep as pathSep } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import {
@@ -36,7 +36,7 @@ describe("Lingui catalog sync guard", () => {
     });
 
     expect(changedFiles).toEqual([]);
-    expect(observedCwd.startsWith(resolvePath(process.cwd()))).toBe(false);
+    expect(observedCwd.startsWith(resolvePath(process.cwd()) + pathSep)).toBe(false);
     expect(observedCwd).toContain("secpal-lingui-catalog-check-");
   }, 120_000);
 

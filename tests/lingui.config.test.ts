@@ -3,7 +3,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import packageJson from "../package.json" with { type: "json" };
+import packageJson from "../package.json";
 import { describe, expect, it } from "vitest";
 
 describe("Lingui configuration", () => {
