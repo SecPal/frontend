@@ -919,7 +919,7 @@ describe("passkeyBrowser", () => {
       },
       () => {
         settled = true;
-      },
+      }
     );
 
     expect(signal.aborted).toBe(false);
