@@ -36,7 +36,9 @@ describe("Lingui catalog sync guard", () => {
     });
 
     expect(changedFiles).toEqual([]);
-    expect(observedCwd.startsWith(resolvePath(process.cwd()) + pathSep)).toBe(false);
+    expect(observedCwd.startsWith(resolvePath(process.cwd()) + pathSep)).toBe(
+      false
+    );
     expect(observedCwd).toContain("secpal-lingui-catalog-check-");
   }, 120_000);
 
