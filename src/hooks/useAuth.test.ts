@@ -569,11 +569,12 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      const staleAuthEvent = new StorageEvent("storage", {
-        key: "auth_user",
-        oldValue: null,
-        newValue: JSON.stringify(mockUser),
-        storageArea: localStorage,
+      const staleAuthEvent = new StorageEvent("storage");
+      Object.defineProperties(staleAuthEvent, {
+        key: { value: "auth_user" },
+        oldValue: { value: null },
+        newValue: { value: JSON.stringify(mockUser) },
+        storageArea: { value: localStorage },
       });
       window.dispatchEvent(staleAuthEvent);
     });
