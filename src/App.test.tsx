@@ -7,7 +7,11 @@ import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
-import { sanitizePersistedAuthUser } from "./services/authState";
+import {
+  sanitizePersistedAuthUser,
+  type PersistedAuthUser,
+} from "./services/authState";
+import { authStorage } from "./services/storage";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -40,6 +44,8 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+let seededAuthUser: PersistedAuthUser | null = null;
+
 function seedPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
 
@@ -47,7 +53,8 @@ function seedPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed persisted auth user for test");
   }
 
-  localStorage.setItem("auth_user", JSON.stringify(persistedUser)); // codeql[js/clear-text-storage-of-sensitive-data] -- test-only helper; same pattern used in src/services/storage.ts (dismissed)
+  seededAuthUser = persistedUser;
+  authStorage.setUser(persistedUser);
 
   return persistedUser;
 }
@@ -85,29 +92,16 @@ describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    seededAuthUser = null;
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
     mockGetCurrentUser.mockImplementation(async () => {
-      const storedUser = localStorage.getItem("auth_user");
-
-      if (!storedUser) {
-        throw new Error("No stored auth user available for bootstrap");
+      if (!seededAuthUser) {
+        throw new Error("No mock auth user available for bootstrap");
       }
 
-      return JSON.parse(storedUser) as {
-        id: string;
-        name: string;
-        email: string;
-        emailVerified?: boolean;
-        roles?: string[];
-        permissions?: string[];
-        hasOrganizationalScopes?: boolean;
-        hasCustomerAccess?: boolean;
-        hasSiteAccess?: boolean;
-        employeeStatus?: string;
-        onboardingWorkflowStatus?: string;
-      };
+      return seededAuthUser;
     });
   });
 

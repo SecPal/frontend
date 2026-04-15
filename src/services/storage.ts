@@ -1,8 +1,189 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import CryptoJS from "crypto-js";
 import type { User } from "../contexts/auth-context";
-import { sanitizePersistedAuthUser } from "./authState";
+import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
+import { getCsrfTokenFromCookie } from "./csrf";
+
+const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
+const AUTH_STORAGE_VERSION = 1;
+const AUTH_STORAGE_PBKDF2_ITERATIONS = 5_000;
+const AUTH_STORAGE_SALT_BYTES = 16;
+const AUTH_STORAGE_IV_BYTES = 16;
+const AUTH_STORAGE_KEY_SIZE_WORDS = 16;
+const AUTH_STORAGE_HALF_KEY_BYTES = 32;
+
+interface AuthStorageEnvelope {
+  scheme: typeof AUTH_STORAGE_SCHEME;
+  version: typeof AUTH_STORAGE_VERSION;
+  salt: string;
+  iv: string;
+  ciphertext: string;
+  mac: string;
+}
+
+function getAuthStorageKeyMaterial(): string | null {
+  const csrfToken = getCsrfTokenFromCookie();
+
+  if (!csrfToken) {
+    return null;
+  }
+
+  return `secpal-auth-storage:${csrfToken}`;
+}
+
+function splitDerivedKey(derivedKey: CryptoJS.lib.WordArray): {
+  encryptionKey: CryptoJS.lib.WordArray;
+  macKey: CryptoJS.lib.WordArray;
+} {
+  if (AUTH_STORAGE_KEY_SIZE_WORDS % 2 !== 0) {
+    throw new Error("AUTH_STORAGE_KEY_SIZE_WORDS must be even.");
+  }
+
+  if (derivedKey.words.length !== AUTH_STORAGE_KEY_SIZE_WORDS) {
+    throw new Error("Derived auth storage key has an unexpected length.");
+  }
+
+  const halfKeySizeWords = AUTH_STORAGE_KEY_SIZE_WORDS / 2;
+
+  return {
+    encryptionKey: CryptoJS.lib.WordArray.create(
+      derivedKey.words.slice(0, halfKeySizeWords),
+      AUTH_STORAGE_HALF_KEY_BYTES
+    ),
+    macKey: CryptoJS.lib.WordArray.create(
+      derivedKey.words.slice(halfKeySizeWords, AUTH_STORAGE_KEY_SIZE_WORDS),
+      AUTH_STORAGE_HALF_KEY_BYTES
+    ),
+  };
+}
+
+function deriveAuthStorageKeys(
+  keyMaterial: string,
+  salt: CryptoJS.lib.WordArray
+): { encryptionKey: CryptoJS.lib.WordArray; macKey: CryptoJS.lib.WordArray } {
+  const derivedKey = CryptoJS.PBKDF2(keyMaterial, salt, {
+    hasher: CryptoJS.algo.SHA256,
+    iterations: AUTH_STORAGE_PBKDF2_ITERATIONS,
+    keySize: AUTH_STORAGE_KEY_SIZE_WORDS,
+  });
+
+  return splitDerivedKey(derivedKey);
+}
+
+function buildEnvelopeMacPayload(
+  envelope: Omit<AuthStorageEnvelope, "mac">
+): string {
+  return [
+    envelope.scheme,
+    String(envelope.version),
+    envelope.salt,
+    envelope.iv,
+    envelope.ciphertext,
+  ].join(".");
+}
+
+function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    candidate.scheme === AUTH_STORAGE_SCHEME &&
+    candidate.version === AUTH_STORAGE_VERSION &&
+    typeof candidate.salt === "string" &&
+    typeof candidate.iv === "string" &&
+    typeof candidate.ciphertext === "string" &&
+    typeof candidate.mac === "string"
+  );
+}
+
+function encryptPersistedAuthUser(user: PersistedAuthUser): string | null {
+  const keyMaterial = getAuthStorageKeyMaterial();
+
+  if (!keyMaterial) {
+    return null;
+  }
+
+  const salt = CryptoJS.lib.WordArray.random(AUTH_STORAGE_SALT_BYTES);
+  const iv = CryptoJS.lib.WordArray.random(AUTH_STORAGE_IV_BYTES);
+  const { encryptionKey, macKey } = deriveAuthStorageKeys(keyMaterial, salt);
+  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(user), encryptionKey, {
+    iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7,
+  }).ciphertext;
+
+  const envelopeWithoutMac = {
+    scheme: AUTH_STORAGE_SCHEME,
+    version: AUTH_STORAGE_VERSION,
+    salt: salt.toString(CryptoJS.enc.Base64),
+    iv: iv.toString(CryptoJS.enc.Base64),
+    ciphertext: ciphertext.toString(CryptoJS.enc.Base64),
+  } satisfies Omit<AuthStorageEnvelope, "mac">;
+
+  return JSON.stringify({
+    ...envelopeWithoutMac,
+    mac: CryptoJS.HmacSHA256(
+      buildEnvelopeMacPayload(envelopeWithoutMac),
+      macKey
+    ).toString(CryptoJS.enc.Base64),
+  } satisfies AuthStorageEnvelope);
+}
+
+function decryptPersistedAuthUser(
+  storedUser: string
+): PersistedAuthUser | null {
+  const parsedStoredUser = JSON.parse(storedUser) as unknown;
+
+  if (!isAuthStorageEnvelope(parsedStoredUser)) {
+    return sanitizePersistedAuthUser(parsedStoredUser);
+  }
+
+  const keyMaterial = getAuthStorageKeyMaterial();
+
+  if (!keyMaterial) {
+    return null;
+  }
+
+  const salt = CryptoJS.enc.Base64.parse(parsedStoredUser.salt);
+  const { encryptionKey, macKey } = deriveAuthStorageKeys(keyMaterial, salt);
+  const expectedMac = CryptoJS.HmacSHA256(
+    buildEnvelopeMacPayload({
+      scheme: parsedStoredUser.scheme,
+      version: parsedStoredUser.version,
+      salt: parsedStoredUser.salt,
+      iv: parsedStoredUser.iv,
+      ciphertext: parsedStoredUser.ciphertext,
+    }),
+    macKey
+  ).toString(CryptoJS.enc.Base64);
+
+  if (expectedMac !== parsedStoredUser.mac) {
+    return null;
+  }
+
+  const decryptedUser = CryptoJS.AES.decrypt(
+    CryptoJS.lib.CipherParams.create({
+      ciphertext: CryptoJS.enc.Base64.parse(parsedStoredUser.ciphertext),
+    }),
+    encryptionKey,
+    {
+      iv: CryptoJS.enc.Base64.parse(parsedStoredUser.iv),
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    }
+  ).toString(CryptoJS.enc.Utf8);
+
+  if (!decryptedUser) {
+    return null;
+  }
+
+  return sanitizePersistedAuthUser(JSON.parse(decryptedUser) as unknown);
+}
 
 /**
  * Storage abstraction layer for auth data
@@ -62,7 +243,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (!storedUser) return null;
 
     try {
-      const sanitizedUser = sanitizePersistedAuthUser(JSON.parse(storedUser));
+      const sanitizedUser = decryptPersistedAuthUser(storedUser);
 
       if (!sanitizedUser) {
         this.removeUser();
@@ -85,14 +266,18 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
+    const encryptedUser = encryptPersistedAuthUser(sanitizedUser);
+
+    if (!encryptedUser) {
+      console.warn(
+        "Failed to derive session-bound auth storage key; clearing persisted auth state."
+      );
+      this.removeUser();
+      return;
+    }
+
     this.clearLogoutBarrier();
-    // Auth state (name, email, capability flags, and employee lifecycle fields) is
-    // stored as cleartext by design: the persisted record intentionally omits the
-    // full employee record and only retains the minimal subset required for offline
-    // route gating.  The same-origin XSS risk profile is accepted for the same
-    // reason existing PII (name, email) is already stored here.  Full at-rest
-    // encryption of the persisted auth state is tracked in issue #784.
-    localStorage.setItem(this.USER_KEY, JSON.stringify(sanitizedUser)); // codeql[js/clear-text-storage-of-sensitive-data]
+    localStorage.setItem(this.USER_KEY, encryptedUser);
   }
 
   removeUser(): void {

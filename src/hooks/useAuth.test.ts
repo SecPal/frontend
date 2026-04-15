@@ -8,6 +8,7 @@ import {
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
+import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
@@ -42,6 +43,21 @@ function createDeferredPromise<T>() {
   });
 
   return { promise, resolve, reject };
+}
+
+function expectEncryptedStoredUser(
+  expectedUser: Record<string, unknown>
+): void {
+  const storedUser = localStorage.getItem("auth_user");
+
+  expect(storedUser).not.toBeNull();
+
+  const parsedStoredUser = JSON.parse(storedUser as string) as unknown;
+
+  expect(parsedStoredUser).toEqual(expect.any(Object));
+  expect(parsedStoredUser).not.toBeNull();
+  expect(parsedStoredUser).not.toEqual(expect.objectContaining(expectedUser));
+  expect(authStorage.getUser()).toEqual(expectedUser);
 }
 
 describe("useAuth", () => {
@@ -108,9 +124,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toEqual(expectedRevalidatedUser);
-    expect(localStorage.getItem("auth_user")).toBe(
-      JSON.stringify(expectedRevalidatedUser)
-    );
+    expectEncryptedStoredUser(expectedRevalidatedUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
@@ -381,7 +395,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
-    expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
+    expectEncryptedStoredUser(mockUser);
   });
 
   it("logout clears user", async () => {
