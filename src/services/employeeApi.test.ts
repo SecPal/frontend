@@ -57,6 +57,69 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       expect(organizationalUnitIdIsOptional).toBe(false);
     });
 
+    it("should omit management_level from the create payload for non-leadership employees", async () => {
+      const mockEmployee: EmployeeFormData = {
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@secpal.dev",
+        position: "Security Guard",
+        date_of_birth: "1990-01-01",
+        contract_start_date: "2025-01-01",
+        organizational_unit_id: "unit-1",
+        status: "pre_contract",
+        contract_type: "full_time",
+        management_level: 0,
+        send_invitation: true,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        headers: new Map(),
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "emp-1",
+            employee_number: "E001",
+            ...mockEmployee,
+            full_name: "John Doe",
+            phone: null,
+            organizational_unit: { id: "unit-1", name: "Engineering" },
+            created_at: "2025-01-01T00:00:00Z",
+            updated_at: "2025-01-01T00:00:00Z",
+            onboarding_invitation: {
+              status: "sent",
+              requested_at: "2025-01-01T00:00:00Z",
+              token_created_at: "2025-01-01T00:00:00Z",
+              mail_sent_at: "2025-01-01T00:00:01Z",
+              mail_failed_at: null,
+              failure_reason: null,
+            },
+          },
+        }),
+      });
+
+      await createEmployee(mockEmployee);
+
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        expect.stringContaining("/v1/employees"),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            first_name: "John",
+            last_name: "Doe",
+            email: "john@secpal.dev",
+            position: "Security Guard",
+            date_of_birth: "1990-01-01",
+            contract_start_date: "2025-01-01",
+            organizational_unit_id: "unit-1",
+            status: "pre_contract",
+            contract_type: "full_time",
+            send_invitation: true,
+          }),
+        })
+      );
+    });
+
     it("should throw error when JSON parsing fails on success response", async () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",

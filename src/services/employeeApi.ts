@@ -90,6 +90,12 @@ export async function fetchEmployee(id: string): Promise<Employee> {
 export async function createEmployee(
   employee: EmployeeFormData
 ): Promise<Employee> {
+  const { management_level: managementLevel, ...restEmployee } = employee;
+  const payload =
+    managementLevel > 0
+      ? { ...restEmployee, management_level: managementLevel }
+      : restEmployee;
+
   const url = `${apiConfig.baseUrl}/v1/employees`;
   const response = await apiFetch(url, {
     method: "POST",
@@ -97,7 +103,7 @@ export async function createEmployee(
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify(employee),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

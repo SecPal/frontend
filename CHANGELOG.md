@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- normalized employee-create POST payloads so non-leadership submissions omit the internal `management_level: 0` sentinel on the wire and match the API's optional create-field contract for onboarding-ready staff creation
 - Standardized auth test fixtures and storage-event construction in `useAuth` coverage, aligned `SiteDetail` metadata date rendering with locale-aware `formatDate`, removed a redundant non-null timeout assertion in passkey browser helpers, and tightened Lingui guard tests with JSON import assertions, command/argument checks, and an appropriate unit-test timeout.
 - Isolated the Lingui catalog guard's nested `sync:purge` environment from parent Vitest and npm runner variables, and refreshed the checked-in locale artifacts so the guard no longer reports false drift in CI while still catching real catalog changes.
 - Added a Lingui catalog sync guard that re-runs the checked-in extract/compile flow during frontend test validation, restores the workspace afterward, and fails CI when new translatable strings were added without committing the resulting catalog updates.
