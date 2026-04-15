@@ -82,6 +82,17 @@ At minimum verify:
   quality-first, and issue-management checks
 - no bypass was used
 
+## AI Findings Triage
+
+- Treat AI findings and AI-generated fix PRs as hints, not proof.
+- Before merge, prove the defect with a failing test, a reproducible defect,
+  or a stated invariant and why the current code violates it.
+- Green CI alone is not enough for AI-generated changes, especially test,
+  lifecycle, shell, regex, or refactor diffs; review the semantic risk
+  explicitly.
+- Reject AI-generated UI refactors that only look cleaner on the diff but
+  weaken lifecycle ordering, markup validity, or state separation.
+
 ## Repository Conventions
 
 - Stack: Node 22, React, TypeScript strict mode, Vite, Vitest, and React Testing Library.

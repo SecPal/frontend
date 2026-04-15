@@ -18,3 +18,8 @@ applyTo: "src/**/*.ts,src/**/*.tsx,tests/**/*.ts,tests/**/*.tsx,vite.config.ts"
   `undefined` on authenticated state.
 - Scope `role="status"` and `aria-live` to the exact dynamic content region, not to wider containers that
   also hold headings or interactive controls.
+- For AI-suggested async fixes, prove ordering with tests; when cleanup must happen after an awaited call settles,
+  prefer `try/finally` over early local-state clearing.
+- Keep plain-text-only HTML contexts such as `<option>` children free of wrapper components; use translated strings,
+  not `<Trans>` or other element-producing helpers.
+- Keep load, action, and destructive-flow error state separate when they drive different UI branches.
