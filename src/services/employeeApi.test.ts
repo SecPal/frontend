@@ -120,6 +120,63 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       );
     });
 
+    it("should include management_level in the create payload for leadership employees", async () => {
+      const mockEmployee: EmployeeFormData = {
+        first_name: "Jane",
+        last_name: "Smith",
+        email: "jane@secpal.dev",
+        position: "Team Lead",
+        date_of_birth: "1985-06-15",
+        contract_start_date: "2025-01-01",
+        organizational_unit_id: "unit-2",
+        status: "pre_contract",
+        contract_type: "full_time",
+        management_level: 3,
+        send_invitation: false,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        headers: new Map(),
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "emp-2",
+            employee_number: "E002",
+            ...mockEmployee,
+            full_name: "Jane Smith",
+            phone: null,
+            organizational_unit: { id: "unit-2", name: "Leadership" },
+            created_at: "2025-01-01T00:00:00Z",
+            updated_at: "2025-01-01T00:00:00Z",
+            onboarding_invitation: null,
+          },
+        }),
+      });
+
+      await createEmployee(mockEmployee);
+
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        expect.stringContaining("/v1/employees"),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            first_name: "Jane",
+            last_name: "Smith",
+            email: "jane@secpal.dev",
+            position: "Team Lead",
+            date_of_birth: "1985-06-15",
+            contract_start_date: "2025-01-01",
+            organizational_unit_id: "unit-2",
+            status: "pre_contract",
+            contract_type: "full_time",
+            send_invitation: false,
+            management_level: 3,
+          }),
+        })
+      );
+    });
+
     it("should throw error when JSON parsing fails on success response", async () => {
       const mockEmployee: EmployeeFormData = {
         first_name: "John",
