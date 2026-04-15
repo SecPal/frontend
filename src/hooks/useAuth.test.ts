@@ -78,7 +78,7 @@ describe("useAuth", () => {
 
   it("revalidates a stored user before completing bootstrap", async () => {
     const mockUser = {
-      id: "1",
+      id: 1,
       name: "Test User",
       email: "test@secpal.dev",
       emailVerified: false,
@@ -87,6 +87,7 @@ describe("useAuth", () => {
       ...mockUser,
       roles: ["Admin"],
     };
+    const expectedRevalidatedUser = { ...revalidatedUser, id: "1" };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
@@ -97,7 +98,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.user).toEqual(mockUser);
+    expect(result.current.user).toEqual({ ...mockUser, id: "1" });
     expect(result.current.isAuthenticated).toBe(true);
 
     deferred.resolve(revalidatedUser);
@@ -106,9 +107,9 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.user).toEqual(revalidatedUser);
+    expect(result.current.user).toEqual(expectedRevalidatedUser);
     expect(localStorage.getItem("auth_user")).toBe(
-      JSON.stringify(revalidatedUser)
+      JSON.stringify(expectedRevalidatedUser)
     );
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
@@ -675,12 +676,11 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(newUser));
-      const crossTabLoginEvent = new Event("storage");
-      Object.defineProperties(crossTabLoginEvent, {
-        key: { value: "auth_user" },
-        oldValue: { value: null },
-        newValue: { value: JSON.stringify(newUser) },
-        storageArea: { value: localStorage },
+      const crossTabLoginEvent = new StorageEvent("storage", {
+        key: "auth_user",
+        oldValue: null,
+        newValue: JSON.stringify(newUser),
+        storageArea: localStorage,
       });
       window.dispatchEvent(crossTabLoginEvent);
     });

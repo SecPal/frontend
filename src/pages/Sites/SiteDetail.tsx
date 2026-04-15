@@ -320,14 +320,14 @@ export default function SiteDetail() {
               <Trans>Created</Trans>
             </DescriptionTerm>
             <DescriptionDetails>
-              {new Date(site.created_at).toLocaleString()}
+              {formatDate(site.created_at, i18n.locale)}
             </DescriptionDetails>
 
             <DescriptionTerm>
               <Trans>Last Updated</Trans>
             </DescriptionTerm>
             <DescriptionDetails>
-              {new Date(site.updated_at).toLocaleString()}
+              {formatDate(site.updated_at, i18n.locale)}
             </DescriptionDetails>
           </DescriptionList>
         </div>

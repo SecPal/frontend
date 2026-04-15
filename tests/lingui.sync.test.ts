@@ -24,9 +24,13 @@ describe("Lingui catalog sync guard", () => {
 
   it("runs sync inside an isolated temporary workspace", async () => {
     let observedCwd = "";
+    let observedCommand = "";
+    let observedArgs: readonly string[] = [];
 
     const changedFiles = await checkLinguiCatalogs({
       execFileAsyncImpl: async (_command, _args, options) => {
+        observedCommand = _command;
+        observedArgs = _args;
         observedCwd = options.cwd;
         return {
           stdout: "",
@@ -36,11 +40,13 @@ describe("Lingui catalog sync guard", () => {
     });
 
     expect(changedFiles).toEqual([]);
+    expect(observedCommand).toBe(process.platform === "win32" ? "npm.cmd" : "npm");
+    expect(observedArgs).toEqual(["run", "sync:purge"]);
     expect(observedCwd.startsWith(resolvePath(process.cwd()) + pathSep)).toBe(
       false
     );
     expect(observedCwd).toContain("secpal-lingui-catalog-check-");
-  }, 120_000);
+  }, 5_000);
 
   it("keeps checked-in catalogs synchronized with source strings", async () => {
     const scriptPath = resolvePath(
