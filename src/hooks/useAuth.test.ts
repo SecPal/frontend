@@ -647,10 +647,10 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      const otherKeyEvent = new StorageEvent("storage", {
-        key: "some_other_key",
-        newValue: null,
-        storageArea: localStorage,
+      const otherKeyEvent = new Event("storage");
+      Object.defineProperty(otherKeyEvent, "key", {
+        value: "some_other_key",
+        configurable: true,
       });
       window.dispatchEvent(otherKeyEvent);
     });
