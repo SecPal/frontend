@@ -3,10 +3,7 @@
 
 import CryptoJS from "crypto-js";
 import type { User } from "../contexts/auth-context";
-import {
-  sanitizePersistedAuthUser,
-  type PersistedAuthUser,
-} from "./authState";
+import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
@@ -36,9 +33,10 @@ function getAuthStorageKeyMaterial(): string | null {
   return `secpal-auth-storage:${csrfToken}`;
 }
 
-function splitDerivedKey(
-  derivedKey: CryptoJS.lib.WordArray
-): { encryptionKey: CryptoJS.lib.WordArray; macKey: CryptoJS.lib.WordArray } {
+function splitDerivedKey(derivedKey: CryptoJS.lib.WordArray): {
+  encryptionKey: CryptoJS.lib.WordArray;
+  macKey: CryptoJS.lib.WordArray;
+} {
   return {
     encryptionKey: CryptoJS.lib.WordArray.create(
       derivedKey.words.slice(0, 8),
@@ -64,7 +62,9 @@ function deriveAuthStorageKeys(
   return splitDerivedKey(derivedKey);
 }
 
-function buildEnvelopeMacPayload(envelope: Omit<AuthStorageEnvelope, "mac">): string {
+function buildEnvelopeMacPayload(
+  envelope: Omit<AuthStorageEnvelope, "mac">
+): string {
   return [
     envelope.scheme,
     String(envelope.version),
@@ -124,7 +124,9 @@ function encryptPersistedAuthUser(user: PersistedAuthUser): string | null {
   } satisfies AuthStorageEnvelope);
 }
 
-function decryptPersistedAuthUser(storedUser: string): PersistedAuthUser | null {
+function decryptPersistedAuthUser(
+  storedUser: string
+): PersistedAuthUser | null {
   const parsedStoredUser = JSON.parse(storedUser) as unknown;
 
   if (!isAuthStorageEnvelope(parsedStoredUser)) {

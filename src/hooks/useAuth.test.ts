@@ -45,7 +45,9 @@ function createDeferredPromise<T>() {
   return { promise, resolve, reject };
 }
 
-function expectEncryptedStoredUser(expectedUser: Record<string, unknown>): void {
+function expectEncryptedStoredUser(
+  expectedUser: Record<string, unknown>
+): void {
   const storedUser = localStorage.getItem("auth_user");
 
   expect(storedUser).not.toBeNull();
@@ -57,8 +59,8 @@ describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
-    vi.spyOn(console, "error").mockImplementation(() => { });
-    vi.spyOn(console, "log").mockImplementation(() => { });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
