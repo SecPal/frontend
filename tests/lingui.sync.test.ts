@@ -40,7 +40,9 @@ describe("Lingui catalog sync guard", () => {
     });
 
     expect(changedFiles).toEqual([]);
-    expect(observedCommand).toBe(process.platform === "win32" ? "npm.cmd" : "npm");
+    expect(observedCommand).toBe(
+      process.platform === "win32" ? "npm.cmd" : "npm"
+    );
     expect(observedArgs).toEqual(["run", "sync:purge"]);
     expect(observedCwd.startsWith(resolvePath(process.cwd()) + pathSep)).toBe(
       false
