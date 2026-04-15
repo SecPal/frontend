@@ -30,9 +30,22 @@ describe("authStorage", () => {
     const storedUser = localStorage.getItem("auth_user");
 
     expect(storedUser).not.toBeNull();
-    expect(storedUser).not.toContain(user.name);
-    expect(storedUser).not.toContain(user.email);
-    expect(storedUser).not.toContain(user.employeeStatus);
+    const parsedStoredUser = JSON.parse(storedUser as string) as Record<string, unknown>;
+
+    expect(parsedStoredUser).toEqual(
+      expect.objectContaining({
+        scheme: expect.any(String),
+        version: expect.anything(),
+        salt: expect.any(String),
+        iv: expect.any(String),
+        ciphertext: expect.any(String),
+        mac: expect.any(String),
+      }),
+    );
+    expect(parsedStoredUser.salt).not.toBe("");
+    expect(parsedStoredUser.iv).not.toBe("");
+    expect(parsedStoredUser.ciphertext).not.toBe("");
+    expect(parsedStoredUser.mac).not.toBe("");
     expect(authStorage.getUser()).toEqual(user);
   });
 

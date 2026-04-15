@@ -12,7 +12,7 @@ const AUTH_STORAGE_PBKDF2_ITERATIONS = 5_000;
 const AUTH_STORAGE_SALT_BYTES = 16;
 const AUTH_STORAGE_IV_BYTES = 16;
 const AUTH_STORAGE_KEY_SIZE_WORDS = 16;
-const AUTH_STORAGE_HALF_KEY_SIG_BYTES = 32;
+const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 
 interface AuthStorageEnvelope {
   scheme: typeof AUTH_STORAGE_SCHEME;
@@ -37,14 +37,24 @@ function splitDerivedKey(derivedKey: CryptoJS.lib.WordArray): {
   encryptionKey: CryptoJS.lib.WordArray;
   macKey: CryptoJS.lib.WordArray;
 } {
+  if (AUTH_STORAGE_KEY_SIZE_WORDS % 2 !== 0) {
+    throw new Error("AUTH_STORAGE_KEY_SIZE_WORDS must be even.");
+  }
+
+  if (derivedKey.words.length !== AUTH_STORAGE_KEY_SIZE_WORDS) {
+    throw new Error("Derived auth storage key has an unexpected length.");
+  }
+
+  const halfKeySizeWords = AUTH_STORAGE_KEY_SIZE_WORDS / 2;
+
   return {
     encryptionKey: CryptoJS.lib.WordArray.create(
-      derivedKey.words.slice(0, 8),
-      AUTH_STORAGE_HALF_KEY_SIG_BYTES
+      derivedKey.words.slice(0, halfKeySizeWords),
+      AUTH_STORAGE_HALF_KEY_BYTES
     ),
     macKey: CryptoJS.lib.WordArray.create(
-      derivedKey.words.slice(8, 16),
-      AUTH_STORAGE_HALF_KEY_SIG_BYTES
+      derivedKey.words.slice(halfKeySizeWords, AUTH_STORAGE_KEY_SIZE_WORDS),
+      AUTH_STORAGE_HALF_KEY_BYTES
     ),
   };
 }

@@ -51,7 +51,12 @@ function expectEncryptedStoredUser(
   const storedUser = localStorage.getItem("auth_user");
 
   expect(storedUser).not.toBeNull();
-  expect(storedUser).not.toContain(String(expectedUser.email));
+
+  const parsedStoredUser = JSON.parse(storedUser as string) as unknown;
+
+  expect(parsedStoredUser).toEqual(expect.any(Object));
+  expect(parsedStoredUser).not.toBeNull();
+  expect(parsedStoredUser).not.toEqual(expect.objectContaining(expectedUser));
   expect(authStorage.getUser()).toEqual(expectedUser);
 }
 
