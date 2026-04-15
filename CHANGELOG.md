@@ -58,10 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the missing German translations for the EmployeeDetail "Confirm Onboarding" action and the onboarding sign-out failure message so those UI states no longer fall back to English.
 - Bounded `ApplicationLayout` sign-out with an 8-second timeout so a hung logout request still clears local auth state and returns the browser user to the login screen.
 - Bounded `OnboardingLayout` sign-out with an 8-second timeout so hung logout requests still clear local auth state and return the user to `/login`, while real API failures continue to show the inline retry message.
-
-### Changed
-
-- strengthened repo-local Copilot governance for AI findings: frontend work now requires proof of defect before merging AI-generated fix PRs, treats green CI alone as insufficient evidence for semantic UI refactors, and documents the known guardrails around async ordering, `<option>` translation strings, and separated error state
 - Persisted the minimal employee lifecycle state in offline auth storage so pre-contract users are still redirected to `/onboarding` even when the full employee record is unavailable.
 - Fixed a race condition in the `ApplicationLayout` logout handler where `logout()` was called before the API request; `logout()` now runs inside the `finally` block so authTransport.logout() can complete before local state is cleared.
 - Replaced `<Trans>` component usage inside `<option>` elements in `EmployeeStatusOptions`, `EmployeeCreate` (contract type and org-unit placeholder), `SiteCreate`, `SiteEdit`, `ActivityLogList` (log-name filter), `CustomersPage` (status filter), `EmployeeList` (status filter), and `SitesPage` (type and status filters) with `_(msg\`...\`)`string calls to produce valid HTML, because`<Trans>`renders a wrapper element that is invalid inside`<option>` elements.
@@ -80,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Strengthened repo-local Copilot governance for AI findings: frontend work now requires proof of defect before merging AI-generated fix PRs, treats green CI alone as insufficient evidence for semantic UI refactors, and documents the known guardrails around async ordering, `<option>` translation strings, and separated error state.
 - Replaced raw Android provisioning rollout-channel and session-status enum values with human-readable labels and operator guidance, so stale, revoked, and already-used enrollment sessions are easier to interpret in the frontend UI.
 - Aligned the frontend lint toolchain back to the ESLint 9 line so `eslint-plugin-react-hooks` no longer leaves the repository in an invalid peer-dependency state during installs.
 - Made native-bridge login prefer the canonical `GET /v1/me` user payload immediately after authentication, so Android capability-gated navigation no longer depends on the potentially narrower token-login payload during first render.
