@@ -223,7 +223,7 @@ async function awaitCredentialOperation<T>(
   timeoutMs: number,
   onTimeout?: () => void
 ): Promise<T> {
-  let timeoutId: number;
+  let timeoutId: number | undefined;
 
   // Observe independently for diagnostics — does not affect Promise.race.
   operation.then(
@@ -260,7 +260,9 @@ async function awaitCredentialOperation<T>(
   try {
     return await Promise.race([operation, timeoutPromise]);
   } finally {
-    window.clearTimeout(timeoutId!);
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
   }
 }
 
