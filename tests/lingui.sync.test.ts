@@ -48,8 +48,7 @@ describe("Lingui catalog sync guard", () => {
       false
     );
     expect(observedCwd).toContain("secpal-lingui-catalog-check-");
-  }, 5_000);
-
+  });
   it("keeps checked-in catalogs synchronized with source strings", async () => {
     const scriptPath = resolvePath(
       process.cwd(),
