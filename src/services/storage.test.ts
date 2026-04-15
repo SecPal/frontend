@@ -30,7 +30,10 @@ describe("authStorage", () => {
     const storedUser = localStorage.getItem("auth_user");
 
     expect(storedUser).not.toBeNull();
-    const parsedStoredUser = JSON.parse(storedUser as string) as Record<string, unknown>;
+    const parsedStoredUser = JSON.parse(storedUser as string) as Record<
+      string,
+      unknown
+    >;
 
     expect(parsedStoredUser).toEqual(
       expect.objectContaining({
@@ -40,7 +43,7 @@ describe("authStorage", () => {
         iv: expect.any(String),
         ciphertext: expect.any(String),
         mac: expect.any(String),
-      }),
+      })
     );
     expect(parsedStoredUser.salt).not.toBe("");
     expect(parsedStoredUser.iv).not.toBe("");
