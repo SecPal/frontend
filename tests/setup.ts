@@ -7,7 +7,7 @@ import { messages as enMessages } from "../src/locales/en/messages";
 import "fake-indexeddb/auto";
 import { mockAnimationsApi } from "jsdom-testing-mocks";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
 // Mock the Web Animations API for HeadlessUI components
 // This prevents "Element.prototype.getAnimations" polyfill warnings
@@ -21,6 +21,15 @@ const originalConfirm = globalThis.confirm;
 const originalAlert = globalThis.alert;
 const originalPrompt = globalThis.prompt;
 const originalLocationHref = window.location.href;
+
+function clearXsrfCookie(): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+}
+
+beforeEach(() => {
+  clearXsrfCookie();
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent("test-csrf-token")};path=/`;
+});
 
 // React 19 act() warning fix: Cleanup after each test to prevent
 // warnings about state updates happening after test completion.
@@ -38,6 +47,7 @@ afterEach(async () => {
   globalThis.alert = originalAlert;
   globalThis.prompt = originalPrompt;
   window.history.replaceState({}, "", originalLocationHref);
+  clearXsrfCookie();
 
   // Give React a chance to flush any pending updates
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -63,8 +73,8 @@ if (typeof Blob.prototype.arrayBuffer === "undefined") {
 
 // Mock ResizeObserver for HeadlessUI components (used by Listbox)
 class MockResizeObserver implements ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { }
+  unobserve() { }
+  disconnect() { }
 }
 global.ResizeObserver = MockResizeObserver;

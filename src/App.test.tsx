@@ -36,7 +36,7 @@ vi.spyOn(globalThis, "fetch").mockRejectedValue(
 async function renderWithI18n(component: React.ReactElement) {
   const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
   // Wait for any async state updates to settle
-  await waitFor(() => {});
+  await waitFor(() => { });
   return result;
 }
 
@@ -47,7 +47,7 @@ function seedPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed persisted auth user for test");
   }
 
-  localStorage.setItem("auth_user", JSON.stringify(persistedUser)); // codeql[js/clear-text-storage-of-sensitive-data] -- test-only helper; same pattern used in src/services/storage.ts (dismissed)
+  localStorage.setItem("auth_user", JSON.stringify(persistedUser)); // Legacy cleartext fixture for backward-compatible auth bootstrap coverage.
 
   return persistedUser;
 }
