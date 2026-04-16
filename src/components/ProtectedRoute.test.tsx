@@ -82,7 +82,9 @@ const persistAuthUser = (user = unverifiedUser) => {
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks clears implementations too, preventing leftover mockReturnValueOnce
+    // entries from failed tests from leaking into subsequent tests.
+    vi.resetAllMocks();
     localStorage.clear();
     i18n.load("en", {});
     i18n.activate("en");
@@ -190,7 +192,13 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       await act(async () => {
+        // restoreAndRevalidate() awaits authStorage.getUser() before registering
+        // the stall timer. getUser() has two nested async levels (getUser outer +
+        // decryptPersistedAuthUser inner), so flush both microtasks first.
+        await Promise.resolve();
+        await Promise.resolve();
         vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
         await Promise.resolve();
       });
 
@@ -240,17 +248,28 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       await act(async () => {
+        // restoreAndRevalidate() awaits authStorage.getUser() before registering
+        // the stall timer. getUser() has two nested async levels (getUser outer +
+        // decryptPersistedAuthUser inner), so flush both microtasks first.
+        await Promise.resolve();
+        await Promise.resolve();
         vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
         await Promise.resolve();
+        await Promise.resolve();
       });
+
+      // Switch to real timers before retry so the new bootstrap can complete
+      // its WebCrypto setUser operations without fake-timer interference.
+      vi.useRealTimers();
 
       await act(async () => {
         fireEvent.click(screen.getByRole("button", { name: /retry/i }));
-        await Promise.resolve();
-        await Promise.resolve();
       });
 
-      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      // Wait for the successful bootstrap to show protected content.
+      await waitFor(() => {
+        expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      });
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
       expect(mockNavigate).not.toHaveBeenCalled();
     } finally {

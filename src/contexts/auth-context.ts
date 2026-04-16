@@ -31,7 +31,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   bootstrapRecoveryReason: AuthBootstrapRecoveryReason | null;
-  login: (user: User) => void;
+  login: (user: User) => Promise<void>;
   logout: () => void;
   retryBootstrap: () => void;
   /**

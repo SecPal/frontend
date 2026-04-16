@@ -13,216 +13,285 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#. js-lingui-explicit-id
-#: src/components/LanguageSwitcher.tsx:20
-msgid "Failed to change language. Please try again."
-msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+#: src/pages/Employees/EmployeeDetail.tsx:96
+msgid "Full Name"
+msgstr "Vollständiger Name"
 
-#. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:236
-msgid "\"{0}\" created successfully"
-msgstr "\"{0}\" erfolgreich erstellt"
+#: src/components/NotificationPreferences.tsx:278
+msgid "Enabling..."
+msgstr "Aktiviere ..."
 
-#. placeholder {0}: unit.name
-#: src/pages/Organization/OrganizationPage.tsx:237
-msgid "\"{0}\" updated successfully"
-msgstr "\"{0}\" erfolgreich aktualisiert"
+#: src/pages/Onboarding/OnboardingWizard.tsx:278
+msgid "Welcome to SecPal Onboarding"
+msgstr "Willkommen zum SecPal Onboarding"
 
-#. placeholder {0}: customer.sites_count || 0
-#: src/pages/Customers/CustomerDetail.tsx:222
-msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
+#: src/pages/Employees/EmployeeCreate.tsx:183
+msgid "Date of birth is required"
+msgstr "Geburtsdatum ist erforderlich"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:206
-msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
-msgstr "{fieldName} scheint eine geringfügige Korrektur zu sein ({similarity}% ähnlich)."
+#: src/pages/Onboarding/OnboardingComplete.tsx:604
+msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
+msgstr "Sie haben Ihren Namen gegenüber der ursprünglichen Eingabe geändert. Die Personalabteilung wird zur Überprüfung über diese Änderung informiert."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:210
-msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
-msgstr "{fieldName} hat sich erheblich verändert ({similarity}% ähnlich). Die Personalabteilung wird zur Überprüfung benachrichtigt."
-
-#: src/components/VerificationDots.tsx:71
-msgid "{label}: Invalid"
-msgstr "{label}: Ungültig"
-
-#: src/components/VerificationDots.tsx:51
-msgid "{label}: N/A"
-msgstr "{label}: N/A"
-
-#: src/components/VerificationDots.tsx:80
-msgid "{label}: Pending"
-msgstr "{label}: Ausstehend"
-
-#: src/components/VerificationDots.tsx:61
-msgid "{label}: Valid"
-msgstr "{label}: Gültig"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:547
-msgid "login.remainingAttempts"
-msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
-
-#: src/pages/Employees/EmployeeEdit.tsx:299
-msgid "← Back to Employee"
-msgstr "← Zurück zum Mitarbeiter"
-
-#: src/pages/Employees/EmployeeCreate.tsx:445
-#: src/pages/Employees/EmployeeDetail.tsx:504
-msgid "← Back to Employees"
-msgstr "← Zurück zu Mitarbeitern"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:313
-msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
-msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivitätsprotokollen. \"Ausstehend\" zeigt an, dass die Hash-Kette noch aufgebaut wird.<1/><2>Merkle Tree:</2> Batch-Verifizierung für einen effizienten Nachweis der Log-Einbindung. Läuft jede Minute in der Entwicklung, stündlich im produktiven Einsatz.<3/><4>OpenTimestamp:</4> Bitcoin-Blockchain-Verankerung für unveränderlichen Existenznachweis. Bitcoin-Bestätigung dauert ~10 Minuten."
-
-#: src/components/NotificationPreferences.tsx:323
-msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
-msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
-
-#: src/components/UpdatePrompt.tsx:72
-msgid "A new version of SecPal is available."
-msgstr "Eine neue Version von SecPal ist verfügbar."
-
-#: src/App.tsx:76
-msgid "About"
-msgstr "Über uns"
-
-#: src/App.tsx:87
-msgid "About SecPal"
-msgstr "Über SecPal"
-
-#: src/components/RouteGuardState.tsx:170
-msgid "Access Denied"
-msgstr "Zugang verweigert"
-
-#: src/pages/Sites/SiteCreate.tsx:447
-#: src/pages/Sites/SiteDetail.tsx:275
-#: src/pages/Sites/SiteEdit.tsx:418
-msgid "Access Instructions"
-msgstr "Zugriffsanweisungen"
-
-#: src/pages/Customers/CustomersPage.tsx:168
-#: src/pages/Employees/EmployeeList.tsx:252
-#: src/pages/Sites/SitesPage.tsx:196
-msgid "Actions"
-msgstr "Aktionen"
-
-#. placeholder {0}: unit.name
-#: src/components/OrganizationalUnitTree.tsx:293
-msgid "Actions for {0}"
-msgstr "Aktionen für {0}"
-
-#: src/pages/Employees/EmployeeDetail.tsx:528
-msgid "Activate"
-msgstr "Aktivieren"
-
-#: src/pages/Customers/CustomerCreate.tsx:281
-#: src/pages/Customers/CustomerDetail.tsx:114
-#: src/pages/Customers/CustomerEdit.tsx:297
-#: src/pages/Customers/CustomersPage.tsx:122
-#: src/pages/Customers/CustomersPage.tsx:188
-#: src/pages/Employees/EmployeeDetail.tsx:69
-#: src/pages/Employees/EmployeeList.tsx:44
-#: src/pages/Employees/EmployeeList.tsx:212
-#: src/pages/Employees/EmployeeStatusOptions.tsx:13
-#: src/pages/Sites/SiteCreate.tsx:478
-#: src/pages/Sites/SiteDetail.tsx:134
-#: src/pages/Sites/SiteEdit.tsx:449
-#: src/pages/Sites/SitesPage.tsx:150
-#: src/pages/Sites/SitesPage.tsx:222
-msgid "Active"
-msgstr "Aktiv"
+#: src/pages/Employees/EmployeeEdit.tsx:305
+msgid "Edit Employee"
+msgstr "Mitarbeiter bearbeiten"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:139
 msgid "Activity Information"
 msgstr "Informationen zur Tätigkeit"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:128
-msgid "Activity Log Details"
-msgstr "Details zum Aktivitätsprotokoll"
+#: src/pages/Employees/EmployeeCreate.tsx:639
+#: src/pages/Employees/EmployeeDetail.tsx:147
+#: src/pages/Employees/EmployeeEdit.tsx:433
+msgid "Contract Start Date"
+msgstr "Datum des Vertragsbeginns"
 
-#: src/components/application-layout.tsx:255
-#: src/components/application-layout.tsx:345
-#: src/pages/ActivityLog/ActivityLogList.tsx:236
-msgid "Activity Logs"
-msgstr "Aktivitätsprotokolle"
+#: src/pages/Customers/CustomerEdit.tsx:132
+msgid "Edit Customer"
+msgstr "Kunde bearbeiten"
 
-#: src/components/OrganizationalUnitTree.tsx:328
-msgid "Add child"
-msgstr "Untergeordnete Einheit hinzufügen"
+#: src/components/DeleteOrganizationalUnitDialog.tsx:138
+msgid "Delete \"{unitName}\"?"
+msgstr "\"{unitName}\" löschen?"
 
-#: src/pages/Organization/OrganizationPage.tsx:366
-msgid "Add Child Unit"
-msgstr "Untergeordnete Einheit hinzufügen"
-
-#: src/pages/Employees/EmployeeList.tsx:158
-msgid "Add Employee"
-msgstr "Mitarbeiter hinzufügen"
-
-#: src/pages/Settings/SettingsPage.tsx:589
-msgid "Add passkey"
-msgstr "Passkey hinzufügen"
-
-#: src/components/OrganizationalUnitTree.tsx:830
-msgid "Add Root Unit"
-msgstr "Stammeinheit hinzufügen"
-
-#. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
-#: src/pages/Settings/SettingsPage.tsx:626
-msgid "Added {0}"
-msgstr "Hinzugefügt am {0}"
+#: src/components/VerificationDots.tsx:112
+#: src/components/VerificationDots.tsx:115
+msgid "Merkle Tree"
+msgstr "Merkelbaum"
 
 #: src/pages/Settings/SettingsPage.tsx:586
 msgid "Adding passkey..."
 msgstr "Passkey wird hinzugefügt..."
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
-msgid "Additional Properties"
-msgstr "Zusätzliche Eigenschaften"
+#: src/components/OrganizationalUnitFormDialog.tsx:303
+#: src/pages/Organization/OrganizationPage.tsx:324
+#: src/pages/Sites/SiteCreate.tsx:263
+#: src/pages/Sites/SiteEdit.tsx:254
+#: src/pages/Sites/SitesPage.tsx:126
+#: src/pages/Sites/SitesPage.tsx:187
+msgid "Type"
+msgstr "Typ"
 
-#: src/pages/Sites/SiteCreate.tsx:280
-#: src/pages/Sites/SiteDetail.tsx:148
-#: src/pages/Sites/SiteEdit.tsx:271
-#: src/pages/Sites/SitesPage.tsx:190
-msgid "Address"
-msgstr "Adresse"
+#: src/pages/Employees/EmployeeDetail.tsx:264
+msgid "Certificate:"
+msgstr "Zertifikat:"
 
-#: src/components/Footer.tsx:31
-msgid "AGPL v3+"
-msgstr "AGPL v3+"
+#: src/pages/Settings/SettingsPage.tsx:80
+#: src/pages/Settings/SettingsPage.tsx:87
+#: src/pages/Settings/SettingsPage.tsx:519
+msgid "Disable MFA"
+msgstr "MFA deaktivieren"
 
-#: src/pages/Employees/EmployeeList.tsx:209
-msgid "All"
-msgstr "Alle"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:306
+msgid "Front desk tablet"
+msgstr "Empfangstablet"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:353
-msgid "All logs"
-msgstr "Alle Protokolle"
+#: src/components/NotificationPreferences.tsx:323
+msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
+msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
 
-#: src/pages/Customers/CustomersPage.tsx:121
-#: src/pages/Sites/SitesPage.tsx:149
-msgid "All Status"
-msgstr "Alle Status"
+#: src/components/ScopeAssignmentForm.tsx:467
+msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
+msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
 
-#: src/pages/Sites/SitesPage.tsx:133
-msgid "All Types"
-msgstr "Alle Typen"
+#: src/components/RouteGuardState.tsx:48
+msgid "Still loading your secure session"
+msgstr "Ihre sichere Sitzung wird noch geladen"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:369
-msgid "All units"
-msgstr "Alle Einheiten"
+#: src/pages/Sites/SiteCreate.tsx:432
+#: src/pages/Sites/SiteDetail.tsx:260
+#: src/pages/Sites/SiteEdit.tsx:403
+msgid "Valid Until"
+msgstr "Gültig bis"
+
+#: src/pages/Employees/EmployeeDetail.tsx:202
+msgid "Invitation Failure Reason"
+msgstr "Grund für das Scheitern der Einladung"
+
+#: src/pages/Employees/EmployeeCreate.tsx:958
+msgid "Create Employee"
+msgstr "Mitarbeiter anlegen"
+
+#: src/pages/Organization/OrganizationPage.tsx:259
+msgid "Manage your internal organizational units including departments, branches, and teams."
+msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
+
+#: src/components/OrganizationalUnitTree.tsx:264
+msgid "Expand"
+msgstr "Ausklappen"
+
+#: src/pages/Customers/CustomerCreate.tsx:264
+#: src/pages/Customers/CustomerDetail.tsx:210
+#: src/pages/Customers/CustomerEdit.tsx:280
+#: src/pages/Sites/SiteCreate.tsx:460
+#: src/pages/Sites/SiteDetail.tsx:287
+#: src/pages/Sites/SiteEdit.tsx:431
+msgid "Notes"
+msgstr "Anmerkungen"
+
+#: src/components/OrganizationalUnitTree.tsx:837
+msgid "Organizational structure"
+msgstr "Organisatorische Struktur"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:601
+msgid "Name Change Detected"
+msgstr "Namensänderung erkannt"
+
+#: src/pages/Settings/SettingsPage.tsx:886
+msgid "Verification method"
+msgstr "Methode zur Überprüfung"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:443
+msgid "Global"
+msgstr "Global"
+
+#: src/pages/Settings/SettingsPage.tsx:82
+msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
+msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren möchten."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:830
+msgid "Name change too significant. Please contact HR before completing onboarding."
+msgstr "Die Namensänderung ist zu bedeutend. Bitte kontaktieren Sie die Personalabteilung, bevor Sie das Onboarding abschließen."
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Employees/EmployeeList.tsx:324
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
+msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
+
+#: src/components/NotificationPreferences.tsx:57
+msgid "Messages from team members and supervisors"
+msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
+
+#: src/components/OrganizationalUnitTree.tsx:810
+msgid "No Organizational Units"
+msgstr "Keine organisatorischen Einheiten"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:303
+msgid "More options"
+msgstr "weitere Optionen"
+
+#: src/components/NotificationPreferences.tsx:295
+msgid "Choose which notifications you want to receive"
+msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
+
+#: src/pages/Customers/CustomerCreate.tsx:181
+#: src/pages/Customers/CustomerDetail.tsx:137
+#: src/pages/Customers/CustomerEdit.tsx:197
+#: src/pages/Sites/SiteCreate.tsx:304
+#: src/pages/Sites/SiteDetail.tsx:157
+#: src/pages/Sites/SiteEdit.tsx:290
+msgid "City"
+msgstr "Stadt"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:260
+msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
+
+#: src/pages/Sites/SiteDetail.tsx:379
+msgid "Site Number:"
+msgstr "Standort-Nummer:"
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Customers/CustomersPage.tsx:230
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
+msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
+
+#: src/components/ScopeAssignmentForm.tsx:365
+msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
+msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:265
+msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
+
+#: src/pages/Employees/EmployeeDetail.tsx:474
+#: src/pages/Employees/EmployeeEdit.tsx:282
+msgid "Error Loading Employee"
+msgstr "Fehler beim Laden eines Mitarbeiters"
+
+#: src/pages/Employees/EmployeeDetail.tsx:70
+#: src/pages/Employees/EmployeeList.tsx:45
+#: src/pages/Employees/EmployeeList.tsx:213
+#: src/pages/Employees/EmployeeStatusOptions.tsx:14
+msgid "On Leave"
+msgstr "in Freistellung"
+
+#: src/pages/Settings/SettingsPage.tsx:500
+msgid "Recovery codes remaining"
+msgstr "Verbleibende Wiederherstellungscodes"
+
+#: src/pages/Employees/EmployeeCreate.tsx:169
+#: src/pages/Onboarding/OnboardingComplete.tsx:305
+msgid "First name is required"
+msgstr "Vorname ist erforderlich"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:687
+msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
+msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
+
+#: src/pages/Customers/CustomerCreate.tsx:131
+#: src/pages/Customers/CustomerEdit.tsx:147
+msgid "Customer Name"
+msgstr "Name des Kunden"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:312
+msgid "Update channel"
+msgstr "Update-Kanal"
 
 #: src/components/OrganizationalUnitPicker.tsx:243
 msgid "All Units"
 msgstr "Alle Einheiten"
 
-#: src/components/ScopeAssignmentForm.tsx:582
-msgid "Allow user to view/edit their own HR data"
-msgstr "Benutzer können ihre eigenen HR-Daten anzeigen/bearbeiten"
+#: src/components/OrganizationalUnitTree.tsx:328
+msgid "Add child"
+msgstr "Untergeordnete Einheit hinzufügen"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:208
-msgid "An unexpected error occurred"
-msgstr "Ein unerwarteter Fehler ist aufgetreten"
+#: src/components/NotificationPreferences.tsx:225
+msgid "Test Notification"
+msgstr "Test-Benachrichtigung"
+
+#: src/pages/Sites/SiteDetail.tsx:107
+#: src/pages/Sites/SiteEdit.tsx:162
+msgid "Site not found"
+msgstr "Standort nicht gefunden"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:349
+msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
+msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
+
+#: src/lib/organizationalUnitUtils.ts:85
+#: src/lib/organizationalUnitUtils.ts:111
+msgid "Department"
+msgstr "Bereich"
+
+#: src/pages/Employees/EmployeeDetail.tsx:91
+msgid "Employee Number"
+msgstr "Mitarbeiter Nummer"
+
+#: src/components/ScopeAssignmentForm.tsx:585
+msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
+msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:225
+msgid "Invalid onboarding link. Please check your email and try again."
+msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:363
+msgid "The new unit will be created under this parent."
+msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
+
+#: src/App.tsx:69
+msgid "SecPal – A guard’s best friend"
+msgstr "SecPal – A guard’s best friend"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:137
+msgid "Type is required"
+msgstr "Typ ist erforderlich"
 
 #: src/components/application-layout.tsx:263
 #: src/components/application-layout.tsx:356
@@ -230,101 +299,131 @@ msgstr "Ein unerwarteter Fehler ist aufgetreten"
 msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:363
-msgid "Android provisioning QR code"
-msgstr "QR-Code zur Android-Provisionierung"
+#: src/components/OrganizationalUnitTree.tsx:797
+#: src/components/RouteGuardState.tsx:65
+msgid "Retry"
+msgstr "Wiederholen"
 
-#: src/pages/Settings/SettingsPage.tsx:691
-msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
-msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
+#: src/pages/Employees/EmployeeCreate.tsx:470
+#: src/pages/Employees/EmployeeEdit.tsx:312
+msgid "Personal Information"
+msgstr "Persönliche Informationen"
 
-#: src/components/NotificationPreferences.tsx:47
-msgid "App updates and maintenance notifications"
-msgstr "App-Updates und Wartungsbenachrichtigungen"
+#: src/components/OrganizationalUnitFormDialog.tsx:357
+msgid "Parent Unit"
+msgstr "Übergeordnete Einheit"
 
-#: src/pages/Employees/EmployeeDetail.tsx:67
-#: src/pages/Employees/EmployeeList.tsx:42
-#: src/pages/Employees/EmployeeList.tsx:210
-#: src/pages/Employees/EmployeeStatusOptions.tsx:11
-msgid "Applicant"
-msgstr "Bewerber"
+#: src/pages/Customers/CustomersPage.tsx:105
+msgid "Search customers..."
+msgstr "Kunden suchen..."
 
-#: src/pages/Employees/EmployeeCreate.tsx:839
-#: src/pages/Employees/EmployeeEdit.tsx:572
-msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
-msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
+#: src/components/ScopeAssignmentForm.tsx:152
+msgid "Invalid combination: No employees will be visible with this range."
+msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
 
-#. placeholder {0}: customer.name
-#: src/pages/Customers/CustomerDetail.tsx:269
-msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
-msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nicht rückgängig gemacht werden."
+#: src/pages/Employees/EmployeeDetail.tsx:573
+msgid "Qualifications"
+msgstr "Qualifikationen"
 
-#: src/pages/Sites/SiteDetail.tsx:364
-msgid "Are you sure you want to delete this site? This action cannot be undone."
-msgstr "Sind Sie sicher, dass Sie diesen Standort löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+#: src/components/OrganizationalUnitFormDialog.tsx:284
+#: src/pages/Customers/CustomerCreate.tsx:222
+#: src/pages/Customers/CustomerDetail.tsx:163
+#: src/pages/Customers/CustomerEdit.tsx:238
+#: src/pages/Customers/CustomersPage.tsx:156
+#: src/pages/Profile/ProfilePage.tsx:62
+#: src/pages/Sites/SiteCreate.tsx:372
+#: src/pages/Sites/SiteDetail.tsx:189
+#: src/pages/Sites/SiteEdit.tsx:343
+#: src/pages/Sites/SitesPage.tsx:184
+msgid "Name"
+msgstr "Name"
 
-#: src/components/ScopeAssignmentForm.tsx:333
-msgid "Assign Organizational Scope"
-msgstr "Organisatorischen Umfang zuordnen"
+#: src/components/NotificationPreferences.tsx:199
+msgid "Notifications Enabled"
+msgstr "Benachrichtigungen aktiviert"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:355
-msgid "Authentication"
-msgstr "Authentifizierung"
+#: src/pages/Onboarding/OnboardingComplete.tsx:627
+msgid "Last Name:"
+msgstr "Nachname:"
 
-#: src/pages/Settings/SettingsPage.tsx:67
-msgid "Authenticator app"
-msgstr "Authenticator-App"
+#: src/components/MoveOrganizationalUnitDialog.tsx:448
+msgid "Select new parent"
+msgstr "neue übergeordnete Einheit auswählen"
 
-#: src/pages/Settings/SettingsPage.tsx:786
-msgid "Authenticator app QR code"
-msgstr "QR-Code der Authenticator-App"
+#: src/pages/Employees/EmployeeDetail.tsx:239
+msgid "Loading qualifications..."
+msgstr "Qualifikationen laden..."
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:721
-msgid "login.mfa.method.totp"
-msgstr "Authenticator-Code"
+#: src/pages/Employees/EmployeeDetail.tsx:46
+msgid "Failed"
+msgstr "Fehlgeschlagen"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:740
-msgid "login.mfa.authenticatorCode"
-msgstr "Authenticator-Code"
+#: src/lib/organizationalUnitUtils.ts:77
+#: src/lib/organizationalUnitUtils.ts:107
+msgid "Company"
+msgstr "Unternehmen"
 
-#: src/pages/Settings/SettingsPage.tsx:813
-#: src/pages/Settings/SettingsPage.tsx:905
-#: src/pages/Settings/SettingsPage.tsx:917
-msgid "Authenticator code"
-msgstr "Authenticator-Code"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:77
+msgid "GitHub Releases"
+msgstr "GitHub-Versionen"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:269
-msgid "Auto-refresh (30s)"
-msgstr "Automatisches Aktualisieren (30s)"
+#: src/pages/Customers/CustomersPage.tsx:168
+#: src/pages/Employees/EmployeeList.tsx:252
+#: src/pages/Sites/SitesPage.tsx:196
+msgid "Actions"
+msgstr "Aktionen"
 
-#: src/components/ScopeAssignmentForm.tsx:603
-msgid "Back"
-msgstr "Zurück"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:283
+msgid "OpenTimestamp Confirmed"
+msgstr "OpenTimestamp Bestätigt"
 
-#: src/pages/Customers/CustomerDetail.tsx:98
-msgid "Back to Customers"
-msgstr "Zurück zu den Kunden"
+#: src/components/UpdatePrompt.tsx:72
+msgid "A new version of SecPal is available."
+msgstr "Eine neue Version von SecPal ist verfügbar."
 
-#: src/pages/Employees/EmployeeDetail.tsx:481
-#: src/pages/Employees/EmployeeEdit.tsx:287
-msgid "Back to Employees"
-msgstr "Zurück zu Mitarbeitern"
+#: src/pages/Employees/EmployeeCreate.tsx:522
+#: src/pages/Employees/EmployeeDetail.tsx:138
+#: src/pages/Employees/EmployeeEdit.tsx:344
+msgid "Date of Birth"
+msgstr "Geburtsdatum"
 
-#: src/App.tsx:96
-#: src/components/RouteGuardState.tsx:197
-msgid "Back to Home"
-msgstr "Zurück zur Startseite"
+#: src/pages/Employees/EmployeeCreate.tsx:891
+msgid "Send Onboarding Invitation"
+msgstr "Onboarding-Einladung senden"
 
-#: src/pages/Customers/CustomerDetail.tsx:254
-#: src/pages/Sites/SiteDetail.tsx:352
-msgid "Back to List"
-msgstr "Zurück zur Liste"
+#: src/components/OrganizationalUnitFormDialog.tsx:131
+msgid "Name is required"
+msgstr "Name ist erforderlich"
 
-#: src/pages/Sites/SiteDetail.tsx:110
-msgid "Back to Sites"
-msgstr "zurück zu den Standorten"
+#: src/components/ScopeAssignmentForm.tsx:504
+msgid "Maximum Assignable Rank"
+msgstr "Maximal zuordenbarer Rang"
+
+#: src/pages/Sites/SiteCreate.tsx:195
+#: src/pages/Sites/SiteDetail.tsx:300
+#: src/pages/Sites/SiteEdit.tsx:186
+msgid "Customer"
+msgstr "Kunde"
+
+#: src/components/ScopeAssignmentForm.tsx:309
+msgid "User cannot assign OR remove ANY rank (prevents privilege escalation)."
+msgstr "Der Benutzer kann KEINEN Rang zuweisen ODER entfernen (verhindert eine Eskalation der Rechte)."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:356
+msgid "Welcome to SecPal! Let's complete your profile."
+msgstr "Willkommen bei SecPal! Lassen Sie uns Ihr Profil vervollständigen."
+
+#: src/components/OrganizationalUnitFormDialog.tsx:243
+msgid "Update the organizational unit details."
+msgstr "Aktualisieren Sie die Details der Organisationseinheit."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:135
+msgid "Please try again in about 1 minute."
+msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
+
+#: src/pages/Settings/SettingsPage.tsx:611
+msgid "No passkeys enrolled yet."
+msgstr "Es sind noch keine Passkeys eingerichtet."
 
 #: src/pages/Customers/CustomerCreate.tsx:147
 #: src/pages/Customers/CustomerDetail.tsx:126
@@ -332,23 +431,295 @@ msgstr "zurück zu den Standorten"
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
-msgid "Bootstrap completed"
-msgstr "Bootstrap abgeschlossen"
+#: src/components/OfflineDataBanner.tsx:122
+msgid "Refresh data"
+msgstr "Daten aktualisieren"
 
-#: src/lib/organizationalUnitUtils.ts:81
-#: src/lib/organizationalUnitUtils.ts:109
-msgid "Branch"
-msgstr "Niederlassung"
+#: src/lib/organizationalUnitUtils.ts:87
+#: src/lib/organizationalUnitUtils.ts:112
+msgid "Custom"
+msgstr "Benutzerdefiniert"
 
-#: src/components/ScopeAssignmentForm.tsx:585
-msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
-msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
+#: src/pages/ActivityLog/ActivityLogList.tsx:371
+msgid "Filter by organizational unit"
+msgstr "nach Organisationseinheit filtern"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:785
-msgid "login.mfa.cancel"
-msgstr "Abbrechen"
+#: src/components/NotificationPreferences.tsx:41
+msgid "Security Alerts"
+msgstr "Sicherheitswarnungen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:760
+msgid "Password"
+msgstr "Passwort"
+
+#: src/pages/Employees/EmployeeDetail.tsx:272
+msgid "Expires:"
+msgstr "Läuft ab:"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:356
+msgid "Permissions"
+msgstr "Berechtigungen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:695
+#: src/pages/Onboarding/OnboardingComplete.tsx:735
+msgid "Original:"
+msgstr "Original:"
+
+#: src/pages/Settings/SettingsPage.tsx:532
+#: src/pages/Settings/SettingsPage.tsx:747
+msgid "Set up MFA"
+msgstr "MFA einrichten"
+
+#: src/pages/Employees/EmployeeList.tsx:239
+msgid "Employee #"
+msgstr "Mitarbeiter #"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:359
+msgid "Provisioning QR code"
+msgstr "Provisionierungs-QR-Code"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
+msgid "Ready for setup"
+msgstr "Bereit zur Einrichtung"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:673
+msgid "First Names (all)"
+msgstr "Vornamen (alle)"
+
+#: src/components/NotificationPreferences.tsx:47
+msgid "App updates and maintenance notifications"
+msgstr "App-Updates und Wartungsbenachrichtigungen"
+
+#: src/components/RouteGuardState.tsx:57
+msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:281
+#: src/pages/Customers/CustomersPage.tsx:100
+#: src/pages/Employees/EmployeeList.tsx:169
+#: src/pages/Sites/SitesPage.tsx:114
+msgid "Search"
+msgstr "Suche"
+
+#: src/components/NotificationPreferences.tsx:226
+msgid "This is a test notification from SecPal"
+msgstr "Dies ist eine Testbenachrichtigung von SecPal"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:390
+msgid "Select a new parent for this organizational unit."
+msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinheit aus."
+
+#: src/pages/Employees/EmployeeCreate.tsx:860
+msgid "Contract Type"
+msgstr "Vertragsart"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:453
+msgid "Make root unit (no parent)"
+msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
+
+#: src/components/RouteGuardState.tsx:173
+msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
+msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:295
+msgid "Device label"
+msgstr "Gerätebezeichnung"
+
+#: src/components/RouteGuardState.tsx:151
+msgid "Sending verification email..."
+msgstr "Senden einer Bestätigungs-E-Mail..."
+
+#: src/pages/Employees/EmployeeList.tsx:248
+msgid "Unit"
+msgstr "Einheit"
+
+#: src/pages/Customers/CustomersPage.tsx:153
+msgid "Customer Number"
+msgstr "Kundennummer"
+
+#: src/components/NotificationPreferences.tsx:56
+msgid "Team Messages"
+msgstr "Team-Nachrichten"
+
+#: src/pages/Employees/EmployeeCreate.tsx:451
+msgid "Create New Employee"
+msgstr "Neuen Mitarbeiter anlegen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:779
+msgid "Minimum 8 characters"
+msgstr "Mindestens 8 Zeichen"
+
+#: src/pages/Sites/SiteDetail.tsx:361
+msgid "Delete Site"
+msgstr "Standort löschen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:845
+msgid "Pre-Contract is the only status that allows onboarding invitations."
+msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
+
+#: src/components/NotificationPreferences.tsx:46
+msgid "System Updates"
+msgstr "System-Updates"
+
+#: src/pages/Sites/SiteCreate.tsx:420
+#: src/pages/Sites/SiteDetail.tsx:249
+#: src/pages/Sites/SiteEdit.tsx:391
+msgid "Valid From"
+msgstr "Gültig von"
+
+#: src/components/ScopeAssignmentForm.tsx:476
+msgid "Minimum Assignable Rank"
+msgstr "Minimaler zuweisbarer Rang"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:235
+msgid "Missing onboarding token. Please use the link from your email."
+msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
+
+#: src/pages/Customers/CustomerDetail.tsx:230
+msgid "View Sites"
+msgstr "Standorte anzeigen"
+
+#: src/pages/Customers/CustomersPage.tsx:145
+msgid "No customers found"
+msgstr "Keine Kunden gefunden"
+
+#: src/components/RouteGuardState.tsx:188
+msgid "Page Not Found"
+msgstr "Seite nicht gefunden"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:664
+msgid "Confirm and Continue"
+msgstr "Bestätigen und fortfahren"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:411
+msgid "Unnamed Android enrollment session"
+msgstr "Unbenannte Android-Enrollment-Sitzung"
+
+#: src/pages/Employees/EmployeeCreate.tsx:875
+msgid "Full Time"
+msgstr "Vollzeit"
+
+#: src/components/application-layout.tsx:144
+#: src/pages/Profile/ProfilePage.tsx:30
+msgid "My profile"
+msgstr "Mein Profil"
+
+#: src/pages/Settings/SettingsPage.tsx:582
+msgid "Complete in your browser…"
+msgstr "Im Browser abschließen …"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:292
+msgid "e.g., Berlin Branch"
+msgstr "z.B. Niederlassung Berlin"
+
+#: src/components/NotificationPreferences.tsx:200
+msgid "You'll now receive important updates from SecPal"
+msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
+
+#: src/pages/Employees/EmployeeCreate.tsx:766
+#: src/pages/Employees/EmployeeDetail.tsx:116
+#: src/pages/Employees/EmployeeEdit.tsx:524
+#: src/pages/Employees/EmployeeList.tsx:275
+msgid "ML"
+msgstr "FE"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:126
+msgid "This session expired before setup completed. Create a new session to continue."
+msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
+
+#: src/pages/Settings/SettingsPage.tsx:99
+msgid "Regenerate codes"
+msgstr "Codes neu generieren"
+
+#: src/pages/Employees/EmployeeDetail.tsx:315
+msgid "No documents uploaded"
+msgstr "Keine Dokumente hochgeladen"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:114
+msgid "Use this QR code during Android setup before it expires."
+msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
+
+#: src/components/ScopeAssignmentForm.tsx:393
+msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
+msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:144
+#: src/pages/Onboarding/OnboardingComplete.tsx:275
+msgid "Too many onboarding attempts. Please try again later."
+msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:313
+msgid "Password is required"
+msgstr "Passwort ist erforderlich"
+
+#: src/pages/Customers/CustomerCreate.tsx:116
+#: src/pages/Customers/CustomersPage.tsx:91
+msgid "New Customer"
+msgstr "Neuer Kunde"
+
+#: src/pages/Employees/EmployeeCreate.tsx:610
+#: src/pages/Employees/EmployeeEdit.tsx:414
+msgid "Employment Details"
+msgstr "Details zur Beschäftigung"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:205
+#: src/components/OrganizationalUnitTree.tsx:386
+#: src/pages/Customers/CustomerDetail.tsx:250
+#: src/pages/Customers/CustomerDetail.tsx:288
+#: src/pages/Sites/SiteDetail.tsx:348
+#: src/pages/Sites/SiteDetail.tsx:387
+msgid "Delete"
+msgstr "Löschen"
+
+#: src/components/ScopeAssignmentForm.tsx:582
+msgid "Allow user to view/edit their own HR data"
+msgstr "Benutzer können ihre eigenen HR-Daten anzeigen/bearbeiten"
+
+#: src/components/ScopeAssignmentForm.tsx:374
+msgid "Minimum Viewable Rank"
+msgstr "Minimal sichtbarer rang"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:821
+msgid "Completing Setup..."
+msgstr "Einrichtung abschließen..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:229
+msgid "Organizational units are still loading. Please wait a moment and try again."
+msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:131
+msgid "View activity log information and verification status"
+msgstr "Aktivitätsprotokollinformationen und Überprüfungsstatus anzeigen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:876
+msgid "Part Time"
+msgstr "Teilzeit"
+
+#: src/pages/Organization/OrganizationPage.tsx:352
+#: src/pages/Sites/SiteDetail.tsx:320
+msgid "Created"
+msgstr "Erstellt"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:436
+msgid "System"
+msgstr "System"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:244
+msgid "Previous Hash"
+msgstr "Vorheriger Hash"
+
+#: src/components/ScopeAssignmentForm.tsx:341
+msgid "Step 3: Self-access control"
+msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
+
+#: src/components/ScopeAssignmentForm.tsx:339
+msgid "Step 1: Configure viewing permissions"
+msgstr "Schritt 1: Konfigurieren der Anzeigeberechtigungen"
+
+#: src/components/ScopeAssignmentForm.tsx:402
+msgid "Maximum Viewable Rank"
+msgstr "Maximal sichtbarer Rang"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:198
 #: src/components/MoveOrganizationalUnitDialog.tsx:485
@@ -369,122 +740,71 @@ msgstr "Abbrechen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:134
-msgid "Cannot Delete \"{unitName}\""
-msgstr "Löschen von \"{unitName}\" nicht möglich"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:122
+msgid "This session was revoked and can no longer be used for device setup."
+msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:164
-#: src/pages/ActivityLog/ActivityLogList.tsx:407
-msgid "Causer"
-msgstr "Verursacher"
+#: src/pages/ActivityLog/ActivityLogList.tsx:467
+#: src/pages/Customers/CustomersPage.tsx:217
+#: src/pages/Customers/CustomersPage.tsx:258
+#: src/pages/Employees/EmployeeList.tsx:311
+#: src/pages/Employees/EmployeeList.tsx:352
+#: src/pages/Onboarding/OnboardingWizard.tsx:74
+#: src/pages/Sites/SitesPage.tsx:251
+#: src/pages/Sites/SitesPage.tsx:292
+msgid "Previous"
+msgstr "Vorherige"
 
-#: src/pages/Employees/EmployeeDetail.tsx:264
-msgid "Certificate:"
-msgstr "Zertifikat:"
+#: src/pages/Customers/CustomerCreate.tsx:167
+#: src/pages/Customers/CustomerEdit.tsx:183
+#: src/pages/Sites/SiteCreate.tsx:323
+#: src/pages/Sites/SiteEdit.tsx:304
+msgid "Postal Code"
+msgstr "Postleitzahl"
 
-#: src/pages/Login.tsx:656
-msgid "Check your browser…"
-msgstr "Browser prüfen …"
+#: src/components/NotificationPreferences.tsx:280
+msgid "Enable Notifications"
+msgstr "Benachrichtigungen aktivieren"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:625
-msgid "login.checkingSystem"
-msgstr "Überprüfung des Systems..."
+#: src/components/RouteGuardState.tsx:153
+msgid "Send verification email again"
+msgstr "Verifizierungs-E-Mail erneut senden"
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:168
-msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
-msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen übergeordneten Einheit neu zugeordnet werden, bevor diese Organisationseinheit entfernt werden kann."
+#: src/pages/Employees/EmployeeDetail.tsx:481
+#: src/pages/Employees/EmployeeEdit.tsx:287
+msgid "Back to Employees"
+msgstr "Zurück zu Mitarbeitern"
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:442
-msgid "Choose a new parent unit or make this a root unit."
-msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu einer Stammeinheit."
+#: src/components/ScopeAssignmentForm.tsx:335
+msgid "Edit Organizational Scope"
+msgstr "Organisatorischen Umfang bearbeiten"
 
-#: src/components/NotificationPreferences.tsx:295
-msgid "Choose which notifications you want to receive"
-msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
+#: src/components/onboarding-layout.tsx:51
+msgid "We could not complete the sign out request. Please try again."
+msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es erneut."
 
-#: src/pages/Settings/SettingsPage.tsx:662
-msgid "Choose your preferred language for the application."
-msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
+#: src/pages/Settings/SettingsPage.tsx:733
+msgid "Done"
+msgstr "Erledigt"
 
-#: src/pages/Customers/CustomerCreate.tsx:181
-#: src/pages/Customers/CustomerDetail.tsx:137
-#: src/pages/Customers/CustomerEdit.tsx:197
-#: src/pages/Sites/SiteCreate.tsx:304
-#: src/pages/Sites/SiteDetail.tsx:157
-#: src/pages/Sites/SiteEdit.tsx:290
-msgid "City"
-msgstr "Stadt"
+#: src/pages/Login.tsx:662
+msgid "Signing in with passkey..."
+msgstr "Anmeldung mit Passkey..."
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:369
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:351
-msgid "Close"
-msgstr "Schließen"
+#: src/pages/Sites/SiteCreate.tsx:280
+#: src/pages/Sites/SiteDetail.tsx:148
+#: src/pages/Sites/SiteEdit.tsx:271
+#: src/pages/Sites/SitesPage.tsx:190
+msgid "Address"
+msgstr "Adresse"
 
-#: src/pages/Organization/OrganizationPage.tsx:314
-msgid "Close detail panel"
-msgstr "Detailfenster schließen"
+#: src/pages/Onboarding/OnboardingComplete.tsx:239
+msgid "Missing email address. Please use the link from your email."
+msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
-#: src/components/OrganizationalUnitTree.tsx:264
-msgid "Collapse"
-msgstr "Zusammenklappen"
-
-#: src/lib/organizationalUnitUtils.ts:77
-#: src/lib/organizationalUnitUtils.ts:107
-msgid "Company"
-msgstr "Unternehmen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:823
-msgid "Complete Account Setup"
-msgstr "Vollständige Kontoeinrichtung"
-
-#: src/pages/Settings/SettingsPage.tsx:582
-msgid "Complete in your browser…"
-msgstr "Im Browser abschließen …"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:577
-msgid "Complete your account setup to get started"
-msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:821
-msgid "Completing Setup..."
-msgstr "Einrichtung abschließen..."
-
-#: src/components/ScopeAssignmentForm.tsx:365
-msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
-msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:664
-msgid "Confirm and Continue"
-msgstr "Bestätigen und fortfahren"
-
-#: src/pages/Settings/SettingsPage.tsx:857
-msgid "Confirm and enable MFA"
-msgstr "Bestätigen und Aktivieren von MFA"
-
-#: src/pages/Employees/EmployeeDetail.tsx:523
-msgid "Confirm Onboarding"
-msgstr "Onboarding bestätigen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:786
-msgid "Confirm Password"
-msgstr "Bestätigen Sie Ihr Passwort"
-
-#: src/pages/Settings/SettingsPage.tsx:82
-msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
-msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren möchten."
-
-#: src/pages/Settings/SettingsPage.tsx:94
-msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
-msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
-
-#: src/pages/Login.tsx:660
-msgid "Confirming session…"
-msgstr "Sitzung bestätigen …"
-
-#: src/pages/Customers/CustomersPage.tsx:159
-msgid "Contact"
-msgstr "Kontakt"
+#: src/components/VerificationDots.tsx:51
+msgid "{label}: N/A"
+msgstr "{label}: N/A"
 
 #: src/pages/Customers/CustomerCreate.tsx:217
 #: src/pages/Customers/CustomerDetail.tsx:157
@@ -495,27 +815,411 @@ msgstr "Kontakt"
 msgid "Contact Person"
 msgstr "Kontaktperson"
 
-#: src/pages/Employees/EmployeeCreate.tsx:639
-#: src/pages/Employees/EmployeeDetail.tsx:147
-#: src/pages/Employees/EmployeeEdit.tsx:433
-msgid "Contract Start Date"
-msgstr "Datum des Vertragsbeginns"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:212
+msgid "Verifying..."
+msgstr "Überprüfen..."
+
+#: src/pages/Employees/EmployeeDetail.tsx:586
+msgid "Documents"
+msgstr "Dokumente"
+
+#. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
+#: src/pages/Settings/SettingsPage.tsx:626
+msgid "Added {0}"
+msgstr "Hinzugefügt am {0}"
+
+#. placeholder {0}: customer.name
+#: src/pages/Customers/CustomerDetail.tsx:269
+msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
+msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:205
+#: src/pages/Customers/CustomerDetail.tsx:288
+#: src/pages/Sites/SiteDetail.tsx:387
+msgid "Deleting..."
+msgstr "Löschen..."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:75
+msgid "Direct APK sideload"
+msgstr "Direktes APK-Sideloading"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:160
+msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
+msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
+
+#: src/components/NotificationPreferences.tsx:51
+msgid "Shift Reminders"
+msgstr "Schicht-Erinnerungen"
+
+#: src/components/OfflineIndicator.tsx:96
+msgid "Some features may be limited. Your changes will sync when you're back online."
+msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
+
+#: src/pages/Sites/SitesPage.tsx:133
+msgid "All Types"
+msgstr "Alle Typen"
+
+#: src/components/VerificationDots.tsx:80
+msgid "{label}: Pending"
+msgstr "{label}: Ausstehend"
+
+#: src/pages/Sites/SiteDetail.tsx:171
+msgid "Coordinates"
+msgstr "Koordinaten"
+
+#: src/components/OrganizationalUnitTree.tsx:347
+#: src/pages/Customers/CustomerDetail.tsx:238
+#: src/pages/Employees/EmployeeDetail.tsx:540
+#: src/pages/Organization/OrganizationPage.tsx:363
+#: src/pages/Sites/SiteDetail.tsx:339
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:133
+msgid "Name must be at most 255 characters"
+msgstr "Der Name darf maximal 255 Zeichen lang sein"
+
+#: src/pages/Settings/SettingsPage.tsx:549
+msgid "Review the passkeys currently enrolled for this account."
+msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:95
+msgid "Bootstrap completed"
+msgstr "Bootstrap abgeschlossen"
+
+#: src/pages/Customers/CustomerCreate.tsx:281
+#: src/pages/Customers/CustomerDetail.tsx:114
+#: src/pages/Customers/CustomerEdit.tsx:297
+#: src/pages/Customers/CustomersPage.tsx:122
+#: src/pages/Customers/CustomersPage.tsx:188
+#: src/pages/Employees/EmployeeDetail.tsx:69
+#: src/pages/Employees/EmployeeList.tsx:44
+#: src/pages/Employees/EmployeeList.tsx:212
+#: src/pages/Employees/EmployeeStatusOptions.tsx:13
+#: src/pages/Sites/SiteCreate.tsx:478
+#: src/pages/Sites/SiteDetail.tsx:134
+#: src/pages/Sites/SiteEdit.tsx:449
+#: src/pages/Sites/SitesPage.tsx:150
+#: src/pages/Sites/SitesPage.tsx:222
+msgid "Active"
+msgstr "Aktiv"
+
+#: src/components/VerificationDots.tsx:71
+msgid "{label}: Invalid"
+msgstr "{label}: Ungültig"
+
+#. js-lingui-explicit-id
+#: src/components/LanguageSwitcher.tsx:20
+msgid "Failed to change language. Please try again."
+msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
+
+#: src/components/application-layout.tsx:157
+#: src/components/onboarding-layout.tsx:62
+msgid "Sign out"
+msgstr "Abmelden"
+
+#: src/pages/Customers/CustomerDetail.tsx:266
+msgid "Delete Customer"
+msgstr "Kunde löschen"
+
+#: src/pages/Employees/EmployeeList.tsx:236
+msgid "Employee"
+msgstr "Mitarbeiter"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:225
+msgid "Loading activity logs..."
+msgstr "Laden von Aktivitätsprotokollen..."
+
+#. placeholder {0}: pagination.current_page
+#. placeholder {1}: pagination.last_page
+#: src/pages/ActivityLog/ActivityLogList.tsx:470
+msgid "Page {0} of {1}"
+msgstr "Seite {0} von {1}"
+
+#: src/pages/Employees/EmployeeDetail.tsx:528
+msgid "Activate"
+msgstr "Aktivieren"
+
+#: src/pages/Sites/SiteCreate.tsx:203
+#: src/pages/Sites/SiteEdit.tsx:194
+msgid "Select customer..."
+msgstr "Kunde auswählen..."
+
+#: src/components/OrganizationalUnitTree.tsx:827
+msgid "My Organization"
+msgstr "Meine Organisation"
+
+#: src/components/NotificationPreferences.tsx:42
+msgid "Critical security notifications and warnings"
+msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
+
+#: src/lib/organizationalUnitUtils.ts:75
+#: src/lib/organizationalUnitUtils.ts:106
+msgid "Holding"
+msgstr "Holding"
+
+#: src/components/ScopeAssignmentForm.tsx:431
+#: src/components/ScopeAssignmentForm.tsx:533
+msgid "Validation Error"
+msgstr "Validierungsfehler"
+
+#: src/components/EncryptionProgress.tsx:47
+msgid "Encrypting files..."
+msgstr "Dateien verschlüsseln..."
+
+#: src/components/RouteGuardState.tsx:119
+msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
+msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten eine neue Bestätigungs-E-Mail an."
+
+#: src/pages/Employees/EmployeeDetail.tsx:523
+msgid "Confirm Onboarding"
+msgstr "Onboarding bestätigen"
 
 #: src/pages/Employees/EmployeeCreate.tsx:210
 msgid "Contract start date is required"
 msgstr "Das Datum des Vertragsbeginns ist erforderlich"
 
-#: src/pages/Employees/EmployeeCreate.tsx:860
-msgid "Contract Type"
-msgstr "Vertragsart"
+#: src/pages/Employees/EmployeeCreate.tsx:197
+msgid "Date of birth must be in the past"
+msgstr "Das Geburtsdatum muss in der Vergangenheit liegen"
 
-#: src/pages/Employees/EmployeeCreate.tsx:242
-msgid "Contract type is required"
-msgstr "Vertragsart ist erforderlich"
+#: src/App.tsx:90
+msgid "SecPal – operations software for German private security services."
+msgstr ""
 
-#: src/pages/Sites/SiteDetail.tsx:171
-msgid "Coordinates"
-msgstr "Koordinaten"
+#: src/pages/Organization/OrganizationPage.tsx:373
+msgid "Select an organizational unit to view details"
+msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
+
+#. placeholder {0}: fieldName.toLowerCase()
+#: src/pages/Onboarding/OnboardingComplete.tsx:215
+msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
+msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wenden Sie sich an die Personalabteilung, um Ihren Namen zu aktualisieren, bevor Sie das Onboarding abschließen."
+
+#: src/components/application-layout.tsx:247
+#: src/components/application-layout.tsx:334
+msgid "Employees"
+msgstr "Mitarbeiter"
+
+#: src/pages/Employees/EmployeeEdit.tsx:371
+#: src/pages/Employees/EmployeeEdit.tsx:460
+msgid "Invalid date. Please use format {format}"
+msgstr "Ungültiges Datum. Bitte verwenden Sie das Format {format}"
+
+#: src/pages/Employees/EmployeeDetail.tsx:184
+msgid "Invitation Requested"
+msgstr "Einladung angefordert"
+
+#: src/pages/Organization/OrganizationPage.tsx:314
+msgid "Close detail panel"
+msgstr "Detailfenster schließen"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:437
+msgid "Revoke"
+msgstr "Widerrufen"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:168
+msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
+msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen übergeordneten Einheit neu zugeordnet werden, bevor diese Organisationseinheit entfernt werden kann."
+
+#: src/pages/Settings/SettingsPage.tsx:63
+msgid "Not enabled"
+msgstr "Nicht aktiviert"
+
+#: src/components/application-layout.tsx:255
+#: src/components/application-layout.tsx:345
+#: src/pages/ActivityLog/ActivityLogList.tsx:236
+msgid "Activity Logs"
+msgstr "Aktivitätsprotokolle"
+
+#: src/pages/Employees/EmployeeDetail.tsx:42
+msgid "Sent"
+msgstr "Gesendet"
+
+#: src/pages/Settings/SettingsPage.tsx:750
+msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
+msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen Code, um MFA zu aktivieren."
+
+#: src/pages/Settings/SettingsPage.tsx:67
+msgid "Authenticator app"
+msgstr "Authenticator-App"
+
+#: src/components/OrganizationalUnitTree.tsx:264
+msgid "Collapse"
+msgstr "Zusammenklappen"
+
+#: src/pages/Customers/CustomerDetail.tsx:254
+#: src/pages/Sites/SiteDetail.tsx:352
+msgid "Back to List"
+msgstr "Zurück zur Liste"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:439
+msgid "New parent"
+msgstr "neue übergeordnete Einheit"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:390
+msgid "Loading enrollment sessions..."
+msgstr "Enrollment-Sitzungen werden geladen..."
+
+#: src/pages/Customers/CustomerCreate.tsx:289
+#: src/pages/Employees/EmployeeCreate.tsx:956
+#: src/pages/Sites/SiteCreate.tsx:485
+msgid "Creating..."
+msgstr "Erstellen..."
+
+#: src/pages/Settings/SettingsPage.tsx:791
+msgid "Manual setup key"
+msgstr "Taste für manuelle Einstellungen"
+
+#: src/components/ScopeAssignmentForm.tsx:462
+msgid "Which rank range can this user ASSIGN or REMOVE?"
+msgstr "Welchen Rangbereich kann dieser Benutzer ZUWEISEN oder ENTFERNEN?"
+
+#: src/components/ScopeAssignmentForm.tsx:258
+msgid "Failed to save scope assignment."
+msgstr "Die Bereichszuweisung konnte nicht gespeichert werden."
+
+#: src/components/ScopeAssignmentForm.tsx:612
+#: src/pages/ActivityLog/ActivityLogList.tsx:479
+#: src/pages/Customers/CustomersPage.tsx:224
+#: src/pages/Customers/CustomersPage.tsx:266
+#: src/pages/Employees/EmployeeList.tsx:318
+#: src/pages/Employees/EmployeeList.tsx:360
+#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Sites/SitesPage.tsx:258
+#: src/pages/Sites/SitesPage.tsx:300
+msgid "Next"
+msgstr "Weiter"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:378
+msgid "Create"
+msgstr "Erstellen"
+
+#: src/pages/Settings/SettingsPage.tsx:564
+msgid "Passkey label"
+msgstr "Passkey-Bezeichnung"
+
+#: src/components/application-layout.tsx:224
+#: src/components/application-layout.tsx:302
+msgid "Home"
+msgstr "Startseite"
+
+#: src/components/OrganizationalUnitPicker.tsx:238
+#: src/pages/Employees/EmployeeCreate.tsx:720
+#: src/pages/Employees/EmployeeEdit.tsx:488
+msgid "Select organizational unit"
+msgstr "Organisationseinheit auswählen"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:73
+msgid "Managed device rollout"
+msgstr "Rollout verwalteter Geräte"
+
+#: src/pages/Sites/SiteDetail.tsx:110
+msgid "Back to Sites"
+msgstr "zurück zu den Standorten"
+
+#: src/pages/Settings/SettingsPage.tsx:691
+msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
+msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
+
+#: src/components/ScopeAssignmentForm.tsx:495
+msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
+msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:389
+msgid "No activity logs found."
+msgstr "Keine Aktivitätsprotokolle gefunden."
+
+#: src/components/ScopeAssignmentForm.tsx:603
+msgid "Back"
+msgstr "Zurück"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:252
+msgid "Refresh activity logs"
+msgstr "Aktivitätsprotokolle aktualisieren"
+
+#: src/pages/Settings/SettingsPage.tsx:662
+msgid "Choose your preferred language for the application."
+msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:369
+msgid "All units"
+msgstr "Alle Einheiten"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:613
+msgid "First Name:"
+msgstr "Vorname:"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:134
+msgid "Cannot Delete \"{unitName}\""
+msgstr "Löschen von \"{unitName}\" nicht möglich"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:380
+#: src/pages/Customers/CustomerEdit.tsx:304
+#: src/pages/Employees/EmployeeEdit.tsx:596
+#: src/pages/Sites/SiteEdit.tsx:456
+msgid "Save Changes"
+msgstr "Änderungen speichern"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:306
+msgid "The type determines the unit's role in the hierarchy."
+msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
+
+#: src/pages/Settings/SettingsPage.tsx:457
+msgid "Manage your application preferences."
+msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
+
+#: src/pages/Sites/SiteDetail.tsx:364
+msgid "Are you sure you want to delete this site? This action cannot be undone."
+msgstr "Sind Sie sicher, dass Sie diesen Standort löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+
+#: src/pages/Sites/SiteCreate.tsx:485
+msgid "Create Site"
+msgstr "Standort anlegen"
+
+#: src/components/ScopeAssignmentForm.tsx:340
+msgid "Step 2: Configure assignment permissions"
+msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Sites/SitesPage.tsx:264
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
+msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Standorten"
+
+#: src/pages/Employees/EmployeeDetail.tsx:44
+msgid "Created, but not sent"
+msgstr "Erstellt, aber nicht gesendet"
+
+#: src/components/VerificationDots.tsx:122
+#: src/components/VerificationDots.tsx:125
+msgid "OpenTimestamp"
+msgstr "OpenTimestamp"
+
+#: src/pages/Employees/EmployeeCreate.tsx:839
+#: src/pages/Employees/EmployeeEdit.tsx:572
+msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
+msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
+
+#: src/components/RouteGuardState.tsx:113
+msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
+msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
+
+#: src/pages/Customers/CustomersPage.tsx:159
+msgid "Contact"
+msgstr "Kontakt"
+
+#: src/pages/Employees/EmployeeDetail.tsx:67
+#: src/pages/Employees/EmployeeList.tsx:42
+#: src/pages/Employees/EmployeeList.tsx:210
+#: src/pages/Employees/EmployeeStatusOptions.tsx:11
+msgid "Applicant"
+msgstr "Bewerber"
+
+#: src/pages/Organization/OrganizationPage.tsx:366
+msgid "Add Child Unit"
+msgstr "Untergeordnete Einheit hinzufügen"
 
 #: src/pages/Customers/CustomerCreate.tsx:196
 #: src/pages/Customers/CustomerDetail.tsx:145
@@ -526,98 +1230,383 @@ msgstr "Koordinaten"
 msgid "Country"
 msgstr "Land"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:378
-msgid "Create"
-msgstr "Erstellen"
+#: src/pages/Customers/CustomersPage.tsx:199
+#: src/pages/Employees/EmployeeList.tsx:293
+#: src/pages/Sites/SitesPage.tsx:233
+msgid "View"
+msgstr "Anzeigen"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:238
-msgid "Create a new organizational unit under \"{parentName}\"."
-msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
+#: src/pages/Sites/SiteCreate.tsx:414
+#: src/pages/Sites/SiteDetail.tsx:243
+#: src/pages/Sites/SiteEdit.tsx:385
+msgid "Validity Period"
+msgstr "Gültigkeitsdauer"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:240
-msgid "Create a new root organizational unit."
-msgstr "Legen Sie eine neue Stammorganisationseinheit an."
+#: src/pages/Settings/SettingsPage.tsx:786
+msgid "Authenticator app QR code"
+msgstr "QR-Code der Authenticator-App"
 
-#: src/pages/Customers/CustomerCreate.tsx:291
-msgid "Create Customer"
-msgstr "Kunde anlegen"
+#: src/components/OrganizationalUnitTree.tsx:813
+msgid "Get started by creating your first organizational unit."
+msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
-#: src/pages/Employees/EmployeeCreate.tsx:958
-msgid "Create Employee"
-msgstr "Mitarbeiter anlegen"
+#: src/pages/Settings/SettingsPage.tsx:907
+#: src/pages/Settings/SettingsPage.tsx:919
+msgid "Recovery code"
+msgstr "Wiederherstellungscode"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:343
-msgid "Create enrollment session"
-msgstr "Enrollment-Sitzung erstellen"
+#: src/pages/Login.tsx:660
+msgid "Confirming session…"
+msgstr "Sitzung bestätigen …"
 
-#: src/pages/Employees/EmployeeCreate.tsx:451
-msgid "Create New Employee"
-msgstr "Neuen Mitarbeiter anlegen"
+#: src/pages/ActivityLog/ActivityLogList.tsx:353
+msgid "All logs"
+msgstr "Alle Protokolle"
+
+#: src/pages/Settings/SettingsPage.tsx:855
+#: src/pages/Settings/SettingsPage.tsx:963
+msgid "Processing..."
+msgstr "Verarbeitung..."
+
+#: src/pages/Sites/SiteDetail.tsx:327
+msgid "Last Updated"
+msgstr "Zuletzt aktualisiert"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:492
+msgid "Moving..."
+msgstr "Verschiebe..."
+
+#: src/pages/Settings/SettingsPage.tsx:778
+msgid "Try again"
+msgstr "Erneut versuchen"
+
+#: src/App.tsx:66
+msgid "Welcome to SecPal"
+msgstr "Willkommen zu SecPal"
+
+#: src/pages/Employees/EmployeeDetail.tsx:68
+#: src/pages/Employees/EmployeeList.tsx:43
+#: src/pages/Employees/EmployeeList.tsx:211
+#: src/pages/Employees/EmployeeStatusOptions.tsx:12
+msgid "Pre-Contract"
+msgstr "Vorvertrag"
+
+#: src/pages/Employees/EmployeeDetail.tsx:535
+msgid "Terminate"
+msgstr "Beenden"
+
+#: src/pages/Sites/SitesPage.tsx:181
+msgid "Site Number"
+msgstr "Standort Nummer"
+
+#: src/components/NotificationPreferences.tsx:266
+msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
+msgstr "Aktivieren Sie Benachrichtigungen, um wichtige Updates zu Sicherheitswarnungen, Schichterinnerungen und Systembenachrichtigungen zu erhalten."
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:373
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:421
+msgid "Expires"
+msgstr "Läuft ab"
+
+#: src/pages/Employees/EmployeeCreate.tsx:476
+#: src/pages/Employees/EmployeeEdit.tsx:318
+msgid "First Name"
+msgstr "Vorname"
+
+#: src/components/RouteGuardState.tsx:110
+msgid "Verify your email address"
+msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:102
+msgid "Unknown status"
+msgstr "Unbekannter Status"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:504
+msgid "Too Many Attempts"
+msgstr "Zu viele Versuche"
+
+#: src/pages/Settings/SettingsPage.tsx:605
+msgid "Loading passkeys..."
+msgstr "Passkeys werden geladen..."
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:298
+msgid "Yes"
+msgstr "Ja"
+
+#: src/pages/Sites/SitesPage.tsx:173
+msgid "No sites found"
+msgstr "Keine Seiten gefunden"
+
+#: src/components/VerificationDots.tsx:61
+msgid "{label}: Valid"
+msgstr "{label}: Gültig"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:400
+#: src/pages/Onboarding/OnboardingComplete.tsx:408
+msgid "Failed to complete onboarding. Please try again or contact support."
+msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:269
+msgid "Auto-refresh (30s)"
+msgstr "Automatisches Aktualisieren (30s)"
+
+#: src/components/OfflineDataBanner.tsx:125
+#: src/pages/ActivityLog/ActivityLogList.tsx:254
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: src/pages/Employees/EmployeeCreate.tsx:255
+msgid "Management level must be between 1 and 255"
+msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:555
+msgid "Validating your link..."
+msgstr "Validierung Ihres Links..."
+
+#: src/pages/Login.tsx:665
+msgid "Sign in with passkey"
+msgstr "Mit Passkey anmelden"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:625
+msgid "login.checkingSystem"
+msgstr "Überprüfung des Systems..."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:558
+msgid "login.email"
+msgstr "E-Mail-Adresse"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:497
+msgid "login.healthWarning.message"
+msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:494
+msgid "login.healthWarning.title"
+msgstr "System nicht bereit"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:627
+msgid "login.lockedButton"
+msgstr "({remainingLockoutSeconds}s) gesperrt"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:740
+msgid "login.mfa.authenticatorCode"
+msgstr "Authenticator-Code"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:785
+msgid "login.mfa.cancel"
+msgstr "Abbrechen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:679
+msgid "login.mfa.description"
+msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
+
+#. js-lingui-explicit-id
+#. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
+#: src/pages/Login.tsx:689
+msgid "login.mfa.expiry"
+msgstr "Dieser Überprüfungsschritt läuft um {0} ab."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:698
+msgid "login.mfa.method"
+msgstr "Methode zur Überprüfung"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:717
+msgid "login.mfa.method.recovery_code"
+msgstr "Wiederherstellungscode"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:721
+msgid "login.mfa.method.totp"
+msgstr "Authenticator-Code"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:727
+msgid "login.mfa.preferred"
+msgstr "empfohlen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:738
+msgid "login.mfa.recoveryCode"
+msgstr "Wiederherstellungscode"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:747
+msgid "login.mfa.recoveryHelp"
+msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:796
+msgid "login.mfa.submit"
+msgstr "Überprüfen und fortfahren"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:676
+msgid "login.mfa.title"
+msgstr "Zweiter Faktor erforderlich"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:751
+msgid "login.mfa.totpHelp"
+msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App ein."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:794
+msgid "login.mfa.verifying"
+msgstr "Überprüfen..."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:470
+msgid "login.offlineWarning.message"
+msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:465
+msgid "login.offlineWarning.title"
+msgstr "Keine Internetverbindung"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:581
+msgid "login.password"
+msgstr "Passwort"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:526
+msgid "login.rateLimitLocked.message"
+msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:521
+msgid "login.rateLimitLocked.title"
+msgstr "Zu viele gescheiterte Versuche"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:547
+msgid "login.remainingAttempts"
+msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:633
+msgid "login.submit"
+msgstr "Einloggen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:631
+msgid "login.submitting"
+msgstr "Einloggen..."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx:443
+msgid "login.title"
+msgstr "Einloggen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:877
+msgid "Minijob"
+msgstr "Minijob"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:319
+msgid "Passwords do not match"
+msgstr "Passwörter stimmen nicht überein"
+
+#: src/pages/Settings/SettingsPage.tsx:680
+msgid "These codes are shown only once. Store them securely before closing this dialog."
+msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
+
+#: src/pages/Employees/EmployeeDetail.tsx:48
+msgid "Not requested"
+msgstr "Nicht angefordert"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:313
+msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
+msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivitätsprotokollen. \"Ausstehend\" zeigt an, dass die Hash-Kette noch aufgebaut wird.<1/><2>Merkle Tree:</2> Batch-Verifizierung für einen effizienten Nachweis der Log-Einbindung. Läuft jede Minute in der Entwicklung, stündlich im produktiven Einsatz.<3/><4>OpenTimestamp:</4> Bitcoin-Blockchain-Verankerung für unveränderlichen Existenznachweis. Bitcoin-Bestätigung dauert ~10 Minuten."
 
 #: src/components/OrganizationalUnitFormDialog.tsx:230
 #: src/components/OrganizationalUnitTree.tsx:817
 msgid "Create Organizational Unit"
 msgstr "Organisatorische Einheit anlegen"
 
-#: src/pages/Sites/SiteCreate.tsx:485
-msgid "Create Site"
-msgstr "Standort anlegen"
+#: src/components/OrganizationalUnitFormDialog.tsx:208
+msgid "An unexpected error occurred"
+msgstr "Ein unerwarteter Fehler ist aufgetreten"
 
-#: src/pages/Organization/OrganizationPage.tsx:352
-#: src/pages/Sites/SiteDetail.tsx:320
-msgid "Created"
-msgstr "Erstellt"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:82
+msgid "Unknown channel"
+msgstr "Unbekannter Kanal"
 
-#: src/pages/Employees/EmployeeDetail.tsx:44
-msgid "Created, but not sent"
-msgstr "Erstellt, aber nicht gesendet"
+#: src/pages/Employees/EmployeeCreate.tsx:778
+#: src/pages/Employees/EmployeeDetail.tsx:120
+#: src/pages/Employees/EmployeeEdit.tsx:535
+msgid "No management position"
+msgstr "Keine Führungsposition"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:341
-msgid "Creating enrollment session..."
-msgstr "Enrollment-Sitzung wird erstellt..."
+#: src/pages/Settings/SettingsPage.tsx:487
+msgid "MFA status could not be loaded."
+msgstr "Der MFA-Status konnte nicht geladen werden."
 
-#: src/components/OrganizationalUnitFormDialog.tsx:260
-msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
-msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:99
+#: src/pages/Sites/SiteDetail.tsx:138
+msgid "Expired"
+msgstr "Abgelaufen"
 
-#: src/pages/Customers/CustomerCreate.tsx:289
-#: src/pages/Employees/EmployeeCreate.tsx:956
-#: src/pages/Sites/SiteCreate.tsx:485
-msgid "Creating..."
-msgstr "Erstellen..."
+#: src/pages/Employees/EmployeeList.tsx:225
+msgid "Error Loading Employees"
+msgstr "Fehler beim Laden von Mitarbeitern"
 
-#: src/components/NotificationPreferences.tsx:42
-msgid "Critical security notifications and warnings"
-msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
+#: src/pages/Settings/SettingsPage.tsx:639
+msgid "Removing..."
+msgstr "Wird entfernt..."
 
-#: src/components/MoveOrganizationalUnitDialog.tsx:417
-msgid "Current parent:"
-msgstr "Aktuelle übergeordnete Einheit:"
+#: src/components/RouteGuardState.tsx:141
+msgid "I have verified my email"
+msgstr "Ich habe meine E-Mail verifiziert"
 
-#: src/lib/organizationalUnitUtils.ts:87
-#: src/lib/organizationalUnitUtils.ts:112
-msgid "Custom"
-msgstr "Benutzerdefiniert"
+#: src/pages/Employees/EmployeeCreate.tsx:177
+msgid "Email address is required"
+msgstr "E-Mail-Adresse ist erforderlich"
 
-#: src/pages/Sites/SiteCreate.tsx:195
-#: src/pages/Sites/SiteDetail.tsx:300
-#: src/pages/Sites/SiteEdit.tsx:186
-msgid "Customer"
-msgstr "Kunde"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:385
+msgid "Enrollment Sessions"
+msgstr "Enrollment-Sitzungen"
 
-#: src/pages/Customers/CustomerCreate.tsx:131
-#: src/pages/Customers/CustomerEdit.tsx:147
-msgid "Customer Name"
-msgstr "Name des Kunden"
+#: src/components/MoveOrganizationalUnitDialog.tsx:400
+msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
-#: src/pages/Customers/CustomerDetail.tsx:95
-#: src/pages/Customers/CustomerEdit.tsx:123
-msgid "Customer not found"
-msgstr "Kunde nicht gefunden"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:444
+msgid "No action available"
+msgstr "Keine Aktion verfügbar"
 
-#: src/pages/Customers/CustomersPage.tsx:153
-msgid "Customer Number"
-msgstr "Kundennummer"
+#: src/pages/Onboarding/OnboardingComplete.tsx:138
+msgid "Please try again in about {retryAfterMinutes} minutes."
+msgstr "Bitte versuchen Sie es in etwa {retryAfterMinutes} Minuten erneut."
+
+#: src/pages/Employees/EmployeeDetail.tsx:338
+msgid "Download"
+msgstr "Herunterladen"
+
+#: src/pages/Employees/EmployeeList.tsx:209
+msgid "All"
+msgstr "Alle"
+
+#: src/pages/Employees/EmployeeDetail.tsx:193
+msgid "Invitation Mail Sent"
+msgstr "Einladungsmail verschickt"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:31
+msgid "Step {currentStep} of {totalSteps}"
+msgstr "Schritt {currentStep} von {totalSteps}"
+
+#: src/pages/Settings/SettingsPage.tsx:595
+msgid "This browser does not support passkeys."
+msgstr "Dieser Browser unterstützt keine Passkeys."
 
 #: src/components/application-layout.tsx:239
 #: src/components/application-layout.tsx:323
@@ -625,64 +1614,26 @@ msgstr "Kundennummer"
 msgid "Customers"
 msgstr "Kunden"
 
-#: src/pages/Employees/EmployeeCreate.tsx:522
-#: src/pages/Employees/EmployeeDetail.tsx:138
-#: src/pages/Employees/EmployeeEdit.tsx:344
-msgid "Date of Birth"
-msgstr "Geburtsdatum"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:395
+msgid "No Android enrollment sessions have been created yet."
+msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 
-#: src/pages/Employees/EmployeeCreate.tsx:183
-msgid "Date of birth is required"
-msgstr "Geburtsdatum ist erforderlich"
+#: src/pages/ActivityLog/ActivityLogList.tsx:301
+msgid "Hide options"
+msgstr "Optionen ausblenden"
 
-#: src/pages/Employees/EmployeeCreate.tsx:197
-msgid "Date of birth must be in the past"
-msgstr "Das Geburtsdatum muss in der Vergangenheit liegen"
+#: src/pages/Customers/CustomerDetail.tsx:116
+#: src/pages/Customers/CustomersPage.tsx:123
+#: src/pages/Customers/CustomersPage.tsx:190
+#: src/pages/Sites/SiteDetail.tsx:134
+#: src/pages/Sites/SitesPage.tsx:151
+#: src/pages/Sites/SitesPage.tsx:224
+msgid "Inactive"
+msgstr "Inaktiv"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:155
-#: src/pages/ActivityLog/ActivityLogList.tsx:398
-msgid "Date/Time"
-msgstr "Datum/Uhrzeit"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:354
-msgid "Default"
-msgstr "Standard"
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:205
-#: src/components/OrganizationalUnitTree.tsx:386
-#: src/pages/Customers/CustomerDetail.tsx:250
-#: src/pages/Customers/CustomerDetail.tsx:288
-#: src/pages/Sites/SiteDetail.tsx:348
-#: src/pages/Sites/SiteDetail.tsx:387
-msgid "Delete"
-msgstr "Löschen"
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:138
-msgid "Delete \"{unitName}\"?"
-msgstr "\"{unitName}\" löschen?"
-
-#: src/pages/Customers/CustomerDetail.tsx:266
-msgid "Delete Customer"
-msgstr "Kunde löschen"
-
-#: src/pages/Sites/SiteDetail.tsx:361
-msgid "Delete Site"
-msgstr "Standort löschen"
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:150
-msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
-msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:205
-#: src/pages/Customers/CustomerDetail.tsx:288
-#: src/pages/Sites/SiteDetail.tsx:387
-msgid "Deleting..."
-msgstr "Löschen..."
-
-#: src/lib/organizationalUnitUtils.ts:85
-#: src/lib/organizationalUnitUtils.ts:111
-msgid "Department"
-msgstr "Bereich"
+#: src/components/MoveOrganizationalUnitDialog.tsx:442
+msgid "Choose a new parent unit or make this a root unit."
+msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu einer Stammeinheit."
 
 #: src/components/OrganizationalUnitFormDialog.tsx:333
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:143
@@ -691,80 +1642,15 @@ msgstr "Bereich"
 msgid "Description"
 msgstr "Beschreibung"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:142
-msgid "Description must be at most 1000 characters"
-msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
+#. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
+#: src/components/OfflineDataBanner.tsx:111
+msgid "Last synced: {0}"
+msgstr "Zuletzt synchronisiert: {0}"
 
-#: src/pages/Sites/SiteDetail.tsx:296
-msgid "Details"
-msgstr "Details"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:295
-msgid "Device label"
-msgstr "Gerätebezeichnung"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:75
-msgid "Direct APK sideload"
-msgstr "Direktes APK-Sideloading"
-
-#: src/pages/Settings/SettingsPage.tsx:80
-#: src/pages/Settings/SettingsPage.tsx:87
-#: src/pages/Settings/SettingsPage.tsx:519
-msgid "Disable MFA"
-msgstr "MFA deaktivieren"
-
-#: src/lib/organizationalUnitUtils.ts:83
-#: src/lib/organizationalUnitUtils.ts:110
-msgid "Division"
-msgstr "Abteilung"
-
-#: src/pages/Employees/EmployeeDetail.tsx:586
-msgid "Documents"
-msgstr "Dokumente"
-
-#: src/pages/Settings/SettingsPage.tsx:733
-msgid "Done"
-msgstr "Erledigt"
-
-#: src/pages/Employees/EmployeeDetail.tsx:338
-msgid "Download"
-msgstr "Herunterladen"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:292
-msgid "e.g., Berlin Branch"
-msgstr "z.B. Niederlassung Berlin"
-
-#: src/components/OrganizationalUnitTree.tsx:347
-#: src/pages/Customers/CustomerDetail.tsx:238
-#: src/pages/Employees/EmployeeDetail.tsx:540
-#: src/pages/Organization/OrganizationPage.tsx:363
-#: src/pages/Sites/SiteDetail.tsx:339
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#: src/pages/Customers/CustomerEdit.tsx:132
-msgid "Edit Customer"
-msgstr "Kunde bearbeiten"
-
-#: src/pages/Employees/EmployeeEdit.tsx:305
-msgid "Edit Employee"
-msgstr "Mitarbeiter bearbeiten"
-
-#: src/components/ScopeAssignmentForm.tsx:335
-msgid "Edit Organizational Scope"
-msgstr "Organisatorischen Umfang bearbeiten"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:232
-msgid "Edit Organizational Unit"
-msgstr "Organisatorische Einheit bearbeiten"
-
-#: src/pages/Sites/SiteEdit.tsx:171
-msgid "Edit Site"
-msgstr "Standort bearbeiten"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:265
-msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
-msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:155
+#: src/pages/ActivityLog/ActivityLogList.tsx:398
+msgid "Date/Time"
+msgstr "Datum/Uhrzeit"
 
 #: src/pages/Customers/CustomerCreate.tsx:235
 #: src/pages/Customers/CustomerDetail.tsx:174
@@ -779,766 +1665,96 @@ msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Email"
 msgstr "E-Mail-Adresse"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:558
-msgid "login.email"
-msgstr "E-Mail-Adresse"
+#: src/components/ScopeAssignmentForm.tsx:567
+msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
+msgstr "Der eigene Rang des Benutzers (FE{userRank}) liegt im sichtbaren Bereich. Sollte dieser Benutzer seine eigenen HR-Daten einsehen/bearbeiten können?"
 
-#: src/pages/Employees/EmployeeCreate.tsx:177
-msgid "Email address is required"
-msgstr "E-Mail-Adresse ist erforderlich"
+#: src/components/OrganizationalUnitTree.tsx:830
+msgid "Add Root Unit"
+msgstr "Stammeinheit hinzufügen"
 
-#: src/pages/Employees/EmployeeList.tsx:236
-msgid "Employee"
-msgstr "Mitarbeiter"
-
-#: src/pages/Employees/EmployeeList.tsx:239
-msgid "Employee #"
-msgstr "Mitarbeiter #"
-
-#: src/pages/Employees/EmployeeEdit.tsx:169
-msgid "Employee ID is missing."
-msgstr "Mitarbeiter-ID fehlt."
-
-#: src/pages/Employees/EmployeeEdit.tsx:234
-msgid "Employee ID is missing. Cannot submit form."
-msgstr "Mitarbeiter-ID fehlt. Das Formular kann nicht abgeschickt werden."
-
-#: src/pages/Employees/EmployeeList.tsx:153
-msgid "Employee Management"
-msgstr "Mitarbeiter-Management"
-
-#: src/pages/Employees/EmployeeDetail.tsx:91
-msgid "Employee Number"
-msgstr "Mitarbeiter Nummer"
-
-#: src/components/application-layout.tsx:247
-#: src/components/application-layout.tsx:334
-msgid "Employees"
-msgstr "Mitarbeiter"
-
-#: src/pages/Employees/EmployeeCreate.tsx:610
-#: src/pages/Employees/EmployeeEdit.tsx:414
-msgid "Employment Details"
-msgstr "Details zur Beschäftigung"
-
-#: src/components/NotificationPreferences.tsx:280
-msgid "Enable Notifications"
-msgstr "Benachrichtigungen aktivieren"
-
-#: src/components/NotificationPreferences.tsx:266
-msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
-msgstr "Aktivieren Sie Benachrichtigungen, um wichtige Updates zu Sicherheitswarnungen, Schichterinnerungen und Systembenachrichtigungen zu erhalten."
-
-#: src/pages/Settings/SettingsPage.tsx:69
-msgid "Enabled"
-msgstr "Aktiviert"
-
-#: src/components/NotificationPreferences.tsx:278
-msgid "Enabling..."
-msgstr "Aktiviere ..."
-
-#: src/components/EncryptionProgress.tsx:47
-msgid "Encrypting files..."
-msgstr "Dateien verschlüsseln..."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:385
-msgid "Enrollment Sessions"
-msgstr "Enrollment-Sitzungen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:687
-msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
-msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:747
-msgid "login.mfa.recoveryHelp"
-msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:751
-msgid "login.mfa.totpHelp"
-msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App ein."
-
-#: src/components/ScopeAssignmentForm.tsx:349
-msgid "Error"
-msgstr "Fehler"
-
-#: src/pages/Employees/EmployeeDetail.tsx:474
-#: src/pages/Employees/EmployeeEdit.tsx:282
-msgid "Error Loading Employee"
-msgstr "Fehler beim Laden eines Mitarbeiters"
-
-#: src/pages/Employees/EmployeeList.tsx:225
-msgid "Error Loading Employees"
-msgstr "Fehler beim Laden von Mitarbeitern"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:233
-msgid "Event Hash"
-msgstr "Ereignis Hash"
-
-#: src/components/OrganizationalUnitTree.tsx:264
-msgid "Expand"
-msgstr "Ausklappen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:99
-#: src/pages/Sites/SiteDetail.tsx:138
-msgid "Expired"
-msgstr "Abgelaufen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:373
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:421
-msgid "Expires"
-msgstr "Läuft ab"
-
-#: src/pages/Employees/EmployeeDetail.tsx:272
-msgid "Expires:"
-msgstr "Läuft ab:"
-
-#: src/pages/Employees/EmployeeDetail.tsx:46
-msgid "Failed"
-msgstr "Fehlgeschlagen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:400
-#: src/pages/Onboarding/OnboardingComplete.tsx:408
-msgid "Failed to complete onboarding. Please try again or contact support."
-msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:100
-msgid "Failed to delete organizational unit"
-msgstr "Organisationseinheit konnte nicht gelöscht werden"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:346
-msgid "Failed to move organizational unit"
-msgstr "Organisationseinheit konnte nicht verschoben werden"
-
-#: src/components/ScopeAssignmentForm.tsx:258
-msgid "Failed to save scope assignment."
-msgstr "Die Bereichszuweisung konnte nicht gespeichert werden."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:287
-#: src/pages/Onboarding/OnboardingComplete.tsx:290
-msgid "Failed to validate onboarding link"
-msgstr "Onboarding-Link konnte nicht validiert werden"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:371
-msgid "Filter by organizational unit"
-msgstr "nach Organisationseinheit filtern"
-
-#: src/pages/Employees/EmployeeCreate.tsx:476
-#: src/pages/Employees/EmployeeEdit.tsx:318
-msgid "First Name"
-msgstr "Vorname"
-
-#: src/pages/Employees/EmployeeCreate.tsx:169
-#: src/pages/Onboarding/OnboardingComplete.tsx:305
-msgid "First name is required"
-msgstr "Vorname ist erforderlich"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:613
-msgid "First Name:"
-msgstr "Vorname:"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:673
-msgid "First Names (all)"
-msgstr "Vornamen (alle)"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx:305
-msgid "Form fields will be rendered based on schema"
-msgstr "Formularfelder werden basierend auf dem Schema gerendert"
-
-#: src/pages/Employees/EmployeeCreate.tsx:878
-msgid "Freelance"
-msgstr "Freiberuflich"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:314
-msgid "From Date"
-msgstr "Von"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:306
-msgid "Front desk tablet"
-msgstr "Empfangstablet"
-
-#: src/pages/Employees/EmployeeDetail.tsx:96
-msgid "Full Name"
-msgstr "Vollständiger Name"
-
-#: src/pages/Employees/EmployeeCreate.tsx:875
-msgid "Full Time"
-msgstr "Vollzeit"
-
-#: src/components/OrganizationalUnitTree.tsx:813
-msgid "Get started by creating your first organizational unit."
-msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:77
-msgid "GitHub Releases"
-msgstr "GitHub-Versionen"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:443
-msgid "Global"
-msgstr "Global"
-
-#: src/components/RouteGuardState.tsx:68
-#: src/components/RouteGuardState.tsx:157
-#: src/pages/Onboarding/OnboardingComplete.tsx:532
-msgid "Go to Login"
-msgstr "Zum Login gehen"
-
-#: src/components/VerificationDots.tsx:89
-#: src/components/VerificationDots.tsx:92
-msgid "Hash Chain (Data)"
-msgstr "Hash-Kette (Daten)"
-
-#: src/components/VerificationDots.tsx:101
-#: src/components/VerificationDots.tsx:105
-msgid "Hash Chain (Link)"
-msgstr "Hash-Kette (Link)"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:301
-msgid "Hide options"
-msgstr "Optionen ausblenden"
-
-#: src/components/ScopeAssignmentForm.tsx:523
-msgid "Highest rank number the user can assign (set to 255 for all, 0 or empty to prevent any assignment). Range: 0-255"
-msgstr "Höchste Rangnummer, die der Benutzer zuweisen kann (auf 255 für alle, 0 oder leer, um jede Zuweisung zu verhindern). Bereich: 0-255"
-
-#: src/components/ScopeAssignmentForm.tsx:421
-msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
-msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder leer für Nicht-Führungskräfte). Bereich: 0-255"
-
-#: src/lib/organizationalUnitUtils.ts:75
-#: src/lib/organizationalUnitUtils.ts:106
-msgid "Holding"
-msgstr "Holding"
-
-#: src/components/application-layout.tsx:224
-#: src/components/application-layout.tsx:302
-msgid "Home"
-msgstr "Startseite"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:357
-msgid "HR Access"
-msgstr "HR Zugang"
-
-#: src/components/RouteGuardState.tsx:141
-msgid "I have verified my email"
-msgstr "Ich habe meine E-Mail verifiziert"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:270
+msgid "Merkle Batch ID"
+msgstr "Merkle Batch ID"
 
 #: src/pages/Settings/SettingsPage.tsx:720
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, dass sie nicht mehr angezeigt werden."
 
-#: src/pages/Customers/CustomerDetail.tsx:116
-#: src/pages/Customers/CustomersPage.tsx:123
-#: src/pages/Customers/CustomersPage.tsx:190
-#: src/pages/Sites/SiteDetail.tsx:134
-#: src/pages/Sites/SitesPage.tsx:151
-#: src/pages/Sites/SitesPage.tsx:224
-msgid "Inactive"
-msgstr "Inaktiv"
+#: src/pages/Settings/SettingsPage.tsx:677
+msgid "Store your recovery codes now"
+msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
-#. placeholder {0}: formData.min_viewable_rank
-#: src/components/ScopeAssignmentForm.tsx:293
-msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
-msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
+#: src/pages/Onboarding/OnboardingComplete.tsx:206
+msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
+msgstr "{fieldName} scheint eine geringfügige Korrektur zu sein ({similarity}% ähnlich)."
 
-#: src/components/ScopeAssignmentForm.tsx:152
-msgid "Invalid combination: No employees will be visible with this range."
-msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
+#: src/pages/Customers/CustomerCreate.tsx:291
+msgid "Create Customer"
+msgstr "Kunde anlegen"
 
-#: src/pages/Employees/EmployeeEdit.tsx:371
-#: src/pages/Employees/EmployeeEdit.tsx:460
-msgid "Invalid date. Please use format {format}"
-msgstr "Ungültiges Datum. Bitte verwenden Sie das Format {format}"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:506
-msgid "Invalid Link"
-msgstr "Ungültiger Link"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:225
-msgid "Invalid onboarding link. Please check your email and try again."
-msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
-
-#: src/pages/Employees/EmployeeDetail.tsx:202
-msgid "Invitation Failure Reason"
-msgstr "Grund für das Scheitern der Einladung"
-
-#: src/pages/Employees/EmployeeDetail.tsx:193
-msgid "Invitation Mail Sent"
-msgstr "Einladungsmail verschickt"
-
-#: src/pages/Employees/EmployeeDetail.tsx:184
-msgid "Invitation Requested"
-msgstr "Einladung angefordert"
-
-#: src/pages/Employees/EmployeeCreate.tsx:850
-#: src/pages/Employees/EmployeeCreate.tsx:900
-#: src/pages/Employees/EmployeeEdit.tsx:577
-msgid "Invitations are only available for employees in pre-contract status."
-msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
-
-#: src/pages/Settings/SettingsPage.tsx:659
-msgid "Language"
-msgstr "Sprache"
-
-#: src/pages/Employees/EmployeeCreate.tsx:499
-#: src/pages/Employees/EmployeeEdit.tsx:331
-#: src/pages/Onboarding/OnboardingComplete.tsx:720
-msgid "Last Name"
-msgstr "Nachname"
-
-#: src/pages/Employees/EmployeeCreate.tsx:173
-#: src/pages/Onboarding/OnboardingComplete.tsx:309
-msgid "Last name is required"
-msgstr "Nachname ist erforderlich"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:627
-msgid "Last Name:"
-msgstr "Nachname:"
-
-#. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
-#: src/components/OfflineDataBanner.tsx:111
-msgid "Last synced: {0}"
-msgstr "Zuletzt synchronisiert: {0}"
-
-#: src/pages/Sites/SiteDetail.tsx:327
-msgid "Last Updated"
-msgstr "Zuletzt aktualisiert"
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:245
+msgid "Revocation reason"
+msgstr "Widerrufsgrund"
 
 #: src/pages/Employees/EmployeeCreate.tsx:740
 #: src/pages/Employees/EmployeeEdit.tsx:501
 msgid "Leadership Position"
 msgstr "Führungskraft"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:225
-msgid "Loading activity logs..."
-msgstr "Laden von Aktivitätsprotokollen..."
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:79
+msgid "Obtainium"
+msgstr "Obtainium"
 
-#: src/pages/Employees/EmployeeDetail.tsx:307
-msgid "Loading documents..."
-msgstr "Dokumente laden..."
+#: src/pages/Organization/OrganizationPage.tsx:256
+msgid "Organization Structure"
+msgstr "Organisationsstruktur"
 
-#: src/pages/Employees/EmployeeDetail.tsx:462
-#: src/pages/Employees/EmployeeEdit.tsx:270
-msgid "Loading employee..."
-msgstr "Mitarbeiter laden..."
+#: src/pages/Employees/EmployeeCreate.tsx:179
+msgid "Please enter a valid email address"
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
 
-#: src/pages/Employees/EmployeeList.tsx:143
-msgid "Loading employees..."
-msgstr "Mitarbeiter laden..."
+#: src/pages/ActivityLog/ActivityLogList.tsx:354
+msgid "Default"
+msgstr "Standard"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:390
-msgid "Loading enrollment sessions..."
-msgstr "Enrollment-Sitzungen werden geladen..."
+#: src/components/Footer.tsx:31
+msgid "AGPL v3+"
+msgstr "AGPL v3+"
 
-#: src/pages/Settings/SettingsPage.tsx:483
-msgid "Loading MFA status..."
-msgstr "Laden des MFA-Status..."
+#: src/components/VerificationDots.tsx:89
+#: src/components/VerificationDots.tsx:92
+msgid "Hash Chain (Data)"
+msgstr "Hash-Kette (Daten)"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:260
-msgid "Loading onboarding..."
-msgstr "Onboarding laden..."
+#: src/pages/Sites/SiteCreate.tsx:272
+#: src/pages/Sites/SiteDetail.tsx:130
+#: src/pages/Sites/SiteEdit.tsx:263
+#: src/pages/Sites/SitesPage.tsx:135
+#: src/pages/Sites/SitesPage.tsx:212
+msgid "Temporary"
+msgstr "Vorübergehend"
 
-#: src/pages/Settings/SettingsPage.tsx:605
-msgid "Loading passkeys..."
-msgstr "Passkeys werden geladen..."
+#: src/pages/Employees/EmployeeCreate.tsx:616
+#: src/pages/Employees/EmployeeDetail.tsx:126
+#: src/pages/Employees/EmployeeEdit.tsx:420
+#: src/pages/Employees/EmployeeList.tsx:242
+#: src/pages/Sites/SiteDetail.tsx:228
+msgid "Position"
+msgstr "Position"
 
-#: src/pages/Employees/EmployeeDetail.tsx:239
-msgid "Loading qualifications..."
-msgstr "Qualifikationen laden..."
-
-#: src/components/RouteGuardState.tsx:33
-#: src/pages/Customers/CustomerDetail.tsx:86
-#: src/pages/Customers/CustomerEdit.tsx:111
-#: src/pages/Customers/CustomersPage.tsx:139
-#: src/pages/Employees/EmployeeCreate.tsx:719
-#: src/pages/Employees/EmployeeEdit.tsx:487
-#: src/pages/Sites/SiteCreate.tsx:171
-#: src/pages/Sites/SiteDetail.tsx:98
-#: src/pages/Sites/SiteEdit.tsx:146
-#: src/pages/Sites/SitesPage.tsx:167
-msgid "Loading..."
-msgstr "Laden..."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:627
-msgid "login.lockedButton"
-msgstr "({remainingLockoutSeconds}s) gesperrt"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:443
-msgid "login.title"
-msgstr "Einloggen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:633
-msgid "login.submit"
-msgstr "Einloggen"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:148
-#: src/pages/ActivityLog/ActivityLogList.tsx:342
-#: src/pages/ActivityLog/ActivityLogList.tsx:404
-msgid "Log Name"
-msgstr "Log Name"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:631
-msgid "login.submitting"
-msgstr "Einloggen..."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:470
-msgid "login.offlineWarning.message"
-msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
-
-#: src/components/ScopeAssignmentForm.tsx:495
-msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
-msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
-
-#: src/components/ScopeAssignmentForm.tsx:393
-msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
-msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:453
-msgid "Make root unit (no parent)"
-msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
-
-#: src/pages/Settings/SettingsPage.tsx:457
-msgid "Manage your application preferences."
-msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
-
-#: src/pages/Organization/OrganizationPage.tsx:259
-msgid "Manage your internal organizational units including departments, branches, and teams."
-msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:73
-msgid "Managed device rollout"
-msgstr "Rollout verwalteter Geräte"
-
-#: src/pages/Employees/EmployeeDetail.tsx:111
-msgid "Management Level"
-msgstr "Führungsebene"
-
-#: src/pages/Employees/EmployeeCreate.tsx:251
-msgid "Management level is required when leadership position is enabled"
-msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
-
-#: src/pages/Employees/EmployeeCreate.tsx:255
-msgid "Management level must be between 1 and 255"
-msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
-
-#: src/pages/Settings/SettingsPage.tsx:791
-msgid "Manual setup key"
-msgstr "Taste für manuelle Einstellungen"
-
-#: src/components/ScopeAssignmentForm.tsx:504
-msgid "Maximum Assignable Rank"
-msgstr "Maximal zuordenbarer Rang"
-
-#: src/components/ScopeAssignmentForm.tsx:402
-msgid "Maximum Viewable Rank"
-msgstr "Maximal sichtbarer Rang"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:270
-msgid "Merkle Batch ID"
-msgstr "Merkle Batch ID"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:257
-msgid "Merkle Root"
-msgstr "Merkle-Wurzel"
-
-#: src/components/VerificationDots.tsx:112
-#: src/components/VerificationDots.tsx:115
-msgid "Merkle Tree"
-msgstr "Merkelbaum"
-
-#: src/components/NotificationPreferences.tsx:57
-msgid "Messages from team members and supervisors"
-msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
-
-#: src/pages/Settings/SettingsPage.tsx:525
-msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
-msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung zu verlangen."
-
-#: src/pages/Settings/SettingsPage.tsx:487
-msgid "MFA status could not be loaded."
-msgstr "Der MFA-Status konnte nicht geladen werden."
-
-#: src/pages/Employees/EmployeeCreate.tsx:877
-msgid "Minijob"
-msgstr "Minijob"
-
-#: src/components/OfflineIndicator.tsx:106
-msgid "Minimize offline notice"
-msgstr "Offline-Benachrichtigung minimieren"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:779
-msgid "Minimum 8 characters"
-msgstr "Mindestens 8 Zeichen"
-
-#: src/components/ScopeAssignmentForm.tsx:476
-msgid "Minimum Assignable Rank"
-msgstr "Minimaler zuweisbarer Rang"
+#: src/pages/Onboarding/OnboardingComplete.tsx:786
+msgid "Confirm Password"
+msgstr "Bestätigen Sie Ihr Passwort"
 
 #: src/components/ScopeAssignmentForm.tsx:140
 #: src/components/ScopeAssignmentForm.tsx:172
 msgid "Minimum rank cannot be greater than maximum rank."
 msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 
-#: src/components/ScopeAssignmentForm.tsx:374
-msgid "Minimum Viewable Rank"
-msgstr "Minimal sichtbarer rang"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:239
-msgid "Missing email address. Please use the link from your email."
-msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:235
-msgid "Missing onboarding token. Please use the link from your email."
-msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:231
-msgid "Missing token and email. Please use the link from your email."
-msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail."
-
-#: src/pages/Employees/EmployeeCreate.tsx:766
-#: src/pages/Employees/EmployeeDetail.tsx:116
-#: src/pages/Employees/EmployeeEdit.tsx:524
-#: src/pages/Employees/EmployeeList.tsx:275
-msgid "ML"
-msgstr "FE"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:303
-msgid "More options"
-msgstr "weitere Optionen"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:492
-#: src/components/OrganizationalUnitTree.tsx:366
-msgid "Move"
-msgstr "Verschieben"
-
-#. placeholder {0}: unit.name
-#: src/components/MoveOrganizationalUnitDialog.tsx:384
-msgid "Move \"{0}\""
-msgstr "Verschieben \"{0}\""
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:400
-msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
-msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:492
-msgid "Moving..."
-msgstr "Verschiebe..."
-
-#: src/pages/Settings/SettingsPage.tsx:467
-msgid "Multi-factor authentication"
-msgstr "Multi-Faktor-Authentifizierung"
-
-#: src/components/OrganizationalUnitTree.tsx:827
-msgid "My Organization"
-msgstr "Meine Organisation"
-
-#: src/components/application-layout.tsx:144
-#: src/pages/Profile/ProfilePage.tsx:30
-msgid "My profile"
-msgstr "Mein Profil"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:284
-#: src/pages/Customers/CustomerCreate.tsx:222
-#: src/pages/Customers/CustomerDetail.tsx:163
-#: src/pages/Customers/CustomerEdit.tsx:238
-#: src/pages/Customers/CustomersPage.tsx:156
-#: src/pages/Profile/ProfilePage.tsx:62
-#: src/pages/Sites/SiteCreate.tsx:372
-#: src/pages/Sites/SiteDetail.tsx:189
-#: src/pages/Sites/SiteEdit.tsx:343
-#: src/pages/Sites/SitesPage.tsx:184
-msgid "Name"
-msgstr "Name"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:601
-msgid "Name Change Detected"
-msgstr "Namensänderung erkannt"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:830
-msgid "Name change too significant. Please contact HR before completing onboarding."
-msgstr "Die Namensänderung ist zu bedeutend. Bitte kontaktieren Sie die Personalabteilung, bevor Sie das Onboarding abschließen."
-
-#: src/components/OrganizationalUnitFormDialog.tsx:131
-msgid "Name is required"
-msgstr "Name ist erforderlich"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:133
-msgid "Name must be at most 255 characters"
-msgstr "Der Name darf maximal 255 Zeichen lang sein"
-
-#: src/pages/Customers/CustomerCreate.tsx:116
-#: src/pages/Customers/CustomersPage.tsx:91
-msgid "New Customer"
-msgstr "Neuer Kunde"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:439
-msgid "New parent"
-msgstr "neue übergeordnete Einheit"
-
-#: src/pages/Sites/SiteCreate.tsx:180
-#: src/pages/Sites/SitesPage.tsx:105
-msgid "New Site"
-msgstr "Neuer Standort"
-
-#: src/components/ScopeAssignmentForm.tsx:612
-#: src/pages/ActivityLog/ActivityLogList.tsx:479
-#: src/pages/Customers/CustomersPage.tsx:224
-#: src/pages/Customers/CustomersPage.tsx:266
-#: src/pages/Employees/EmployeeList.tsx:318
-#: src/pages/Employees/EmployeeList.tsx:360
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
-#: src/pages/Sites/SitesPage.tsx:258
-#: src/pages/Sites/SitesPage.tsx:300
-msgid "Next"
-msgstr "Weiter"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:444
-msgid "No action available"
-msgstr "Keine Aktion verfügbar"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:389
-msgid "No activity logs found."
-msgstr "Keine Aktivitätsprotokolle gefunden."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:395
-msgid "No Android enrollment sessions have been created yet."
-msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
-
-#: src/pages/Customers/CustomersPage.tsx:145
-msgid "No customers found"
-msgstr "Keine Kunden gefunden"
-
-#: src/pages/Employees/EmployeeDetail.tsx:315
-msgid "No documents uploaded"
-msgstr "Keine Dokumente hochgeladen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:465
-msgid "login.offlineWarning.title"
-msgstr "Keine Internetverbindung"
-
-#: src/pages/Employees/EmployeeCreate.tsx:778
-#: src/pages/Employees/EmployeeDetail.tsx:120
-#: src/pages/Employees/EmployeeEdit.tsx:535
-msgid "No management position"
-msgstr "Keine Führungsposition"
-
-#: src/components/OrganizationalUnitTree.tsx:810
-msgid "No Organizational Units"
-msgstr "Keine organisatorischen Einheiten"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:423
-msgid "No parent (root unit)"
-msgstr "Keine übergeordnete Einheit (Stammeinheit)"
-
-#: src/pages/Settings/SettingsPage.tsx:611
-msgid "No passkeys enrolled yet."
-msgstr "Es sind noch keine Passkeys eingerichtet."
-
-#: src/pages/Employees/EmployeeDetail.tsx:247
-msgid "No qualifications assigned"
-msgstr "Keine Qualifikationen zugewiesen"
-
-#: src/pages/Sites/SitesPage.tsx:173
-msgid "No sites found"
-msgstr "Keine Seiten gefunden"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:364
-msgid "No unit selected"
-msgstr "Keine Einheit ausgewählt"
-
-#: src/pages/Settings/SettingsPage.tsx:63
-msgid "Not enabled"
-msgstr "Nicht aktiviert"
-
-#: src/pages/Employees/EmployeeDetail.tsx:48
-msgid "Not requested"
-msgstr "Nicht angefordert"
-
-#: src/pages/Customers/CustomerCreate.tsx:264
-#: src/pages/Customers/CustomerDetail.tsx:210
-#: src/pages/Customers/CustomerEdit.tsx:280
-#: src/pages/Sites/SiteCreate.tsx:460
-#: src/pages/Sites/SiteDetail.tsx:287
-#: src/pages/Sites/SiteEdit.tsx:431
-msgid "Notes"
-msgstr "Anmerkungen"
-
-#: src/components/NotificationPreferences.tsx:292
-msgid "Notification Preferences"
-msgstr "Präferenzen für Benachrichtigungen"
-
-#: src/components/NotificationPreferences.tsx:239
-msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
-msgstr "Benachrichtigungen werden von Ihrem Browser nicht unterstützt. Bitte verwenden Sie einen modernen Browser wie Chrome, Firefox oder Safari."
-
-#: src/components/NotificationPreferences.tsx:199
-msgid "Notifications Enabled"
-msgstr "Benachrichtigungen aktiviert"
-
-#: src/components/NotificationPreferences.tsx:252
-msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
-msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:79
-msgid "Obtainium"
-msgstr "Obtainium"
-
-#: src/components/DeleteOrganizationalUnitDialog.tsx:177
-msgid "OK"
-msgstr "OK"
-
-#: src/pages/Employees/EmployeeDetail.tsx:70
-#: src/pages/Employees/EmployeeList.tsx:45
-#: src/pages/Employees/EmployeeList.tsx:213
-#: src/pages/Employees/EmployeeStatusOptions.tsx:14
-msgid "On Leave"
-msgstr "in Freistellung"
-
-#: src/pages/Employees/EmployeeDetail.tsx:163
-msgid "Onboarding Invitation"
-msgstr "Onboarding-Einladung"
-
-#: src/components/RouteGuardState.tsx:119
-msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
-msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten eine neue Bestätigungs-E-Mail an."
-
-#: src/components/VerificationDots.tsx:122
-#: src/components/VerificationDots.tsx:125
-msgid "OpenTimestamp"
-msgstr "OpenTimestamp"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:283
-msgid "OpenTimestamp Confirmed"
-msgstr "OpenTimestamp Bestätigt"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:336
-msgid "Optional description for this unit."
-msgstr "Optionale Beschreibung für diese Einheit."
-
-#: src/components/OrganizationalUnitFormDialog.tsx:343
-msgid "Optional description..."
-msgstr "Optionale Beschreibung..."
-
-#: src/components/application-layout.tsx:231
-#: src/components/application-layout.tsx:312
-msgid "Organization"
-msgstr "Organisation"
-
-#: src/pages/Organization/OrganizationPage.tsx:256
-msgid "Organization Structure"
-msgstr "Organisationsstruktur"
-
-#: src/components/OrganizationalUnitTree.tsx:837
-msgid "Organizational structure"
-msgstr "Organisatorische Struktur"
+#: src/pages/ActivityLog/ActivityLogList.tsx:355
+msgid "Authentication"
+msgstr "Authentifizierung"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:194
 #: src/pages/ActivityLog/ActivityLogList.tsx:363
@@ -1553,73 +1769,10 @@ msgstr "Organisatorische Struktur"
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
-#: src/pages/Employees/EmployeeCreate.tsx:233
-msgid "Organizational unit is required"
-msgstr "Organisatorische Einheit ist erforderlich"
-
-#: src/pages/Employees/EmployeeCreate.tsx:229
-msgid "Organizational units are still loading. Please wait a moment and try again."
-msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:695
-#: src/pages/Onboarding/OnboardingComplete.tsx:735
-msgid "Original:"
-msgstr "Original:"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:294
-msgid "Orphaned Genesis"
-msgstr "Verwaiste Genesis"
-
-#. placeholder {0}: pagination.current_page
-#. placeholder {1}: pagination.last_page
-#: src/pages/ActivityLog/ActivityLogList.tsx:470
-msgid "Page {0} of {1}"
-msgstr "Seite {0} von {1}"
-
-#: src/components/RouteGuardState.tsx:188
-msgid "Page Not Found"
-msgstr "Seite nicht gefunden"
-
-#: src/pages/Organization/OrganizationPage.tsx:343
-msgid "Parent"
-msgstr "Übergeordnete Einheit"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:357
-msgid "Parent Unit"
-msgstr "Übergeordnete Einheit"
-
-#: src/pages/Employees/EmployeeCreate.tsx:876
-msgid "Part Time"
-msgstr "Teilzeit"
-
-#: src/pages/Settings/SettingsPage.tsx:564
-msgid "Passkey label"
-msgstr "Passkey-Bezeichnung"
-
-#: src/pages/Settings/SettingsPage.tsx:546
-msgid "Passkeys"
-msgstr "Passkeys"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:581
-msgid "login.password"
-msgstr "Passwort"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:760
-msgid "Password"
-msgstr "Passwort"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:313
-msgid "Password is required"
-msgstr "Passwort ist erforderlich"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:315
-msgid "Password must be at least 8 characters"
-msgstr "Das Passwort muss mindestens 8 Zeichen lang sein"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:319
-msgid "Passwords do not match"
-msgstr "Passwörter stimmen nicht überein"
+#: src/pages/Settings/SettingsPage.tsx:92
+#: src/pages/Settings/SettingsPage.tsx:513
+msgid "Regenerate recovery codes"
+msgstr "Wiederherstellungscodes neu generieren"
 
 #: src/pages/Sites/SiteCreate.tsx:271
 #: src/pages/Sites/SiteDetail.tsx:128
@@ -1629,427 +1782,78 @@ msgstr "Passwörter stimmen nicht überein"
 msgid "Permanent"
 msgstr "Dauerhaft"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:356
-msgid "Permissions"
-msgstr "Berechtigungen"
+#: src/components/OfflineIndicator.tsx:73
+msgid "You're offline. Click for details."
+msgstr "Sie sind offline. Klicken Sie für Details."
 
-#: src/pages/Employees/EmployeeCreate.tsx:470
-#: src/pages/Employees/EmployeeEdit.tsx:312
-msgid "Personal Information"
-msgstr "Persönliche Informationen"
+#: src/pages/Employees/EmployeeDetail.tsx:71
+#: src/pages/Employees/EmployeeList.tsx:46
+#: src/pages/Employees/EmployeeList.tsx:214
+#: src/pages/Employees/EmployeeStatusOptions.tsx:15
+msgid "Terminated"
+msgstr "Beendet"
 
-#: src/pages/Customers/CustomerCreate.tsx:248
-#: src/pages/Customers/CustomerDetail.tsx:190
-#: src/pages/Customers/CustomerEdit.tsx:264
-#: src/pages/Employees/EmployeeCreate.tsx:593
-#: src/pages/Employees/EmployeeDetail.tsx:106
-#: src/pages/Employees/EmployeeEdit.tsx:398
-#: src/pages/Sites/SiteCreate.tsx:398
-#: src/pages/Sites/SiteDetail.tsx:212
-#: src/pages/Sites/SiteEdit.tsx:369
-msgid "Phone"
-msgstr "Telefon"
+#: src/pages/Employees/EmployeeCreate.tsx:242
+msgid "Contract type is required"
+msgstr "Vertragsart ist erforderlich"
 
-#: src/pages/Employees/EmployeeCreate.tsx:378
-msgid "Please correct the highlighted fields before submitting."
-msgstr "Bitte korrigieren Sie die hervorgehobenen Felder vor dem Absenden."
+#: src/components/Footer.tsx:43
+msgid "Source Code"
+msgstr "Quelltext"
 
-#: src/pages/Employees/EmployeeCreate.tsx:179
-msgid "Please enter a valid email address"
-msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+#: src/components/ScopeAssignmentForm.tsx:333
+msgid "Assign Organizational Scope"
+msgstr "Organisatorischen Umfang zuordnen"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:138
-msgid "Please try again in about {retryAfterMinutes} minutes."
-msgstr "Bitte versuchen Sie es in etwa {retryAfterMinutes} Minuten erneut."
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:233
+msgid "Event Hash"
+msgstr "Ereignis Hash"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:135
-msgid "Please try again in about 1 minute."
-msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
+#: src/pages/Employees/EmployeeCreate.tsx:251
+msgid "Management level is required when leadership position is enabled"
+msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:526
-msgid "login.rateLimitLocked.message"
-msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
+#: src/components/OrganizationalUnitFormDialog.tsx:142
+msgid "Description must be at most 1000 characters"
+msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
-#: src/pages/Employees/EmployeeCreate.tsx:616
-#: src/pages/Employees/EmployeeDetail.tsx:126
-#: src/pages/Employees/EmployeeEdit.tsx:420
-#: src/pages/Employees/EmployeeList.tsx:242
-#: src/pages/Sites/SiteDetail.tsx:228
-msgid "Position"
-msgstr "Position"
+#: src/pages/Onboarding/OnboardingComplete.tsx:287
+#: src/pages/Onboarding/OnboardingComplete.tsx:290
+msgid "Failed to validate onboarding link"
+msgstr "Onboarding-Link konnte nicht validiert werden"
 
-#: src/pages/Employees/EmployeeCreate.tsx:206
-msgid "Position is required"
-msgstr "Position ist erforderlich"
+#: src/pages/Employees/EmployeeEdit.tsx:234
+msgid "Employee ID is missing. Cannot submit form."
+msgstr "Mitarbeiter-ID fehlt. Das Formular kann nicht abgeschickt werden."
 
-#: src/pages/Customers/CustomerCreate.tsx:167
-#: src/pages/Customers/CustomerEdit.tsx:183
-#: src/pages/Sites/SiteCreate.tsx:323
-#: src/pages/Sites/SiteEdit.tsx:304
-msgid "Postal Code"
-msgstr "Postleitzahl"
+#: src/components/ScopeAssignmentForm.tsx:523
+msgid "Highest rank number the user can assign (set to 255 for all, 0 or empty to prevent any assignment). Range: 0-255"
+msgstr "Höchste Rangnummer, die der Benutzer zuweisen kann (auf 255 für alle, 0 oder leer, um jede Zuweisung zu verhindern). Bereich: 0-255"
 
-#: src/components/Footer.tsx:20
-msgid "Powered by SecPal – A guard's best friend"
-msgstr "Powered by SecPal – A guard's best friend"
+#: src/components/UpdatePrompt.tsx:80
+msgid "Update now"
+msgstr "Jetzt aktualisieren"
 
-#: src/pages/Employees/EmployeeDetail.tsx:68
-#: src/pages/Employees/EmployeeList.tsx:43
-#: src/pages/Employees/EmployeeList.tsx:211
-#: src/pages/Employees/EmployeeStatusOptions.tsx:12
-msgid "Pre-Contract"
-msgstr "Vorvertrag"
+#: src/pages/Employees/EmployeeCreate.tsx:895
+msgid "The new employee will receive an onboarding email immediately after creation."
+msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einführungs-E-Mail."
 
-#: src/pages/Employees/EmployeeCreate.tsx:845
-msgid "Pre-Contract is the only status that allows onboarding invitations."
-msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
+#: src/pages/Employees/EmployeeDetail.tsx:247
+msgid "No qualifications assigned"
+msgstr "Keine Qualifikationen zugewiesen"
 
-#: src/pages/Settings/SettingsPage.tsx:759
-msgid "Preparing MFA setup..."
-msgstr "MFA-Einrichtung vorbereiten..."
+#: src/pages/Employees/EmployeeEdit.tsx:299
+msgid "← Back to Employee"
+msgstr "← Zurück zum Mitarbeiter"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:467
-#: src/pages/Customers/CustomersPage.tsx:217
-#: src/pages/Customers/CustomersPage.tsx:258
-#: src/pages/Employees/EmployeeList.tsx:311
-#: src/pages/Employees/EmployeeList.tsx:352
-#: src/pages/Onboarding/OnboardingWizard.tsx:74
-#: src/pages/Sites/SitesPage.tsx:251
-#: src/pages/Sites/SitesPage.tsx:292
-msgid "Previous"
-msgstr "Vorherige"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:244
-msgid "Previous Hash"
-msgstr "Vorheriger Hash"
-
-#: src/pages/Settings/SettingsPage.tsx:855
-#: src/pages/Settings/SettingsPage.tsx:963
-msgid "Processing..."
-msgstr "Verarbeitung..."
-
-#: src/pages/Employees/EmployeeDetail.tsx:560
-msgid "Profile"
-msgstr "Profil"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:359
-msgid "Provisioning QR code"
-msgstr "Provisionierungs-QR-Code"
-
-#: src/pages/Employees/EmployeeDetail.tsx:573
-msgid "Qualifications"
-msgstr "Qualifikationen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:93
-msgid "Ready for setup"
-msgstr "Bereit zur Einrichtung"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
-msgid "Reason"
-msgstr "Grund"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:727
-msgid "login.mfa.preferred"
-msgstr "empfohlen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:717
-msgid "login.mfa.method.recovery_code"
-msgstr "Wiederherstellungscode"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:738
-msgid "login.mfa.recoveryCode"
-msgstr "Wiederherstellungscode"
-
-#: src/pages/Settings/SettingsPage.tsx:907
-#: src/pages/Settings/SettingsPage.tsx:919
-msgid "Recovery code"
-msgstr "Wiederherstellungscode"
-
-#: src/pages/Settings/SettingsPage.tsx:500
-msgid "Recovery codes remaining"
-msgstr "Verbleibende Wiederherstellungscodes"
-
-#: src/components/OfflineDataBanner.tsx:125
-#: src/pages/ActivityLog/ActivityLogList.tsx:254
-msgid "Refresh"
-msgstr "Aktualisieren"
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:252
-msgid "Refresh activity logs"
-msgstr "Aktivitätsprotokolle aktualisieren"
-
-#: src/components/OfflineDataBanner.tsx:122
-msgid "Refresh data"
-msgstr "Daten aktualisieren"
-
-#: src/pages/Settings/SettingsPage.tsx:99
-msgid "Regenerate codes"
-msgstr "Codes neu generieren"
-
-#: src/pages/Settings/SettingsPage.tsx:92
-#: src/pages/Settings/SettingsPage.tsx:513
-msgid "Regenerate recovery codes"
-msgstr "Wiederherstellungscodes neu generieren"
-
-#: src/lib/organizationalUnitUtils.ts:79
-#: src/lib/organizationalUnitUtils.ts:108
-msgid "Region"
-msgstr "Region"
-
-#: src/components/NotificationPreferences.tsx:52
-msgid "Reminders about upcoming shifts and duties"
-msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
-
-#: src/pages/Settings/SettingsPage.tsx:641
-msgid "Remove"
-msgstr "Entfernen"
-
-#: src/pages/Settings/SettingsPage.tsx:639
-msgid "Removing..."
-msgstr "Wird entfernt..."
-
-#: src/components/OrganizationalUnitTree.tsx:797
-#: src/components/RouteGuardState.tsx:65
-msgid "Retry"
-msgstr "Wiederholen"
-
-#: src/pages/Settings/SettingsPage.tsx:549
-msgid "Review the passkeys currently enrolled for this account."
-msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:245
-msgid "Revocation reason"
-msgstr "Widerrufsgrund"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:437
-msgid "Revoke"
-msgstr "Widerrufen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:97
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:442
-msgid "Revoked"
-msgstr "Widerrufen"
-
-#: src/components/ScopeAssignmentForm.tsx:610
-msgid "Save"
-msgstr "Speichern"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:380
-#: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:596
-#: src/pages/Sites/SiteEdit.tsx:456
-msgid "Save Changes"
-msgstr "Änderungen speichern"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx:81
-msgid "Save Draft"
-msgstr "Entwurf speichern"
-
-#: src/pages/Settings/SettingsPage.tsx:584
-msgid "Saving passkey…"
-msgstr "Passkey speichern …"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:376
-#: src/components/ScopeAssignmentForm.tsx:608
-#: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:596
-#: src/pages/Sites/SiteEdit.tsx:456
-msgid "Saving..."
-msgstr "Speichern..."
-
-#: src/pages/Settings/SettingsPage.tsx:750
-msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
-msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen Code, um MFA zu aktivieren."
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:281
-#: src/pages/Customers/CustomersPage.tsx:100
-#: src/pages/Employees/EmployeeList.tsx:169
-#: src/pages/Sites/SitesPage.tsx:114
-msgid "Search"
-msgstr "Suche"
-
-#: src/pages/Employees/EmployeeList.tsx:174
-msgid "Search by name or email..."
-msgstr "Suche nach Name oder E-Mail..."
-
-#: src/pages/Customers/CustomersPage.tsx:105
-msgid "Search customers..."
-msgstr "Kunden suchen..."
-
-#: src/pages/ActivityLog/ActivityLogList.tsx:288
-msgid "Search in descriptions..."
-msgstr "Suche in Beschreibungen..."
-
-#: src/pages/Sites/SitesPage.tsx:119
-msgid "Search sites..."
-msgstr "Standorte suchen..."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:676
-msgid "login.mfa.title"
-msgstr "Zweiter Faktor erforderlich"
-
-#: src/App.tsx:69
-msgid "SecPal – A guard’s best friend"
-msgstr "SecPal – A guard’s best friend"
-
-#: src/App.tsx:90
-msgid "SecPal – operations software for German private security services."
-msgstr ""
-
-#: src/components/RouteGuardState.tsx:57
-msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
-msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
+#: src/pages/Sites/SiteCreate.tsx:180
+#: src/pages/Sites/SitesPage.tsx:105
+msgid "New Site"
+msgstr "Neuer Standort"
 
 #: src/components/RouteGuardState.tsx:52
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
-
-#: src/components/RouteGuardState.tsx:113
-msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
-msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
-
-#: src/components/NotificationPreferences.tsx:41
-msgid "Security Alerts"
-msgstr "Sicherheitswarnungen"
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:390
-msgid "Select a new parent for this organizational unit."
-msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinheit aus."
-
-#: src/pages/Organization/OrganizationPage.tsx:373
-msgid "Select an organizational unit to view details"
-msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
-
-#: src/pages/Sites/SiteCreate.tsx:203
-#: src/pages/Sites/SiteEdit.tsx:194
-msgid "Select customer..."
-msgstr "Kunde auswählen..."
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:448
-msgid "Select new parent"
-msgstr "neue übergeordnete Einheit auswählen"
-
-#: src/components/OrganizationalUnitPicker.tsx:238
-#: src/pages/Employees/EmployeeCreate.tsx:720
-#: src/pages/Employees/EmployeeEdit.tsx:488
-msgid "Select organizational unit"
-msgstr "Organisationseinheit auswählen"
-
-#: src/pages/Sites/SiteCreate.tsx:229
-#: src/pages/Sites/SiteEdit.tsx:220
-msgid "Select organizational unit..."
-msgstr "Organisationseinheit auswählen..."
-
-#: src/components/ScopeAssignmentForm.tsx:564
-msgid "Self-Access Control Required"
-msgstr "Selbstzugriffskontrolle erforderlich"
-
-#: src/pages/Employees/EmployeeCreate.tsx:891
-msgid "Send Onboarding Invitation"
-msgstr "Onboarding-Einladung senden"
-
-#: src/components/NotificationPreferences.tsx:299
-msgid "Send Test"
-msgstr "Test senden"
-
-#: src/components/RouteGuardState.tsx:153
-msgid "Send verification email again"
-msgstr "Verifizierungs-E-Mail erneut senden"
-
-#: src/components/RouteGuardState.tsx:151
-msgid "Sending verification email..."
-msgstr "Senden einer Bestätigungs-E-Mail..."
-
-#: src/pages/Employees/EmployeeDetail.tsx:42
-msgid "Sent"
-msgstr "Gesendet"
-
-#: src/pages/Settings/SettingsPage.tsx:532
-#: src/pages/Settings/SettingsPage.tsx:747
-msgid "Set up MFA"
-msgstr "MFA einrichten"
-
-#: src/components/application-layout.tsx:150
-#: src/components/application-layout.tsx:371
-#: src/pages/Settings/SettingsPage.tsx:454
-msgid "Settings"
-msgstr "Einstellungen"
-
-#: src/components/NotificationPreferences.tsx:51
-msgid "Shift Reminders"
-msgstr "Schicht-Erinnerungen"
-
-#. placeholder {0}: pagination.from
-#. placeholder {1}: pagination.to
-#. placeholder {2}: pagination.total
-#: src/pages/ActivityLog/ActivityLogList.tsx:241
-msgid "Showing {0} to {1} of {2} logs"
-msgstr "Anzeigen von {0} bis {1} von {2} Protokollen"
-
-#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
-#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
-#. placeholder {2}: pagination.total
-#: src/pages/Customers/CustomersPage.tsx:230
-msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
-msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
-
-#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
-#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
-#. placeholder {2}: pagination.total
-#: src/pages/Employees/EmployeeList.tsx:324
-msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
-msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
-
-#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
-#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
-#. placeholder {2}: pagination.total
-#: src/pages/Sites/SitesPage.tsx:264
-msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
-msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Standorten"
-
-#: src/components/OfflineDataBanner.tsx:106
-msgid "Showing cached data"
-msgstr "Zeige zwischengespeicherte Daten"
-
-#: src/pages/Login.tsx:665
-msgid "Sign in with passkey"
-msgstr "Mit Passkey anmelden"
-
-#: src/components/application-layout.tsx:157
-#: src/components/onboarding-layout.tsx:62
-msgid "Sign out"
-msgstr "Abmelden"
-
-#: src/pages/Login.tsx:662
-msgid "Signing in with passkey..."
-msgstr "Anmeldung mit Passkey..."
-
-#: src/pages/Sites/SiteCreate.tsx:245
-#: src/pages/Sites/SiteEdit.tsx:236
-msgid "Site Name"
-msgstr "Name des Standorts"
-
-#: src/pages/Sites/SiteDetail.tsx:107
-#: src/pages/Sites/SiteEdit.tsx:162
-msgid "Site not found"
-msgstr "Standort nicht gefunden"
-
-#: src/pages/Sites/SitesPage.tsx:181
-msgid "Site Number"
-msgstr "Standort Nummer"
-
-#: src/pages/Sites/SiteDetail.tsx:379
-msgid "Site Number:"
-msgstr "Standort-Nummer:"
-
-#: src/pages/Sites/SiteDetail.tsx:376
-msgid "Site:"
-msgstr "Standort:"
 
 #: src/pages/Customers/CustomerDetail.tsx:219
 #: src/pages/Customers/CustomersPage.tsx:162
@@ -2057,13 +1861,215 @@ msgstr "Standort:"
 msgid "Sites"
 msgstr "Standorte"
 
-#: src/components/OfflineIndicator.tsx:96
-msgid "Some features may be limited. Your changes will sync when you're back online."
-msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:164
+#: src/pages/ActivityLog/ActivityLogList.tsx:407
+msgid "Causer"
+msgstr "Verursacher"
 
-#: src/components/Footer.tsx:43
-msgid "Source Code"
-msgstr "Quelltext"
+#: src/pages/Onboarding/OnboardingComplete.tsx:528
+msgid "Try Again"
+msgstr "Erneut versuchen"
+
+#. placeholder {0}: customer.sites_count || 0
+#: src/pages/Customers/CustomerDetail.tsx:222
+msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
+msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
+
+#. placeholder {0}: formData.min_viewable_rank
+#: src/components/ScopeAssignmentForm.tsx:293
+msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
+msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
+
+#: src/components/ScopeAssignmentForm.tsx:564
+msgid "Self-Access Control Required"
+msgstr "Selbstzugriffskontrolle erforderlich"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:492
+#: src/components/OrganizationalUnitTree.tsx:366
+msgid "Move"
+msgstr "Verschieben"
+
+#: src/pages/Customers/CustomersPage.tsx:121
+#: src/pages/Sites/SitesPage.tsx:149
+msgid "All Status"
+msgstr "Alle Status"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:288
+msgid "Search in descriptions..."
+msgstr "Suche in Beschreibungen..."
+
+#: src/lib/organizationalUnitUtils.ts:83
+#: src/lib/organizationalUnitUtils.ts:110
+msgid "Division"
+msgstr "Abteilung"
+
+#: src/components/ScopeAssignmentForm.tsx:442
+#: src/components/ScopeAssignmentForm.tsx:544
+msgid "Warning"
+msgstr "Warnung"
+
+#: src/pages/Settings/SettingsPage.tsx:525
+msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
+msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung zu verlangen."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:506
+msgid "Invalid Link"
+msgstr "Ungültiger Link"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:574
+msgid "Welcome to SecPal!"
+msgstr "Willkommen bei SecPal!"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:210
+msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
+msgstr "{fieldName} hat sich erheblich verändert ({similarity}% ähnlich). Die Personalabteilung wird zur Überprüfung benachrichtigt."
+
+#: src/components/RouteGuardState.tsx:191
+msgid "The page you requested does not exist or is no longer available."
+msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:423
+msgid "No parent (root unit)"
+msgstr "Keine übergeordnete Einheit (Stammeinheit)"
+
+#. placeholder {0}: unit.name
+#: src/components/OrganizationalUnitTree.tsx:293
+msgid "Actions for {0}"
+msgstr "Aktionen für {0}"
+
+#: src/pages/Employees/EmployeeList.tsx:143
+msgid "Loading employees..."
+msgstr "Mitarbeiter laden..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:378
+msgid "Please correct the highlighted fields before submitting."
+msgstr "Bitte korrigieren Sie die hervorgehobenen Felder vor dem Absenden."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:86
+msgid "Submit for Review"
+msgstr "Zur Überprüfung einreichen"
+
+#: src/App.tsx:96
+#: src/components/RouteGuardState.tsx:197
+msgid "Back to Home"
+msgstr "Zurück zur Startseite"
+
+#: src/components/UpdatePrompt.tsx:66
+msgid "Updating..."
+msgstr "Aktualisiere ..."
+
+#: src/pages/Settings/SettingsPage.tsx:69
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: src/pages/Sites/SiteCreate.tsx:447
+#: src/pages/Sites/SiteDetail.tsx:275
+#: src/pages/Sites/SiteEdit.tsx:418
+msgid "Access Instructions"
+msgstr "Zugriffsanweisungen"
+
+#: src/pages/Profile/ProfilePage.tsx:33
+msgid "View your account information."
+msgstr "Zeigen Sie Ihre Kontoinformationen an."
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:100
+msgid "Failed to delete organizational unit"
+msgstr "Organisationseinheit konnte nicht gelöscht werden"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:823
+msgid "Complete Account Setup"
+msgstr "Vollständige Kontoeinrichtung"
+
+#: src/pages/Settings/SettingsPage.tsx:759
+msgid "Preparing MFA setup..."
+msgstr "MFA-Einrichtung vorbereiten..."
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:314
+msgid "From Date"
+msgstr "Von"
+
+#: src/pages/Sites/SitesPage.tsx:119
+msgid "Search sites..."
+msgstr "Standorte suchen..."
+
+#: src/pages/Employees/EmployeeDetail.tsx:111
+msgid "Management Level"
+msgstr "Führungsebene"
+
+#: src/pages/Sites/SiteCreate.tsx:245
+#: src/pages/Sites/SiteEdit.tsx:236
+msgid "Site Name"
+msgstr "Name des Standorts"
+
+#: src/pages/Settings/SettingsPage.tsx:857
+msgid "Confirm and enable MFA"
+msgstr "Bestätigen und Aktivieren von MFA"
+
+#: src/components/ScopeAssignmentForm.tsx:349
+msgid "Error"
+msgstr "Fehler"
+
+#: src/pages/Settings/SettingsPage.tsx:94
+msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
+msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
+
+#. placeholder {0}: formData.max_viewable_rank
+#. placeholder {1}: formData.max_assignable_rank
+#: src/components/ScopeAssignmentForm.tsx:322
+msgid "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
+msgstr "Der Benutzer kann Ränge sehen (bis {0}), die er nicht zuordnen/entfernen kann (bis {1})."
+
+#: src/lib/organizationalUnitUtils.ts:81
+#: src/lib/organizationalUnitUtils.ts:109
+msgid "Branch"
+msgstr "Niederlassung"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:577
+msgid "Complete your account setup to get started"
+msgstr "Vervollständigen Sie Ihre Kontoeinrichtung, um loszulegen"
+
+#: src/pages/Organization/OrganizationPage.tsx:343
+msgid "Parent"
+msgstr "Übergeordnete Einheit"
+
+#. placeholder {0}: unit.name
+#: src/pages/Organization/OrganizationPage.tsx:236
+msgid "\"{0}\" created successfully"
+msgstr "\"{0}\" erfolgreich erstellt"
+
+#: src/pages/Settings/SettingsPage.tsx:641
+msgid "Remove"
+msgstr "Entfernen"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:410
+msgid "Viewing cached data. Some units may be outdated."
+msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
+
+#: src/components/ScopeAssignmentForm.tsx:610
+msgid "Save"
+msgstr "Speichern"
+
+#: src/pages/Customers/CustomerDetail.tsx:98
+msgid "Back to Customers"
+msgstr "Zurück zu den Kunden"
+
+#: src/pages/Employees/EmployeeCreate.tsx:402
+msgid "We couldn't submit the form yet. Please review the highlighted fields."
+msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
+
+#: src/components/application-layout.tsx:150
+#: src/components/application-layout.tsx:371
+#: src/pages/Settings/SettingsPage.tsx:454
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: src/components/OfflineDataBanner.tsx:106
+msgid "Showing cached data"
+msgstr "Zeige zwischengespeicherte Daten"
+
+#: src/components/OfflineIndicator.tsx:106
+msgid "Minimize offline notice"
+msgstr "Offline-Benachrichtigung minimieren"
 
 #: src/pages/Customers/CustomersPage.tsx:112
 #: src/pages/Customers/CustomersPage.tsx:165
@@ -2078,33 +2084,84 @@ msgstr "Quelltext"
 msgid "Status"
 msgstr "Status"
 
+#: src/components/application-layout.tsx:231
+#: src/components/application-layout.tsx:312
+msgid "Organization"
+msgstr "Organisation"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:343
+msgid "Optional description..."
+msgstr "Optionale Beschreibung..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:233
+msgid "Organizational unit is required"
+msgstr "Organisatorische Einheit ist erforderlich"
+
+#: src/pages/Sites/SiteDetail.tsx:376
+msgid "Site:"
+msgstr "Standort:"
+
+#. placeholder {0}: unit.name
+#: src/components/MoveOrganizationalUnitDialog.tsx:384
+msgid "Move \"{0}\""
+msgstr "Verschieben \"{0}\""
+
 #: src/pages/Employees/EmployeeCreate.tsx:238
 msgid "Status is required"
 msgstr "Status ist erforderlich"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:31
-msgid "Step {currentStep} of {totalSteps}"
-msgstr "Schritt {currentStep} von {totalSteps}"
+#: src/components/MoveOrganizationalUnitDialog.tsx:346
+msgid "Failed to move organizational unit"
+msgstr "Organisationseinheit konnte nicht verschoben werden"
 
-#: src/components/ScopeAssignmentForm.tsx:339
-msgid "Step 1: Configure viewing permissions"
-msgstr "Schritt 1: Konfigurieren der Anzeigeberechtigungen"
+#: src/lib/organizationalUnitUtils.ts:79
+#: src/lib/organizationalUnitUtils.ts:108
+msgid "Region"
+msgstr "Region"
 
-#: src/components/ScopeAssignmentForm.tsx:340
-msgid "Step 2: Configure assignment permissions"
-msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
+#: src/pages/Login.tsx:656
+msgid "Check your browser…"
+msgstr "Browser prüfen …"
 
-#: src/components/ScopeAssignmentForm.tsx:341
-msgid "Step 3: Self-access control"
-msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:180
+msgid "Subject"
+msgstr "Thema"
 
-#: src/components/RouteGuardState.tsx:48
-msgid "Still loading your secure session"
-msgstr "Ihre sichere Sitzung wird noch geladen"
+#: src/pages/Employees/EmployeeCreate.tsx:206
+msgid "Position is required"
+msgstr "Position ist erforderlich"
 
-#: src/pages/Settings/SettingsPage.tsx:677
-msgid "Store your recovery codes now"
-msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
+#: src/pages/Settings/SettingsPage.tsx:483
+msgid "Loading MFA status..."
+msgstr "Laden des MFA-Status..."
+
+#: src/components/OfflineDataBanner.tsx:104
+msgid "You're offline - showing cached data"
+msgstr "Sie sind offline - Anzeige von Daten im Cache"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:337
+msgid "Additional Properties"
+msgstr "Zusätzliche Eigenschaften"
+
+#: src/pages/Settings/SettingsPage.tsx:467
+msgid "Multi-factor authentication"
+msgstr "Multi-Faktor-Authentifizierung"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:232
+msgid "Edit Organizational Unit"
+msgstr "Organisatorische Einheit bearbeiten"
+
+#: src/pages/Sites/SiteDetail.tsx:296
+msgid "Details"
+msgstr "Details"
+
+#: src/App.tsx:87
+msgid "About SecPal"
+msgstr "Über SecPal"
+
+#: src/components/UpdatePrompt.tsx:78
+msgid "Update application now"
+msgstr "Anwendung jetzt aktualisieren"
 
 #: src/pages/Customers/CustomerCreate.tsx:152
 #: src/pages/Customers/CustomerDetail.tsx:130
@@ -2115,365 +2172,233 @@ msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 msgid "Street"
 msgstr "Straße"
 
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:180
-msgid "Subject"
-msgstr "Thema"
+#: src/pages/Employees/EmployeeCreate.tsx:499
+#: src/pages/Employees/EmployeeEdit.tsx:331
+#: src/pages/Onboarding/OnboardingComplete.tsx:720
+msgid "Last Name"
+msgstr "Nachname"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:86
-msgid "Submit for Review"
-msgstr "Zur Überprüfung einreichen"
+#: src/components/VerificationDots.tsx:101
+#: src/components/VerificationDots.tsx:105
+msgid "Hash Chain (Link)"
+msgstr "Hash-Kette (Link)"
 
-#: src/pages/ActivityLog/ActivityLogList.tsx:436
-msgid "System"
-msgstr "System"
+#: src/pages/Customers/CustomerDetail.tsx:95
+#: src/pages/Customers/CustomerEdit.tsx:123
+msgid "Customer not found"
+msgstr "Kunde nicht gefunden"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:494
-msgid "login.healthWarning.title"
-msgstr "System nicht bereit"
+#: src/App.tsx:76
+msgid "About"
+msgstr "Über uns"
 
-#: src/components/NotificationPreferences.tsx:46
-msgid "System Updates"
-msgstr "System-Updates"
+#: src/pages/Settings/SettingsPage.tsx:546
+msgid "Passkeys"
+msgstr "Passkeys"
 
-#: src/components/NotificationPreferences.tsx:56
-msgid "Team Messages"
-msgstr "Team-Nachrichten"
+#: src/components/NotificationPreferences.tsx:299
+msgid "Send Test"
+msgstr "Test senden"
 
-#: src/pages/Sites/SiteCreate.tsx:272
-#: src/pages/Sites/SiteDetail.tsx:130
-#: src/pages/Sites/SiteEdit.tsx:263
-#: src/pages/Sites/SitesPage.tsx:135
-#: src/pages/Sites/SitesPage.tsx:212
-msgid "Temporary"
-msgstr "Vorübergehend"
+#: src/components/ScopeAssignmentForm.tsx:362
+msgid "Who can this user VIEW?"
+msgstr "Wen kann dieser Benutzer SEHEN?"
 
-#: src/pages/Employees/EmployeeDetail.tsx:535
-msgid "Terminate"
-msgstr "Beenden"
+#: src/pages/Employees/EmployeeCreate.tsx:173
+#: src/pages/Onboarding/OnboardingComplete.tsx:309
+msgid "Last name is required"
+msgstr "Nachname ist erforderlich"
 
-#: src/pages/Employees/EmployeeDetail.tsx:71
-#: src/pages/Employees/EmployeeList.tsx:46
-#: src/pages/Employees/EmployeeList.tsx:214
-#: src/pages/Employees/EmployeeStatusOptions.tsx:15
-msgid "Terminated"
-msgstr "Beendet"
+#: src/pages/Employees/EmployeeDetail.tsx:560
+msgid "Profile"
+msgstr "Profil"
 
-#: src/components/NotificationPreferences.tsx:225
-msgid "Test Notification"
-msgstr "Test-Benachrichtigung"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:294
+msgid "Orphaned Genesis"
+msgstr "Verwaiste Genesis"
 
-#: src/pages/Employees/EmployeeCreate.tsx:895
-msgid "The new employee will receive an onboarding email immediately after creation."
-msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einführungs-E-Mail."
+#: src/components/NotificationPreferences.tsx:292
+msgid "Notification Preferences"
+msgstr "Präferenzen für Benachrichtigungen"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:363
-msgid "The new unit will be created under this parent."
-msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
+#: src/components/OrganizationalUnitFormDialog.tsx:238
+msgid "Create a new organizational unit under \"{parentName}\"."
+msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
 
-#: src/components/RouteGuardState.tsx:191
-msgid "The page you requested does not exist or is no longer available."
-msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:363
+msgid "Android provisioning QR code"
+msgstr "QR-Code zur Android-Provisionierung"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:497
-msgid "login.healthWarning.message"
-msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:430
+msgid "Reason"
+msgstr "Grund"
 
-#: src/components/OrganizationalUnitFormDialog.tsx:306
-msgid "The type determines the unit's role in the hierarchy."
-msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
+#: src/components/NotificationPreferences.tsx:52
+msgid "Reminders about upcoming shifts and duties"
+msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
 
-#: src/pages/Settings/SettingsPage.tsx:680
-msgid "These codes are shown only once. Store them securely before closing this dialog."
-msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
+#: src/pages/Onboarding/OnboardingWizard.tsx:260
+msgid "Loading onboarding..."
+msgstr "Onboarding laden..."
 
-#. placeholder {0}: fieldName.toLowerCase()
-#: src/pages/Onboarding/OnboardingComplete.tsx:215
-msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
-msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wenden Sie sich an die Personalabteilung, um Ihren Namen zu aktualisieren, bevor Sie das Onboarding abschließen."
+#: src/pages/Employees/EmployeeList.tsx:174
+msgid "Search by name or email..."
+msgstr "Suche nach Name oder E-Mail..."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:184
-msgid "This action cannot be undone. The organizational unit will be permanently removed."
-msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
+#: src/components/RouteGuardState.tsx:170
+msgid "Access Denied"
+msgstr "Zugang verweigert"
 
-#: src/pages/Settings/SettingsPage.tsx:595
-msgid "This browser does not support passkeys."
-msgstr "Dieser Browser unterstützt keine Passkeys."
+#: src/pages/Onboarding/OnboardingComplete.tsx:315
+msgid "Password must be at least 8 characters"
+msgstr "Das Passwort muss mindestens 8 Zeichen lang sein"
 
-#: src/components/NotificationPreferences.tsx:226
-msgid "This is a test notification from SecPal"
-msgstr "Dies ist eine Testbenachrichtigung von SecPal"
+#: src/pages/Employees/EmployeeDetail.tsx:462
+#: src/pages/Employees/EmployeeEdit.tsx:270
+msgid "Loading employee..."
+msgstr "Mitarbeiter laden..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:126
-msgid "This session expired before setup completed. Create a new session to continue."
-msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
+#: src/pages/Settings/SettingsPage.tsx:659
+msgid "Language"
+msgstr "Sprache"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:118
-msgid "This session has already been used to complete device bootstrap."
-msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:341
+msgid "Creating enrollment session..."
+msgstr "Enrollment-Sitzung wird erstellt..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:122
-msgid "This session was revoked and can no longer be used for device setup."
-msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
+#: src/pages/Settings/SettingsPage.tsx:589
+msgid "Add passkey"
+msgstr "Passkey hinzufügen"
+
+#: src/pages/Employees/EmployeeEdit.tsx:169
+msgid "Employee ID is missing."
+msgstr "Mitarbeiter-ID fehlt."
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:364
+msgid "No unit selected"
+msgstr "Keine Einheit ausgewählt"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:148
+#: src/pages/ActivityLog/ActivityLogList.tsx:342
+#: src/pages/ActivityLog/ActivityLogList.tsx:404
+msgid "Log Name"
+msgstr "Log Name"
+
+#: src/components/NotificationPreferences.tsx:239
+msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
+msgstr "Benachrichtigungen werden von Ihrem Browser nicht unterstützt. Bitte verwenden Sie einen modernen Browser wie Chrome, Firefox oder Safari."
+
+#: src/pages/Login.tsx:658
+msgid "Verifying passkey…"
+msgstr "Passkey wird überprüft …"
+
+#: src/components/ScopeAssignmentForm.tsx:421
+msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
+msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder leer für Nicht-Führungskräfte). Bereich: 0-255"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:81
+msgid "Save Draft"
+msgstr "Entwurf speichern"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:257
+msgid "Merkle Root"
+msgstr "Merkle-Wurzel"
+
+#: src/pages/Employees/EmployeeList.tsx:158
+msgid "Add Employee"
+msgstr "Mitarbeiter hinzufügen"
+
+#: src/pages/Sites/SiteEdit.tsx:171
+msgid "Edit Site"
+msgstr "Standort bearbeiten"
+
+#: src/pages/Settings/SettingsPage.tsx:584
+msgid "Saving passkey…"
+msgstr "Passkey speichern …"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:97
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:442
+msgid "Revoked"
+msgstr "Widerrufen"
+
+#: src/pages/Employees/EmployeeList.tsx:153
+msgid "Employee Management"
+msgstr "Mitarbeiter-Management"
+
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:207
+msgid "Verification Status"
+msgstr "Status der Verifizierung"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:376
+#: src/components/ScopeAssignmentForm.tsx:608
+#: src/pages/Customers/CustomerEdit.tsx:304
+#: src/pages/Employees/EmployeeEdit.tsx:596
+#: src/pages/Sites/SiteEdit.tsx:456
+msgid "Saving..."
+msgstr "Speichern..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:878
+msgid "Freelance"
+msgstr "Freiberuflich"
+
+#: src/components/OrganizationalUnitFormDialog.tsx:336
+msgid "Optional description for this unit."
+msgstr "Optionale Beschreibung für diese Einheit."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx:231
+msgid "Missing token and email. Please use the link from your email."
+msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail."
+
+#: src/pages/Employees/EmployeeDetail.tsx:307
+msgid "Loading documents..."
+msgstr "Dokumente laden..."
+
+#: src/components/RouteGuardState.tsx:68
+#: src/components/RouteGuardState.tsx:157
+#: src/pages/Onboarding/OnboardingComplete.tsx:532
+msgid "Go to Login"
+msgstr "Zum Login gehen"
+
+#: src/pages/Employees/EmployeeCreate.tsx:445
+#: src/pages/Employees/EmployeeDetail.tsx:504
+msgid "← Back to Employees"
+msgstr "← Zurück zu Mitarbeitern"
+
+#: src/components/Footer.tsx:20
+msgid "Powered by SecPal – A guard's best friend"
+msgstr "Powered by SecPal – A guard's best friend"
 
 #. placeholder {0}: formatDateTime( enrollmentPreparation.expires_at, i18n.locale )
 #: src/pages/Settings/SettingsPage.tsx:800
 msgid "This setup expires at {0}."
 msgstr "Diese Einstellung läuft am {0} ab."
 
-#: src/components/DeleteOrganizationalUnitDialog.tsx:160
-msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
-msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
+#: src/components/DeleteOrganizationalUnitDialog.tsx:184
+msgid "This action cannot be undone. The organizational unit will be permanently removed."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
 
-#. js-lingui-explicit-id
-#. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx:689
-msgid "login.mfa.expiry"
-msgstr "Dieser Überprüfungsschritt läuft um {0} ab."
+#. placeholder {0}: pagination.from
+#. placeholder {1}: pagination.to
+#. placeholder {2}: pagination.total
+#: src/pages/ActivityLog/ActivityLogList.tsx:241
+msgid "Showing {0} to {1} of {2} logs"
+msgstr "Anzeigen von {0} bis {1} von {2} Protokollen"
+
+#: src/pages/ActivityLog/ActivityLogList.tsx:357
+msgid "HR Access"
+msgstr "HR Zugang"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx:328
 msgid "To Date"
 msgstr "Bis"
 
-#: src/components/ScopeAssignmentForm.tsx:467
-msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
-msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
+#: src/components/OrganizationalUnitFormDialog.tsx:240
+msgid "Create a new root organizational unit."
+msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:504
-msgid "Too Many Attempts"
-msgstr "Zu viele Versuche"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:521
-msgid "login.rateLimitLocked.title"
-msgstr "Zu viele gescheiterte Versuche"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:144
-#: src/pages/Onboarding/OnboardingComplete.tsx:275
-msgid "Too many onboarding attempts. Please try again later."
-msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
-
-#: src/pages/Settings/SettingsPage.tsx:778
-msgid "Try again"
-msgstr "Erneut versuchen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:528
-msgid "Try Again"
-msgstr "Erneut versuchen"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:303
-#: src/pages/Organization/OrganizationPage.tsx:324
-#: src/pages/Sites/SiteCreate.tsx:263
-#: src/pages/Sites/SiteEdit.tsx:254
-#: src/pages/Sites/SitesPage.tsx:126
-#: src/pages/Sites/SitesPage.tsx:187
-msgid "Type"
-msgstr "Typ"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:137
-msgid "Type is required"
-msgstr "Typ ist erforderlich"
-
-#: src/pages/Employees/EmployeeList.tsx:248
-msgid "Unit"
-msgstr "Einheit"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:82
-msgid "Unknown channel"
-msgstr "Unbekannter Kanal"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:102
-msgid "Unknown status"
-msgstr "Unbekannter Status"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:367
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:411
-msgid "Unnamed Android enrollment session"
-msgstr "Unbenannte Android-Enrollment-Sitzung"
-
-#: src/components/UpdatePrompt.tsx:78
-msgid "Update application now"
-msgstr "Anwendung jetzt aktualisieren"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:312
-msgid "Update channel"
-msgstr "Update-Kanal"
-
-#: src/components/UpdatePrompt.tsx:80
-msgid "Update now"
-msgstr "Jetzt aktualisieren"
-
-#: src/components/OrganizationalUnitFormDialog.tsx:243
-msgid "Update the organizational unit details."
-msgstr "Aktualisieren Sie die Details der Organisationseinheit."
-
-#: src/components/UpdatePrompt.tsx:66
-msgid "Updating..."
-msgstr "Aktualisiere ..."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:114
-msgid "Use this QR code during Android setup before it expires."
-msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
-
-#. placeholder {0}: formData.max_viewable_rank
-#. placeholder {1}: formData.max_assignable_rank
-#: src/components/ScopeAssignmentForm.tsx:322
-msgid "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
-msgstr "Der Benutzer kann Ränge sehen (bis {0}), die er nicht zuordnen/entfernen kann (bis {1})."
-
-#: src/components/ScopeAssignmentForm.tsx:309
-msgid "User cannot assign OR remove ANY rank (prevents privilege escalation)."
-msgstr "Der Benutzer kann KEINEN Rang zuweisen ODER entfernen (verhindert eine Eskalation der Rechte)."
-
-#: src/components/ScopeAssignmentForm.tsx:567
-msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
-msgstr "Der eigene Rang des Benutzers (FE{userRank}) liegt im sichtbaren Bereich. Sollte dieser Benutzer seine eigenen HR-Daten einsehen/bearbeiten können?"
-
-#: src/pages/Sites/SiteCreate.tsx:420
-#: src/pages/Sites/SiteDetail.tsx:249
-#: src/pages/Sites/SiteEdit.tsx:391
-msgid "Valid From"
-msgstr "Gültig von"
-
-#: src/pages/Sites/SiteCreate.tsx:432
-#: src/pages/Sites/SiteDetail.tsx:260
-#: src/pages/Sites/SiteEdit.tsx:403
-msgid "Valid Until"
-msgstr "Gültig bis"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:555
-msgid "Validating your link..."
-msgstr "Validierung Ihres Links..."
-
-#: src/components/ScopeAssignmentForm.tsx:431
-#: src/components/ScopeAssignmentForm.tsx:533
-msgid "Validation Error"
-msgstr "Validierungsfehler"
-
-#: src/pages/Sites/SiteCreate.tsx:414
-#: src/pages/Sites/SiteDetail.tsx:243
-#: src/pages/Sites/SiteEdit.tsx:385
-msgid "Validity Period"
-msgstr "Gültigkeitsdauer"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:698
-msgid "login.mfa.method"
-msgstr "Methode zur Überprüfung"
-
-#: src/pages/Settings/SettingsPage.tsx:886
-msgid "Verification method"
-msgstr "Methode zur Überprüfung"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:207
-msgid "Verification Status"
-msgstr "Status der Verifizierung"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:796
-msgid "login.mfa.submit"
-msgstr "Überprüfen und fortfahren"
-
-#: src/components/RouteGuardState.tsx:110
-msgid "Verify your email address"
-msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
-
-#: src/pages/Login.tsx:658
-msgid "Verifying passkey…"
-msgstr "Passkey wird überprüft …"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:794
-msgid "login.mfa.verifying"
-msgstr "Überprüfen..."
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:212
-msgid "Verifying..."
-msgstr "Überprüfen..."
-
-#: src/pages/Customers/CustomersPage.tsx:199
-#: src/pages/Employees/EmployeeList.tsx:293
-#: src/pages/Sites/SitesPage.tsx:233
-msgid "View"
-msgstr "Anzeigen"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:131
-msgid "View activity log information and verification status"
-msgstr "Aktivitätsprotokollinformationen und Überprüfungsstatus anzeigen"
-
-#: src/App.tsx:73
-msgid "View Profile"
-msgstr "Profil ansehen"
-
-#: src/pages/Customers/CustomerDetail.tsx:230
-msgid "View Sites"
-msgstr "Standorte anzeigen"
-
-#: src/pages/Profile/ProfilePage.tsx:33
-msgid "View your account information."
-msgstr "Zeigen Sie Ihre Kontoinformationen an."
-
-#: src/components/MoveOrganizationalUnitDialog.tsx:410
-msgid "Viewing cached data. Some units may be outdated."
-msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
-
-#: src/components/ScopeAssignmentForm.tsx:442
-#: src/components/ScopeAssignmentForm.tsx:544
-msgid "Warning"
-msgstr "Warnung"
-
-#: src/components/onboarding-layout.tsx:51
-msgid "We could not complete the sign out request. Please try again."
-msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es erneut."
-
-#: src/pages/Employees/EmployeeCreate.tsx:402
-msgid "We couldn't submit the form yet. Please review the highlighted fields."
-msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
-
-#: src/App.tsx:66
-msgid "Welcome to SecPal"
-msgstr "Willkommen zu SecPal"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx:278
-msgid "Welcome to SecPal Onboarding"
-msgstr "Willkommen zum SecPal Onboarding"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:574
-msgid "Welcome to SecPal!"
-msgstr "Willkommen bei SecPal!"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:356
-msgid "Welcome to SecPal! Let's complete your profile."
-msgstr "Willkommen bei SecPal! Lassen Sie uns Ihr Profil vervollständigen."
-
-#: src/components/ScopeAssignmentForm.tsx:462
-msgid "Which rank range can this user ASSIGN or REMOVE?"
-msgstr "Welchen Rangbereich kann dieser Benutzer ZUWEISEN oder ENTFERNEN?"
-
-#: src/components/ScopeAssignmentForm.tsx:362
-msgid "Who can this user VIEW?"
-msgstr "Wen kann dieser Benutzer SEHEN?"
-
-#: src/pages/ActivityLog/ActivityDetailDialog.tsx:298
-msgid "Yes"
-msgstr "Ja"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:349
-msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
-msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
-
-#: src/components/RouteGuardState.tsx:173
-msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
-msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
-
-#: src/pages/Onboarding/OnboardingComplete.tsx:604
-msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
-msgstr "Sie haben Ihren Namen gegenüber der ursprünglichen Eingabe geändert. Die Personalabteilung wird zur Überprüfung über diese Änderung informiert."
-
-#: src/components/NotificationPreferences.tsx:200
-msgid "You'll now receive important updates from SecPal"
-msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
+#: src/pages/Employees/EmployeeDetail.tsx:163
+msgid "Onboarding Invitation"
+msgstr "Onboarding-Einladung"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx:148
 #: src/components/MoveOrganizationalUnitDialog.tsx:398
@@ -2482,15 +2407,90 @@ msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 msgid "You're offline"
 msgstr "Sie sind offline"
 
-#: src/components/OfflineDataBanner.tsx:104
-msgid "You're offline - showing cached data"
-msgstr "Sie sind offline - Anzeige von Daten im Cache"
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:128
+msgid "Activity Log Details"
+msgstr "Details zum Aktivitätsprotokoll"
 
-#: src/components/OfflineIndicator.tsx:73
-msgid "You're offline. Click for details."
-msgstr "Sie sind offline. Klicken Sie für Details."
+#: src/App.tsx:73
+msgid "View Profile"
+msgstr "Profil ansehen"
 
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx:679
-msgid "login.mfa.description"
-msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
+#: src/components/NotificationPreferences.tsx:252
+msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
+msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:369
+#: src/pages/ActivityLog/ActivityDetailDialog.tsx:351
+msgid "Close"
+msgstr "Schließen"
+
+#: src/components/RouteGuardState.tsx:33
+#: src/pages/Customers/CustomerDetail.tsx:86
+#: src/pages/Customers/CustomerEdit.tsx:111
+#: src/pages/Customers/CustomersPage.tsx:139
+#: src/pages/Employees/EmployeeCreate.tsx:719
+#: src/pages/Employees/EmployeeEdit.tsx:487
+#: src/pages/Sites/SiteCreate.tsx:171
+#: src/pages/Sites/SiteDetail.tsx:98
+#: src/pages/Sites/SiteEdit.tsx:146
+#: src/pages/Sites/SitesPage.tsx:167
+msgid "Loading..."
+msgstr "Laden..."
+
+#: src/pages/Employees/EmployeeCreate.tsx:850
+#: src/pages/Employees/EmployeeCreate.tsx:900
+#: src/pages/Employees/EmployeeEdit.tsx:577
+msgid "Invitations are only available for employees in pre-contract status."
+msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
+
+#: src/pages/Settings/SettingsPage.tsx:813
+#: src/pages/Settings/SettingsPage.tsx:905
+#: src/pages/Settings/SettingsPage.tsx:917
+msgid "Authenticator code"
+msgstr "Authenticator-Code"
+
+#: src/components/MoveOrganizationalUnitDialog.tsx:417
+msgid "Current parent:"
+msgstr "Aktuelle übergeordnete Einheit:"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:177
+msgid "OK"
+msgstr "OK"
+
+#: src/components/DeleteOrganizationalUnitDialog.tsx:150
+msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
+
+#: src/pages/Sites/SiteCreate.tsx:229
+#: src/pages/Sites/SiteEdit.tsx:220
+msgid "Select organizational unit..."
+msgstr "Organisationseinheit auswählen..."
+
+#. placeholder {0}: unit.name
+#: src/pages/Organization/OrganizationPage.tsx:237
+msgid "\"{0}\" updated successfully"
+msgstr "\"{0}\" erfolgreich aktualisiert"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:343
+msgid "Create enrollment session"
+msgstr "Enrollment-Sitzung erstellen"
+
+#: src/pages/Customers/CustomerCreate.tsx:248
+#: src/pages/Customers/CustomerDetail.tsx:190
+#: src/pages/Customers/CustomerEdit.tsx:264
+#: src/pages/Employees/EmployeeCreate.tsx:593
+#: src/pages/Employees/EmployeeDetail.tsx:106
+#: src/pages/Employees/EmployeeEdit.tsx:398
+#: src/pages/Sites/SiteCreate.tsx:398
+#: src/pages/Sites/SiteDetail.tsx:212
+#: src/pages/Sites/SiteEdit.tsx:369
+msgid "Phone"
+msgstr "Telefon"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:118
+msgid "This session has already been used to complete device bootstrap."
+msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx:305
+msgid "Form fields will be rendered based on schema"
+msgstr "Formularfelder werden basierend auf dem Schema gerendert"

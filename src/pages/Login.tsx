@@ -207,7 +207,7 @@ export function Login() {
         return;
       }
 
-      login(response.user);
+      await login(response.user);
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);
@@ -340,7 +340,7 @@ export function Login() {
       }
 
       resetAttempts();
-      login(sessionUser);
+      await login(sessionUser);
       console.info("[SecPal] Passkey login: complete, navigating to /");
       navigate("/");
     } catch (err) {
@@ -409,7 +409,7 @@ export function Login() {
 
       setPendingMfaChallenge(null);
       setMfaCode("");
-      login(sanitizedUser);
+      await login(sanitizedUser);
       navigate("/");
     } catch (err) {
       console.error("MFA verification error:", err);

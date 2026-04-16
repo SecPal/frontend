@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import CryptoJS from "crypto-js";
 import type { User } from "../contexts/auth-context";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -11,8 +10,11 @@ const AUTH_STORAGE_VERSION = 1;
 const AUTH_STORAGE_PBKDF2_ITERATIONS = 5_000;
 const AUTH_STORAGE_SALT_BYTES = 16;
 const AUTH_STORAGE_IV_BYTES = 16;
-const AUTH_STORAGE_KEY_SIZE_WORDS = 16;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
+const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 interface AuthStorageEnvelope {
   scheme: typeof AUTH_STORAGE_SCHEME;
@@ -33,43 +35,197 @@ function getAuthStorageKeyMaterial(): string | null {
   return `secpal-auth-storage:${csrfToken}`;
 }
 
-function splitDerivedKey(derivedKey: CryptoJS.lib.WordArray): {
-  encryptionKey: CryptoJS.lib.WordArray;
-  macKey: CryptoJS.lib.WordArray;
-} {
-  if (AUTH_STORAGE_KEY_SIZE_WORDS % 2 !== 0) {
-    throw new Error("AUTH_STORAGE_KEY_SIZE_WORDS must be even.");
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    const chunk = bytes.subarray(index, index + 0x8000);
+    binary += String.fromCharCode(...chunk);
   }
 
-  if (derivedKey.words.length !== AUTH_STORAGE_KEY_SIZE_WORDS) {
+  return btoa(binary);
+}
+
+function decodeBase64(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return bytes;
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength
+  ) as ArrayBuffer;
+}
+
+async function deriveAuthStorageKeys(
+  keyMaterial: string,
+  salt: Uint8Array
+): Promise<{ encryptionKey: CryptoKey; macKey: CryptoKey }> {
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    textEncoder.encode(keyMaterial),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedKeyBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt: toArrayBuffer(salt),
+      iterations: AUTH_STORAGE_PBKDF2_ITERATIONS,
+    },
+    baseKey,
+    AUTH_STORAGE_DERIVED_KEY_BYTES * 8
+  );
+  const derivedKey = new Uint8Array(derivedKeyBits);
+
+  if (derivedKey.byteLength !== AUTH_STORAGE_DERIVED_KEY_BYTES) {
     throw new Error("Derived auth storage key has an unexpected length.");
   }
 
-  const halfKeySizeWords = AUTH_STORAGE_KEY_SIZE_WORDS / 2;
+  const encryptionKeyBytes = derivedKey.slice(0, AUTH_STORAGE_HALF_KEY_BYTES);
+  const macKeyBytes = derivedKey.slice(AUTH_STORAGE_HALF_KEY_BYTES);
 
-  return {
-    encryptionKey: CryptoJS.lib.WordArray.create(
-      derivedKey.words.slice(0, halfKeySizeWords),
-      AUTH_STORAGE_HALF_KEY_BYTES
+  const [encryptionKey, macKey] = await Promise.all([
+    crypto.subtle.importKey(
+      "raw",
+      encryptionKeyBytes,
+      {
+        name: "AES-CBC",
+        length: AUTH_STORAGE_HALF_KEY_BYTES * 8,
+      },
+      false,
+      ["encrypt", "decrypt"]
     ),
-    macKey: CryptoJS.lib.WordArray.create(
-      derivedKey.words.slice(halfKeySizeWords, AUTH_STORAGE_KEY_SIZE_WORDS),
-      AUTH_STORAGE_HALF_KEY_BYTES
+    crypto.subtle.importKey(
+      "raw",
+      macKeyBytes,
+      {
+        name: "HMAC",
+        hash: "SHA-256",
+      },
+      false,
+      ["sign", "verify"]
     ),
-  };
+  ]);
+
+  return { encryptionKey, macKey };
 }
 
-function deriveAuthStorageKeys(
-  keyMaterial: string,
-  salt: CryptoJS.lib.WordArray
-): { encryptionKey: CryptoJS.lib.WordArray; macKey: CryptoJS.lib.WordArray } {
-  const derivedKey = CryptoJS.PBKDF2(keyMaterial, salt, {
-    hasher: CryptoJS.algo.SHA256,
-    iterations: AUTH_STORAGE_PBKDF2_ITERATIONS,
-    keySize: AUTH_STORAGE_KEY_SIZE_WORDS,
-  });
+function hasStoredUserRecord(storageKey: string): boolean {
+  return localStorage.getItem(storageKey) !== null;
+}
 
-  return splitDerivedKey(derivedKey);
+async function signEnvelopeMac(
+  envelope: Omit<AuthStorageEnvelope, "mac">,
+  macKey: CryptoKey
+): Promise<string> {
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    macKey,
+    textEncoder.encode(buildEnvelopeMacPayload(envelope))
+  );
+
+  return encodeBase64(new Uint8Array(mac));
+}
+
+async function verifyEnvelopeMac(
+  envelope: Omit<AuthStorageEnvelope, "mac">,
+  mac: string,
+  macKey: CryptoKey
+): Promise<boolean> {
+  return await crypto.subtle.verify(
+    "HMAC",
+    macKey,
+    toArrayBuffer(decodeBase64(mac)),
+    textEncoder.encode(buildEnvelopeMacPayload(envelope))
+  );
+}
+
+async function encryptAuthPayload(
+  plaintext: string,
+  encryptionKey: CryptoKey,
+  iv: Uint8Array
+): Promise<Uint8Array> {
+  const ciphertext = await crypto.subtle.encrypt(
+    {
+      name: "AES-CBC",
+      iv: toArrayBuffer(iv),
+    },
+    encryptionKey,
+    textEncoder.encode(plaintext)
+  );
+
+  return new Uint8Array(ciphertext);
+}
+
+async function decryptAuthPayload(
+  ciphertext: Uint8Array,
+  encryptionKey: CryptoKey,
+  iv: Uint8Array
+): Promise<string | null> {
+  try {
+    const plaintext = await crypto.subtle.decrypt(
+      {
+        name: "AES-CBC",
+        iv: toArrayBuffer(iv),
+      },
+      encryptionKey,
+      toArrayBuffer(ciphertext)
+    );
+
+    return textDecoder.decode(plaintext);
+  } catch {
+    return null;
+  }
+}
+
+function createRandomBytes(length: number): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(length));
+}
+
+async function encryptPersistedAuthUser(
+  user: PersistedAuthUser
+): Promise<string | null> {
+  const keyMaterial = getAuthStorageKeyMaterial();
+
+  if (!keyMaterial) {
+    return null;
+  }
+
+  const salt = createRandomBytes(AUTH_STORAGE_SALT_BYTES);
+  const iv = createRandomBytes(AUTH_STORAGE_IV_BYTES);
+  const { encryptionKey, macKey } = await deriveAuthStorageKeys(
+    keyMaterial,
+    salt
+  );
+  const ciphertext = await encryptAuthPayload(
+    JSON.stringify(user),
+    encryptionKey,
+    iv
+  );
+
+  const envelopeWithoutMac = {
+    scheme: AUTH_STORAGE_SCHEME,
+    version: AUTH_STORAGE_VERSION,
+    salt: encodeBase64(salt),
+    iv: encodeBase64(iv),
+    ciphertext: encodeBase64(ciphertext),
+  } satisfies Omit<AuthStorageEnvelope, "mac">;
+
+  return JSON.stringify({
+    ...envelopeWithoutMac,
+    mac: await signEnvelopeMac(envelopeWithoutMac, macKey),
+  });
 }
 
 function buildEnvelopeMacPayload(
@@ -101,42 +257,9 @@ function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
   );
 }
 
-function encryptPersistedAuthUser(user: PersistedAuthUser): string | null {
-  const keyMaterial = getAuthStorageKeyMaterial();
-
-  if (!keyMaterial) {
-    return null;
-  }
-
-  const salt = CryptoJS.lib.WordArray.random(AUTH_STORAGE_SALT_BYTES);
-  const iv = CryptoJS.lib.WordArray.random(AUTH_STORAGE_IV_BYTES);
-  const { encryptionKey, macKey } = deriveAuthStorageKeys(keyMaterial, salt);
-  const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(user), encryptionKey, {
-    iv,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7,
-  }).ciphertext;
-
-  const envelopeWithoutMac = {
-    scheme: AUTH_STORAGE_SCHEME,
-    version: AUTH_STORAGE_VERSION,
-    salt: salt.toString(CryptoJS.enc.Base64),
-    iv: iv.toString(CryptoJS.enc.Base64),
-    ciphertext: ciphertext.toString(CryptoJS.enc.Base64),
-  } satisfies Omit<AuthStorageEnvelope, "mac">;
-
-  return JSON.stringify({
-    ...envelopeWithoutMac,
-    mac: CryptoJS.HmacSHA256(
-      buildEnvelopeMacPayload(envelopeWithoutMac),
-      macKey
-    ).toString(CryptoJS.enc.Base64),
-  } satisfies AuthStorageEnvelope);
-}
-
-function decryptPersistedAuthUser(
+async function decryptPersistedAuthUser(
   storedUser: string
-): PersistedAuthUser | null {
+): Promise<PersistedAuthUser | null> {
   const parsedStoredUser = JSON.parse(storedUser) as unknown;
 
   if (!isAuthStorageEnvelope(parsedStoredUser)) {
@@ -149,34 +272,32 @@ function decryptPersistedAuthUser(
     return null;
   }
 
-  const salt = CryptoJS.enc.Base64.parse(parsedStoredUser.salt);
-  const { encryptionKey, macKey } = deriveAuthStorageKeys(keyMaterial, salt);
-  const expectedMac = CryptoJS.HmacSHA256(
-    buildEnvelopeMacPayload({
-      scheme: parsedStoredUser.scheme,
-      version: parsedStoredUser.version,
-      salt: parsedStoredUser.salt,
-      iv: parsedStoredUser.iv,
-      ciphertext: parsedStoredUser.ciphertext,
-    }),
+  const envelopeWithoutMac = {
+    scheme: parsedStoredUser.scheme,
+    version: parsedStoredUser.version,
+    salt: parsedStoredUser.salt,
+    iv: parsedStoredUser.iv,
+    ciphertext: parsedStoredUser.ciphertext,
+  } satisfies Omit<AuthStorageEnvelope, "mac">;
+  const { encryptionKey, macKey } = await deriveAuthStorageKeys(
+    keyMaterial,
+    decodeBase64(parsedStoredUser.salt)
+  );
+  const isMacValid = await verifyEnvelopeMac(
+    envelopeWithoutMac,
+    parsedStoredUser.mac,
     macKey
-  ).toString(CryptoJS.enc.Base64);
+  );
 
-  if (expectedMac !== parsedStoredUser.mac) {
+  if (!isMacValid) {
     return null;
   }
 
-  const decryptedUser = CryptoJS.AES.decrypt(
-    CryptoJS.lib.CipherParams.create({
-      ciphertext: CryptoJS.enc.Base64.parse(parsedStoredUser.ciphertext),
-    }),
+  const decryptedUser = await decryptAuthPayload(
+    decodeBase64(parsedStoredUser.ciphertext),
     encryptionKey,
-    {
-      iv: CryptoJS.enc.Base64.parse(parsedStoredUser.iv),
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
-    }
-  ).toString(CryptoJS.enc.Utf8);
+    decodeBase64(parsedStoredUser.iv)
+  );
 
   if (!decryptedUser) {
     return null;
@@ -194,8 +315,10 @@ function decryptPersistedAuthUser(
  * httpOnly cookies (Sanctum SPA mode). See issue #246.
  */
 export interface AuthStorage {
-  getUser(): User | null;
-  setUser(user: User): void;
+  hasStoredUser(): boolean;
+  getUserSnapshot(): User | null;
+  getUser(): Promise<User | null>;
+  setUser(user: User): Promise<void>;
   removeUser(): void;
   clear(): void;
   hasLogoutBarrier(): boolean;
@@ -233,7 +356,45 @@ class LocalStorageAuthStorage implements AuthStorage {
     return localStorage.getItem(this.LOGOUT_BARRIER_KEY) !== null;
   }
 
-  getUser(): User | null {
+  hasStoredUser(): boolean {
+    return !this.hasLogoutBarrier() && hasStoredUserRecord(this.USER_KEY);
+  }
+
+  getUserSnapshot(): User | null {
+    if (this.hasLogoutBarrier()) {
+      this.removeUser();
+      return null;
+    }
+
+    const storedUser = localStorage.getItem(this.USER_KEY);
+
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      const parsedStoredUser = JSON.parse(storedUser) as unknown;
+
+      if (isAuthStorageEnvelope(parsedStoredUser)) {
+        return null;
+      }
+
+      const sanitizedUser = sanitizePersistedAuthUser(parsedStoredUser);
+
+      if (!sanitizedUser) {
+        this.removeUser();
+        return null;
+      }
+
+      return sanitizedUser;
+    } catch (error) {
+      console.error("Failed to parse stored user snapshot:", error);
+      this.removeUser();
+      return null;
+    }
+  }
+
+  async getUser(): Promise<User | null> {
     if (this.hasLogoutBarrier()) {
       this.removeUser();
       return null;
@@ -243,7 +404,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (!storedUser) return null;
 
     try {
-      const sanitizedUser = decryptPersistedAuthUser(storedUser);
+      const sanitizedUser = await decryptPersistedAuthUser(storedUser);
 
       if (!sanitizedUser) {
         this.removeUser();
@@ -258,7 +419,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  setUser(user: User): void {
+  async setUser(user: User): Promise<void> {
     const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
@@ -266,7 +427,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
-    const encryptedUser = encryptPersistedAuthUser(sanitizedUser);
+    const encryptedUser = await encryptPersistedAuthUser(sanitizedUser);
 
     if (!encryptedUser) {
       console.warn(

@@ -81,15 +81,22 @@ function isOfflineBootstrapError(error: unknown): boolean {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authTransport = useMemo(() => getAuthTransport(), []);
-  const [user, setUser] = useState<User | null>(() => {
-    return authStorage.getUser();
-  });
-
+  const [user, setUser] = useState<User | null>(() =>
+    authStorage.getUserSnapshot()
+  );
   const [isLoading, setIsLoading] = useState(() => {
-    if (authStorage.getUser() === null) return false;
-    // For browser-session, only revalidate when online at initialization.
-    // A very narrow race (online at mount → offline before effect) is accepted.
-    if (authTransport.kind === "browser-session" && !isOnline()) return false;
+    if (!authStorage.hasStoredUser()) {
+      return false;
+    }
+
+    if (
+      authStorage.getUserSnapshot() !== null &&
+      authTransport.kind === "browser-session" &&
+      !isOnline()
+    ) {
+      return false;
+    }
+
     return true;
   });
   const [bootstrapRecoveryReason, setBootstrapRecoveryReason] =
@@ -155,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const login = useCallback(
-    (newUser: User) => {
+    async (newUser: User) => {
       const sanitizedUser = sanitizeAuthUser(newUser);
 
       if (!sanitizedUser) {
@@ -164,7 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       invalidateBootstrapRevalidation();
-      authStorage.setUser(sanitizedUser);
+      await authStorage.setUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(sanitizedUser);
@@ -183,10 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuthenticatedState]);
 
   const retryBootstrap = useCallback(() => {
-    if (
-      !authStorage.getUser() ||
-      (authTransport.kind === "browser-session" && !isOnline())
-    ) {
+    if (!user || (authTransport.kind === "browser-session" && !isOnline())) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;
@@ -195,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRecoveryReason(null);
     setIsLoading(true);
     setBootstrapRetryKey((currentValue) => currentValue + 1);
-  }, [authTransport.kind]);
+  }, [authTransport.kind, user]);
 
   /**
    * Check if user has a specific role
@@ -237,25 +241,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Bootstrap: revalidate any stored session on app load/refresh when online.
   // Uses getCurrentUser() to confirm the session and clear it if invalid.
   useEffect(() => {
-    syncOfflineAuthState(authStorage.getUser() !== null);
-  }, [syncOfflineAuthState]);
-
-  useEffect(() => {
-    const storedUser = authStorage.getUser();
-
-    if (!storedUser) {
-      return;
-    }
-
-    if (authTransport.kind === "browser-session" && !isOnline()) {
-      return;
-    }
-
     let isActive = true;
     let didTimeout = false;
     let timeoutId: number | null = null;
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
+    const snapshotUser = authStorage.getUserSnapshot();
+
+    if (
+      snapshotUser &&
+      authTransport.kind === "browser-session" &&
+      !isOnline()
+    ) {
+      syncOfflineAuthState(true);
+      return;
+    }
 
     const startBootstrapRevalidation = () => {
       timeoutId = window.setTimeout(() => {
@@ -277,7 +277,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       void authTransport
         .getCurrentUser()
-        .then((currentUser) => {
+        .then(async (currentUser) => {
           if (timeoutId !== null) {
             window.clearTimeout(timeoutId);
           }
@@ -290,7 +290,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          authStorage.setUser(currentUser);
+          await authStorage.setUser(currentUser);
+
+          if (hasLogoutBarrierRef.current) {
+            authStorage.removeUser();
+          }
+
+          if (
+            !isActive ||
+            bootstrapRequestVersionRef.current !== requestVersion ||
+            hasLogoutBarrierRef.current
+          ) {
+            return;
+          }
+
           hasLogoutBarrierRef.current = false;
           setBootstrapRecoveryReason(null);
           setUser(currentUser);
@@ -329,26 +342,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    if (authTransport.kind === "browser-session") {
-      startBootstrapRevalidation();
-    } else {
-      void authTransport.isNetworkAvailable().then((networkAvailable) => {
-        if (
-          !isActive ||
-          bootstrapRequestVersionRef.current !== requestVersion ||
-          hasLogoutBarrierRef.current
-        ) {
-          return;
-        }
+    const restoreAndRevalidate = async () => {
+      const storedUser = await authStorage.getUser();
 
-        if (!networkAvailable) {
+      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
+        return;
+      }
+
+      if (!storedUser) {
+        setBootstrapRecoveryReason(null);
+        setUser(null);
+        setIsLoading(false);
+        syncOfflineAuthState(false);
+        return;
+      }
+
+      hasLogoutBarrierRef.current = false;
+      setBootstrapRecoveryReason(null);
+      setUser(storedUser);
+      syncOfflineAuthState(true);
+
+      if (authTransport.kind === "browser-session") {
+        if (!isOnline()) {
           setIsLoading(false);
           return;
         }
 
         startBootstrapRevalidation();
-      });
-    }
+        return;
+      }
+
+      const networkAvailable = await authTransport.isNetworkAvailable();
+
+      if (
+        !isActive ||
+        bootstrapRequestVersionRef.current !== requestVersion ||
+        hasLogoutBarrierRef.current
+      ) {
+        return;
+      }
+
+      if (!networkAvailable) {
+        setIsLoading(false);
+        return;
+      }
+
+      startBootstrapRevalidation();
+    };
+
+    void restoreAndRevalidate().catch((error: unknown) => {
+      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
+        return;
+      }
+
+      console.error("Failed to restore persisted auth state:", error);
+      clearAuthenticatedState(false);
+    });
 
     return () => {
       isActive = false;
@@ -374,24 +423,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      try {
-        const nextUser = authStorage.getUser();
+      void (async () => {
+        try {
+          const nextUser = await authStorage.getUser();
 
-        if (!nextUser) {
+          // Re-check the in-memory barrier after the async decrypt because
+          // an inflight setUser() from bootstrap may have already cleared the
+          // localStorage barrier (via clearLogoutBarrier()) before we got
+          // here.
+          if (hasLogoutBarrierRef.current) {
+            authStorage.removeUser();
+            return;
+          }
+
+          if (!nextUser) {
+            clearAuthenticatedState(true);
+            return;
+          }
+
+          hasLogoutBarrierRef.current = false;
+          setBootstrapRecoveryReason(null);
+          invalidateBootstrapRevalidation();
+          setUser(nextUser);
+          setIsLoading(false);
+          syncOfflineAuthState(true);
+        } catch (error) {
+          console.error("Failed to parse cross-tab auth state:", error);
           clearAuthenticatedState(true);
-          return;
         }
-
-        hasLogoutBarrierRef.current = false;
-        setBootstrapRecoveryReason(null);
-        invalidateBootstrapRevalidation();
-        setUser(nextUser);
-        setIsLoading(false);
-        syncOfflineAuthState(true);
-      } catch (error) {
-        console.error("Failed to parse cross-tab auth state:", error);
-        clearAuthenticatedState(true);
-      }
+      })();
     };
 
     window.addEventListener("storage", handleStorage);
@@ -411,22 +471,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const storedUser = authStorage.getUser();
+      void (async () => {
+        const storedUser = await authStorage.getUser();
 
-      if (!storedUser) {
-        if (user) {
-          clearAuthenticatedState(false);
+        // Re-check the in-memory barrier after the async decrypt.
+        if (hasLogoutBarrierRef.current) {
+          authStorage.removeUser();
+          return;
         }
 
-        return;
-      }
+        if (!storedUser) {
+          if (user) {
+            clearAuthenticatedState(false);
+          }
 
-      hasLogoutBarrierRef.current = false;
-      setBootstrapRecoveryReason(null);
-      invalidateBootstrapRevalidation();
-      setUser(storedUser);
-      setIsLoading(false);
-      syncOfflineAuthState(true);
+          return;
+        }
+
+        hasLogoutBarrierRef.current = false;
+        setBootstrapRecoveryReason(null);
+        invalidateBootstrapRevalidation();
+        setUser(storedUser);
+        setIsLoading(false);
+        syncOfflineAuthState(true);
+      })();
     };
 
     window.addEventListener("pageshow", reconcileRestoredPageState);
@@ -445,16 +513,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // This handles 401 responses from API calls when online.
   useEffect(() => {
     const unsubscribe = sessionEvents.on("session:expired", () => {
-      // Check authStorage instead of user state to avoid adding user as dependency.
-      // Adding user would cause re-subscription on every user change, which is unnecessary.
-      // authStorage and user state are always in sync via login/logout functions.
-      if (authStorage.getUser()) {
+      // user and authStorage are kept in sync via login/logout/bootstrap flows.
+      if (user) {
         clearAuthenticatedState(true);
       }
     });
 
     return unsubscribe;
-  }, [clearAuthenticatedState]);
+  }, [clearAuthenticatedState, user]);
 
   const value = useMemo(
     () => ({
