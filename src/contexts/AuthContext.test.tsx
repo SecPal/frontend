@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
 
@@ -48,6 +48,8 @@ function PermissionTestComponent({
 describe("AuthContext", () => {
   beforeEach(() => {
     localStorage.clear();
+    document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+    document.cookie = "XSRF-TOKEN=test-csrf-token;path=/";
   });
 
   describe("hasRole", () => {
@@ -324,7 +326,7 @@ describe("AuthContext", () => {
   });
 
   describe("login updates permission state", () => {
-    it("updates hasOrganizationalAccess after login", () => {
+    it("updates hasOrganizationalAccess after login", async () => {
       const LoginComponent = () => {
         const auth = useAuth();
         return (
@@ -360,7 +362,9 @@ describe("AuthContext", () => {
         screen.getByText("Login").click();
       });
 
-      expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
+      });
     });
   });
 });

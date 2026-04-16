@@ -11,7 +11,6 @@ import {
   sanitizePersistedAuthUser,
   type PersistedAuthUser,
 } from "./services/authState";
-import { authStorage } from "./services/storage";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -54,7 +53,7 @@ function seedPersistedAuthUser(user: Record<string, unknown>) {
   }
 
   seededAuthUser = persistedUser;
-  authStorage.setUser(persistedUser);
+  localStorage.setItem("auth_user", JSON.stringify(persistedUser));
 
   return persistedUser;
 }

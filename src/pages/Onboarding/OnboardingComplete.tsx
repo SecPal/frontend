@@ -344,7 +344,7 @@ export function OnboardingComplete() {
       const response = await completeOnboarding(data);
 
       // Store the new authenticated session user data
-      login({
+      await login({
         id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,

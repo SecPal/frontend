@@ -33,6 +33,11 @@ vi.mock("../lib/serviceWorkerSession", () => ({
   syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
 }));
 
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
 function createDeferredPromise<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -45,9 +50,9 @@ function createDeferredPromise<T>() {
   return { promise, resolve, reject };
 }
 
-function expectEncryptedStoredUser(
+async function expectEncryptedStoredUser(
   expectedUser: Record<string, unknown>
-): void {
+): Promise<void> {
   const storedUser = localStorage.getItem("auth_user");
 
   expect(storedUser).not.toBeNull();
@@ -57,13 +62,17 @@ function expectEncryptedStoredUser(
   expect(parsedStoredUser).toEqual(expect.any(Object));
   expect(parsedStoredUser).not.toBeNull();
   expect(parsedStoredUser).not.toEqual(expect.objectContaining(expectedUser));
-  expect(authStorage.getUser()).toEqual(expectedUser);
+  await expect(authStorage.getUser()).resolves.toEqual(expectedUser);
 }
 
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    setCsrfTokenCookie("test-csrf-token");
     vi.clearAllMocks();
+    mockGetCurrentUser.mockReset();
+    vi.mocked(syncOfflineSessionAccess).mockReset();
+    vi.mocked(clearSensitiveClientState).mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
@@ -72,6 +81,7 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
+    vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
 
@@ -124,7 +134,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toEqual(expectedRevalidatedUser);
-    expectEncryptedStoredUser(expectedRevalidatedUser);
+    await expectEncryptedStoredUser(expectedRevalidatedUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
@@ -176,7 +186,7 @@ describe("useAuth", () => {
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
-    mockGetCurrentUser.mockRejectedValueOnce(
+    mockGetCurrentUser.mockRejectedValue(
       Object.assign(new Error("Unauthorized"), {
         code: "HTTP_401",
       })
@@ -207,7 +217,7 @@ describe("useAuth", () => {
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
-    mockGetCurrentUser.mockRejectedValueOnce(new Error("Network down"));
+    mockGetCurrentUser.mockRejectedValue(new Error("Network down"));
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -235,7 +245,7 @@ describe("useAuth", () => {
     };
 
     localStorage.setItem("auth_user", JSON.stringify(mockUser));
-    mockGetCurrentUser.mockRejectedValueOnce(
+    mockGetCurrentUser.mockRejectedValue(
       Object.assign(
         new Error("Android auth requires an active internet connection"),
         {
@@ -318,13 +328,20 @@ describe("useAuth", () => {
 
     try {
       localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
+      mockGetCurrentUser.mockImplementation(() => deferred.promise);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       });
 
       expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
 
       await act(async () => {
         vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
@@ -377,7 +394,7 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("login stores user", () => {
+  it("login stores user", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -389,13 +406,13 @@ describe("useAuth", () => {
       emailVerified: false,
     };
 
-    act(() => {
-      result.current.login(mockUser);
+    await act(async () => {
+      await result.current.login(mockUser);
     });
 
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
-    expectEncryptedStoredUser(mockUser);
+    await expectEncryptedStoredUser(mockUser);
   });
 
   it("logout clears user", async () => {
@@ -442,15 +459,19 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
   });
 
-  it("updates isAuthenticated when user changes", () => {
+  it("updates isAuthenticated when user changes", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
     expect(result.current.isAuthenticated).toBe(false);
 
-    act(() => {
-      result.current.login({ id: "1", name: "User", email: "u@e.com" });
+    await act(async () => {
+      await result.current.login({
+        id: "1",
+        name: "User",
+        email: "u@e.com",
+      });
     });
 
     expect(result.current.isAuthenticated).toBe(true);

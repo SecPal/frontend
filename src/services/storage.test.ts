@@ -15,7 +15,7 @@ describe("authStorage", () => {
     setCsrfTokenCookie("test-csrf-token");
   });
 
-  it("encrypts persisted auth state before writing to localStorage", () => {
+  it("encrypts persisted auth state before writing to localStorage", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -25,7 +25,7 @@ describe("authStorage", () => {
       onboardingWorkflowStatus: "submitted_for_review" as const,
     };
 
-    authStorage.setUser(user);
+    await authStorage.setUser(user);
 
     const storedUser = localStorage.getItem("auth_user");
 
@@ -49,10 +49,10 @@ describe("authStorage", () => {
     expect(parsedStoredUser.iv).not.toBe("");
     expect(parsedStoredUser.ciphertext).not.toBe("");
     expect(parsedStoredUser.mac).not.toBe("");
-    expect(authStorage.getUser()).toEqual(user);
+    await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 
-  it("clears encrypted auth state when the session-derived key material changes", () => {
+  it("clears encrypted auth state when the session-derived key material changes", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -60,14 +60,14 @@ describe("authStorage", () => {
       emailVerified: false,
     };
 
-    authStorage.setUser(user);
+    await authStorage.setUser(user);
     setCsrfTokenCookie("rotated-csrf-token");
 
-    expect(authStorage.getUser()).toBeNull();
+    await expect(authStorage.getUser()).resolves.toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("keeps reading legacy cleartext persisted auth state for compatibility", () => {
+  it("keeps reading legacy cleartext persisted auth state for compatibility", async () => {
     const legacyUser = {
       id: "1",
       name: "Legacy User",
@@ -77,6 +77,6 @@ describe("authStorage", () => {
 
     localStorage.setItem("auth_user", JSON.stringify(legacyUser));
 
-    expect(authStorage.getUser()).toEqual(legacyUser);
+    await expect(authStorage.getUser()).resolves.toEqual(legacyUser);
   });
 });
