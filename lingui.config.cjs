@@ -13,4 +13,10 @@ module.exports = {
     },
   ],
   format: "po",
+  // Use messageId ordering to guarantee a deterministic catalog sort.
+  // The default "message" ordering is unstable when two entries share the
+  // same translated text (e.g. "Cancel" appears as both a generic button
+  // label and the msgstr for the "login.mfa.cancel" explicit ID), causing
+  // the PO file to oscillate between two orderings on successive runs.
+  orderBy: "messageId",
 };

@@ -427,6 +427,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const nextUser = await authStorage.getUser();
 
+          // Re-check the in-memory barrier after the async decrypt because
+          // an inflight setUser() from bootstrap may have already cleared the
+          // localStorage barrier (via clearLogoutBarrier()) before we got
+          // here.
+          if (hasLogoutBarrierRef.current) {
+            authStorage.removeUser();
+            return;
+          }
+
           if (!nextUser) {
             clearAuthenticatedState(true);
             return;
@@ -464,6 +473,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       void (async () => {
         const storedUser = await authStorage.getUser();
+
+        // Re-check the in-memory barrier after the async decrypt.
+        if (hasLogoutBarrierRef.current) {
+          authStorage.removeUser();
+          return;
+        }
 
         if (!storedUser) {
           if (user) {
