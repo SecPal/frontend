@@ -81,7 +81,9 @@ function isOfflineBootstrapError(error: unknown): boolean {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authTransport = useMemo(() => getAuthTransport(), []);
-  const [user, setUser] = useState<User | null>(() => authStorage.getUserSnapshot());
+  const [user, setUser] = useState<User | null>(() =>
+    authStorage.getUserSnapshot()
+  );
   const [isLoading, setIsLoading] = useState(() => {
     if (!authStorage.hasStoredUser()) {
       return false;
@@ -188,10 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuthenticatedState]);
 
   const retryBootstrap = useCallback(() => {
-    if (
-      !user ||
-      (authTransport.kind === "browser-session" && !isOnline())
-    ) {
+    if (!user || (authTransport.kind === "browser-session" && !isOnline())) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;
@@ -346,10 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const restoreAndRevalidate = async () => {
       const storedUser = await authStorage.getUser();
 
-      if (
-        !isActive ||
-        bootstrapRequestVersionRef.current !== requestVersion
-      ) {
+      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
         return;
       }
 
@@ -395,10 +391,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     void restoreAndRevalidate().catch((error: unknown) => {
-      if (
-        !isActive ||
-        bootstrapRequestVersionRef.current !== requestVersion
-      ) {
+      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
         return;
       }
 
