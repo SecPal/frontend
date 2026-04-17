@@ -272,7 +272,7 @@ describe("Login", () => {
       )
     ).rejects.toThrow("Passkeys are not available in this browser.");
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -700,6 +700,9 @@ describe("Login", () => {
     expect(
       await screen.findByText(/passkey sign-in timed out/i)
     ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    ).toBeInTheDocument();
   });
 
   it("shows a verifying prompt while the passkey verify request is in progress", async () => {
@@ -768,6 +771,10 @@ describe("Login", () => {
         screen.queryByRole("button", { name: /verifying passkey/i })
       ).not.toBeInTheDocument();
     });
+    const passkeyButton = screen.getByRole("button", {
+      name: /sign in with passkey/i,
+    });
+    expect(passkeyButton).toHaveAttribute("aria-busy", "false");
   });
 
   it("confirms the session with getCurrentUser after a successful passkey login", async () => {
@@ -951,7 +958,7 @@ describe("Login", () => {
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockResolvedValueOnce({
       challenge: {
@@ -1027,7 +1034,7 @@ describe("Login", () => {
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
       user: createAuthUser(),
       authentication: {
@@ -1086,7 +1093,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -1126,7 +1133,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -1160,7 +1167,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
