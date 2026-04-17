@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/pages/Employees/EmployeeDetail.tsx:509
+#: src/pages/Employees/EmployeeDetail.tsx:91
 msgid "Full Name"
 msgstr "Full Name"
 
@@ -42,7 +42,7 @@ msgid "Activity Information"
 msgstr "Activity Information"
 
 #: src/pages/Employees/EmployeeCreate.tsx:639
-#: src/pages/Employees/EmployeeDetail.tsx:560
+#: src/pages/Employees/EmployeeDetail.tsx:142
 #: src/pages/Employees/EmployeeEdit.tsx:447
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
@@ -73,11 +73,11 @@ msgstr "Adding passkey..."
 msgid "Type"
 msgstr "Type"
 
-#: src/pages/Employees/EmployeeDetail.tsx:323
+#: src/pages/Employees/EmployeeBwrPanel.tsx:303
 msgid "Latest export"
 msgstr "Latest export"
 
-#: src/pages/Employees/EmployeeDetail.tsx:686
+#: src/pages/Employees/EmployeeDetail.tsx:265
 msgid "Certificate:"
 msgstr "Certificate:"
 
@@ -109,7 +109,7 @@ msgstr "Still loading your secure session"
 msgid "Valid Until"
 msgstr "Valid Until"
 
-#: src/pages/Employees/EmployeeDetail.tsx:615
+#: src/pages/Employees/EmployeeDetail.tsx:197
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
 
@@ -213,16 +213,16 @@ msgstr "Configure which rank range this user can view. Leave empty or set to 0 t
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Editing organizational units is not possible while offline. Please reconnect to make changes."
 
-#: src/pages/Employees/EmployeeDetail.tsx:933
+#: src/pages/Employees/EmployeeDetail.tsx:508
 #: src/pages/Employees/EmployeeEdit.tsx:296
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
-#: src/pages/Employees/EmployeeDetail.tsx:230
+#: src/pages/Employees/EmployeeBwrPanel.tsx:210
 msgid "BWR status updated."
 msgstr "BWR status updated."
 
-#: src/pages/Employees/EmployeeDetail.tsx:483
+#: src/pages/Employees/EmployeeDetail.tsx:68
 #: src/pages/Employees/EmployeeList.tsx:45
 #: src/pages/Employees/EmployeeList.tsx:238
 #: src/pages/Employees/EmployeeStatusOptions.tsx:14
@@ -277,7 +277,7 @@ msgstr "You can inspect Android enrollment status, but write permission is requi
 msgid "Department"
 msgstr "Department"
 
-#: src/pages/Employees/EmployeeDetail.tsx:504
+#: src/pages/Employees/EmployeeDetail.tsx:86
 msgid "Employee Number"
 msgstr "Employee Number"
 
@@ -329,7 +329,7 @@ msgstr "Search customers..."
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Invalid combination: No employees will be visible with this range."
 
-#: src/pages/Employees/EmployeeDetail.tsx:1032
+#: src/pages/Employees/EmployeeDetail.tsx:601
 msgid "Qualifications"
 msgstr "Qualifications"
 
@@ -358,11 +358,11 @@ msgstr "Last Name:"
 msgid "Select new parent"
 msgstr "Select new parent"
 
-#: src/pages/Employees/EmployeeDetail.tsx:661
+#: src/pages/Employees/EmployeeDetail.tsx:240
 msgid "Loading qualifications..."
 msgstr "Loading qualifications..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:459
+#: src/pages/Employees/EmployeeDetail.tsx:47
 msgid "Failed"
 msgstr "Failed"
 
@@ -390,7 +390,7 @@ msgid "A new version of SecPal is available."
 msgstr "A new version of SecPal is available."
 
 #: src/pages/Employees/EmployeeCreate.tsx:522
-#: src/pages/Employees/EmployeeDetail.tsx:551
+#: src/pages/Employees/EmployeeDetail.tsx:133
 #: src/pages/Employees/EmployeeEdit.tsx:358
 msgid "Date of Birth"
 msgstr "Date of Birth"
@@ -460,7 +460,7 @@ msgstr "Security Alerts"
 msgid "Password"
 msgstr "Password"
 
-#: src/pages/Employees/EmployeeDetail.tsx:694
+#: src/pages/Employees/EmployeeDetail.tsx:273
 msgid "Expires:"
 msgstr "Expires:"
 
@@ -482,7 +482,7 @@ msgstr "Set up MFA"
 msgid "Employee #"
 msgstr "Employee #"
 
-#: src/pages/Employees/EmployeeDetail.tsx:247
+#: src/pages/Employees/EmployeeBwrPanel.tsx:227
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
@@ -506,7 +506,7 @@ msgstr "App updates and maintenance notifications"
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 
-#: src/pages/Employees/EmployeeDetail.tsx:374
+#: src/pages/Employees/EmployeeBwrPanel.tsx:354
 msgid "Generate BWR Export"
 msgstr "Generate BWR Export"
 
@@ -621,7 +621,7 @@ msgstr "Full Time"
 msgid "My profile"
 msgstr "My profile"
 
-#: src/pages/Employees/EmployeeDetail.tsx:195
+#: src/pages/Employees/EmployeeBwrPanel.tsx:175
 msgid "BWR export generated. Download the file below."
 msgstr "BWR export generated. Download the file below."
 
@@ -638,7 +638,7 @@ msgid "You'll now receive important updates from SecPal"
 msgstr "You'll now receive important updates from SecPal"
 
 #: src/pages/Employees/EmployeeCreate.tsx:766
-#: src/pages/Employees/EmployeeDetail.tsx:529
+#: src/pages/Employees/EmployeeDetail.tsx:111
 #: src/pages/Employees/EmployeeEdit.tsx:538
 #: src/pages/Employees/EmployeeList.tsx:300
 msgid "ML"
@@ -652,11 +652,11 @@ msgstr "This session expired before setup completed. Create a new session to con
 msgid "Regenerate codes"
 msgstr "Regenerate codes"
 
-#: src/pages/Employees/EmployeeDetail.tsx:746
+#: src/pages/Employees/EmployeeDetail.tsx:322
 msgid "No documents uploaded"
 msgstr "No documents uploaded"
 
-#: src/pages/Employees/EmployeeDetail.tsx:250
+#: src/pages/Employees/EmployeeBwrPanel.tsx:230
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 
@@ -712,7 +712,7 @@ msgstr "Completing Setup..."
 msgid "Organizational units are still loading. Please wait a moment and try again."
 msgstr "Organizational units are still loading. Please wait a moment and try again."
 
-#: src/pages/Employees/EmployeeDetail.tsx:80
+#: src/pages/Employees/EmployeeBwrPanel.tsx:60
 msgid "Not registered"
 msgstr "Not registered"
 
@@ -741,7 +741,7 @@ msgstr "Previous Hash"
 msgid "Step 3: Self-access control"
 msgstr "Step 3: Self-access control"
 
-#: src/pages/Employees/EmployeeDetail.tsx:347
+#: src/pages/Employees/EmployeeBwrPanel.tsx:327
 msgid "Export Format"
 msgstr "Export Format"
 
@@ -753,7 +753,7 @@ msgstr "Step 1: Configure viewing permissions"
 msgid "Maximum Viewable Rank"
 msgstr "Maximum Viewable Rank"
 
-#: src/pages/Employees/EmployeeDetail.tsx:363
+#: src/pages/Employees/EmployeeBwrPanel.tsx:343
 msgid "Generate the initial export to move this employee into the pending BWR state."
 msgstr "Generate the initial export to move this employee into the pending BWR state."
 
@@ -806,7 +806,7 @@ msgstr "Enable Notifications"
 msgid "Send verification email again"
 msgstr "Send verification email again"
 
-#: src/pages/Employees/EmployeeDetail.tsx:940
+#: src/pages/Employees/EmployeeDetail.tsx:515
 #: src/pages/Employees/EmployeeEdit.tsx:301
 msgid "Back to Employees"
 msgstr "Back to Employees"
@@ -827,8 +827,8 @@ msgstr "Done"
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:260
-#: src/pages/Employees/EmployeeDetail.tsx:383
+#: src/pages/Employees/EmployeeBwrPanel.tsx:240
+#: src/pages/Employees/EmployeeBwrPanel.tsx:363
 msgid "BWR Status"
 msgstr "BWR Status"
 
@@ -860,7 +860,7 @@ msgstr "Contact Person"
 msgid "Verifying..."
 msgstr "Verifying..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:1045
+#: src/pages/Employees/EmployeeDetail.tsx:611
 msgid "Documents"
 msgstr "Documents"
 
@@ -910,7 +910,7 @@ msgstr "Coordinates"
 
 #: src/components/OrganizationalUnitTree.tsx:347
 #: src/pages/Customers/CustomerDetail.tsx:238
-#: src/pages/Employees/EmployeeDetail.tsx:999
+#: src/pages/Employees/EmployeeDetail.tsx:574
 #: src/pages/Organization/OrganizationPage.tsx:363
 #: src/pages/Sites/SiteDetail.tsx:339
 msgid "Edit"
@@ -933,8 +933,8 @@ msgstr "Bootstrap completed"
 #: src/pages/Customers/CustomerEdit.tsx:297
 #: src/pages/Customers/CustomersPage.tsx:143
 #: src/pages/Customers/CustomersPage.tsx:209
-#: src/pages/Employees/EmployeeDetail.tsx:84
-#: src/pages/Employees/EmployeeDetail.tsx:482
+#: src/pages/Employees/EmployeeBwrPanel.tsx:64
+#: src/pages/Employees/EmployeeDetail.tsx:67
 #: src/pages/Employees/EmployeeList.tsx:44
 #: src/pages/Employees/EmployeeList.tsx:237
 #: src/pages/Employees/EmployeeStatusOptions.tsx:13
@@ -978,7 +978,7 @@ msgstr "Loading activity logs..."
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:987
+#: src/pages/Employees/EmployeeDetail.tsx:562
 msgid "Activate"
 msgstr "Activate"
 
@@ -991,7 +991,7 @@ msgstr "Select customer..."
 msgid "My Organization"
 msgstr "My Organization"
 
-#: src/pages/Employees/EmployeeDetail.tsx:86
+#: src/pages/Employees/EmployeeBwrPanel.tsx:66
 msgid "Suspended"
 msgstr "Suspended"
 
@@ -1017,7 +1017,7 @@ msgstr "Encrypting files..."
 msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
 msgstr "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
 
-#: src/pages/Employees/EmployeeDetail.tsx:982
+#: src/pages/Employees/EmployeeDetail.tsx:557
 msgid "Confirm Onboarding"
 msgstr "Confirm Onboarding"
 
@@ -1052,7 +1052,7 @@ msgstr "Employees"
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:597
+#: src/pages/Employees/EmployeeDetail.tsx:179
 msgid "Invitation Requested"
 msgstr "Invitation Requested"
 
@@ -1078,7 +1078,7 @@ msgstr "Not enabled"
 msgid "Activity Logs"
 msgstr "Activity Logs"
 
-#: src/pages/Employees/EmployeeDetail.tsx:455
+#: src/pages/Employees/EmployeeDetail.tsx:43
 msgid "Sent"
 msgstr "Sent"
 
@@ -1168,7 +1168,7 @@ msgstr "Back to Sites"
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 msgstr "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 
-#: src/pages/Employees/EmployeeDetail.tsx:274
+#: src/pages/Employees/EmployeeBwrPanel.tsx:254
 msgid "BWR Submission Date"
 msgstr "BWR Submission Date"
 
@@ -1231,7 +1231,7 @@ msgstr "Create Site"
 msgid "Step 2: Configure assignment permissions"
 msgstr "Step 2: Configure assignment permissions"
 
-#: src/pages/Employees/EmployeeDetail.tsx:331
+#: src/pages/Employees/EmployeeBwrPanel.tsx:311
 msgid "Download Latest Export"
 msgstr "Download Latest Export"
 
@@ -1242,7 +1242,7 @@ msgstr "Download Latest Export"
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 
-#: src/pages/Employees/EmployeeDetail.tsx:457
+#: src/pages/Employees/EmployeeDetail.tsx:45
 msgid "Created, but not sent"
 msgstr "Created, but not sent"
 
@@ -1264,7 +1264,7 @@ msgstr "SecPal signed you in as {email}, but this account cannot access the prot
 msgid "Contact"
 msgstr "Contact"
 
-#: src/pages/Employees/EmployeeDetail.tsx:480
+#: src/pages/Employees/EmployeeDetail.tsx:65
 #: src/pages/Employees/EmployeeList.tsx:42
 #: src/pages/Employees/EmployeeList.tsx:235
 #: src/pages/Employees/EmployeeStatusOptions.tsx:11
@@ -1338,18 +1338,18 @@ msgstr "Try again"
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
-#: src/pages/Employees/EmployeeDetail.tsx:481
+#: src/pages/Employees/EmployeeDetail.tsx:66
 #: src/pages/Employees/EmployeeList.tsx:43
 #: src/pages/Employees/EmployeeList.tsx:236
 #: src/pages/Employees/EmployeeStatusOptions.tsx:12
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
 
-#: src/pages/Employees/EmployeeDetail.tsx:994
+#: src/pages/Employees/EmployeeDetail.tsx:569
 msgid "Terminate"
 msgstr "Terminate"
 
-#: src/pages/Employees/EmployeeDetail.tsx:372
+#: src/pages/Employees/EmployeeBwrPanel.tsx:352
 msgid "Generating BWR Export..."
 msgstr "Generating BWR Export..."
 
@@ -1578,7 +1578,7 @@ msgstr "Passwords do not match"
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "These codes are shown only once. Store them securely before closing this dialog."
 
-#: src/pages/Employees/EmployeeDetail.tsx:461
+#: src/pages/Employees/EmployeeDetail.tsx:49
 msgid "Not requested"
 msgstr "Not requested"
 
@@ -1600,7 +1600,7 @@ msgid "Unknown channel"
 msgstr "Unknown channel"
 
 #: src/pages/Employees/EmployeeCreate.tsx:778
-#: src/pages/Employees/EmployeeDetail.tsx:533
+#: src/pages/Employees/EmployeeDetail.tsx:115
 #: src/pages/Employees/EmployeeEdit.tsx:549
 msgid "No management position"
 msgstr "No management position"
@@ -1646,11 +1646,11 @@ msgstr "No action available"
 msgid "Please try again in about {retryAfterMinutes} minutes."
 msgstr "Please try again in about {retryAfterMinutes} minutes."
 
-#: src/pages/Employees/EmployeeDetail.tsx:769
+#: src/pages/Employees/EmployeeDetail.tsx:345
 msgid "Download"
 msgstr "Download"
 
-#: src/pages/Employees/EmployeeDetail.tsx:284
+#: src/pages/Employees/EmployeeBwrPanel.tsx:264
 msgid "BWR Registered At"
 msgstr "BWR Registered At"
 
@@ -1658,7 +1658,7 @@ msgstr "BWR Registered At"
 msgid "All"
 msgstr "All"
 
-#: src/pages/Employees/EmployeeDetail.tsx:606
+#: src/pages/Employees/EmployeeDetail.tsx:188
 msgid "Invitation Mail Sent"
 msgstr "Invitation Mail Sent"
 
@@ -1704,7 +1704,7 @@ msgstr "Choose a new parent unit or make this a root unit."
 msgid "Description"
 msgstr "Description"
 
-#: src/pages/Employees/EmployeeDetail.tsx:338
+#: src/pages/Employees/EmployeeBwrPanel.tsx:318
 msgid "You can inspect BWR data, but write permission is required to manage it."
 msgstr "You can inspect BWR data, but write permission is required to manage it."
 
@@ -1722,7 +1722,7 @@ msgstr "Date/Time"
 #: src/pages/Customers/CustomerDetail.tsx:174
 #: src/pages/Customers/CustomerEdit.tsx:251
 #: src/pages/Employees/EmployeeCreate.tsx:570
-#: src/pages/Employees/EmployeeDetail.tsx:514
+#: src/pages/Employees/EmployeeDetail.tsx:96
 #: src/pages/Employees/EmployeeEdit.tsx:399
 #: src/pages/Profile/ProfilePage.tsx:67
 #: src/pages/Sites/SiteCreate.tsx:385
@@ -1802,7 +1802,7 @@ msgid "Temporary"
 msgstr "Temporary"
 
 #: src/pages/Employees/EmployeeCreate.tsx:616
-#: src/pages/Employees/EmployeeDetail.tsx:539
+#: src/pages/Employees/EmployeeDetail.tsx:121
 #: src/pages/Employees/EmployeeEdit.tsx:434
 #: src/pages/Employees/EmployeeList.tsx:267
 #: src/pages/Sites/SiteDetail.tsx:228
@@ -1826,7 +1826,7 @@ msgstr "Authentication"
 #: src/pages/ActivityLog/ActivityLogList.tsx:423
 #: src/pages/ActivityLog/ActivityLogList.tsx:470
 #: src/pages/Employees/EmployeeCreate.tsx:693
-#: src/pages/Employees/EmployeeDetail.tsx:569
+#: src/pages/Employees/EmployeeDetail.tsx:151
 #: src/pages/Employees/EmployeeEdit.tsx:488
 #: src/pages/Employees/EmployeeList.tsx:207
 #: src/pages/Sites/SiteCreate.tsx:219
@@ -1852,7 +1852,7 @@ msgstr "Permanent"
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
 
-#: src/pages/Employees/EmployeeDetail.tsx:484
+#: src/pages/Employees/EmployeeDetail.tsx:69
 #: src/pages/Employees/EmployeeList.tsx:46
 #: src/pages/Employees/EmployeeList.tsx:239
 #: src/pages/Employees/EmployeeStatusOptions.tsx:15
@@ -1904,7 +1904,7 @@ msgstr "Update now"
 msgid "The new employee will receive an onboarding email immediately after creation."
 msgstr "The new employee will receive an onboarding email immediately after creation."
 
-#: src/pages/Employees/EmployeeDetail.tsx:669
+#: src/pages/Employees/EmployeeDetail.tsx:248
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
@@ -1912,7 +1912,7 @@ msgstr "No qualifications assigned"
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/Employees/EmployeeDetail.tsx:437
+#: src/pages/Employees/EmployeeBwrPanel.tsx:417
 msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
 
@@ -2062,7 +2062,7 @@ msgstr "From Date"
 msgid "Search sites..."
 msgstr "Search sites..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:524
+#: src/pages/Employees/EmployeeDetail.tsx:106
 msgid "Management Level"
 msgstr "Management Level"
 
@@ -2144,7 +2144,7 @@ msgstr "Minimize offline notice"
 #: src/pages/Customers/CustomersPage.tsx:133
 #: src/pages/Customers/CustomersPage.tsx:186
 #: src/pages/Employees/EmployeeCreate.tsx:816
-#: src/pages/Employees/EmployeeDetail.tsx:544
+#: src/pages/Employees/EmployeeDetail.tsx:126
 #: src/pages/Employees/EmployeeEdit.tsx:573
 #: src/pages/Employees/EmployeeList.tsx:221
 #: src/pages/Employees/EmployeeList.tsx:270
@@ -2154,7 +2154,7 @@ msgstr "Minimize offline notice"
 msgid "Status"
 msgstr "Status"
 
-#: src/pages/Employees/EmployeeDetail.tsx:82
+#: src/pages/Employees/EmployeeBwrPanel.tsx:62
 msgid "Pending"
 msgstr "Pending"
 
@@ -2257,8 +2257,8 @@ msgstr "Last Name"
 msgid "Hash Chain (Link)"
 msgstr "Hash Chain (Link)"
 
-#: src/pages/Employees/EmployeeDetail.tsx:296
-#: src/pages/Employees/EmployeeDetail.tsx:422
+#: src/pages/Employees/EmployeeBwrPanel.tsx:276
+#: src/pages/Employees/EmployeeBwrPanel.tsx:402
 msgid "BWR Notes"
 msgstr "BWR Notes"
 
@@ -2288,7 +2288,7 @@ msgstr "Who can this user VIEW?"
 msgid "Last name is required"
 msgstr "Last name is required"
 
-#: src/pages/Employees/EmployeeDetail.tsx:1019
+#: src/pages/Employees/EmployeeDetail.tsx:591
 msgid "Profile"
 msgstr "Profile"
 
@@ -2300,8 +2300,8 @@ msgstr "Orphaned Genesis"
 msgid "Notification Preferences"
 msgstr "Notification Preferences"
 
-#: src/pages/Employees/EmployeeDetail.tsx:268
-#: src/pages/Employees/EmployeeDetail.tsx:405
+#: src/pages/Employees/EmployeeBwrPanel.tsx:248
+#: src/pages/Employees/EmployeeBwrPanel.tsx:385
 msgid "BWR ID"
 msgstr "BWR ID"
 
@@ -2337,7 +2337,7 @@ msgstr "Access Denied"
 msgid "Password must be at least 8 characters"
 msgstr "Password must be at least 8 characters"
 
-#: src/pages/Employees/EmployeeDetail.tsx:921
+#: src/pages/Employees/EmployeeDetail.tsx:496
 #: src/pages/Employees/EmployeeEdit.tsx:284
 msgid "Loading employee..."
 msgstr "Loading employee..."
@@ -2402,7 +2402,7 @@ msgstr "Saving passkey…"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:97
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx:454
-#: src/pages/Employees/EmployeeDetail.tsx:88
+#: src/pages/Employees/EmployeeBwrPanel.tsx:68
 msgid "Revoked"
 msgstr "Revoked"
 
@@ -2422,7 +2422,7 @@ msgstr "Verification Status"
 msgid "Saving..."
 msgstr "Saving..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:439
+#: src/pages/Employees/EmployeeBwrPanel.tsx:419
 msgid "Save BWR Status"
 msgstr "Save BWR Status"
 
@@ -2438,7 +2438,7 @@ msgstr "Optional description for this unit."
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Missing token and email. Please use the link from your email."
 
-#: src/pages/Employees/EmployeeDetail.tsx:738
+#: src/pages/Employees/EmployeeDetail.tsx:314
 msgid "Loading documents..."
 msgstr "Loading documents..."
 
@@ -2449,7 +2449,7 @@ msgid "Go to Login"
 msgstr "Go to Login"
 
 #: src/pages/Employees/EmployeeCreate.tsx:445
-#: src/pages/Employees/EmployeeDetail.tsx:963
+#: src/pages/Employees/EmployeeDetail.tsx:538
 msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
@@ -2485,7 +2485,7 @@ msgstr "To Date"
 msgid "Create a new root organizational unit."
 msgstr "Create a new root organizational unit."
 
-#: src/pages/Employees/EmployeeDetail.tsx:576
+#: src/pages/Employees/EmployeeDetail.tsx:158
 msgid "Onboarding Invitation"
 msgstr "Onboarding Invitation"
 
@@ -2568,7 +2568,7 @@ msgstr "Create enrollment session"
 #: src/pages/Customers/CustomerDetail.tsx:190
 #: src/pages/Customers/CustomerEdit.tsx:264
 #: src/pages/Employees/EmployeeCreate.tsx:593
-#: src/pages/Employees/EmployeeDetail.tsx:519
+#: src/pages/Employees/EmployeeDetail.tsx:101
 #: src/pages/Employees/EmployeeEdit.tsx:412
 #: src/pages/Sites/SiteCreate.tsx:398
 #: src/pages/Sites/SiteDetail.tsx:212
