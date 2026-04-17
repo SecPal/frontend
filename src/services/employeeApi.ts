@@ -3,6 +3,9 @@
 
 import type {
   Employee,
+  EmployeeBwrExportFormat,
+  EmployeeBwrExportResponse,
+  EmployeeBwrStatusUpdatePayload,
   EmployeeFilters,
   EmployeeFormData,
   EmployeeListResponse,
@@ -14,6 +17,25 @@ import { ApiError } from "./ApiError";
 
 export interface ConfirmEmployeeOnboardingPayload {
   notes?: string;
+}
+
+interface ApiErrorPayload {
+  message?: string;
+  errors?: Record<string, string[]> | string[];
+}
+
+function normalizeApiErrorErrors(
+  errors: ApiErrorPayload["errors"]
+): ValidationErrorResponse["errors"] | undefined {
+  if (Array.isArray(errors)) {
+    return errors.length > 0 ? { general: errors } : undefined;
+  }
+
+  if (errors && typeof errors === "object") {
+    return errors;
+  }
+
+  return undefined;
 }
 
 /**
@@ -302,5 +324,81 @@ export async function terminateEmployee(id: string): Promise<Employee> {
   if (!data.data) {
     throw new ApiError("Failed to parse employee response");
   }
+  return data.data;
+}
+
+/**
+ * Generate a BWR export for an employee.
+ */
+export async function exportEmployeeBwr(
+  id: string,
+  format: EmployeeBwrExportFormat = "csv"
+): Promise<EmployeeBwrExportResponse> {
+  const url = `${apiConfig.baseUrl}/v1/employees/${id}/bwr/export`;
+  const response = await apiFetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ format }),
+  });
+
+  if (!response.ok) {
+    const error: ApiErrorPayload = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+
+    throw new ApiError(
+      error.message || "Failed to generate BWR export",
+      response.status,
+      normalizeApiErrorErrors(error.errors) ?? response,
+      response
+    );
+  }
+
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse BWR export response");
+  }
+
+  return data.data;
+}
+
+/**
+ * Update the BWR registration status for an employee.
+ */
+export async function updateEmployeeBwrStatus(
+  id: string,
+  payload: EmployeeBwrStatusUpdatePayload
+): Promise<Employee> {
+  const url = `${apiConfig.baseUrl}/v1/employees/${id}/bwr/status`;
+  const response = await apiFetch(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error: ApiErrorPayload = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+
+    throw new ApiError(
+      error.message || "Failed to update BWR status",
+      response.status,
+      normalizeApiErrorErrors(error.errors) ?? response,
+      response
+    );
+  }
+
+  const data = await response.json().catch(() => ({ data: null }));
+  if (!data.data) {
+    throw new ApiError("Failed to parse employee response");
+  }
+
   return data.data;
 }

@@ -22,6 +22,20 @@ export type EmployeeContractType =
   | "minijob"
   | "freelance";
 
+export type EmployeeBwrStatus =
+  | "not_registered"
+  | "pending"
+  | "active"
+  | "suspended"
+  | "revoked";
+
+export type EmployeeBwrManagedStatus = Exclude<
+  EmployeeBwrStatus,
+  "not_registered"
+>;
+
+export type EmployeeBwrExportFormat = "csv" | "xml";
+
 export interface EmployeeUserSummary {
   id: string;
   name: string;
@@ -80,6 +94,11 @@ export interface Employee {
   termination_date?: string | null;
   last_working_day?: string | null;
   position?: string | null;
+  bwr_id?: string | null;
+  bwr_status?: EmployeeBwrStatus | null;
+  bwr_registered_at?: string | null;
+  bwr_submission_date?: string | null;
+  bwr_notes?: string | null;
   status: EmployeeStatus;
   contract_type: EmployeeContractType;
   organizational_unit_id?: string | null;
@@ -127,6 +146,19 @@ export interface EmployeeFormData {
 export interface ValidationErrorResponse {
   message: string;
   errors: Record<string, string[]>;
+}
+
+export interface EmployeeBwrExportResponse {
+  employee_id: string;
+  status: EmployeeBwrStatus | null;
+  format: EmployeeBwrExportFormat;
+  download_url: string;
+}
+
+export interface EmployeeBwrStatusUpdatePayload {
+  status: EmployeeBwrManagedStatus;
+  bwr_id?: string | null;
+  notes?: string | null;
 }
 
 export interface EmployeeFilters {
