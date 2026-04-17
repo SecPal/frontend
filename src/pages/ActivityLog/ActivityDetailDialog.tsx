@@ -47,90 +47,78 @@ function formatDateTime(dateString: string): string {
   });
 }
 
-/**
- * Activity Detail Dialog
- *
- * Displays comprehensive activity log details with verification status.
- * Shows:
- * - Basic activity information (description, causer, subject)
- * - Hash chain verification status
- * - Merkle tree proof verification (if available)
- * - OpenTimestamp proof verification (if available)
- * - Orphaned genesis information (if applicable)
- */
-export function ActivityDetailDialog({
+function buildVerificationFromActivity(
+  activity: Activity
+): ActivityVerification | null {
+  if (!activity.verification) {
+    return null;
+  }
+
+  return {
+    activity_id: activity.id,
+    verification: activity.verification,
+    details: {
+      event_hash: activity.event_hash || "",
+      previous_hash: activity.previous_hash || null,
+      merkle_root: activity.merkle_root || null,
+      merkle_batch_id: activity.merkle_batch_id?.toString() || null,
+      ots_confirmed_at: activity.ots_confirmed_at || null,
+      is_orphaned_genesis: activity.is_orphaned_genesis || false,
+      orphaned_reason: activity.orphaned_reason || null,
+    },
+  };
+}
+
+function ActivityDetailDialogContent({
   activity,
-  open,
   onClose,
-}: ActivityDetailDialogProps) {
+}: {
+  activity: Activity;
+  onClose: () => void;
+}) {
+  const initialVerification = buildVerificationFromActivity(activity);
   const [verification, setVerification] = useState<ActivityVerification | null>(
-    null
+    initialVerification
   );
-  const [verifying, setVerifying] = useState(false);
+  const [verifying, setVerifying] = useState(initialVerification === null);
   const [verificationError, setVerificationError] = useState<string | null>(
     null
   );
 
-  // Load verification: use cached data from list if available, otherwise fetch
   useEffect(() => {
-    if (!open) {
+    if (initialVerification) {
       return;
     }
 
-    // Reset state when dialog opens
-    setVerificationError(null);
+    let active = true;
 
-    // If activity already has verification data, use it
-    if (activity.verification) {
-      setVerification({
-        activity_id: activity.id,
-        verification: activity.verification,
-        details: {
-          event_hash: activity.event_hash || "",
-          previous_hash: activity.previous_hash || null,
-          merkle_root: activity.merkle_root || null,
-          merkle_batch_id: activity.merkle_batch_id?.toString() || null,
-          ots_confirmed_at: activity.ots_confirmed_at || null,
-          is_orphaned_genesis: activity.is_orphaned_genesis || false,
-          orphaned_reason: activity.orphaned_reason || null,
-        },
+    void verifyActivityLog(activity.id)
+      .then((response) => {
+        if (active) {
+          setVerification(response.data);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error("Failed to verify activity log:", err);
+          setVerificationError(
+            err instanceof Error ? err.message : "Verification failed"
+          );
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setVerifying(false);
+        }
       });
-      setVerifying(false);
-      return;
-    }
 
-    // Otherwise, lazy load verification
-    setVerifying(true);
-
-    async function loadVerification() {
-      try {
-        const response = await verifyActivityLog(activity.id);
-        setVerification(response.data);
-      } catch (err) {
-        console.error("Failed to verify activity log:", err);
-        setVerificationError(
-          err instanceof Error ? err.message : "Verification failed"
-        );
-      } finally {
-        setVerifying(false);
-      }
-    }
-
-    loadVerification();
-    // We intentionally only re-run when dialog opens or activity changes (by ID)
-    // This prevents flickering when switching between activities
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activity.id]);
+    return () => {
+      active = false;
+    };
+  }, [activity.id, initialVerification]);
 
   return (
-    <Dialog open={open} onClose={onClose} size="3xl">
-      <DialogTitle>
-        <Trans>Activity Log Details</Trans>
-      </DialogTitle>
-      <DialogDescription>
-        <Trans>View activity log information and verification status</Trans>
-      </DialogDescription>
-
+    <>
       <DialogBody>
         <div className="space-y-6">
           {/* Basic Information */}
@@ -307,7 +295,6 @@ export function ActivityDetailDialog({
                   )}
                 </DescriptionList>
 
-                {/* Explanation */}
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-md">
                   <Text className="text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
@@ -329,7 +316,6 @@ export function ActivityDetailDialog({
             )}
           </div>
 
-          {/* Properties (if any) */}
           {activity.properties &&
             Object.keys(activity.properties).length > 0 && (
               <div>
@@ -351,6 +337,41 @@ export function ActivityDetailDialog({
           <Trans>Close</Trans>
         </Button>
       </DialogActions>
+    </>
+  );
+}
+
+/**
+ * Activity Detail Dialog
+ *
+ * Displays comprehensive activity log details with verification status.
+ * Shows:
+ * - Basic activity information (description, causer, subject)
+ * - Hash chain verification status
+ * - Merkle tree proof verification (if available)
+ * - OpenTimestamp proof verification (if available)
+ * - Orphaned genesis information (if applicable)
+ */
+export function ActivityDetailDialog({
+  activity,
+  open,
+  onClose,
+}: ActivityDetailDialogProps) {
+  return (
+    <Dialog open={open} onClose={onClose} size="3xl">
+      <DialogTitle>
+        <Trans>Activity Log Details</Trans>
+      </DialogTitle>
+      <DialogDescription>
+        <Trans>View activity log information and verification status</Trans>
+      </DialogDescription>
+      {open ? (
+        <ActivityDetailDialogContent
+          key={`${activity.id}:${activity.updated_at}`}
+          activity={activity}
+          onClose={onClose}
+        />
+      ) : null}
     </Dialog>
   );
 }

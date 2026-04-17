@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -40,8 +40,10 @@ export function EmployeeEdit() {
   const [contractDateError, setContractDateError] = useState<string | null>(
     null
   );
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchLoading, setFetchLoading] = useState(id !== undefined);
+  const [error, setError] = useState<string | null>(
+    id === undefined ? i18n._(msg`Employee ID is missing.`) : null
+  );
   const [organizationalUnits, setOrganizationalUnits] = useState<
     OrganizationalUnit[]
   >([]);
@@ -163,69 +165,81 @@ export function EmployeeEdit() {
     loadOrganizationalUnits();
   }, []);
 
-  const loadEmployee = useCallback(async () => {
-    setFetchLoading(true);
+  useEffect(() => {
     if (!id) {
-      setError(i18n._(msg`Employee ID is missing.`));
-      setFetchLoading(false);
       return;
     }
 
-    try {
-      setError(null);
-      const employee: Employee = await fetchEmployee(id);
+    let active = true;
 
-      // Populate form with existing data
-      setFormData({
-        first_name: employee.first_name || "",
-        last_name: employee.last_name || "",
-        email: employee.email,
-        phone: employee.phone || "",
-        date_of_birth: employee.date_of_birth || "",
-        position: employee.position || "",
-        contract_start_date: employee.contract_start_date || "",
-        organizational_unit_id: employee.organizational_unit?.id || "",
-        management_level: employee.management_level,
-        status: employee.status,
-        contract_type: employee.contract_type || "full_time",
+    void fetchEmployee(id)
+      .then((employee: Employee) => {
+        if (!active) {
+          return;
+        }
+
+        setError(null);
+        setFormData({
+          first_name: employee.first_name || "",
+          last_name: employee.last_name || "",
+          email: employee.email,
+          phone: employee.phone || "",
+          date_of_birth: employee.date_of_birth || "",
+          position: employee.position || "",
+          contract_start_date: employee.contract_start_date || "",
+          organizational_unit_id: employee.organizational_unit?.id || "",
+          management_level: employee.management_level,
+          status: employee.status,
+          contract_type: employee.contract_type || "full_time",
+        });
+        setIsLeadership(employee.management_level > 0);
+
+        if (i18n.locale === "de") {
+          setBirthDateDisplay(
+            formatDateForDisplay(employee.date_of_birth || "", "de")
+          );
+          setContractDateDisplay(
+            formatDateForDisplay(employee.contract_start_date || "", "de")
+          );
+        } else {
+          setBirthDateDisplay(
+            formatDateForDisplay(employee.date_of_birth || "", "en")
+          );
+          setContractDateDisplay(
+            formatDateForDisplay(employee.contract_start_date || "", "en")
+          );
+        }
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        console.error("Failed to load employee:", err);
+        let errorMessage = "Failed to load employee";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (
+          typeof err === "object" &&
+          err !== null &&
+          "message" in err
+        ) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+      })
+      .finally(() => {
+        if (active) {
+          setFetchLoading(false);
+        }
       });
-      setIsLeadership(employee.management_level > 0);
 
-      // Set display values based on locale
-      if (i18n.locale === "de") {
-        setBirthDateDisplay(
-          formatDateForDisplay(employee.date_of_birth || "", "de")
-        );
-        setContractDateDisplay(
-          formatDateForDisplay(employee.contract_start_date || "", "de")
-        );
-      } else {
-        setBirthDateDisplay(
-          formatDateForDisplay(employee.date_of_birth || "", "en")
-        );
-        setContractDateDisplay(
-          formatDateForDisplay(employee.contract_start_date || "", "en")
-        );
-      }
-    } catch (err) {
-      console.error("Failed to load employee:", err);
-      let errorMessage = "Failed to load employee";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null && "message" in err) {
-        errorMessage = String(err.message);
-      }
-
-      setError(errorMessage);
-    } finally {
-      setFetchLoading(false);
-    }
-  }, [id, i18n]);
-
-  useEffect(() => {
-    loadEmployee();
-  }, [loadEmployee]);
+    return () => {
+      active = false;
+    };
+  }, [id, i18n.locale]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
