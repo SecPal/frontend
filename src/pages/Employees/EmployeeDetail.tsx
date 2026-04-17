@@ -365,10 +365,15 @@ export function EmployeeDetail() {
       return null;
     }
 
-    const data = await fetchEmployee(id);
-    setEmployee(data);
-    setError(null);
-    return data;
+    try {
+      const data = await fetchEmployee(id);
+      setEmployee(data);
+      setError(null);
+      return data;
+    } catch (err) {
+      console.error("Failed to load employee:", err);
+      return null;
+    }
   }
 
   useEffect(() => {

@@ -97,11 +97,24 @@ function normalizeBwrFieldErrors(
   }
 
   const nextErrors: BwrPanelFieldErrors = {};
-  for (const key of ["general", "status", "bwr_id", "notes"] as const) {
-    const messages = errors[key];
-    if (messages && messages.length > 0) {
-      nextErrors[key] = messages;
+  const unknownMessages: string[] = [];
+  for (const [key, messages] of Object.entries(errors)) {
+    if (!messages || messages.length === 0) {
+      continue;
     }
+    if (
+      key === "general" ||
+      key === "status" ||
+      key === "bwr_id" ||
+      key === "notes"
+    ) {
+      nextErrors[key as keyof BwrPanelFieldErrors] = messages;
+    } else {
+      unknownMessages.push(...messages);
+    }
+  }
+  if (unknownMessages.length > 0) {
+    nextErrors.general = [...(nextErrors.general ?? []), ...unknownMessages];
   }
 
   return nextErrors;
@@ -276,7 +289,11 @@ export function EmployeeBwrPanel({
       </div>
 
       {panelError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200"
+        >
           <Text>{panelError}</Text>
           {panelFieldErrors.general && panelFieldErrors.general.length > 0 ? (
             <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -289,7 +306,11 @@ export function EmployeeBwrPanel({
       ) : null}
 
       {successMessage ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+        >
           {successMessage}
         </div>
       ) : null}
@@ -303,7 +324,7 @@ export function EmployeeBwrPanel({
             className="inline-flex items-center justify-center rounded-lg border border-zinc-950/10 px-3.5 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-950/2.5 sm:px-3 sm:py-1.5 dark:border-white/15 dark:text-white dark:hover:bg-white/5"
             href={latestExportUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
             <Trans>Download Latest Export</Trans>
           </a>
