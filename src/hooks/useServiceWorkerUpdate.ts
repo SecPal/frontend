@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 /**
@@ -46,9 +46,6 @@ export interface UseServiceWorkerUpdateReturn {
  * ```
  */
 export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
-  const [needRefresh, setNeedRefresh] = useState(false);
-  const [offlineReady, setOfflineReady] = useState(false);
-
   // Track interval ID for cleanup
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -91,15 +88,6 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
     };
   }, []);
 
-  // Sync states from useRegisterSW
-  useEffect(() => {
-    setNeedRefresh(swNeedRefresh);
-  }, [swNeedRefresh]);
-
-  useEffect(() => {
-    setOfflineReady(swOfflineReady);
-  }, [swOfflineReady]);
-
   /**
    * Update service worker and reload the page
    *
@@ -121,8 +109,8 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   }, [swUpdate]);
 
   return {
-    needRefresh,
-    offlineReady,
+    needRefresh: swNeedRefresh,
+    offlineReady: swOfflineReady,
     updateServiceWorker,
   };
 }

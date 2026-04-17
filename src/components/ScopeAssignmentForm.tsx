@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Trans, t } from "@lingui/macro";
 import {
   Dialog,
@@ -56,26 +56,39 @@ interface FormErrors {
  * @see Issue #426: Frontend UI for Leadership Levels
  * @see https://github.com/SecPal/.github/blob/main/docs/adr/20251221-inheritance-blocking-and-leadership-access-control.md
  */
-export function ScopeAssignmentForm({
-  open,
+function ScopeAssignmentFormContent({
   onClose,
   mode,
   organizationalUnitId,
   user,
   scope,
   onSuccess,
-}: ScopeAssignmentFormProps) {
+}: Omit<ScopeAssignmentFormProps, "open">) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<
     Partial<OrganizationalScopeFormData>
-  >({
-    access_level: "read",
-    include_descendants: true,
-    min_viewable_rank: null,
-    max_viewable_rank: null,
-    min_assignable_rank: null,
-    max_assignable_rank: null,
-    allow_self_access: false,
+  >(() => {
+    if (mode === "edit" && scope) {
+      return {
+        access_level: scope.access_level,
+        include_descendants: scope.include_descendants,
+        min_viewable_rank: scope.min_viewable_rank,
+        max_viewable_rank: scope.max_viewable_rank,
+        min_assignable_rank: scope.min_assignable_rank,
+        max_assignable_rank: scope.max_assignable_rank,
+        allow_self_access: scope.allow_self_access,
+      };
+    }
+
+    return {
+      access_level: "read",
+      include_descendants: true,
+      min_viewable_rank: null,
+      max_viewable_rank: null,
+      min_assignable_rank: null,
+      max_assignable_rank: null,
+      allow_self_access: false,
+    };
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,36 +106,6 @@ export function ScopeAssignmentForm({
       formData.max_viewable_rank === undefined ||
       formData.max_viewable_rank === 0 ||
       userRank <= formData.max_viewable_rank);
-
-  // Reset form when dialog opens or changes
-  useEffect(() => {
-    if (open) {
-      setStep(1);
-      setErrors({});
-
-      if (mode === "edit" && scope) {
-        setFormData({
-          access_level: scope.access_level,
-          include_descendants: scope.include_descendants,
-          min_viewable_rank: scope.min_viewable_rank,
-          max_viewable_rank: scope.max_viewable_rank,
-          min_assignable_rank: scope.min_assignable_rank,
-          max_assignable_rank: scope.max_assignable_rank,
-          allow_self_access: scope.allow_self_access,
-        });
-      } else {
-        setFormData({
-          access_level: "read",
-          include_descendants: true,
-          min_viewable_rank: null,
-          max_viewable_rank: null,
-          min_assignable_rank: null,
-          max_assignable_rank: null,
-          allow_self_access: false,
-        });
-      }
-    }
-  }, [open, mode, scope]);
 
   // Validation for viewing permissions
   const validateViewingStep = useCallback((): boolean => {
@@ -327,7 +310,7 @@ export function ScopeAssignmentForm({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} size="2xl">
+    <>
       <DialogTitle>
         {mode === "create" ? (
           <Trans>Assign Organizational Scope</Trans>
@@ -614,6 +597,32 @@ export function ScopeAssignmentForm({
           </Button>
         </DialogActions>
       </form>
+    </>
+  );
+}
+
+export function ScopeAssignmentForm({
+  open,
+  onClose,
+  mode,
+  organizationalUnitId,
+  user,
+  scope,
+  onSuccess,
+}: ScopeAssignmentFormProps) {
+  return (
+    <Dialog open={open} onClose={onClose} size="2xl">
+      {open ? (
+        <ScopeAssignmentFormContent
+          key={`${mode}:${scope?.id ?? user?.id ?? "new"}`}
+          onClose={onClose}
+          mode={mode}
+          organizationalUnitId={organizationalUnitId}
+          user={user}
+          scope={scope}
+          onSuccess={onSuccess}
+        />
+      ) : null}
     </Dialog>
   );
 }

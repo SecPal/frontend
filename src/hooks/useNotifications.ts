@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 export type NotificationPermissionState = "default" | "granted" | "denied";
 
@@ -44,8 +44,12 @@ interface UseNotificationsReturn {
  * ```
  */
 export function useNotifications(): UseNotificationsReturn {
-  const [permission, setPermission] =
-    useState<NotificationPermissionState>("default");
+  const [permission, setPermission] = useState<NotificationPermissionState>(
+    () =>
+      typeof window !== "undefined" && "Notification" in window
+        ? Notification.permission
+        : "default"
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -54,16 +58,6 @@ export function useNotifications(): UseNotificationsReturn {
     typeof window !== "undefined" &&
     "Notification" in window &&
     "serviceWorker" in navigator;
-
-  // Initialize permission state
-  useEffect(() => {
-    if (isSupported) {
-      setPermission(Notification.permission);
-    }
-    // Note: Permission changes are rare (user must manually change in browser settings)
-    // We don't poll for changes to avoid performance overhead
-    // Permission state is updated after requestPermission() is called
-  }, [isSupported]);
 
   /**
    * Request notification permission from the user

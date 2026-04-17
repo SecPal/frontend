@@ -6,7 +6,7 @@
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -48,29 +48,46 @@ export default function SitesPage() {
     total: 0,
   });
 
-  const loadSites = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await listSites(filters);
-      setSites(response.data);
-      setPagination(response.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sites");
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    let active = true;
+
+    void listSites(filters)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setSites(response.data);
+        setPagination(response.meta);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        setError(err instanceof Error ? err.message : "Failed to load sites");
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [filters]);
 
-  useEffect(() => {
-    loadSites();
-  }, [loadSites]);
-
   function handleSearch(value: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, search: value, page: 1 });
   }
 
   function handleStatusFilter(value: string) {
+    setLoading(true);
+    setError(null);
     setFilters({
       ...filters,
       is_active: value === "" ? undefined : value === "true",
@@ -79,6 +96,8 @@ export default function SitesPage() {
   }
 
   function handleTypeFilter(value: string) {
+    setLoading(true);
+    setError(null);
     setFilters({
       ...filters,
       type: value === "" ? undefined : (value as "permanent" | "temporary"),
@@ -87,6 +106,8 @@ export default function SitesPage() {
   }
 
   function handlePageChange(page: number) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, page });
   }
 
