@@ -1,36 +1,37 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeOnboardingInvitationStatus } from "@/types/api";
+import { Badge } from "../../components/badge";
+import { Button } from "../../components/button";
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
+} from "../../components/description-list";
+import { Heading } from "../../components/heading";
+import { Text } from "../../components/text";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
-  fetchEmployee,
+  fetchEmployeeDocuments,
+  type EmployeeDocument,
+} from "../../services/employeeDocumentApi";
+import {
   activateEmployee,
   confirmEmployeeOnboarding,
+  fetchEmployee,
   terminateEmployee,
 } from "../../services/employeeApi";
 import {
   fetchEmployeeQualifications,
   type EmployeeQualification,
 } from "../../services/qualificationApi";
-import {
-  fetchEmployeeDocuments,
-  type EmployeeDocument,
-} from "../../services/employeeDocumentApi";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
-import { Badge } from "../../components/badge";
-import { useUserCapabilities } from "../../hooks/useUserCapabilities";
-import {
-  DescriptionList,
-  DescriptionTerm,
-  DescriptionDetails,
-} from "../../components/description-list";
+import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 
 function InvitationStatusLabel({
   status,
@@ -51,9 +52,6 @@ function InvitationStatusLabel({
   }
 }
 
-/**
- * Status badge component using Catalyst Badge
- */
 function StatusBadge({ status }: { status: string }) {
   const colors = {
     applicant: "orange",
@@ -78,9 +76,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/**
- * Profile Tab using Catalyst DescriptionList
- */
 function ProfileTab({ employee }: { employee: Employee }) {
   const { i18n } = useLingui();
   const onboardingInvitation = employee.onboarding_invitation;
@@ -208,9 +203,6 @@ function ProfileTab({ employee }: { employee: Employee }) {
   );
 }
 
-/**
- * Qualifications Tab
- */
 function QualificationsTab({ employeeId }: { employeeId: string }) {
   const [qualifications, setQualifications] = useState<EmployeeQualification[]>(
     []
@@ -277,7 +269,7 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
             <StatusBadge status={eq.status} />
           </div>
           {eq.expiry_date && (
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+            <Text className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>Expires:</Trans> {eq.expiry_date}
             </Text>
           )}
@@ -287,9 +279,6 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
   );
 }
 
-/**
- * Documents Tab
- */
 function DocumentsTab({ employeeId }: { employeeId: string }) {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -362,9 +351,6 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
   );
 }
 
-/**
- * Employee Detail Page
- */
 export function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const capabilities = useUserCapabilities();
@@ -374,14 +360,20 @@ export function EmployeeDetail() {
   const [activeTab, setActiveTab] = useState("profile");
   const [actionLoading, setActionLoading] = useState(false);
 
-  async function refreshEmployee() {
+  async function refreshEmployee(): Promise<Employee | null> {
     if (!id) {
-      return;
+      return null;
     }
 
-    const data = await fetchEmployee(id);
-    setEmployee(data);
-    setError(null);
+    try {
+      const data = await fetchEmployee(id);
+      setEmployee(data);
+      setError(null);
+      return data;
+    } catch (err) {
+      console.error("Failed to load employee:", err);
+      return null;
+    }
   }
 
   useEffect(() => {
@@ -432,7 +424,9 @@ export function EmployeeDetail() {
   }, [id]);
 
   async function handleActivate() {
-    if (!id || !confirm("Activate this employee?")) return;
+    if (!id || !confirm("Activate this employee?")) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -455,7 +449,9 @@ export function EmployeeDetail() {
   }
 
   async function handleTerminate() {
-    if (!id || !confirm("Terminate this employee?")) return;
+    if (!id || !confirm("Terminate this employee?")) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -478,7 +474,9 @@ export function EmployeeDetail() {
   }
 
   async function handleConfirmOnboarding() {
-    if (!id || !confirm("Confirm this onboarding dossier?")) return;
+    if (!id || !confirm("Confirm this onboarding dossier?")) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -502,7 +500,7 @@ export function EmployeeDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <Text>
           <Trans>Loading employee...</Trans>
         </Text>
@@ -593,40 +591,31 @@ export function EmployeeDetail() {
           <nav className="flex gap-6 px-6" aria-label="Tabs">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`
-                border-b-2 py-4 text-sm font-medium
-                ${
-                  activeTab === "profile"
-                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
-                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-                }
-              `}
+              className={
+                activeTab === "profile"
+                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
+                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+              }
             >
               <Trans>Profile</Trans>
             </button>
             <button
               onClick={() => setActiveTab("qualifications")}
-              className={`
-                border-b-2 py-4 text-sm font-medium
-                ${
-                  activeTab === "qualifications"
-                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
-                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-                }
-              `}
+              className={
+                activeTab === "qualifications"
+                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
+                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+              }
             >
               <Trans>Qualifications</Trans>
             </button>
             <button
               onClick={() => setActiveTab("documents")}
-              className={`
-                border-b-2 py-4 text-sm font-medium
-                ${
-                  activeTab === "documents"
-                    ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
-                    : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-                }
-              `}
+              className={
+                activeTab === "documents"
+                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
+                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+              }
             >
               <Trans>Documents</Trans>
             </button>
@@ -634,7 +623,16 @@ export function EmployeeDetail() {
         </div>
 
         <div className="p-6">
-          {activeTab === "profile" && <ProfileTab employee={employee} />}
+          {activeTab === "profile" && (
+            <div className="space-y-8">
+              <ProfileTab employee={employee} />
+              <EmployeeBwrPanel
+                employee={employee}
+                canManage={capabilities.actions.employees.update}
+                onRefresh={refreshEmployee}
+              />
+            </div>
+          )}
           {activeTab === "qualifications" && (
             <QualificationsTab employeeId={employee.id} />
           )}
