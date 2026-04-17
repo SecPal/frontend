@@ -92,6 +92,10 @@ At minimum verify:
   explicitly.
 - Reject AI-generated UI refactors that only look cleaner on the diff but
   weaken lifecycle ordering, markup validity, or state separation.
+- Reject AI-generated memoization or cache refactors that freeze locale-,
+  tenant-, or user-derived UI state across session changes or auth
+  transitions; prove dependency lists invalidate correctly and add focused
+  regression coverage.
 
 ## Repository Conventions
 
