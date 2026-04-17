@@ -73,7 +73,7 @@ msgstr "Passkey wird hinzugefügt..."
 msgid "Type"
 msgstr "Typ"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:303
+#: src/pages/Employees/EmployeeBwrPanel.tsx:300
 msgid "Latest export"
 msgstr "Letzter Export"
 
@@ -213,12 +213,12 @@ msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen S
 msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
-#: src/pages/Employees/EmployeeDetail.tsx:508
+#: src/pages/Employees/EmployeeDetail.tsx:512
 #: src/pages/Employees/EmployeeEdit.tsx:296
 msgid "Error Loading Employee"
 msgstr "Fehler beim Laden eines Mitarbeiters"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:210
+#: src/pages/Employees/EmployeeBwrPanel.tsx:209
 msgid "BWR status updated."
 msgstr "BWR-Status aktualisiert."
 
@@ -329,7 +329,7 @@ msgstr "Kunden suchen..."
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
 
-#: src/pages/Employees/EmployeeDetail.tsx:601
+#: src/pages/Employees/EmployeeDetail.tsx:605
 msgid "Qualifications"
 msgstr "Qualifikationen"
 
@@ -482,7 +482,7 @@ msgstr "MFA einrichten"
 msgid "Employee #"
 msgstr "Mitarbeiter #"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:227
+#: src/pages/Employees/EmployeeBwrPanel.tsx:224
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
@@ -506,7 +506,7 @@ msgstr "App-Updates und Wartungsbenachrichtigungen"
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:354
+#: src/pages/Employees/EmployeeBwrPanel.tsx:351
 msgid "Generate BWR Export"
 msgstr "BWR-Export erstellen"
 
@@ -621,7 +621,7 @@ msgstr "Vollzeit"
 msgid "My profile"
 msgstr "Mein Profil"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:175
+#: src/pages/Employees/EmployeeBwrPanel.tsx:177
 msgid "BWR export generated. Download the file below."
 msgstr "BWR-Export erstellt. Laden Sie die Datei unten herunter."
 
@@ -656,7 +656,7 @@ msgstr "Codes neu generieren"
 msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:230
+#: src/pages/Employees/EmployeeBwrPanel.tsx:227
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbeiters über die dedizierten Runtime-Endpunkte."
 
@@ -741,7 +741,7 @@ msgstr "Vorheriger Hash"
 msgid "Step 3: Self-access control"
 msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:327
+#: src/pages/Employees/EmployeeBwrPanel.tsx:324
 msgid "Export Format"
 msgstr "Exportformat"
 
@@ -753,7 +753,7 @@ msgstr "Schritt 1: Konfigurieren der Anzeigeberechtigungen"
 msgid "Maximum Viewable Rank"
 msgstr "Maximal sichtbarer Rang"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:343
+#: src/pages/Employees/EmployeeBwrPanel.tsx:340
 msgid "Generate the initial export to move this employee into the pending BWR state."
 msgstr "Erstellen Sie den initialen Export, um diesen Mitarbeiter in den ausstehenden BWR-Status zu überführen."
 
@@ -806,7 +806,7 @@ msgstr "Benachrichtigungen aktivieren"
 msgid "Send verification email again"
 msgstr "Verifizierungs-E-Mail erneut senden"
 
-#: src/pages/Employees/EmployeeDetail.tsx:515
+#: src/pages/Employees/EmployeeDetail.tsx:519
 #: src/pages/Employees/EmployeeEdit.tsx:301
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
@@ -827,8 +827,8 @@ msgstr "Erledigt"
 msgid "Signing in with passkey..."
 msgstr "Anmeldung mit Passkey..."
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:240
-#: src/pages/Employees/EmployeeBwrPanel.tsx:363
+#: src/pages/Employees/EmployeeBwrPanel.tsx:237
+#: src/pages/Employees/EmployeeBwrPanel.tsx:360
 msgid "BWR Status"
 msgstr "BWR-Status"
 
@@ -860,7 +860,7 @@ msgstr "Kontaktperson"
 msgid "Verifying..."
 msgstr "Überprüfen..."
 
-#: src/pages/Employees/EmployeeDetail.tsx:611
+#: src/pages/Employees/EmployeeDetail.tsx:615
 msgid "Documents"
 msgstr "Dokumente"
 
@@ -910,7 +910,7 @@ msgstr "Koordinaten"
 
 #: src/components/OrganizationalUnitTree.tsx:347
 #: src/pages/Customers/CustomerDetail.tsx:238
-#: src/pages/Employees/EmployeeDetail.tsx:574
+#: src/pages/Employees/EmployeeDetail.tsx:578
 #: src/pages/Organization/OrganizationPage.tsx:363
 #: src/pages/Sites/SiteDetail.tsx:339
 msgid "Edit"
@@ -978,7 +978,7 @@ msgstr "Laden von Aktivitätsprotokollen..."
 msgid "Page {0} of {1}"
 msgstr "Seite {0} von {1}"
 
-#: src/pages/Employees/EmployeeDetail.tsx:562
+#: src/pages/Employees/EmployeeDetail.tsx:566
 msgid "Activate"
 msgstr "Aktivieren"
 
@@ -1017,7 +1017,7 @@ msgstr "Dateien verschlüsseln..."
 msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
 msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten eine neue Bestätigungs-E-Mail an."
 
-#: src/pages/Employees/EmployeeDetail.tsx:557
+#: src/pages/Employees/EmployeeDetail.tsx:561
 msgid "Confirm Onboarding"
 msgstr "Onboarding bestätigen"
 
@@ -1168,7 +1168,7 @@ msgstr "zurück zu den Standorten"
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
 msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:254
+#: src/pages/Employees/EmployeeBwrPanel.tsx:251
 msgid "BWR Submission Date"
 msgstr "BWR-Übermittlungsdatum"
 
@@ -1231,7 +1231,7 @@ msgstr "Standort anlegen"
 msgid "Step 2: Configure assignment permissions"
 msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:311
+#: src/pages/Employees/EmployeeBwrPanel.tsx:308
 msgid "Download Latest Export"
 msgstr "Letzten Export herunterladen"
 
@@ -1345,11 +1345,11 @@ msgstr "Willkommen zu SecPal"
 msgid "Pre-Contract"
 msgstr "Vorvertrag"
 
-#: src/pages/Employees/EmployeeDetail.tsx:569
+#: src/pages/Employees/EmployeeDetail.tsx:573
 msgid "Terminate"
 msgstr "Beenden"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:352
+#: src/pages/Employees/EmployeeBwrPanel.tsx:349
 msgid "Generating BWR Export..."
 msgstr "BWR-Export wird erstellt..."
 
@@ -1650,7 +1650,7 @@ msgstr "Bitte versuchen Sie es in etwa {retryAfterMinutes} Minuten erneut."
 msgid "Download"
 msgstr "Herunterladen"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:264
+#: src/pages/Employees/EmployeeBwrPanel.tsx:261
 msgid "BWR Registered At"
 msgstr "BWR registriert am"
 
@@ -1704,7 +1704,7 @@ msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu ei
 msgid "Description"
 msgstr "Beschreibung"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:318
+#: src/pages/Employees/EmployeeBwrPanel.tsx:315
 msgid "You can inspect BWR data, but write permission is required to manage it."
 msgstr "Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich."
 
@@ -1912,7 +1912,7 @@ msgstr "Keine Qualifikationen zugewiesen"
 msgid "← Back to Employee"
 msgstr "← Zurück zum Mitarbeiter"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:417
+#: src/pages/Employees/EmployeeBwrPanel.tsx:416
 msgid "Saving BWR Status..."
 msgstr "BWR-Status wird gespeichert..."
 
@@ -2257,8 +2257,8 @@ msgstr "Nachname"
 msgid "Hash Chain (Link)"
 msgstr "Hash-Kette (Link)"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:276
-#: src/pages/Employees/EmployeeBwrPanel.tsx:402
+#: src/pages/Employees/EmployeeBwrPanel.tsx:273
+#: src/pages/Employees/EmployeeBwrPanel.tsx:401
 msgid "BWR Notes"
 msgstr "BWR-Notizen"
 
@@ -2288,7 +2288,7 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Last name is required"
 msgstr "Nachname ist erforderlich"
 
-#: src/pages/Employees/EmployeeDetail.tsx:591
+#: src/pages/Employees/EmployeeDetail.tsx:595
 msgid "Profile"
 msgstr "Profil"
 
@@ -2300,8 +2300,8 @@ msgstr "Verwaiste Genesis"
 msgid "Notification Preferences"
 msgstr "Präferenzen für Benachrichtigungen"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:248
-#: src/pages/Employees/EmployeeBwrPanel.tsx:385
+#: src/pages/Employees/EmployeeBwrPanel.tsx:245
+#: src/pages/Employees/EmployeeBwrPanel.tsx:384
 msgid "BWR ID"
 msgstr "BWR-ID"
 
@@ -2337,7 +2337,7 @@ msgstr "Zugang verweigert"
 msgid "Password must be at least 8 characters"
 msgstr "Das Passwort muss mindestens 8 Zeichen lang sein"
 
-#: src/pages/Employees/EmployeeDetail.tsx:496
+#: src/pages/Employees/EmployeeDetail.tsx:500
 #: src/pages/Employees/EmployeeEdit.tsx:284
 msgid "Loading employee..."
 msgstr "Mitarbeiter laden..."
@@ -2422,7 +2422,7 @@ msgstr "Status der Verifizierung"
 msgid "Saving..."
 msgstr "Speichern..."
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx:419
+#: src/pages/Employees/EmployeeBwrPanel.tsx:418
 msgid "Save BWR Status"
 msgstr "BWR-Status speichern"
 
@@ -2449,7 +2449,7 @@ msgid "Go to Login"
 msgstr "Zum Login gehen"
 
 #: src/pages/Employees/EmployeeCreate.tsx:445
-#: src/pages/Employees/EmployeeDetail.tsx:538
+#: src/pages/Employees/EmployeeDetail.tsx:542
 msgid "← Back to Employees"
 msgstr "← Zurück zu Mitarbeitern"
 
