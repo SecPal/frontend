@@ -1031,7 +1031,7 @@ msgstr "Das Geburtsdatum muss in der Vergangenheit liegen"
 
 #: src/App.tsx:90
 msgid "SecPal – operations software for German private security services."
-msgstr ""
+msgstr "SecPal – Einsatzsoftware für deutsche private Sicherheitsdienste."
 
 #: src/pages/Organization/OrganizationPage.tsx:373
 msgid "Select an organizational unit to view details"

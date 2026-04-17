@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wrapped `authStorage.setUser()` persistence in a WebCrypto error boundary so rare PBKDF2/AES failures now log, clear stale `auth_user` state, and return cleanly instead of bubbling an unhandled rejection during login/bootstrap flows; includes focused regression coverage for issue #871.
 - Resolved issue #874 by refactoring the remaining `react-hooks/set-state-in-effect` violations across list/detail loaders, dialog reset flows, and organizational-unit tree state derivation; restored the rule to `error` in `eslint.config.js` and added a focused lint regression test for the tracked files.
 - Guarded auth-storage event and pageshow handlers with an in-memory `hasLogoutBarrierRef` check after `await authStorage.getUser()` to prevent an async race where an in-flight bootstrap `setUser()` clears the localStorage logout barrier (via `clearLogoutBarrier()`) before the stale-storage handler resumes, which caused a post-logout StorageEvent to restore the authenticated user.
 - Stabilized the Lingui catalog sort: switched `lingui.config.cjs` from the default `orderBy: "message"` to `orderBy: "messageId"` so entries sharing the same translated text (e.g. the generic Cancel button and the `login.mfa.cancel` explicit-ID entry both translate to "Cancel") are ordered by their unique key rather than producing a non-deterministic oscillation between two orderings on successive `sync:purge` runs.
