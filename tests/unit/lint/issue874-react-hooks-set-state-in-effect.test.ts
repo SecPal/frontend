@@ -61,7 +61,9 @@ describe("Issue 874 lint regression", () => {
 
     const violations = report.flatMap((entry) =>
       entry.messages
-        .filter((message) => message.ruleId === "react-hooks/set-state-in-effect")
+        .filter(
+          (message) => message.ruleId === "react-hooks/set-state-in-effect"
+        )
         .map((message) => ({
           filePath: path.relative(repoRoot, entry.filePath),
           line: message.line,
@@ -71,4 +73,4 @@ describe("Issue 874 lint regression", () => {
 
     expect(violations).toEqual([]);
   });
-  });
+});

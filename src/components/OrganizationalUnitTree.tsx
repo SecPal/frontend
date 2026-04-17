@@ -550,7 +550,9 @@ function removeUnitFromTree(
     .filter((unit) => unit.id !== unitId)
     .map((unit) => ({
       ...unit,
-      children: unit.children ? removeUnitFromTree(unit.children, unitId) : undefined,
+      children: unit.children
+        ? removeUnitFromTree(unit.children, unitId)
+        : undefined,
     }));
 }
 
@@ -565,7 +567,9 @@ function buildTreeUnits(
   }
 
   if (flatView) {
-    return typeFilter ? items.filter((item) => item.type === typeFilter) : items;
+    return typeFilter
+      ? items.filter((item) => item.type === typeFilter)
+      : items;
   }
 
   const itemMap = new Map<string, OrganizationalUnit>();
@@ -668,7 +672,9 @@ export function OrganizationalUnitTree({
   );
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [unitToMove, setUnitToMove] = useState<OrganizationalUnit | null>(null);
-  const [locallyDeletedUnitIds, setLocallyDeletedUnitIds] = useState<string[]>([]);
+  const [locallyDeletedUnitIds, setLocallyDeletedUnitIds] = useState<string[]>(
+    []
+  );
   const [locallyMovedParents, setLocallyMovedParents] = useState<
     Record<string, string | null>
   >({});
@@ -693,7 +699,11 @@ export function OrganizationalUnitTree({
     let nextUnits = baseUnits;
 
     if (createdUnit) {
-      nextUnits = addUnitToTree(nextUnits, createdUnit.unit, createdUnit.parentId);
+      nextUnits = addUnitToTree(
+        nextUnits,
+        createdUnit.unit,
+        createdUnit.parentId
+      );
     }
 
     if (updatedUnit) {

@@ -130,7 +130,11 @@ export function ActivityLogList() {
 
         if (err instanceof Error) {
           errorMessage = err.message;
-        } else if (typeof err === "object" && err !== null && "message" in err) {
+        } else if (
+          typeof err === "object" &&
+          err !== null &&
+          "message" in err
+        ) {
           errorMessage = String(err.message);
         }
 
