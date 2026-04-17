@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
+
 ### Removed
 
 - Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
