@@ -11,6 +11,7 @@ import {
   sanitizePersistedAuthUser,
   type PersistedAuthUser,
 } from "./services/authState";
+import { authStorage } from "./services/storage";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -43,13 +44,31 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
 let seededAuthUser: PersistedAuthUser | null = null;
 
-function seedPersistedAuthUser(user: Record<string, unknown>) {
+async function seedPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
 
   if (!persistedUser) {
     throw new Error("Failed to seed persisted auth user for test");
+  }
+
+  seededAuthUser = persistedUser;
+  await authStorage.setUser(persistedUser);
+
+  return persistedUser;
+}
+
+function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
+  const persistedUser = sanitizePersistedAuthUser(user);
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed legacy persisted auth user for test");
   }
 
   seededAuthUser = persistedUser;
@@ -92,6 +111,7 @@ describe("App", () => {
     vi.clearAllMocks();
     localStorage.clear();
     seededAuthUser = null;
+    setCsrfTokenCookie("app-test-csrf-token");
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
@@ -130,7 +150,7 @@ describe("App", () => {
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/activity-logs");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -148,7 +168,7 @@ describe("App", () => {
   it("shows not found for the legacy organizational-units route when the user lacks organizational access", async () => {
     window.history.replaceState({}, "", "/organizational-units");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -166,7 +186,7 @@ describe("App", () => {
   it("shows not found for organization routes when the user only has scopes but no elevated feature capability", async () => {
     window.history.replaceState({}, "", "/organization");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -186,7 +206,7 @@ describe("App", () => {
   it("shows not found for customer routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/customers");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -204,7 +224,7 @@ describe("App", () => {
   it("shows not found for site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -222,7 +242,7 @@ describe("App", () => {
   it("shows not found for customer-scoped site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites/customer/123");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -240,7 +260,7 @@ describe("App", () => {
   it("shows access denied for known customer action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/customers/new");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -259,7 +279,7 @@ describe("App", () => {
   it("shows access denied for known customer edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/customers/123/edit");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -278,7 +298,7 @@ describe("App", () => {
   it("shows access denied for known site action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/sites/new");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -297,7 +317,7 @@ describe("App", () => {
   it("shows access denied for known site edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/sites/123/edit");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -316,7 +336,7 @@ describe("App", () => {
   it("shows access denied for known employee action routes when the user lacks create permission", async () => {
     window.history.replaceState({}, "", "/employees/create");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -336,7 +356,7 @@ describe("App", () => {
   it("shows access denied for known employee edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/employees/123/edit");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -356,7 +376,7 @@ describe("App", () => {
   it("redirects the legacy organizational-units route to the canonical organization route for authorized users", async () => {
     window.history.replaceState({}, "", "/organizational-units");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -375,10 +395,10 @@ describe("App", () => {
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
 
-  it("shows a not found state for authenticated users on unknown app routes", async () => {
+  it("keeps supporting legacy cleartext persisted auth state on unknown authenticated routes", async () => {
     window.history.replaceState({}, "", "/dashboard");
 
-    seedPersistedAuthUser({
+    seedLegacyPersistedAuthUser({
       id: 1,
       name: "User",
       email: "user@secpal.dev",
@@ -397,7 +417,7 @@ describe("App", () => {
   it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
     window.history.replaceState({}, "", "/");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "Pre-Contract User",
       email: "new.hire@secpal.dev",
@@ -421,7 +441,7 @@ describe("App", () => {
   it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {
     window.history.replaceState({}, "", "/onboarding");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "Pre-Contract User",
       email: "new.hire@secpal.dev",
@@ -454,7 +474,7 @@ describe("App", () => {
   it("redirects active authenticated users away from onboarding-only routes", async () => {
     window.history.replaceState({}, "", "/onboarding");
 
-    seedPersistedAuthUser({
+    await seedPersistedAuthUser({
       id: 1,
       name: "Active User",
       email: "guard@secpal.dev",
