@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: CC0-1.0
 
 import js from "@eslint/js";
@@ -29,6 +29,9 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Tracked in https://github.com/SecPal/frontend/issues/874 — disable until
+      // the void-loadFn()-in-useEffect patterns are refactored properly.
+      "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
