@@ -33,10 +33,17 @@ const issue874Files = [
 
 describe("Issue 874 lint regression", () => {
   it("has no react-hooks/set-state-in-effect violations in the tracked files", () => {
-    const eslintBinary = path.join(repoRoot, "node_modules", ".bin", "eslint");
+    const eslintCli = path.join(
+      repoRoot,
+      "node_modules",
+      "eslint",
+      "bin",
+      "eslint.js"
+    );
     const result = spawnSync(
-      eslintBinary,
+      process.execPath,
       [
+        eslintCli,
         ...issue874Files,
         "--rule",
         "react-hooks/set-state-in-effect:error",
@@ -50,6 +57,7 @@ describe("Issue 874 lint regression", () => {
     );
 
     expect(result.error).toBeUndefined();
+    expect(result.status, result.stderr).toBe(0);
 
     const output = result.stdout.trim();
     expect(output).not.toBe("");

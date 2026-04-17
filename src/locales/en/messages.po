@@ -33,7 +33,7 @@ msgstr "Date of birth is required"
 msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 msgstr "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 
-#: src/pages/Employees/EmployeeEdit.tsx:317
+#: src/pages/Employees/EmployeeEdit.tsx:319
 msgid "Edit Employee"
 msgstr "Edit Employee"
 
@@ -43,7 +43,7 @@ msgstr "Activity Information"
 
 #: src/pages/Employees/EmployeeCreate.tsx:639
 #: src/pages/Employees/EmployeeDetail.tsx:147
-#: src/pages/Employees/EmployeeEdit.tsx:445
+#: src/pages/Employees/EmployeeEdit.tsx:447
 msgid "Contract Start Date"
 msgstr "Contract Start Date"
 
@@ -210,7 +210,7 @@ msgid "Editing organizational units is not possible while offline. Please reconn
 msgstr "Editing organizational units is not possible while offline. Please reconnect to make changes."
 
 #: src/pages/Employees/EmployeeDetail.tsx:519
-#: src/pages/Employees/EmployeeEdit.tsx:294
+#: src/pages/Employees/EmployeeEdit.tsx:296
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
@@ -305,7 +305,7 @@ msgid "Retry"
 msgstr "Retry"
 
 #: src/pages/Employees/EmployeeCreate.tsx:470
-#: src/pages/Employees/EmployeeEdit.tsx:324
+#: src/pages/Employees/EmployeeEdit.tsx:326
 msgid "Personal Information"
 msgstr "Personal Information"
 
@@ -383,7 +383,7 @@ msgstr "A new version of SecPal is available."
 
 #: src/pages/Employees/EmployeeCreate.tsx:522
 #: src/pages/Employees/EmployeeDetail.tsx:138
-#: src/pages/Employees/EmployeeEdit.tsx:356
+#: src/pages/Employees/EmployeeEdit.tsx:358
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
@@ -619,7 +619,7 @@ msgstr "You'll now receive important updates from SecPal"
 
 #: src/pages/Employees/EmployeeCreate.tsx:766
 #: src/pages/Employees/EmployeeDetail.tsx:116
-#: src/pages/Employees/EmployeeEdit.tsx:536
+#: src/pages/Employees/EmployeeEdit.tsx:538
 #: src/pages/Employees/EmployeeList.tsx:300
 msgid "ML"
 msgstr "ML"
@@ -659,7 +659,7 @@ msgid "New Customer"
 msgstr "New Customer"
 
 #: src/pages/Employees/EmployeeCreate.tsx:610
-#: src/pages/Employees/EmployeeEdit.tsx:426
+#: src/pages/Employees/EmployeeEdit.tsx:428
 msgid "Employment Details"
 msgstr "Employment Details"
 
@@ -729,7 +729,7 @@ msgstr "Maximum Viewable Rank"
 #: src/pages/Customers/CustomerDetail.tsx:285
 #: src/pages/Customers/CustomerEdit.tsx:311
 #: src/pages/Employees/EmployeeCreate.tsx:952
-#: src/pages/Employees/EmployeeEdit.tsx:605
+#: src/pages/Employees/EmployeeEdit.tsx:607
 #: src/pages/Onboarding/OnboardingComplete.tsx:653
 #: src/pages/Settings/SettingsPage.tsx:796
 #: src/pages/Settings/SettingsPage.tsx:869
@@ -771,7 +771,7 @@ msgid "Send verification email again"
 msgstr "Send verification email again"
 
 #: src/pages/Employees/EmployeeDetail.tsx:526
-#: src/pages/Employees/EmployeeEdit.tsx:299
+#: src/pages/Employees/EmployeeEdit.tsx:301
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
@@ -1001,8 +1001,8 @@ msgstr "This {0} change is too significant ({similarity}% similar). Please conta
 msgid "Employees"
 msgstr "Employees"
 
-#: src/pages/Employees/EmployeeEdit.tsx:383
-#: src/pages/Employees/EmployeeEdit.tsx:472
+#: src/pages/Employees/EmployeeEdit.tsx:385
+#: src/pages/Employees/EmployeeEdit.tsx:474
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
 
@@ -1106,7 +1106,7 @@ msgstr "Home"
 
 #: src/components/OrganizationalUnitPicker.tsx:238
 #: src/pages/Employees/EmployeeCreate.tsx:720
-#: src/pages/Employees/EmployeeEdit.tsx:500
+#: src/pages/Employees/EmployeeEdit.tsx:502
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
 
@@ -1156,7 +1156,7 @@ msgstr "Cannot Delete \"{unitName}\""
 
 #: src/components/OrganizationalUnitFormDialog.tsx:342
 #: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:608
+#: src/pages/Employees/EmployeeEdit.tsx:610
 #: src/pages/Sites/SiteEdit.tsx:456
 msgid "Save Changes"
 msgstr "Save Changes"
@@ -1198,7 +1198,7 @@ msgid "OpenTimestamp"
 msgstr "OpenTimestamp"
 
 #: src/pages/Employees/EmployeeCreate.tsx:839
-#: src/pages/Employees/EmployeeEdit.tsx:584
+#: src/pages/Employees/EmployeeEdit.tsx:586
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
 
@@ -1309,7 +1309,7 @@ msgid "Expires"
 msgstr "Expires"
 
 #: src/pages/Employees/EmployeeCreate.tsx:476
-#: src/pages/Employees/EmployeeEdit.tsx:330
+#: src/pages/Employees/EmployeeEdit.tsx:332
 msgid "First Name"
 msgstr "First Name"
 
@@ -1543,7 +1543,7 @@ msgstr "Unknown channel"
 
 #: src/pages/Employees/EmployeeCreate.tsx:778
 #: src/pages/Employees/EmployeeDetail.tsx:120
-#: src/pages/Employees/EmployeeEdit.tsx:547
+#: src/pages/Employees/EmployeeEdit.tsx:549
 msgid "No management position"
 msgstr "No management position"
 
@@ -1657,7 +1657,7 @@ msgstr "Date/Time"
 #: src/pages/Customers/CustomerEdit.tsx:251
 #: src/pages/Employees/EmployeeCreate.tsx:570
 #: src/pages/Employees/EmployeeDetail.tsx:101
-#: src/pages/Employees/EmployeeEdit.tsx:397
+#: src/pages/Employees/EmployeeEdit.tsx:399
 #: src/pages/Profile/ProfilePage.tsx:67
 #: src/pages/Sites/SiteCreate.tsx:385
 #: src/pages/Sites/SiteDetail.tsx:196
@@ -1698,7 +1698,7 @@ msgid "Revocation reason"
 msgstr "Revocation reason"
 
 #: src/pages/Employees/EmployeeCreate.tsx:740
-#: src/pages/Employees/EmployeeEdit.tsx:513
+#: src/pages/Employees/EmployeeEdit.tsx:515
 msgid "Leadership Position"
 msgstr "Leadership Position"
 
@@ -1737,7 +1737,7 @@ msgstr "Temporary"
 
 #: src/pages/Employees/EmployeeCreate.tsx:616
 #: src/pages/Employees/EmployeeDetail.tsx:126
-#: src/pages/Employees/EmployeeEdit.tsx:432
+#: src/pages/Employees/EmployeeEdit.tsx:434
 #: src/pages/Employees/EmployeeList.tsx:267
 #: src/pages/Sites/SiteDetail.tsx:228
 msgid "Position"
@@ -1761,7 +1761,7 @@ msgstr "Authentication"
 #: src/pages/ActivityLog/ActivityLogList.tsx:470
 #: src/pages/Employees/EmployeeCreate.tsx:693
 #: src/pages/Employees/EmployeeDetail.tsx:156
-#: src/pages/Employees/EmployeeEdit.tsx:486
+#: src/pages/Employees/EmployeeEdit.tsx:488
 #: src/pages/Employees/EmployeeList.tsx:207
 #: src/pages/Sites/SiteCreate.tsx:219
 #: src/pages/Sites/SiteDetail.tsx:313
@@ -1822,7 +1822,7 @@ msgstr "Description must be at most 1000 characters"
 msgid "Failed to validate onboarding link"
 msgstr "Failed to validate onboarding link"
 
-#: src/pages/Employees/EmployeeEdit.tsx:246
+#: src/pages/Employees/EmployeeEdit.tsx:248
 msgid "Employee ID is missing. Cannot submit form."
 msgstr "Employee ID is missing. Cannot submit form."
 
@@ -1842,7 +1842,7 @@ msgstr "The new employee will receive an onboarding email immediately after crea
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
-#: src/pages/Employees/EmployeeEdit.tsx:311
+#: src/pages/Employees/EmployeeEdit.tsx:313
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
@@ -2075,7 +2075,7 @@ msgstr "Minimize offline notice"
 #: src/pages/Customers/CustomersPage.tsx:186
 #: src/pages/Employees/EmployeeCreate.tsx:816
 #: src/pages/Employees/EmployeeDetail.tsx:131
-#: src/pages/Employees/EmployeeEdit.tsx:571
+#: src/pages/Employees/EmployeeEdit.tsx:573
 #: src/pages/Employees/EmployeeList.tsx:221
 #: src/pages/Employees/EmployeeList.tsx:270
 #: src/pages/Settings/SettingsPage.tsx:518
@@ -2173,7 +2173,7 @@ msgid "Street"
 msgstr "Street"
 
 #: src/pages/Employees/EmployeeCreate.tsx:499
-#: src/pages/Employees/EmployeeEdit.tsx:343
+#: src/pages/Employees/EmployeeEdit.tsx:345
 #: src/pages/Onboarding/OnboardingComplete.tsx:720
 msgid "Last Name"
 msgstr "Last Name"
@@ -2254,7 +2254,7 @@ msgid "Password must be at least 8 characters"
 msgstr "Password must be at least 8 characters"
 
 #: src/pages/Employees/EmployeeDetail.tsx:507
-#: src/pages/Employees/EmployeeEdit.tsx:282
+#: src/pages/Employees/EmployeeEdit.tsx:284
 msgid "Loading employee..."
 msgstr "Loading employee..."
 
@@ -2269,6 +2269,10 @@ msgstr "Creating enrollment session..."
 #: src/pages/Settings/SettingsPage.tsx:614
 msgid "Add passkey"
 msgstr "Add passkey"
+
+#: src/pages/Employees/EmployeeEdit.tsx:168
+msgid "Employee ID is missing."
+msgstr "Employee ID is missing."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx:479
 msgid "No unit selected"
@@ -2328,7 +2332,7 @@ msgstr "Verification Status"
 #: src/components/OrganizationalUnitFormDialog.tsx:338
 #: src/components/ScopeAssignmentForm.tsx:591
 #: src/pages/Customers/CustomerEdit.tsx:304
-#: src/pages/Employees/EmployeeEdit.tsx:608
+#: src/pages/Employees/EmployeeEdit.tsx:610
 #: src/pages/Sites/SiteEdit.tsx:456
 msgid "Saving..."
 msgstr "Saving..."
@@ -2425,7 +2429,7 @@ msgstr "Close"
 #: src/pages/Customers/CustomerEdit.tsx:111
 #: src/pages/Customers/CustomersPage.tsx:160
 #: src/pages/Employees/EmployeeCreate.tsx:719
-#: src/pages/Employees/EmployeeEdit.tsx:499
+#: src/pages/Employees/EmployeeEdit.tsx:501
 #: src/pages/Sites/SiteCreate.tsx:171
 #: src/pages/Sites/SiteDetail.tsx:98
 #: src/pages/Sites/SiteEdit.tsx:146
@@ -2435,7 +2439,7 @@ msgstr "Loading..."
 
 #: src/pages/Employees/EmployeeCreate.tsx:850
 #: src/pages/Employees/EmployeeCreate.tsx:900
-#: src/pages/Employees/EmployeeEdit.tsx:589
+#: src/pages/Employees/EmployeeEdit.tsx:591
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Invitations are only available for employees in pre-contract status."
 
@@ -2476,7 +2480,7 @@ msgstr "Create enrollment session"
 #: src/pages/Customers/CustomerEdit.tsx:264
 #: src/pages/Employees/EmployeeCreate.tsx:593
 #: src/pages/Employees/EmployeeDetail.tsx:106
-#: src/pages/Employees/EmployeeEdit.tsx:410
+#: src/pages/Employees/EmployeeEdit.tsx:412
 #: src/pages/Sites/SiteCreate.tsx:398
 #: src/pages/Sites/SiteDetail.tsx:212
 #: src/pages/Sites/SiteEdit.tsx:369

@@ -40,8 +40,10 @@ export function EmployeeEdit() {
   const [contractDateError, setContractDateError] = useState<string | null>(
     null
   );
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [fetchLoading, setFetchLoading] = useState(id !== undefined);
+  const [error, setError] = useState<string | null>(
+    id === undefined ? i18n._(msg`Employee ID is missing.`) : null
+  );
   const [organizationalUnits, setOrganizationalUnits] = useState<
     OrganizationalUnit[]
   >([]);
