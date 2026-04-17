@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authStorage } from "./storage";
 
 function setCsrfTokenCookie(value: string): void {
@@ -13,6 +13,10 @@ describe("authStorage", () => {
   beforeEach(() => {
     localStorage.clear();
     setCsrfTokenCookie("test-csrf-token");
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("encrypts persisted auth state before writing to localStorage", async () => {
@@ -64,6 +68,39 @@ describe("authStorage", () => {
     setCsrfTokenCookie("rotated-csrf-token");
 
     await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears persisted auth state when WebCrypto rejects during setUser", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cryptoFailure = new DOMException(
+      "The operation failed.",
+      "OperationError"
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({ stale: true, email: "stale@secpal.dev" })
+    );
+
+    vi.spyOn(globalThis.crypto.subtle, "deriveBits").mockRejectedValue(
+      cryptoFailure
+    );
+
+    await expect(authStorage.setUser(user)).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to persist stored user data:",
+      cryptoFailure
+    );
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
