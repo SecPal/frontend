@@ -1,12 +1,14 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "@/locales/de/messages.mjs";
+import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NotificationPreferences } from "./NotificationPreferences";
 import * as useNotificationsModule from "@/hooks/useNotifications";
 
@@ -30,6 +32,9 @@ describe("NotificationPreferences", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+    i18n.activate("en");
 
     mockUseNotifications.mockReturnValue({
       permission: "granted",
@@ -365,6 +370,27 @@ describe("NotificationPreferences", () => {
   });
 
   describe("translation updates", () => {
+    it("should recompute translated preferences when the locale changes", async () => {
+      const { rerender } = await renderWithI18n(<NotificationPreferences />);
+
+      expect(screen.getByText("Security Alerts")).toBeInTheDocument();
+
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <NotificationPreferences />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Sicherheitswarnungen")).toBeInTheDocument();
+      });
+      expect(screen.queryByText("Security Alerts")).not.toBeInTheDocument();
+    });
+
     it("should update translations when locale changes without excessive re-renders", async () => {
       // Track render count to detect infinite loop
       let renderCount = 0;
