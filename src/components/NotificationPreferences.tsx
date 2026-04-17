@@ -126,9 +126,9 @@ export function NotificationPreferences() {
   const { permission, isSupported, requestPermission, showNotification } =
     useNotifications();
 
-  const [preferences, setPreferences] = useState<StoredNotificationPreference[]>(
-    loadStoredPreferences
-  );
+  const [preferences, setPreferences] = useState<
+    StoredNotificationPreference[]
+  >(loadStoredPreferences);
 
   const translatedPreferences = useMemo<NotificationPreference[]>(
     () =>
