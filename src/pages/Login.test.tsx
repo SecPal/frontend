@@ -671,10 +671,10 @@ describe("Login", () => {
       },
     });
 
-    let resolveAssertion!: (value: unknown) => void;
+    let rejectAssertion!: (reason?: unknown) => void;
     vi.mocked(passkeyBrowser.getPasskeyAssertion).mockReturnValue(
-      new Promise((resolve) => {
-        resolveAssertion = resolve as (value: unknown) => void;
+      new Promise((_, reject) => {
+        rejectAssertion = reject as (reason?: unknown) => void;
       })
     );
 
@@ -691,18 +691,18 @@ describe("Login", () => {
       ).toBeInTheDocument();
     });
 
-    // Resolve to avoid dangling promise
-    resolveAssertion({
-      id: "credential-id",
-      raw_id: "credential-id",
-      type: "public-key",
-      response: {
-        client_data_json: "Y2xpZW50",
-        authenticator_data: "YXV0aA",
-        signature: "c2lnbmF0dXJl",
-      },
-      client_extension_results: {},
+    await act(async () => {
+      rejectAssertion(
+        new DOMException("The operation was aborted.", "AbortError")
+      );
     });
+
+    expect(
+      await screen.findByText(/passkey sign-in timed out/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /sign in with passkey/i })
+    ).toBeInTheDocument();
   });
 
   it("shows a verifying prompt while the passkey verify request is in progress", async () => {
@@ -740,6 +740,7 @@ describe("Login", () => {
         resolveVerify = resolve as (value: unknown) => void;
       })
     );
+    vi.mocked(authApi.getCurrentUser).mockResolvedValueOnce(createAuthUser());
 
     renderLogin();
 
@@ -754,15 +755,26 @@ describe("Login", () => {
       ).toBeInTheDocument();
     });
 
-    // Resolve to avoid dangling promise
-    resolveVerify({
-      user: createAuthUser(),
-      authentication: {
-        mode: "session",
-        method: "passkey",
-        mfa_completed: true,
-      },
+    await act(async () => {
+      resolveVerify({
+        user: createAuthUser(),
+        authentication: {
+          mode: "session",
+          method: "passkey",
+          mfa_completed: true,
+        },
+      });
     });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /verifying passkey/i })
+      ).not.toBeInTheDocument();
+    });
+    const passkeyButton = screen.getByRole("button", {
+      name: /sign in with passkey/i,
+    });
+    expect(passkeyButton).toHaveAttribute("aria-busy", "false");
   });
 
   it("confirms the session with getCurrentUser after a successful passkey login", async () => {
