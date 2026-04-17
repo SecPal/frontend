@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Trans, t } from "@lingui/macro";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
@@ -65,22 +65,7 @@ interface FormErrors {
   general?: string;
 }
 
-/**
- * Dialog component for creating and editing organizational units
- *
- * Features:
- * - Create mode: New unit with optional pre-selected parent
- * - Edit mode: Update existing unit name/type/description
- * - Form validation
- * - API error handling
- * - Loading state during submission
- * - Hierarchy-based type filtering (Issue #300)
- *
- * @see Issue #294: Frontend: Organizational unit Create/Edit forms
- * @see Issue #300: UX improvement - filter type dropdown based on parent hierarchy
- */
-export function OrganizationalUnitFormDialog({
-  open,
+function OrganizationalUnitFormDialogContent({
   onClose,
   mode,
   parentId,
@@ -88,41 +73,28 @@ export function OrganizationalUnitFormDialog({
   parentType,
   unit,
   onSuccess,
-}: OrganizationalUnitFormDialogProps) {
+}: Omit<OrganizationalUnitFormDialogProps, "open">) {
   const isOnline = useOnlineStatus();
 
-  // Form state
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    type: "branch",
-    description: "",
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (mode === "edit" && unit) {
+      return {
+        name: unit.name,
+        type: unit.type,
+        description: unit.description || "",
+      };
+    }
+
+    const defaultType = getDefaultChildType(parentType || undefined);
+    return {
+      name: "",
+      type: defaultType || "branch",
+      description: "",
+    };
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when dialog opens or unit changes
-  useEffect(() => {
-    if (open) {
-      if (mode === "edit" && unit) {
-        setFormData({
-          name: unit.name,
-          type: unit.type,
-          description: unit.description || "",
-        });
-      } else {
-        // Create mode: set default type based on parent
-        const defaultType = getDefaultChildType(parentType || undefined);
-        setFormData({
-          name: "",
-          type: defaultType || "branch",
-          description: "",
-        });
-      }
-      setErrors({});
-    }
-  }, [open, mode, unit, parentType]);
-
-  // Validate form
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
@@ -146,7 +118,6 @@ export function OrganizationalUnitFormDialog({
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -185,7 +156,6 @@ export function OrganizationalUnitFormDialog({
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 422 && err.errors) {
-          // Map validation errors to form fields
           const fieldErrors: FormErrors = {};
           for (const [field, messages] of Object.entries(err.errors)) {
             const message = Array.isArray(messages)
@@ -213,13 +183,11 @@ export function OrganizationalUnitFormDialog({
     }
   };
 
-  // Handle field changes
   const handleChange = (
     field: keyof FormData,
     value: string | OrganizationalUnitType
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear field error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
@@ -244,13 +212,12 @@ export function OrganizationalUnitFormDialog({
     );
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <>
       <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogDescription>{dialogDescription}</DialogDescription>
 
       <form onSubmit={handleSubmit}>
         <DialogBody>
-          {/* Offline warning banner - mutations not possible */}
           {!isOnline && (
             <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
               <div className="font-semibold mb-1">
@@ -270,7 +237,6 @@ export function OrganizationalUnitFormDialog({
             </div>
           )}
 
-          {/* General error message */}
           {errors.general && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
               {errors.general}
@@ -278,7 +244,6 @@ export function OrganizationalUnitFormDialog({
           )}
 
           <div className="space-y-6">
-            {/* Name field */}
             <Field>
               <Label>
                 <Trans>Name</Trans>
@@ -297,7 +262,6 @@ export function OrganizationalUnitFormDialog({
               {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
             </Field>
 
-            {/* Type field */}
             <Field>
               <Label>
                 <Trans>Type</Trans>
@@ -327,7 +291,6 @@ export function OrganizationalUnitFormDialog({
               {errors.type && <ErrorMessage>{errors.type}</ErrorMessage>}
             </Field>
 
-            {/* Description field */}
             <Field>
               <Label>
                 <Trans>Description</Trans>
@@ -350,7 +313,6 @@ export function OrganizationalUnitFormDialog({
               )}
             </Field>
 
-            {/* Parent info (read-only in create mode) */}
             {mode === "create" && parentName && (
               <Field>
                 <Label>
@@ -382,6 +344,48 @@ export function OrganizationalUnitFormDialog({
           </Button>
         </DialogActions>
       </form>
+    </>
+  );
+}
+
+/**
+ * Dialog component for creating and editing organizational units
+ *
+ * Features:
+ * - Create mode: New unit with optional pre-selected parent
+ * - Edit mode: Update existing unit name/type/description
+ * - Form validation
+ * - API error handling
+ * - Loading state during submission
+ * - Hierarchy-based type filtering (Issue #300)
+ *
+ * @see Issue #294: Frontend: Organizational unit Create/Edit forms
+ * @see Issue #300: UX improvement - filter type dropdown based on parent hierarchy
+ */
+export function OrganizationalUnitFormDialog({
+  open,
+  onClose,
+  mode,
+  parentId,
+  parentName,
+  parentType,
+  unit,
+  onSuccess,
+}: OrganizationalUnitFormDialogProps) {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      {open ? (
+        <OrganizationalUnitFormDialogContent
+          key={`${open ? "open" : "closed"}:${mode}:${unit?.id ?? parentId ?? "root"}:${parentType ?? "none"}`}
+          onClose={onClose}
+          mode={mode}
+          parentId={parentId}
+          parentName={parentName}
+          parentType={parentType}
+          unit={unit}
+          onSuccess={onSuccess}
+        />
+      ) : null}
     </Dialog>
   );
 }

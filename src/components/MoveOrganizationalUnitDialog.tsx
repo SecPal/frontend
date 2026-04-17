@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Trans, t } from "@lingui/macro";
 import {
   Dialog,
@@ -214,12 +214,13 @@ function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
  *
  * @see Issue #305: Frontend: UI for moving/reparenting units in hierarchy
  */
-export function MoveOrganizationalUnitDialog({
-  open,
+function MoveOrganizationalUnitDialogContent({
   unit,
   onClose,
   onSuccess,
-}: MoveOrganizationalUnitDialogProps) {
+}: Omit<MoveOrganizationalUnitDialogProps, "open"> & {
+  unit: OrganizationalUnit;
+}) {
   // Use offline-first hook for fetching available parent units
   const {
     units: allUnits,
@@ -229,7 +230,9 @@ export function MoveOrganizationalUnitDialog({
     isStale,
   } = useOrganizationalUnitsWithOffline();
 
-  const [selectedParentId, setSelectedParentId] = useState<string>("");
+  const [selectedParentId, setSelectedParentId] = useState<string>(
+    unit.parent?.id || ""
+  );
   const [isMoving, setIsMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -247,8 +250,6 @@ export function MoveOrganizationalUnitDialog({
    * 2. Units that would violate hierarchy rules (parent must be higher rank)
    */
   const availableUnits = useMemo(() => {
-    if (!unit) return [];
-
     const unitRank = TYPE_HIERARCHY[unit.type];
     return allUnits.filter((u) => {
       // Can't be its own parent
@@ -311,18 +312,8 @@ export function MoveOrganizationalUnitDialog({
     return result;
   }, [availableUnits]);
 
-  // Reset state when dialog opens/closes or unit changes
-  useEffect(() => {
-    if (open && unit) {
-      setSelectedParentId(unit.parent?.id || "");
-      setError(null);
-    }
-  }, [open, unit]);
-
   // Handle move action
   const handleMove = async () => {
-    if (!unit) return;
-
     setError(null);
     setIsMoving(true);
 
@@ -350,31 +341,8 @@ export function MoveOrganizationalUnitDialog({
     }
   };
 
-  const handleClose = () => {
-    setError(null);
-    onClose();
-  };
-
-  // Handle null unit gracefully
-  if (!unit) {
-    return (
-      <Dialog open={open} onClose={handleClose} size="md">
-        <DialogBody>
-          <Text>
-            <Trans>No unit selected</Trans>
-          </Text>
-        </DialogBody>
-        <DialogActions>
-          <Button onClick={handleClose}>
-            <Trans>Close</Trans>
-          </Button>
-        </DialogActions>
-      </Dialog>
-    );
-  }
-
   return (
-    <Dialog open={open} onClose={handleClose} size="md">
+    <>
       <div className="flex items-center gap-4">
         <div className="shrink-0 rounded-full bg-blue-100 p-2 dark:bg-blue-900/50">
           <ArrowsRightLeftIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -481,7 +449,7 @@ export function MoveOrganizationalUnitDialog({
       </DialogBody>
 
       <DialogActions>
-        <Button plain onClick={handleClose} disabled={isMoving}>
+        <Button plain onClick={onClose} disabled={isMoving}>
           <Trans>Cancel</Trans>
         </Button>
         <Button
@@ -492,6 +460,39 @@ export function MoveOrganizationalUnitDialog({
           {isMoving ? <Trans>Moving...</Trans> : <Trans>Move</Trans>}
         </Button>
       </DialogActions>
+    </>
+  );
+}
+
+export function MoveOrganizationalUnitDialog({
+  open,
+  unit,
+  onClose,
+  onSuccess,
+}: MoveOrganizationalUnitDialogProps) {
+  return (
+    <Dialog open={open} onClose={onClose} size="md">
+      {!unit ? (
+        <>
+          <DialogBody>
+            <Text>
+              <Trans>No unit selected</Trans>
+            </Text>
+          </DialogBody>
+          <DialogActions>
+            <Button onClick={onClose}>
+              <Trans>Close</Trans>
+            </Button>
+          </DialogActions>
+        </>
+      ) : open ? (
+        <MoveOrganizationalUnitDialogContent
+          key={`${open ? "open" : "closed"}:${unit.id}:${unit.parent?.id ?? "root"}`}
+          unit={unit}
+          onClose={onClose}
+          onSuccess={onSuccess}
+        />
+      ) : null}
     </Dialog>
   );
 }

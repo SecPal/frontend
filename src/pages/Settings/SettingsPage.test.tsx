@@ -183,7 +183,7 @@ const textBytes = (value: string) => Uint8Array.from(Buffer.from(value)).buffer;
 
 describe("SettingsPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     // Setup i18n with English locale
     i18n.load("en", {});
     i18n.activate("en");
@@ -630,7 +630,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
     expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
 
@@ -651,7 +651,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
     expect(await screen.findByText(/deletion exploded/i)).toBeInTheDocument();
   });
@@ -661,7 +661,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
     expect(
       await screen.findByText(/failed to delete passkey/i)
@@ -675,7 +675,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
     expect(
       await screen.findByText(/passkey deletion failed/i)

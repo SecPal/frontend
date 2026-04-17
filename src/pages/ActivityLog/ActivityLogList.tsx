@@ -115,28 +115,31 @@ export function ActivityLogList() {
     setSearchParams(params, { replace: true });
   }, [filters, setSearchParams]);
 
-  const loadActivities = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetchActivityLogs(filters);
-      setActivities(response.data);
-      setPagination(response.meta);
-    } catch (err) {
-      console.error("Failed to load activity logs:", err);
-      let errorMessage = "Failed to load activity logs";
+  const refreshActivities = useCallback(() => {
+    setLoading(true);
+    setError(null);
 
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null && "message" in err) {
-        errorMessage = String(err.message);
-      }
+    void fetchActivityLogs(filters)
+      .then((response) => {
+        setActivities(response.data);
+        setPagination(response.meta);
+      })
+      .catch((err) => {
+        console.error("Failed to load activity logs:", err);
+        let errorMessage = "Failed to load activity logs";
 
-      setError(errorMessage);
-      setActivities([]);
-    } finally {
-      setLoading(false);
-    }
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === "object" && err !== null && "message" in err) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+        setActivities([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [filters]);
 
   // Load organizational units on mount
@@ -157,53 +160,106 @@ export function ActivityLogList() {
   }, []);
 
   useEffect(() => {
-    loadActivities();
-  }, [loadActivities]);
+    let active = true;
+
+    void fetchActivityLogs(filters)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setActivities(response.data);
+        setPagination(response.meta);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        console.error("Failed to load activity logs:", err);
+        let errorMessage = "Failed to load activity logs";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (
+          typeof err === "object" &&
+          err !== null &&
+          "message" in err
+        ) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+        setActivities([]);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [filters]);
 
   // Auto-refresh: Reload data every 30 seconds when enabled
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
-      loadActivities();
+      refreshActivities();
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [autoRefresh, loadActivities]);
+  }, [autoRefresh, refreshActivities]);
 
   // Refresh on page focus (when user returns to tab)
   useEffect(() => {
     const handleFocus = () => {
-      loadActivities();
+      refreshActivities();
     };
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [loadActivities]);
+  }, [refreshActivities]);
 
   function handleLogNameFilter(log_name: string | undefined) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, log_name, page: 1 });
   }
 
   function handleOrganizationalUnitFilter(
     organizational_unit_id: string | undefined
   ) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, organizational_unit_id, page: 1 });
   }
 
   function handleSearch(search: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, search, page: 1 });
   }
 
   function handleFromDateFilter(from_date: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, from_date: from_date || undefined, page: 1 });
   }
 
   function handleToDateFilter(to_date: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, to_date: to_date || undefined, page: 1 });
   }
 
   function handlePageChange(page: number) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, page });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -246,7 +302,7 @@ export function ActivityLogList() {
           )}
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              onClick={() => loadActivities()}
+              onClick={refreshActivities}
               disabled={loading}
               outline
               title={_(msg`Refresh activity logs`)}

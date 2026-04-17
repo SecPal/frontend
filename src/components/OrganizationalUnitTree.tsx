@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useEffect, lazy, Suspense, memo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense, memo } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Button } from "./button";
 import { SpinnerContainer } from "./spinner";
@@ -542,6 +542,56 @@ function updateUnitInTree(
   });
 }
 
+function removeUnitFromTree(
+  units: OrganizationalUnit[],
+  unitId: string
+): OrganizationalUnit[] {
+  return units
+    .filter((unit) => unit.id !== unitId)
+    .map((unit) => ({
+      ...unit,
+      children: unit.children ? removeUnitFromTree(unit.children, unitId) : undefined,
+    }));
+}
+
+function buildTreeUnits(
+  items: OrganizationalUnit[],
+  rootUnitIds: string[],
+  typeFilter?: OrganizationalUnitType,
+  flatView = false
+): OrganizationalUnit[] {
+  if (items.length === 0) {
+    return [];
+  }
+
+  if (flatView) {
+    return typeFilter ? items.filter((item) => item.type === typeFilter) : items;
+  }
+
+  const itemMap = new Map<string, OrganizationalUnit>();
+  const filteredItems = typeFilter
+    ? items.filter((item) => item.type === typeFilter)
+    : items;
+
+  filteredItems.forEach((item) => {
+    itemMap.set(item.id, { ...item, children: [] });
+  });
+
+  const rootItems: OrganizationalUnit[] = [];
+  filteredItems.forEach((item) => {
+    const node = itemMap.get(item.id)!;
+    if (item.parent?.id && itemMap.has(item.parent.id)) {
+      const parent = itemMap.get(item.parent.id)!;
+      parent.children = parent.children || [];
+      parent.children.push(node);
+    } else if (rootUnitIds.length === 0 || rootUnitIds.includes(item.id)) {
+      rootItems.push(node);
+    }
+  });
+
+  return rootItems;
+}
+
 export interface OrganizationalUnitTreeProps {
   /** Callback when a unit is selected */
   onSelect?: (unit: OrganizationalUnit) => void;
@@ -618,6 +668,10 @@ export function OrganizationalUnitTree({
   );
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
   const [unitToMove, setUnitToMove] = useState<OrganizationalUnit | null>(null);
+  const [locallyDeletedUnitIds, setLocallyDeletedUnitIds] = useState<string[]>([]);
+  const [locallyMovedParents, setLocallyMovedParents] = useState<
+    Record<string, string | null>
+  >({});
 
   // Use offline-first hook for organizational units
   const {
@@ -628,93 +682,40 @@ export function OrganizationalUnitTree({
     refresh,
   } = useOrganizationalUnitsWithOffline();
 
-  // Local state for tree structure
-  const [units, setUnits] = useState<OrganizationalUnit[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const error = hookError;
 
-  // Update error from hook
-  useEffect(() => {
-    setError(hookError);
-  }, [hookError]);
+  const baseUnits = useMemo(
+    () => buildTreeUnits(rawUnits, apiRootUnitIds, typeFilter, flatView),
+    [rawUnits, apiRootUnitIds, typeFilter, flatView]
+  );
 
-  // Build tree structure when rawUnits or dependencies change
-  useEffect(() => {
-    if (rawUnits.length === 0) {
-      setUnits([]);
-      return;
-    }
+  const units = useMemo(() => {
+    let nextUnits = baseUnits;
 
-    if (flatView) {
-      // Flat view: Filter by type if needed
-      const filtered = typeFilter
-        ? rawUnits.filter((unit) => unit.type === typeFilter)
-        : rawUnits;
-      setUnits(filtered);
-    } else {
-      // Tree view: Build hierarchy
-      const buildTree = (
-        items: OrganizationalUnit[],
-        rootUnitIds: string[]
-      ): OrganizationalUnit[] => {
-        const itemMap = new Map<string, OrganizationalUnit>();
-
-        // Filter by type first if needed
-        const filteredItems = typeFilter
-          ? items.filter((item) => item.type === typeFilter)
-          : items;
-
-        // First pass: create map with empty children arrays
-        filteredItems.forEach((item) => {
-          itemMap.set(item.id, { ...item, children: [] });
-        });
-
-        // Second pass: build tree structure
-        const rootItems: OrganizationalUnit[] = [];
-        filteredItems.forEach((item) => {
-          const node = itemMap.get(item.id)!;
-          if (item.parent?.id && itemMap.has(item.parent.id)) {
-            // Has accessible parent - add as child
-            const parent = itemMap.get(item.parent.id)!;
-            parent.children = parent.children || [];
-            parent.children.push(node);
-          } else if (
-            rootUnitIds.length === 0 ||
-            rootUnitIds.includes(item.id)
-          ) {
-            // Either no parent (true root), parent inaccessible (designated root),
-            // or offline mode (no rootUnitIds available - show all without parents)
-            rootItems.push(node);
-          }
-          // Units with parents that aren't accessible and aren't in rootUnitIds are ignored
-        });
-
-        return rootItems;
-      };
-
-      // Use apiRootUnitIds from hook (empty array when offline)
-      setUnits(buildTree(rawUnits, apiRootUnitIds));
-    }
-  }, [rawUnits, apiRootUnitIds, flatView, typeFilter]);
-
-  // Optimistic UI: Handle newly created unit from parent component
-  // Uses key property to ensure each create triggers the effect
-  useEffect(() => {
     if (createdUnit) {
-      setUnits((prevUnits) =>
-        addUnitToTree(prevUnits, createdUnit.unit, createdUnit.parentId)
-      );
+      nextUnits = addUnitToTree(nextUnits, createdUnit.unit, createdUnit.parentId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createdUnit?.key]);
 
-  // Optimistic UI: Handle updated unit from parent component
-  // Uses key property to ensure each update triggers the effect
-  useEffect(() => {
     if (updatedUnit) {
-      setUnits((prevUnits) => updateUnitInTree(prevUnits, updatedUnit.unit));
+      nextUnits = updateUnitInTree(nextUnits, updatedUnit.unit);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [updatedUnit?.key]);
+
+    for (const deletedUnitId of locallyDeletedUnitIds) {
+      nextUnits = removeUnitFromTree(nextUnits, deletedUnitId);
+    }
+
+    for (const [unitId, newParentId] of Object.entries(locallyMovedParents)) {
+      nextUnits = moveUnitInTree(nextUnits, unitId, newParentId);
+    }
+
+    return nextUnits;
+  }, [
+    baseUnits,
+    createdUnit,
+    updatedUnit,
+    locallyDeletedUnitIds,
+    locallyMovedParents,
+  ]);
 
   const handleDeleteClick = useCallback((unit: OrganizationalUnit) => {
     setUnitToDelete(unit);
@@ -724,21 +725,11 @@ export function OrganizationalUnitTree({
   const handleDeleteSuccess = useCallback(() => {
     if (!unitToDelete) return;
 
-    // Optimistic UI update: Remove the deleted unit from local state
-    // This avoids reloading the entire tree (Issue #303)
-    setUnits((prevUnits) => {
-      const removeUnit = (
-        units: OrganizationalUnit[]
-      ): OrganizationalUnit[] => {
-        return units
-          .filter((unit) => unit.id !== unitToDelete.id)
-          .map((unit) => ({
-            ...unit,
-            children: unit.children ? removeUnit(unit.children) : undefined,
-          }));
-      };
-      return removeUnit(prevUnits);
-    });
+    setLocallyDeletedUnitIds((current) =>
+      current.includes(unitToDelete.id)
+        ? current
+        : [...current, unitToDelete.id]
+    );
 
     // Notify parent component
     onDelete?.(unitToDelete);
@@ -760,15 +751,10 @@ export function OrganizationalUnitTree({
     (newParentId: string) => {
       if (!unitToMove) return;
 
-      // Optimistic UI update: Move the unit in local state
-      // This avoids reloading the entire tree (Issue #303)
-      setUnits((prevUnits) =>
-        moveUnitInTree(
-          prevUnits,
-          unitToMove.id,
-          newParentId === "" ? null : newParentId
-        )
-      );
+      setLocallyMovedParents((current) => ({
+        ...current,
+        [unitToMove.id]: newParentId === "" ? null : newParentId,
+      }));
 
       // Notify parent component
       onMove?.(unitToMove);

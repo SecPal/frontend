@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -25,7 +25,65 @@ interface NotificationPreference {
   description: string;
 }
 
+interface StoredNotificationPreference {
+  category: NotificationCategory;
+  enabled: boolean;
+}
+
 const STORAGE_KEY = "secpal-notification-preferences";
+
+const DEFAULT_NOTIFICATION_PREFERENCES: StoredNotificationPreference[] = [
+  { category: "alerts", enabled: true },
+  { category: "updates", enabled: true },
+  { category: "reminders", enabled: true },
+  { category: "messages", enabled: false },
+];
+
+function loadStoredPreferences(): StoredNotificationPreference[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      return DEFAULT_NOTIFICATION_PREFERENCES;
+    }
+
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      console.warn("Invalid notification preferences format, using defaults");
+      return DEFAULT_NOTIFICATION_PREFERENCES;
+    }
+
+    return DEFAULT_NOTIFICATION_PREFERENCES.map((pref) => {
+      const storedPref = parsed.find(
+        (entry: StoredNotificationPreference) =>
+          entry &&
+          typeof entry === "object" &&
+          entry.category === pref.category &&
+          typeof entry.enabled === "boolean"
+      );
+
+      return storedPref ? { ...pref, enabled: storedPref.enabled } : pref;
+    });
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      console.error(
+        "Failed to parse notification preferences, using defaults:",
+        error
+      );
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Ignore removal errors (e.g., SecurityError in private mode)
+      }
+    } else {
+      console.error(
+        "Failed to load notification preferences (storage access denied):",
+        error
+      );
+    }
+
+    return DEFAULT_NOTIFICATION_PREFERENCES;
+  }
+}
 
 /**
  * Helper function to get translations for a given category
@@ -68,105 +126,23 @@ export function NotificationPreferences() {
   const { permission, isSupported, requestPermission, showNotification } =
     useNotifications();
 
-  // Default preferences with translations that update when locale changes
-  const defaultPreferences = useMemo<NotificationPreference[]>(
-    () => [
-      {
-        category: "alerts" as const,
-        enabled: true,
-        ...getTranslationsForCategory("alerts", i18n),
-      },
-      {
-        category: "updates" as const,
-        enabled: true,
-        ...getTranslationsForCategory("updates", i18n),
-      },
-      {
-        category: "reminders" as const,
-        enabled: true,
-        ...getTranslationsForCategory("reminders", i18n),
-      },
-      {
-        category: "messages" as const,
-        enabled: false,
-        ...getTranslationsForCategory("messages", i18n),
-      },
-    ],
-    [i18n]
+  const [preferences, setPreferences] = useState<StoredNotificationPreference[]>(
+    loadStoredPreferences
   );
 
-  const [preferences, setPreferences] = useState<NotificationPreference[]>(
-    () => defaultPreferences
+  const translatedPreferences = useMemo<NotificationPreference[]>(
+    () =>
+      preferences.map((pref) => ({
+        ...pref,
+        ...getTranslationsForCategory(pref.category, i18n),
+      })),
+    [preferences, i18n]
   );
 
   const [isEnabling, setIsEnabling] = useState(false);
 
-  // Update translations when locale changes
-  // We compute translations directly using the helper function and depend on i18n.locale,
-  // avoiding defaultPreferences to prevent unnecessary re-renders or infinite loops.
-  useEffect(() => {
-    setPreferences((current) =>
-      current.map((pref) => ({
-        ...pref,
-        ...getTranslationsForCategory(pref.category, i18n),
-      }))
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.locale]); // Only locale changes should trigger translation updates
-
-  // Load preferences from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          // Validate that parsed data is an array
-          if (!Array.isArray(parsed)) {
-            console.warn(
-              "Invalid notification preferences format, using defaults"
-            );
-            return;
-          }
-
-          setPreferences((current) =>
-            current.map((pref) => {
-              const storedPref = parsed.find(
-                (p: NotificationPreference) =>
-                  p &&
-                  typeof p === "object" &&
-                  p.category === pref.category &&
-                  typeof p.enabled === "boolean"
-              );
-              return storedPref
-                ? { ...pref, enabled: storedPref.enabled }
-                : pref;
-            })
-          );
-        } catch (parseError) {
-          console.error(
-            "Failed to parse notification preferences, using defaults:",
-            parseError
-          );
-          // Clear corrupted data
-          try {
-            localStorage.removeItem(STORAGE_KEY);
-          } catch {
-            // Ignore removal errors (e.g., SecurityError in private mode)
-          }
-        }
-      }
-    } catch (error) {
-      // Handle QuotaExceededError or SecurityError when accessing localStorage
-      console.error(
-        "Failed to load notification preferences (storage access denied):",
-        error
-      );
-    }
-  }, []);
-
   // Save preferences to localStorage synchronously for immediate error feedback
-  const savePreferences = (newPreferences: NotificationPreference[]) => {
+  const savePreferences = (newPreferences: StoredNotificationPreference[]) => {
     setPreferences(newPreferences);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
@@ -301,7 +277,7 @@ export function NotificationPreferences() {
       </div>
 
       <Fieldset>
-        {preferences.map((pref) => (
+        {translatedPreferences.map((pref) => (
           <Field key={pref.category}>
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">

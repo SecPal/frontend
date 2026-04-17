@@ -29,9 +29,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Tracked in https://github.com/SecPal/frontend/issues/874 — disable until
-      // the void-loadFn()-in-useEffect patterns are refactored properly.
-      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/set-state-in-effect": "error",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
