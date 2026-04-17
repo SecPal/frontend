@@ -487,7 +487,7 @@ export function MoveOrganizationalUnitDialog({
         </>
       ) : open ? (
         <MoveOrganizationalUnitDialogContent
-          key={`${open ? "open" : "closed"}:${unit.id}:${unit.parent?.id ?? "root"}`}
+          key={`${unit.id}:${unit.parent?.id ?? "root"}`}
           unit={unit}
           onClose={onClose}
           onSuccess={onSuccess}

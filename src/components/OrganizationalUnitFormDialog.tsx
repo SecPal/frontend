@@ -376,7 +376,7 @@ export function OrganizationalUnitFormDialog({
     <Dialog open={open} onClose={onClose}>
       {open ? (
         <OrganizationalUnitFormDialogContent
-          key={`${open ? "open" : "closed"}:${mode}:${unit?.id ?? parentId ?? "root"}:${parentType ?? "none"}`}
+          key={`${mode}:${unit?.id ?? parentId ?? "root"}:${parentType ?? "none"}`}
           onClose={onClose}
           mode={mode}
           parentId={parentId}

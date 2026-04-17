@@ -614,7 +614,7 @@ export function ScopeAssignmentForm({
     <Dialog open={open} onClose={onClose} size="2xl">
       {open ? (
         <ScopeAssignmentFormContent
-          key={`${open ? "open" : "closed"}:${mode}:${scope?.id ?? user?.id ?? "new"}`}
+          key={`${mode}:${scope?.id ?? user?.id ?? "new"}`}
           onClose={onClose}
           mode={mode}
           organizationalUnitId={organizationalUnitId}
