@@ -44,11 +44,6 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
-function setCsrfTokenCookie(value: string): void {
-  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
-  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
-}
-
 let seededAuthUser: PersistedAuthUser | null = null;
 
 async function seedPersistedAuthUser(user: Record<string, unknown>) {
@@ -111,7 +106,6 @@ describe("App", () => {
     vi.clearAllMocks();
     localStorage.clear();
     seededAuthUser = null;
-    setCsrfTokenCookie("app-test-csrf-token");
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
