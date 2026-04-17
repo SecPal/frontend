@@ -770,11 +770,11 @@ describe("Login", () => {
       expect(
         screen.queryByRole("button", { name: /verifying passkey/i })
       ).not.toBeInTheDocument();
+      const passkeyButton = screen.getByRole("button", {
+        name: /sign in with passkey/i,
+      });
+      expect(passkeyButton).toHaveAttribute("aria-busy", "false");
     });
-    const passkeyButton = screen.getByRole("button", {
-      name: /sign in with passkey/i,
-    });
-    expect(passkeyButton).toHaveAttribute("aria-busy", "false");
   });
 
   it("confirms the session with getCurrentUser after a successful passkey login", async () => {
