@@ -16,6 +16,7 @@ import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee } from "@/types/api";
 import { EmployeeDetail } from "./EmployeeDetail";
+import { ApiError } from "../../services/ApiError";
 import * as employeeApi from "../../services/employeeApi";
 import * as qualificationApi from "../../services/qualificationApi";
 import * as documentApi from "../../services/employeeDocumentApi";
@@ -66,6 +67,11 @@ const mockEmployee: Employee = {
   date_of_birth: "1990-01-01",
   position: "Developer",
   contract_start_date: "2025-01-01",
+  bwr_id: null,
+  bwr_status: "not_registered",
+  bwr_registered_at: null,
+  bwr_submission_date: null,
+  bwr_notes: null,
   status: "active",
   contract_type: "full_time",
   management_level: 0,
@@ -208,6 +214,166 @@ describe("EmployeeDetail", () => {
     });
 
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("should render the BWR management panel with export controls", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      bwr_notes: "Awaiting initial Bewacherregister export",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /bewacherregister/i })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Not registered")).toBeInTheDocument();
+    expect(screen.getByLabelText(/export format/i)).toHaveValue("csv");
+    expect(
+      screen.getByRole("button", { name: /generate bwr export/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Awaiting initial Bewacherregister export")
+    ).toBeInTheDocument();
+  });
+
+  it("should generate a BWR export and refresh the employee", async () => {
+    vi.mocked(employeeApi.fetchEmployee)
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        bwr_status: "not_registered",
+      })
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        bwr_status: "pending",
+        bwr_submission_date: "2025-01-02",
+      });
+
+    vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
+      employee_id: "emp-1",
+      status: "pending",
+      format: "xml",
+      download_url: "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /generate bwr export/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/export format/i), {
+      target: { value: "xml" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /generate bwr export/i })
+    );
+
+    await waitFor(() => {
+      expect(employeeApi.exportEmployeeBwr).toHaveBeenCalledWith("emp-1", "xml");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/bwr export generated/i)).toBeInTheDocument();
+    });
+
+    const downloadLink = screen.getByRole("link", {
+      name: /download latest export/i,
+    });
+    expect(downloadLink).toHaveAttribute(
+      "href",
+      "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download"
+    );
+  });
+
+  it("should show export readiness validation errors in the BWR panel", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
+    vi.mocked(employeeApi.exportEmployeeBwr).mockRejectedValue(
+      new ApiError("Employee is not ready for BWR export.", 422, {
+        general: ["gender", "birth_city"],
+      })
+    );
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /generate bwr export/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /generate bwr export/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Employee is not ready for BWR export.")
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("gender")).toBeInTheDocument();
+    expect(screen.getByText("birth_city")).toBeInTheDocument();
+  });
+
+  it("should update the BWR status and refresh the employee", async () => {
+    vi.mocked(employeeApi.fetchEmployee)
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        bwr_status: "pending",
+      })
+      .mockResolvedValueOnce({
+        ...mockEmployee,
+        bwr_status: "active",
+        bwr_id: "1234567",
+        bwr_registered_at: "2025-01-03T10:30:00Z",
+        bwr_notes: "Registration confirmed by authority",
+      });
+
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue({
+      ...mockEmployee,
+      bwr_status: "active",
+      bwr_id: "1234567",
+      bwr_registered_at: "2025-01-03T10:30:00Z",
+      bwr_notes: "Registration confirmed by authority",
+    });
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^BWR Status$/i)).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/^BWR Status$/i), {
+      target: { value: "active" },
+    });
+    fireEvent.change(screen.getByLabelText(/^BWR ID$/i), {
+      target: { value: "1234567" },
+    });
+    fireEvent.change(screen.getByLabelText(/^BWR Notes$/i), {
+      target: { value: "Registration confirmed by authority" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save bwr status/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployeeBwrStatus).toHaveBeenCalledWith(
+        "emp-1",
+        {
+          status: "active",
+          bwr_id: "1234567",
+          notes: "Registration confirmed by authority",
+        }
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/bwr status updated/i)).toBeInTheDocument();
+    });
   });
 
   it("should display error on fetch failure", async () => {
@@ -769,8 +935,8 @@ describe("EmployeeDetail", () => {
         ).toBeInTheDocument();
       });
 
-      // Should NOT display ML badge
-      expect(screen.queryByText(/ML/)).not.toBeInTheDocument();
+      // Should NOT display the management badge markup
+      expect(screen.queryByText(/^ML\s+\d+$/)).not.toBeInTheDocument();
     });
 
     it("should display high management level (CEO level)", async () => {
