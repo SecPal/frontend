@@ -711,12 +711,13 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_user", JSON.stringify(newUser));
-      const crossTabLoginEvent = new StorageEvent("storage", {
-        key: "auth_user",
-        oldValue: null,
-        newValue: JSON.stringify(newUser),
-        storageArea: localStorage,
-      });
+      const crossTabLoginEvent = new Event("storage");
+      Object.defineProperties(crossTabLoginEvent, {
+        key: { value: "auth_user" },
+        oldValue: { value: null },
+        newValue: { value: JSON.stringify(newUser) },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLoginEvent);
     });
 
