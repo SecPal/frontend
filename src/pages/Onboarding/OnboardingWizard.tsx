@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 import {
   createOnboardingSubmission,
@@ -106,69 +106,87 @@ export function OnboardingWizard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const currentStepTemplateId = steps[currentStepIndex]?.template_id;
 
-  const loadOnboardingSteps = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchOnboardingSteps();
-      setSteps(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load onboarding steps"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  function syncStepState(step: OnboardingStep | undefined) {
+    const currentSubmission = step?.submission ?? null;
 
-  const loadCurrentTemplate = useCallback(async () => {
-    const currentStep = steps[currentStepIndex];
-
-    if (!currentStep) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const templateData = await fetchOnboardingTemplate(
-        currentStep.template_id
-      );
-      const currentSubmission = currentStep.submission ?? null;
-
-      setTemplate(templateData);
-      setSubmission(currentSubmission);
-      setFormData(
-        currentSubmission?.form_data &&
-          typeof currentSubmission.form_data === "object"
-          ? currentSubmission.form_data
-          : {}
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load form template"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [currentStepIndex, steps]);
+    setSubmission(currentSubmission);
+    setFormData(
+      currentSubmission?.form_data &&
+        typeof currentSubmission.form_data === "object"
+        ? currentSubmission.form_data
+        : {}
+    );
+  }
 
   useEffect(() => {
-    void loadOnboardingSteps();
-  }, [loadOnboardingSteps]);
+    let active = true;
+
+    void fetchOnboardingSteps()
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+
+        setError(null);
+        setLoading(data.length > 0);
+        setSteps(data);
+        syncStepState(data[0]);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        setError(
+          err instanceof Error ? err.message : "Failed to load onboarding steps"
+        );
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
   useEffect(() => {
-    if (steps.length > 0) {
-      void loadCurrentTemplate();
+    if (!currentStepTemplateId) {
+      return;
     }
-    // Intentionally omitting `loadCurrentTemplate` from deps: including it would
-    // retrigger this effect on every setSteps call (e.g. after saving a draft),
-    // causing an unnecessary API round-trip. The effect should only run when
-    // the active step index or the step count changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepIndex, steps.length]);
+
+    let active = true;
+
+    void fetchOnboardingTemplate(currentStepTemplateId)
+      .then((templateData) => {
+        if (!active) {
+          return;
+        }
+
+        setTemplate(templateData);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        setError(
+          err instanceof Error ? err.message : "Failed to load form template"
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentStepIndex, currentStepTemplateId]);
 
   function updateCurrentStep(
     savedSubmission: OnboardingSubmission,
@@ -235,12 +253,24 @@ export function OnboardingWizard() {
       (await persistCurrentStep("draft")) &&
       currentStepIndex < steps.length - 1
     ) {
+      const nextStep = steps[currentStepIndex + 1];
+
+      setLoading(true);
+      setError(null);
+      setTemplate(null);
+      syncStepState(nextStep);
       setCurrentStepIndex(currentStepIndex + 1);
     }
   }
 
   function handlePrevious() {
     if (currentStepIndex > 0) {
+      const previousStep = steps[currentStepIndex - 1];
+
+      setLoading(true);
+      setError(null);
+      setTemplate(null);
+      syncStepState(previousStep);
       setCurrentStepIndex(currentStepIndex - 1);
     }
   }

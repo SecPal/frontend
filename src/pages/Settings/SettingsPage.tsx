@@ -147,53 +147,77 @@ export function SettingsPage() {
     [sensitiveAction]
   );
 
-  const loadMfaStatus = useCallback(async () => {
-    setIsLoadingMfaStatus(true);
-    setMfaStatusError(null);
+  useEffect(() => {
+    let active = true;
 
-    try {
-      const response = await getMfaStatus();
-      setMfaStatus(response.data);
-    } catch (error) {
-      if (error instanceof AuthApiError) {
-        setMfaStatusError(error.message);
-      } else if (error instanceof Error) {
-        setMfaStatusError(error.message);
-      } else {
-        setMfaStatusError("Failed to load MFA status.");
-      }
-    } finally {
-      setIsLoadingMfaStatus(false);
-    }
+    void getMfaStatus()
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setMfaStatus(response.data);
+        setMfaStatusError(null);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        if (error instanceof AuthApiError) {
+          setMfaStatusError(error.message);
+        } else if (error instanceof Error) {
+          setMfaStatusError(error.message);
+        } else {
+          setMfaStatusError("Failed to load MFA status.");
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingMfaStatus(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    void loadMfaStatus();
-  }, [loadMfaStatus]);
+    let active = true;
 
-  const loadPasskeys = useCallback(async () => {
-    setIsLoadingPasskeys(true);
-    setPasskeyError(null);
+    void getPasskeys()
+      .then((response) => {
+        if (!active) {
+          return;
+        }
 
-    try {
-      const response = await getPasskeys();
-      setPasskeys(response.data);
-    } catch (error) {
-      if (error instanceof AuthApiError) {
-        setPasskeyError(error.message);
-      } else if (error instanceof Error) {
-        setPasskeyError(error.message);
-      } else {
-        setPasskeyError("Failed to load passkeys.");
-      }
-    } finally {
-      setIsLoadingPasskeys(false);
-    }
+        setPasskeys(response.data);
+        setPasskeyError(null);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        if (error instanceof AuthApiError) {
+          setPasskeyError(error.message);
+        } else if (error instanceof Error) {
+          setPasskeyError(error.message);
+        } else {
+          setPasskeyError("Failed to load passkeys.");
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingPasskeys(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
-
-  useEffect(() => {
-    void loadPasskeys();
-  }, [loadPasskeys]);
 
   const handlePasskeyRemoval = async (credentialId: string) => {
     setPasskeyError(null);
@@ -201,7 +225,8 @@ export function SettingsPage() {
 
     try {
       await deletePasskey(credentialId);
-      await loadPasskeys();
+      const response = await getPasskeys();
+      setPasskeys(response.data);
     } catch (error) {
       if (error instanceof AuthApiError) {
         setPasskeyError(error.message);

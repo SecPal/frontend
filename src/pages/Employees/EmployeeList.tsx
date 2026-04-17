@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeFilters, EmployeeStatus } from "@/types/api";
@@ -73,30 +73,6 @@ export function EmployeeList() {
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
 
-  const loadEmployees = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetchEmployees(filters);
-      setEmployees(response.data);
-      setPagination(response.meta);
-    } catch (err) {
-      console.error("Failed to load employees:", err);
-      let errorMessage = "Failed to load employees";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null && "message" in err) {
-        errorMessage = String(err.message);
-      }
-
-      setError(errorMessage);
-      setEmployees([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
   // Load organizational units on mount
   useEffect(() => {
     async function loadUnits() {
@@ -115,24 +91,73 @@ export function EmployeeList() {
   }, []);
 
   useEffect(() => {
-    loadEmployees();
-  }, [loadEmployees]);
+    let active = true;
+
+    void fetchEmployees(filters)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setEmployees(response.data);
+        setPagination(response.meta);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        console.error("Failed to load employees:", err);
+        let errorMessage = "Failed to load employees";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (
+          typeof err === "object" &&
+          err !== null &&
+          "message" in err
+        ) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+        setEmployees([]);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [filters]);
 
   function handleStatusFilter(status: EmployeeStatus | undefined) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, status, page: 1 });
   }
 
   function handleOrganizationalUnitFilter(
     organizational_unit_id: string | undefined
   ) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, organizational_unit_id, page: 1 });
   }
 
   function handleSearch(search: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, search, page: 1 });
   }
 
   function handlePageChange(page: number) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, page });
   }
 

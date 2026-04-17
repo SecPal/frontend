@@ -6,7 +6,7 @@
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -46,29 +46,48 @@ export default function CustomersPage() {
     total: 0,
   });
 
-  const loadCustomers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await listCustomers(filters);
-      setCustomers(response.data);
-      setPagination(response.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load customers");
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    let active = true;
+
+    void listCustomers(filters)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setCustomers(response.data);
+        setPagination(response.meta);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        setError(
+          err instanceof Error ? err.message : "Failed to load customers"
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [filters]);
 
-  useEffect(() => {
-    loadCustomers();
-  }, [loadCustomers]);
-
   function handleSearch(value: string) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, search: value, page: 1 });
   }
 
   function handleStatusFilter(value: string) {
+    setLoading(true);
+    setError(null);
     setFilters({
       ...filters,
       is_active: value === "" ? undefined : value === "true",
@@ -77,6 +96,8 @@ export default function CustomersPage() {
   }
 
   function handlePageChange(page: number) {
+    setLoading(true);
+    setError(null);
     setFilters({ ...filters, page });
   }
 
