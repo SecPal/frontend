@@ -184,26 +184,38 @@ export default function AndroidProvisioningPage() {
   const canCreate = capabilities.actions.androidProvisioning.create;
   const canRevoke = capabilities.actions.androidProvisioning.revoke;
 
-  async function loadSessions() {
-    setLoading(true);
-    setLoadError(null);
-
-    try {
-      const response = await requestJson<AndroidSessionListResponse>(
-        "/v1/admin/android-enrollment-sessions?per_page=15"
-      );
-      setSessions(response.data);
-    } catch (error) {
-      setLoadError(
-        getErrorMessage(error, "Failed to load Android enrollment sessions")
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    void loadSessions();
+    let active = true;
+
+    void requestJson<AndroidSessionListResponse>(
+      "/v1/admin/android-enrollment-sessions?per_page=15"
+    )
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setSessions(response.data);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setLoadError(
+          getErrorMessage(error, "Failed to load Android enrollment sessions")
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleCreateSession(event: FormEvent<HTMLFormElement>) {

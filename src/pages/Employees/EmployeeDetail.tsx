@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Trans } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
@@ -217,21 +217,30 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
   );
   const [loading, setLoading] = useState(true);
 
-  const loadQualifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchEmployeeQualifications(employeeId);
-      setQualifications(data);
-    } catch (err) {
-      console.error("Failed to load qualifications", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId]);
-
   useEffect(() => {
-    loadQualifications();
-  }, [loadQualifications]);
+    let active = true;
+
+    void fetchEmployeeQualifications(employeeId)
+      .then((data) => {
+        if (active) {
+          setQualifications(data);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error("Failed to load qualifications", err);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [employeeId]);
 
   if (loading) {
     return (
@@ -285,21 +294,30 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadDocuments = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await fetchEmployeeDocuments(employeeId);
-      setDocuments(data);
-    } catch (err) {
-      console.error("Failed to load documents", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [employeeId]);
-
   useEffect(() => {
-    loadDocuments();
-  }, [loadDocuments]);
+    let active = true;
+
+    void fetchEmployeeDocuments(employeeId)
+      .then((data) => {
+        if (active) {
+          setDocuments(data);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error("Failed to load documents", err);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [employeeId]);
 
   if (loading) {
     return (
@@ -356,35 +374,62 @@ export function EmployeeDetail() {
   const [activeTab, setActiveTab] = useState("profile");
   const [actionLoading, setActionLoading] = useState(false);
 
-  const loadEmployee = useCallback(async () => {
-    if (!id) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchEmployee(id);
-      setEmployee(data);
-    } catch (err) {
-      console.error("Failed to load employee:", err);
-      let errorMessage = "Failed to load employee";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null && "message" in err) {
-        errorMessage = String(err.message);
-      }
-
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+  async function refreshEmployee() {
+    if (!id) {
+      return;
     }
-  }, [id]);
+
+    const data = await fetchEmployee(id);
+    setEmployee(data);
+    setError(null);
+  }
 
   useEffect(() => {
-    if (id) {
-      loadEmployee();
+    if (!id) {
+      return;
     }
-  }, [id, loadEmployee]);
+
+    let active = true;
+
+    void fetchEmployee(id)
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+
+        setEmployee(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+
+        console.error("Failed to load employee:", err);
+        let errorMessage = "Failed to load employee";
+
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (
+          typeof err === "object" &&
+          err !== null &&
+          "message" in err
+        ) {
+          errorMessage = String(err.message);
+        }
+
+        setError(errorMessage);
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   async function handleActivate() {
     if (!id || !confirm("Activate this employee?")) return;
@@ -392,7 +437,7 @@ export function EmployeeDetail() {
     try {
       setActionLoading(true);
       await activateEmployee(id);
-      await loadEmployee();
+      await refreshEmployee();
     } catch (err) {
       console.error("Failed to activate employee:", err);
       let errorMessage = "Failed to activate employee";
@@ -415,7 +460,7 @@ export function EmployeeDetail() {
     try {
       setActionLoading(true);
       await terminateEmployee(id);
-      await loadEmployee();
+      await refreshEmployee();
     } catch (err) {
       console.error("Failed to terminate employee:", err);
       let errorMessage = "Failed to terminate employee";
@@ -438,7 +483,7 @@ export function EmployeeDetail() {
     try {
       setActionLoading(true);
       await confirmEmployeeOnboarding(id, undefined);
-      await loadEmployee();
+      await refreshEmployee();
     } catch (err) {
       console.error("Failed to confirm onboarding:", err);
       let errorMessage = "Failed to confirm onboarding";
