@@ -154,9 +154,10 @@ function EmployeeBwrPanel({
   const currentStatus = employee.bwr_status ?? "not_registered";
   const [exportFormat, setExportFormat] =
     useState<EmployeeBwrExportFormat>("csv");
-  const [selectedStatus, setSelectedStatus] = useState<EmployeeBwrManagedStatus>(
-    currentStatus === "not_registered" ? "pending" : currentStatus
-  );
+  const [selectedStatus, setSelectedStatus] =
+    useState<EmployeeBwrManagedStatus>(
+      currentStatus === "not_registered" ? "pending" : currentStatus
+    );
   const [bwrId, setBwrId] = useState(employee.bwr_id ?? "");
   const [notes, setNotes] = useState(employee.bwr_notes ?? "");
   const [latestExportUrl, setLatestExportUrl] = useState<string | null>(null);
@@ -185,7 +186,8 @@ function EmployeeBwrPanel({
       setLatestExportUrl(response.download_url);
       const refreshedEmployee = await onRefresh();
       if (refreshedEmployee) {
-        const refreshedStatus = refreshedEmployee.bwr_status ?? "not_registered";
+        const refreshedStatus =
+          refreshedEmployee.bwr_status ?? "not_registered";
         setSelectedStatus(
           refreshedStatus === "not_registered" ? "pending" : refreshedStatus
         );
@@ -194,13 +196,9 @@ function EmployeeBwrPanel({
       }
       setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
     } catch (error) {
-      setPanelError(
-        getBwrErrorMessage(error, "Failed to generate BWR export")
-      );
+      setPanelError(getBwrErrorMessage(error, "Failed to generate BWR export"));
       setPanelFieldErrors(
-        error instanceof ApiError
-          ? normalizeBwrFieldErrors(error.errors)
-          : {}
+        error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
     } finally {
       setExportLoading(false);
@@ -220,7 +218,8 @@ function EmployeeBwrPanel({
       });
       const refreshedEmployee = await onRefresh();
       if (refreshedEmployee) {
-        const refreshedStatus = refreshedEmployee.bwr_status ?? "not_registered";
+        const refreshedStatus =
+          refreshedEmployee.bwr_status ?? "not_registered";
         setSelectedStatus(
           refreshedStatus === "not_registered" ? "pending" : refreshedStatus
         );
@@ -231,9 +230,7 @@ function EmployeeBwrPanel({
     } catch (error) {
       setPanelError(getBwrErrorMessage(error, "Failed to update BWR status"));
       setPanelFieldErrors(
-        error instanceof ApiError
-          ? normalizeBwrFieldErrors(error.errors)
-          : {}
+        error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
     } finally {
       setSaveLoading(false);
@@ -336,8 +333,8 @@ function EmployeeBwrPanel({
       {!canManage ? (
         <Text className="text-sm text-zinc-500 dark:text-zinc-400">
           <Trans>
-            You can inspect BWR data, but write permission is required to
-            manage it.
+            You can inspect BWR data, but write permission is required to manage
+            it.
           </Trans>
         </Text>
       ) : currentStatus === "not_registered" ? (
@@ -386,7 +383,9 @@ function EmployeeBwrPanel({
                 id="bwr-status"
                 value={selectedStatus}
                 onChange={(event) =>
-                  setSelectedStatus(event.target.value as EmployeeBwrManagedStatus)
+                  setSelectedStatus(
+                    event.target.value as EmployeeBwrManagedStatus
+                  )
                 }
               >
                 {managedStatusOptions.map((status) => (

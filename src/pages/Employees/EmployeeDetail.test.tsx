@@ -256,7 +256,8 @@ describe("EmployeeDetail", () => {
       employee_id: "emp-1",
       status: "pending",
       format: "xml",
-      download_url: "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download",
+      download_url:
+        "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download",
     });
 
     renderWithProviders("emp-1");
@@ -275,7 +276,10 @@ describe("EmployeeDetail", () => {
     );
 
     await waitFor(() => {
-      expect(employeeApi.exportEmployeeBwr).toHaveBeenCalledWith("emp-1", "xml");
+      expect(employeeApi.exportEmployeeBwr).toHaveBeenCalledWith(
+        "emp-1",
+        "xml"
+      );
     });
 
     await waitFor(() => {
