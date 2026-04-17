@@ -2270,7 +2270,7 @@ msgstr "Enrollment-Sitzung wird erstellt..."
 msgid "Add passkey"
 msgstr "Passkey hinzufügen"
 
-#: src/pages/Employees/EmployeeEdit.tsx:168
+#: src/pages/Employees/EmployeeEdit.tsx:45
 msgid "Employee ID is missing."
 msgstr "Mitarbeiter-ID fehlt."
 
