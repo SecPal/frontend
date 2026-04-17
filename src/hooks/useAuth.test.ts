@@ -717,7 +717,7 @@ describe("useAuth", () => {
         oldValue: { value: null },
         newValue: { value: JSON.stringify(newUser) },
         storageArea: { value: localStorage },
-      });
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLoginEvent);
     });
 
