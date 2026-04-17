@@ -7,7 +7,7 @@ import { getCsrfTokenFromCookie } from "./csrf";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const AUTH_STORAGE_VERSION = 1;
-const AUTH_STORAGE_PBKDF2_ITERATIONS = 5_000;
+const AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_SALT_BYTES = 16;
 const AUTH_STORAGE_IV_BYTES = 16;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
@@ -260,7 +260,13 @@ function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
 async function decryptPersistedAuthUser(
   storedUser: string
 ): Promise<PersistedAuthUser | null> {
-  const parsedStoredUser = JSON.parse(storedUser) as unknown;
+  let parsedStoredUser: unknown;
+
+  try {
+    parsedStoredUser = JSON.parse(storedUser) as unknown;
+  } catch {
+    return null;
+  }
 
   if (!isAuthStorageEnvelope(parsedStoredUser)) {
     return sanitizePersistedAuthUser(parsedStoredUser);
@@ -360,6 +366,16 @@ class LocalStorageAuthStorage implements AuthStorage {
     return !this.hasLogoutBarrier() && hasStoredUserRecord(this.USER_KEY);
   }
 
+  private clearInvalidStoredUser(): null {
+    this.removeUser();
+    return null;
+  }
+
+  private handleStoredUserError(message: string, error: unknown): null {
+    console.error(message, error);
+    return this.clearInvalidStoredUser();
+  }
+
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
       this.removeUser();
@@ -382,15 +398,12 @@ class LocalStorageAuthStorage implements AuthStorage {
       const sanitizedUser = sanitizePersistedAuthUser(parsedStoredUser);
 
       if (!sanitizedUser) {
-        this.removeUser();
-        return null;
+        return this.clearInvalidStoredUser();
       }
 
       return sanitizedUser;
     } catch (error) {
-      console.error("Failed to parse stored user snapshot:", error);
-      this.removeUser();
-      return null;
+      return this.handleStoredUserError("Failed to parse stored user snapshot:", error);
     }
   }
 
@@ -407,15 +420,12 @@ class LocalStorageAuthStorage implements AuthStorage {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
 
       if (!sanitizedUser) {
-        this.removeUser();
-        return null;
+        return this.clearInvalidStoredUser();
       }
 
       return sanitizedUser;
     } catch (error) {
-      console.error("Failed to parse stored user data:", error);
-      this.removeUser();
-      return null;
+      return this.handleStoredUserError("Failed to parse stored user data:", error);
     }
   }
 
@@ -439,7 +449,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     if (!encryptedUser) {
       console.warn(
-        "Failed to derive session-bound auth storage key; clearing persisted auth state."
+        "Failed to derive auth storage key due to missing CSRF token/session context; clearing persisted auth state."
       );
       this.removeUser();
       return;

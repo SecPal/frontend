@@ -7,11 +7,10 @@ import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
-import {
-  sanitizePersistedAuthUser,
-  type PersistedAuthUser,
-} from "./services/authState";
+import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
+
+const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
@@ -39,12 +38,10 @@ vi.spyOn(globalThis, "fetch").mockRejectedValue(
 // Helper to render with I18n and wait for async updates
 async function renderWithI18n(component: React.ReactElement) {
   const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
-  // Wait for any async state updates to settle
-  await waitFor(() => {});
+  // Wait for microtasks queued during initial render/effects to settle
+  await Promise.resolve();
   return result;
 }
-
-let seededAuthUser: PersistedAuthUser | null = null;
 
 async function seedPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
@@ -53,8 +50,8 @@ async function seedPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed persisted auth user for test");
   }
 
-  seededAuthUser = persistedUser;
   await authStorage.setUser(persistedUser);
+  mockGetCurrentUser.mockResolvedValue(persistedUser);
 
   return persistedUser;
 }
@@ -66,8 +63,8 @@ function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed legacy persisted auth user for test");
   }
 
-  seededAuthUser = persistedUser;
   localStorage.setItem("auth_user", JSON.stringify(persistedUser));
+  mockGetCurrentUser.mockResolvedValue(persistedUser);
 
   return persistedUser;
 }
@@ -105,17 +102,12 @@ describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    seededAuthUser = null;
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
-    mockGetCurrentUser.mockImplementation(async () => {
-      if (!seededAuthUser) {
-        throw new Error("No mock auth user available for bootstrap");
-      }
-
-      return seededAuthUser;
-    });
+    mockGetCurrentUser.mockRejectedValue(
+      new Error("No mock auth user available for bootstrap")
+    );
   });
 
   it("renders login page when not authenticated", async () => {
@@ -155,7 +147,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -173,7 +165,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -193,7 +185,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -211,7 +203,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -229,7 +221,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -247,7 +239,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
   });
 
@@ -265,7 +257,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/new");
   });
@@ -284,7 +276,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/123/edit");
   });
@@ -303,7 +295,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/sites/new");
   });
@@ -322,7 +314,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/sites/123/edit");
   });
@@ -342,7 +334,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/employees/create");
   });
@@ -362,7 +354,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: 20000 })
+      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/employees/123/edit");
   });
@@ -402,7 +394,7 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: 20000 })
+      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
     ).toBeInTheDocument();
 
     expect(window.location.pathname).toBe("/dashboard");
@@ -488,14 +480,14 @@ describe("App", () => {
       () => {
         expect(window.location.pathname).toBe("/");
       },
-      { timeout: 20000 }
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
     );
 
     expect(
       await screen.findByRole(
         "heading",
         { name: /welcome to secpal/i },
-        { timeout: 20000 }
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
       )
     ).toBeInTheDocument();
   });

@@ -110,7 +110,7 @@ const mfaChallengeFixture = {
   expires_at: "2026-04-01T09:30:00Z",
 };
 
-const textBytes = (value: string) => Uint8Array.from(Buffer.from(value)).buffer;
+const textBytes = (value: string) => Uint8Array.from(new TextEncoder().encode(value)).buffer;
 const loadPasskeyBrowser = () =>
   vi.importActual<typeof import("../services/passkeyBrowser")>(
     "../services/passkeyBrowser"
@@ -1061,7 +1061,9 @@ describe("Login", () => {
   it("displays error message on login failure", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const testError = new authApi.AuthApiError("Invalid credentials");
-    mockLogin.mockRejectedValue(testError); // Use mockRejectedValue instead of mockRejectedValueOnce
+    // Keep rejection active for every invocation in this test flow
+    // (e.g., rerenders/retries), so the failure path remains deterministic.
+    mockLogin.mockRejectedValue(testError);
 
     renderLogin();
 

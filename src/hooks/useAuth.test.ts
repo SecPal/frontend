@@ -116,7 +116,7 @@ describe("useAuth", () => {
     const expectedRevalidatedUser = { ...revalidatedUser, id: "1" };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await authStorage.setUser(mockUser);
     mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
 
     const { result } = renderHook(() => useAuth(), {
@@ -124,8 +124,14 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.user).toEqual({ ...mockUser, id: "1" });
+
+    // Encrypted storage is read asynchronously; wait for getUser() to decrypt
+    // and set the cached user before bootstrap revalidation completes.
+    await waitFor(() => {
+      expect(result.current.user).toEqual({ ...mockUser, id: "1" });
+    });
     expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.isLoading).toBe(true);
 
     deferred.resolve(revalidatedUser);
 
@@ -150,14 +156,18 @@ describe("useAuth", () => {
     };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await authStorage.setUser(mockUser);
     mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    expect(result.current.isAuthenticated).toBe(true);
+    // Encrypted storage is read asynchronously; wait for getUser() to decrypt
+    // and set the cached user before proceeding.
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
     expect(result.current.isLoading).toBe(true);
 
     act(() => {
@@ -185,7 +195,7 @@ describe("useAuth", () => {
       email: "test@secpal.dev",
     };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await authStorage.setUser(mockUser);
     mockGetCurrentUser.mockRejectedValue(
       Object.assign(new Error("Unauthorized"), {
         code: "HTTP_401",
@@ -216,7 +226,7 @@ describe("useAuth", () => {
       emailVerified: false,
     };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await authStorage.setUser(mockUser);
     mockGetCurrentUser.mockRejectedValue(new Error("Network down"));
 
     const { result } = renderHook(() => useAuth(), {
@@ -232,7 +242,7 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBe("network");
-    expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
+    await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
@@ -244,7 +254,7 @@ describe("useAuth", () => {
       emailVerified: false,
     };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await authStorage.setUser(mockUser);
     mockGetCurrentUser.mockRejectedValue(
       Object.assign(
         new Error("Android auth requires an active internet connection"),
@@ -267,7 +277,7 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBe(JSON.stringify(mockUser));
+    await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 

@@ -352,7 +352,7 @@ export async function exportEmployeeBwr(
     throw new ApiError(
       error.message || "Failed to generate BWR export",
       response.status,
-      normalizeApiErrorErrors(error.errors) ?? response,
+      normalizeApiErrorErrors(error.errors) ?? undefined,
       response
     );
   }
@@ -390,7 +390,7 @@ export async function updateEmployeeBwrStatus(
     throw new ApiError(
       error.message || "Failed to update BWR status",
       response.status,
-      normalizeApiErrorErrors(error.errors) ?? response,
+      normalizeApiErrorErrors(error.errors) ?? undefined,
       response
     );
   }
