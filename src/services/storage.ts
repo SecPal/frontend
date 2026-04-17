@@ -427,7 +427,15 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
-    const encryptedUser = await encryptPersistedAuthUser(sanitizedUser);
+    let encryptedUser: string | null;
+
+    try {
+      encryptedUser = await encryptPersistedAuthUser(sanitizedUser);
+    } catch (error) {
+      console.error("Failed to persist stored user data:", error);
+      this.removeUser();
+      return;
+    }
 
     if (!encryptedUser) {
       console.warn(
