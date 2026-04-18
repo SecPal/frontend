@@ -63,6 +63,8 @@ function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed legacy persisted auth user for test");
   }
 
+  // codeql[js/clear-text-storage-of-sensitive-data]: intentional legacy
+  // test scaffolding for backward-compat coverage of cleartext persisted auth.
   localStorage.setItem("auth_user", JSON.stringify(persistedUser));
   mockGetCurrentUser.mockResolvedValue(persistedUser);
 
