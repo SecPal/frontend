@@ -17,7 +17,7 @@ const trackedFiles = [
 ];
 
 const directAuthUserWritePattern =
-  /localStorage\.setItem\(\s*["']auth_user["']\s*,\s*JSON\.stringify\(/;
+  /(?:(?:window|globalThis)\s*\.\s*)?localStorage\s*\.\s*setItem\(\s*["']auth_user["']\s*,\s*JSON\s*\.\s*stringify\(/;
 
 describe("Issue 889 auth storage fixture regression", () => {
   it("does not seed auth_user test state via direct localStorage JSON writes", () => {
