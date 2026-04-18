@@ -383,15 +383,12 @@ describe("useAuth", () => {
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.isLoading).toBe(false);
-        expect(result.current.user).toEqual(mockUser);
-        expect(result.current.isAuthenticated).toBe(true);
-        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      },
-      BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000
-    );
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
   });
 
   it("keeps stored auth when offline without revalidation", async () => {

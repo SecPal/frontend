@@ -84,7 +84,9 @@ const renderProtectedRoute = () => {
   );
 };
 
-const persistAuthUser = async (user: Record<string, unknown> = unverifiedUser) => {
+const persistAuthUser = async (
+  user: Record<string, unknown> = unverifiedUser
+) => {
   const persistedUser = sanitizePersistedAuthUser(user);
 
   if (!persistedUser) {
@@ -231,7 +233,6 @@ describe("ProtectedRoute", () => {
         emailVerified: true,
       });
 
-
     await persistAuthUser({
       id: 1,
       name: "Test",
@@ -350,9 +351,13 @@ describe("ProtectedRoute", () => {
     renderProtectedRoute();
 
     fireEvent.click(
-      await screen.findByRole("button", {
-        name: /send verification email again/i,
-      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
+      await screen.findByRole(
+        "button",
+        {
+          name: /send verification email again/i,
+        },
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
+      )
     );
 
     expect(
@@ -381,15 +386,23 @@ describe("ProtectedRoute", () => {
     renderProtectedRoute();
 
     fireEvent.click(
-      await screen.findByRole("button", {
-        name: /send verification email again/i,
-      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
+      await screen.findByRole(
+        "button",
+        {
+          name: /send verification email again/i,
+        },
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
+      )
     );
 
     expect(
-      await screen.findByText(/too many requests\./i, {}, {
-        timeout: AUTH_ROUTE_TIMEOUT_MS,
-      })
+      await screen.findByText(
+        /too many requests\./i,
+        {},
+        {
+          timeout: AUTH_ROUTE_TIMEOUT_MS,
+        }
+      )
     ).toBeInTheDocument();
   });
 
@@ -401,9 +414,13 @@ describe("ProtectedRoute", () => {
     renderProtectedRoute();
 
     fireEvent.click(
-      await screen.findByRole("button", {
-        name: /send verification email again/i,
-      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
+      await screen.findByRole(
+        "button",
+        {
+          name: /send verification email again/i,
+        },
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
+      )
     );
 
     expect(
