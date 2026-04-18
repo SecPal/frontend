@@ -14,6 +14,7 @@ import {
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
+import { getOnboardingStepState } from "./onboardingWizardState";
 
 function ProgressIndicator({
   currentStep,
@@ -108,18 +109,6 @@ export function OnboardingWizard() {
   const [saving, setSaving] = useState(false);
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
 
-  function syncStepState(step: OnboardingStep | undefined) {
-    const currentSubmission = step?.submission ?? null;
-
-    setSubmission(currentSubmission);
-    setFormData(
-      currentSubmission?.form_data &&
-        typeof currentSubmission.form_data === "object"
-        ? currentSubmission.form_data
-        : {}
-    );
-  }
-
   useEffect(() => {
     let active = true;
 
@@ -132,7 +121,10 @@ export function OnboardingWizard() {
         setError(null);
         setLoading(data.length > 0);
         setSteps(data);
-        syncStepState(data[0]);
+
+        const stepState = getOnboardingStepState(data[0]);
+        setSubmission(stepState.submission);
+        setFormData(stepState.formData);
       })
       .catch((err) => {
         if (!active) {
@@ -254,11 +246,13 @@ export function OnboardingWizard() {
       currentStepIndex < steps.length - 1
     ) {
       const nextStep = steps[currentStepIndex + 1];
+      const nextStepState = getOnboardingStepState(nextStep);
 
       setLoading(true);
       setError(null);
       setTemplate(null);
-      syncStepState(nextStep);
+      setSubmission(nextStepState.submission);
+      setFormData(nextStepState.formData);
       setCurrentStepIndex(currentStepIndex + 1);
     }
   }
@@ -266,11 +260,13 @@ export function OnboardingWizard() {
   function handlePrevious() {
     if (currentStepIndex > 0) {
       const previousStep = steps[currentStepIndex - 1];
+      const previousStepState = getOnboardingStepState(previousStep);
 
       setLoading(true);
       setError(null);
       setTemplate(null);
-      syncStepState(previousStep);
+      setSubmission(previousStepState.submission);
+      setFormData(previousStepState.formData);
       setCurrentStepIndex(currentStepIndex - 1);
     }
   }
