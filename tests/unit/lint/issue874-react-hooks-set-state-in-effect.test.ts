@@ -70,8 +70,19 @@ function lintTrackedFiles(trackedFiles: string[]) {
     {
       cwd: repoRoot,
       encoding: "utf8",
+      timeout: ISSUE_874_BATCH_TIMEOUT_MS,
+      killSignal: "SIGTERM",
     }
   );
+
+  if (
+    result.signal === "SIGTERM" ||
+    result.error?.message?.includes("ETIMEDOUT")
+  ) {
+    throw new Error(
+      `ESLint timed out after ${ISSUE_874_BATCH_TIMEOUT_MS}ms for batch: ${trackedFiles.join(", ")}`
+    );
+  }
 
   expect(result.error).toBeUndefined();
   expect(result.status, result.stderr).toBe(0);
