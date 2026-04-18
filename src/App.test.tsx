@@ -437,37 +437,45 @@ describe("App", () => {
   });
 
   it("keeps supporting legacy cleartext persisted auth state on unknown authenticated routes", async () => {
+    const originalConsoleError = console.error.bind(console);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation((...args: Parameters<typeof console.error>) => {
+        if (!args.some((a) => String(a).includes("not wrapped in act"))) {
+          originalConsoleError(...args);
+        }
+      });
 
-    window.history.replaceState({}, "", "/dashboard");
+    try {
+      window.history.replaceState({}, "", "/dashboard");
 
-    seedLegacyPersistedAuthUser({
-      id: 1,
-      name: "User",
-      email: "user@secpal.dev",
-      emailVerified: true,
-    });
+      seedLegacyPersistedAuthUser({
+        id: 1,
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      });
 
-    await renderWithI18n(<App />);
+      await renderWithI18n(<App />);
 
-    expect(
-      await screen.findByText(
-        /Page Not Found/i,
-        {},
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
+      expect(
+        await screen.findByText(
+          /Page Not Found/i,
+          {},
+          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+        )
+      ).toBeInTheDocument();
 
-    expect(window.location.pathname).toBe("/dashboard");
+      expect(window.location.pathname).toBe("/dashboard");
 
-    const actWarnings = consoleErrorSpy.mock.calls
-      .flatMap((call) => call.map((entry) => String(entry)))
-      .filter((message) => message.includes("not wrapped in act"));
+      const actWarnings = consoleErrorSpy.mock.calls
+        .flatMap((call) => call.map((entry) => String(entry)))
+        .filter((message) => message.includes("not wrapped in act"));
 
-    expect(actWarnings).toEqual([]);
-    consoleErrorSpy.mockRestore();
+      expect(actWarnings).toEqual([]);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
