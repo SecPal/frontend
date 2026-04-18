@@ -543,7 +543,7 @@ describe("useAuth", () => {
         oldValue: { value: JSON.stringify(mockUser) },
         newValue: { value: null },
         storageArea: { value: localStorage },
-      });
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLogoutEvent);
     });
 
