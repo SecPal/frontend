@@ -21,7 +21,7 @@ msgstr "Full Name"
 msgid "Enabling..."
 msgstr "Enabling..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:308
+#: src/pages/Onboarding/OnboardingWizard.tsx:304
 msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
 
@@ -785,7 +785,7 @@ msgstr "This session was revoked and can no longer be used for device setup."
 #: src/pages/Customers/CustomersPage.tsx:279
 #: src/pages/Employees/EmployeeList.tsx:336
 #: src/pages/Employees/EmployeeList.tsx:377
-#: src/pages/Onboarding/OnboardingWizard.tsx:74
+#: src/pages/Onboarding/OnboardingWizard.tsx:75
 #: src/pages/Sites/SitesPage.tsx:272
 #: src/pages/Sites/SitesPage.tsx:313
 msgid "Previous"
@@ -1131,7 +1131,7 @@ msgstr "Failed to save scope assignment."
 #: src/pages/Customers/CustomersPage.tsx:287
 #: src/pages/Employees/EmployeeList.tsx:343
 #: src/pages/Employees/EmployeeList.tsx:385
-#: src/pages/Onboarding/OnboardingWizard.tsx:90
+#: src/pages/Onboarding/OnboardingWizard.tsx:91
 #: src/pages/Sites/SitesPage.tsx:279
 #: src/pages/Sites/SitesPage.tsx:321
 msgid "Next"
@@ -1662,7 +1662,7 @@ msgstr "All"
 msgid "Invitation Mail Sent"
 msgstr "Invitation Mail Sent"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:31
+#: src/pages/Onboarding/OnboardingWizard.tsx:32
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Step {currentStep} of {totalSteps}"
 
@@ -2015,7 +2015,7 @@ msgstr "Loading employees..."
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:86
+#: src/pages/Onboarding/OnboardingWizard.tsx:87
 msgid "Submit for Review"
 msgstr "Submit for Review"
 
@@ -2321,7 +2321,7 @@ msgstr "Reason"
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:290
+#: src/pages/Onboarding/OnboardingWizard.tsx:286
 msgid "Loading onboarding..."
 msgstr "Loading onboarding..."
 
@@ -2380,7 +2380,7 @@ msgstr "Verifying passkey…"
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:81
+#: src/pages/Onboarding/OnboardingWizard.tsx:82
 msgid "Save Draft"
 msgstr "Save Draft"
 
@@ -2580,6 +2580,6 @@ msgstr "Phone"
 msgid "This session has already been used to complete device bootstrap."
 msgstr "This session has already been used to complete device bootstrap."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx:335
+#: src/pages/Onboarding/OnboardingWizard.tsx:331
 msgid "Form fields will be rendered based on schema"
 msgstr "Form fields will be rendered based on schema"
