@@ -147,7 +147,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -165,7 +169,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -185,7 +193,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -203,7 +215,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -221,7 +237,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -239,7 +259,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -257,7 +281,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/new");
   });
@@ -276,7 +304,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/123/edit");
   });
@@ -295,7 +327,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/sites/new");
   });
@@ -314,7 +350,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/sites/123/edit");
   });
@@ -334,7 +374,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/employees/create");
   });
@@ -354,7 +398,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Access Denied/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/employees/123/edit");
   });
@@ -394,7 +442,11 @@ describe("App", () => {
     await renderWithI18n(<App />);
 
     expect(
-      await screen.findByText(/Page Not Found/i, {}, { timeout: ROUTE_NAVIGATION_TIMEOUT_MS })
+      await screen.findByText(
+        /Page Not Found/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
 
     expect(window.location.pathname).toBe("/dashboard");

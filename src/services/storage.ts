@@ -403,7 +403,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       return sanitizedUser;
     } catch (error) {
-      return this.handleStoredUserError("Failed to parse stored user snapshot:", error);
+      return this.handleStoredUserError(
+        "Failed to parse stored user snapshot:",
+        error
+      );
     }
   }
 
@@ -425,7 +428,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       return sanitizedUser;
     } catch (error) {
-      return this.handleStoredUserError("Failed to parse stored user data:", error);
+      return this.handleStoredUserError(
+        "Failed to parse stored user data:",
+        error
+      );
     }
   }
 

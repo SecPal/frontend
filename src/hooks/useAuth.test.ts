@@ -8,6 +8,7 @@ import {
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
+import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
@@ -109,6 +110,7 @@ describe("useAuth", () => {
       email: "test@secpal.dev",
       emailVerified: false,
     };
+    const storedUser = sanitizePersistedAuthUser(mockUser);
     const revalidatedUser = {
       ...mockUser,
       roles: ["Admin"],
@@ -116,7 +118,8 @@ describe("useAuth", () => {
     const expectedRevalidatedUser = { ...revalidatedUser, id: "1" };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
 
-    await authStorage.setUser(mockUser);
+    expect(storedUser).not.toBeNull();
+    await authStorage.setUser(storedUser!);
     mockGetCurrentUser.mockReturnValueOnce(deferred.promise);
 
     const { result } = renderHook(() => useAuth(), {

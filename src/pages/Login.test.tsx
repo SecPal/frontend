@@ -110,7 +110,8 @@ const mfaChallengeFixture = {
   expires_at: "2026-04-01T09:30:00Z",
 };
 
-const textBytes = (value: string) => Uint8Array.from(new TextEncoder().encode(value)).buffer;
+const textBytes = (value: string) =>
+  Uint8Array.from(new TextEncoder().encode(value)).buffer;
 const loadPasskeyBrowser = () =>
   vi.importActual<typeof import("../services/passkeyBrowser")>(
     "../services/passkeyBrowser"
