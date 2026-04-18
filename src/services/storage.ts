@@ -6,7 +6,9 @@ import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
-const AUTH_STORAGE_VERSION = 1;
+const AUTH_STORAGE_LEGACY_VERSION = 1;
+const AUTH_STORAGE_VERSION = 2;
+const AUTH_STORAGE_LEGACY_PBKDF2_ITERATIONS = 5_000;
 const AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_SALT_BYTES = 16;
 const AUTH_STORAGE_IV_BYTES = 16;
@@ -16,13 +18,29 @@ const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
+type AuthStorageVersion =
+  | typeof AUTH_STORAGE_LEGACY_VERSION
+  | typeof AUTH_STORAGE_VERSION;
+
 interface AuthStorageEnvelope {
   scheme: typeof AUTH_STORAGE_SCHEME;
-  version: typeof AUTH_STORAGE_VERSION;
+  version: AuthStorageVersion;
   salt: string;
   iv: string;
   ciphertext: string;
   mac: string;
+}
+
+function isAuthStorageVersion(value: unknown): value is AuthStorageVersion {
+  return (
+    value === AUTH_STORAGE_LEGACY_VERSION || value === AUTH_STORAGE_VERSION
+  );
+}
+
+function getAuthStorageIterations(version: AuthStorageVersion): number {
+  return version === AUTH_STORAGE_LEGACY_VERSION
+    ? AUTH_STORAGE_LEGACY_PBKDF2_ITERATIONS
+    : AUTH_STORAGE_PBKDF2_ITERATIONS;
 }
 
 function getAuthStorageKeyMaterial(): string | null {
@@ -66,7 +84,8 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 
 async function deriveAuthStorageKeys(
   keyMaterial: string,
-  salt: Uint8Array
+  salt: Uint8Array,
+  iterations: number
 ): Promise<{ encryptionKey: CryptoKey; macKey: CryptoKey }> {
   const baseKey = await crypto.subtle.importKey(
     "raw",
@@ -81,7 +100,7 @@ async function deriveAuthStorageKeys(
       name: "PBKDF2",
       hash: "SHA-256",
       salt: toArrayBuffer(salt),
-      iterations: AUTH_STORAGE_PBKDF2_ITERATIONS,
+      iterations,
     },
     baseKey,
     AUTH_STORAGE_DERIVED_KEY_BYTES * 8
@@ -206,7 +225,8 @@ async function encryptPersistedAuthUser(
   const iv = createRandomBytes(AUTH_STORAGE_IV_BYTES);
   const { encryptionKey, macKey } = await deriveAuthStorageKeys(
     keyMaterial,
-    salt
+    salt,
+    getAuthStorageIterations(AUTH_STORAGE_VERSION)
   );
   const ciphertext = await encryptAuthPayload(
     JSON.stringify(user),
@@ -249,7 +269,7 @@ function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
 
   return (
     candidate.scheme === AUTH_STORAGE_SCHEME &&
-    candidate.version === AUTH_STORAGE_VERSION &&
+    isAuthStorageVersion(candidate.version) &&
     typeof candidate.salt === "string" &&
     typeof candidate.iv === "string" &&
     typeof candidate.ciphertext === "string" &&
@@ -287,7 +307,8 @@ async function decryptPersistedAuthUser(
   } satisfies Omit<AuthStorageEnvelope, "mac">;
   const { encryptionKey, macKey } = await deriveAuthStorageKeys(
     keyMaterial,
-    decodeBase64(parsedStoredUser.salt)
+    decodeBase64(parsedStoredUser.salt),
+    getAuthStorageIterations(parsedStoredUser.version)
   );
   const isMacValid = await verifyEnvelopeMac(
     envelopeWithoutMac,

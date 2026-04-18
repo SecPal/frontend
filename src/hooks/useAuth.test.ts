@@ -809,7 +809,9 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    expect(result.current.user).not.toBeNull();
+    await waitFor(() => {
+      expect(result.current.user).not.toBeNull();
+    });
     // The reconcile-path calls syncOfflineAuthState(true) which forwards to syncOfflineSessionAccess.
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
