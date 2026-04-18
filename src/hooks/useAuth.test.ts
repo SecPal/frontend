@@ -685,11 +685,12 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
 
     act(() => {
-      const otherKeyEvent = new StorageEvent("storage", {
-        key: "some_other_key",
-        newValue: null,
-        storageArea: localStorage,
-      });
+      const otherKeyEvent = new Event("storage");
+      Object.defineProperties(otherKeyEvent, {
+        key: { value: "some_other_key" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(otherKeyEvent);
     });
 
