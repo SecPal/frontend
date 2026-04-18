@@ -537,12 +537,13 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.removeItem("auth_user");
-      const crossTabLogoutEvent = new StorageEvent("storage", {
-        key: "auth_user",
-        oldValue: JSON.stringify(mockUser),
-        newValue: null,
-        storageArea: localStorage,
-      });
+      const crossTabLogoutEvent = new Event("storage");
+      Object.defineProperties(crossTabLogoutEvent, {
+        key: { value: "auth_user" },
+        oldValue: { value: JSON.stringify(mockUser) },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLogoutEvent);
     });
 
