@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Trans, msg } from "@lingui/macro";
 import { useLingui } from "@lingui/react";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -130,13 +130,11 @@ export function NotificationPreferences() {
     StoredNotificationPreference[]
   >(loadStoredPreferences);
 
-  const translatedPreferences = useMemo<NotificationPreference[]>(
-    () =>
-      preferences.map((pref) => ({
-        ...pref,
-        ...getTranslationsForCategory(pref.category, i18n),
-      })),
-    [preferences, i18n]
+  const translatedPreferences: NotificationPreference[] = preferences.map(
+    (pref) => ({
+      ...pref,
+      ...getTranslationsForCategory(pref.category, i18n),
+    })
   );
 
   const [isEnabling, setIsEnabling] = useState(false);
