@@ -151,19 +151,15 @@ describe("App", () => {
       permissions: [],
     });
 
-    let notFoundHeading: Awaited<ReturnType<typeof screen.findByText>> | null =
-      null;
+    await renderWithI18n(<App />);
 
-    await act(async () => {
-      await renderWithI18n(<App />);
-      notFoundHeading = await screen.findByText(
+    expect(
+      await screen.findByText(
         /Page Not Found/i,
         {},
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      );
-    });
-
-    expect(notFoundHeading).toBeInTheDocument();
+      )
+    ).toBeInTheDocument();
   });
 
   it("shows not found for the legacy organizational-units route when the user lacks organizational access", async () => {
