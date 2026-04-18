@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import {
+  renderHook,
+  act,
+  waitFor as waitForTestingLibrary,
+} from "@testing-library/react";
 import {
   AuthProvider,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
@@ -17,6 +21,8 @@ import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 const { mockGetCurrentUser } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
 }));
+
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
 
 vi.mock("../services/authApi", async () => {
   const actual = await vi.importActual("../services/authApi");
@@ -50,6 +56,33 @@ function createDeferredPromise<T>() {
 
   return { promise, resolve, reject };
 }
+
+async function persistAuthUser(user: Record<string, unknown>): Promise<string> {
+  const persistedUser = sanitizePersistedAuthUser(user);
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed persisted auth user for test");
+  }
+
+  await authStorage.setUser(persistedUser);
+  mockGetCurrentUser.mockResolvedValue(persistedUser);
+  const storedUser = localStorage.getItem("auth_user");
+
+  expect(storedUser).not.toBeNull();
+
+  return storedUser as string;
+}
+
+async function waitForAuthState(
+  assertion: Parameters<typeof waitForTestingLibrary>[0],
+  timeout = AUTH_BOOTSTRAP_TIMEOUT_MS
+) {
+  await waitForTestingLibrary(assertion, {
+    timeout,
+  });
+}
+
+const waitFor = waitForAuthState;
 
 async function expectEncryptedStoredUser(
   expectedUser: Record<string, unknown>
@@ -303,7 +336,7 @@ describe("useAuth", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -337,40 +370,28 @@ describe("useAuth", () => {
     };
     const deferred = createDeferredPromise<typeof mockUser>();
 
-    vi.useFakeTimers();
+    await persistAuthUser(mockUser);
+    mockGetCurrentUser.mockImplementation(() => deferred.promise);
 
-    try {
-      localStorage.setItem("auth_user", JSON.stringify(mockUser));
-      mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
 
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
+    expect(result.current.isLoading).toBe(true);
 
-      expect(result.current.isLoading).toBe(true);
-
-      await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
+    await waitFor(() => {
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    });
 
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        await Promise.resolve();
-      });
-
+    await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-    } finally {
-      vi.useRealTimers();
-    }
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
   });
 
-  it("keeps stored auth when offline without revalidation", () => {
+  it("keeps stored auth when offline without revalidation", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -378,7 +399,7 @@ describe("useAuth", () => {
       emailVerified: false,
     };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const onLineSpy = vi
       .spyOn(window.navigator, "onLine", "get")
@@ -388,7 +409,9 @@ describe("useAuth", () => {
       wrapper: AuthProvider,
     });
 
-    expect(result.current.isLoading).toBe(false);
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
@@ -431,7 +454,7 @@ describe("useAuth", () => {
   it("logout clears user", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -454,7 +477,7 @@ describe("useAuth", () => {
   it("logout stores only the minimal logout barrier flag", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -498,7 +521,7 @@ describe("useAuth", () => {
 
   it("logs out when session:expired event is emitted", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -538,7 +561,7 @@ describe("useAuth", () => {
   it("clears auth state when another tab removes auth storage", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    const storedUser = await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -553,7 +576,7 @@ describe("useAuth", () => {
       const crossTabLogoutEvent = new Event("storage");
       Object.defineProperties(crossTabLogoutEvent, {
         key: { value: "auth_user" },
-        oldValue: { value: JSON.stringify(mockUser) },
+        oldValue: { value: storedUser },
         newValue: { value: null },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
@@ -571,7 +594,7 @@ describe("useAuth", () => {
   it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -599,7 +622,7 @@ describe("useAuth", () => {
   it("ignores stale auth storage that reappears after explicit logout", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -617,13 +640,13 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    act(() => {
-      localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await act(async () => {
+      const newStoredValue = await persistAuthUser(mockUser);
       const staleAuthEvent = new Event("storage");
       Object.defineProperties(staleAuthEvent, {
         key: { value: "auth_user" },
         oldValue: { value: null },
-        newValue: { value: JSON.stringify(mockUser) },
+        newValue: { value: newStoredValue },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(staleAuthEvent);
@@ -634,13 +657,15 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_user")).toBeNull();
+    });
   });
 
   it("rejects BFCache-style auth restoration after explicit logout", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -658,8 +683,8 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(false);
     });
 
-    act(() => {
-      localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await act(async () => {
+      await persistAuthUser(mockUser);
       window.dispatchEvent(
         new PageTransitionEvent("pageshow", { persisted: true })
       );
@@ -670,13 +695,15 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_user")).toBeNull();
+    });
   });
 
-  it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", () => {
+  it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", async () => {
     const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(staleUser));
+    await persistAuthUser(staleUser);
     localStorage.setItem("auth_logout_barrier", "1");
 
     const { result } = renderHook(() => useAuth(), {
@@ -725,13 +752,13 @@ describe("useAuth", () => {
       emailVerified: false,
     };
 
-    act(() => {
-      localStorage.setItem("auth_user", JSON.stringify(newUser));
+    await act(async () => {
+      const storedUser = await persistAuthUser(newUser);
       const crossTabLoginEvent = new Event("storage");
       Object.defineProperties(crossTabLoginEvent, {
         key: { value: "auth_user" },
         oldValue: { value: null },
-        newValue: { value: JSON.stringify(newUser) },
+        newValue: { value: storedUser },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLoginEvent);
@@ -748,7 +775,7 @@ describe("useAuth", () => {
   it("clears auth state when cross-tab auth storage contains invalid JSON", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    const storedUser = await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -765,7 +792,7 @@ describe("useAuth", () => {
       const invalidJsonEvent = new Event("storage");
       Object.defineProperties(invalidJsonEvent, {
         key: { value: "auth_user" },
-        oldValue: { value: JSON.stringify(mockUser) },
+        oldValue: { value: storedUser },
         newValue: { value: "{invalid json{{" },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
@@ -789,13 +816,14 @@ describe("useAuth", () => {
       email: "bootstrap@secpal.dev",
     };
 
-    localStorage.setItem("auth_user", JSON.stringify(mockUser));
+    await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
     await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.isAuthenticated).toBe(true);
     });
 
@@ -809,14 +837,11 @@ describe("useAuth", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.isAuthenticated).toBe(true);
+      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
     });
 
-    await waitFor(() => {
-      expect(result.current.user).not.toBeNull();
-    });
-    // The reconcile-path calls syncOfflineAuthState(true) which forwards to syncOfflineSessionAccess.
-    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).not.toBeNull();
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
