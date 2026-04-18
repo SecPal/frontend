@@ -752,7 +752,7 @@ describe("useAuth", () => {
         oldValue: { value: JSON.stringify(mockUser) },
         newValue: { value: "{invalid json{{" },
         storageArea: { value: localStorage },
-      });
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(invalidJsonEvent);
     });
 
