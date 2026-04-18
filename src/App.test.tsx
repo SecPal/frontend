@@ -56,14 +56,14 @@ async function seedPersistedAuthUser(user: Record<string, unknown>) {
   return persistedUser;
 }
 
-function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
+async function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
 
   if (!persistedUser) {
     throw new Error("Failed to seed legacy persisted auth user for test");
   }
 
-  localStorage.setItem("auth_user", JSON.stringify(persistedUser));
+  await authStorage.setUser(persistedUser);
   mockGetCurrentUser.mockResolvedValue(persistedUser);
 
   return persistedUser;
