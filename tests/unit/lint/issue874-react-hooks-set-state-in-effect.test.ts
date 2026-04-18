@@ -31,54 +31,88 @@ const issue874Files = [
   "src/pages/Sites/SitesPage.tsx",
 ];
 
+const ISSUE_874_FILE_BATCH_SIZE = 4;
+const ISSUE_874_BATCH_TIMEOUT_MS = 30_000;
+
+type LintReportEntry = {
+  filePath: string;
+  messages: Array<{ ruleId: string | null; line: number; column: number }>;
+};
+
+function chunkFiles(files: string[], batchSize: number): string[][] {
+  const batches: string[][] = [];
+
+  for (let index = 0; index < files.length; index += batchSize) {
+    batches.push(files.slice(index, index + batchSize));
+  }
+
+  return batches;
+}
+
+function lintTrackedFiles(trackedFiles: string[]) {
+  const eslintCli = path.join(
+    repoRoot,
+    "node_modules",
+    "eslint",
+    "bin",
+    "eslint.js"
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      eslintCli,
+      ...trackedFiles,
+      "--rule",
+      "react-hooks/set-state-in-effect:error",
+      "--format",
+      "json",
+    ],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      timeout: ISSUE_874_BATCH_TIMEOUT_MS,
+      killSignal: "SIGTERM",
+    }
+  );
+
+  if (
+    result.signal === "SIGTERM" ||
+    result.error?.message?.includes("ETIMEDOUT")
+  ) {
+    throw new Error(
+      `ESLint timed out after ${ISSUE_874_BATCH_TIMEOUT_MS}ms for batch: ${trackedFiles.join(", ")}`
+    );
+  }
+
+  expect(result.error).toBeUndefined();
+  expect(result.status, result.stderr).toBe(0);
+
+  const output = result.stdout.trim();
+  expect(output).not.toBe("");
+
+  const report = JSON.parse(output) as LintReportEntry[];
+
+  return report.flatMap((entry) =>
+    entry.messages
+      .filter((message) => message.ruleId === "react-hooks/set-state-in-effect")
+      .map((message) => ({
+        filePath: path.relative(repoRoot, entry.filePath),
+        line: message.line,
+        column: message.column,
+      }))
+  );
+}
+
 describe("Issue 874 lint regression", () => {
-  it("has no react-hooks/set-state-in-effect violations in the tracked files", () => {
-    const eslintCli = path.join(
-      repoRoot,
-      "node_modules",
-      "eslint",
-      "bin",
-      "eslint.js"
-    );
-    const result = spawnSync(
-      process.execPath,
-      [
-        eslintCli,
-        ...issue874Files,
-        "--rule",
-        "react-hooks/set-state-in-effect:error",
-        "--format",
-        "json",
-      ],
-      {
-        cwd: repoRoot,
-        encoding: "utf8",
-      }
-    );
-
-    expect(result.error).toBeUndefined();
-    expect(result.status, result.stderr).toBe(0);
-
-    const output = result.stdout.trim();
-    expect(output).not.toBe("");
-
-    const report = JSON.parse(output) as Array<{
-      filePath: string;
-      messages: Array<{ ruleId: string | null; line: number; column: number }>;
-    }>;
-
-    const violations = report.flatMap((entry) =>
-      entry.messages
-        .filter(
-          (message) => message.ruleId === "react-hooks/set-state-in-effect"
-        )
-        .map((message) => ({
-          filePath: path.relative(repoRoot, entry.filePath),
-          line: message.line,
-          column: message.column,
-        }))
-    );
-
-    expect(violations).toEqual([]);
-  });
+  it.each(
+    chunkFiles(issue874Files, ISSUE_874_FILE_BATCH_SIZE).map(
+      (trackedFiles, index) => [index + 1, trackedFiles] as const
+    )
+  )(
+    "has no react-hooks/set-state-in-effect violations in tracked batch %i",
+    (_batchNumber, trackedFiles) => {
+      expect(lintTrackedFiles(trackedFiles)).toEqual([]);
+    },
+    ISSUE_874_BATCH_TIMEOUT_MS
+  );
 });
