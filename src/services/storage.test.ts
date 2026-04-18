@@ -71,6 +71,54 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("clears invalid JSON snapshots and logs the parse failure", () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    localStorage.setItem("auth_user", "invalid-json");
+
+    expect(authStorage.getUserSnapshot()).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to parse stored user snapshot:",
+      expect.any(SyntaxError)
+    );
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears invalid JSON persisted auth state while decrypting", async () => {
+    localStorage.setItem("auth_user", "invalid-json");
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears encrypted auth state when the decrypted payload is not valid JSON", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    await authStorage.setUser(user);
+
+    vi.spyOn(globalThis.crypto.subtle, "decrypt").mockResolvedValue(
+      new TextEncoder().encode("not-json").buffer
+    );
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to parse stored user data:",
+      expect.any(SyntaxError)
+    );
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
   it("clears persisted auth state when WebCrypto rejects during setUser", async () => {
     const user = {
       id: "1",
