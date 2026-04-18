@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
@@ -29,11 +29,14 @@ describe("NotificationPreferences", () => {
   const mockRequestPermission = vi.fn();
   const mockShowNotification = vi.fn();
 
+  beforeAll(() => {
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    i18n.load("en", enMessages);
-    i18n.load("de", deMessages);
     i18n.activate("en");
 
     mockUseNotifications.mockReturnValue({
