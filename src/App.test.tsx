@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -37,9 +37,14 @@ vi.spyOn(globalThis, "fetch").mockRejectedValue(
 
 // Helper to render with I18n and wait for async updates
 async function renderWithI18n(component: React.ReactElement) {
-  const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
-  // Wait for microtasks queued during initial render/effects to settle
-  await Promise.resolve();
+  let result!: ReturnType<typeof render>;
+
+  await act(async () => {
+    result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+    // Wait for microtasks queued during initial render/effects to settle.
+    await Promise.resolve();
+  });
+
   return result;
 }
 
@@ -146,15 +151,19 @@ describe("App", () => {
       permissions: [],
     });
 
-    await renderWithI18n(<App />);
+    let notFoundHeading: Awaited<ReturnType<typeof screen.findByText>> | null =
+      null;
 
-    expect(
-      await screen.findByText(
+    await act(async () => {
+      await renderWithI18n(<App />);
+      notFoundHeading = await screen.findByText(
         /Page Not Found/i,
         {},
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
+      );
+    });
+
+    expect(notFoundHeading).toBeInTheDocument();
   });
 
   it("shows not found for the legacy organizational-units route when the user lacks organizational access", async () => {
@@ -432,6 +441,10 @@ describe("App", () => {
   });
 
   it("keeps supporting legacy cleartext persisted auth state on unknown authenticated routes", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     window.history.replaceState({}, "", "/dashboard");
 
     seedLegacyPersistedAuthUser({
@@ -452,6 +465,13 @@ describe("App", () => {
     ).toBeInTheDocument();
 
     expect(window.location.pathname).toBe("/dashboard");
+
+    const actWarnings = consoleErrorSpy.mock.calls
+      .flatMap((call) => call.map((entry) => String(entry)))
+      .filter((message) => message.includes("not wrapped in act"));
+
+    expect(actWarnings).toEqual([]);
+    consoleErrorSpy.mockRestore();
   });
 
   it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
