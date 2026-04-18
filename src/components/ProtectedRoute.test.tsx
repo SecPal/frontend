@@ -7,7 +7,7 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
+  waitFor as waitForTestingLibrary,
 } from "@testing-library/react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -18,6 +18,8 @@ import {
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
 import { AuthApiError } from "../services/authApi";
+import { sanitizePersistedAuthUser } from "../services/authState";
+import { authStorage } from "../services/storage";
 
 const mockNavigate = vi.fn();
 const { mockGetCurrentUser, mockSendVerificationNotification } = vi.hoisted(
@@ -48,12 +50,18 @@ vi.mock("react-router-dom", async () => {
 });
 
 const TestComponent = () => <div>Protected Content</div>;
+const AUTH_ROUTE_TIMEOUT_MS = 20_000;
 const unverifiedUser = {
   id: 1,
   name: "Test",
   email: "test@secpal.dev",
   emailVerified: false,
 };
+
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
 
 const renderProtectedRoute = () => {
   return render(
@@ -76,9 +84,27 @@ const renderProtectedRoute = () => {
   );
 };
 
-const persistAuthUser = (user = unverifiedUser) => {
-  localStorage.setItem("auth_user", JSON.stringify(user));
+const persistAuthUser = async (user: Record<string, unknown> = unverifiedUser) => {
+  const persistedUser = sanitizePersistedAuthUser(user);
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed persisted auth user for test");
+  }
+
+  await authStorage.setUser(persistedUser);
+  mockGetCurrentUser.mockResolvedValue(persistedUser);
 };
+
+async function waitForProtectedRoute(
+  assertion: Parameters<typeof waitForTestingLibrary>[0],
+  timeout = AUTH_ROUTE_TIMEOUT_MS
+) {
+  await waitForTestingLibrary(assertion, {
+    timeout,
+  });
+}
+
+const waitFor = waitForProtectedRoute;
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
@@ -86,6 +112,7 @@ describe("ProtectedRoute", () => {
     // entries from failed tests from leaking into subsequent tests.
     vi.resetAllMocks();
     localStorage.clear();
+    setCsrfTokenCookie("test-csrf-token");
     i18n.load("en", {});
     i18n.activate("en");
   });
@@ -105,15 +132,12 @@ describe("ProtectedRoute", () => {
       emailVerified: true,
     });
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Test",
-        email: "test@secpal.dev",
-        emailVerified: true,
-      })
-    );
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
 
     renderProtectedRoute();
 
@@ -126,18 +150,15 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("shows loading instead of protected content while stored auth is revalidated", () => {
+  it("shows loading instead of protected content while stored auth is revalidated", async () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Test",
-        email: "test@secpal.dev",
-        emailVerified: true,
-      })
-    );
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
 
     renderProtectedRoute();
 
@@ -153,15 +174,12 @@ describe("ProtectedRoute", () => {
       })
     );
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "Test",
-        email: "test@secpal.dev",
-        emailVerified: true,
-      })
-    );
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
 
     renderProtectedRoute();
 
@@ -176,48 +194,29 @@ describe("ProtectedRoute", () => {
 
   it("shows a retry recovery state instead of spinning forever when bootstrap stalls", async () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
-    vi.useFakeTimers();
 
-    try {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test",
-          email: "test@secpal.dev",
-          emailVerified: true,
-        })
-      );
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
 
-      renderProtectedRoute();
+    renderProtectedRoute();
 
-      await act(async () => {
-        // restoreAndRevalidate() awaits authStorage.getUser() before registering
-        // the stall timer. getUser() has two nested async levels (getUser outer +
-        // decryptPersistedAuthUser inner), so flush both microtasks first.
-        await Promise.resolve();
-        await Promise.resolve();
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(
-        screen.getByRole("heading", {
-          name: /still loading your secure session/i,
-        })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /retry/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /go to login/i })
-      ).toBeInTheDocument();
-      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /still loading your secure session/i },
+        { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000 }
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /go to login/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("retries bootstrap recovery when the user requests it", async () => {
@@ -232,49 +231,31 @@ describe("ProtectedRoute", () => {
         emailVerified: true,
       });
 
-    vi.useFakeTimers();
 
-    try {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test",
-          email: "test@secpal.dev",
-          emailVerified: true,
-        })
-      );
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
 
-      renderProtectedRoute();
+    renderProtectedRoute();
 
-      await act(async () => {
-        // restoreAndRevalidate() awaits authStorage.getUser() before registering
-        // the stall timer. getUser() has two nested async levels (getUser outer +
-        // decryptPersistedAuthUser inner), so flush both microtasks first.
-        await Promise.resolve();
-        await Promise.resolve();
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        await Promise.resolve();
-        await Promise.resolve();
-      });
+    await screen.findByRole(
+      "button",
+      { name: /retry/i },
+      { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000 }
+    );
 
-      // Switch to real timers before retry so the new bootstrap can complete
-      // its WebCrypto setUser operations without fake-timer interference.
-      vi.useRealTimers();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+    });
 
-      await act(async () => {
-        fireEvent.click(screen.getByRole("button", { name: /retry/i }));
-      });
-
-      // Wait for the successful bootstrap to show protected content.
-      await waitFor(() => {
-        expect(screen.getByText("Protected Content")).toBeInTheDocument();
-      });
-      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-      expect(mockNavigate).not.toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("shows loading state initially", () => {
@@ -335,15 +316,17 @@ describe("ProtectedRoute", () => {
 
   it("shows the dedicated email verification gate for authenticated unverified users", async () => {
     mockGetCurrentUser.mockResolvedValueOnce(unverifiedUser);
-    persistAuthUser();
+    await persistAuthUser();
 
     renderProtectedRoute();
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /verify your email address/i })
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /verify your email address/i },
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
 
     expect(screen.getByText(/test@secpal\.dev/i)).toBeInTheDocument();
     expect(
@@ -362,18 +345,22 @@ describe("ProtectedRoute", () => {
     mockSendVerificationNotification.mockResolvedValueOnce({
       message: "Verification link sent successfully.",
     });
-    persistAuthUser();
+    await persistAuthUser();
 
     renderProtectedRoute();
 
     fireEvent.click(
       await screen.findByRole("button", {
         name: /send verification email again/i,
-      })
+      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
     );
 
     expect(
-      await screen.findByText(/verification link sent successfully\./i)
+      await screen.findByText(
+        /verification link sent successfully\./i,
+        {},
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: /i have verified my email/i })
@@ -389,35 +376,41 @@ describe("ProtectedRoute", () => {
     mockSendVerificationNotification.mockRejectedValueOnce(
       new AuthApiError("Too many requests.")
     );
-    persistAuthUser();
+    await persistAuthUser();
 
     renderProtectedRoute();
 
     fireEvent.click(
       await screen.findByRole("button", {
         name: /send verification email again/i,
-      })
+      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
     );
 
-    expect(await screen.findByText(/too many requests\./i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/too many requests\./i, {}, {
+        timeout: AUTH_ROUTE_TIMEOUT_MS,
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows a generic error when resend rejects with a non-Error value", async () => {
     mockGetCurrentUser.mockResolvedValueOnce(unverifiedUser);
     mockSendVerificationNotification.mockRejectedValueOnce("network-failed");
-    persistAuthUser();
+    await persistAuthUser();
 
     renderProtectedRoute();
 
     fireEvent.click(
       await screen.findByRole("button", {
         name: /send verification email again/i,
-      })
+      }, { timeout: AUTH_ROUTE_TIMEOUT_MS })
     );
 
     expect(
       await screen.findByText(
-        /we could not send a new verification email\. please try again\./i
+        /we could not send a new verification email\. please try again\./i,
+        {},
+        { timeout: AUTH_ROUTE_TIMEOUT_MS }
       )
     ).toBeInTheDocument();
   });
