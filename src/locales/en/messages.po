@@ -17,7 +17,7 @@ msgstr ""
 msgid "Full Name"
 msgstr "Full Name"
 
-#: src/components/NotificationPreferences.tsx:254
+#: src/components/NotificationPreferences.tsx:252
 msgid "Enabling..."
 msgstr "Enabling..."
 
@@ -91,7 +91,7 @@ msgstr "Disable MFA"
 msgid "Front desk tablet"
 msgstr "Front desk tablet"
 
-#: src/components/NotificationPreferences.tsx:299
+#: src/components/NotificationPreferences.tsx:297
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
@@ -177,7 +177,7 @@ msgstr "No Organizational Units"
 msgid "More options"
 msgstr "More options"
 
-#: src/components/NotificationPreferences.tsx:271
+#: src/components/NotificationPreferences.tsx:269
 msgid "Choose which notifications you want to receive"
 msgstr "Choose which notifications you want to receive"
 
@@ -259,7 +259,7 @@ msgstr "All Units"
 msgid "Add child"
 msgstr "Add child"
 
-#: src/components/NotificationPreferences.tsx:201
+#: src/components/NotificationPreferences.tsx:199
 msgid "Test Notification"
 msgstr "Test Notification"
 
@@ -346,7 +346,7 @@ msgstr "Qualifications"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/NotificationPreferences.tsx:175
+#: src/components/NotificationPreferences.tsx:173
 msgid "Notifications Enabled"
 msgstr "Notifications Enabled"
 
@@ -517,7 +517,7 @@ msgstr "Generate BWR Export"
 msgid "Search"
 msgstr "Search"
 
-#: src/components/NotificationPreferences.tsx:202
+#: src/components/NotificationPreferences.tsx:200
 msgid "This is a test notification from SecPal"
 msgstr "This is a test notification from SecPal"
 
@@ -633,7 +633,7 @@ msgstr "Complete in your browser…"
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
-#: src/components/NotificationPreferences.tsx:176
+#: src/components/NotificationPreferences.tsx:174
 msgid "You'll now receive important updates from SecPal"
 msgstr "You'll now receive important updates from SecPal"
 
@@ -798,7 +798,7 @@ msgstr "Previous"
 msgid "Postal Code"
 msgstr "Postal Code"
 
-#: src/components/NotificationPreferences.tsx:256
+#: src/components/NotificationPreferences.tsx:254
 msgid "Enable Notifications"
 msgstr "Enable Notifications"
 
@@ -1357,7 +1357,7 @@ msgstr "Generating BWR Export..."
 msgid "Site Number"
 msgstr "Site Number"
 
-#: src/components/NotificationPreferences.tsx:242
+#: src/components/NotificationPreferences.tsx:240
 msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 msgstr "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 
@@ -2275,7 +2275,7 @@ msgstr "About"
 msgid "Passkeys"
 msgstr "Passkeys"
 
-#: src/components/NotificationPreferences.tsx:275
+#: src/components/NotificationPreferences.tsx:273
 msgid "Send Test"
 msgstr "Send Test"
 
@@ -2296,7 +2296,7 @@ msgstr "Profile"
 msgid "Orphaned Genesis"
 msgstr "Orphaned Genesis"
 
-#: src/components/NotificationPreferences.tsx:268
+#: src/components/NotificationPreferences.tsx:266
 msgid "Notification Preferences"
 msgstr "Notification Preferences"
 
@@ -2368,7 +2368,7 @@ msgstr "No unit selected"
 msgid "Log Name"
 msgstr "Log Name"
 
-#: src/components/NotificationPreferences.tsx:215
+#: src/components/NotificationPreferences.tsx:213
 msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
 msgstr "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
 
@@ -2504,7 +2504,7 @@ msgstr "Activity Log Details"
 msgid "View Profile"
 msgstr "View Profile"
 
-#: src/components/NotificationPreferences.tsx:228
+#: src/components/NotificationPreferences.tsx:226
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 

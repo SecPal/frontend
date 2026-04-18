@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Increased PBKDF2 iteration count from 5,000 to 600,000 (OWASP minimum for PBKDF2-HMAC-SHA256) to harden auth-storage key derivation against brute-force attacks on captured storage envelopes.
+- Increased PBKDF2 iteration count from 5,000 to 600,000 (OWASP minimum for PBKDF2-HMAC-SHA256) for new auth-storage envelopes while preserving reads of legacy v1 envelopes during rollout, hardening key derivation without forcing deploy-time logouts.
 - Replaced `Buffer.from` with `TextEncoder` in `Login.test.tsx` `textBytes` helper for cross-platform Web API compatibility.
 - Fixed incorrect `ApiError` constructor argument order in `employeeApi.ts` BWR export and BWR status update error paths: the third argument now correctly passes `normalizeApiErrorErrors(error.errors) ?? undefined` (errors array) instead of `response` (the Response object).
 - Added JSON parse error boundary in `decryptPersistedAuthUser` so malformed `auth_user` storage values return `null` cleanly instead of throwing.
@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `seededAuthUser` module-scoped coupling in `App.test.tsx` with direct `mockGetCurrentUser.mockResolvedValue` calls in seed helpers, and replaced empty `waitFor(() => {})` with `Promise.resolve()`.
 - Extracted `ROUTE_NAVIGATION_TIMEOUT_MS` constant in `App.test.tsx` to replace the repeated magic number `20000`.
 - Replaced plaintext `localStorage.setItem` test setup in `useAuth.test.ts` with `await authStorage.setUser()` to exercise the actual encryption layer, and updated affected assertions to use `authStorage.getUser()`.
+- Removed stale memoization from `NotificationPreferences` so translated preference labels now recompute correctly when the active Lingui locale changes, resolving frontend issue #878.
 - Wrapped `authStorage.setUser()` persistence in a WebCrypto error boundary so rare PBKDF2/AES failures now log, clear stale `auth_user` state, and return cleanly instead of bubbling an unhandled rejection during login/bootstrap flows; includes focused regression coverage for issue #871.
 - Resolved issue #874 by refactoring the remaining `react-hooks/set-state-in-effect` violations across list/detail loaders, dialog reset flows, and organizational-unit tree state derivation; restored the rule to `error` in `eslint.config.js` and added a focused lint regression test for the tracked files.
 - Guarded auth-storage event and pageshow handlers with an in-memory `hasLogoutBarrierRef` check after `await authStorage.getUser()` to prevent an async race where an in-flight bootstrap `setUser()` clears the localStorage logout barrier (via `clearLogoutBarrier()`) before the stale-storage handler resumes, which caused a post-logout StorageEvent to restore the authenticated user.
