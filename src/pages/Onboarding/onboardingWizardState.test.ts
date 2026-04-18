@@ -47,4 +47,27 @@ describe("getOnboardingStepState", () => {
       formData: {},
     });
   });
+
+  it("falls back to empty formData when submission has null form_data", () => {
+    const step: OnboardingStep = {
+      step_number: 3,
+      title: "Bank Details",
+      template_id: "template-3",
+      is_completed: false,
+      submission: {
+        id: "submission-3",
+        employee_id: "employee-1",
+        form_template_id: "template-3",
+        form_data: null,
+        status: "draft",
+        created_at: "2026-04-18T00:00:00Z",
+        updated_at: "2026-04-18T00:00:00Z",
+      },
+    };
+
+    expect(getOnboardingStepState(step)).toEqual({
+      submission: step.submission,
+      formData: {},
+    });
+  });
 });
