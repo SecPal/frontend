@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Split the heavy `issue874-react-hooks-set-state-in-effect` lint regression into smaller tracked-file batches and gave each batch a dedicated 30-second timeout so `npm run test:coverage` no longer times out on one monolithic ESLint spawn under full-suite coverage load, resolving frontend issue #899.
 - Increased PBKDF2 iteration count from 5,000 to 600,000 (OWASP minimum for PBKDF2-HMAC-SHA256) for new auth-storage envelopes while preserving reads of legacy v1 envelopes during rollout, hardening key derivation without forcing deploy-time logouts.
 - Replaced `Buffer.from` with `TextEncoder` in `Login.test.tsx` `textBytes` helper for cross-platform Web API compatibility.
 - Fixed incorrect `ApiError` constructor argument order in `employeeApi.ts` BWR export and BWR status update error paths: the third argument now correctly passes `normalizeApiErrorErrors(error.errors) ?? undefined` (errors array) instead of `response` (the Response object).
