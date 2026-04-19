@@ -432,7 +432,7 @@ describe("fetchOnboardingSubmissions", () => {
 });
 
 describe("createOnboardingSubmission", () => {
-  it("accepts the legacy template_id field and sends form_template_id to the runtime API", async () => {
+  it("requires form_template_id and sends it to the runtime API", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(
       makeFetchResponse(201, {
         data: {
@@ -449,7 +449,7 @@ describe("createOnboardingSubmission", () => {
 
     await expect(
       createOnboardingSubmission({
-        template_id: "template-9",
+        form_template_id: "template-9",
         form_data: { tax_id: "DE123" },
         status: "draft",
       })
@@ -471,6 +471,18 @@ describe("createOnboardingSubmission", () => {
         }),
       })
     );
+  });
+
+  it("rejects the legacy template_id alias when form_template_id is missing", async () => {
+    await expect(
+      createOnboardingSubmission({
+        template_id: "template-9",
+        form_data: { tax_id: "DE123" },
+        status: "draft",
+      } as unknown as Parameters<typeof createOnboardingSubmission>[0])
+    ).rejects.toThrow("Missing onboarding form template identifier");
+
+    expect(apiFetch).not.toHaveBeenCalled();
   });
 
   it("fails fast when no onboarding form template identifier is provided", async () => {
