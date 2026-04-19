@@ -819,7 +819,7 @@ msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es ern
 msgid "Done"
 msgstr "Erledigt"
 
-#: src/pages/Login.tsx:681
+#: src/pages/Login.tsx:679
 msgid "Signing in with passkey..."
 msgstr "Anmeldung mit Passkey..."
 
@@ -1305,10 +1305,6 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Recovery code"
 msgstr "Wiederherstellungscode"
 
-#: src/pages/Login.tsx:679
-msgid "Confirming session…"
-msgstr "Sitzung bestätigen …"
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:413
 msgid "All logs"
 msgstr "Alle Protokolle"
@@ -1421,7 +1417,7 @@ msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 msgid "Validating your link..."
 msgstr "Validierung Ihres Links..."
 
-#: src/pages/Login.tsx:684
+#: src/pages/Login.tsx:682
 msgid "Sign in with passkey"
 msgstr "Mit Passkey anmelden"
 
@@ -1451,73 +1447,73 @@ msgid "login.lockedButton"
 msgstr "({remainingLockoutSeconds}s) gesperrt"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:759
+#: src/pages/Login.tsx:757
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator-Code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:804
+#: src/pages/Login.tsx:802
 msgid "login.mfa.cancel"
 msgstr "Abbrechen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:698
+#: src/pages/Login.tsx:696
 msgid "login.mfa.description"
 msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx:708
+#: src/pages/Login.tsx:706
 msgid "login.mfa.expiry"
 msgstr "Dieser Überprüfungsschritt läuft um {0} ab."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:717
+#: src/pages/Login.tsx:715
 msgid "login.mfa.method"
 msgstr "Methode zur Überprüfung"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:736
+#: src/pages/Login.tsx:734
 msgid "login.mfa.method.recovery_code"
 msgstr "Wiederherstellungscode"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:740
+#: src/pages/Login.tsx:738
 msgid "login.mfa.method.totp"
 msgstr "Authenticator-Code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:746
+#: src/pages/Login.tsx:744
 msgid "login.mfa.preferred"
 msgstr "empfohlen"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:757
+#: src/pages/Login.tsx:755
 msgid "login.mfa.recoveryCode"
 msgstr "Wiederherstellungscode"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:766
+#: src/pages/Login.tsx:764
 msgid "login.mfa.recoveryHelp"
 msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:815
+#: src/pages/Login.tsx:813
 msgid "login.mfa.submit"
 msgstr "Überprüfen und fortfahren"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:695
+#: src/pages/Login.tsx:693
 msgid "login.mfa.title"
 msgstr "Zweiter Faktor erforderlich"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:770
+#: src/pages/Login.tsx:768
 msgid "login.mfa.totpHelp"
 msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App ein."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:813
+#: src/pages/Login.tsx:811
 msgid "login.mfa.verifying"
 msgstr "Überprüfen..."
 
