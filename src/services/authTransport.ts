@@ -20,6 +20,10 @@ export interface AuthCredentials {
   password: string;
 }
 
+export interface PasskeyLoginOptions {
+  email?: string;
+}
+
 export interface AuthenticatedLoginResult {
   status: "authenticated";
   user: User;
@@ -36,6 +40,7 @@ export type AuthTransportKind = "browser-session" | "native-bridge";
 
 export interface NativeAuthBridge {
   login(credentials: AuthCredentials): Promise<unknown>;
+  loginWithPasskey?(options?: PasskeyLoginOptions): Promise<unknown>;
   logout(): Promise<void>;
   logoutAll?(): Promise<void>;
   getCurrentUser(): Promise<unknown>;
@@ -45,10 +50,39 @@ export interface NativeAuthBridge {
 export interface AuthTransport {
   readonly kind: AuthTransportKind;
   login(credentials: AuthCredentials): Promise<AuthLoginResult>;
+  supportsPasskeyLogin(): boolean;
+  loginWithPasskey(options?: PasskeyLoginOptions): Promise<AuthenticatedLoginResult>;
   logout(): Promise<void>;
   logoutAll(): Promise<void>;
   getCurrentUser(): Promise<User>;
   isNetworkAvailable(): Promise<boolean>;
+}
+
+async function finalizeAuthenticatedLogin(
+  payload: unknown,
+  loginOperation: string,
+  getCurrentUserImpl: () => Promise<unknown>,
+  currentUserOperation: string
+): Promise<AuthenticatedLoginResult> {
+  const loginUser = sanitizeAuthPayload(payload, loginOperation);
+
+  try {
+    const currentUser = await getCurrentUserImpl();
+
+    return {
+      status: "authenticated",
+      user: sanitizeAuthPayload(currentUser, currentUserOperation),
+    };
+  } catch (err) {
+    if (err instanceof Error) {
+      return {
+        status: "authenticated",
+        user: loginUser,
+      };
+    }
+
+    throw err;
+  }
 }
 
 function isMfaChallengeResponse(
@@ -92,27 +126,20 @@ const browserSessionAuthTransport: AuthTransport = {
       };
     }
 
-    const loginUser = sanitizeAuthPayload(result, "Browser-session login");
-
-    try {
-      const currentUser = await getBrowserSessionCurrentUser();
-
-      return {
-        status: "authenticated",
-        user: sanitizeAuthPayload(
-          currentUser,
-          "Browser-session current-user fetch"
-        ),
-      };
-    } catch (err) {
-      if (err instanceof Error) {
-        return {
-          status: "authenticated",
-          user: loginUser,
-        };
-      }
-      throw err;
-    }
+    return finalizeAuthenticatedLogin(
+      result,
+      "Browser-session login",
+      () => getBrowserSessionCurrentUser(),
+      "Browser-session current-user fetch"
+    );
+  },
+  supportsPasskeyLogin(): boolean {
+    return false;
+  },
+  async loginWithPasskey(): Promise<AuthenticatedLoginResult> {
+    throw new AuthApiError(
+      "Browser-session transport does not support transport-managed passkey sign-in"
+    );
   },
   async logout(): Promise<void> {
     await logoutBrowserSession();
@@ -138,28 +165,33 @@ function createNativeBridgeAuthTransport(
     async login(credentials): Promise<AuthLoginResult> {
       const result = await nativeAuthBridge.login(credentials);
 
-      const loginUser = sanitizeAuthPayload(result, "Native auth login");
-
-      try {
-        const currentUser = await nativeAuthBridge.getCurrentUser();
-
-        return {
-          status: "authenticated",
-          user: sanitizeAuthPayload(
-            currentUser,
-            "Native auth current-user fetch"
-          ),
-        };
-      } catch (err) {
-        if (err instanceof Error) {
-          return {
-            status: "authenticated",
-            user: loginUser,
-          };
-        }
-
-        throw err;
+      return finalizeAuthenticatedLogin(
+        result,
+        "Native auth login",
+        () => nativeAuthBridge.getCurrentUser(),
+        "Native auth current-user fetch"
+      );
+    },
+    supportsPasskeyLogin(): boolean {
+      return typeof nativeAuthBridge.loginWithPasskey === "function";
+    },
+    async loginWithPasskey(
+      options?: PasskeyLoginOptions
+    ): Promise<AuthenticatedLoginResult> {
+      if (typeof nativeAuthBridge.loginWithPasskey !== "function") {
+        throw new AuthApiError(
+          "Native auth transport does not support passkey sign-in"
+        );
       }
+
+      const result = await nativeAuthBridge.loginWithPasskey(options);
+
+      return finalizeAuthenticatedLogin(
+        result,
+        "Native passkey login",
+        () => nativeAuthBridge.getCurrentUser(),
+        "Native auth current-user fetch"
+      );
     },
     async logout(): Promise<void> {
       await nativeAuthBridge.logout();

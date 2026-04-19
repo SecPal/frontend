@@ -254,6 +254,62 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
+  it("routes passkey sign-in through the native auth bridge when available", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn().mockResolvedValue({
+        user: createAuthUser({ name: "Native Passkey User" }),
+      }),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn().mockResolvedValue(
+        createAuthUser({ name: "Canonical Native User" })
+      ),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.change(await screen.findByLabelText(/email/i), {
+        target: { value: " TEST@SECPAL.DEV " },
+      });
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      await waitFor(() => {
+        expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith({
+          email: "test@secpal.dev",
+        });
+      });
+
+      expect(
+        authApi.startPasskeyAuthenticationChallenge
+      ).not.toHaveBeenCalled();
+      expect(passkeyBrowser.getPasskeyAssertion).not.toHaveBeenCalled();
+      expect(
+        authApi.verifyPasskeyAuthenticationChallenge
+      ).not.toHaveBeenCalled();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
   it("maps real browser passkey assertions into the API payload", async () => {
     const actualPasskeyBrowser = await loadPasskeyBrowser();
 
@@ -767,18 +823,12 @@ describe("Login", () => {
       });
     });
 
-    await waitFor(() => {
-      expect(
-        screen.queryByRole("button", { name: /verifying passkey/i })
-      ).not.toBeInTheDocument();
-      const passkeyButton = screen.getByRole("button", {
-        name: /sign in with passkey/i,
-      });
-      expect(passkeyButton).toHaveAttribute("aria-busy", "false");
-    });
+    expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
+      1
+    );
   });
 
-  it("confirms the session with getCurrentUser after a successful passkey login", async () => {
+  it("completes browser passkey login without a separate session confirmation fetch", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
@@ -816,10 +866,6 @@ describe("Login", () => {
         mfa_completed: true,
       },
     });
-    vi.mocked(authApi.getCurrentUser).mockResolvedValueOnce(
-      createAuthUser({ name: "Authoritative User" })
-    );
-
     renderLogin();
 
     fireEvent.click(
@@ -827,11 +873,15 @@ describe("Login", () => {
     );
 
     await waitFor(() => {
-      expect(authApi.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
+        1
+      );
     });
+
+    expect(authApi.getCurrentUser).not.toHaveBeenCalled();
   });
 
-  it("falls back to verify response user when session confirmation fails after passkey login", async () => {
+  it("clears the browser passkey loading state after verify succeeds", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
@@ -869,22 +919,19 @@ describe("Login", () => {
         mfa_completed: true,
       },
     });
-    vi.mocked(authApi.getCurrentUser).mockRejectedValueOnce(
-      new authApi.AuthApiError("Unauthorized", undefined, 401)
-    );
-
     renderLogin();
 
     fireEvent.click(
       await screen.findByRole("button", { name: /sign in with passkey/i })
     );
 
-    // Should still eventually clear the loading state and not hang
     await waitFor(() => {
       expect(
         screen.queryByRole("button", { name: /signing in with passkey/i })
       ).not.toBeInTheDocument();
     });
+
+    expect(authApi.getCurrentUser).not.toHaveBeenCalled();
   });
 
   it("verifies an MFA challenge and continues the session login flow", async () => {
