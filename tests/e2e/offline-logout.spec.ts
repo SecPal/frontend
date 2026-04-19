@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { waitForLoginFormReady } from "./auth-helpers";
 
 const supportsServiceWorkerOfflineFlows =
   Boolean(process.env.CI) ||
@@ -112,6 +113,7 @@ test.describe("Offline Logout Privacy", () => {
 
     await page.locator("#email").fill(offlineLogoutMockUser.email);
     await page.locator("#password").fill("password");
+    await waitForLoginFormReady(page);
     await page
       .getByRole("button", { name: /log in|anmelden|einloggen/i })
       .click();

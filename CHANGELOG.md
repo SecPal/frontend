@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hardened Playwright login setup for the live app by waiting for the health-gated submit button to become actionable before clicking, reusing that guard in mocked offline-auth flows, and requiring explicit `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` whenever Playwright targets a remote HTTPS environment like `app.secpal.dev` so live E2E runs fail clearly instead of silently using invalid local placeholder credentials.
 - Expanded `app.secpal.dev` Digital Asset Links to publish both `delegate_permission/common.handle_all_urls` and `delegate_permission/common.get_login_creds`, matching Android Credential Manager's documented app-to-web trust prerequisites for passkey validation.
 - Reused a shared `buildEnvelopeMacPayload()` helper for auth-storage MAC construction in both runtime storage code and the Playwright passkey fixture, removing the duplicated inline field assembly that could drift and resolving frontend issue #917.
 - Published `/.well-known/assetlinks.json` for `app.secpal.dev` and copied it through the Vite build so release-signed SecPal Android builds can complete Credential Manager passkey registration instead of falling through to the SPA shell at the Digital Asset Links endpoint.

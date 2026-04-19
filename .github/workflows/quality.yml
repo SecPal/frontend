@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025-2026 SecPal
 # SPDX-License-Identifier: CC0-1.0
 
+---
 name: Quality Checks
 
 on:
@@ -81,3 +82,34 @@ jobs:
         # Allow step to succeed even if upload fails for dependabot
         # This prevents blocking the PR when CODECOV_TOKEN is unavailable
         continue-on-error: ${{ contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.actor) }}
+
+  playwright-live-smoke:
+    name: Playwright Live Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run live auth smoke against app.secpal.dev
+        env:
+          PLAYWRIGHT_BASE_URL: https://app.secpal.dev
+          PLAYWRIGHT_SKIP_GLOBAL_LOGIN: "1"
+        run: >-
+          npx playwright test tests/e2e/auth.spec.ts --project=chromium --grep
+          "should reject invalid credentials|should redirect to login when
+          accessing protected route without auth"
