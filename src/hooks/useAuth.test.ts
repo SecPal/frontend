@@ -108,8 +108,8 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
-    vi.spyOn(console, "error").mockImplementation(() => { });
-    vi.spyOn(console, "log").mockImplementation(() => { });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
