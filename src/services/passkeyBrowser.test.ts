@@ -45,6 +45,10 @@ describe("passkeyBrowser", () => {
     navigator,
     "credentials"
   );
+  const originalNativeBridge = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "SecPalNativeAuthBridge"
+  );
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -65,6 +69,15 @@ describe("passkeyBrowser", () => {
       Object.defineProperty(navigator, "credentials", originalCredentials);
     } else {
       Reflect.deleteProperty(navigator, "credentials");
+    }
+
+    if (originalNativeBridge) {
+      Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
+        configurable: true,
+        value: originalNativeBridge.value,
+      });
+    } else {
+      Reflect.deleteProperty(globalThis, "SecPalNativeAuthBridge");
     }
   });
 
@@ -390,6 +403,58 @@ describe("passkeyBrowser", () => {
     });
 
     expect(isPasskeyRegistrationSupported()).toBe(true);
+  });
+
+  it("returns true for isPasskeyRegistrationSupported when a native bridge exposes attestation creation", () => {
+    Reflect.deleteProperty(window, "PublicKeyCredential");
+    Reflect.deleteProperty(navigator, "credentials");
+    Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
+      configurable: true,
+      value: {
+        createPasskeyAttestation: vi.fn(),
+      },
+    });
+
+    expect(isPasskeyRegistrationSupported()).toBe(true);
+  });
+
+  it("delegates attestation creation to the native bridge when browser registration is unavailable", async () => {
+    const registrationOptions: PasskeyRegistrationPublicKeyOptions = {
+      challenge: toBase64Url("challenge"),
+      rp: { id: "app.secpal.dev", name: "SecPal" },
+      user: {
+        id: toBase64Url("user-id"),
+        name: "test@secpal.dev",
+        display_name: "Test User",
+      },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }],
+    };
+    const nativeCredential = {
+      id: "native-credential-id",
+      raw_id: "bmF0aXZlLWNyZWRlbnRpYWwtaWQ",
+      type: "public-key" as const,
+      response: {
+        client_data_json: "Y2xpZW50LWRhdGE",
+        attestation_object: "YXR0ZXN0YXRpb24tb2JqZWN0",
+        transports: ["internal" as const],
+      },
+      client_extension_results: { credProps: { rk: true } },
+    };
+    const createPasskeyAttestation = vi.fn().mockResolvedValue(nativeCredential);
+
+    Reflect.deleteProperty(window, "PublicKeyCredential");
+    Reflect.deleteProperty(navigator, "credentials");
+    Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
+      configurable: true,
+      value: {
+        createPasskeyAttestation,
+      },
+    });
+
+    await expect(getPasskeyAttestation(registrationOptions)).resolves.toEqual(
+      nativeCredential
+    );
+    expect(createPasskeyAttestation).toHaveBeenCalledWith(registrationOptions);
   });
 
   it("omits the attestation key when an unrecognised attestation value is provided", async () => {

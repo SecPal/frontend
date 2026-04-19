@@ -337,7 +337,7 @@ describe("SettingsPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /complete in your browser/i })
+        screen.getByRole("button", { name: /complete on your device/i })
       ).toBeInTheDocument();
     });
 

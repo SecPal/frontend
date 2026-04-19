@@ -12,6 +12,12 @@ import type {
   PasskeyTransport,
 } from "@/types/api";
 
+interface NativePasskeyRegistrationBridge {
+  createPasskeyAttestation?: (
+    options: PasskeyRegistrationPublicKeyOptions
+  ) => Promise<PasskeyRegistrationCredential>;
+}
+
 function toBase64Url(value: ArrayBuffer | ArrayBufferView): string {
   const bytes =
     value instanceof ArrayBuffer
@@ -206,6 +212,24 @@ function normalizeExtensionResults(
   };
 }
 
+function getNativePasskeyRegistrationBridge(): NativePasskeyRegistrationBridge | null {
+  const candidate = (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: NativePasskeyRegistrationBridge;
+    }
+  ).SecPalNativeAuthBridge;
+
+  if (
+    candidate &&
+    typeof candidate === "object" &&
+    typeof candidate.createPasskeyAttestation === "function"
+  ) {
+    return candidate;
+  }
+
+  return null;
+}
+
 function assertPasskeySupport(): void {
   if (!isPasskeySupported()) {
     throw new Error("Passkeys are not available in this browser.");
@@ -278,7 +302,8 @@ export function isPasskeySupported(): boolean {
 
 export function isPasskeyRegistrationSupported(): boolean {
   return (
-    isPasskeySupported() && typeof navigator.credentials?.create === "function"
+    (isPasskeySupported() && typeof navigator.credentials?.create === "function") ||
+    getNativePasskeyRegistrationBridge() !== null
   );
 }
 
@@ -389,6 +414,17 @@ export async function getPasskeyAssertion(
 export async function getPasskeyAttestation(
   options: PasskeyRegistrationPublicKeyOptions
 ): Promise<PasskeyRegistrationCredential> {
+  const nativePasskeyRegistrationBridge = getNativePasskeyRegistrationBridge();
+
+  if (nativePasskeyRegistrationBridge) {
+    console.info(
+      "[SecPal] Passkey attestation: delegating registration to native bridge for rpId=%s",
+      options.rp.id
+    );
+
+    return nativePasskeyRegistrationBridge.createPasskeyAttestation!(options);
+  }
+
   assertPasskeySupport();
 
   if (typeof navigator.credentials?.create !== "function") {
