@@ -52,7 +52,11 @@ test.describe("Authentication", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("should logout successfully", async ({ authenticatedPage: page }) => {
+  test("should logout successfully", async ({ page }) => {
+    // Use a fresh UI login so this destructive flow does not invalidate the
+    // shared authenticated fixture state used by parallel auth tests.
+    await loginViaUI(page);
+
     // Now we should be on the dashboard - open the user menu
     const dropdownTrigger = page.getByRole("button", {
       name: /user menu/i,
