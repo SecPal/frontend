@@ -48,6 +48,8 @@ function mockTransport(logout = vi.fn().mockResolvedValue(undefined)) {
   vi.mocked(authTransport.getAuthTransport).mockReturnValue({
     kind: "browser-session",
     login: vi.fn(),
+    supportsPasskeyLogin: vi.fn().mockReturnValue(false),
+    loginWithPasskey: vi.fn(),
     logout,
     logoutAll: vi.fn(),
     getCurrentUser: vi.fn(),

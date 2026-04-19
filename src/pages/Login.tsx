@@ -10,7 +10,6 @@ import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import {
-  getCurrentUser,
   startPasskeyAuthenticationChallenge,
   verifyMfaChallenge,
   verifyPasskeyAuthenticationChallenge,
@@ -74,7 +73,13 @@ export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const authTransport = useMemo(() => getAuthTransport(), []);
-  const supportsPasskeys = useMemo(() => isPasskeySupported(), []);
+  const supportsPasskeys = useMemo(
+    () =>
+      authTransport.kind === "native-bridge"
+        ? authTransport.supportsPasskeyLogin()
+        : isPasskeySupported(),
+    [authTransport]
+  );
   const {
     remainingAttempts,
     isLocked,
@@ -89,7 +94,7 @@ export function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
   const [passkeyStep, setPasskeyStep] = useState<
-    "challenge" | "browser" | "verifying" | "confirming" | null
+    "challenge" | "native" | "browser" | "verifying" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
@@ -252,6 +257,37 @@ export function Login() {
     const initialChallengeEmail =
       normalizedEmail !== "" ? normalizedEmail : undefined;
 
+    if (authTransport.kind === "native-bridge") {
+      try {
+        setPasskeyStep("native");
+
+        const response = await authTransport.loginWithPasskey(
+          initialChallengeEmail ? { email: initialChallengeEmail } : undefined
+        );
+
+        resetAttempts();
+        await login(response.user);
+        navigate("/");
+      } catch (err) {
+        console.error("Passkey sign-in error:", err);
+
+        if (err instanceof AuthApiError) {
+          setError(err.message);
+        } else if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError(
+            "An unexpected passkey sign-in error occurred. Please try again."
+          );
+        }
+      } finally {
+        setIsSubmittingPasskey(false);
+        setPasskeyStep(null);
+      }
+
+      return;
+    }
+
     const completePasskeySignIn = async (challengeEmail?: string) => {
       const challengeResponse = await startPasskeyAuthenticationChallenge(
         challengeEmail ? { email: challengeEmail } : undefined
@@ -320,27 +356,8 @@ export function Login() {
         );
       }
 
-      // Confirm the session is established by fetching the current user,
-      // consistent with the password login flow in authTransport.
-      // Falls back to the verify response user if session confirmation fails.
-      setPasskeyStep("confirming");
-      let sessionUser = sanitizedUser;
-      try {
-        const confirmedUser = sanitizeAuthUser(await getCurrentUser());
-        if (confirmedUser) {
-          sessionUser = confirmedUser;
-          console.info(
-            "[SecPal] Passkey login: session confirmed via GET /v1/me"
-          );
-        }
-      } catch {
-        console.info(
-          "[SecPal] Passkey login: session confirmation skipped, using verify response user"
-        );
-      }
-
       resetAttempts();
-      await login(sessionUser);
+      await login(sanitizedUser);
       console.info("[SecPal] Passkey login: complete, navigating to /");
       navigate("/");
     } catch (err) {
@@ -654,10 +671,10 @@ export function Login() {
             {isSubmittingPasskey ? (
               passkeyStep === "browser" ? (
                 <Trans>Check your browser…</Trans>
+              ) : passkeyStep === "native" ? (
+                <Trans>Check your device…</Trans>
               ) : passkeyStep === "verifying" ? (
                 <Trans>Verifying passkey…</Trans>
-              ) : passkeyStep === "confirming" ? (
-                <Trans>Confirming session…</Trans>
               ) : (
                 <Trans>Signing in with passkey...</Trans>
               )

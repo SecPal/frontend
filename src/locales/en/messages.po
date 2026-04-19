@@ -625,10 +625,6 @@ msgstr "My profile"
 msgid "BWR export generated. Download the file below."
 msgstr "BWR export generated. Download the file below."
 
-#: src/pages/Settings/SettingsPage.tsx:607
-msgid "Complete in your browser…"
-msgstr "Complete in your browser…"
-
 #: src/components/OrganizationalUnitFormDialog.tsx:257
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
@@ -823,7 +819,7 @@ msgstr "We could not complete the sign out request. Please try again."
 msgid "Done"
 msgstr "Done"
 
-#: src/pages/Login.tsx:662
+#: src/pages/Login.tsx:679
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
 
@@ -1309,10 +1305,6 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Recovery code"
 msgstr "Recovery code"
 
-#: src/pages/Login.tsx:660
-msgid "Confirming session…"
-msgstr "Confirming session…"
-
 #: src/pages/ActivityLog/ActivityLogList.tsx:413
 msgid "All logs"
 msgstr "All logs"
@@ -1413,6 +1405,10 @@ msgstr "Auto-refresh (30s)"
 msgid "Refresh"
 msgstr "Refresh"
 
+#: src/pages/Settings/SettingsPage.tsx:607
+msgid "Complete on your device…"
+msgstr "Complete on your device…"
+
 #: src/pages/Employees/EmployeeCreate.tsx:255
 msgid "Management level must be between 1 and 255"
 msgstr "Management level must be between 1 and 255"
@@ -1421,148 +1417,148 @@ msgstr "Management level must be between 1 and 255"
 msgid "Validating your link..."
 msgstr "Validating your link..."
 
-#: src/pages/Login.tsx:665
+#: src/pages/Login.tsx:682
 msgid "Sign in with passkey"
 msgstr "Sign in with passkey"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:625
+#: src/pages/Login.tsx:642
 msgid "login.checkingSystem"
 msgstr "Checking system..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:558
+#: src/pages/Login.tsx:575
 msgid "login.email"
 msgstr "Email address"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:497
+#: src/pages/Login.tsx:514
 msgid "login.healthWarning.message"
 msgstr "The system is not fully configured. Please contact your administrator."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:494
+#: src/pages/Login.tsx:511
 msgid "login.healthWarning.title"
 msgstr "System not ready"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:627
+#: src/pages/Login.tsx:644
 msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:740
+#: src/pages/Login.tsx:757
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:785
+#: src/pages/Login.tsx:802
 msgid "login.mfa.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:679
+#: src/pages/Login.tsx:696
 msgid "login.mfa.description"
 msgstr "Your password was accepted. Complete MFA to finish signing in."
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx:689
+#: src/pages/Login.tsx:706
 msgid "login.mfa.expiry"
 msgstr "This verification step expires at {0}."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:698
+#: src/pages/Login.tsx:715
 msgid "login.mfa.method"
 msgstr "Verification method"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:717
+#: src/pages/Login.tsx:734
 msgid "login.mfa.method.recovery_code"
 msgstr "Recovery code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:721
+#: src/pages/Login.tsx:738
 msgid "login.mfa.method.totp"
 msgstr "Authenticator code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:727
+#: src/pages/Login.tsx:744
 msgid "login.mfa.preferred"
 msgstr "recommended"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:738
+#: src/pages/Login.tsx:755
 msgid "login.mfa.recoveryCode"
 msgstr "Recovery code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:747
+#: src/pages/Login.tsx:764
 msgid "login.mfa.recoveryHelp"
 msgstr "Enter one unused recovery code exactly as stored."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:796
+#: src/pages/Login.tsx:813
 msgid "login.mfa.submit"
 msgstr "Verify and continue"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:676
+#: src/pages/Login.tsx:693
 msgid "login.mfa.title"
 msgstr "Second factor required"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:751
+#: src/pages/Login.tsx:768
 msgid "login.mfa.totpHelp"
 msgstr "Enter the current 6-digit code from your authenticator app."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:794
+#: src/pages/Login.tsx:811
 msgid "login.mfa.verifying"
 msgstr "Verifying..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:470
+#: src/pages/Login.tsx:487
 msgid "login.offlineWarning.message"
 msgstr "Login requires an internet connection. Please check your connection and try again."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:465
+#: src/pages/Login.tsx:482
 msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:581
+#: src/pages/Login.tsx:598
 msgid "login.password"
 msgstr "Password"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:526
+#: src/pages/Login.tsx:543
 msgid "login.rateLimitLocked.message"
 msgstr "Please wait {remainingLockoutSeconds} seconds before trying again."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:521
+#: src/pages/Login.tsx:538
 msgid "login.rateLimitLocked.title"
 msgstr "Too many failed attempts"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:547
+#: src/pages/Login.tsx:564
 msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:633
+#: src/pages/Login.tsx:650
 msgid "login.submit"
 msgstr "Log in"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:631
+#: src/pages/Login.tsx:648
 msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx:443
+#: src/pages/Login.tsx:460
 msgid "login.title"
 msgstr "Log in"
 
@@ -2193,7 +2189,7 @@ msgstr "Failed to move organizational unit"
 msgid "Region"
 msgstr "Region"
 
-#: src/pages/Login.tsx:656
+#: src/pages/Login.tsx:673
 msgid "Check your browser…"
 msgstr "Check your browser…"
 
@@ -2372,7 +2368,7 @@ msgstr "Log Name"
 msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
 msgstr "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
 
-#: src/pages/Login.tsx:658
+#: src/pages/Login.tsx:677
 msgid "Verifying passkey…"
 msgstr "Verifying passkey…"
 
@@ -2383,6 +2379,10 @@ msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty fo
 #: src/pages/Onboarding/OnboardingWizard.tsx:82
 msgid "Save Draft"
 msgstr "Save Draft"
+
+#: src/pages/Login.tsx:675
+msgid "Check your device…"
+msgstr "Check your device…"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:245
 msgid "Merkle Root"

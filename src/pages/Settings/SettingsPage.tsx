@@ -115,7 +115,7 @@ export function SettingsPage() {
   const [passkeyLabel, setPasskeyLabel] = useState("");
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<
-    "challenge" | "browser" | "saving" | null
+    "challenge" | "device" | "saving" | null
   >(null);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [isPreparingEnrollment, setIsPreparingEnrollment] = useState(false);
@@ -260,12 +260,12 @@ export function SettingsPage() {
         "[SecPal] Passkey registration: challenge created id=%s",
         challengeResponse.data.challenge_id
       );
-      setRegistrationStep("browser");
+      setRegistrationStep("device");
       const credential = await getPasskeyAttestation(
         challengeResponse.data.public_key
       );
       console.info(
-        "[SecPal] Passkey registration: browser attestation complete"
+        "[SecPal] Passkey registration: device attestation complete"
       );
       setRegistrationStep("saving");
       const response = await verifyPasskeyRegistrationChallenge(
@@ -603,8 +603,8 @@ export function SettingsPage() {
                   disabled={isRegisteringPasskey}
                 >
                   {isRegisteringPasskey ? (
-                    registrationStep === "browser" ? (
-                      <Trans>Complete in your browser…</Trans>
+                    registrationStep === "device" ? (
+                      <Trans>Complete on your device…</Trans>
                     ) : registrationStep === "saving" ? (
                       <Trans>Saving passkey…</Trans>
                     ) : (

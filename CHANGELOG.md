@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added native Android passkey registration fallback in Settings so the shared passkey enrollment flow can delegate attestation creation to the injected Android bridge when the embedded WebView does not support browser WebAuthn registration, while keeping browser behavior unchanged.
+- Added native-bridge passkey sign-in to the shared login flow so Android can complete token-based passkey authentication through the injected native auth bridge while browsers keep the existing WebAuthn ceremony and progress states.
 - Added a Bewacherregister management panel to employee detail so authorized users can review BWR status and timestamps, generate the initial export, download the generated file, and move supported BWR states through the dedicated backend endpoints with inline validation feedback.
 - Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
 - Added a live Playwright passkey proof that drives the real app.secpal.dev/api.secpal.dev stack through passkey registration, UI/API consistency checks, passkey removal, and a fresh email-first passkey login using a browser WebAuthn authenticator.

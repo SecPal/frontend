@@ -13,6 +13,8 @@ import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SettingsPage } from "./SettingsPage";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import * as i18nModule from "../../i18n";
 import * as authApi from "../../services/authApi";
 import * as passkeyBrowser from "../../services/passkeyBrowser";
@@ -206,6 +208,11 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("loads the generated locale catalogs used by the passkey settings flow", () => {
+    expect(Object.keys(deMessages).length).toBeGreaterThan(0);
+    expect(Object.keys(enMessages).length).toBeGreaterThan(0);
+  });
+
   it("lists enrolled passkeys", async () => {
     await renderSettingsPage();
 
@@ -337,21 +344,70 @@ describe("SettingsPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /complete in your browser/i })
+        screen.getByRole("button", { name: /complete on your device/i })
       ).toBeInTheDocument();
     });
 
-    // Resolve to avoid dangling promise
-    resolveAttestation({
+    // Resolve to avoid dangling promise.
+    await act(async () => {
+      resolveAttestation({
+        id: "new-credential-id",
+        raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
+        type: "public-key",
+        response: {
+          client_data_json: "Y2xpZW50",
+          attestation_object: "YXR0ZXN0YXRpb24",
+        },
+        client_extension_results: {},
+      });
+    });
+  });
+
+  it("shows a saving prompt while the passkey registration is being verified", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
       type: "public-key",
       response: {
         client_data_json: "Y2xpZW50",
         attestation_object: "YXR0ZXN0YXRpb24",
+        transports: ["usb"],
       },
       client_extension_results: {},
     });
+
+    let resolveVerification!: (
+      value: ReturnType<typeof createPasskeyRegistrationVerificationResponse>
+    ) => void;
+    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveVerification = resolve;
+      })
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /saving passkey/i })
+      ).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      resolveVerification(createPasskeyRegistrationVerificationResponse());
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /add passkey/i })
+    ).toBeInTheDocument();
   });
 
   it("shows passkey enrollment errors inline", async () => {
