@@ -24,8 +24,12 @@ import { MemoryRouter } from "react-router-dom";
 import { ApplicationLayout } from "./application-layout";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
+import { sanitizePersistedAuthUser } from "../services/authState";
+import { authStorage } from "../services/storage";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { messages as deMessages } from "../locales/de/messages.mjs";
+
+type AuthenticatedUser = Awaited<ReturnType<typeof authApi.getCurrentUser>>;
 
 vi.mock("../services/authApi");
 vi.mock("../lib/clientStateCleanup", () => ({
@@ -56,6 +60,30 @@ const renderWithProviders = (
   );
 };
 
+async function seedAuthenticatedUser(user: Record<string, unknown>) {
+  const persistedUser = sanitizePersistedAuthUser({
+    emailVerified: true,
+    ...user,
+  });
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed authenticated user for test");
+  }
+
+  const authenticatedUser: AuthenticatedUser = {
+    ...persistedUser,
+    roles: [],
+    permissions: [],
+    hasOrganizationalScopes: false,
+    hasCustomerAccess: false,
+    hasSiteAccess: false,
+    emailVerified: persistedUser.emailVerified ?? false,
+  };
+
+  vi.mocked(authApi.getCurrentUser).mockResolvedValue(authenticatedUser);
+  await authStorage.setUser(persistedUser);
+}
+
 async function openUserMenu() {
   const userMenuButton = screen.getByRole("button", {
     name: /user menu/i,
@@ -75,26 +103,20 @@ async function openUserMenu() {
 
 describe("ApplicationLayout", () => {
   const SLOW_TEST_TIMEOUT = 20000;
+  const authenticatedUser = {
+    id: 1,
+    name: "John Doe",
+    email: "john@secpal.dev",
+    emailVerified: true,
+  };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     localStorage.clear();
     i18n.load("en", {});
     i18n.activate("en");
 
-    vi.mocked(authApi.getCurrentUser).mockImplementation(
-      () => new Promise(() => undefined)
-    );
-
-    // Set up authenticated user
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({
-        id: 1,
-        name: "John Doe",
-        email: "john@secpal.dev",
-      })
-    );
+    await seedAuthenticatedUser(authenticatedUser);
   });
 
   describe("rendering", () => {
@@ -162,7 +184,7 @@ describe("ApplicationLayout", () => {
       expect(userMenuButton).toBeInTheDocument();
     });
 
-    it("renders user initials in avatar", () => {
+    it("renders user initials in avatar", async () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
@@ -170,7 +192,7 @@ describe("ApplicationLayout", () => {
       );
 
       // Avatar in navbar (stacked layout has avatar only in navbar)
-      const avatars = screen.getAllByText("JD");
+      const avatars = await screen.findAllByText("JD");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
   });
@@ -437,15 +459,12 @@ describe("ApplicationLayout", () => {
   });
 
   describe("getInitials helper", () => {
-    it("generates correct initials for two-word name", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Jane Smith",
-          email: "jane@secpal.dev",
-        })
-      );
+    it("generates correct initials for two-word name", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Jane Smith",
+        email: "jane@secpal.dev",
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -454,19 +473,16 @@ describe("ApplicationLayout", () => {
       );
 
       // Avatar in navbar (stacked layout has avatar only in navbar)
-      const avatars = screen.getAllByText("JS");
+      const avatars = await screen.findAllByText("JS");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("generates correct initials for single-word name", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin",
-          email: "admin@secpal.dev",
-        })
-      );
+    it("generates correct initials for single-word name", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin",
+        email: "admin@secpal.dev",
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -475,19 +491,16 @@ describe("ApplicationLayout", () => {
       );
 
       // Avatar in navbar (stacked layout has avatar only in navbar)
-      const avatars = screen.getAllByText("A");
+      const avatars = await screen.findAllByText("A");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("generates correct initials for three-word name (max 2)", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Paul Smith",
-          email: "john@secpal.dev",
-        })
-      );
+    it("generates correct initials for three-word name (max 2)", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Paul Smith",
+        email: "john@secpal.dev",
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -496,18 +509,16 @@ describe("ApplicationLayout", () => {
       );
 
       // Avatar in navbar (stacked layout has avatar only in navbar)
-      const avatars = screen.getAllByText("JP");
+      const avatars = await screen.findAllByText("JP");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("shows fallback U when user name is missing", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          email: "user@secpal.dev",
-        })
-      );
+    it("shows fallback U when user name is missing", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "   ",
+        email: "user@secpal.dev",
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -522,16 +533,13 @@ describe("ApplicationLayout", () => {
   });
 
   describe("permission-based navigation", () => {
-    it("hides Organization link when user has no organizational scopes", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: false,
-        })
-      );
+    it("hides Organization link when user has no organizational scopes", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: false,
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -542,16 +550,13 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
     });
 
-    it("hides Customers link when user has no organizational scopes", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: false,
-        })
-      );
+    it("hides Customers link when user has no organizational scopes", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: false,
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -562,18 +567,15 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Customers")).not.toBeInTheDocument();
     });
 
-    it("keeps management links hidden for scope-only users", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: true,
-          roles: [],
-          permissions: [],
-        })
-      );
+    it("keeps management links hidden for scope-only users", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: [],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -586,18 +588,15 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
-    it("shows management links for elevated organization roles", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: true,
-          roles: ["Manager"],
-          permissions: [],
-        })
-      );
+    it("shows management links for elevated organization roles", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: ["Manager"],
+        permissions: [],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -605,23 +604,20 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Organization")).toBeInTheDocument();
-      expect(screen.getByText("Customers")).toBeInTheDocument();
-      expect(screen.getByText("Employees")).toBeInTheDocument();
+      expect(await screen.findByText("Organization")).toBeInTheDocument();
+      expect(await screen.findByText("Customers")).toBeInTheDocument();
+      expect(await screen.findByText("Employees")).toBeInTheDocument();
     });
 
-    it("shows Customers for users with explicit customer permissions", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: false,
-          roles: [],
-          permissions: ["customers.read"],
-        })
-      );
+    it("shows Customers for users with explicit customer permissions", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: false,
+        roles: [],
+        permissions: ["customers.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -629,24 +625,21 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Customers")).toBeInTheDocument();
+      expect(await screen.findByText("Customers")).toBeInTheDocument();
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
-    it("shows Customers for users with backend scoped-access flags", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: false,
-          hasCustomerAccess: true,
-          roles: [],
-          permissions: [],
-        })
-      );
+    it("shows Customers for users with backend scoped-access flags", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: true,
+        roles: [],
+        permissions: [],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -654,21 +647,18 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Customers")).toBeInTheDocument();
+      expect(await screen.findByText("Customers")).toBeInTheDocument();
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
-    it("always shows Home", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          hasOrganizationalScopes: false,
-        })
-      );
+    it("always shows Home", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+        hasOrganizationalScopes: false,
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -679,16 +669,12 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Home")).toBeInTheDocument();
     });
 
-    it("treats undefined hasOrganizationalScopes as false", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "John Doe",
-          email: "john@secpal.dev",
-          // hasOrganizationalScopes not set
-        })
-      );
+    it("treats undefined hasOrganizationalScopes as false", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "John Doe",
+        email: "john@secpal.dev",
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -750,16 +736,13 @@ describe("ApplicationLayout", () => {
   });
 
   describe("Activity Logs Navigation", () => {
-    it("shows Activity Logs menu item when user has permission", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin User",
-          email: "admin@secpal.dev",
-          permissions: ["activity_log.read"],
-        })
-      );
+    it("shows Activity Logs menu item when user has permission", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin User",
+        email: "admin@secpal.dev",
+        permissions: ["activity_log.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -767,19 +750,16 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Activity Logs")).toBeInTheDocument();
+      expect(await screen.findByText("Activity Logs")).toBeInTheDocument();
     });
 
-    it("hides Activity Logs menu item when user lacks permission", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Regular User",
-          email: "user@secpal.dev",
-          permissions: [],
-        })
-      );
+    it("hides Activity Logs menu item when user lacks permission", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Regular User",
+        email: "user@secpal.dev",
+        permissions: [],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -790,16 +770,13 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Activity Logs")).not.toBeInTheDocument();
     });
 
-    it("highlights Activity Logs when on that page", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin User",
-          email: "admin@secpal.dev",
-          permissions: ["activity_log.read"],
-        })
-      );
+    it("highlights Activity Logs when on that page", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin User",
+        email: "admin@secpal.dev",
+        permissions: ["activity_log.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -808,20 +785,19 @@ describe("ApplicationLayout", () => {
         { route: "/activity-logs" }
       );
 
-      const activityLogsLink = screen.getByText("Activity Logs").closest("a");
+      const activityLogsLink = (
+        await screen.findByText("Activity Logs")
+      ).closest("a");
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
     });
 
-    it("links to /activity-logs route", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin User",
-          email: "admin@secpal.dev",
-          permissions: ["activity_log.read"],
-        })
-      );
+    it("links to /activity-logs route", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin User",
+        email: "admin@secpal.dev",
+        permissions: ["activity_log.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -829,7 +805,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      const activityLogsLink = screen.getByText("Activity Logs").closest("a");
+      const activityLogsLink = (
+        await screen.findByText("Activity Logs")
+      ).closest("a");
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
     });
   });
@@ -841,23 +819,20 @@ describe("ApplicationLayout", () => {
       });
     });
 
-    it("renders the localized German label instead of the raw Lingui message id", () => {
+    it("renders the localized German label instead of the raw Lingui message id", async () => {
       act(() => {
         i18n.load("de", deMessages);
         i18n.activate("de");
       });
 
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin User",
-          email: "admin@secpal.dev",
-          hasOrganizationalScopes: true,
-          roles: ["Manager"],
-          permissions: ["android_enrollment.read"],
-        })
-      );
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin User",
+        email: "admin@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: ["Manager"],
+        permissions: ["android_enrollment.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>
@@ -865,22 +840,21 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Android-Provisionierung")).toBeInTheDocument();
+      expect(
+        await screen.findByText("Android-Provisionierung")
+      ).toBeInTheDocument();
       expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
     });
 
-    it("hides the Android provisioning navigation entry without read access", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Admin User",
-          email: "admin@secpal.dev",
-          hasOrganizationalScopes: true,
-          roles: [],
-          permissions: ["activity_log.read"],
-        })
-      );
+    it("hides the Android provisioning navigation entry without read access", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Admin User",
+        email: "admin@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["activity_log.read"],
+      });
 
       renderWithProviders(
         <ApplicationLayout>

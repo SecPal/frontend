@@ -15,10 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
+- Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 
 ### Removed
 
 - Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
+
+### Security
+
+- Updated the transitive `basic-ftp` dependency from `5.2.2` to `5.3.0` in `package-lock.json`, clearing the high-severity `GHSA-rp42-5vxx-qpwr` npm audit finding tracked in issue #893.
 
 ### Fixed
 
