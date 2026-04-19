@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test as base, expect, type Page } from "@playwright/test";
+import {
+  buildTestUser,
+  getConfiguredTestUserOrThrow,
+  waitForAuthResolution,
+  waitForLoginFormReady,
+} from "./auth-helpers";
 
 /**
  * Test Credentials
@@ -10,8 +16,7 @@ import { test as base, expect, type Page } from "@playwright/test";
  * In CI, these can be overridden via environment variables.
  */
 export const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL || "test@secpal.dev",
-  password: process.env.TEST_USER_PASSWORD || "password",
+  ...buildTestUser(),
 };
 
 /**
@@ -22,15 +27,20 @@ export const TEST_USER = {
  */
 export async function loginViaUI(
   page: Page,
-  email = TEST_USER.email,
-  password = TEST_USER.password
+  email?: string,
+  password?: string
 ): Promise<void> {
+  const configuredTestUser =
+    email && password ? { email, password } : getConfiguredTestUserOrThrow();
+
   await page.goto("/login");
   await page.waitForLoadState("networkidle");
 
   // Fill in credentials using ID selectors (matching Login.tsx)
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
+  await page.locator("#email").fill(configuredTestUser.email);
+  await page.locator("#password").fill(configuredTestUser.password);
+
+  await waitForLoginFormReady(page);
 
   // Submit form - "Log in" in English, "Anmelden" or similar in German
   await page
@@ -56,6 +66,8 @@ const AUTH_FILE = "./tests/e2e/.auth/user.json";
  */
 export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ browser }, runTest) => {
+    const configuredTestUser = getConfiguredTestUserOrThrow();
+
     // Try to use saved auth state
     let context;
     try {
@@ -67,13 +79,24 @@ export const test = base.extend<{ authenticatedPage: Page }>({
 
     const page = await context.newPage();
 
-    // If no valid session, perform login
+    // Resolve whether the reused storage state still results in the authenticated shell.
     await page.goto("/");
-    if (page.url().includes("/login")) {
-      await loginViaUI(page);
+    await page.waitForLoadState("networkidle");
+
+    const authResolution = await waitForAuthResolution(page);
+
+    if (authResolution !== "authenticated") {
+      await loginViaUI(
+        page,
+        configuredTestUser.email,
+        configuredTestUser.password
+      );
     }
 
-    // Verify we're logged in
+    // Verify we're logged in with the actual authenticated application shell.
+    await expect(page.getByRole("button", { name: /user menu/i })).toBeVisible({
+      timeout: 15_000,
+    });
     expect(page.url()).not.toContain("/login");
 
     // Run the test with authenticated page

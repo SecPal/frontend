@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { test, expect, loginViaUI, TEST_USER } from "./auth.setup";
+import { test, expect, loginViaUI } from "./auth.setup";
+import { waitForLoginFormReady } from "./auth-helpers";
 
 /**
  * Authentication Flow Tests
@@ -35,8 +36,9 @@ test.describe("Authentication", () => {
     await page.waitForLoadState("networkidle");
 
     // Try to login with wrong password
-    await page.locator("#email").fill(TEST_USER.email);
+    await page.locator("#email").fill("wrong-user@secpal.dev");
     await page.locator("#password").fill("wrongpassword");
+    await waitForLoginFormReady(page);
     await page
       .getByRole("button", { name: /log in|anmelden|einloggen/i })
       .click();

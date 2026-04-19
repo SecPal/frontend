@@ -10,7 +10,7 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * 1. Local Development (default):
  *    - Uses Vite dev server (http://localhost:5173)
- *    - Proxies API to DDEV backend
+ *    - Uses the repository's current Vite/API wiring for local development
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
