@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 - Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
+- Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
+- Replaced the `vite-plugin-static-copy` `rename: { stripBase: true }` option with `rename: "assetlinks.json"` to use the correct string-based API
+- Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
+- Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
+- Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
+- Added `stableStringify` helper in the Playwright auth storage utility so the PBKDF2 cache key is deterministic regardless of property insertion order in the user object
+- Extracted `TEST_FILE_PATTERN` constant in the issue-889 lint regression test and decomposed `directAuthUserWritePattern` into named sub-pattern constants with an explanatory comment
+- Replaced the inline `makeFetchResponse` stub in `onboardingApi.test.ts` with a real `Response` constructor so the mock implements the full browser `Response` interface
 
 ### Removed
 

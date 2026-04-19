@@ -9,11 +9,20 @@ const AUTH_STORAGE_VERSION = 2;
 const AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
+const AUTH_STORAGE_KEY_MATERIAL_PREFIX = "secpal-auth-storage:";
 
 const storedAuthUserCache = new Map<string, Promise<string>>();
 
 function encodeBase64(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString("base64");
+  const CHUNK_SIZE = 0x8000;
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += CHUNK_SIZE) {
+    const chunk = bytes.subarray(index, index + CHUNK_SIZE);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
@@ -23,11 +32,35 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   ) as ArrayBuffer;
 }
 
+function stableStringify(value: unknown): string {
+  const canonicalize = (input: unknown): unknown => {
+    if (Array.isArray(input)) {
+      return input.map((item) => canonicalize(item));
+    }
+
+    if (input !== null && typeof input === "object") {
+      const record = input as Record<string, unknown>;
+      const sortedKeys = Object.keys(record).sort();
+      const normalized: Record<string, unknown> = {};
+
+      for (const key of sortedKeys) {
+        normalized[key] = canonicalize(record[key]);
+      }
+
+      return normalized;
+    }
+
+    return input;
+  };
+
+  return JSON.stringify(canonicalize(value));
+}
+
 function getStoredAuthUserCacheKey(
   user: Record<string, unknown>,
   csrfToken: string
 ): string {
-  return `${csrfToken}:${JSON.stringify(user)}`;
+  return `${csrfToken}:${stableStringify(user)}`;
 }
 
 export function clearStoredAuthUserCache(): void {
@@ -64,7 +97,7 @@ async function createEncryptedStoredAuthUser(
   csrfToken: string
 ): Promise<string> {
   const textEncoder = new TextEncoder();
-  const keyMaterial = `secpal-auth-storage:${csrfToken}`;
+  const keyMaterial = `${AUTH_STORAGE_KEY_MATERIAL_PREFIX}${csrfToken}`;
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(16));
   const baseKey = await crypto.subtle.importKey(

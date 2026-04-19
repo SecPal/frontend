@@ -29,18 +29,18 @@ function makeFetchResponse(
   body: object | null,
   headers: Record<string, string> = {}
 ): Response {
-  return {
-    ok: status >= 200 && status < 300,
+  const isNullBodyStatus =
+    status === 101 || status === 204 || status === 205 || status === 304;
+  const responseBody = isNullBodyStatus
+    ? null
+    : body !== null
+      ? JSON.stringify(body)
+      : "{invalid-json";
+  return new Response(responseBody, {
     status,
     statusText: `HTTP ${status}`,
-    headers: {
-      get: (name: string) => headers[name.toLowerCase()] ?? null,
-    },
-    json: () =>
-      body !== null
-        ? Promise.resolve(body)
-        : Promise.reject(new SyntaxError("invalid json")),
-  } as unknown as Response;
+    headers: new Headers(headers),
+  });
 }
 
 beforeEach(() => {
@@ -266,7 +266,7 @@ describe("completeOnboarding", () => {
 });
 
 describe("fetchOnboardingSteps", () => {
-  it("sorts templates, merges existing submissions, and marks submitted steps complete", async () => {
+  it("returns sorted onboarding steps with submission status", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce(
         makeFetchResponse(200, {
@@ -346,7 +346,7 @@ describe("fetchOnboardingSteps", () => {
 });
 
 describe("fetchOnboardingTemplate", () => {
-  it("normalizes missing title and step_number from the template payload", async () => {
+  it("uses template name as title fallback and sort_order as step_number fallback when null", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(
       makeFetchResponse(200, {
         data: {
@@ -474,12 +474,16 @@ describe("createOnboardingSubmission", () => {
   });
 
   it("rejects the legacy template_id alias when form_template_id is missing", async () => {
+    const invalidPayload = {
+      template_id: "template-9",
+      form_data: { tax_id: "DE123" },
+      status: "draft",
+    };
+
     await expect(
-      createOnboardingSubmission({
-        template_id: "template-9",
-        form_data: { tax_id: "DE123" },
-        status: "draft",
-      } as unknown as Parameters<typeof createOnboardingSubmission>[0])
+      createOnboardingSubmission(
+        invalidPayload as Parameters<typeof createOnboardingSubmission>[0]
+      )
     ).rejects.toThrow("Missing onboarding form template identifier");
 
     expect(apiFetch).not.toHaveBeenCalled();
