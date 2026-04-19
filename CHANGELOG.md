@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stabilized the live Playwright offline coverage by moving the flaky service-worker offline route assertions onto deterministic mocked auth and organizational-unit fixtures, correcting the offline banner expectation to the shipped copy, and marking the mocked offline-logout session as verified so the privacy flow reaches the profile page before logout.
 - Stopped browser-session auth from collapsing into an immediate frontend logout on protected routes when the local `auth_user` snapshot is missing or becomes unreadable after an `XSRF-TOKEN` rotation; bootstrap now falls back to `/v1/me` revalidation instead of treating client-side storage drift as a confirmed sign-out.
 - Hardened Playwright login setup for the live app by waiting for the health-gated submit button to become actionable before clicking, reusing that guard in mocked offline-auth flows, and requiring explicit `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` whenever Playwright targets a remote HTTPS environment like `app.secpal.dev` so live E2E runs fail clearly instead of silently using invalid local placeholder credentials.
 - Expanded `app.secpal.dev` Digital Asset Links to publish both `delegate_permission/common.handle_all_urls` and `delegate_permission/common.get_login_creds`, matching Android Credential Manager's documented app-to-web trust prerequisites for passkey validation.
