@@ -70,8 +70,7 @@ export interface OnboardingSubmission {
  * Onboarding submission create/update request
  */
 export interface OnboardingSubmissionData {
-  template_id?: string;
-  form_template_id?: string;
+  form_template_id: string;
   form_data: Record<string, unknown>;
   status?: "draft" | "submitted";
 }
@@ -352,9 +351,7 @@ export async function fetchOnboardingSubmissions(): Promise<
 export async function createOnboardingSubmission(
   data: OnboardingSubmissionData
 ): Promise<OnboardingSubmission> {
-  const formTemplateId = data.form_template_id ?? data.template_id;
-
-  if (!formTemplateId) {
+  if (!data.form_template_id) {
     throw new Error("Missing onboarding form template identifier");
   }
 
@@ -365,7 +362,7 @@ export async function createOnboardingSubmission(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      form_template_id: formTemplateId,
+      form_template_id: data.form_template_id,
       form_data: data.form_data,
       status: data.status,
     }),
