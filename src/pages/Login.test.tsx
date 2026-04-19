@@ -270,9 +270,9 @@ describe("Login", () => {
         user: createAuthUser({ name: "Native Passkey User" }),
       }),
       logout: vi.fn(),
-      getCurrentUser: vi.fn().mockResolvedValue(
-        createAuthUser({ name: "Canonical Native User" })
-      ),
+      getCurrentUser: vi
+        .fn()
+        .mockResolvedValue(createAuthUser({ name: "Canonical Native User" })),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -873,9 +873,9 @@ describe("Login", () => {
     );
 
     await waitFor(() => {
-      expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
-        1
-      );
+      expect(
+        authApi.verifyPasskeyAuthenticationChallenge
+      ).toHaveBeenCalledTimes(1);
     });
 
     expect(authApi.getCurrentUser).not.toHaveBeenCalled();

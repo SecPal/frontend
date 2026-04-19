@@ -51,7 +51,9 @@ export interface AuthTransport {
   readonly kind: AuthTransportKind;
   login(credentials: AuthCredentials): Promise<AuthLoginResult>;
   supportsPasskeyLogin(): boolean;
-  loginWithPasskey(options?: PasskeyLoginOptions): Promise<AuthenticatedLoginResult>;
+  loginWithPasskey(
+    options?: PasskeyLoginOptions
+  ): Promise<AuthenticatedLoginResult>;
   logout(): Promise<void>;
   logoutAll(): Promise<void>;
   getCurrentUser(): Promise<User>;
