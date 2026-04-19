@@ -182,13 +182,16 @@ export async function waitForLoginFormReady(
 export async function readAuthResolutionState(
   page: Page
 ): Promise<AuthResolutionState> {
-  return page.evaluate((bootstrapRecoverySelector) => ({
-    pathname: window.location.pathname,
-    hasUserMenu:
-      document.querySelector('button[aria-label="User menu"]') !== null,
-    hasBootstrapRecoveryScreen:
-      document.querySelector(bootstrapRecoverySelector) !== null,
-  }), BOOTSTRAP_RECOVERY_SELECTOR);
+  return page.evaluate(
+    (bootstrapRecoverySelector) => ({
+      pathname: window.location.pathname,
+      hasUserMenu:
+        document.querySelector('button[aria-label="User menu"]') !== null,
+      hasBootstrapRecoveryScreen:
+        document.querySelector(bootstrapRecoverySelector) !== null,
+    }),
+    BOOTSTRAP_RECOVERY_SELECTOR
+  );
 }
 
 export async function waitForAuthResolution(
