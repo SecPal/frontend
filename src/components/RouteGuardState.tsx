@@ -42,7 +42,10 @@ export function RouteBootstrapRecoveryState({
   reason,
 }: RouteBootstrapRecoveryStateProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      data-route-guard-state="bootstrap-recovery"
+    >
       <div className="max-w-md text-center" role="status" aria-live="polite">
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Still loading your secure session</Trans>

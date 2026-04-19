@@ -159,6 +159,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: true,
+          hasBootstrapRecoveryScreen: false,
         })
       ).toBe("authenticated");
     });
@@ -168,8 +169,19 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/login",
           hasUserMenu: false,
+          hasBootstrapRecoveryScreen: false,
         })
       ).toBe("login");
+    });
+
+    it("returns recovery when the protected-route bootstrap recovery screen is visible", () => {
+      expect(
+        describeAuthResolutionState({
+          pathname: "/customers",
+          hasUserMenu: false,
+          hasBootstrapRecoveryScreen: true,
+        })
+      ).toBe("recovery");
     });
 
     it("returns unresolved while neither login nor authenticated shell is visible", () => {
@@ -177,6 +189,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: false,
+          hasBootstrapRecoveryScreen: false,
         })
       ).toBe("unresolved");
     });
