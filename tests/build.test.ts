@@ -47,6 +47,20 @@ describe("Build Output Verification", () => {
     expect(viteConfig).toContain('dest: "."');
   });
 
+  it("keeps auth-storage MAC payload assembly on the shared helper", () => {
+    const storageService = readRepoFile("src/services/storage.ts");
+    const passkeysSpec = readRepoFile("tests/e2e/passkeys.spec.ts");
+
+    expect(storageService).toContain("./authStorageEnvelope");
+    expect(storageService).not.toContain("function buildEnvelopeMacPayload(");
+
+    expect(passkeysSpec).toContain(
+      '../../src/services/authStorageEnvelope'
+    );
+    expect(passkeysSpec).toContain("buildEnvelopeMacPayload(");
+    expect(passkeysSpec).not.toContain('].join(".")');
+  });
+
   it("hardens browser responses with the required security headers", () => {
     const htaccess = readRepoFile("public/.htaccess");
     const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { User } from "../contexts/auth-context";
+import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
 
@@ -238,18 +239,6 @@ async function encryptPersistedAuthUser(
     ...envelopeWithoutMac,
     mac: await signEnvelopeMac(envelopeWithoutMac, macKey),
   });
-}
-
-function buildEnvelopeMacPayload(
-  envelope: Omit<AuthStorageEnvelope, "mac">
-): string {
-  return [
-    envelope.scheme,
-    String(envelope.version),
-    envelope.salt,
-    envelope.iv,
-    envelope.ciphertext,
-  ].join(".");
 }
 
 function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
