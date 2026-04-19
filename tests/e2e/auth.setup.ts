@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { mkdir } from "fs/promises";
+import { dirname } from "path";
 import { test as base, expect, type Page } from "@playwright/test";
 import {
   buildTestUser,
@@ -103,6 +105,7 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     expect(page.url()).not.toContain("/login");
 
     if (shouldRefreshAuthState) {
+      await mkdir(dirname(AUTH_FILE), { recursive: true });
       await context.storageState({ path: AUTH_FILE });
     }
 
