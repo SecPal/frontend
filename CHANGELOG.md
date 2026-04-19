@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Expanded `app.secpal.dev` Digital Asset Links to publish both `delegate_permission/common.handle_all_urls` and `delegate_permission/common.get_login_creds`, matching Android Credential Manager's documented app-to-web trust prerequisites for passkey validation.
 - Published `/.well-known/assetlinks.json` for `app.secpal.dev` and copied it through the Vite build so release-signed SecPal Android builds can complete Credential Manager passkey registration instead of falling through to the SPA shell at the Digital Asset Links endpoint.
 - Split the heavy `issue874-react-hooks-set-state-in-effect` lint regression into smaller tracked-file batches and gave each batch a dedicated 30-second timeout so `npm run test:coverage` no longer times out on one monolithic ESLint spawn under full-suite coverage load, resolving frontend issue #899.
 - Increased PBKDF2 iteration count from 5,000 to 600,000 (OWASP minimum for PBKDF2-HMAC-SHA256) for new auth-storage envelopes while preserving reads of legacy v1 envelopes during rollout, hardening key derivation without forcing deploy-time logouts.
