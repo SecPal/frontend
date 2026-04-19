@@ -61,6 +61,7 @@ export interface SessionAuthenticationResult {
 
 export interface TokenAuthenticationResult {
   mode: "token";
+  method?: "passkey";
   mfa_completed: true;
 }
 

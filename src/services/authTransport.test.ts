@@ -184,6 +184,15 @@ describe("authTransport", () => {
     }
   });
 
+  it("reports that the browser-session transport does not support transport-managed passkey login", async () => {
+    const transport = getAuthTransport();
+
+    expect(transport.supportsPasskeyLogin()).toBe(false);
+    await expect(transport.loginWithPasskey()).rejects.toThrow(
+      "Browser-session transport does not support transport-managed passkey sign-in"
+    );
+  });
+
   it("surfaces an MFA challenge from the browser-session transport", async () => {
     const mfaChallenge = {
       id: "550e8400-e29b-41d4-a716-446655440099",
@@ -554,5 +563,81 @@ describe("authTransport", () => {
     } finally {
       onLineSpy.mockRestore();
     }
+  });
+
+  it("reports passkey support when the native bridge exposes passkey login", () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      loginWithPasskey: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+
+    expect(transport.supportsPasskeyLogin()).toBe(true);
+  });
+
+  it("delegates native passkey login to the native bridge and sanitizes the canonical user", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      loginWithPasskey: vi.fn().mockResolvedValue({
+        user: {
+          id: 9,
+          name: "Passkey User",
+          email: "passkey@secpal.dev",
+          token: "native-secret",
+        },
+      }),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue({
+        id: 9,
+        name: "Canonical Passkey User",
+        email: "canonical@secpal.dev",
+        emailVerified: true,
+        roles: ["Employee"],
+        permissions: ["profile.read"],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      }),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+    const result = await transport.loginWithPasskey({
+      email: "passkey@secpal.dev",
+    });
+
+    expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith({
+      email: "passkey@secpal.dev",
+    });
+    expect(result).toEqual({
+      status: "authenticated",
+      user: {
+        id: "9",
+        name: "Canonical Passkey User",
+        email: "canonical@secpal.dev",
+        emailVerified: true,
+        roles: ["Employee"],
+        permissions: ["profile.read"],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      },
+    });
+  });
+
+  it("throws when native passkey login is unavailable on the bridge", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transport = resolveAuthTransport({ nativeBridge });
+
+    await expect(transport.loginWithPasskey()).rejects.toThrow(
+      "Native auth transport does not support passkey sign-in"
+    );
   });
 });
