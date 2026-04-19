@@ -83,7 +83,7 @@ describe("passkeyBrowser", () => {
   });
 
   it("detects passkey support when the secure browser APIs are available", () => {
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -95,7 +95,7 @@ describe("passkeyBrowser", () => {
   });
 
   it("returns false when the browser is not in a secure context", () => {
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(window, "isSecureContext", {
       configurable: true,
       value: false,
@@ -126,7 +126,7 @@ describe("passkeyBrowser", () => {
       }),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -196,7 +196,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -227,7 +227,7 @@ describe("passkeyBrowser", () => {
   });
 
   it("throws when the browser returns an invalid assertion response", async () => {
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -277,7 +277,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -317,7 +317,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -346,7 +346,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -373,7 +373,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -387,7 +387,7 @@ describe("passkeyBrowser", () => {
   });
 
   it("returns false for isPasskeyRegistrationSupported when credentials.create is absent", () => {
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn() },
@@ -397,7 +397,7 @@ describe("passkeyBrowser", () => {
   });
 
   it("returns true for isPasskeyRegistrationSupported when both get and create are present", () => {
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: vi.fn() },
@@ -485,7 +485,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -523,7 +523,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -555,7 +555,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -589,7 +589,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -663,7 +663,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -715,7 +715,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -760,7 +760,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -803,7 +803,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -842,7 +842,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -877,10 +877,10 @@ describe("passkeyBrowser", () => {
 
     const createCredential = vi.fn((options: CredentialCreationOptions) => {
       void options;
-      return new Promise<PublicKeyCredential | null>(() => {});
+      return new Promise<PublicKeyCredential | null>(() => { });
     });
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: vi.fn(), create: createCredential },
@@ -934,7 +934,7 @@ describe("passkeyBrowser", () => {
       getClientExtensionResults: () => ({}),
     } as unknown as PublicKeyCredential);
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
@@ -956,10 +956,10 @@ describe("passkeyBrowser", () => {
 
     const getCredential = vi.fn((options: CredentialRequestOptions) => {
       void options;
-      return new Promise<PublicKeyCredential | null>(() => {});
+      return new Promise<PublicKeyCredential | null>(() => { });
     });
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: { get: getCredential },
