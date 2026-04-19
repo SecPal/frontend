@@ -2,6 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect } from "./auth.setup";
+import {
+  installMockAuthRoutes,
+  installMockOrganizationRoutes,
+  loginWithMockedBrowserSession,
+  offlineLiveMockOrganizationUnit,
+  offlineLiveMockUser,
+} from "./offline-live-helpers";
 
 const supportsServiceWorkerOfflineFlows =
   Boolean(process.env.CI) ||
@@ -23,12 +30,17 @@ const supportsServiceWorkerOfflineFlows =
 test.describe("Offline Functionality", () => {
   test.describe("Organization Page Offline", () => {
     test("should display cached organizational units when offline", async ({
-      authenticatedPage: page,
+      page,
+      context,
     }) => {
       test.skip(
         !supportsServiceWorkerOfflineFlows,
         "Requires preview/staging mode with an active service worker."
       );
+
+      await installMockAuthRoutes(context);
+      await installMockOrganizationRoutes(context);
+      await loginWithMockedBrowserSession(page);
 
       // Step 1: Load page online to populate cache
       await page.goto("/organization");
@@ -37,6 +49,9 @@ test.describe("Offline Functionality", () => {
       // Wait for units to load
       await expect(
         page.getByRole("heading", { name: /Organization Structure/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
       ).toBeVisible();
 
       // Step 2: Go offline
@@ -50,10 +65,13 @@ test.describe("Offline Functionality", () => {
       await expect(
         page.getByRole("heading", { name: /Organization Structure/i })
       ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
+      ).toBeVisible();
 
       // Should show offline indicator banner
       await expect(
-        page.getByText(/You're offline.*Viewing cached/i)
+        page.getByText(/You're offline - showing cached data/i)
       ).toBeVisible();
 
       // Go back online
@@ -168,12 +186,17 @@ test.describe("Offline Functionality", () => {
 
   test.describe("Offline Navigation", () => {
     test("should navigate between Organization and Profile while offline", async ({
-      authenticatedPage: page,
+      page,
+      context,
     }) => {
       test.skip(
         !supportsServiceWorkerOfflineFlows,
         "Requires preview/staging mode with an active service worker."
       );
+
+      await installMockAuthRoutes(context);
+      await installMockOrganizationRoutes(context);
+      await loginWithMockedBrowserSession(page);
 
       // Step 1: Visit both pages online to cache them
       await page.goto("/organization");
@@ -181,11 +204,20 @@ test.describe("Offline Functionality", () => {
       await expect(
         page.getByRole("heading", { name: /Organization Structure/i })
       ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
+      ).toBeVisible();
 
       await page.goto("/profile");
       await page.waitForLoadState("networkidle");
       await expect(
         page.getByRole("heading", { name: /My Profile/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.email).first()
       ).toBeVisible();
 
       // Step 2: Go offline
@@ -198,7 +230,10 @@ test.describe("Offline Functionality", () => {
         page.getByRole("heading", { name: /Organization Structure/i })
       ).toBeVisible();
       await expect(
-        page.getByText(/You're offline.*Viewing cached/i)
+        page.getByText(/You're offline - showing cached data/i)
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
       ).toBeVisible();
 
       // Step 4: Navigate to Profile
@@ -206,6 +241,12 @@ test.describe("Offline Functionality", () => {
       await page.waitForLoadState("networkidle");
       await expect(
         page.getByRole("heading", { name: /My Profile/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.email).first()
       ).toBeVisible();
 
       // Step 5: Navigate back to Organization using nav links
@@ -215,6 +256,9 @@ test.describe("Offline Functionality", () => {
         await page.waitForLoadState("networkidle");
         await expect(
           page.getByRole("heading", { name: /Organization Structure/i })
+        ).toBeVisible();
+        await expect(
+          page.getByText(offlineLiveMockOrganizationUnit.name).first()
         ).toBeVisible();
       }
 

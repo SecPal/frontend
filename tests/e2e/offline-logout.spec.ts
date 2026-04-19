@@ -1,100 +1,18 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { waitForLoginFormReady } from "./auth-helpers";
+import { expect, test } from "@playwright/test";
+import {
+  installMockAuthRoutes,
+  loginWithMockedBrowserSession,
+  offlineLiveMockUser,
+} from "./offline-live-helpers";
 
 const supportsServiceWorkerOfflineFlows =
   Boolean(process.env.CI) ||
   (process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false);
 
-const offlineLogoutMockUser = {
-  id: 42,
-  name: "Jane Example",
-  email: "jane.example@secpal.app",
-  roles: ["Employee"],
-  permissions: [],
-  hasOrganizationalScopes: false,
-  hasCustomerAccess: false,
-  hasSiteAccess: false,
-};
-
 const OFFLINE_SESSION_STATE_PATH = "/__session-state__";
-
-async function installMockAuthRoutes(context: BrowserContext): Promise<void> {
-  await context.route("**/health/ready", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        status: "ready",
-        checks: {
-          database: "ok",
-          tenant_keys: "ok",
-          kek_file: "ok",
-        },
-        timestamp: new Date().toISOString(),
-      }),
-    });
-  });
-
-  await context.route("**/sanctum/csrf-cookie", async (route) => {
-    await route.fulfill({
-      status: 204,
-      headers: {
-        "set-cookie": "XSRF-TOKEN=test-xsrf-token; Path=/; SameSite=Lax",
-      },
-      body: "",
-    });
-  });
-
-  await context.route("**/v1/auth/login", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ user: offlineLogoutMockUser }),
-    });
-  });
-
-  await context.route("**/v1/me", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(offlineLogoutMockUser),
-    });
-  });
-
-  await context.route("**/v1/auth/logout", async (route) => {
-    await route.fulfill({
-      status: 204,
-      body: "",
-    });
-  });
-}
-
-async function ensureActiveServiceWorker(page: Page): Promise<void> {
-  await page.waitForLoadState("networkidle");
-
-  await page.evaluate(async () => {
-    if (!("serviceWorker" in navigator)) {
-      return;
-    }
-
-    await navigator.serviceWorker.ready;
-  });
-
-  const hasController = await page.evaluate(() => {
-    return (
-      "serviceWorker" in navigator &&
-      navigator.serviceWorker.controller !== null
-    );
-  });
-
-  if (!hasController) {
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-  }
-}
 
 test.describe("Offline Logout Privacy", () => {
   test("should block offline access to the cached profile page after logout", async ({
@@ -107,18 +25,7 @@ test.describe("Offline Logout Privacy", () => {
     );
 
     await installMockAuthRoutes(context);
-
-    await page.goto("/login");
-    await ensureActiveServiceWorker(page);
-
-    await page.locator("#email").fill(offlineLogoutMockUser.email);
-    await page.locator("#password").fill("password");
-    await waitForLoginFormReady(page);
-    await page
-      .getByRole("button", { name: /log in|anmelden|einloggen/i })
-      .click();
-
-    await expect(page).toHaveURL(/\/$/);
+    await loginWithMockedBrowserSession(page);
 
     await page.goto("/profile");
     await page.waitForLoadState("networkidle");
@@ -127,10 +34,10 @@ test.describe("Offline Logout Privacy", () => {
       page.getByRole("heading", { name: /my profile/i })
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.name).first()
+      page.getByText(offlineLiveMockUser.name).first()
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.email).first()
+      page.getByText(offlineLiveMockUser.email).first()
     ).toBeVisible();
 
     await context.setOffline(true);
@@ -141,10 +48,10 @@ test.describe("Offline Logout Privacy", () => {
       page.getByRole("heading", { name: /my profile/i })
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.name).first()
+      page.getByText(offlineLiveMockUser.name).first()
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.email).first()
+      page.getByText(offlineLiveMockUser.email).first()
     ).toBeVisible();
 
     await page.evaluate(() => {
@@ -219,10 +126,10 @@ test.describe("Offline Logout Privacy", () => {
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.name).first()
+      page.getByText(offlineLiveMockUser.name).first()
     ).not.toBeVisible();
     await expect(
-      page.getByText(offlineLogoutMockUser.email).first()
+      page.getByText(offlineLiveMockUser.email).first()
     ).not.toBeVisible();
 
     await page.goto("/settings").catch(() => undefined);
