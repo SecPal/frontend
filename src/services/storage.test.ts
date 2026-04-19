@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { authStorage } from "./storage";
 
 const LEGACY_AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
@@ -27,22 +28,6 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
     bytes.byteOffset,
     bytes.byteOffset + bytes.byteLength
   ) as ArrayBuffer;
-}
-
-function buildEnvelopeMacPayload(envelope: {
-  scheme: string;
-  version: number;
-  salt: string;
-  iv: string;
-  ciphertext: string;
-}): string {
-  return [
-    envelope.scheme,
-    String(envelope.version),
-    envelope.salt,
-    envelope.iv,
-    envelope.ciphertext,
-  ].join(".");
 }
 
 async function createLegacyEncryptedEnvelope(

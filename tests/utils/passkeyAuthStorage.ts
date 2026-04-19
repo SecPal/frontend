@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { Page } from "@playwright/test";
+import { buildEnvelopeMacPayload } from "../../src/services/authStorageEnvelope";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const AUTH_STORAGE_VERSION = 2;
@@ -120,15 +121,7 @@ async function createEncryptedStoredAuthUser(
   const mac = await crypto.subtle.sign(
     "HMAC",
     macKey,
-    textEncoder.encode(
-      [
-        envelopeWithoutMac.scheme,
-        String(envelopeWithoutMac.version),
-        envelopeWithoutMac.salt,
-        envelopeWithoutMac.iv,
-        envelopeWithoutMac.ciphertext,
-      ].join(".")
-    )
+    textEncoder.encode(buildEnvelopeMacPayload(envelopeWithoutMac))
   );
 
   return JSON.stringify({
