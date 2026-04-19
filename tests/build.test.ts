@@ -27,7 +27,9 @@ describe("Build Output Verification", () => {
   });
 
   it("ships Android Digital Asset Links for passkey trust on app.secpal.dev", () => {
-    expect(existsSync(path.join(repoRoot, "config/assetlinks.json"))).toBe(true);
+    expect(existsSync(path.join(repoRoot, "config/assetlinks.json"))).toBe(
+      true
+    );
 
     const assetLinks = JSON.parse(
       readRepoFile("config/assetlinks.json")
