@@ -65,6 +65,11 @@ export default defineConfig(({ mode }) => {
             src: "public/.htaccess",
             dest: ".",
           },
+          {
+            src: "config/assetlinks.json",
+            dest: ".well-known",
+            rename: { stripBase: true },
+          },
         ],
       }),
       VitePWA({

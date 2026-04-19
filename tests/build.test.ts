@@ -26,6 +26,36 @@ describe("Build Output Verification", () => {
     expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
   });
 
+  it("ships Android Digital Asset Links for passkey trust on app.secpal.dev", () => {
+    const assetLinksPath = path.join(repoRoot, "config/assetlinks.json");
+
+    expect(existsSync(assetLinksPath)).toBe(true);
+
+    const assetLinks = JSON.parse(
+      readFileSync(assetLinksPath, "utf8")
+    ) as Array<{
+      relation: string[];
+      target: {
+        namespace: string;
+        package_name: string;
+        sha256_cert_fingerprints: string[];
+      };
+    }>;
+
+    expect(assetLinks).toEqual([
+      {
+        relation: ["delegate_permission/common.get_login_creds"],
+        target: {
+          namespace: "android_app",
+          package_name: "app.secpal",
+          sha256_cert_fingerprints: [
+            "C3:E9:FD:07:69:F3:34:9B:B0:B0:56:BA:E6:69:47:23:40:E1:CB:28:66:26:DE:30:C9:C9:FA:F9:5F:1E:47:B5",
+          ],
+        },
+      },
+    ]);
+  });
+
   it("ships a versioned Nginx config for app.secpal.dev", () => {
     expect(
       existsSync(path.join(repoRoot, "deploy/nginx/app.secpal.dev.conf"))
@@ -45,6 +75,9 @@ describe("Build Output Verification", () => {
     expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "public/.htaccess"');
     expect(viteConfig).toContain('dest: "."');
+    expect(viteConfig).toContain('src: "config/assetlinks.json"');
+    expect(viteConfig).toContain('dest: ".well-known"');
+    expect(viteConfig).toContain("stripBase: true");
   });
 
   it("hardens browser responses with the required security headers", () => {
