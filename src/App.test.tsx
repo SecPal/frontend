@@ -98,7 +98,9 @@ describe("App", () => {
     i18n.load("en", {});
     i18n.activate("en");
     mockGetCurrentUser.mockRejectedValue(
-      new Error("No mock auth user available for bootstrap")
+      Object.assign(new Error("No mock auth user available for bootstrap"), {
+        code: "HTTP_401",
+      })
     );
   });
 
@@ -123,6 +125,33 @@ describe("App", () => {
   it("renders language switcher on login page", async () => {
     await renderWithI18n(<App />);
     expect(screen.getByRole("combobox")).toBeInTheDocument();
+  });
+
+  it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
+    window.history.replaceState({}, "", "/");
+
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "1",
+      name: "Recovered Session User",
+      email: "recovered-session@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {

@@ -117,12 +117,19 @@ describe("ProtectedRoute", () => {
     setCsrfTokenCookie("test-csrf-token");
     i18n.load("en", {});
     i18n.activate("en");
+    mockGetCurrentUser.mockRejectedValue(
+      Object.assign(new Error("Unauthorized"), {
+        code: "HTTP_401",
+      })
+    );
   });
 
-  it("redirects to login when not authenticated", () => {
+  it("redirects to login when not authenticated", async () => {
     renderProtectedRoute();
 
-    expect(mockNavigate).toHaveBeenCalledWith("/login");
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
     expect(screen.getByText(/redirected to \/login/i)).toBeInTheDocument();
   });
 
@@ -194,6 +201,33 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText(/redirected to \/login/i)).toBeInTheDocument();
   });
 
+  it("recovers browser-session auth when the persisted record becomes unreadable after CSRF rotation", async () => {
+    await persistAuthUser({
+      id: 1,
+      name: "Recovered User",
+      email: "recovered@secpal.dev",
+      emailVerified: true,
+    });
+
+    setCsrfTokenCookie("rotated-csrf-token");
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Recovered User",
+      email: "recovered@secpal.dev",
+      emailVerified: true,
+    });
+
+    renderProtectedRoute();
+
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("shows a retry recovery state instead of spinning forever when bootstrap stalls", async () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
@@ -260,6 +294,8 @@ describe("ProtectedRoute", () => {
   });
 
   it("shows loading state initially", () => {
+    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+
     const { container } = render(
       <BrowserRouter>
         <I18nProvider i18n={i18n}>
@@ -278,33 +314,21 @@ describe("ProtectedRoute", () => {
 
   describe("Accessibility", () => {
     it("loading state has role=status", () => {
-      // Temporarily remove token to trigger loading check
-      localStorage.clear();
+      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
-      // The loading div should have role="status"
-      // This will fail until we implement the ARIA attributes
-      const loadingElement = screen.queryByText("Loading...");
-      if (loadingElement) {
-        expect(loadingElement.closest("div")).toHaveAttribute("role", "status");
-      }
+      expect(screen.getByRole("status")).toHaveTextContent("Loading...");
     });
 
     it("loading state has aria-live=polite", () => {
-      localStorage.clear();
+      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
-      const loadingElement = screen.queryByText("Loading...");
-      if (loadingElement) {
-        expect(loadingElement.closest("div")).toHaveAttribute(
-          "aria-live",
-          "polite"
-        );
-      }
+      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
     });
 
     it("loading text is visible to screen readers", () => {
-      localStorage.clear();
+      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
       const loadingText = screen.queryByText("Loading...");

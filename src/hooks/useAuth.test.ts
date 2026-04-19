@@ -102,13 +102,14 @@ async function expectEncryptedStoredUser(
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    window.history.replaceState({}, "", "/login");
     setCsrfTokenCookie("test-csrf-token");
     vi.clearAllMocks();
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    vi.spyOn(console, "log").mockImplementation(() => { });
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
@@ -134,6 +135,28 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("bootstraps a protected browser-session route even when local auth storage is empty", async () => {
+    window.history.replaceState({}, "", "/");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    });
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("revalidates a stored user before completing bootstrap", async () => {
