@@ -58,12 +58,18 @@ export default defineConfig(({ mode }) => {
       }),
       lingui(),
       tailwindcss(),
-      // Copy .htaccess from public/ to dist/ (Vite ignores dotfiles by default)
+      // Copy static files that Vite ignores by default:
+      // - .htaccess (dotfile from public/) and assetlinks.json (Android Digital Asset Links)
       viteStaticCopy({
         targets: [
           {
             src: "public/.htaccess",
             dest: ".",
+          },
+          {
+            src: "config/assetlinks.json",
+            dest: ".well-known",
+            rename: { stripBase: true },
           },
         ],
       }),
