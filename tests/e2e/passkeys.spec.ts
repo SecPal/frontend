@@ -112,7 +112,7 @@ async function installPasskeyBrowserMocks(
         value: true,
       });
 
-      class PublicKeyCredentialMock { }
+      class PublicKeyCredentialMock {}
 
       Object.defineProperty(window, "PublicKeyCredential", {
         configurable: true,

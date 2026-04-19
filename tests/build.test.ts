@@ -54,9 +54,7 @@ describe("Build Output Verification", () => {
     expect(storageService).toContain("./authStorageEnvelope");
     expect(storageService).not.toContain("function buildEnvelopeMacPayload(");
 
-    expect(passkeysSpec).toContain(
-      '../../src/services/authStorageEnvelope'
-    );
+    expect(passkeysSpec).toContain("../../src/services/authStorageEnvelope");
     expect(passkeysSpec).toContain("buildEnvelopeMacPayload(");
     expect(passkeysSpec).not.toContain('].join(".")');
   });
