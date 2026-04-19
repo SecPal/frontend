@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Reused a shared `buildEnvelopeMacPayload()` helper for auth-storage MAC construction in both runtime storage code and the Playwright passkey fixture, removing the duplicated inline field assembly that could drift and resolving frontend issue #917.
+- Published `/.well-known/assetlinks.json` for `app.secpal.dev` and copied it through the Vite build so release-signed SecPal Android builds can complete Credential Manager passkey registration instead of falling through to the SPA shell at the Digital Asset Links endpoint.
 - Cached the encrypted auth-storage envelope used by the Playwright passkey fixture so repeated `installStoredAuthUser()` calls no longer pay the 600,000-iteration PBKDF2 cost more than once per identical seeded user/token combination, resolving frontend issue #916.
 - Split the heavy `issue874-react-hooks-set-state-in-effect` lint regression into smaller tracked-file batches and gave each batch a dedicated 30-second timeout so `npm run test:coverage` no longer times out on one monolithic ESLint spawn under full-suite coverage load, resolving frontend issue #899.
 - Increased PBKDF2 iteration count from 5,000 to 600,000 (OWASP minimum for PBKDF2-HMAC-SHA256) for new auth-storage envelopes while preserving reads of legacy v1 envelopes during rollout, hardening key derivation without forcing deploy-time logouts.
