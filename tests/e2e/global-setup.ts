@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { chromium, type FullConfig } from "@playwright/test";
-import { TEST_USER } from "./auth.setup";
+import {
+  getConfiguredTestUserOrThrow,
+  waitForLoginFormReady,
+} from "./auth-helpers";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -44,6 +47,8 @@ async function globalSetup(config: FullConfig) {
 
   console.log("🔐 Performing global login setup...");
 
+  const testUser = getConfiguredTestUserOrThrow();
+
   const baseURL = config.projects[0]?.use?.baseURL || "http://localhost:5173";
 
   const browser = await chromium.launch();
@@ -56,8 +61,10 @@ async function globalSetup(config: FullConfig) {
     await page.waitForLoadState("networkidle");
 
     // Fill in credentials
-    await page.locator("#email").fill(TEST_USER.email);
-    await page.locator("#password").fill(TEST_USER.password);
+    await page.locator("#email").fill(testUser.email);
+    await page.locator("#password").fill(testUser.password);
+
+    await waitForLoginFormReady(page);
 
     // Submit form
     await page
