@@ -69,7 +69,7 @@ export default defineConfig(({ mode }) => {
           {
             src: "config/assetlinks.json",
             dest: ".well-known",
-            rename: { stripBase: true },
+            rename: "assetlinks.json",
           },
         ],
       }),
@@ -153,7 +153,7 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          // Vite 8 requires function-based manual chunking with Rolldown.
+          // Manual chunking is configured via a function (Rollup/Rolldown output API).
           manualChunks: getManualChunk,
         },
       },

@@ -20,10 +20,14 @@ function readRepoFile(relativePath: string): string {
  * are present and contain the expected directives. They read repo source
  * files directly and do not require a prior build step to pass.
  */
-describe("Build Output Verification", () => {
+describe("Build Configuration and Source Verification", () => {
   it("keeps the Apache SPA routing file in the build inputs", () => {
     expect(existsSync(path.join(repoRoot, "public/.htaccess"))).toBe(true);
     expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
+
+    const htaccess = readRepoFile("public/.htaccess");
+    expect(htaccess).toContain("RewriteEngine On");
+    expect(htaccess).toContain("RewriteRule . /index.html [L]");
   });
 
   it("ships Android Digital Asset Links for passkey trust on app.secpal.dev", () => {
@@ -106,7 +110,7 @@ describe("Build Output Verification", () => {
     expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "config/assetlinks.json"');
     expect(viteConfig).toContain('dest: ".well-known"');
-    expect(viteConfig).toContain("stripBase: true");
+    expect(viteConfig).toContain('rename: "assetlinks.json"');
   });
 
   it("hardens browser responses with the required security headers", () => {
@@ -159,6 +163,11 @@ describe("Build Output Verification", () => {
     expect(indexHtml).toContain('<script src="/theme-color.js"></script>');
     expect(indexHtml).not.toContain("(function () {");
     expect(existsSync(path.join(repoRoot, "public/theme-color.js"))).toBe(true);
+
+    const themeColorJs = readRepoFile("public/theme-color.js");
+    expect(themeColorJs.trim().length).toBeGreaterThan(0);
+    expect(themeColorJs).toContain("theme-color");
+    expect(themeColorJs).not.toContain("<script");
   });
 
   it("adds dedicated delivery rules for service worker and manifest files", () => {

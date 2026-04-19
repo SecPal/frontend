@@ -11,6 +11,8 @@ const repoRoot = path.resolve(
   "../../.."
 );
 
+const TEST_FILE_PATTERN = /\.(test|spec)\.tsx?$/;
+
 function collectTrackedFiles(relativeDir: string): string[] {
   const absoluteDir = path.join(repoRoot, relativeDir);
   const entries = readdirSync(absoluteDir, { withFileTypes: true });
@@ -22,7 +24,7 @@ function collectTrackedFiles(relativeDir: string): string[] {
       return collectTrackedFiles(relativePath);
     }
 
-    if (!/\.(test|spec)\.tsx?$/.test(entry.name)) {
+    if (!TEST_FILE_PATTERN.test(entry.name)) {
       return [];
     }
 
@@ -35,11 +37,20 @@ const trackedFiles = [
   ...collectTrackedFiles("tests"),
 ];
 
-const directAuthUserWritePattern =
-  /(?:(?:window|globalThis)\s*\.\s*)?localStorage\s*\.\s*setItem\(\s*["']auth_user["']\s*,\s*JSON\s*\.\s*stringify\(/;
+// Matches direct writes to the auth_user localStorage key using JSON.stringify
+// as the value argument, with optional window./globalThis. prefix and flexible
+// whitespace around delimiters; either quote style is accepted for the key.
+const storageObjectPrefixPattern = String.raw`(?:(?:window|globalThis)\s*\.\s*)?`;
+const localStorageSetItemPattern = String.raw`localStorage\s*\.\s*setItem\(`;
+const authUserKeyPattern = String.raw`\s*["']auth_user["']\s*,`;
+const jsonStringifyPattern = String.raw`\s*JSON\s*\.\s*stringify\(`;
+
+const directAuthUserWritePattern = new RegExp(
+  `${storageObjectPrefixPattern}${localStorageSetItemPattern}${authUserKeyPattern}${jsonStringifyPattern}`
+);
 
 describe("Issue 889 auth storage fixture regression", () => {
-  it("does not seed auth_user test state via direct localStorage JSON writes", () => {
+  it("does not seed auth_user test state via direct localStorage JSON writes (performance note: this test synchronously scans all tracked src/tests files and may slow as the repository grows)", () => {
     const offendingFiles = trackedFiles.filter((relativePath) => {
       const fileContents = readFileSync(
         path.join(repoRoot, relativePath),
