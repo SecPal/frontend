@@ -16,6 +16,10 @@ applyTo: "src/**/*.ts,src/**/*.tsx,tests/**/*.ts,tests/**/*.tsx,vite.config.ts"
 - Maintain accessibility, semantic markup, and responsive behavior.
 - Default boolean security flags (e.g. `emailVerified`) to `false` in sanitization layers; never leave them
   `undefined` on authenticated state.
+- Do not persist auth state or other sensitive user-derived data via direct
+  cleartext `localStorage`/`sessionStorage` writes. Use the approved storage
+  abstraction in runtime code, and in tests seed authenticated state through
+  `authStorage.setUser()` or a real current-format encrypted envelope.
 - Scope `role="status"` and `aria-live` to the exact dynamic content region, not to wider containers that
   also hold headings or interactive controls.
 - For AI-suggested async fixes, prove ordering with tests; when cleanup must happen after an awaited call settles,
@@ -23,3 +27,7 @@ applyTo: "src/**/*.ts,src/**/*.tsx,tests/**/*.ts,tests/**/*.tsx,vite.config.ts"
 - Keep plain-text-only HTML contexts such as `<option>` children free of wrapper components; use translated strings,
   not `<Trans>` or other element-producing helpers.
 - Keep load, action, and destructive-flow error state separate when they drive different UI branches.
+- Because the SecPal project is still under `1.x`, do not preserve obsolete
+  compatibility shims by default. If a legacy storage format, input alias, or
+  deprecated frontend contract has no proven live caller, prefer removing it
+  and updating tests and changelog coverage in the same change.

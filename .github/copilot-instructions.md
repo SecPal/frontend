@@ -96,6 +96,11 @@ At minimum verify:
   tenant-, or user-derived UI state across session changes or auth
   transitions; prove dependency lists invalidate correctly and add focused
   regression coverage.
+- Reject AI-generated compatibility keep-alives that preserve obsolete
+  frontend contracts, storage formats, or input aliases without a proven live
+  caller. Because the SecPal project is still under `1.x`, prefer removing
+  unnecessary compatibility paths over carrying them forward, especially when
+  they weaken security, correctness, or contract clarity.
 
 ## Repository Conventions
 
@@ -104,7 +109,15 @@ At minimum verify:
 - Keep presentation in components and reusable logic in hooks or API clients.
 - Prefer functional components, named exports, and existing design-system patterns before new abstractions.
 - Preserve strict TypeScript, accessibility, semantic HTML, focus behavior, and responsive layouts.
+- Auth and other sensitive user-derived state must not be persisted in
+  cleartext browser storage. Use the approved storage abstraction for runtime
+  code, and in tests seed auth state through `authStorage.setUser()` or a real
+  current-format encrypted envelope when browser-only setup is unavoidable.
 
 ## Scope Notes
 
 - Do not add dependencies or create documentation files unless the task requires them.
+- Because the SecPal project is still under `1.x`, breaking changes are
+  acceptable when they remove insecure or obsolete compatibility layers. When
+  taking that route, update tests and `CHANGELOG.md` in the same change set
+  instead of keeping a legacy path alive by default.

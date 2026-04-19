@@ -5,6 +5,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
+import { sanitizePersistedAuthUser } from "../services/authState";
+import { authStorage } from "../services/storage";
 
 vi.mock("../services/authApi", () => ({
   getCurrentUser: vi.fn(),
@@ -45,6 +47,19 @@ function PermissionTestComponent({
   );
 }
 
+async function seedStoredUser(user: Record<string, unknown>) {
+  const persistedUser = sanitizePersistedAuthUser({
+    emailVerified: false,
+    ...user,
+  });
+
+  if (!persistedUser) {
+    throw new Error("Failed to seed persisted auth user for test");
+  }
+
+  await authStorage.setUser(persistedUser);
+}
+
 describe("AuthContext", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -53,16 +68,13 @@ describe("AuthContext", () => {
   });
 
   describe("hasRole", () => {
-    it("returns true when user has the specified role", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          roles: ["Admin", "Manager"],
-        })
-      );
+    it("returns true when user has the specified role", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        roles: ["Admin", "Manager"],
+      });
 
       render(
         <AuthProvider>
@@ -70,19 +82,18 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasRole")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasRole")).toHaveTextContent("true");
+      });
     });
 
-    it("returns false when user does not have the specified role", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          roles: ["Guard"],
-        })
-      );
+    it("returns false when user does not have the specified role", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        roles: ["Guard"],
+      });
 
       render(
         <AuthProvider>
@@ -90,18 +101,17 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
+      });
     });
 
-    it("returns false when user has no roles", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-        })
-      );
+    it("returns false when user has no roles", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+      });
 
       render(
         <AuthProvider>
@@ -109,7 +119,9 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
+      });
     });
 
     it("returns false when user is null", () => {
@@ -124,16 +136,13 @@ describe("AuthContext", () => {
   });
 
   describe("hasPermission", () => {
-    it("returns true for direct permission match", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          permissions: ["employees.read", "employees.create"],
-        })
-      );
+    it("returns true for direct permission match", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read", "employees.create"],
+      });
 
       render(
         <AuthProvider>
@@ -141,19 +150,18 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
     });
 
-    it("returns false when permission is not present", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          permissions: ["employees.read"],
-        })
-      );
+    it("returns false when permission is not present", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
 
       render(
         <AuthProvider>
@@ -161,19 +169,18 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      });
     });
 
-    it("returns true for wildcard permission match", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          permissions: ["employees.*"],
-        })
-      );
+    it("returns true for wildcard permission match", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.*"],
+      });
 
       render(
         <AuthProvider>
@@ -181,19 +188,18 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
     });
 
-    it("does not match wildcard across different resources", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          permissions: ["employees.*"],
-        })
-      );
+    it("does not match wildcard across different resources", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.*"],
+      });
 
       render(
         <AuthProvider>
@@ -201,18 +207,17 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      });
     });
 
-    it("returns false when user has no permissions", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-        })
-      );
+    it("returns false when user has no permissions", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+      });
 
       render(
         <AuthProvider>
@@ -220,7 +225,9 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      });
     });
 
     it("returns false when user is null", () => {
@@ -233,16 +240,13 @@ describe("AuthContext", () => {
       expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
     });
 
-    it("handles permission without dot separator", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          permissions: ["admin"],
-        })
-      );
+    it("handles permission without dot separator", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["admin"],
+      });
 
       render(
         <AuthProvider>
@@ -250,21 +254,20 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
     });
   });
 
   describe("hasOrganizationalAccess", () => {
-    it("returns true when hasOrganizationalScopes is true", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          hasOrganizationalScopes: true,
-        })
-      );
+    it("returns true when hasOrganizationalScopes is true", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        hasOrganizationalScopes: true,
+      });
 
       render(
         <AuthProvider>
@@ -272,19 +275,18 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
+      });
     });
 
-    it("returns false when hasOrganizationalScopes is false", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-          hasOrganizationalScopes: false,
-        })
-      );
+    it("returns false when hasOrganizationalScopes is false", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        hasOrganizationalScopes: false,
+      });
 
       render(
         <AuthProvider>
@@ -292,18 +294,17 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+      });
     });
 
-    it("returns false when hasOrganizationalScopes is undefined", () => {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          id: 1,
-          name: "Test User",
-          email: "test@secpal.dev",
-        })
-      );
+    it("returns false when hasOrganizationalScopes is undefined", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+      });
 
       render(
         <AuthProvider>
@@ -311,7 +312,9 @@ describe("AuthContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+      await waitFor(() => {
+        expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+      });
     });
 
     it("returns false when user is null", () => {

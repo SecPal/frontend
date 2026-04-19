@@ -34,7 +34,7 @@ describe("clearSensitiveClientState", () => {
   it("clears auth storage, sensitive caches, and deletes the IndexedDB database", async () => {
     const deleteSpy = vi.spyOn(db, "delete");
 
-    localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
+    localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
     localStorage.setItem("auth_token", "legacy-token");
     localStorage.setItem(
       "secpal-notification-preferences",
@@ -97,9 +97,9 @@ describe("clearSensitiveClientState", () => {
   it("falls back to clearing IndexedDB tables when deleting the database fails", async () => {
     const deleteError = new Error("Delete blocked by another connection");
     const deleteSpy = vi.spyOn(db, "delete").mockRejectedValueOnce(deleteError);
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => { });
 
-    localStorage.setItem("auth_user", JSON.stringify({ id: 1 }));
+    localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
     localStorage.setItem(
       "secpal-notification-preferences",
       JSON.stringify([{ category: "alerts", enabled: true }])

@@ -61,21 +61,6 @@ async function seedPersistedAuthUser(user: Record<string, unknown>) {
   return persistedUser;
 }
 
-function seedLegacyPersistedAuthUser(user: Record<string, unknown>) {
-  const persistedUser = sanitizePersistedAuthUser(user);
-
-  if (!persistedUser) {
-    throw new Error("Failed to seed legacy persisted auth user for test");
-  }
-
-  // codeql[js/clear-text-storage-of-sensitive-data]: intentional legacy
-  // test scaffolding for backward-compat coverage of cleartext persisted auth.
-  localStorage.setItem("auth_user", JSON.stringify(persistedUser));
-  mockGetCurrentUser.mockResolvedValue(persistedUser);
-
-  return persistedUser;
-}
-
 describe("App", () => {
   // Pre-load all lazily-imported route modules once before any test runs.
   // Without this, each test that renders a route with a lazy component creates
@@ -434,48 +419,6 @@ describe("App", () => {
     });
 
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
-  });
-
-  it("keeps supporting legacy cleartext persisted auth state on unknown authenticated routes", async () => {
-    const originalConsoleError = console.error.bind(console);
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation((...args: Parameters<typeof console.error>) => {
-        if (!args.some((a) => String(a).includes("not wrapped in act"))) {
-          originalConsoleError(...args);
-        }
-      });
-
-    try {
-      window.history.replaceState({}, "", "/dashboard");
-
-      seedLegacyPersistedAuthUser({
-        id: 1,
-        name: "User",
-        email: "user@secpal.dev",
-        emailVerified: true,
-      });
-
-      await renderWithI18n(<App />);
-
-      expect(
-        await screen.findByText(
-          /Page Not Found/i,
-          {},
-          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-        )
-      ).toBeInTheDocument();
-
-      expect(window.location.pathname).toBe("/dashboard");
-
-      const actWarnings = consoleErrorSpy.mock.calls
-        .flatMap((call) => call.map((entry) => String(entry)))
-        .filter((message) => message.includes("not wrapped in act"));
-
-      expect(actWarnings).toEqual([]);
-    } finally {
-      consoleErrorSpy.mockRestore();
-    }
   });
 
   it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
