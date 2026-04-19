@@ -4,16 +4,35 @@
 import { describe, expect, it } from "vitest";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../.."
 );
 
+function collectTrackedFiles(relativeDir: string): string[] {
+  const absoluteDir = path.join(repoRoot, relativeDir);
+  const entries = readdirSync(absoluteDir, { withFileTypes: true });
+
+  return entries.flatMap((entry) => {
+    const relativePath = path.join(relativeDir, entry.name);
+
+    if (entry.isDirectory()) {
+      return collectTrackedFiles(relativePath);
+    }
+
+    if (!/\.(test|spec)\.tsx?$/.test(entry.name)) {
+      return [];
+    }
+
+    return [relativePath];
+  });
+}
+
 const trackedFiles = [
-  "src/hooks/useAuth.test.ts",
-  "src/components/ProtectedRoute.test.tsx",
+  ...collectTrackedFiles("src"),
+  ...collectTrackedFiles("tests"),
 ];
 
 const directAuthUserWritePattern =

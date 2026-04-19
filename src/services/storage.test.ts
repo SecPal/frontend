@@ -246,10 +246,7 @@ describe("authStorage", () => {
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
 
-    localStorage.setItem(
-      "auth_user",
-      JSON.stringify({ stale: true, email: "stale@secpal.dev" })
-    );
+    localStorage.setItem("auth_user", "stale-auth-storage-record");
 
     vi.spyOn(globalThis.crypto.subtle, "deriveBits").mockRejectedValue(
       cryptoFailure
@@ -264,20 +261,27 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("keeps reading legacy cleartext persisted auth state for compatibility", async () => {
-    const legacyUser = {
-      id: "1",
-      name: "Legacy User",
-      email: "legacy@secpal.dev",
-      emailVerified: false,
-    };
+  it("clears unsupported unencrypted auth snapshots", () => {
+    const unsupportedStoredUser =
+      '{"id":"1","name":"Legacy User","email":"legacy@secpal.dev","emailVerified":false}';
 
-    localStorage.setItem("auth_user", JSON.stringify(legacyUser));
+    localStorage.setItem("auth_user", unsupportedStoredUser);
 
-    await expect(authStorage.getUser()).resolves.toEqual(legacyUser);
+    expect(authStorage.getUserSnapshot()).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("keeps reading legacy encrypted auth state after increasing PBKDF2 iterations", async () => {
+  it("clears unsupported unencrypted persisted auth state", async () => {
+    const unsupportedStoredUser =
+      '{"id":"1","name":"Legacy User","email":"legacy@secpal.dev","emailVerified":false}';
+
+    localStorage.setItem("auth_user", unsupportedStoredUser);
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears unsupported legacy encrypted auth state after the format upgrade", async () => {
     const legacyUser = {
       id: "1",
       name: "Legacy Encrypted User",
@@ -290,6 +294,7 @@ describe("authStorage", () => {
       await createLegacyEncryptedEnvelope(legacyUser, "test-csrf-token")
     );
 
-    await expect(authStorage.getUser()).resolves.toEqual(legacyUser);
+    await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem("auth_user")).toBeNull();
   });
 });

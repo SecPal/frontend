@@ -3,6 +3,13 @@
 
 import { expect, test, type Page, type Route } from "@playwright/test";
 
+const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
+const AUTH_STORAGE_VERSION = 2;
+const AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
+const AUTH_STORAGE_HALF_KEY_BYTES = 32;
+const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
+const AUTH_STORAGE_CSRF_TOKEN = "playwright-test-csrf-token";
+
 const authUser = {
   id: "1",
   name: "Test User",
@@ -168,10 +175,106 @@ async function installPasskeyBrowserMocks(
   );
 }
 
+function encodeBase64(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("base64");
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength
+  ) as ArrayBuffer;
+}
+
+async function createEncryptedStoredAuthUser(user: Record<string, unknown>) {
+  const textEncoder = new TextEncoder();
+  const keyMaterial = `secpal-auth-storage:${AUTH_STORAGE_CSRF_TOKEN}`;
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(16));
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    textEncoder.encode(keyMaterial),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      salt: toArrayBuffer(salt),
+      iterations: AUTH_STORAGE_PBKDF2_ITERATIONS,
+    },
+    baseKey,
+    AUTH_STORAGE_DERIVED_KEY_BYTES * 8
+  );
+  const derivedKey = new Uint8Array(derivedBits);
+  const encryptionKeyBytes = derivedKey.slice(0, AUTH_STORAGE_HALF_KEY_BYTES);
+  const macKeyBytes = derivedKey.slice(AUTH_STORAGE_HALF_KEY_BYTES);
+
+  const [encryptionKey, macKey] = await Promise.all([
+    crypto.subtle.importKey(
+      "raw",
+      encryptionKeyBytes,
+      { name: "AES-CBC", length: AUTH_STORAGE_HALF_KEY_BYTES * 8 },
+      false,
+      ["encrypt"]
+    ),
+    crypto.subtle.importKey(
+      "raw",
+      macKeyBytes,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    ),
+  ]);
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-CBC", iv: toArrayBuffer(iv) },
+      encryptionKey,
+      textEncoder.encode(JSON.stringify(user))
+    )
+  );
+  const envelopeWithoutMac = {
+    scheme: AUTH_STORAGE_SCHEME,
+    version: AUTH_STORAGE_VERSION,
+    salt: encodeBase64(salt),
+    iv: encodeBase64(iv),
+    ciphertext: encodeBase64(ciphertext),
+  };
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    macKey,
+    textEncoder.encode(
+      [
+        envelopeWithoutMac.scheme,
+        String(envelopeWithoutMac.version),
+        envelopeWithoutMac.salt,
+        envelopeWithoutMac.iv,
+        envelopeWithoutMac.ciphertext,
+      ].join(".")
+    )
+  );
+
+  return JSON.stringify({
+    ...envelopeWithoutMac,
+    mac: encodeBase64(new Uint8Array(mac)),
+  });
+}
+
 async function installStoredAuthUser(page: Page) {
-  await page.addInitScript((user) => {
-    window.localStorage.setItem("auth_user", JSON.stringify(user));
-  }, authUser);
+  const encryptedUser = await createEncryptedStoredAuthUser(authUser);
+
+  await page.addInitScript(
+    ({ csrfToken, storedUser }) => {
+      document.cookie = `XSRF-TOKEN=${encodeURIComponent(csrfToken)}; path=/`;
+      window.localStorage.setItem("auth_user", storedUser);
+    },
+    {
+      csrfToken: AUTH_STORAGE_CSRF_TOKEN,
+      storedUser: encryptedUser,
+    }
+  );
 }
 
 test.describe("Passkeys", () => {
