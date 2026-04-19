@@ -72,10 +72,11 @@ describe("passkeyBrowser", () => {
     }
 
     if (originalNativeBridge) {
-      Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
-        configurable: true,
-        value: originalNativeBridge.value,
-      });
+      Object.defineProperty(
+        globalThis,
+        "SecPalNativeAuthBridge",
+        originalNativeBridge
+      );
     } else {
       Reflect.deleteProperty(globalThis, "SecPalNativeAuthBridge");
     }

@@ -132,12 +132,12 @@ export default defineConfig(({ mode }) => {
       }),
       // Bundle size visualizer (only in analyze mode)
       mode === "analyze" &&
-        visualizer({
-          open: true,
-          gzipSize: true,
-          brotliSize: true,
-          filename: "dist/stats.html",
-        }),
+      visualizer({
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+        filename: "dist/stats.html",
+      }),
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -163,31 +163,31 @@ export default defineConfig(({ mode }) => {
       // Only active when VITE_API_URL is not explicitly set.
       proxy: !env.VITE_API_URL
         ? {
-            "/v1": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false, // Accept self-signed DDEV certificates
-              // Add headers to help Sanctum recognize the request origin
-              headers: {
-                Origin: "http://localhost:5173",
-                Referer: "http://localhost:5173/",
-              },
+          "/v1": {
+            target: "https://secpal-api.ddev.site",
+            changeOrigin: true,
+            secure: false, // Accept self-signed DDEV certificates
+            // Add headers to help Sanctum recognize the request origin
+            headers: {
+              Origin: "http://localhost:5173",
+              Referer: "http://localhost:5173/",
             },
-            "/sanctum": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false,
-              headers: {
-                Origin: "http://localhost:5173",
-                Referer: "http://localhost:5173/",
-              },
+          },
+          "/sanctum": {
+            target: "https://secpal-api.ddev.site",
+            changeOrigin: true,
+            secure: false,
+            headers: {
+              Origin: "http://localhost:5173",
+              Referer: "http://localhost:5173/",
             },
-            "/health": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false,
-            },
-          }
+          },
+          "/health": {
+            target: "https://secpal-api.ddev.site",
+            changeOrigin: true,
+            secure: false,
+          },
+        }
         : undefined,
     },
     test: {

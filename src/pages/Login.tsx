@@ -94,7 +94,7 @@ export function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
   const [passkeyStep, setPasskeyStep] = useState<
-    "challenge" | "native" | "browser" | "verifying" | "confirming" | null
+    "challenge" | "native" | "browser" | "verifying" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
@@ -675,8 +675,6 @@ export function Login() {
                 <Trans>Check your device…</Trans>
               ) : passkeyStep === "verifying" ? (
                 <Trans>Verifying passkey…</Trans>
-              ) : passkeyStep === "confirming" ? (
-                <Trans>Confirming session…</Trans>
               ) : (
                 <Trans>Signing in with passkey...</Trans>
               )

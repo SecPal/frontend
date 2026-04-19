@@ -14,13 +14,11 @@ const {
   mockBrowserLogout,
   mockBrowserLogoutAll,
   mockBrowserGetCurrentUser,
-  mockBrowserPasskeySupport,
 } = vi.hoisted(() => ({
   mockBrowserLogin: vi.fn(),
   mockBrowserLogout: vi.fn(),
   mockBrowserLogoutAll: vi.fn(),
   mockBrowserGetCurrentUser: vi.fn(),
-  mockBrowserPasskeySupport: vi.fn(),
 }));
 
 vi.mock("./authApi", async () => {
@@ -35,10 +33,6 @@ vi.mock("./authApi", async () => {
   };
 });
 
-vi.mock("./passkeyBrowser", () => ({
-  isPasskeySupported: mockBrowserPasskeySupport,
-}));
-
 describe("authTransport", () => {
   const authTransportGlobal = globalThis as Record<string, unknown>;
   const hadNativeBridge = "SecPalNativeAuthBridge" in authTransportGlobal;
@@ -46,7 +40,6 @@ describe("authTransport", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockBrowserPasskeySupport.mockReturnValue(false);
     delete authTransportGlobal.SecPalNativeAuthBridge;
   });
 

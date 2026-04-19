@@ -1411,7 +1411,7 @@ msgstr "Aktualisieren"
 
 #: src/pages/Settings/SettingsPage.tsx:607
 msgid "Complete on your device…"
-msgstr ""
+msgstr "Auf Ihrem Gerät abschließen…"
 
 #: src/pages/Employees/EmployeeCreate.tsx:255
 msgid "Management level must be between 1 and 255"
@@ -2386,7 +2386,7 @@ msgstr "Entwurf speichern"
 
 #: src/pages/Login.tsx:675
 msgid "Check your device…"
-msgstr ""
+msgstr "Auf Ihrem Gerät prüfen…"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx:245
 msgid "Merkle Root"
