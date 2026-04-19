@@ -49,7 +49,9 @@ describe("Build Output Verification", () => {
 
   it("keeps auth-storage MAC payload assembly on the shared helper", () => {
     const storageService = readRepoFile("src/services/storage.ts");
-    const passkeyAuthStorage = readRepoFile("tests/utils/passkeyAuthStorage.ts");
+    const passkeyAuthStorage = readRepoFile(
+      "tests/utils/passkeyAuthStorage.ts"
+    );
     const passkeysSpec = readRepoFile("tests/e2e/passkeys.spec.ts");
 
     expect(storageService).toContain("./authStorageEnvelope");
@@ -57,7 +59,9 @@ describe("Build Output Verification", () => {
 
     expect(passkeyAuthStorage).toContain("authStorageEnvelope");
     expect(passkeyAuthStorage).toContain("buildEnvelopeMacPayload(");
-    expect(passkeyAuthStorage).not.toContain("function buildEnvelopeMacPayload(");
+    expect(passkeyAuthStorage).not.toContain(
+      "function buildEnvelopeMacPayload("
+    );
 
     expect(passkeysSpec).toContain("../utils/passkeyAuthStorage");
     expect(passkeysSpec).not.toContain("function buildEnvelopeMacPayload(");
