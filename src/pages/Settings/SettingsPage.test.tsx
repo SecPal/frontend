@@ -341,17 +341,66 @@ describe("SettingsPage", () => {
       ).toBeInTheDocument();
     });
 
-    // Resolve to avoid dangling promise
-    resolveAttestation({
+    // Resolve to avoid dangling promise.
+    await act(async () => {
+      resolveAttestation({
+        id: "new-credential-id",
+        raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
+        type: "public-key",
+        response: {
+          client_data_json: "Y2xpZW50",
+          attestation_object: "YXR0ZXN0YXRpb24",
+        },
+        client_extension_results: {},
+      });
+    });
+  });
+
+  it("shows a saving prompt while the passkey registration is being verified", async () => {
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
       type: "public-key",
       response: {
         client_data_json: "Y2xpZW50",
         attestation_object: "YXR0ZXN0YXRpb24",
+        transports: ["usb"],
       },
       client_extension_results: {},
     });
+
+    let resolveVerification!: (
+      value: ReturnType<typeof createPasskeyRegistrationVerificationResponse>
+    ) => void;
+    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveVerification = resolve;
+      })
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /saving passkey/i })
+      ).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      resolveVerification(createPasskeyRegistrationVerificationResponse());
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /add passkey/i })
+    ).toBeInTheDocument();
   });
 
   it("shows passkey enrollment errors inline", async () => {
