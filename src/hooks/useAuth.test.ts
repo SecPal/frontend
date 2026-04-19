@@ -442,6 +442,40 @@ describe("useAuth", () => {
     onLineSpy.mockRestore();
   });
 
+  it("collapses to logged-out state when stored user becomes unreadable while offline", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await persistAuthUser(mockUser);
+
+    // Rotate the CSRF token so the stored MAC becomes invalid — getUser() returns null
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(false);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    } finally {
+      onLineSpy.mockRestore();
+    }
+  });
+
   it("handles corrupted user data in localStorage", () => {
     localStorage.setItem("auth_user", "invalid-json");
 
