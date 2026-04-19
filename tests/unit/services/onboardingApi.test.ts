@@ -24,6 +24,8 @@ vi.mock("../../../src/services/csrf", async () => {
   };
 });
 
+const INVALID_JSON_BODY = "{invalid-json";
+
 function makeFetchResponse(
   status: number,
   body: object | null,
@@ -35,7 +37,7 @@ function makeFetchResponse(
     ? null
     : body !== null
       ? JSON.stringify(body)
-      : "{invalid-json";
+      : INVALID_JSON_BODY;
   return new Response(responseBody, {
     status,
     statusText: `HTTP ${status}`,
