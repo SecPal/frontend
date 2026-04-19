@@ -2,19 +2,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, type BrowserContext, type Page } from "@playwright/test";
-import { waitForLoginFormReady } from "./auth-helpers";
+import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
 
 const MOCK_XSRF_TOKEN = "test-xsrf-token";
 
+function getMockCookieDomain(): string {
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  if (isRemoteE2ETarget(baseUrl)) {
+    return new URL(baseUrl).hostname;
+  }
+  return "localhost";
+}
+
 async function ensureMockXsrfCookie(context: BrowserContext): Promise<void> {
+  const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
   await context.addCookies([
     {
       name: "XSRF-TOKEN",
       value: MOCK_XSRF_TOKEN,
-      domain: "app.secpal.dev",
+      domain: getMockCookieDomain(),
       path: "/",
       sameSite: "Lax",
-      secure: true,
+      secure: isHttps,
       httpOnly: false,
     },
   ]);
@@ -68,10 +77,11 @@ export async function installMockAuthRoutes(
   await context.route("**/sanctum/csrf-cookie", async (route) => {
     await ensureMockXsrfCookie(context);
 
+    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
     await route.fulfill({
       status: 204,
       headers: {
-        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax; Secure`,
+        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${isHttps ? "; Secure" : ""}`,
       },
       body: "",
     });
