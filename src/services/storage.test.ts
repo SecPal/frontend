@@ -265,10 +265,7 @@ describe("authStorage", () => {
     const unsupportedStoredUser =
       '{"id":"1","name":"Legacy User","email":"legacy@secpal.dev","emailVerified":false}';
 
-    localStorage.setItem(
-      "auth_user",
-      unsupportedStoredUser
-    );
+    localStorage.setItem("auth_user", unsupportedStoredUser);
 
     expect(authStorage.getUserSnapshot()).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
@@ -278,10 +275,7 @@ describe("authStorage", () => {
     const unsupportedStoredUser =
       '{"id":"1","name":"Legacy User","email":"legacy@secpal.dev","emailVerified":false}';
 
-    localStorage.setItem(
-      "auth_user",
-      unsupportedStoredUser
-    );
+    localStorage.setItem("auth_user", unsupportedStoredUser);
 
     await expect(authStorage.getUser()).resolves.toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();

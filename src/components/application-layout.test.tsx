@@ -41,9 +41,9 @@ const QUERY_TIMEOUT = 15000;
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
-    observe() { }
-    unobserve() { }
-    disconnect() { }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
   };
 });
 
@@ -378,7 +378,7 @@ describe("ApplicationLayout", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       renderWithProviders(
         <ApplicationLayout>
@@ -412,7 +412,7 @@ describe("ApplicationLayout", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       renderWithProviders(
         <ApplicationLayout>
@@ -785,9 +785,9 @@ describe("ApplicationLayout", () => {
         { route: "/activity-logs" }
       );
 
-      const activityLogsLink = (await screen.findByText("Activity Logs")).closest(
-        "a"
-      );
+      const activityLogsLink = (
+        await screen.findByText("Activity Logs")
+      ).closest("a");
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
     });
 
@@ -805,9 +805,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      const activityLogsLink = (await screen.findByText("Activity Logs")).closest(
-        "a"
-      );
+      const activityLogsLink = (
+        await screen.findByText("Activity Logs")
+      ).closest("a");
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
     });
   });
