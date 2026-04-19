@@ -13,6 +13,8 @@ import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { SettingsPage } from "./SettingsPage";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import * as i18nModule from "../../i18n";
 import * as authApi from "../../services/authApi";
 import * as passkeyBrowser from "../../services/passkeyBrowser";
@@ -204,6 +206,11 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("heading", { name: /settings/i })
     ).toBeInTheDocument();
+  });
+
+  it("loads the generated locale catalogs used by the passkey settings flow", () => {
+    expect(Object.keys(deMessages).length).toBeGreaterThan(0);
+    expect(Object.keys(enMessages).length).toBeGreaterThan(0);
   });
 
   it("lists enrolled passkeys", async () => {
