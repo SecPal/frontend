@@ -6,6 +6,7 @@ import {
   buildTestUser,
   describeAuthResolutionState,
   describeLoginBlockingState,
+  getConfiguredTestUserOrThrow,
   isRemoteE2ETarget,
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
@@ -61,6 +62,7 @@ describe("auth E2E helpers", () => {
         text: "Checking system...",
         healthWarning: "System not ready",
         offlineWarning: null,
+        lockoutWarning: null,
         error: null,
       };
 
@@ -74,10 +76,39 @@ describe("auth E2E helpers", () => {
         text: "Log in",
         healthWarning: null,
         offlineWarning: "No internet connection",
+        lockoutWarning: null,
         error: null,
       };
 
       expect(describeLoginBlockingState(state)).toContain("offline gate");
+    });
+
+    it("explains rate-limit lockout states", () => {
+      const state: LoginSubmitState = {
+        disabled: true,
+        ariaDisabled: "true",
+        text: "Log in",
+        healthWarning: null,
+        offlineWarning: null,
+        lockoutWarning: "Too many attempts. Try again in 10 minutes.",
+        error: null,
+      };
+
+      expect(describeLoginBlockingState(state)).toContain("lockout");
+    });
+
+    it("explains login-error blocking states", () => {
+      const state: LoginSubmitState = {
+        disabled: true,
+        ariaDisabled: "true",
+        text: "Log in",
+        healthWarning: null,
+        offlineWarning: null,
+        lockoutWarning: null,
+        error: "Invalid credentials",
+      };
+
+      expect(describeLoginBlockingState(state)).toContain("visible error");
     });
 
     it("returns null when the submit button is actionable", () => {
@@ -87,10 +118,38 @@ describe("auth E2E helpers", () => {
         text: "Log in",
         healthWarning: null,
         offlineWarning: null,
+        lockoutWarning: null,
         error: null,
       };
 
       expect(describeLoginBlockingState(state)).toBeNull();
+    });
+  });
+
+  describe("getConfiguredTestUserOrThrow", () => {
+    it("returns credentials when targeting a remote environment with credentials set", () => {
+      const result = getConfiguredTestUserOrThrow(
+        {
+          TEST_USER_EMAIL: "guard@secpal.dev",
+          TEST_USER_PASSWORD: "correct-horse-battery-staple",
+          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+        },
+        "https://app.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "guard@secpal.dev",
+        password: "correct-horse-battery-staple",
+      });
+    });
+
+    it("throws when targeting a remote environment without credentials", () => {
+      expect(() =>
+        getConfiguredTestUserOrThrow(
+          { PLAYWRIGHT_BASE_URL: "https://app.secpal.dev" },
+          "https://app.secpal.dev"
+        )
+      ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
   });
 

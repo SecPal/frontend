@@ -14,6 +14,7 @@ export interface LoginSubmitState {
   text: string | null;
   healthWarning: string | null;
   offlineWarning: string | null;
+  lockoutWarning: string | null;
   error: string | null;
 }
 
@@ -84,6 +85,10 @@ export function describeLoginBlockingState(
     return `Login blocked by offline gate: ${state.offlineWarning}`;
   }
 
+  if (state.lockoutWarning) {
+    return `Login blocked by rate-limit lockout: ${state.lockoutWarning}`;
+  }
+
   if (state.error) {
     return `Login blocked with visible error: ${state.error}`;
   }
@@ -123,6 +128,8 @@ export async function readLoginSubmitState(
         document.querySelector("#health-warning")?.textContent?.trim() ?? null,
       offlineWarning:
         document.querySelector("#offline-warning")?.textContent?.trim() ?? null,
+      lockoutWarning:
+        document.querySelector("#lockout-warning")?.textContent?.trim() ?? null,
       error:
         document.querySelector("#login-error")?.textContent?.trim() ?? null,
     };
@@ -143,7 +150,9 @@ export async function waitForLoginFormReady(
       return Boolean(
         (submitButton && !submitButton.hasAttribute("disabled")) ||
         document.querySelector("#health-warning") ||
-        document.querySelector("#offline-warning")
+        document.querySelector("#offline-warning") ||
+        document.querySelector("#lockout-warning") ||
+        document.querySelector("#login-error")
       );
     },
     { timeout }
