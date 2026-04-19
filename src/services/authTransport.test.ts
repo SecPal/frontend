@@ -191,6 +191,15 @@ describe("authTransport", () => {
     }
   });
 
+  it("reports that the browser-session transport does not support transport-managed passkey login", async () => {
+    const transport = getAuthTransport();
+
+    expect(transport.supportsPasskeyLogin()).toBe(false);
+    await expect(transport.loginWithPasskey()).rejects.toThrow(
+      "Browser-session transport does not support transport-managed passkey sign-in"
+    );
+  });
+
   it("surfaces an MFA challenge from the browser-session transport", async () => {
     const mfaChallenge = {
       id: "550e8400-e29b-41d4-a716-446655440099",

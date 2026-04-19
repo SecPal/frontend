@@ -310,6 +310,179 @@ describe("Login", () => {
     }
   });
 
+  it("shows a native-device prompt while waiting for native passkey sign-in", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    let resolvePasskeyLogin!: (value: unknown) => void;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolvePasskeyLogin = resolve;
+        })
+      ),
+      logout: vi.fn(),
+      getCurrentUser: vi
+        .fn()
+        .mockResolvedValue(createAuthUser({ name: "Canonical Native User" })),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /check your device/i })
+        ).toBeInTheDocument();
+      });
+
+      await act(async () => {
+        resolvePasskeyLogin({ user: createAuthUser() });
+      });
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("shows native passkey AuthApiError messages inline", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi
+        .fn()
+        .mockRejectedValue(new authApi.AuthApiError("Native passkey failed.")),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      expect(
+        await screen.findByText(/native passkey failed/i)
+      ).toBeInTheDocument();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("shows unexpected native passkey Error messages inline", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi
+        .fn()
+        .mockRejectedValue(new Error("Native passkey crashed.")),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      expect(
+        await screen.findByText(/native passkey crashed/i)
+      ).toBeInTheDocument();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("shows a fallback message for non-Error native passkey failures", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn().mockRejectedValue("unexpected-native-failure"),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      expect(
+        await screen.findByText(/an unexpected passkey sign-in error occurred/i)
+      ).toBeInTheDocument();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
   it("maps real browser passkey assertions into the API payload", async () => {
     const actualPasskeyBrowser = await loadPasskeyBrowser();
 
