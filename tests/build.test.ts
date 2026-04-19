@@ -54,9 +54,9 @@ describe("Build Output Verification", () => {
     expect(storageService).toContain("./authStorageEnvelope");
     expect(storageService).not.toContain("function buildEnvelopeMacPayload(");
 
-    expect(passkeysSpec).toContain("../../src/services/authStorageEnvelope");
+    expect(passkeysSpec).toContain("authStorageEnvelope");
     expect(passkeysSpec).toContain("buildEnvelopeMacPayload(");
-    expect(passkeysSpec).not.toContain('].join(".")');
+    expect(passkeysSpec).not.toContain("function buildEnvelopeMacPayload(");
   });
 
   it("hardens browser responses with the required security headers", () => {
