@@ -25,7 +25,11 @@ import { analytics } from "../lib/analytics";
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 
 function isPublicUnauthenticatedRoute(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/onboarding/complete";
+  const normalized =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  return normalized === "/login" || normalized === "/onboarding/complete";
 }
 
 function shouldBootstrapBrowserSessionWithoutStoredUser(

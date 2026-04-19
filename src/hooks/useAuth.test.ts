@@ -159,6 +159,22 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("skips bootstrap revalidation on the login route with a trailing slash", async () => {
+    window.history.replaceState({}, "", "/login/");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
   it("revalidates a stored user before completing bootstrap", async () => {
     const mockUser = {
       id: 1,
