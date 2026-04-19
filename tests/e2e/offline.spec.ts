@@ -213,8 +213,12 @@ test.describe("Offline Functionality", () => {
       await expect(
         page.getByRole("heading", { name: /My Profile/i })
       ).toBeVisible();
-      await expect(page.getByText(offlineLiveMockUser.name).first()).toBeVisible();
-      await expect(page.getByText(offlineLiveMockUser.email).first()).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.email).first()
+      ).toBeVisible();
 
       // Step 2: Go offline
       await page.context().setOffline(true);
@@ -238,8 +242,12 @@ test.describe("Offline Functionality", () => {
       await expect(
         page.getByRole("heading", { name: /My Profile/i })
       ).toBeVisible();
-      await expect(page.getByText(offlineLiveMockUser.name).first()).toBeVisible();
-      await expect(page.getByText(offlineLiveMockUser.email).first()).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockUser.email).first()
+      ).toBeVisible();
 
       // Step 5: Navigate back to Organization using nav links
       const orgNavLink = page.getByRole("link", { name: /Organization/i });
