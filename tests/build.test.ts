@@ -27,12 +27,10 @@ describe("Build Output Verification", () => {
   });
 
   it("ships Android Digital Asset Links for passkey trust on app.secpal.dev", () => {
-    const assetLinksPath = path.join(repoRoot, "config/assetlinks.json");
-
-    expect(existsSync(assetLinksPath)).toBe(true);
+    expect(existsSync(path.join(repoRoot, "config/assetlinks.json"))).toBe(true);
 
     const assetLinks = JSON.parse(
-      readFileSync(assetLinksPath, "utf8")
+      readRepoFile("config/assetlinks.json")
     ) as Array<{
       relation: string[];
       target: {
@@ -75,6 +73,12 @@ describe("Build Output Verification", () => {
     expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "public/.htaccess"');
     expect(viteConfig).toContain('dest: "."');
+  });
+
+  it("keeps vite-plugin-static-copy configured for assetlinks.json", () => {
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "config/assetlinks.json"');
     expect(viteConfig).toContain('dest: ".well-known"');
     expect(viteConfig).toContain("stripBase: true");
