@@ -137,6 +137,7 @@ describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
     // Default: health check passes

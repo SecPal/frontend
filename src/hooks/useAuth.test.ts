@@ -102,6 +102,7 @@ async function expectEncryptedStoredUser(
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    window.history.replaceState({}, "", "/login");
     setCsrfTokenCookie("test-csrf-token");
     vi.clearAllMocks();
     mockGetCurrentUser.mockReset();
@@ -133,6 +134,44 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("bootstraps a protected browser-session route even when local auth storage is empty", async () => {
+    window.history.replaceState({}, "", "/");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    });
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips bootstrap revalidation on the login route with a trailing slash", async () => {
+    window.history.replaceState({}, "", "/login/");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
@@ -417,6 +456,40 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
 
     onLineSpy.mockRestore();
+  });
+
+  it("collapses to logged-out state when stored user becomes unreadable while offline", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await persistAuthUser(mockUser);
+
+    // Rotate the CSRF token so the stored MAC becomes invalid — getUser() returns null
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(false);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    } finally {
+      onLineSpy.mockRestore();
+    }
   });
 
   it("handles corrupted user data in localStorage", () => {

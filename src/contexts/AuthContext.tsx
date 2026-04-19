@@ -24,6 +24,29 @@ import { analytics } from "../lib/analytics";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 
+function isPublicUnauthenticatedRoute(pathname: string): boolean {
+  const normalized =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  return normalized === "/login" || normalized === "/onboarding/complete";
+}
+
+function shouldBootstrapBrowserSessionWithoutStoredUser(
+  authTransportKind: string,
+  hasLogoutBarrier: boolean
+): boolean {
+  if (authTransportKind !== "browser-session" || hasLogoutBarrier) {
+    return false;
+  }
+
+  if (!isOnline() || typeof window === "undefined") {
+    return false;
+  }
+
+  return !isPublicUnauthenticatedRoute(window.location.pathname);
+}
+
 function getBootstrapErrorCode(error: unknown): string | null {
   if (typeof error !== "object" || error === null || !("code" in error)) {
     return null;
@@ -85,8 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authStorage.getUserSnapshot()
   );
   const [isLoading, setIsLoading] = useState(() => {
+    const hasLogoutBarrier = authStorage.hasLogoutBarrier();
+
     if (!authStorage.hasStoredUser()) {
-      return false;
+      return shouldBootstrapBrowserSessionWithoutStoredUser(
+        authTransport.kind,
+        hasLogoutBarrier
+      );
     }
 
     if (
@@ -343,6 +371,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const restoreAndRevalidate = async () => {
+      const hadStoredUser = authStorage.hasStoredUser();
       const storedUser = await authStorage.getUser();
 
       if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
@@ -350,6 +379,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!storedUser) {
+        if (authTransport.kind === "browser-session" && hadStoredUser) {
+          if (!isOnline()) {
+            setBootstrapRecoveryReason(null);
+            setUser(null);
+            setIsLoading(false);
+            syncOfflineAuthState(false);
+            return;
+          }
+
+          startBootstrapRevalidation();
+          return;
+        }
+
+        if (
+          shouldBootstrapBrowserSessionWithoutStoredUser(
+            authTransport.kind,
+            hasLogoutBarrierRef.current
+          )
+        ) {
+          startBootstrapRevalidation();
+          return;
+        }
+
         setBootstrapRecoveryReason(null);
         setUser(null);
         setIsLoading(false);

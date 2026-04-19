@@ -81,6 +81,26 @@ test.describe("Authentication", () => {
     expect(page.url()).not.toContain("/login");
   });
 
+  test("should stay authenticated when deep-linking to a protected route and reloading it", async ({
+    authenticatedPage: page,
+  }) => {
+    await page.goto("/customers");
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/customers$/);
+    await expect(page.getByRole("button", { name: /user menu/i })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).toHaveURL(/\/customers$/);
+    await expect(page.getByRole("button", { name: /user menu/i })).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
   test("should redirect to login when accessing protected route without auth", async ({
     page,
   }) => {
