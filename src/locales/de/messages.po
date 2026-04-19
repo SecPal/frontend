@@ -99,7 +99,7 @@ msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend au
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
 
-#: src/components/RouteGuardState.tsx:48
+#: src/components/RouteGuardState.tsx:51
 msgid "Still loading your secure session"
 msgstr "Ihre sichere Sitzung wird noch geladen"
 
@@ -308,7 +308,7 @@ msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
 #: src/components/OrganizationalUnitTree.tsx:793
-#: src/components/RouteGuardState.tsx:65
+#: src/components/RouteGuardState.tsx:68
 msgid "Retry"
 msgstr "Wiederholen"
 
@@ -502,7 +502,7 @@ msgstr "Vornamen (alle)"
 msgid "App updates and maintenance notifications"
 msgstr "App-Updates und Wartungsbenachrichtigungen"
 
-#: src/components/RouteGuardState.tsx:57
+#: src/components/RouteGuardState.tsx:60
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
@@ -533,7 +533,7 @@ msgstr "Vertragsart"
 msgid "Make root unit (no parent)"
 msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 
-#: src/components/RouteGuardState.tsx:173
+#: src/components/RouteGuardState.tsx:176
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
@@ -541,7 +541,7 @@ msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie
 msgid "Device label"
 msgstr "Gerätebezeichnung"
 
-#: src/components/RouteGuardState.tsx:151
+#: src/components/RouteGuardState.tsx:154
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
 
@@ -599,7 +599,7 @@ msgstr "Standorte anzeigen"
 msgid "No customers found"
 msgstr "Keine Kunden gefunden"
 
-#: src/components/RouteGuardState.tsx:188
+#: src/components/RouteGuardState.tsx:191
 msgid "Page Not Found"
 msgstr "Seite nicht gefunden"
 
@@ -798,7 +798,7 @@ msgstr "Postleitzahl"
 msgid "Enable Notifications"
 msgstr "Benachrichtigungen aktivieren"
 
-#: src/components/RouteGuardState.tsx:153
+#: src/components/RouteGuardState.tsx:156
 msgid "Send verification email again"
 msgstr "Verifizierungs-E-Mail erneut senden"
 
@@ -1009,7 +1009,7 @@ msgstr "Validierungsfehler"
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
 
-#: src/components/RouteGuardState.tsx:119
+#: src/components/RouteGuardState.tsx:122
 msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
 msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten eine neue Bestätigungs-E-Mail an."
 
@@ -1252,7 +1252,7 @@ msgstr "OpenTimestamp"
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
 
-#: src/components/RouteGuardState.tsx:113
+#: src/components/RouteGuardState.tsx:116
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
 
@@ -1363,7 +1363,7 @@ msgstr "Läuft ab"
 msgid "First Name"
 msgstr "Vorname"
 
-#: src/components/RouteGuardState.tsx:110
+#: src/components/RouteGuardState.tsx:113
 msgid "Verify your email address"
 msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 
@@ -1618,7 +1618,7 @@ msgstr "Fehler beim Laden von Mitarbeitern"
 msgid "Removing..."
 msgstr "Wird entfernt..."
 
-#: src/components/RouteGuardState.tsx:141
+#: src/components/RouteGuardState.tsx:144
 msgid "I have verified my email"
 msgstr "Ich habe meine E-Mail verifiziert"
 
@@ -1917,7 +1917,7 @@ msgstr "BWR-Status wird gespeichert..."
 msgid "New Site"
 msgstr "Neuer Standort"
 
-#: src/components/RouteGuardState.tsx:52
+#: src/components/RouteGuardState.tsx:55
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
@@ -1990,7 +1990,7 @@ msgstr "Willkommen bei SecPal!"
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
 msgstr "{fieldName} hat sich erheblich verändert ({similarity}% ähnlich). Die Personalabteilung wird zur Überprüfung benachrichtigt."
 
-#: src/components/RouteGuardState.tsx:191
+#: src/components/RouteGuardState.tsx:194
 msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
@@ -2016,7 +2016,7 @@ msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
 
 #: src/App.tsx:96
-#: src/components/RouteGuardState.tsx:197
+#: src/components/RouteGuardState.tsx:200
 msgid "Back to Home"
 msgstr "Zurück zur Startseite"
 
@@ -2325,7 +2325,7 @@ msgstr "Onboarding laden..."
 msgid "Search by name or email..."
 msgstr "Suche nach Name oder E-Mail..."
 
-#: src/components/RouteGuardState.tsx:170
+#: src/components/RouteGuardState.tsx:173
 msgid "Access Denied"
 msgstr "Zugang verweigert"
 
@@ -2442,8 +2442,8 @@ msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail
 msgid "Loading documents..."
 msgstr "Dokumente laden..."
 
-#: src/components/RouteGuardState.tsx:68
-#: src/components/RouteGuardState.tsx:157
+#: src/components/RouteGuardState.tsx:71
+#: src/components/RouteGuardState.tsx:160
 #: src/pages/Onboarding/OnboardingComplete.tsx:532
 msgid "Go to Login"
 msgstr "Zum Login gehen"

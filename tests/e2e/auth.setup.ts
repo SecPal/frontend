@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { mkdir } from "fs/promises";
+import { dirname } from "path";
 import { test as base, expect, type Page } from "@playwright/test";
 import {
   buildTestUser,
@@ -67,6 +69,7 @@ const AUTH_FILE = "./tests/e2e/.auth/user.json";
 export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ browser }, runTest) => {
     const configuredTestUser = getConfiguredTestUserOrThrow();
+    let shouldRefreshAuthState = false;
 
     // Try to use saved auth state
     let context;
@@ -86,6 +89,8 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     const authResolution = await waitForAuthResolution(page);
 
     if (authResolution !== "authenticated") {
+      shouldRefreshAuthState = true;
+
       await loginViaUI(
         page,
         configuredTestUser.email,
@@ -98,6 +103,11 @@ export const test = base.extend<{ authenticatedPage: Page }>({
       timeout: 15_000,
     });
     expect(page.url()).not.toContain("/login");
+
+    if (shouldRefreshAuthState) {
+      await mkdir(dirname(AUTH_FILE), { recursive: true });
+      await context.storageState({ path: AUTH_FILE });
+    }
 
     // Run the test with authenticated page
     await runTest(page);

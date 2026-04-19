@@ -21,7 +21,14 @@ export interface LoginSubmitState {
 export interface AuthResolutionState {
   pathname: string;
   hasUserMenu: boolean;
+  hasBootstrapRecoveryScreen: boolean;
 }
+
+export type AuthResolution =
+  | "authenticated"
+  | "login"
+  | "recovery"
+  | "unresolved";
 
 const DEFAULT_LOCAL_TEST_USER: TestUserCredentials = {
   email: "test@secpal.dev",
@@ -30,6 +37,8 @@ const DEFAULT_LOCAL_TEST_USER: TestUserCredentials = {
 
 const LOGIN_READY_TIMEOUT_MS = 15_000;
 const AUTH_RESOLUTION_TIMEOUT_MS = 15_000;
+const BOOTSTRAP_RECOVERY_SELECTOR =
+  '[data-route-guard-state="bootstrap-recovery"]';
 
 export function isRemoteE2ETarget(baseUrl = process.env.PLAYWRIGHT_BASE_URL) {
   return typeof baseUrl === "string" && /^https:\/\//i.test(baseUrl);
@@ -102,13 +111,17 @@ export function describeLoginBlockingState(
 
 export function describeAuthResolutionState(
   state: AuthResolutionState
-): "authenticated" | "login" | "unresolved" {
+): AuthResolution {
   if (state.hasUserMenu) {
     return "authenticated";
   }
 
   if (state.pathname.includes("/login")) {
     return "login";
+  }
+
+  if (state.hasBootstrapRecoveryScreen) {
+    return "recovery";
   }
 
   return "unresolved";
@@ -169,22 +182,29 @@ export async function waitForLoginFormReady(
 export async function readAuthResolutionState(
   page: Page
 ): Promise<AuthResolutionState> {
-  return page.evaluate(() => ({
-    pathname: window.location.pathname,
-    hasUserMenu:
-      document.querySelector('button[aria-label="User menu"]') !== null,
-  }));
+  return page.evaluate(
+    (bootstrapRecoverySelector) => ({
+      pathname: window.location.pathname,
+      hasUserMenu:
+        document.querySelector('button[aria-label="User menu"]') !== null,
+      hasBootstrapRecoveryScreen:
+        document.querySelector(bootstrapRecoverySelector) !== null,
+    }),
+    BOOTSTRAP_RECOVERY_SELECTOR
+  );
 }
 
 export async function waitForAuthResolution(
   page: Page,
   timeout = AUTH_RESOLUTION_TIMEOUT_MS
-): Promise<"authenticated" | "login" | "unresolved"> {
+): Promise<AuthResolution> {
   await page
     .waitForFunction(
-      () =>
+      (bootstrapRecoverySelector) =>
         window.location.pathname.includes("/login") ||
-        document.querySelector('button[aria-label="User menu"]') !== null,
+        document.querySelector('button[aria-label="User menu"]') !== null ||
+        document.querySelector(bootstrapRecoverySelector) !== null,
+      BOOTSTRAP_RECOVERY_SELECTOR,
       { timeout }
     )
     .catch(() => undefined);
