@@ -71,13 +71,13 @@ async function seedAuthenticatedUser(user: Record<string, unknown>) {
   }
 
   const authenticatedUser: AuthenticatedUser = {
+    ...persistedUser,
     roles: [],
     permissions: [],
     hasOrganizationalScopes: false,
     hasCustomerAccess: false,
     hasSiteAccess: false,
-    emailVerified: persistedUser.emailVerified ?? true,
-    ...persistedUser,
+    emailVerified: persistedUser.emailVerified ?? false,
   };
 
   vi.mocked(authApi.getCurrentUser).mockResolvedValue(authenticatedUser);
