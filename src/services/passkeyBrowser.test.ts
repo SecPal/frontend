@@ -440,7 +440,9 @@ describe("passkeyBrowser", () => {
       },
       client_extension_results: { credProps: { rk: true } },
     };
-    const createPasskeyAttestation = vi.fn().mockResolvedValue(nativeCredential);
+    const createPasskeyAttestation = vi
+      .fn()
+      .mockResolvedValue(nativeCredential);
 
     Reflect.deleteProperty(window, "PublicKeyCredential");
     Reflect.deleteProperty(navigator, "credentials");
