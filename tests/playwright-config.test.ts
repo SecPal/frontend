@@ -1,11 +1,22 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, expect, it } from "vitest";
-import config from "../playwright.config";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("playwright config", () => {
-  it("clears developer-local VITE_API_URL overrides for the local dev web server", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("clears developer-local VITE_API_URL overrides for the local dev web server", async () => {
+    // Explicitly test the local-dev path: CI must be falsy so the config
+    // takes the dev-server branch and not the CI preview-server branch.
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
     const webServer =
       config.webServer && !Array.isArray(config.webServer)
         ? config.webServer
