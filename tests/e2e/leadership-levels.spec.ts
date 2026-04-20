@@ -80,7 +80,9 @@ function buildCreatedEmployee(payload: Record<string, unknown>, index: number) {
     date_of_birth: String(payload.date_of_birth ?? "1992-03-03"),
     contract_start_date: String(payload.contract_start_date ?? "2026-01-01"),
     management_level: managementLevel,
-    organizational_unit_id: String(payload.organizational_unit_id ?? mockUnit.id),
+    organizational_unit_id: String(
+      payload.organizational_unit_id ?? mockUnit.id
+    ),
     organizational_unit: {
       id: String(payload.organizational_unit_id ?? mockUnit.id),
       name: mockUnit.name,
@@ -133,10 +135,14 @@ async function installMockEmployeeRoutes(
     }
 
     if (request.method() === "POST" && url.pathname.endsWith("/v1/employees")) {
-      const payload = (request.postDataJSON() as Record<string, unknown> | null) ?? {};
+      const payload =
+        (request.postDataJSON() as Record<string, unknown> | null) ?? {};
       createdPayloads.push(payload);
 
-      const createdEmployee = buildCreatedEmployee(payload, createdPayloads.length);
+      const createdEmployee = buildCreatedEmployee(
+        payload,
+        createdPayloads.length
+      );
       employees.unshift(createdEmployee);
 
       await route.fulfill({
@@ -170,7 +176,10 @@ async function installMockEmployeeRoutes(
   return { createdPayloads };
 }
 
-async function fillRequiredEmployeeFields(page: Page, email: string): Promise<void> {
+async function fillRequiredEmployeeFields(
+  page: Page,
+  email: string
+): Promise<void> {
   await page.getByLabel(/First Name/i).fill("Taylor");
   await page.getByLabel(/Last Name/i).fill("Example");
   await page.getByLabel(/^Email/i).fill(email);
@@ -246,7 +255,9 @@ test.describe("Management level employee flows", () => {
     await page.getByRole("button", { name: /Create Employee/i }).click();
 
     await expect(
-      page.getByText(/Management level is required when leadership position is enabled/i)
+      page.getByText(
+        /Management level is required when leadership position is enabled/i
+      )
     ).toBeVisible();
 
     const managementLevelInput = page.getByRole("spinbutton");
@@ -267,9 +278,7 @@ test.describe("Management level employee flows", () => {
     await page.waitForLoadState("networkidle");
 
     await fillRequiredEmployeeFields(page, `created.${Date.now()}@secpal.dev`);
-    await page
-      .getByRole("switch", { name: /Leadership Position/i })
-      .click();
+    await page.getByRole("switch", { name: /Leadership Position/i }).click();
     await page.getByRole("spinbutton").fill("7");
 
     await page.getByRole("button", { name: /Create Employee/i }).click();
