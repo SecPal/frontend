@@ -7,9 +7,14 @@ import { test as base, expect, type Page } from "@playwright/test";
 import {
   buildTestUser,
   getConfiguredTestUserOrThrow,
+  isRemoteE2ETarget,
   waitForAuthResolution,
   waitForLoginFormReady,
 } from "./auth-helpers";
+import {
+  installMockAuthRoutes,
+  installStoredMockBrowserSession,
+} from "./offline-live-helpers";
 
 /**
  * Test Credentials
@@ -69,6 +74,7 @@ const AUTH_FILE = "./tests/e2e/.auth/user.json";
 export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ browser }, runTest) => {
     const configuredTestUser = getConfiguredTestUserOrThrow();
+    const usesRemoteTarget = isRemoteE2ETarget();
     let shouldRefreshAuthState = false;
 
     // Try to use saved auth state
@@ -78,6 +84,10 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     } catch {
       // Fall back to fresh context if auth file doesn't exist
       context = await browser.newContext();
+    }
+
+    if (!usesRemoteTarget) {
+      await installMockAuthRoutes(context);
     }
 
     const page = await context.newPage();
@@ -91,11 +101,17 @@ export const test = base.extend<{ authenticatedPage: Page }>({
     if (authResolution !== "authenticated") {
       shouldRefreshAuthState = true;
 
-      await loginViaUI(
-        page,
-        configuredTestUser.email,
-        configuredTestUser.password
-      );
+      if (usesRemoteTarget) {
+        await loginViaUI(
+          page,
+          configuredTestUser.email,
+          configuredTestUser.password
+        );
+      } else {
+        await installStoredMockBrowserSession(page);
+        await page.goto("/");
+        await page.waitForLoadState("networkidle");
+      }
     }
 
     // Verify we're logged in with the actual authenticated application shell.

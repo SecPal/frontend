@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect, loginViaUI } from "./auth.setup";
-import { waitForLoginFormReady } from "./auth-helpers";
+import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
+import { installMockAuthRoutes } from "./offline-live-helpers";
 
 /**
  * Authentication Flow Tests
@@ -11,6 +12,12 @@ import { waitForLoginFormReady } from "./auth-helpers";
  */
 
 test.describe("Authentication", () => {
+  test.beforeEach(async ({ context }) => {
+    if (!isRemoteE2ETarget()) {
+      await installMockAuthRoutes(context);
+    }
+  });
+
   test("should login with valid credentials", async ({ page }) => {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");

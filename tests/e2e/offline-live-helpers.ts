@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, type BrowserContext, type Page } from "@playwright/test";
+import { installStoredAuthUser } from "../utils/passkeyAuthStorage";
 import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
 
 const MOCK_XSRF_TOKEN = "test-xsrf-token";
+const MOCK_SESSION_COOKIE_NAME = "secpal-playwright-session";
 
 function getMockCookieDomain(): string {
   const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
@@ -32,14 +34,43 @@ async function ensureMockXsrfCookie(context: BrowserContext): Promise<void> {
 export const offlineLiveMockUser = {
   id: "42",
   name: "Jane Example",
-  email: "jane.example@secpal.app",
+  email: "test@example.com",
   emailVerified: true,
   roles: ["Manager"],
   permissions: [],
   hasOrganizationalScopes: true,
-  hasCustomerAccess: false,
-  hasSiteAccess: false,
+  hasCustomerAccess: true,
+  hasSiteAccess: true,
 };
+
+async function ensureMockSessionCookie(
+  context: BrowserContext,
+  value = "authenticated"
+): Promise<void> {
+  const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
+
+  await context.addCookies([
+    {
+      name: MOCK_SESSION_COOKIE_NAME,
+      value,
+      domain: getMockCookieDomain(),
+      path: "/",
+      sameSite: "Lax",
+      secure: isHttps,
+      httpOnly: true,
+    },
+  ]);
+}
+
+function requestHasMockSessionCookie(cookieHeader: string | null): boolean {
+  if (!cookieHeader) {
+    return false;
+  }
+
+  return cookieHeader
+    .split(";")
+    .some((cookie) => cookie.trim() === `${MOCK_SESSION_COOKIE_NAME}=authenticated`);
+}
 
 export const offlineLiveMockOrganizationUnit = {
   id: "org-root-1",
@@ -88,14 +119,53 @@ export async function installMockAuthRoutes(
   });
 
   await context.route("**/v1/auth/login", async (route) => {
+    const requestBody = route.request().postDataJSON() as
+      | { email?: string }
+      | undefined;
+
+    if (requestBody?.email?.startsWith("wrong-user@")) {
+      await route.fulfill({
+        status: 422,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "Invalid credentials.",
+          errors: {
+            email: ["Invalid credentials."],
+          },
+        }),
+      });
+
+      return;
+    }
+
+    await ensureMockSessionCookie(context);
+
+    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
     await route.fulfill({
       status: 200,
       contentType: "application/json",
+      headers: {
+        "set-cookie": `${MOCK_SESSION_COOKIE_NAME}=authenticated; Path=/; SameSite=Lax${isHttps ? "; Secure" : ""}; HttpOnly`,
+      },
       body: JSON.stringify({ user: offlineLiveMockUser }),
     });
   });
 
   await context.route("**/v1/me", async (route) => {
+    if (
+      !requestHasMockSessionCookie(
+        await route.request().headerValue("cookie")
+      )
+    ) {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthenticated." }),
+      });
+
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -104,9 +174,43 @@ export async function installMockAuthRoutes(
   });
 
   await context.route("**/v1/auth/logout", async (route) => {
+    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
     await route.fulfill({
       status: 204,
+      headers: {
+        "set-cookie": `${MOCK_SESSION_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isHttps ? "; Secure" : ""}; HttpOnly`,
+      },
       body: "",
+    });
+  });
+
+  await context.route("**/v1/customers**", async (route) => {
+    if (
+      !requestHasMockSessionCookie(
+        await route.request().headerValue("cookie")
+      )
+    ) {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthenticated." }),
+      });
+
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 0,
+        },
+      }),
     });
   });
 }
@@ -168,4 +272,13 @@ export async function loginWithMockedBrowserSession(page: Page): Promise<void> {
     .click();
 
   await expect(page).toHaveURL(/\/$/);
+}
+
+export async function installStoredMockBrowserSession(
+  page: Page,
+  user = offlineLiveMockUser
+): Promise<void> {
+  await ensureMockXsrfCookie(page.context());
+  await ensureMockSessionCookie(page.context());
+  await installStoredAuthUser(page, user, MOCK_XSRF_TOKEN);
 }

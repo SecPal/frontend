@@ -26,7 +26,7 @@ describe("auth E2E helpers", () => {
   describe("buildTestUser", () => {
     it("uses local development defaults for non-remote targets", () => {
       expect(buildTestUser({}, undefined)).toEqual({
-        email: "test@secpal.dev",
+        email: "test@example.com",
         password: "password",
       });
     });
