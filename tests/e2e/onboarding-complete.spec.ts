@@ -71,9 +71,13 @@ async function installMockOnboardingRoutes(
   });
 
   await context.route("**/v1/onboarding/complete", async (route) => {
-    const body = (route.request().postDataJSON() as Record<string, unknown>) ?? {};
+    const body =
+      (route.request().postDataJSON() as Record<string, unknown>) ?? {};
 
-    if (body.token !== validOnboardingToken || body.email !== validOnboardingEmail) {
+    if (
+      body.token !== validOnboardingToken ||
+      body.email !== validOnboardingEmail
+    ) {
       await route.fulfill({
         status: 422,
         contentType: "application/json",
@@ -192,13 +196,17 @@ test.describe("Onboarding Complete Flow", () => {
     ).toBeVisible();
   });
 
-  test("shows the invalid link state for an invalid token", async ({ page }) => {
+  test("shows the invalid link state for an invalid token", async ({
+    page,
+  }) => {
     await page.goto("/onboarding/complete?token=invalid&email=test@secpal.dev");
 
     await expect(
       page.getByRole("heading", { name: /Invalid Link/i })
     ).toBeVisible();
-    await expect(page.getByText(/Invalid or expired onboarding link/i)).toBeVisible();
+    await expect(
+      page.getByText(/Invalid or expired onboarding link/i)
+    ).toBeVisible();
   });
 
   test("shows the invalid link state for a missing token", async ({ page }) => {
@@ -208,9 +216,13 @@ test.describe("Onboarding Complete Flow", () => {
       page.getByRole("heading", { name: /Invalid Link/i })
     ).toBeVisible();
     await expect(
-      page.getByText(/Missing token and email\. Please use the link from your email\./i)
+      page.getByText(
+        /Missing token and email\. Please use the link from your email\./i
+      )
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: /Go to Login/i })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Go to Login/i })
+    ).toBeVisible();
   });
 
   test("validates password mismatch before submitting", async ({ page }) => {
