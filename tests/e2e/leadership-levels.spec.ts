@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { expect, test, type BrowserContext, type Page } from "./auth.setup";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./auth.setup";
 
 const mockUnit = {
   id: "org-root-1",
@@ -113,7 +114,7 @@ async function installMockEmployeeRoutes(
     });
   });
 
-  await context.route("**/v1/employees**", async (route) => {
+  await context.route(/\/v1\/employees(\?.*)?$/, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
 
