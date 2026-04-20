@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
@@ -112,7 +113,7 @@ export interface OnboardingCompleteResponse {
       id: string | number;
       first_name: string;
       last_name: string;
-      status: string;
+      status: EmployeeStatus;
     };
   };
 }
