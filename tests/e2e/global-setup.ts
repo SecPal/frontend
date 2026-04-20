@@ -1,11 +1,16 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { chromium, type FullConfig } from "@playwright/test";
+import { chromium, expect, type FullConfig } from "@playwright/test";
 import {
   getConfiguredTestUserOrThrow,
+  isRemoteE2ETarget,
   waitForLoginFormReady,
 } from "./auth-helpers";
+import {
+  installMockAuthRoutes,
+  installStoredMockBrowserSession,
+} from "./offline-live-helpers";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -35,8 +40,10 @@ async function globalSetup(config: FullConfig) {
     fs.mkdirSync(authDir, { recursive: true });
   }
 
+  const baseURL = config.projects[0]?.use?.baseURL || "http://localhost:5173";
+
   // Skip if auth file already exists and is recent (< 30 minutes old)
-  if (fs.existsSync(AUTH_FILE)) {
+  if (isRemoteE2ETarget(String(baseURL)) && fs.existsSync(AUTH_FILE)) {
     const stats = fs.statSync(AUTH_FILE);
     const ageMinutes = (Date.now() - stats.mtimeMs) / 1000 / 60;
     if (ageMinutes < 30) {
@@ -49,13 +56,25 @@ async function globalSetup(config: FullConfig) {
 
   const testUser = getConfiguredTestUserOrThrow();
 
-  const baseURL = config.projects[0]?.use?.baseURL || "http://localhost:5173";
-
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
+    if (!isRemoteE2ETarget(String(baseURL))) {
+      await installMockAuthRoutes(context);
+      await installStoredMockBrowserSession(page);
+      await page.goto(baseURL);
+      await page.waitForLoadState("networkidle");
+      await expect(
+        page.getByRole("button", { name: /user menu/i })
+      ).toBeVisible({ timeout: 15_000 });
+
+      await context.storageState({ path: AUTH_FILE });
+      console.log("✅ Local mocked auth session saved");
+      return;
+    }
+
     // Navigate to login page
     await page.goto(`${baseURL}/login`);
     await page.waitForLoadState("networkidle");

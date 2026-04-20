@@ -31,7 +31,7 @@ export type AuthResolution =
   | "unresolved";
 
 const DEFAULT_LOCAL_TEST_USER: TestUserCredentials = {
-  email: "test@secpal.dev",
+  email: "test@example.com",
   password: "password",
 };
 
