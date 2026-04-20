@@ -69,7 +69,9 @@ function requestHasMockSessionCookie(cookieHeader: string | null): boolean {
 
   return cookieHeader
     .split(";")
-    .some((cookie) => cookie.trim() === `${MOCK_SESSION_COOKIE_NAME}=authenticated`);
+    .some(
+      (cookie) => cookie.trim() === `${MOCK_SESSION_COOKIE_NAME}=authenticated`
+    );
 }
 
 export const offlineLiveMockOrganizationUnit = {
@@ -153,9 +155,7 @@ export async function installMockAuthRoutes(
 
   await context.route("**/v1/me", async (route) => {
     if (
-      !requestHasMockSessionCookie(
-        await route.request().headerValue("cookie")
-      )
+      !requestHasMockSessionCookie(await route.request().headerValue("cookie"))
     ) {
       await route.fulfill({
         status: 401,
@@ -186,9 +186,7 @@ export async function installMockAuthRoutes(
 
   await context.route("**/v1/customers**", async (route) => {
     if (
-      !requestHasMockSessionCookie(
-        await route.request().headerValue("cookie")
-      )
+      !requestHasMockSessionCookie(await route.request().headerValue("cookie"))
     ) {
       await route.fulfill({
         status: 401,
