@@ -140,8 +140,6 @@ export async function installMockAuthRoutes(
       return;
     }
 
-    await ensureMockSessionCookie(context);
-
     const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
     await route.fulfill({
       status: 200,
