@@ -70,16 +70,12 @@ async function waitForPersistedLogoutState(
 
   while (Date.now() < deadline) {
     try {
-      const authUser = await page.evaluate(() =>
-        localStorage.getItem("auth_user")
-      );
       const persistedState = await readPersistedLogoutState(page);
       const indexedDbCleared =
         persistedState.indexedDbNames === null ||
         !persistedState.indexedDbNames.includes("SecPalDB");
 
       if (
-        authUser === null &&
         persistedState.localStorageKeys.length === 1 &&
         persistedState.localStorageKeys[0] === "auth_logout_barrier" &&
         persistedState.sessionStorageKeys.length === 0 &&
