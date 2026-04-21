@@ -82,10 +82,10 @@ export default defineConfig({
   // Reporter configuration
   reporter: process.env.CI
     ? [
-      ["html", { open: "never" }],
-      ["list"],
-      ["json", { outputFile: "test-results.json" }],
-    ]
+        ["html", { open: "never" }],
+        ["list"],
+        ["json", { outputFile: "test-results.json" }],
+      ]
     : [["html", { open: "never" }], ["list"]],
 
   // Shared settings for all projects

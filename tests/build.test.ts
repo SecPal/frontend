@@ -108,10 +108,12 @@ describe("Build Configuration and Source Verification", () => {
     const performanceSpec = readRepoFile("tests/e2e/performance.spec.ts");
     const packageJson = readRepoFile("package.json");
 
-    expect(performanceSpec).toContain('import { test, expect } from "./auth.setup"');
+    expect(performanceSpec).toContain(
+      'import { test, expect } from "./auth.setup"'
+    );
     expect(performanceSpec).toContain("authenticatedPage: page");
     expect(packageJson).toContain(
-      'PLAYWRIGHT_LIGHTHOUSE=1 PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/performance.spec.ts --project=chromium'
+      "PLAYWRIGHT_LIGHTHOUSE=1 PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/performance.spec.ts --project=chromium"
     );
   });
 

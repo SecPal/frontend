@@ -45,7 +45,7 @@ test.describe("Lighthouse Performance Audits", () => {
   test.skip(
     () => Boolean(performanceAuditMode.skipReason),
     performanceAuditMode.skipReason ??
-    "Performance audits require an explicit preview or live Lighthouse target"
+      "Performance audits require an explicit preview or live Lighthouse target"
   );
 
   // Only run on chromium (Lighthouse requires Chrome DevTools Protocol)
@@ -82,41 +82,40 @@ test.describe("Lighthouse Performance Audits", () => {
     );
   });
 
-  test(
-    "should have good Core Web Vitals",
-    async ({ authenticatedPage: page }, testInfo) => {
-      await page.goto("/");
-      await page.waitForLoadState("networkidle");
+  test("should have good Core Web Vitals", async ({
+    authenticatedPage: page,
+  }, testInfo) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
 
-      const result = await playAudit({
-        page,
-        port: LIGHTHOUSE_DEBUG_PORT,
-        config: LIGHTHOUSE_AUDIT_CONFIG,
-        thresholds: PERFORMANCE_THRESHOLDS,
-        reports: {
-          formats: {
-            html: true,
-          },
-          name: `lighthouse-cwv-${testInfo.title.replace(/\s+/g, "-")}`,
-          directory: "test-results/lighthouse",
+    const result = await playAudit({
+      page,
+      port: LIGHTHOUSE_DEBUG_PORT,
+      config: LIGHTHOUSE_AUDIT_CONFIG,
+      thresholds: PERFORMANCE_THRESHOLDS,
+      reports: {
+        formats: {
+          html: true,
         },
-      });
+        name: `lighthouse-cwv-${testInfo.title.replace(/\s+/g, "-")}`,
+        directory: "test-results/lighthouse",
+      },
+    });
 
-      // Extract Core Web Vitals from audit
-      const lcp =
-        result.lhr.audits["largest-contentful-paint"]?.numericValue || 0;
-      const cls = result.lhr.audits["cumulative-layout-shift"]?.numericValue || 0;
-      const tbt = result.lhr.audits["total-blocking-time"]?.numericValue || 0;
+    // Extract Core Web Vitals from audit
+    const lcp =
+      result.lhr.audits["largest-contentful-paint"]?.numericValue || 0;
+    const cls = result.lhr.audits["cumulative-layout-shift"]?.numericValue || 0;
+    const tbt = result.lhr.audits["total-blocking-time"]?.numericValue || 0;
 
-      console.log(`Core Web Vitals:
+    console.log(`Core Web Vitals:
       - LCP: ${lcp}ms (target: <2500ms)
       - CLS: ${cls} (target: <0.1)
       - TBT: ${tbt}ms (target: <200ms)`);
 
-      // Verify Core Web Vitals are within acceptable ranges
-      expect(lcp, "LCP should be under 2.5s").toBeLessThan(2500);
-      expect(cls, "CLS should be under 0.1").toBeLessThan(0.1);
-      expect(tbt, "TBT should be under 200ms").toBeLessThan(200);
-    }
-  );
+    // Verify Core Web Vitals are within acceptable ranges
+    expect(lcp, "LCP should be under 2.5s").toBeLessThan(2500);
+    expect(cls, "CLS should be under 0.1").toBeLessThan(0.1);
+    expect(tbt, "TBT should be under 200ms").toBeLessThan(200);
+  });
 });
