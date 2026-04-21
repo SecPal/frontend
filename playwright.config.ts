@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig, devices } from "@playwright/test";
@@ -137,7 +137,7 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build && npm run preview",
+          command: "npm run build -- --mode preview && npm run preview",
           env: {
             ...process.env,
             VITE_API_URL: PREVIEW_BASE_URL,

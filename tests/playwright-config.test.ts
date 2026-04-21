@@ -41,7 +41,9 @@ describe("playwright config", () => {
         : undefined;
 
     expect(webServer).toBeDefined();
-    expect(webServer?.command).toBe("npm run build && npm run preview");
+    expect(webServer?.command).toBe(
+      "npm run build -- --mode preview && npm run preview"
+    );
     expect(webServer?.url).toBe("http://localhost:4173");
     expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
   });
