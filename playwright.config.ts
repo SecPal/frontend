@@ -131,7 +131,7 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build && npm run preview",
+          command: "npm run build -- --mode preview && npm run preview",
           env: {
             ...process.env,
             VITE_API_URL: "http://localhost:4173",
