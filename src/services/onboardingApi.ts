@@ -107,6 +107,7 @@ export interface OnboardingCompleteResponse {
     user: {
       id: string | number;
       email: string;
+      email_verified?: boolean;
       name: string;
     };
     employee: {

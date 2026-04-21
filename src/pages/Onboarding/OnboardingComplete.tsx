@@ -348,7 +348,7 @@ export function OnboardingComplete() {
         id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
-        emailVerified: true,
+        emailVerified: response.data.user.email_verified ?? true,
         employeeStatus: response.data.employee.status,
       });
 

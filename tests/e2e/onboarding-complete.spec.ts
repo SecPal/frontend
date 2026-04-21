@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { isRemoteE2ETarget } from "./auth-helpers";
+
+const MOCK_XSRF_TOKEN = "test-xsrf-token";
 
 const validOnboardingEmail = "john.doe@secpal.dev";
 const validOnboardingToken = "test-token-12345";
@@ -31,13 +34,38 @@ async function installMockOnboardingRoutes(
   context: BrowserContext,
   responseDelayMs = 350
 ): Promise<void> {
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  const isHttps = isRemoteE2ETarget(baseUrl);
+  const mockDomain = isHttps ? new URL(baseUrl).hostname : "localhost";
+
   await context.route("**/sanctum/csrf-cookie", async (route) => {
+    await context.addCookies([
+      {
+        name: "XSRF-TOKEN",
+        value: MOCK_XSRF_TOKEN,
+        domain: mockDomain,
+        path: "/",
+        sameSite: "Lax",
+        secure: isHttps,
+        httpOnly: false,
+      },
+    ]);
     await route.fulfill({
       status: 204,
       headers: {
-        "set-cookie": "XSRF-TOKEN=test-xsrf-token; Path=/; SameSite=Lax",
+        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${
+          isHttps ? "; Secure" : ""
+        }`,
       },
       body: "",
+    });
+  });
+
+  await context.route("**/v1/me", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Unauthenticated." }),
     });
   });
 
@@ -102,6 +130,7 @@ async function installMockOnboardingRoutes(
           user: {
             id: "user-1",
             email: validOnboardingEmail,
+            email_verified: true,
             name: "John Doe",
           },
           employee: {

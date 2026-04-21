@@ -249,6 +249,7 @@ describe("OnboardingComplete", () => {
         user: {
           id: 1,
           email: "john@secpal.dev",
+          email_verified: true,
           name: "John Doe",
         },
         employee: {
