@@ -161,10 +161,12 @@ test.describe("Application Smoke Tests", () => {
 
     test("should have no large layout shifts during load", async ({ page }) => {
       await page.addInitScript(() => {
-        (window as unknown as {
-          __clsReady?: Promise<void>;
-          __clsValue?: number;
-        }).__clsReady = new Promise<void>((resolve) => {
+        (
+          window as unknown as {
+            __clsReady?: Promise<void>;
+            __clsValue?: number;
+          }
+        ).__clsReady = new Promise<void>((resolve) => {
           let clsValue = 0;
           const observer = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
