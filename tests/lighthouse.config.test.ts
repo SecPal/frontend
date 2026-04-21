@@ -4,6 +4,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { existsSync } from "fs";
 import { join } from "path";
+import {
+  LIGHTHOUSE_AUDIT_CONFIG,
+  LIGHTHOUSE_ONLY_CATEGORIES,
+  LIGHTHOUSE_SKIP_AUDITS,
+} from "./e2e/lighthouse-audit-config";
 
 describe("Lighthouse CI Configuration", () => {
   const configPath = join(process.cwd(), "lighthouserc.cjs");
@@ -42,6 +47,25 @@ describe("Lighthouse CI Configuration", () => {
     expect(assertions["largest-contentful-paint"]).toBeDefined();
     expect(assertions["cumulative-layout-shift"]).toBeDefined();
     expect(assertions["total-blocking-time"]).toBeDefined();
+  });
+
+  it("should keep Playwright Lighthouse audits aligned with the desktop LHCI settings", () => {
+    const collectSettings = config.ci.collect.settings;
+
+    expect(LIGHTHOUSE_AUDIT_CONFIG.settings?.formFactor).toBe("desktop");
+    expect(LIGHTHOUSE_AUDIT_CONFIG.settings?.onlyCategories).toEqual(
+      collectSettings.onlyCategories
+    );
+    expect(LIGHTHOUSE_ONLY_CATEGORIES).toEqual(collectSettings.onlyCategories);
+    expect(LIGHTHOUSE_AUDIT_CONFIG.settings?.skipAudits).toEqual(
+      expect.arrayContaining(collectSettings.skipAudits)
+    );
+    expect(LIGHTHOUSE_SKIP_AUDITS).toEqual(
+      expect.arrayContaining(collectSettings.skipAudits)
+    );
+    expect(
+      LIGHTHOUSE_AUDIT_CONFIG.settings?.throttling?.cpuSlowdownMultiplier
+    ).toBe(collectSettings.throttling.cpuSlowdownMultiplier);
   });
 
   it("should enforce LCP budget of 2.5s (2500ms)", () => {

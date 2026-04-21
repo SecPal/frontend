@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig, devices } from "@playwright/test";
+import {
+  LIGHTHOUSE_DEBUG_PORT,
+  PREVIEW_BASE_URL,
+  shouldEnableLighthouseBrowser,
+  shouldUseSingleWorker,
+} from "./tests/e2e/performance-mode";
 
 /**
  * Playwright E2E Test Configuration
@@ -37,7 +43,7 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const BASE_URL =
   process.env.PLAYWRIGHT_BASE_URL ||
-  (process.env.CI ? "http://localhost:4173" : "http://localhost:5173");
+  (process.env.CI ? PREVIEW_BASE_URL : "http://localhost:5173");
 
 /**
  * Detect if we're running against a remote server
@@ -46,11 +52,11 @@ const BASE_URL =
 const isRemoteTarget =
   process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
 
-const usesSingleWorker = Boolean(process.env.CI) || isRemoteTarget;
+const usesSingleWorker = shouldUseSingleWorker();
 
-const chromiumLaunchOptions = isRemoteTarget
+const chromiumLaunchOptions = shouldEnableLighthouseBrowser()
   ? {
-      args: ["--remote-debugging-port=9222"],
+      args: [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`],
     }
   : undefined;
 
@@ -70,16 +76,16 @@ export default defineConfig({
   // Retry on CI only (flaky tests should be fixed, not retried locally)
   retries: process.env.CI ? 2 : 0,
 
-  // Remote and CI targets share fixed external resources, so serialize them.
+  // CI preview and Lighthouse audits share fixed external resources.
   workers: usesSingleWorker ? 1 : undefined,
 
   // Reporter configuration
   reporter: process.env.CI
     ? [
-        ["html", { open: "never" }],
-        ["list"],
-        ["json", { outputFile: "test-results.json" }],
-      ]
+      ["html", { open: "never" }],
+      ["list"],
+      ["json", { outputFile: "test-results.json" }],
+    ]
     : [["html", { open: "never" }], ["list"]],
 
   // Shared settings for all projects
@@ -131,12 +137,12 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build -- --mode preview && npm run preview",
+          command: "npm run build && npm run preview",
           env: {
             ...process.env,
-            VITE_API_URL: "http://localhost:4173",
+            VITE_API_URL: PREVIEW_BASE_URL,
           },
-          url: "http://localhost:4173",
+          url: PREVIEW_BASE_URL,
           reuseExistingServer: false,
           timeout: 120_000,
         }
