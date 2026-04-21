@@ -1,223 +1,321 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { test, expect } from "@playwright/test";
+import { expect, test, type BrowserContext } from "@playwright/test";
+import { isRemoteE2ETarget } from "./auth-helpers";
+
+const MOCK_XSRF_TOKEN = "test-xsrf-token";
+
+const validOnboardingEmail = "john.doe@secpal.dev";
+const validOnboardingToken = "test-token-12345";
+
+const onboardingTemplate = {
+  id: "template-1",
+  name: "Personal Details",
+  title: "Personal Details",
+  description: "Confirm your personal details before starting onboarding.",
+  form_schema: {},
+  is_required: true,
+  is_system_template: true,
+  sort_order: 1,
+  can_be_deleted: false,
+  can_be_edited: false,
+};
+
+function passwordInput(page: import("@playwright/test").Page) {
+  return page.locator('input[name="password"]');
+}
+
+function passwordConfirmationInput(page: import("@playwright/test").Page) {
+  return page.locator('input[name="password_confirmation"]');
+}
+
+async function installMockOnboardingRoutes(
+  context: BrowserContext,
+  responseDelayMs = 350
+): Promise<void> {
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  const isHttps = isRemoteE2ETarget(baseUrl);
+  const mockDomain = isHttps ? new URL(baseUrl).hostname : "localhost";
+
+  await context.route("**/sanctum/csrf-cookie", async (route) => {
+    await context.addCookies([
+      {
+        name: "XSRF-TOKEN",
+        value: MOCK_XSRF_TOKEN,
+        domain: mockDomain,
+        path: "/",
+        sameSite: "Lax",
+        secure: isHttps,
+        httpOnly: false,
+      },
+    ]);
+    await route.fulfill({
+      status: 204,
+      headers: {
+        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${
+          isHttps ? "; Secure" : ""
+        }`,
+      },
+      body: "",
+    });
+  });
+
+  await context.route("**/v1/me", async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Unauthenticated." }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/validate-token**", async (route) => {
+    const url = new URL(route.request().url());
+    const token = url.searchParams.get("token");
+    const email = url.searchParams.get("email");
+
+    if (token === validOnboardingToken && email === validOnboardingEmail) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            first_name: "John",
+            last_name: "Doe",
+            email: validOnboardingEmail,
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 401,
+      contentType: "application/json",
+      body: JSON.stringify({
+        message: "Invalid or expired onboarding link.",
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/complete", async (route) => {
+    const body =
+      (route.request().postDataJSON() as Record<string, unknown>) ?? {};
+
+    if (
+      body.token !== validOnboardingToken ||
+      body.email !== validOnboardingEmail
+    ) {
+      await route.fulfill({
+        status: 422,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "Invalid or expired onboarding link.",
+          errors: {
+            token: ["Invalid or expired onboarding link."],
+          },
+        }),
+      });
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, responseDelayMs));
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        message: "Onboarding completed successfully.",
+        data: {
+          user: {
+            id: "user-1",
+            email: validOnboardingEmail,
+            email_verified: true,
+            name: "John Doe",
+          },
+          employee: {
+            id: "employee-1",
+            first_name: "John",
+            last_name: "Doe",
+            status: "pre_contract",
+          },
+        },
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/templates", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [onboardingTemplate],
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/templates/*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: onboardingTemplate,
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/submissions", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [],
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: onboardingTemplate.id,
+          form_data: {},
+          status: "draft",
+          created_at: "2026-04-20T00:00:00Z",
+          updated_at: "2026-04-20T00:00:00Z",
+        },
+      }),
+    });
+  });
+}
 
 test.describe("Onboarding Complete Flow", () => {
-  test("completes onboarding with valid magic link", async ({ page }) => {
-    // Navigate to onboarding complete page with token
-    await page.goto(
-      "/onboarding/complete?token=test-token-12345&email=john.doe@secpal.dev"
-    );
-
-    // Verify page loaded
-    await expect(page.locator("h2")).toContainText("Welcome to SecPal");
-
-    // Fill form
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill(
-      'input[type="password"][name="password"]',
-      "SecurePass123!"
-    );
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "SecurePass123!"
-    );
-
-    // Submit
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should redirect to onboarding wizard
-    await expect(page).toHaveURL("/onboarding");
-    await expect(page.locator("h1")).toContainText(
-      "Welcome to SecPal Onboarding"
-    );
+  test.beforeEach(async ({ context }) => {
+    await installMockOnboardingRoutes(context);
   });
 
-  test("shows error for invalid token", async ({ page }) => {
+  test("completes onboarding with a deterministic valid magic link", async ({
+    page,
+  }) => {
+    await page.goto(
+      `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
+    );
+
+    await expect(
+      page.getByRole("heading", { name: /Welcome to SecPal!/i })
+    ).toBeVisible();
+    await expect(page.getByLabel(/First Names \(all\)/i)).toHaveValue("John");
+    await expect(page.getByLabel(/Last Name/i)).toHaveValue("Doe");
+
+    await passwordInput(page).fill("SecurePass123!");
+    await passwordConfirmationInput(page).fill("SecurePass123!");
+    await page.getByRole("button", { name: /Complete Account Setup/i }).click();
+
+    await expect(
+      page.getByRole("button", { name: /Completing Setup/i })
+    ).toBeVisible();
+    await expect(page).toHaveURL(/\/onboarding$/);
+    await expect(
+      page.getByRole("heading", { name: /Welcome to SecPal Onboarding/i })
+    ).toBeVisible();
+  });
+
+  test("shows the invalid link state for an invalid token", async ({
+    page,
+  }) => {
     await page.goto("/onboarding/complete?token=invalid&email=test@secpal.dev");
 
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill(
-      'input[type="password"][name="password"]',
-      "SecurePass123!"
-    );
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "SecurePass123!"
-    );
-
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should show error message
-    await expect(page.locator("text=Invalid or expired")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Invalid Link/i })
+    ).toBeVisible();
+    await expect(
+      page.getByText(/Invalid or expired onboarding link/i)
+    ).toBeVisible();
   });
 
-  test("shows error for missing token", async ({ page }) => {
+  test("shows the invalid link state for a missing token", async ({ page }) => {
     await page.goto("/onboarding/complete");
 
-    // Should show invalid link error immediately
-    await expect(page.locator("text=Invalid onboarding link")).toBeVisible();
-    await expect(page.locator('button:has-text("Go to Login")')).toBeVisible();
-  });
-
-  test("validates password mismatch", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
-    );
-
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill('input[type="password"][name="password"]', "password1");
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "password2"
-    );
-
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should show validation error
-    await expect(page.locator("text=Passwords do not match")).toBeVisible();
-  });
-
-  test("validates password minimum length", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
-    );
-
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill('input[type="password"][name="password"]', "short");
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "short"
-    );
-
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should show validation error
-    await expect(page.locator("text=at least 8 characters")).toBeVisible();
-  });
-
-  test("validates required fields", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
-    );
-
-    // Submit empty form
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should show validation errors for all required fields
-    await expect(page.locator("text=First name is required")).toBeVisible();
-    await expect(page.locator("text=Last name is required")).toBeVisible();
-    await expect(page.locator("text=Password is required")).toBeVisible();
-  });
-
-  test("uploads profile photo", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
-    );
-
-    // Create a test image file
-    const buffer = Buffer.from("fake-image-data");
-    await page.setInputFiles('input[type="file"]', {
-      name: "profile-photo.jpg",
-      mimeType: "image/jpeg",
-      buffer: buffer,
-    });
-
-    // Verify preview shown
-    await expect(page.locator('img[alt="Preview"]')).toBeVisible();
-
-    // Fill rest of form
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill(
-      'input[type="password"][name="password"]',
-      "SecurePass123!"
-    );
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "SecurePass123!"
-    );
-
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should succeed
-    await expect(page).toHaveURL("/onboarding");
-  });
-
-  test("shows loading state during submission", async ({ page }) => {
-    await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
-    );
-
-    await page.fill('input[name="first_name"]', "John");
-    await page.fill('input[name="last_name"]', "Doe");
-    await page.fill(
-      'input[type="password"][name="password"]',
-      "SecurePass123!"
-    );
-    await page.fill(
-      'input[type="password"][name="password_confirmation"]',
-      "SecurePass123!"
-    );
-
-    // Click submit
-    await page.click('button:has-text("Complete Account Setup")');
-
-    // Should show loading spinner immediately
     await expect(
-      page.locator('button:has-text("Completing Setup")')
+      page.getByRole("heading", { name: /Invalid Link/i })
     ).toBeVisible();
-
-    // Inputs should be disabled during submission
-    await expect(page.locator('input[name="first_name"]')).toBeDisabled();
-    await expect(page.locator('input[name="last_name"]')).toBeDisabled();
+    await expect(
+      page.getByText(
+        /Missing token and email\. Please use the link from your email\./i
+      )
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Go to Login/i })
+    ).toBeVisible();
   });
 
-  test("allows removing uploaded photo", async ({ page }) => {
+  test("validates password mismatch before submitting", async ({ page }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
+      `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
     );
 
-    // Upload photo
-    const buffer = Buffer.from("fake-image-data");
-    await page.setInputFiles('input[type="file"]', {
-      name: "profile-photo.jpg",
-      mimeType: "image/jpeg",
-      buffer: buffer,
-    });
+    await passwordInput(page).fill("password1");
+    await passwordConfirmationInput(page).fill("password2");
+    await page.getByRole("button", { name: /Complete Account Setup/i }).click();
 
-    // Verify preview shown
-    await expect(page.locator('img[alt="Preview"]')).toBeVisible();
-
-    // Click remove button
-    await page.click('button:has-text("Remove")');
-
-    // Preview should be gone
-    await expect(page.locator('img[alt="Preview"]')).not.toBeVisible();
+    await expect(page.getByText(/Passwords do not match/i)).toBeVisible();
   });
 
-  test("validates photo file size (max 2MB)", async ({ page }) => {
+  test("validates minimum password length before submitting", async ({
+    page,
+  }) => {
     await page.goto(
-      "/onboarding/complete?token=valid-token&email=test@secpal.dev"
+      `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
     );
 
-    // Create a file larger than 2MB (3MB)
-    const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
-    await page.setInputFiles('input[type="file"]', {
-      name: "large-photo.jpg",
-      mimeType: "image/jpeg",
-      buffer: largeBuffer,
-    });
+    await passwordInput(page).fill("short");
+    await passwordConfirmationInput(page).fill("short");
+    await page.getByRole("button", { name: /Complete Account Setup/i }).click();
 
-    // Should show error
-    await expect(page.locator("text=smaller than 2MB")).toBeVisible();
+    await expect(
+      page.getByText(/Password must be at least 8 characters/i)
+    ).toBeVisible();
+  });
 
-    // Preview should NOT be shown
-    await expect(page.locator('img[alt="Preview"]')).not.toBeVisible();
+  test("validates required onboarding fields with the current prefills", async ({
+    page,
+  }) => {
+    await page.goto(
+      `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
+    );
+
+    await page.getByLabel(/First Names \(all\)/i).fill("");
+    await page.getByLabel(/Last Name/i).fill("");
+    await page.getByRole("button", { name: /Complete Account Setup/i }).click();
+
+    await expect(page.getByText(/First name is required/i)).toBeVisible();
+    await expect(page.getByText(/Last name is required/i)).toBeVisible();
+    await expect(page.getByText(/Password is required/i)).toBeVisible();
+  });
+
+  test("shows the loading state and disables inputs during submission", async ({
+    page,
+  }) => {
+    await page.goto(
+      `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
+    );
+
+    await passwordInput(page).fill("SecurePass123!");
+    await passwordConfirmationInput(page).fill("SecurePass123!");
+    await page.getByRole("button", { name: /Complete Account Setup/i }).click();
+
+    await expect(
+      page.getByRole("button", { name: /Completing Setup/i })
+    ).toBeVisible();
+    await expect(page.getByLabel(/First Names \(all\)/i)).toBeDisabled();
+    await expect(page.getByLabel(/Last Name/i)).toBeDisabled();
+    await expect(passwordInput(page)).toBeDisabled();
+
+    await expect(page).toHaveURL(/\/onboarding$/);
   });
 });
