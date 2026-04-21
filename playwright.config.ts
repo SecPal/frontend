@@ -46,10 +46,12 @@ const BASE_URL =
 const isRemoteTarget =
   process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
 
+const usesSingleWorker = Boolean(process.env.CI) || isRemoteTarget;
+
 const chromiumLaunchOptions = isRemoteTarget
   ? {
-      args: ["--remote-debugging-port=9222"],
-    }
+    args: ["--remote-debugging-port=9222"],
+  }
   : undefined;
 
 export default defineConfig({
@@ -68,16 +70,16 @@ export default defineConfig({
   // Retry on CI only (flaky tests should be fixed, not retried locally)
   retries: process.env.CI ? 2 : 0,
 
-  // Limit parallel workers on CI to avoid resource contention
-  workers: process.env.CI ? 1 : undefined,
+  // Remote and CI targets share fixed external resources, so serialize them.
+  workers: usesSingleWorker ? 1 : undefined,
 
   // Reporter configuration
   reporter: process.env.CI
     ? [
-        ["html", { open: "never" }],
-        ["list"],
-        ["json", { outputFile: "test-results.json" }],
-      ]
+      ["html", { open: "never" }],
+      ["list"],
+      ["json", { outputFile: "test-results.json" }],
+    ]
     : [["html", { open: "never" }], ["list"]],
 
   // Shared settings for all projects
@@ -129,23 +131,23 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build && npm run preview",
-          env: {
-            ...process.env,
-            VITE_API_URL: "http://localhost:4173",
-          },
-          url: "http://localhost:4173",
-          reuseExistingServer: false,
-          timeout: 120_000,
-        }
-      : {
-          command: "npm run dev",
-          env: {
-            ...process.env,
-            VITE_API_URL: "",
-          },
-          url: "http://localhost:5173",
-          reuseExistingServer: true, // Reuse if already running
-          timeout: 30_000,
+        command: "npm run build && npm run preview",
+        env: {
+          ...process.env,
+          VITE_API_URL: "http://localhost:4173",
         },
+        url: "http://localhost:4173",
+        reuseExistingServer: false,
+        timeout: 120_000,
+      }
+      : {
+        command: "npm run dev",
+        env: {
+          ...process.env,
+          VITE_API_URL: "",
+        },
+        url: "http://localhost:5173",
+        reuseExistingServer: true, // Reuse if already running
+        timeout: 30_000,
+      },
 });

@@ -61,6 +61,15 @@ describe("playwright config", () => {
     });
   });
 
+  it("serializes remote staging workers so the fixed chromium CDP port does not collide across Playwright launches", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    expect(config.workers).toBe(1);
+  });
+
   it("keeps the local chromium project free of a fixed CDP port so parallel E2E workers do not collide", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
