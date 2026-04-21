@@ -43,6 +43,20 @@ describe("config", () => {
     );
   });
 
+  it("rejects loopback API origins in production builds", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "VITE_API_URL must not point to a loopback or local preview origin in production"
+    );
+    expect(() => buildApiUrl("/v1/me")).toThrow(
+      "VITE_API_URL must not point to a loopback or local preview origin in production"
+    );
+  });
+
   it("accepts deployment-specific absolute production API URLs", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "https://portal.customer.example");

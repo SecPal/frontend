@@ -32,6 +32,17 @@ function isAbsoluteHttpUrl(value: string): boolean {
   }
 }
 
+function isLoopbackApiHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "0.0.0.0" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    /^127(?:\.\d{1,3}){3}$/.test(hostname)
+  );
+}
+
 function normalizeConfiguredApiBaseUrl(value: string): string {
   return stripTrailingSlashes(value.trim());
 }
@@ -66,7 +77,16 @@ export function resolveApiBaseUrl(options?: {
     );
   }
 
-  return new URL(normalizedConfiguredBaseUrl).origin;
+  const normalizedOrigin = new URL(normalizedConfiguredBaseUrl).origin;
+  const normalizedUrl = new URL(normalizedOrigin);
+
+  if (isLoopbackApiHost(normalizedUrl.hostname)) {
+    throw new ApiBaseUrlConfigurationError(
+      "VITE_API_URL must not point to a loopback or local preview origin in production. Use the deployed API origin instead of localhost/127.0.0.1/::1."
+    );
+  }
+
+  return normalizedOrigin;
 }
 
 export const apiConfig = {
