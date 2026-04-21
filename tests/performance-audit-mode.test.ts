@@ -43,12 +43,52 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
+    vi.stubEnv("CHROME_PATH", "/usr/bin/google-chrome-stable");
+    vi.resetModules();
+    const { getConfiguredLighthouseBrowserPath, getPerformanceAuditMode } =
+      await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "https://app.secpal.dev",
+      skipReason: undefined,
+    });
+    expect(getConfiguredLighthouseBrowserPath()).toBe(
+      "/usr/bin/google-chrome-stable"
+    );
+  });
+
+  it("requires an explicit Chrome path for live Lighthouse audits", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
+    vi.stubEnv("CHROME_PATH", "");
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
-      skipReason: undefined,
+      skipReason:
+        "Live Lighthouse audits against https://app.secpal.dev require CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot does not support live HTTPS targets.",
+    });
+  });
+
+  it("rejects the bundled Playwright Chromium snapshot for live Lighthouse audits", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
+    vi.stubEnv(
+      "CHROME_PATH",
+      "/home/secpal/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
+    );
+    vi.resetModules();
+    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "https://app.secpal.dev",
+      skipReason:
+        "Live Lighthouse audits require CHROME_PATH to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.",
     });
   });
 
