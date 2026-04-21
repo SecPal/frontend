@@ -3,6 +3,7 @@
 
 import { defineConfig, devices } from "@playwright/test";
 import {
+  getConfiguredLighthouseBrowserPath,
   LIGHTHOUSE_DEBUG_PORT,
   PREVIEW_BASE_URL,
   shouldEnableLighthouseBrowser,
@@ -53,10 +54,14 @@ const isRemoteTarget =
   process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
 
 const usesSingleWorker = shouldUseSingleWorker();
+const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
 
 const chromiumLaunchOptions = shouldEnableLighthouseBrowser()
   ? {
       args: [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`],
+      ...(lighthouseExecutablePath !== undefined && {
+        executablePath: lighthouseExecutablePath,
+      }),
     }
   : undefined;
 

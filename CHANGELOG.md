@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stopped live Playwright Lighthouse runs from failing with misleading 0-score threshold errors when they use the bundled Playwright Chromium snapshot against `app.secpal.dev`; live audits now require `CHROME_PATH` to point to a stable Chrome/Chromium binary and skip with an explicit capability message until that browser prerequisite is provided, keeping preview performance coverage intact while making issue #932 actionable.
 - Pinned Playwright CI preview builds to the preview origin so mocked browser-session E2E flows no longer drift onto the live API host, enabled Chromium's fixed CDP port for Lighthouse audits, mocked preview smoke auth-bootstrap endpoints so static-preview unauthenticated checks return deterministic 401/ready responses instead of 404 recovery screens, hardened the smoke CLS probe against SPA redirect timing, and corrected the missing Apple touch icon reference in `index.html`.
 - Hardened production API base URL resolution to reject loopback and preview-only origins such as `localhost`, `127.0.0.1`, and `::1`, so shipped frontend builds fail fast instead of deploying with a broken local-preview API endpoint.
 - Serialized remote Playwright workers for `https://app.secpal.dev` targets so Chromium runs that need the fixed Lighthouse CDP port no longer fail intermittently with `Address already in use (98)` during parallel browser launches.
