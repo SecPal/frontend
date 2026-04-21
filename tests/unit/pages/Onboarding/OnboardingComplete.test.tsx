@@ -285,6 +285,8 @@ describe("OnboardingComplete", () => {
       expect(mockLogin).toHaveBeenCalledWith({
         id: "1",
         email: "john@secpal.dev",
+        emailVerified: true,
+        employeeStatus: "pre_contract",
         name: "John Doe",
       });
     });

@@ -29,7 +29,7 @@ msgstr "Welcome to SecPal Onboarding"
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:604
+#: src/pages/Onboarding/OnboardingComplete.tsx:606
 msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 msgstr "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 
@@ -138,7 +138,7 @@ msgstr "Notes"
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:601
+#: src/pages/Onboarding/OnboardingComplete.tsx:603
 msgid "Name Change Detected"
 msgstr "Name Change Detected"
 
@@ -154,7 +154,7 @@ msgstr "Global"
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:830
+#: src/pages/Onboarding/OnboardingComplete.tsx:832
 msgid "Name change too significant. Please contact HR before completing onboarding."
 msgstr "Name change too significant. Please contact HR before completing onboarding."
 
@@ -238,7 +238,7 @@ msgstr "Recovery codes remaining"
 msgid "First name is required"
 msgstr "First name is required"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:687
+#: src/pages/Onboarding/OnboardingComplete.tsx:689
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 
@@ -350,7 +350,7 @@ msgstr "Name"
 msgid "Notifications Enabled"
 msgstr "Notifications Enabled"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:627
+#: src/pages/Onboarding/OnboardingComplete.tsx:629
 msgid "Last Name:"
 msgstr "Last Name:"
 
@@ -417,7 +417,7 @@ msgstr "Customer"
 msgid "User cannot assign OR remove ANY rank (prevents privilege escalation)."
 msgstr "User cannot assign OR remove ANY rank (prevents privilege escalation)."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:356
+#: src/pages/Onboarding/OnboardingComplete.tsx:358
 msgid "Welcome to SecPal! Let's complete your profile."
 msgstr "Welcome to SecPal! Let's complete your profile."
 
@@ -456,7 +456,7 @@ msgstr "Filter by organizational unit"
 msgid "Security Alerts"
 msgstr "Security Alerts"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:760
+#: src/pages/Onboarding/OnboardingComplete.tsx:762
 msgid "Password"
 msgstr "Password"
 
@@ -468,8 +468,8 @@ msgstr "Expires:"
 msgid "Permissions"
 msgstr "Permissions"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:695
-#: src/pages/Onboarding/OnboardingComplete.tsx:735
+#: src/pages/Onboarding/OnboardingComplete.tsx:697
+#: src/pages/Onboarding/OnboardingComplete.tsx:737
 msgid "Original:"
 msgstr "Original:"
 
@@ -494,7 +494,7 @@ msgstr "Provisioning QR code"
 msgid "Ready for setup"
 msgstr "Ready for setup"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:673
+#: src/pages/Onboarding/OnboardingComplete.tsx:675
 msgid "First Names (all)"
 msgstr "First Names (all)"
 
@@ -561,7 +561,7 @@ msgstr "Team Messages"
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:779
+#: src/pages/Onboarding/OnboardingComplete.tsx:781
 msgid "Minimum 8 characters"
 msgstr "Minimum 8 characters"
 
@@ -603,7 +603,7 @@ msgstr "No customers found"
 msgid "Page Not Found"
 msgstr "Page Not Found"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:664
+#: src/pages/Onboarding/OnboardingComplete.tsx:666
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
@@ -700,7 +700,7 @@ msgstr "Allow user to view/edit their own HR data"
 msgid "Minimum Viewable Rank"
 msgstr "Minimum Viewable Rank"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:821
+#: src/pages/Onboarding/OnboardingComplete.tsx:823
 msgid "Completing Setup..."
 msgstr "Completing Setup..."
 
@@ -762,7 +762,7 @@ msgstr "Generate the initial export to move this employee into the pending BWR s
 #: src/pages/Customers/CustomerEdit.tsx:311
 #: src/pages/Employees/EmployeeCreate.tsx:952
 #: src/pages/Employees/EmployeeEdit.tsx:607
-#: src/pages/Onboarding/OnboardingComplete.tsx:653
+#: src/pages/Onboarding/OnboardingComplete.tsx:655
 #: src/pages/Settings/SettingsPage.tsx:796
 #: src/pages/Settings/SettingsPage.tsx:869
 #: src/pages/Settings/SettingsPage.tsx:976
@@ -1192,7 +1192,7 @@ msgstr "Choose your preferred language for the application."
 msgid "All units"
 msgstr "All units"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:613
+#: src/pages/Onboarding/OnboardingComplete.tsx:615
 msgid "First Name:"
 msgstr "First Name:"
 
@@ -1371,7 +1371,7 @@ msgstr "Verify your email address"
 msgid "Unknown status"
 msgstr "Unknown status"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:504
+#: src/pages/Onboarding/OnboardingComplete.tsx:506
 msgid "Too Many Attempts"
 msgstr "Too Many Attempts"
 
@@ -1391,8 +1391,8 @@ msgstr "No sites found"
 msgid "{label}: Valid"
 msgstr "{label}: Valid"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:400
-#: src/pages/Onboarding/OnboardingComplete.tsx:408
+#: src/pages/Onboarding/OnboardingComplete.tsx:402
+#: src/pages/Onboarding/OnboardingComplete.tsx:410
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Failed to complete onboarding. Please try again or contact support."
 
@@ -1413,7 +1413,7 @@ msgstr "Complete on your device…"
 msgid "Management level must be between 1 and 255"
 msgstr "Management level must be between 1 and 255"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:555
+#: src/pages/Onboarding/OnboardingComplete.tsx:557
 msgid "Validating your link..."
 msgstr "Validating your link..."
 
@@ -1805,7 +1805,7 @@ msgstr "Temporary"
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:786
+#: src/pages/Onboarding/OnboardingComplete.tsx:788
 msgid "Confirm Password"
 msgstr "Confirm Password"
 
@@ -1932,7 +1932,7 @@ msgstr "Sites"
 msgid "Causer"
 msgstr "Causer"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:528
+#: src/pages/Onboarding/OnboardingComplete.tsx:530
 msgid "Try Again"
 msgstr "Try Again"
 
@@ -1978,11 +1978,11 @@ msgstr "Warning"
 msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 msgstr "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:506
+#: src/pages/Onboarding/OnboardingComplete.tsx:508
 msgid "Invalid Link"
 msgstr "Invalid Link"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:574
+#: src/pages/Onboarding/OnboardingComplete.tsx:576
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
 
@@ -2042,7 +2042,7 @@ msgstr "View your account information."
 msgid "Failed to delete organizational unit"
 msgstr "Failed to delete organizational unit"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:823
+#: src/pages/Onboarding/OnboardingComplete.tsx:825
 msgid "Complete Account Setup"
 msgstr "Complete Account Setup"
 
@@ -2090,7 +2090,7 @@ msgstr "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
 msgid "Branch"
 msgstr "Branch"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx:577
+#: src/pages/Onboarding/OnboardingComplete.tsx:579
 msgid "Complete your account setup to get started"
 msgstr "Complete your account setup to get started"
 
@@ -2244,7 +2244,7 @@ msgstr "Street"
 
 #: src/pages/Employees/EmployeeCreate.tsx:499
 #: src/pages/Employees/EmployeeEdit.tsx:345
-#: src/pages/Onboarding/OnboardingComplete.tsx:720
+#: src/pages/Onboarding/OnboardingComplete.tsx:722
 msgid "Last Name"
 msgstr "Last Name"
 
@@ -2444,7 +2444,7 @@ msgstr "Loading documents..."
 
 #: src/components/RouteGuardState.tsx:71
 #: src/components/RouteGuardState.tsx:160
-#: src/pages/Onboarding/OnboardingComplete.tsx:532
+#: src/pages/Onboarding/OnboardingComplete.tsx:534
 msgid "Go to Login"
 msgstr "Go to Login"
 
