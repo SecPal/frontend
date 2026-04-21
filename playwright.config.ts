@@ -50,8 +50,8 @@ const usesSingleWorker = Boolean(process.env.CI) || isRemoteTarget;
 
 const chromiumLaunchOptions = isRemoteTarget
   ? {
-    args: ["--remote-debugging-port=9222"],
-  }
+      args: ["--remote-debugging-port=9222"],
+    }
   : undefined;
 
 export default defineConfig({
@@ -76,10 +76,10 @@ export default defineConfig({
   // Reporter configuration
   reporter: process.env.CI
     ? [
-      ["html", { open: "never" }],
-      ["list"],
-      ["json", { outputFile: "test-results.json" }],
-    ]
+        ["html", { open: "never" }],
+        ["list"],
+        ["json", { outputFile: "test-results.json" }],
+      ]
     : [["html", { open: "never" }], ["list"]],
 
   // Shared settings for all projects
@@ -131,23 +131,23 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-        command: "npm run build && npm run preview",
-        env: {
-          ...process.env,
-          VITE_API_URL: "http://localhost:4173",
-        },
-        url: "http://localhost:4173",
-        reuseExistingServer: false,
-        timeout: 120_000,
-      }
+          command: "npm run build && npm run preview",
+          env: {
+            ...process.env,
+            VITE_API_URL: "http://localhost:4173",
+          },
+          url: "http://localhost:4173",
+          reuseExistingServer: false,
+          timeout: 120_000,
+        }
       : {
-        command: "npm run dev",
-        env: {
-          ...process.env,
-          VITE_API_URL: "",
+          command: "npm run dev",
+          env: {
+            ...process.env,
+            VITE_API_URL: "",
+          },
+          url: "http://localhost:5173",
+          reuseExistingServer: true, // Reuse if already running
+          timeout: 30_000,
         },
-        url: "http://localhost:5173",
-        reuseExistingServer: true, // Reuse if already running
-        timeout: 30_000,
-      },
 });
