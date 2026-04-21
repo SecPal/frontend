@@ -3,6 +3,7 @@
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
+export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
 
 type PerformanceAuditMode = {
   baseUrl: string;
@@ -13,6 +14,15 @@ const hasExplicitLighthouseMode = () =>
   process.env.PLAYWRIGHT_LIGHTHOUSE === "1";
 
 const isLiveHttpsTarget = (baseUrl: string) => baseUrl.startsWith("https://");
+
+const isPlaywrightBundledChromiumPath = (browserPath: string) =>
+  /(^|[/\\])ms-playwright([/\\]|$)/.test(browserPath);
+
+export const getConfiguredLighthouseBrowserPath = () => {
+  const browserPath = process.env[LIGHTHOUSE_BROWSER_PATH_ENV_VAR]?.trim();
+
+  return browserPath ? browserPath : undefined;
+};
 
 export const shouldEnableLighthouseBrowser = () => hasExplicitLighthouseMode();
 
@@ -48,6 +58,24 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
       skipReason:
         "Live Lighthouse audits require PLAYWRIGHT_LIVE_LIGHTHOUSE=1 until issue #957 is resolved.",
     };
+  }
+
+  if (isLiveHttpsTarget(baseUrl)) {
+    const browserPath = getConfiguredLighthouseBrowserPath();
+
+    if (!browserPath) {
+      return {
+        baseUrl,
+        skipReason: `Live Lighthouse audits require ${LIGHTHOUSE_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot currently aborts with FAILED_DOCUMENT_REQUEST on app.secpal.dev.`,
+      };
+    }
+
+    if (isPlaywrightBundledChromiumPath(browserPath)) {
+      return {
+        baseUrl,
+        skipReason: `Live Lighthouse audits require ${LIGHTHOUSE_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.`,
+      };
+    }
   }
 
   return { baseUrl, skipReason: undefined };
