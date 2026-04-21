@@ -27,4 +27,62 @@ describe("playwright config", () => {
     expect(webServer?.url).toBe("http://localhost:5173");
     expect(webServer?.env?.VITE_API_URL).toBe("");
   });
+
+  it("pins the CI preview build to the preview origin for mocked browser-session E2E coverage", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer).toBeDefined();
+    expect(webServer?.command).toBe(
+      "npm run build -- --mode preview && npm run preview"
+    );
+    expect(webServer?.url).toBe("http://localhost:4173");
+    expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
+  });
+
+  it("launches the chromium project with a fixed CDP port for Lighthouse audits", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const chromiumProject = config.projects?.find(
+      (project) => project.name === "chromium"
+    );
+
+    expect(chromiumProject).toBeDefined();
+    expect(chromiumProject?.use.launchOptions).toEqual({
+      args: ["--remote-debugging-port=9222"],
+    });
+  });
+
+  it("serializes remote staging workers so the fixed chromium CDP port does not collide across Playwright launches", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    expect(config.workers).toBe(1);
+  });
+
+  it("keeps the local chromium project free of a fixed CDP port so parallel E2E workers do not collide", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const chromiumProject = config.projects?.find(
+      (project) => project.name === "chromium"
+    );
+
+    expect(chromiumProject).toBeDefined();
+    expect(chromiumProject?.use.launchOptions).toBeUndefined();
+  });
 });

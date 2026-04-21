@@ -46,6 +46,14 @@ const BASE_URL =
 const isRemoteTarget =
   process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
 
+const usesSingleWorker = Boolean(process.env.CI) || isRemoteTarget;
+
+const chromiumLaunchOptions = isRemoteTarget
+  ? {
+      args: ["--remote-debugging-port=9222"],
+    }
+  : undefined;
+
 export default defineConfig({
   // Global setup - logs in once and saves session state
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -62,8 +70,8 @@ export default defineConfig({
   // Retry on CI only (flaky tests should be fixed, not retried locally)
   retries: process.env.CI ? 2 : 0,
 
-  // Limit parallel workers on CI to avoid resource contention
-  workers: process.env.CI ? 1 : undefined,
+  // Remote and CI targets share fixed external resources, so serialize them.
+  workers: usesSingleWorker ? 1 : undefined,
 
   // Reporter configuration
   reporter: process.env.CI
@@ -95,6 +103,7 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        launchOptions: chromiumLaunchOptions,
       },
     },
     // Mobile Chrome for responsive testing
@@ -122,7 +131,11 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build && npm run preview",
+          command: "npm run build -- --mode preview && npm run preview",
+          env: {
+            ...process.env,
+            VITE_API_URL: "http://localhost:4173",
+          },
           url: "http://localhost:4173",
           reuseExistingServer: false,
           timeout: 120_000,
