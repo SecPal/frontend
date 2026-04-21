@@ -1,8 +1,13 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./auth.setup";
 import { playAudit } from "playwright-lighthouse";
+import {
+  getPerformanceAuditMode,
+  LIGHTHOUSE_DEBUG_PORT,
+} from "./performance-mode";
+import { LIGHTHOUSE_AUDIT_CONFIG } from "./lighthouse-audit-config";
 
 /**
  * Performance Tests with Lighthouse Integration
@@ -13,21 +18,20 @@ import { playAudit } from "playwright-lighthouse";
  * Note: These tests require Chromium with remote debugging enabled.
  * The playwright.config.ts already configures this.
  *
- * IMPORTANT: These tests are designed for staging/production environments.
+ * IMPORTANT: These tests are designed for production-like builds.
  * Dev server performance will be significantly lower due to:
  * - No code minification
  * - No tree-shaking
  * - Source maps enabled
  * - HMR overhead
  *
- * Run with: npm run test:e2e:staging (uses https://app.secpal.dev)
+ * Default run: npm run test:e2e:performance (uses the local preview build)
+ * Live opt-in: npm run test:e2e:performance:staging
  *
  * @see Issue #309 - Playwright performance tests for local development
  */
 
-// Only run against staging/production (remote HTTPS targets)
-const isRemoteTarget =
-  process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
+const performanceAuditMode = getPerformanceAuditMode();
 
 // Performance thresholds based on Core Web Vitals
 const PERFORMANCE_THRESHOLDS = {
@@ -37,10 +41,11 @@ const PERFORMANCE_THRESHOLDS = {
 };
 
 test.describe("Lighthouse Performance Audits", () => {
-  // Skip unless running against staging/production
+  // Skip unless running against an explicit preview or live target.
   test.skip(
-    () => !isRemoteTarget,
-    "Performance tests only run against staging (npm run test:e2e:staging)"
+    () => Boolean(performanceAuditMode.skipReason),
+    performanceAuditMode.skipReason ??
+      "Performance audits require an explicit preview or live Lighthouse target"
   );
 
   // Only run on chromium (Lighthouse requires Chrome DevTools Protocol)
@@ -50,7 +55,7 @@ test.describe("Lighthouse Performance Audits", () => {
   );
 
   test("should meet performance thresholds on home page", async ({
-    page,
+    authenticatedPage: page,
   }, testInfo) => {
     // Navigate to the page first
     await page.goto("/");
@@ -59,7 +64,8 @@ test.describe("Lighthouse Performance Audits", () => {
     // Run Lighthouse audit
     const result = await playAudit({
       page,
-      port: 9222,
+      port: LIGHTHOUSE_DEBUG_PORT,
+      config: LIGHTHOUSE_AUDIT_CONFIG,
       thresholds: PERFORMANCE_THRESHOLDS,
       reports: {
         formats: {
@@ -76,13 +82,16 @@ test.describe("Lighthouse Performance Audits", () => {
     );
   });
 
-  test("should have good Core Web Vitals", async ({ page }, testInfo) => {
+  test("should have good Core Web Vitals", async ({
+    authenticatedPage: page,
+  }, testInfo) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
     const result = await playAudit({
       page,
-      port: 9222,
+      port: LIGHTHOUSE_DEBUG_PORT,
+      config: LIGHTHOUSE_AUDIT_CONFIG,
       thresholds: PERFORMANCE_THRESHOLDS,
       reports: {
         formats: {

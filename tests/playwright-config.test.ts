@@ -28,9 +28,10 @@ describe("playwright config", () => {
     expect(webServer?.env?.VITE_API_URL).toBe("");
   });
 
-  it("pins the CI preview build to the preview origin for mocked browser-session E2E coverage", async () => {
+  it("pins the CI preview server to the local preview origin for browser-session audits", async () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
@@ -47,9 +48,10 @@ describe("playwright config", () => {
     expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
   });
 
-  it("launches the chromium project with a fixed CDP port for Lighthouse audits", async () => {
-    vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+  it("enables a fixed chromium CDP port for preview Lighthouse audits when explicitly requested", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
@@ -58,23 +60,17 @@ describe("playwright config", () => {
     );
 
     expect(chromiumProject).toBeDefined();
-    expect(chromiumProject?.use.launchOptions).toEqual({
+    expect(chromiumProject?.use).toBeDefined();
+    expect(chromiumProject?.use?.launchOptions).toEqual({
       args: ["--remote-debugging-port=9222"],
     });
-  });
-
-  it("serializes remote staging workers so the fixed chromium CDP port does not collide across Playwright launches", async () => {
-    vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
-    vi.resetModules();
-    const { default: config } = await import("../playwright.config");
-
     expect(config.workers).toBe(1);
   });
 
-  it("keeps the local chromium project free of a fixed CDP port so parallel E2E workers do not collide", async () => {
-    vi.stubEnv("CI", "");
+  it("does not pin a fixed chromium CDP port for routine CI preview smoke runs", async () => {
+    vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
@@ -83,6 +79,7 @@ describe("playwright config", () => {
     );
 
     expect(chromiumProject).toBeDefined();
-    expect(chromiumProject?.use.launchOptions).toBeUndefined();
+    expect(chromiumProject?.use).toBeDefined();
+    expect(chromiumProject?.use?.launchOptions).toBeUndefined();
   });
 });
