@@ -69,7 +69,7 @@ describe("performance audit mode", () => {
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
       skipReason:
-        "Live Lighthouse audits require CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot currently aborts with FAILED_DOCUMENT_REQUEST on app.secpal.dev.",
+        "Live Lighthouse audits against https://app.secpal.dev require CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot does not support live HTTPS targets.",
     });
   });
 

@@ -66,7 +66,7 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
     if (!browserPath) {
       return {
         baseUrl,
-        skipReason: `Live Lighthouse audits require ${LIGHTHOUSE_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot currently aborts with FAILED_DOCUMENT_REQUEST on app.secpal.dev.`,
+        skipReason: `Live Lighthouse audits against ${baseUrl} require ${LIGHTHOUSE_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot does not support live HTTPS targets.`,
       };
     }
 

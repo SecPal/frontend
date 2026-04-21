@@ -59,7 +59,9 @@ const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
 const chromiumLaunchOptions = shouldEnableLighthouseBrowser()
   ? {
       args: [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`],
-      executablePath: lighthouseExecutablePath,
+      ...(lighthouseExecutablePath !== undefined && {
+        executablePath: lighthouseExecutablePath,
+      }),
     }
   : undefined;
 
