@@ -34,35 +34,32 @@ function isExecutionContextDestroyed(error: unknown): boolean {
 async function readPersistedLogoutState(
   page: Page
 ): Promise<PersistedLogoutState> {
-  return page.evaluate(
-    async (offlineSessionStatePath) => {
-      const cacheNames = "caches" in globalThis ? await caches.keys() : [];
-      let offlineSessionState: unknown = null;
+  return page.evaluate(async (offlineSessionStatePath) => {
+    const cacheNames = "caches" in globalThis ? await caches.keys() : [];
+    let offlineSessionState: unknown = null;
 
-      if ("caches" in globalThis && cacheNames.includes("auth-session-state")) {
-        const cache = await caches.open("auth-session-state");
-        const response = await cache.match(
-          new URL(offlineSessionStatePath, window.location.origin).toString()
-        );
+    if ("caches" in globalThis && cacheNames.includes("auth-session-state")) {
+      const cache = await caches.open("auth-session-state");
+      const response = await cache.match(
+        new URL(offlineSessionStatePath, window.location.origin).toString()
+      );
 
-        offlineSessionState = response ? await response.json() : null;
-      }
+      offlineSessionState = response ? await response.json() : null;
+    }
 
-      const indexedDbNames =
-        typeof indexedDB.databases === "function"
-          ? (await indexedDB.databases()).map((database) => database.name)
-          : null;
+    const indexedDbNames =
+      typeof indexedDB.databases === "function"
+        ? (await indexedDB.databases()).map((database) => database.name)
+        : null;
 
-      return {
-        cacheNames,
-        indexedDbNames,
-        localStorageKeys: Object.keys(localStorage).sort(),
-        offlineSessionState,
-        sessionStorageKeys: Object.keys(sessionStorage).sort(),
-      };
-    },
-    OFFLINE_SESSION_STATE_PATH
-  );
+    return {
+      cacheNames,
+      indexedDbNames,
+      localStorageKeys: Object.keys(localStorage).sort(),
+      offlineSessionState,
+      sessionStorageKeys: Object.keys(sessionStorage).sort(),
+    };
+  }, OFFLINE_SESSION_STATE_PATH);
 }
 
 async function waitForPersistedLogoutState(
@@ -73,7 +70,9 @@ async function waitForPersistedLogoutState(
 
   while (Date.now() < deadline) {
     try {
-      const authUser = await page.evaluate(() => localStorage.getItem("auth_user"));
+      const authUser = await page.evaluate(() =>
+        localStorage.getItem("auth_user")
+      );
       const persistedState = await readPersistedLogoutState(page);
       const indexedDbCleared =
         persistedState.indexedDbNames === null ||
