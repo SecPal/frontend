@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect } from "@playwright/test";
+import { installMockAuthRoutes } from "./offline-live-helpers";
 
 /**
  * Smoke Tests for Critical User Flows
@@ -13,6 +14,18 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("Application Smoke Tests", () => {
+  test.beforeEach(async ({ context }) => {
+    const usesLocalPreviewTarget =
+      Boolean(process.env.CI) &&
+      !(process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false);
+
+    if (!usesLocalPreviewTarget) {
+      return;
+    }
+
+    await installMockAuthRoutes(context);
+  });
+
   test.describe("Page Loading", () => {
     test("should not have JavaScript errors on home page", async ({ page }) => {
       const jsErrors: string[] = [];
@@ -147,34 +160,47 @@ test.describe("Application Smoke Tests", () => {
     });
 
     test("should have no large layout shifts during load", async ({ page }) => {
-      await page.goto("/");
-
-      // Use PerformanceObserver to track CLS
-      await page.evaluate(() => {
-        return new Promise<void>((resolve) => {
+      await page.addInitScript(() => {
+        (window as unknown as {
+          __clsReady?: Promise<void>;
+          __clsValue?: number;
+        }).__clsReady = new Promise<void>((resolve) => {
           let clsValue = 0;
           const observer = new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
-              // Layout shift entries have 'value' and 'hadRecentInput' properties
               const shiftEntry = entry as unknown as {
                 value: number;
                 hadRecentInput: boolean;
               };
+
               if (!shiftEntry.hadRecentInput) {
                 clsValue += shiftEntry.value;
               }
             }
           });
+
           observer.observe({ type: "layout-shift", buffered: true });
 
-          // Wait for layout shifts to occur (3s captures initial load)
-          setTimeout(() => {
-            observer.disconnect();
-            (window as unknown as { __clsValue: number }).__clsValue = clsValue;
-            resolve();
-          }, 3000);
+          addEventListener(
+            "load",
+            () => {
+              setTimeout(() => {
+                observer.disconnect();
+                (window as unknown as { __clsValue: number }).__clsValue =
+                  clsValue;
+                resolve();
+              }, 3000);
+            },
+            { once: true }
+          );
         });
       });
+
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await page.evaluate(
+        () => (window as unknown as { __clsReady?: Promise<void> }).__clsReady
+      );
 
       const cls = await page.evaluate(
         () => (window as unknown as { __clsValue: number }).__clsValue || 0

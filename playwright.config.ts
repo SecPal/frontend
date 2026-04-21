@@ -46,6 +46,12 @@ const BASE_URL =
 const isRemoteTarget =
   process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
 
+const chromiumLaunchOptions = isRemoteTarget
+  ? {
+    args: ["--remote-debugging-port=9222"],
+  }
+  : undefined;
+
 export default defineConfig({
   // Global setup - logs in once and saves session state
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -68,10 +74,10 @@ export default defineConfig({
   // Reporter configuration
   reporter: process.env.CI
     ? [
-        ["html", { open: "never" }],
-        ["list"],
-        ["json", { outputFile: "test-results.json" }],
-      ]
+      ["html", { open: "never" }],
+      ["list"],
+      ["json", { outputFile: "test-results.json" }],
+    ]
     : [["html", { open: "never" }], ["list"]],
 
   // Shared settings for all projects
@@ -95,6 +101,7 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        launchOptions: chromiumLaunchOptions,
       },
     },
     // Mobile Chrome for responsive testing
@@ -122,19 +129,23 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build && npm run preview",
-          url: "http://localhost:4173",
-          reuseExistingServer: false,
-          timeout: 120_000,
-        }
-      : {
-          command: "npm run dev",
-          env: {
-            ...process.env,
-            VITE_API_URL: "",
-          },
-          url: "http://localhost:5173",
-          reuseExistingServer: true, // Reuse if already running
-          timeout: 30_000,
+        command: "npm run build && npm run preview",
+        env: {
+          ...process.env,
+          VITE_API_URL: "http://localhost:4173",
         },
+        url: "http://localhost:4173",
+        reuseExistingServer: false,
+        timeout: 120_000,
+      }
+      : {
+        command: "npm run dev",
+        env: {
+          ...process.env,
+          VITE_API_URL: "",
+        },
+        url: "http://localhost:5173",
+        reuseExistingServer: true, // Reuse if already running
+        timeout: 30_000,
+      },
 });
