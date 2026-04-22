@@ -3,6 +3,10 @@
 
 import { test, expect } from "@playwright/test";
 import { installMockAuthRoutes } from "./offline-live-helpers";
+import {
+  filterExpectedSmokeConsoleErrors,
+  type SmokeResponseRecord,
+} from "./smoke-console-errors";
 
 /**
  * Smoke Tests for Critical User Flows
@@ -29,35 +33,16 @@ test.describe("Application Smoke Tests", () => {
   test.describe("Page Loading", () => {
     test("should not have JavaScript errors on home page", async ({ page }) => {
       const jsErrors: string[] = [];
-      // Track the expected auth bootstrap 401 from GET /v1/me so we can allow
-      // exactly its console error without masking other unexpected 401 responses.
-      let authBootstrap401Count = 0;
+      const responses: SmokeResponseRecord[] = [];
+
       page.on("response", (resp) => {
-        if (/\/v1\/me(\?|$)/.test(resp.url()) && resp.status() === 401) {
-          authBootstrap401Count++;
-        }
+        responses.push({ url: resp.url(), status: resp.status() });
       });
 
       // Set up console listener BEFORE navigation to catch all errors
       page.on("console", (msg) => {
         if (msg.type() === "error") {
-          const text = msg.text();
-
-          // Logged-out visits to "/" intentionally trigger the auth bootstrap
-          // probe (GET /v1/me), which returns 401 before the app redirects to
-          // /login. Consume one expected count per occurrence so any other
-          // unexpected 401 still fails the test.
-          if (
-            authBootstrap401Count > 0 &&
-            text.includes(
-              "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
-            )
-          ) {
-            authBootstrap401Count--;
-            return;
-          }
-
-          jsErrors.push(text);
+          jsErrors.push(msg.text());
         }
       });
 
@@ -68,7 +53,9 @@ test.describe("Application Smoke Tests", () => {
       await expect(page).toHaveTitle(/SecPal/);
 
       // No JavaScript errors should occur
-      expect(jsErrors).toHaveLength(0);
+      expect(
+        filterExpectedSmokeConsoleErrors(jsErrors, responses)
+      ).toHaveLength(0);
     });
 
     test("should display login page for unauthenticated users", async ({
