@@ -34,7 +34,7 @@ import { LIGHTHOUSE_AUDIT_CONFIG } from "./lighthouse-audit-config";
 
 const performanceAuditMode = getPerformanceAuditMode();
 
-const PERFORMANCE_THRESHOLDS = getPerformanceAuditThresholds();
+const PERFORMANCE_THRESHOLDS = getPerformanceAuditThresholds(performanceAuditMode.baseUrl);
 
 test.describe("Lighthouse Performance Audits", () => {
   // Skip unless running against an explicit preview or live target.
