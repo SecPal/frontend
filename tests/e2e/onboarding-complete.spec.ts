@@ -185,7 +185,8 @@ async function installRemoteOnboardingFetchMocks(
         }
 
         if (pathname === "/v1/onboarding/submissions") {
-          const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+          const method =
+            init?.method ?? (input instanceof Request ? input.method : "GET");
 
           if (method === "GET") {
             return jsonResponse({
