@@ -137,9 +137,8 @@ describe("performance audit mode", () => {
 
   it("limits Lighthouse audits to the desktop chromium project", async () => {
     vi.resetModules();
-    const { getPerformanceAuditProjectSkipReason } = await import(
-      "./e2e/performance-mode"
-    );
+    const { getPerformanceAuditProjectSkipReason } =
+      await import("./e2e/performance-mode");
 
     expect(
       getPerformanceAuditProjectSkipReason("chromium", "chromium")
@@ -149,8 +148,8 @@ describe("performance audit mode", () => {
     ).toBe(
       "Lighthouse audits only run in the desktop chromium project because mobile-chrome does not expose the fixed CDP port."
     );
-    expect(
-      getPerformanceAuditProjectSkipReason("webkit", "webkit")
-    ).toBe("Lighthouse only works with Chromium");
+    expect(getPerformanceAuditProjectSkipReason("webkit", "webkit")).toBe(
+      "Lighthouse only works with Chromium"
+    );
   });
 });
