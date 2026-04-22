@@ -32,21 +32,8 @@ function passwordConfirmationInput(page: import("@playwright/test").Page) {
 
 async function installRemoteOnboardingFetchMocks(
   context: BrowserContext,
-  responseDelayMs: number,
-  mockDomain: string
+  responseDelayMs: number
 ): Promise<void> {
-  await context.addCookies([
-    {
-      name: "XSRF-TOKEN",
-      value: MOCK_XSRF_TOKEN,
-      domain: mockDomain,
-      path: "/",
-      sameSite: "Lax",
-      secure: true,
-      httpOnly: false,
-    },
-  ]);
-
   await context.addInitScript(
     ({ xsrfToken, validToken, validEmail, template, delayMs }) => {
       const originalFetch = window.fetch.bind(window);
@@ -236,11 +223,7 @@ async function installMockOnboardingRoutes(
   // deterministic onboarding contract spec we therefore mock the public fetches
   // inside the page on remote targets, while keeping route-based mocks locally.
   if (isHttps) {
-    await installRemoteOnboardingFetchMocks(
-      context,
-      responseDelayMs,
-      mockDomain
-    );
+    await installRemoteOnboardingFetchMocks(context, responseDelayMs);
     return;
   }
 
