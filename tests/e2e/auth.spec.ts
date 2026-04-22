@@ -90,8 +90,11 @@ test.describe("Authentication", () => {
       } catch (error) {
         const blockingReason = error instanceof Error ? error.message : "";
 
+        if (!blockingReason.includes("health gate")) {
+          throw error;
+        }
+
         await expect(page.locator("#health-warning")).toBeVisible();
-        expect(blockingReason).toContain("health gate");
         return;
       }
 
