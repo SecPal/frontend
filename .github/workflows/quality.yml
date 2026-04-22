@@ -70,7 +70,8 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5
+        # v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2
         with:
           # Token is optional for public repos (tokenless uploads supported)
           # Dependabot PRs cannot access secrets, so token may be empty
@@ -111,5 +112,5 @@ jobs:
           PLAYWRIGHT_SKIP_GLOBAL_LOGIN: "1"
         run: >-
           npx playwright test tests/e2e/auth.spec.ts --project=chromium --grep
-          "should reject invalid credentials|should redirect to login when
-          accessing protected route without auth"
+          "should surface the current login readiness state on live targets|should
+          resolve protected route auth bootstrap on live targets"
