@@ -121,4 +121,26 @@ describe("config", () => {
       })
     ).toBe("https://api.secpal.dev/v1/me");
   });
+
+  it("resolveApiBaseUrl returns the canonical live origin on app.secpal.dev when a loopback API base leaked into the bundle", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })
+    ).toBe("https://api.secpal.dev");
+  });
+
+  it("resolveApiBaseUrl throws ApiBaseUrlConfigurationError on app.secpal.dev when VITE_API_URL is empty", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl, ApiBaseUrlConfigurationError } = await import("./config");
+
+    expect(() =>
+      resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })
+    ).toThrow(ApiBaseUrlConfigurationError);
+  });
 });
