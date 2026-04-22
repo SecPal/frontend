@@ -85,9 +85,7 @@ describe("config", () => {
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(
-      getApiBaseUrl()
-    ).toBe("http://localhost:4173");
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
 
     expect(
       buildApiUrl("/v1/me", {
@@ -115,9 +113,7 @@ describe("config", () => {
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(
-      getApiBaseUrl()
-    ).toBe("https://app.secpal.dev");
+    expect(getApiBaseUrl()).toBe("https://app.secpal.dev");
 
     expect(
       buildApiUrl("/v1/me", {
