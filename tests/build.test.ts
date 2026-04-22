@@ -117,6 +117,31 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
+  it("keeps live Lighthouse CI provisioned with a stable Chrome binary", () => {
+    const liveLighthouseWorkflow = readRepoFile(
+      ".github/workflows/playwright-live-lighthouse.yml"
+    );
+
+    expect(liveLighthouseWorkflow).toContain(
+      "name: Playwright Live Lighthouse"
+    );
+    expect(liveLighthouseWorkflow).toContain(
+      "browser-actions/setup-chrome@3ba2f2bc81ddf8088ecbacdea69d476631049f8b"
+    );
+    expect(liveLighthouseWorkflow).toContain("id: setup-chrome");
+    expect(liveLighthouseWorkflow).toContain("chrome-version: stable");
+    expect(liveLighthouseWorkflow).toContain(
+      "CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}"
+    );
+    expect(liveLighthouseWorkflow).toContain(
+      "TEST_USER_EMAIL: test@example.com"
+    );
+    expect(liveLighthouseWorkflow).toContain("TEST_USER_PASSWORD: password");
+    expect(liveLighthouseWorkflow).toContain(
+      "npm run test:e2e:performance:staging"
+    );
+  });
+
   it("keeps vite-plugin-static-copy configured for assetlinks.json", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
