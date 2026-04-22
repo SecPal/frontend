@@ -13,6 +13,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
 import type { AuthenticatedUser, MfaVerificationMethod } from "@/types/api";
+import { messages as deMessages } from "../locales/de/messages.mjs";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 import { Login } from "./Login";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
@@ -138,7 +140,8 @@ describe("Login", () => {
     vi.clearAllMocks();
     localStorage.clear();
     window.history.replaceState({}, "", "/login");
-    i18n.load("en", {});
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
     i18n.activate("en");
     // Default: health check passes
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
@@ -437,6 +440,55 @@ describe("Login", () => {
         await screen.findByText(/native passkey crashed/i)
       ).toBeInTheDocument();
     } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("localizes native passkey cancellation errors with the active locale", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi
+        .fn()
+        .mockRejectedValue(new Error("Passkey sign-in was cancelled.")),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      act(() => {
+        i18n.activate("de");
+      });
+
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /mit passkey anmelden/i })
+      );
+
+      expect(
+        await screen.findByText(/die passkey-anmeldung wurde abgebrochen/i)
+      ).toBeInTheDocument();
+    } finally {
+      act(() => {
+        i18n.activate("en");
+      });
+
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
       } else {

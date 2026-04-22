@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Localized the shared login-page passkey sign-in cancellation, timeout, provider-availability, and fallback messages so the Android native Credential Manager path no longer falls back to English on German devices after a cancelled passkey prompt, resolving frontend issue #978.
 - Split the live no-secret Playwright auth smoke away from the deterministic local invalid-credential and hard-login-redirect assertions, so `app.secpal.dev` now validates the shipped health-gated login state and browser-session protected-route recovery flow instead of failing on outdated assumptions, resolving frontend issue #975.
 - Shifted the remote `onboarding-complete` Playwright suite from pure network-route mocks to a page-level fetch shim for the deterministic public onboarding endpoints, so live runs against `app.secpal.dev` no longer collapse into CSP-blocked `Failed to fetch` invalid-link screens when the deployed app points public onboarding traffic at a broken absolute API origin, resolving frontend issue #933.
 - Added a runtime guard for the live `app.secpal.dev` host so leaked preview-mode or loopback API bases such as `http://localhost:4173`, relative `/api`, or the SPA host itself now collapse back to the canonical `https://api.secpal.dev` origin instead of shipping CSP-blocked `/v1/me` bootstrap traffic, addressing frontend issue #973.
