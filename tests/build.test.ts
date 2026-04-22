@@ -134,9 +134,11 @@ describe("Build Configuration and Source Verification", () => {
       "CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}"
     );
     expect(liveLighthouseWorkflow).toContain(
-      "TEST_USER_EMAIL: test@example.com"
+      "TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}"
     );
-    expect(liveLighthouseWorkflow).toContain("TEST_USER_PASSWORD: password");
+    expect(liveLighthouseWorkflow).toContain(
+      "TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}"
+    );
     expect(liveLighthouseWorkflow).toContain(
       "npm run test:e2e:performance:staging"
     );

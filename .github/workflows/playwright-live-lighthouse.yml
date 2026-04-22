@@ -47,6 +47,6 @@ jobs:
         env:
           CI: "true"
           CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
-          TEST_USER_EMAIL: test@example.com
-          TEST_USER_PASSWORD: password
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: npm run test:e2e:performance:staging
