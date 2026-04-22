@@ -5,6 +5,17 @@ export const PREVIEW_BASE_URL = "http://localhost:4173";
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
 export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
 
+export const DEFAULT_LIGHTHOUSE_THRESHOLDS = {
+  performance: 90,
+  accessibility: 90,
+  "best-practices": 90,
+} as const;
+
+export const LIVE_LIGHTHOUSE_THRESHOLDS = {
+  ...DEFAULT_LIGHTHOUSE_THRESHOLDS,
+  performance: 85,
+} as const;
+
 type PerformanceAuditMode = {
   baseUrl: string;
   skipReason?: string;
@@ -23,6 +34,14 @@ export const getConfiguredLighthouseBrowserPath = () => {
 
   return browserPath ? browserPath : undefined;
 };
+
+export const getPerformanceAuditThresholds = (
+  baseUrl = process.env.PLAYWRIGHT_BASE_URL ||
+    (process.env.CI ? PREVIEW_BASE_URL : "")
+) =>
+  isLiveHttpsTarget(baseUrl)
+    ? LIVE_LIGHTHOUSE_THRESHOLDS
+    : DEFAULT_LIGHTHOUSE_THRESHOLDS;
 
 export const shouldEnableLighthouseBrowser = () => hasExplicitLighthouseMode();
 
