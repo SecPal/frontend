@@ -51,6 +51,7 @@ jobs:
   vitest:
     name: Vitest Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
 
     steps:

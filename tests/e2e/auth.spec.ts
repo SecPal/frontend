@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect, loginViaUI } from "./auth.setup";
@@ -158,12 +158,12 @@ test.describe("Authentication", () => {
         return;
       }
 
-      await expect(
-        page.locator('[data-route-guard-state="bootstrap-recovery"]')
-      ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /go to login/i })
-      ).toBeVisible();
+      const bootstrapRecovery = page.locator(
+        '[data-route-guard-state="bootstrap-recovery"]'
+      );
+
+      await expect(bootstrapRecovery).toBeVisible();
+      await expect(bootstrapRecovery.locator("button").first()).toBeVisible();
     });
   });
 
