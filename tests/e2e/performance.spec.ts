@@ -5,6 +5,7 @@ import { test, expect } from "./auth.setup";
 import { playAudit } from "playwright-lighthouse";
 import {
   getPerformanceAuditMode,
+  getPerformanceAuditThresholds,
   LIGHTHOUSE_DEBUG_PORT,
 } from "./performance-mode";
 import { LIGHTHOUSE_AUDIT_CONFIG } from "./lighthouse-audit-config";
@@ -33,12 +34,7 @@ import { LIGHTHOUSE_AUDIT_CONFIG } from "./lighthouse-audit-config";
 
 const performanceAuditMode = getPerformanceAuditMode();
 
-// Performance thresholds based on Core Web Vitals
-const PERFORMANCE_THRESHOLDS = {
-  performance: 90,
-  accessibility: 90,
-  "best-practices": 90,
-};
+const PERFORMANCE_THRESHOLDS = getPerformanceAuditThresholds();
 
 test.describe("Lighthouse Performance Audits", () => {
   // Skip unless running against an explicit preview or live target.

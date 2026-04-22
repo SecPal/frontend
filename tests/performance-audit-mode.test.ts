@@ -92,6 +92,34 @@ describe("performance audit mode", () => {
     });
   });
 
+  it("keeps stricter default Lighthouse thresholds for preview audits", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.resetModules();
+    const { getPerformanceAuditThresholds } =
+      await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditThresholds()).toEqual({
+      performance: 90,
+      accessibility: 90,
+      "best-practices": 90,
+    });
+  });
+
+  it("uses a relaxed performance threshold for live Lighthouse targets", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.resetModules();
+    const { getPerformanceAuditThresholds } =
+      await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditThresholds()).toEqual({
+      performance: 85,
+      accessibility: 90,
+      "best-practices": 90,
+    });
+  });
+
   it("skips performance audits when Lighthouse mode was not explicitly requested", async () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
