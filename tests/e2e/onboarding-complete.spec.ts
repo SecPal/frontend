@@ -30,6 +30,198 @@ function passwordConfirmationInput(page: import("@playwright/test").Page) {
   return page.locator('input[name="password_confirmation"]');
 }
 
+async function installRemoteOnboardingFetchMocks(
+  context: BrowserContext,
+  responseDelayMs: number,
+  mockDomain: string
+): Promise<void> {
+  await context.addCookies([
+    {
+      name: "XSRF-TOKEN",
+      value: MOCK_XSRF_TOKEN,
+      domain: mockDomain,
+      path: "/",
+      sameSite: "Lax",
+      secure: true,
+      httpOnly: false,
+    },
+  ]);
+
+  await context.addInitScript(
+    ({ xsrfToken, validToken, validEmail, template, delayMs }) => {
+      const originalFetch = window.fetch.bind(window);
+
+      const jsonResponse = (body: unknown, status = 200) =>
+        new Response(JSON.stringify(body), {
+          status,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+      const emptyResponse = (status = 204) =>
+        new Response(null, {
+          status,
+        });
+
+      const resolveUrl = (input: RequestInfo | URL) => {
+        if (typeof input === "string") {
+          return new URL(input, window.location.origin);
+        }
+
+        if (input instanceof URL) {
+          return input;
+        }
+
+        return new URL(input.url, window.location.origin);
+      };
+
+      const readRequestBody = async (
+        input: RequestInfo | URL,
+        init?: RequestInit
+      ) => {
+        const directBody = init?.body;
+
+        if (typeof directBody === "string") {
+          return directBody;
+        }
+
+        if (input instanceof Request) {
+          return input.clone().text();
+        }
+
+        return "";
+      };
+
+      document.cookie = `XSRF-TOKEN=${encodeURIComponent(xsrfToken)}; path=/; SameSite=Lax`;
+
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = resolveUrl(input);
+        const pathname = url.pathname;
+
+        if (pathname === "/sanctum/csrf-cookie") {
+          document.cookie = `XSRF-TOKEN=${encodeURIComponent(xsrfToken)}; path=/; SameSite=Lax`;
+          return emptyResponse();
+        }
+
+        if (pathname === "/v1/me") {
+          return jsonResponse({ message: "Unauthenticated." }, 401);
+        }
+
+        if (pathname === "/v1/onboarding/validate-token") {
+          const token = url.searchParams.get("token");
+          const email = url.searchParams.get("email");
+
+          if (token === validToken && email === validEmail) {
+            return jsonResponse({
+              data: {
+                first_name: "John",
+                last_name: "Doe",
+                email: validEmail,
+              },
+            });
+          }
+
+          return jsonResponse(
+            {
+              message: "Invalid or expired onboarding link.",
+            },
+            401
+          );
+        }
+
+        if (pathname === "/v1/onboarding/complete") {
+          const requestBodyText = await readRequestBody(input, init);
+          const requestBody = requestBodyText
+            ? (JSON.parse(requestBodyText) as Record<string, unknown>)
+            : {};
+
+          if (
+            requestBody.token !== validToken ||
+            requestBody.email !== validEmail
+          ) {
+            return jsonResponse(
+              {
+                message: "Invalid or expired onboarding link.",
+                errors: {
+                  token: ["Invalid or expired onboarding link."],
+                },
+              },
+              422
+            );
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+
+          return jsonResponse({
+            message: "Onboarding completed successfully.",
+            data: {
+              user: {
+                id: "user-1",
+                email: validEmail,
+                email_verified: true,
+                name: "John Doe",
+              },
+              employee: {
+                id: "employee-1",
+                first_name: "John",
+                last_name: "Doe",
+                status: "pre_contract",
+              },
+            },
+          });
+        }
+
+        if (pathname === "/v1/onboarding/templates") {
+          return jsonResponse({
+            data: [template],
+          });
+        }
+
+        if (/^\/v1\/onboarding\/templates\/.+/.test(pathname)) {
+          return jsonResponse({
+            data: template,
+          });
+        }
+
+        if (pathname === "/v1/onboarding/submissions") {
+          const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+
+          if (method === "GET") {
+            return jsonResponse({
+              data: [],
+            });
+          }
+
+          return jsonResponse(
+            {
+              data: {
+                id: "submission-1",
+                employee_id: "employee-1",
+                form_template_id: template.id,
+                form_data: {},
+                status: "draft",
+                created_at: "2026-04-20T00:00:00Z",
+                updated_at: "2026-04-20T00:00:00Z",
+              },
+            },
+            201
+          );
+        }
+
+        return originalFetch(input, init);
+      };
+    },
+    {
+      xsrfToken: MOCK_XSRF_TOKEN,
+      validToken: validOnboardingToken,
+      validEmail: validOnboardingEmail,
+      template: onboardingTemplate,
+      delayMs: responseDelayMs,
+    }
+  );
+}
+
 async function installMockOnboardingRoutes(
   context: BrowserContext,
   responseDelayMs = 350
@@ -37,6 +229,19 @@ async function installMockOnboardingRoutes(
   const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
   const isHttps = isRemoteE2ETarget(baseUrl);
   const mockDomain = isHttps ? new URL(baseUrl).hostname : "localhost";
+
+  // Live app.secpal.dev can still ship a broken absolute API origin that the
+  // browser blocks before Playwright network routing sees the request. For the
+  // deterministic onboarding contract spec we therefore mock the public fetches
+  // inside the page on remote targets, while keeping route-based mocks locally.
+  if (isHttps) {
+    await installRemoteOnboardingFetchMocks(
+      context,
+      responseDelayMs,
+      mockDomain
+    );
+    return;
+  }
 
   await context.route("**/sanctum/csrf-cookie", async (route) => {
     await context.addCookies([
@@ -53,9 +258,8 @@ async function installMockOnboardingRoutes(
     await route.fulfill({
       status: 204,
       headers: {
-        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${
-          isHttps ? "; Secure" : ""
-        }`,
+        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${isHttps ? "; Secure" : ""
+          }`,
       },
       body: "",
     });
