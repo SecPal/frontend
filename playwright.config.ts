@@ -3,6 +3,7 @@
 
 import { defineConfig, devices } from "@playwright/test";
 import {
+  DESKTOP_CHROMIUM_PROJECT_NAME,
   getConfiguredLighthouseBrowserPath,
   LIGHTHOUSE_DEBUG_PORT,
   PREVIEW_BASE_URL,
@@ -111,7 +112,7 @@ export default defineConfig({
   // Configure projects - Chromium only for performance consistency
   projects: [
     {
-      name: "chromium",
+      name: DESKTOP_CHROMIUM_PROJECT_NAME,
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: chromiumLaunchOptions,
