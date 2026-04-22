@@ -1,8 +1,12 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect, loginViaUI } from "./auth.setup";
-import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
+import {
+  isRemoteE2ETarget,
+  waitForAuthResolution,
+  waitForLoginFormReady,
+} from "./auth-helpers";
 import { installMockAuthRoutes } from "./offline-live-helpers";
 
 /**
@@ -42,6 +46,11 @@ test.describe("Authentication", () => {
     });
 
     test("should reject invalid credentials", async ({ page }) => {
+      test.skip(
+        isRemoteE2ETarget(),
+        "Live targets use a dedicated no-secret smoke assertion for the current login gate state."
+      );
+
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
 
@@ -60,6 +69,38 @@ test.describe("Authentication", () => {
       await expect(
         page.getByText(/invalid|incorrect|falsch|ungültig|credentials/i)
       ).toBeVisible({ timeout: 10_000 });
+    });
+
+    test("should surface the current login readiness state on live targets", async ({
+      page,
+    }) => {
+      test.skip(
+        !isRemoteE2ETarget(),
+        "Only relevant for the live no-secret auth smoke on app.secpal.dev."
+      );
+
+      await page.goto("/login");
+      await page.waitForLoadState("networkidle");
+
+      await expect(page.locator("#email")).toBeVisible();
+      await expect(page.locator("#password")).toBeVisible();
+
+      try {
+        await waitForLoginFormReady(page);
+      } catch (error) {
+        const blockingReason = error instanceof Error ? error.message : "";
+
+        if (!blockingReason.includes("health gate")) {
+          throw error;
+        }
+
+        await expect(page.locator("#health-warning")).toBeVisible();
+        return;
+      }
+
+      await expect(
+        page.getByRole("button", { name: /log in|anmelden|einloggen/i })
+      ).toBeEnabled();
     });
 
     test("should logout successfully", async ({ page }) => {
@@ -87,12 +128,45 @@ test.describe("Authentication", () => {
     test("should redirect to login when accessing protected route without auth", async ({
       page,
     }) => {
+      test.skip(
+        isRemoteE2ETarget(),
+        "Live targets can legitimately resolve protected browser-session routes through recovery instead of an immediate login redirect."
+      );
+
       // Try to access protected route directly
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
       // Should redirect to login
       await expect(page).toHaveURL(/\/login/);
+    });
+
+    test("should resolve protected route auth bootstrap on live targets", async ({
+      page,
+    }) => {
+      test.skip(
+        !isRemoteE2ETarget(),
+        "Only relevant for the live no-secret auth smoke on app.secpal.dev."
+      );
+
+      await page.goto("/organization");
+      await page.waitForLoadState("networkidle");
+
+      const authResolution = await waitForAuthResolution(page);
+
+      expect(["login", "recovery"]).toContain(authResolution);
+
+      if (authResolution === "login") {
+        await expect(page).toHaveURL(/\/login/);
+        return;
+      }
+
+      const bootstrapRecovery = page.locator(
+        '[data-route-guard-state="bootstrap-recovery"]'
+      );
+
+      await expect(bootstrapRecovery).toBeVisible();
+      await expect(bootstrapRecovery.locator("button").first()).toBeVisible();
     });
   });
 
