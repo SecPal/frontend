@@ -48,6 +48,21 @@ export const shouldEnableLighthouseBrowser = () => hasExplicitLighthouseMode();
 export const shouldUseSingleWorker = () =>
   Boolean(process.env.CI) || hasExplicitLighthouseMode();
 
+export const getPerformanceAuditProjectSkipReason = (
+  projectName: string,
+  browserName: string
+) => {
+  if (browserName !== "chromium") {
+    return "Lighthouse only works with Chromium";
+  }
+
+  if (projectName !== "chromium") {
+    return "Lighthouse audits only run in the desktop chromium project because mobile-chrome does not expose the fixed CDP port.";
+  }
+
+  return undefined;
+};
+
 export const getPerformanceAuditMode = (): PerformanceAuditMode => {
   const baseUrl =
     process.env.PLAYWRIGHT_BASE_URL || (process.env.CI ? PREVIEW_BASE_URL : "");

@@ -134,4 +134,23 @@ describe("performance audit mode", () => {
         "Performance audits require PLAYWRIGHT_LIGHTHOUSE=1 so Chromium exposes the Lighthouse CDP port.",
     });
   });
+
+  it("limits Lighthouse audits to the desktop chromium project", async () => {
+    vi.resetModules();
+    const { getPerformanceAuditProjectSkipReason } = await import(
+      "./e2e/performance-mode"
+    );
+
+    expect(
+      getPerformanceAuditProjectSkipReason("chromium", "chromium")
+    ).toBeUndefined();
+    expect(
+      getPerformanceAuditProjectSkipReason("mobile-chrome", "chromium")
+    ).toBe(
+      "Lighthouse audits only run in the desktop chromium project because mobile-chrome does not expose the fixed CDP port."
+    );
+    expect(
+      getPerformanceAuditProjectSkipReason("webkit", "webkit")
+    ).toBe("Lighthouse only works with Chromium");
+  });
 });
