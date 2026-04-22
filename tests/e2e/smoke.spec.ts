@@ -53,9 +53,9 @@ test.describe("Application Smoke Tests", () => {
       await expect(page).toHaveTitle(/SecPal/);
 
       // No JavaScript errors should occur
-      expect(filterExpectedSmokeConsoleErrors(jsErrors, responses)).toHaveLength(
-        0
-      );
+      expect(
+        filterExpectedSmokeConsoleErrors(jsErrors, responses)
+      ).toHaveLength(0);
     });
 
     test("should display login page for unauthenticated users", async ({

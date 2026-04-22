@@ -23,9 +23,7 @@ describe("playwright smoke console error filtering", () => {
       [{ url: "https://api.secpal.dev/v1/auth/login", status: 401 }]
     );
 
-    expect(filteredErrors).toEqual([
-      EXPECTED_AUTH_BOOTSTRAP_401_CONSOLE_ERROR,
-    ]);
+    expect(filteredErrors).toEqual([EXPECTED_AUTH_BOOTSTRAP_401_CONSOLE_ERROR]);
   });
 
   it("does not hide real CSP or loopback-origin failures", () => {
