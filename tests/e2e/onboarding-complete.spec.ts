@@ -259,8 +259,9 @@ async function installMockOnboardingRoutes(
     await route.fulfill({
       status: 204,
       headers: {
-        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${isHttps ? "; Secure" : ""
-          }`,
+        "set-cookie": `XSRF-TOKEN=${MOCK_XSRF_TOKEN}; Path=/; SameSite=Lax${
+          isHttps ? "; Secure" : ""
+        }`,
       },
       body: "",
     });
