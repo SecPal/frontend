@@ -18,6 +18,9 @@ export class ApiBaseUrlConfigurationError extends Error {
   }
 }
 
+const LIVE_APP_HOSTNAME = "app.secpal.dev";
+const LIVE_API_ORIGIN = "https://api.secpal.dev";
+
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
 }
@@ -47,15 +50,59 @@ function normalizeConfiguredApiBaseUrl(value: string): string {
   return stripTrailingSlashes(value.trim());
 }
 
+function getRuntimeHostname(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.location.hostname || null;
+}
+
+function shouldUseCanonicalLiveApiOrigin(
+  runtimeHostname: string | null,
+  normalizedConfiguredBaseUrl: string
+): boolean {
+  if (runtimeHostname !== LIVE_APP_HOSTNAME) {
+    return false;
+  }
+
+  if (!normalizedConfiguredBaseUrl) {
+    return false;
+  }
+
+  if (!isAbsoluteHttpUrl(normalizedConfiguredBaseUrl)) {
+    return true;
+  }
+
+  const normalizedOrigin = new URL(normalizedConfiguredBaseUrl).origin;
+  const normalizedHostname = new URL(normalizedOrigin).hostname;
+
+  return (
+    normalizedHostname === LIVE_APP_HOSTNAME ||
+    isLoopbackApiHost(normalizedHostname)
+  );
+}
+
 export function resolveApiBaseUrl(options?: {
   configuredBaseUrl?: string;
   mode?: string;
+  runtimeHostname?: string | null;
 }): string {
   const configuredBaseUrl =
     options?.configuredBaseUrl ?? import.meta.env.VITE_API_URL ?? "";
   const mode = options?.mode ?? import.meta.env.MODE;
+  const runtimeHostname = options?.runtimeHostname ?? getRuntimeHostname();
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
+
+  if (
+    shouldUseCanonicalLiveApiOrigin(
+      runtimeHostname,
+      normalizedConfiguredBaseUrl
+    )
+  ) {
+    return LIVE_API_ORIGIN;
+  }
 
   if (!normalizedConfiguredBaseUrl) {
     if (mode === "production") {
@@ -163,6 +210,7 @@ export function buildApiUrl(
   options?: {
     configuredBaseUrl?: string;
     mode?: string;
+    runtimeHostname?: string | null;
   }
 ): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;

@@ -78,4 +78,70 @@ describe("config", () => {
     expect(getApiBaseUrl()).toBe("https://api.customer.example");
     expect(buildApiUrl("/v1/me")).toBe("https://api.customer.example/v1/me");
   });
+
+  it("falls back to the canonical live API origin on app.secpal.dev when a preview loopback origin leaked into the bundle", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
+
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "app.secpal.dev",
+      })
+    ).toBe("https://api.secpal.dev/v1/me");
+  });
+
+  it("falls back to the canonical live API origin on app.secpal.dev when the bundle kept a relative API base", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_API_URL", "/api");
+
+    const { buildApiUrl } = await import("./config");
+
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "app.secpal.dev",
+      })
+    ).toBe("https://api.secpal.dev/sanctum/csrf-cookie");
+  });
+
+  it("falls back to the canonical live API origin on app.secpal.dev when the bundle points at the SPA host", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://app.secpal.dev");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("https://app.secpal.dev");
+
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "app.secpal.dev",
+      })
+    ).toBe("https://api.secpal.dev/v1/me");
+  });
+
+  it("resolveApiBaseUrl returns the canonical live origin on app.secpal.dev when a loopback API base leaked into the bundle", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })).toBe(
+      "https://api.secpal.dev"
+    );
+  });
+
+  it("resolveApiBaseUrl throws ApiBaseUrlConfigurationError on app.secpal.dev when VITE_API_URL is empty", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl, ApiBaseUrlConfigurationError } =
+      await import("./config");
+
+    expect(() =>
+      resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })
+    ).toThrow(ApiBaseUrlConfigurationError);
+  });
 });
