@@ -149,7 +149,10 @@ describe("performance audit mode", () => {
       )
     ).toBeUndefined();
     expect(
-      getPerformanceAuditProjectSkipReason("mobile-chrome", DESKTOP_CHROMIUM_PROJECT_NAME)
+      getPerformanceAuditProjectSkipReason(
+        "mobile-chrome",
+        DESKTOP_CHROMIUM_PROJECT_NAME
+      )
     ).toBe(
       "Lighthouse audits only run in the desktop chromium project because mobile-chrome does not expose the fixed CDP port."
     );
