@@ -67,7 +67,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
-    "@lingui/core": "^5.9.3",
+    "@lingui/core": "^6.0.0",
     "@lingui/react": "^5.9.3",
     "clsx": "^2.1.1",
     "dexie": "^4.4.2",
