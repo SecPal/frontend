@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useCallback, useMemo, lazy, Suspense, memo } from "react";
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "./button";
 import { SpinnerContainer } from "./spinner";
 import { Badge } from "./badge";

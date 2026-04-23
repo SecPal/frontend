@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeOnboardingInvitationStatus } from "@/types/api";
 import { Badge } from "../../components/badge";

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: CC0-1.0
 
+const { formatter } = require("@lingui/format-po");
+
 /** @type {import('@lingui/conf').LinguiConfig} */
 module.exports = {
   locales: ["en", "de"],
@@ -12,7 +14,7 @@ module.exports = {
       exclude: ["**/*.d.ts"],
     },
   ],
-  format: "po",
+  format: formatter({ lineNumbers: false }),
   // Use messageId ordering to guarantee a deterministic catalog sort.
   // The default "message" ordering is unstable when two entries share the
   // same translated text (e.g. "Cancel" appears as both a generic button

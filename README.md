@@ -252,7 +252,7 @@ Use `npm run i18n:check` before opening a PR when you touched translatable strin
 **Adding Translations:**
 
 ```tsx
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 
 // Simple text
 <Trans>Hello World</Trans>

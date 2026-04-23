@@ -3,7 +3,8 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Trans, msg } from "@lingui/macro";
+import { msg } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";

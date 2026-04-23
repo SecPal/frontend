@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated the frontend Lingui toolchain to the v6-compatible formatter and split macro entry points (`@lingui/core/macro`, `@lingui/react/macro`) so Dependabot Lingui update PRs no longer fail CI on mixed-version `I18n` types, stale `@lingui/macro` extraction, or the removed `format: "po"` setting.
 - Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 - Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
