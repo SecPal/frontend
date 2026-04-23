@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";

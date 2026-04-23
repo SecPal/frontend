@@ -3,7 +3,7 @@
 
 import { useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { getAuthTransport } from "../services/authTransport";

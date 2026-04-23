@@ -8,7 +8,8 @@
 
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Trans, msg } from "@lingui/macro";
+import { msg } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { listSites } from "../../services/customersApi";
 import type { Site, SiteFilters } from "../../types/customers";

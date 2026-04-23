@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Trans, msg } from "@lingui/macro";
+import { msg } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeFormData, EmployeeStatus } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";

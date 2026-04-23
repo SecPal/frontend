@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { useAuth } from "../../hooks/useAuth";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";

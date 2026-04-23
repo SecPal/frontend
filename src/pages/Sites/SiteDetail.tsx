@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";

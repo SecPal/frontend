@@ -27,10 +27,16 @@ describe("Lingui configuration", () => {
       "node ./scripts/check-lingui-catalogs.mjs"
     );
     expect(packageJson.scripts.sync).toBe(
-      'cross-env-shell "lingui extract --overwrite && lingui compile --namespace es"'
+      'cross-env-shell "lingui extract && lingui compile --namespace es"'
     );
     expect(packageJson.scripts["sync:purge"]).toBe(
-      'cross-env-shell "lingui extract --overwrite --clean && lingui compile --namespace es"'
+      'cross-env-shell "lingui extract --clean && lingui compile --namespace es"'
+    );
+    expect(packageJson.scripts["sync:local"]).toBe(
+      'cross-env-shell "lingui extract && lingui compile --namespace es"'
+    );
+    expect(packageJson.scripts["sync:local:purge"]).toBe(
+      'cross-env-shell "lingui extract --clean && lingui compile --namespace es"'
     );
     expect(packageJson.scripts["sync:translationio"]).toBeUndefined();
     expect(packageJson.scripts["sync:translationio:purge"]).toBeUndefined();
