@@ -3,7 +3,9 @@
 
 import { useState, useEffect, useMemo, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -43,12 +45,78 @@ import { Input } from "../components/input";
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
+const NATIVE_PASSKEY_CANCELLED_PATTERN = /^Passkey sign-in was cancelled\.?$/i;
+const NATIVE_PASSKEY_INTERRUPTED_PATTERN =
+  /^Passkey sign-in was interrupted\.?$/i;
+const NATIVE_PASSKEY_TIMEOUT_PATTERN = /^Passkey sign-in timed out\.?$/i;
+const NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN =
+  /^No credential provider is available on this device\.?$/i;
+
+type Translate = ReturnType<typeof useLingui>["_"];
 
 function isResidentCredentialError(error: unknown): error is Error {
   return (
     error instanceof Error &&
     (error.message.includes("resident credentials") ||
       error.message.includes("allowCredentials"))
+  );
+}
+
+function getPasskeySignInErrorMessage(
+  error: unknown,
+  translate: Translate
+): string {
+  if (error instanceof AuthApiError) {
+    return error.message;
+  }
+
+  if (error instanceof DOMException && error.name === "NotAllowedError") {
+    return translate(
+      msg`Passkey sign-in was cancelled or not permitted by the browser.`
+    );
+  }
+
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return translate(msg`Passkey sign-in timed out. Please try again.`);
+  }
+
+  if (
+    error instanceof Error &&
+    NATIVE_PASSKEY_CANCELLED_PATTERN.test(error.message)
+  ) {
+    return translate(msg`Passkey sign-in was cancelled.`);
+  }
+
+  if (
+    error instanceof Error &&
+    NATIVE_PASSKEY_INTERRUPTED_PATTERN.test(error.message)
+  ) {
+    return translate(msg`Passkey sign-in was interrupted. Please try again.`);
+  }
+
+  if (
+    error instanceof Error &&
+    NATIVE_PASSKEY_TIMEOUT_PATTERN.test(error.message)
+  ) {
+    return translate(msg`Passkey sign-in timed out. Please try again.`);
+  }
+
+  if (
+    error instanceof Error &&
+    (/credential.manager/i.test(error.message) ||
+      NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN.test(error.message))
+  ) {
+    return translate(
+      msg`No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings.`
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return translate(
+    msg`An unexpected passkey sign-in error occurred. Please try again.`
   );
 }
 
@@ -71,6 +139,7 @@ function formatDateTime(value: string): string {
 
 export function Login() {
   const navigate = useNavigate();
+  const { _ } = useLingui();
   const { login } = useAuth();
   const authTransport = useMemo(() => getAuthTransport(), []);
   const supportsPasskeys = useMemo(
@@ -270,16 +339,7 @@ export function Login() {
         navigate("/");
       } catch (err) {
         console.error("Passkey sign-in error:", err);
-
-        if (err instanceof AuthApiError) {
-          setError(err.message);
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError(
-            "An unexpected passkey sign-in error occurred. Please try again."
-          );
-        }
+        setError(getPasskeySignInErrorMessage(err, _));
       } finally {
         setIsSubmittingPasskey(false);
         setPasskeyStep(null);
@@ -362,32 +422,7 @@ export function Login() {
       navigate("/");
     } catch (err) {
       console.error("Passkey sign-in error:", err);
-
-      if (err instanceof AuthApiError) {
-        setError(err.message);
-      } else if (
-        err instanceof DOMException &&
-        err.name === "NotAllowedError"
-      ) {
-        setError(
-          "Passkey sign-in was cancelled or not permitted by the browser."
-        );
-      } else if (err instanceof DOMException && err.name === "AbortError") {
-        setError("Passkey sign-in timed out. Please try again.");
-      } else if (
-        err instanceof Error &&
-        /credential.manager/i.test(err.message)
-      ) {
-        setError(
-          "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
-        );
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(
-          "An unexpected passkey sign-in error occurred. Please try again."
-        );
-      }
+      setError(getPasskeySignInErrorMessage(err, _));
     } finally {
       setIsSubmittingPasskey(false);
       setPasskeyStep(null);

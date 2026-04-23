@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in was interrupted. Please try again."
+msgstr "Passkey sign-in was interrupted. Please try again."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Full Name"
 msgstr "Full Name"
@@ -1016,6 +1020,10 @@ msgstr "This {0} change is too significant ({similarity}% similar). Please conta
 msgid "Employees"
 msgstr "Employees"
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in timed out. Please try again."
+msgstr "Passkey sign-in timed out. Please try again."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
@@ -1307,6 +1315,10 @@ msgstr "Terminate"
 msgid "Generating BWR Export..."
 msgstr "Generating BWR Export..."
 
+#: src/pages/Login.tsx
+msgid "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+msgstr "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+
 #: src/pages/Sites/SitesPage.tsx
 msgid "Site Number"
 msgstr "Site Number"
@@ -1541,6 +1553,10 @@ msgstr "Not requested"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
 msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
+
+#: src/pages/Login.tsx
+msgid "An unexpected passkey sign-in error occurred. Please try again."
+msgstr "An unexpected passkey sign-in error occurred. Please try again."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -2242,6 +2258,10 @@ msgstr "BWR ID"
 msgid "Create a new organizational unit under \"{parentName}\"."
 msgstr "Create a new organizational unit under \"{parentName}\"."
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in was cancelled or not permitted by the browser."
+msgstr "Passkey sign-in was cancelled or not permitted by the browser."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Android provisioning QR code"
 msgstr "Android provisioning QR code"
@@ -2414,6 +2434,10 @@ msgstr "HR Access"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "To Date"
 msgstr "To Date"
+
+#: src/pages/Login.tsx
+msgid "Passkey sign-in was cancelled."
+msgstr "Passkey sign-in was cancelled."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Create a new root organizational unit."
