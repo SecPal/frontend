@@ -126,7 +126,7 @@ describe("Build Configuration and Source Verification", () => {
       "name: Playwright Live Lighthouse"
     );
     expect(liveLighthouseWorkflow).toContain(
-      "browser-actions/setup-chrome@3ba2f2bc81ddf8088ecbacdea69d476631049f8b"
+      "browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded"
     );
     expect(liveLighthouseWorkflow).toContain("id: setup-chrome");
     expect(liveLighthouseWorkflow).toContain("chrome-version: stable");
