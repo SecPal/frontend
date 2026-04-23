@@ -497,6 +497,90 @@ describe("Login", () => {
     }
   });
 
+  it("shows a localized message for interrupted native passkey flows", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi
+        .fn()
+        .mockRejectedValue(new Error("Passkey sign-in was interrupted.")),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      expect(
+        await screen.findByText(/passkey sign-in was interrupted/i)
+      ).toBeInTheDocument();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("shows provider guidance for native passkey provider-unavailable errors", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi
+        .fn()
+        .mockRejectedValue(
+          new Error("No credential provider is available on this device.")
+        ),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      fireEvent.click(
+        await screen.findByRole("button", { name: /sign in with passkey/i })
+      );
+
+      expect(
+        await screen.findByText(/no credential provider is available/i)
+      ).toBeInTheDocument();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
   it("shows a fallback message for non-Error native passkey failures", async () => {
     const authGlobal = globalThis as {
       SecPalNativeAuthBridge?: {
@@ -555,7 +639,7 @@ describe("Login", () => {
       )
     ).rejects.toThrow("Passkeys are not available in this browser.");
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -1232,7 +1316,7 @@ describe("Login", () => {
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockResolvedValueOnce({
       challenge: {
@@ -1308,7 +1392,7 @@ describe("Login", () => {
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
       user: createAuthUser(),
       authentication: {
@@ -1369,7 +1453,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -1409,7 +1493,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -1443,7 +1527,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
