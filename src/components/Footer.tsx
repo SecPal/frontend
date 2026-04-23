@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Tailwind Labs Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { ScaleIcon, CodeBracketIcon } from "@heroicons/react/24/outline";
 import { Link } from "./link";
 

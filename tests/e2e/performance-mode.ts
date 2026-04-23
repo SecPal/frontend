@@ -4,6 +4,7 @@
 export const PREVIEW_BASE_URL = "http://localhost:4173";
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
 export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
+export const DESKTOP_CHROMIUM_PROJECT_NAME = "chromium";
 
 export const DEFAULT_LIGHTHOUSE_THRESHOLDS = {
   performance: 90,
@@ -47,6 +48,21 @@ export const shouldEnableLighthouseBrowser = () => hasExplicitLighthouseMode();
 
 export const shouldUseSingleWorker = () =>
   Boolean(process.env.CI) || hasExplicitLighthouseMode();
+
+export const getPerformanceAuditProjectSkipReason = (
+  projectName: string,
+  browserName: string
+) => {
+  if (browserName !== DESKTOP_CHROMIUM_PROJECT_NAME) {
+    return "Lighthouse only works with Chromium";
+  }
+
+  if (projectName !== DESKTOP_CHROMIUM_PROJECT_NAME) {
+    return "Lighthouse audits only run in the desktop chromium project because mobile-chrome does not expose the fixed CDP port.";
+  }
+
+  return undefined;
+};
 
 export const getPerformanceAuditMode = (): PerformanceAuditMode => {
   const baseUrl =

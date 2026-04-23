@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import type {
   Customer,

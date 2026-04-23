@@ -5,6 +5,7 @@ import { test, expect } from "./auth.setup";
 import { playAudit } from "playwright-lighthouse";
 import {
   getPerformanceAuditMode,
+  getPerformanceAuditProjectSkipReason,
   getPerformanceAuditThresholds,
   LIGHTHOUSE_DEBUG_PORT,
 } from "./performance-mode";
@@ -46,11 +47,14 @@ test.describe("Lighthouse Performance Audits", () => {
       "Performance audits require an explicit preview or live Lighthouse target"
   );
 
-  // Only run on chromium (Lighthouse requires Chrome DevTools Protocol)
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "Lighthouse only works with Chromium"
-  );
+  test.beforeEach(({ browserName }, testInfo) => {
+    const projectSkipReason = getPerformanceAuditProjectSkipReason(
+      testInfo.project.name,
+      browserName
+    );
+
+    test.skip(Boolean(projectSkipReason), projectSkipReason);
+  });
 
   test("should meet performance thresholds on home page", async ({
     authenticatedPage: page,

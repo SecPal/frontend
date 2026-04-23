@@ -3,7 +3,7 @@
 
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { OfflineIndicator } from "./components/OfflineIndicator";
