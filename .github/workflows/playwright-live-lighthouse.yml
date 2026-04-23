@@ -35,7 +35,7 @@ jobs:
 
       - name: Install stable Chrome
         id: setup-chrome
-        uses: browser-actions/setup-chrome@3ba2f2bc81ddf8088ecbacdea69d476631049f8b
+        uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded
         with:
           chrome-version: stable
           install-dependencies: true
