@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 - Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
 - Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
-- Replaced the `vite-plugin-static-copy` `rename: { stripBase: true }` option with `rename: "assetlinks.json"` to use the correct string-based API
+- Restored the documented `vite-plugin-static-copy` rename object for Digital Asset Links so the build flattens `config/assetlinks.json` to `assetlinks.json` instead of nesting it under `config/` in the output tree
 - Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
 - Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
 - Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Stopped the login page from treating transient readiness-probe transport failures as a backend `not_ready` state, so sign-in now stays enabled unless the API explicitly reports `status: "not_ready"`, resolving frontend issue #991.
+- Added a deploy-safe Digital Asset Links fallback by shipping `assetlinks.json` at the build root, serving `/.well-known/assetlinks.json` through an exact-match Nginx fallback, and adding a live smoke check so `app.secpal.dev` no longer regresses to the SPA shell or a stale DAL payload during Android passkey rollout, resolving frontend issue #925.
 - Localized the shared login-page passkey sign-in cancellation, timeout, provider-availability, and fallback messages so the Android native Credential Manager path no longer falls back to English on German devices after a cancelled passkey prompt, resolving frontend issue #978.
 - Limited Playwright Lighthouse audits to the desktop `chromium` project so strict all-project live E2E runs no longer fail in `mobile-chrome`, which lacks the fixed CDP port required by `playwright-lighthouse` for `app.secpal.dev` audits.
 - Split the live no-secret Playwright auth smoke away from the deterministic local invalid-credential and hard-login-redirect assertions, so `app.secpal.dev` now validates the shipped health-gated login state and browser-session protected-route recovery flow instead of failing on outdated assumptions, resolving frontend issue #975.
