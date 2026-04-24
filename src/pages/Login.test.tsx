@@ -1714,24 +1714,32 @@ describe("Login", () => {
       expect(passwordInput).toBeDisabled();
     });
 
-    it("disables login and shows warning when health check fails with error", async () => {
-      vi.mocked(healthApi.checkHealth).mockRejectedValue(
-        new healthApi.HealthCheckError("Network error")
-      );
+    it("keeps login enabled and hides the warning when health check fails with a transport error", async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(healthApi.checkHealth).mockRejectedValue(
+          new healthApi.HealthCheckError("Network error")
+        );
 
-      renderLogin();
+        renderLogin();
 
-      // Wait for health check to complete and warning to appear
-      await waitFor(
-        () => {
-          expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
-        },
-        { timeout: 8000 }
-      );
+        await act(async () => {
+          await vi.runAllTimersAsync();
+        });
 
-      // Button should be disabled
-      const submitButton = screen.getByRole("button", { name: /log in/i });
-      expect(submitButton).toBeDisabled();
+        expect(vi.mocked(healthApi.checkHealth)).toHaveBeenCalledTimes(3);
+        expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
+
+        const submitButton = screen.getByRole("button", { name: /log in/i });
+        const emailInput = screen.getByLabelText(/email/i);
+        const passwordInput = screen.getByLabelText(/password/i);
+
+        expect(submitButton).toBeEnabled();
+        expect(emailInput).toBeEnabled();
+        expect(passwordInput).toBeEnabled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("shows 'Checking system...' while health check is in progress", async () => {
@@ -2204,52 +2212,45 @@ describe("Login", () => {
       expect(submitButton).not.toBeDisabled();
     });
 
-    it("shows system not ready warning if health check fails after coming online", async () => {
+    it("keeps login enabled if the health check transport fails after coming online", async () => {
       // Start offline
       vi.mocked(useOnlineStatus).mockReturnValue(false);
       const mockCheckHealth = vi.mocked(healthApi.checkHealth);
 
       const { rerender } = renderLogin();
 
-      // Should show offline warning
-      await waitFor(() => {
-        expect(screen.getByText(/no internet connection/i)).toBeInTheDocument();
-      });
+      await screen.findByText(/no internet connection/i);
 
-      // Now go online but health check fails
-      vi.mocked(useOnlineStatus).mockReturnValue(true);
-      mockCheckHealth.mockRejectedValue(
-        new healthApi.HealthCheckError("Network error")
-      );
+      vi.useFakeTimers();
+      try {
+        // Now go online but the readiness probe keeps failing in transport.
+        vi.mocked(useOnlineStatus).mockReturnValue(true);
+        mockCheckHealth.mockRejectedValue(
+          new healthApi.HealthCheckError("Network error")
+        );
 
-      // Re-render to trigger online status change
-      rerender(
-        <MemoryRouter initialEntries={["/login"]}>
-          <I18nProvider i18n={i18n}>
-            <AuthProvider>
-              <Login />
-            </AuthProvider>
-          </I18nProvider>
-        </MemoryRouter>
-      );
+        rerender(
+          <MemoryRouter initialEntries={["/login"]}>
+            <I18nProvider i18n={i18n}>
+              <AuthProvider>
+                <Login />
+              </AuthProvider>
+            </I18nProvider>
+          </MemoryRouter>
+        );
 
-      // Should perform health check
-      await waitFor(() => {
-        expect(mockCheckHealth).toHaveBeenCalled();
-      });
+        await act(async () => {
+          await vi.runAllTimersAsync();
+        });
 
-      // Should now show system not ready warning
-      await waitFor(
-        () => {
-          expect(screen.getByText(/system not ready/i)).toBeInTheDocument();
-        },
-        { timeout: 8000 }
-      );
+        expect(mockCheckHealth).toHaveBeenCalledTimes(3);
+        expect(screen.queryByText(/system not ready/i)).not.toBeInTheDocument();
 
-      // Offline warning should be gone
-      expect(
-        screen.queryByText(/no internet connection/i)
-      ).not.toBeInTheDocument();
+        const submitButton = screen.getByRole("button", { name: /log in/i });
+        expect(submitButton).toBeEnabled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

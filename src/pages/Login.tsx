@@ -174,7 +174,6 @@ export function Login() {
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [isHealthCheckLoading, setIsHealthCheckLoading] = useState(true);
-  const [healthCheckError, setHealthCheckError] = useState(false);
 
   // Check backend health on component mount and when online status changes
   useEffect(() => {
@@ -185,7 +184,6 @@ export function Login() {
       if (!isOnline) {
         if (isMounted) {
           setIsHealthCheckLoading(false);
-          setHealthCheckError(false);
         }
         return;
       }
@@ -194,7 +192,6 @@ export function Login() {
       if (isMounted) {
         setIsHealthCheckLoading(true);
         setHealthStatus(null);
-        setHealthCheckError(false);
       }
 
       try {
@@ -215,7 +212,6 @@ export function Login() {
 
             if (isMounted) {
               setHealthStatus(status);
-              setHealthCheckError(false);
             }
 
             return;
@@ -225,7 +221,6 @@ export function Login() {
 
             if (isMounted && isLastAttempt) {
               setHealthStatus(null);
-              setHealthCheckError(true);
             }
           }
         }
@@ -243,10 +238,8 @@ export function Login() {
     };
   }, [isOnline]); // Re-run when online status changes
 
-  // Determine if system is not ready (health check failed or backend reported not_ready)
-  // Only check health status when online; offline is handled separately
-  const isSystemNotReady =
-    isOnline && (healthCheckError || healthStatus?.status === "not_ready");
+  // Only an explicit backend not_ready result should block sign-in.
+  const isSystemNotReady = isOnline && healthStatus?.status === "not_ready";
 
   // Compute aria-describedby for inputs (combines error, lockout, and offline alerts)
   const ariaDescribedBy =
