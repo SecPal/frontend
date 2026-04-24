@@ -42,10 +42,50 @@ import {
 } from "../components/dialog";
 import { Input } from "../components/input";
 
-const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
+// Health-check retry policy: immediate retry, then short and medium backoff.
+const HEALTH_CHECK_RETRY_DELAY_IMMEDIATE_MS = 0;
+const HEALTH_CHECK_RETRY_DELAY_SHORT_MS = 1500;
+const HEALTH_CHECK_RETRY_DELAY_MEDIUM_MS = 5000;
+const HEALTH_CHECK_RETRY_DELAYS_MS = [
+  HEALTH_CHECK_RETRY_DELAY_IMMEDIATE_MS,
+  HEALTH_CHECK_RETRY_DELAY_SHORT_MS,
+  HEALTH_CHECK_RETRY_DELAY_MEDIUM_MS,
+];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
 const NATIVE_PASSKEY_CANCELLED_PATTERN = /^Passkey sign-in was cancelled\.?$/i;
+
+const completePasskeySignIn = async (
+  challengeEmail: string | undefined,
+  setPasskeyStep: (step: "browser" | "verifying") => void
+) => {
+  const challengeResponse = await startPasskeyAuthenticationChallenge(
+    challengeEmail ? { email: challengeEmail } : undefined
+  );
+  console.info(
+    "[SecPal] Passkey login: challenge created id=%s credentials=%d",
+    challengeResponse.data.challenge_id,
+    challengeResponse.data.public_key.allow_credentials?.length ?? 0
+  );
+
+  // Always use "optional" mediation for an explicit button click.
+  // "conditional" is designed for passive autofill-based discovery and
+  // would silently wait for an input-field interaction that never comes.
+  setPasskeyStep("browser");
+  const credential = await getPasskeyAssertion(
+    challengeResponse.data.public_key,
+    "optional"
+  );
+  console.info("[SecPal] Passkey login: browser assertion complete");
+
+  setPasskeyStep("verifying");
+  return verifyPasskeyAuthenticationChallenge(
+    challengeResponse.data.challenge_id,
+    {
+      credential,
+    }
+  );
+};
 const NATIVE_PASSKEY_INTERRUPTED_PATTERN =
   /^Passkey sign-in was interrupted\.?$/i;
 const NATIVE_PASSKEY_TIMEOUT_PATTERN = /^Passkey sign-in timed out\.?$/i;
@@ -195,10 +235,12 @@ export function Login() {
       }
 
       try {
-        for (const [
-          attempt,
-          retryDelay,
-        ] of HEALTH_CHECK_RETRY_DELAYS_MS.entries()) {
+        for (
+          let attempt = 0;
+          attempt < HEALTH_CHECK_RETRY_DELAYS_MS.length;
+          attempt++
+        ) {
+          const retryDelay = HEALTH_CHECK_RETRY_DELAYS_MS[attempt]!;
           if (retryDelay > 0) {
             await new Promise((resolve) => setTimeout(resolve, retryDelay));
           }
@@ -341,53 +383,33 @@ export function Login() {
       return;
     }
 
-    const completePasskeySignIn = async (challengeEmail?: string) => {
-      const challengeResponse = await startPasskeyAuthenticationChallenge(
-        challengeEmail ? { email: challengeEmail } : undefined
-      );
-      console.info(
-        "[SecPal] Passkey login: challenge created id=%s credentials=%d",
-        challengeResponse.data.challenge_id,
-        challengeResponse.data.public_key.allow_credentials?.length ?? 0
-      );
-
-      // Always use "optional" mediation for an explicit button click.
-      // "conditional" is designed for passive autofill-based discovery and
-      // would silently wait for an input-field interaction that never comes.
-      setPasskeyStep("browser");
-      const credential = await getPasskeyAssertion(
-        challengeResponse.data.public_key,
-        "optional"
-      );
-      console.info("[SecPal] Passkey login: browser assertion complete");
-
-      setPasskeyStep("verifying");
-      return verifyPasskeyAuthenticationChallenge(
-        challengeResponse.data.challenge_id,
-        {
-          credential,
-        }
-      );
-    };
-
     try {
       let response;
 
       try {
-        response = await completePasskeySignIn(initialChallengeEmail);
+        response = await completePasskeySignIn(
+          initialChallengeEmail,
+          setPasskeyStep
+        );
       } catch (firstError) {
-        if (!isResidentCredentialError(firstError) || initialChallengeEmail) {
+        // Only retry when the first failure indicates a resident-credential lookup issue.
+        if (!isResidentCredentialError(firstError)) {
+          throw firstError;
+        }
+
+        // If we already attempted with an email, there is no alternate retry path.
+        if (initialChallengeEmail) {
           throw firstError;
         }
 
         if (normalizedEmail === "") {
           throw new Error(
-            "This browser requires your email address for passkey sign-in. Enter your email address and try again.",
+            "Enter your email address to sign in with a passkey, then try again.",
             { cause: firstError }
           );
         }
 
-        response = await completePasskeySignIn(normalizedEmail);
+        response = await completePasskeySignIn(normalizedEmail, setPasskeyStep);
       }
 
       console.info(

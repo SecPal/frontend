@@ -3,6 +3,8 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const PERFORMANCE_MODE_MODULE = "./e2e/performance-mode";
+
 describe("performance audit mode", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -15,7 +17,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
     vi.resetModules();
-    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+    const { getPerformanceAuditMode } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "http://localhost:4173",
@@ -29,7 +31,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
     vi.resetModules();
-    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+    const { getPerformanceAuditMode } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
@@ -46,7 +48,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("CHROME_PATH", "/usr/bin/google-chrome-stable");
     vi.resetModules();
     const { getConfiguredLighthouseBrowserPath, getPerformanceAuditMode } =
-      await import("./e2e/performance-mode");
+      await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
@@ -64,7 +66,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
     vi.stubEnv("CHROME_PATH", "");
     vi.resetModules();
-    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+    const { getPerformanceAuditMode } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
@@ -83,7 +85,7 @@ describe("performance audit mode", () => {
       "/home/secpal/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
     );
     vi.resetModules();
-    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+    const { getPerformanceAuditMode } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
@@ -126,7 +128,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
     vi.resetModules();
-    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+    const { getPerformanceAuditMode } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "http://localhost:4173",
@@ -136,11 +138,15 @@ describe("performance audit mode", () => {
   });
 
   it("limits Lighthouse audits to the desktop chromium project", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
     vi.resetModules();
     const {
       DESKTOP_CHROMIUM_PROJECT_NAME,
       getPerformanceAuditProjectSkipReason,
-    } = await import("./e2e/performance-mode");
+    } = await import(PERFORMANCE_MODE_MODULE);
 
     expect(
       getPerformanceAuditProjectSkipReason(

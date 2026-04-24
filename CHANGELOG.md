@@ -19,13 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 - Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
 - Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
-- Restored the documented `vite-plugin-static-copy` rename object for Digital Asset Links so the build flattens `config/assetlinks.json` to `assetlinks.json` instead of nesting it under `config/` in the output tree
+- Fixed `vite-plugin-static-copy` `rename` option for Digital Asset Links targets from an unsupported object form to a plain string so the build correctly flattens `config/assetlinks.json` to `assetlinks.json` in both `/.well-known/` and the root output tree
 - Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
 - Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
 - Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
 - Added `stableStringify` helper in the Playwright auth storage utility so the PBKDF2 cache key is deterministic regardless of property insertion order in the user object
 - Extracted `TEST_FILE_PATTERN` constant in the issue-889 lint regression test and decomposed `directAuthUserWritePattern` into named sub-pattern constants with an explanatory comment
 - Replaced the inline `makeFetchResponse` stub in `onboardingApi.test.ts` with a real `Response` constructor so the mock implements the full browser `Response` interface
+- Added explicit `initialDelayMs: 1000` to the API retry configuration and extracted `MINUTES_PER_HOUR`, `HOURS_PER_DAY`, and `TWENTY_FOUR_HOURS_IN_MINUTES` time constants to replace the inline `60 * 24` magic product
+- Extracted named `HEALTH_CHECK_RETRY_DELAY_*` constants for the login health-check retry delays, refactored the retry loop to an indexed `for` loop, and moved `completePasskeySignIn` to module scope with an explicit `setPasskeyStep` parameter
+- Clarified the resident-credential retry guard in `handlePasskeySignIn` by splitting the combined `||` condition into two sequential guards with explanatory comments, and updated the user-facing error message to remove technical jargon
+- Extracted `PERFORMANCE_MODE_MODULE` constant in `performance-audit-mode.test.ts` to avoid repeating the import path, added explicit env stubs to the previously un-stubbed last test case, and added coverage for the multiple-401-filtering and loopback-origin-error scenarios
 
 ### Removed
 

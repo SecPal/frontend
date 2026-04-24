@@ -21,6 +21,10 @@ export class ApiBaseUrlConfigurationError extends Error {
 const LIVE_APP_HOSTNAME = "app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
 
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const TWENTY_FOUR_HOURS_IN_MINUTES = MINUTES_PER_HOUR * HOURS_PER_DAY;
+
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
 }
@@ -172,8 +176,9 @@ export const apiConfig = {
    */
   retry: {
     maxAttempts: 5,
-    backoffMultiplier: 2, // 1s, 2s, 4s, 8s, 16s
-    maxRetentionTimeMinutes: 60 * 24, // 24 hours
+    initialDelayMs: 1000, // 1 second initial delay
+    backoffMultiplier: 2, // 1s, 2s, 4s, 8s, 16s (from initialDelayMs with multiplier 2)
+    maxRetentionTimeMinutes: TWENTY_FOUR_HOURS_IN_MINUTES, // 24 hours
   },
 };
 
