@@ -4,7 +4,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
-import { lingui } from "@lingui/vite-plugin";
+import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react({}),
       babel({
-        plugins: ["@lingui/babel-plugin-lingui-macro"],
+        presets: [linguiTransformerBabelPreset()],
       }),
       lingui(),
       tailwindcss(),
