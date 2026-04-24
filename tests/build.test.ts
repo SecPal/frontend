@@ -148,9 +148,28 @@ describe("Build Configuration and Source Verification", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
     expect(viteConfig).toContain("vite-plugin-static-copy");
-    expect(viteConfig).toContain('src: "config/assetlinks.json"');
+    expect(viteConfig.split('src: "config/assetlinks.json"').length - 1).toBe(
+      2
+    );
     expect(viteConfig).toContain('dest: ".well-known"');
-    expect(viteConfig).toContain('rename: "assetlinks.json"');
+    expect(
+      viteConfig
+        .split('src: "config/assetlinks.json"')
+        .slice(1)
+        .some((block) => block.includes('dest: "."'))
+    ).toBe(true);
+    expect(
+      viteConfig.split('rename: { stripBase: true, name: "assetlinks.json" }')
+        .length - 1
+    ).toBe(2);
+  });
+
+  it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+
+    expect(nginxConfig).toContain("location = /.well-known/assetlinks.json");
+    expect(nginxConfig).toContain("default_type application/json");
+    expect(nginxConfig).toContain("try_files $uri /assetlinks.json =404;");
   });
 
   it("hardens browser responses with the required security headers", () => {
@@ -234,6 +253,18 @@ describe("Build Configuration and Source Verification", () => {
 
     expect(packageJson).toContain(
       '"test:live:pwa-headers": "bash ./scripts/check-live-pwa-headers.sh"'
+    );
+  });
+
+  it("ships a live smoke check for deployed assetlinks delivery", () => {
+    expect(
+      existsSync(path.join(repoRoot, "scripts/check-live-assetlinks.sh"))
+    ).toBe(true);
+
+    const packageJson = readRepoFile("package.json");
+
+    expect(packageJson).toContain(
+      '"test:live:assetlinks": "bash ./scripts/check-live-assetlinks.sh"'
     );
   });
 
