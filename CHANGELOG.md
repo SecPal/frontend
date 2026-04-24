@@ -12,10 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time.
-
 ### Changed
 
 - Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to Lingui's filtered `linguiTransformerBabelPreset()`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
@@ -24,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
 - Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
 - Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
-- Restored the documented `vite-plugin-static-copy` rename object for Digital Asset Links so the build flattens `config/assetlinks.json` to `assetlinks.json` instead of nesting it under `config/` in the output tree
 - Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
 - Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
 - Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
@@ -42,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time, resolving frontend issue #997.
 - Mirrored backend `429` login lockouts into the frontend login rate limiter via `Retry-After` and added Playwright regression coverage, so the login UI now stays in the authoritative cooldown state instead of falling back to local failed-attempt tracking, resolving frontend issue #803.
 - Fixed RFC-correct handling of `Retry-After: 0` on `429` login responses; the header value is now parsed as valid rather than discarded, and `syncAuthoritativeLockout(0)` clears the local lockout state so the form remains immediately usable, matching the server's intent to allow an instant retry.
 - Stopped the login page from treating transient readiness-probe transport failures as a backend `not_ready` state, so sign-in now stays enabled unless the API explicitly reports `status: "not_ready"`, resolving frontend issue #991.
