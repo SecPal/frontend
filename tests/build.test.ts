@@ -158,10 +158,7 @@ describe("Build Configuration and Source Verification", () => {
         .slice(1)
         .some((block) => block.includes('dest: "."'))
     ).toBe(true);
-    expect(
-      viteConfig.split('rename: { stripBase: true, name: "assetlinks.json" }')
-        .length - 1
-    ).toBe(2);
+    expect(viteConfig.split('rename: "assetlinks.json"').length - 1).toBe(2);
   });
 
   it("scopes the Lingui macro Babel transform to files that import Lingui macros", () => {
