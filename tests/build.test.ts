@@ -167,11 +167,11 @@ describe("Build Configuration and Source Verification", () => {
   it("scopes the Lingui macro Babel transform to files that import Lingui macros", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
-    expect(viteConfig).toContain("linguiTransformerBabelPreset");
-    expect(viteConfig).toContain("presets: [linguiTransformerBabelPreset()]");
-    expect(viteConfig).not.toContain(
-      'plugins: ["@lingui/babel-plugin-lingui-macro"]'
+    expect(viteConfig).toMatch(/\blinguiTransformerBabelPreset\b/);
+    expect(viteConfig).toMatch(
+      /presets\s*:\s*\[\s*linguiTransformerBabelPreset\(\)\s*\]/
     );
+    expect(viteConfig).not.toMatch(/@lingui\/babel-plugin-lingui-macro/);
   });
 
   it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {
