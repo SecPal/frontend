@@ -347,6 +347,32 @@ describe("authApi", () => {
         retryAfterSeconds: 120,
       });
     });
+
+    it("treats Retry-After: 0 as valid (retry immediately) on 429 login errors", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({
+          "Content-Type": "application/json",
+          "Retry-After": "0",
+        }),
+        json: async () => ({
+          message: "Too many login attempts. Please try again later.",
+        }),
+      } as Response);
+
+      await expect(
+        login({ email: "test@secpal.dev", password: "wrong" })
+      ).rejects.toMatchObject({
+        message: "Too many login attempts. Please try again later.",
+        status: 429,
+        retryAfterSeconds: 0,
+      });
+    });
   });
 
   describe("logout", () => {

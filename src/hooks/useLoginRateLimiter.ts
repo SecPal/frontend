@@ -118,6 +118,20 @@ export function useLoginRateLimiter(): UseLoginRateLimiterResult {
   const syncAuthoritativeLockout = useCallback(
     (retryAfterSeconds?: number) => {
       const currentTime = Date.now();
+
+      // Retry-After: 0 means "retry immediately" — clear any client-side lockout
+      if (retryAfterSeconds === 0) {
+        const clearedState: RateLimitState = {
+          attempts: 0,
+          lockoutEndTime: null,
+          lastAttemptTime: currentTime,
+        };
+        setNow(currentTime);
+        setState(clearedState);
+        saveState(clearedState);
+        return;
+      }
+
       const retryAfterMs =
         typeof retryAfterSeconds === "number" && retryAfterSeconds > 0
           ? retryAfterSeconds * 1000

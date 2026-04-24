@@ -96,7 +96,7 @@ function parseRetryAfterSeconds(response: Response): number | undefined {
     ? Number.parseInt(retryAfterHeader, 10)
     : Number.NaN;
 
-  return Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+  return Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0
     ? retryAfterSeconds
     : undefined;
 }

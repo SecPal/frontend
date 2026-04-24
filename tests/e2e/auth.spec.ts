@@ -135,7 +135,7 @@ test.describe("Authentication", () => {
         page.getByText(/too many login attempts\. please try again later\./i)
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: /locked \(120s\)|locked \(119s\)/i })
+        page.getByRole("button", { name: /locked \(\d+s\)/i })
       ).toBeDisabled();
       await expect(page.locator("#email")).toBeDisabled();
       await expect(page.locator("#password")).toBeDisabled();

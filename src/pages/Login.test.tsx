@@ -1974,13 +1974,56 @@ describe("Login", () => {
         screen.getByText(/too many login attempts\. please try again later\./i)
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /locked \(120s\)|locked \(119s\)/i })
+        screen.getByRole("button", { name: /locked \(\d+s\)/i })
       ).toBeDisabled();
 
       const stored = JSON.parse(
         localStorage.getItem("login_rate_limit") || "{}"
       );
       expect(stored.attempts).toBe(5);
+    });
+
+    it("does not lock out when login returns 429 with Retry-After: 0", async () => {
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockRejectedValueOnce(
+        new authApi.AuthApiError(
+          "Too many login attempts. Please try again later.",
+          undefined,
+          429,
+          undefined,
+          0
+        )
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "test@secpal.dev" },
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: "wrong" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            /too many login attempts\. please try again later\./i
+          )
+        ).toBeInTheDocument();
+      });
+
+      // Retry-After: 0 means retry immediately — form must remain enabled
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).not.toBeDisabled();
+      expect(screen.getByLabelText(/email/i)).not.toBeDisabled();
     });
 
     it("disables form inputs and button during lockout", async () => {

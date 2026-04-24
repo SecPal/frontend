@@ -180,6 +180,17 @@ describe("useLoginRateLimiter", () => {
       expect(stored.attempts).toBe(5);
     });
 
+    it("does not lock out when Retry-After: 0 (retry immediately)", () => {
+      const { result } = renderHook(() => useLoginRateLimiter());
+
+      act(() => {
+        result.current.syncAuthoritativeLockout(0);
+      });
+
+      expect(result.current.isLocked).toBe(false);
+      expect(result.current.canAttemptLogin()).toBe(true);
+    });
+
     it("does not shorten an active authoritative lockout when a weaker retry-after arrives", () => {
       const { result } = renderHook(() => useLoginRateLimiter());
 
