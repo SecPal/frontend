@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Mirrored backend `429` login lockouts into the frontend login rate limiter via `Retry-After` and added Playwright regression coverage, so the login UI now stays in the authoritative cooldown state instead of falling back to local failed-attempt tracking, resolving frontend issue #803.
+- Fixed RFC-correct handling of `Retry-After: 0` on `429` login responses; the header value is now parsed as valid rather than discarded, and `syncAuthoritativeLockout(0)` clears the local lockout state so the form remains immediately usable, matching the server's intent to allow an instant retry.
 - Stopped the login page from treating transient readiness-probe transport failures as a backend `not_ready` state, so sign-in now stays enabled unless the API explicitly reports `status: "not_ready"`, resolving frontend issue #991.
 - Added a deploy-safe Digital Asset Links fallback by shipping `assetlinks.json` at the build root, serving `/.well-known/assetlinks.json` through an exact-match Nginx fallback, and adding a live smoke check so `app.secpal.dev` no longer regresses to the SPA shell or a stale DAL payload during Android passkey rollout, resolving frontend issue #925.
 - Localized the shared login-page passkey sign-in cancellation, timeout, provider-availability, and fallback messages so the Android native Credential Manager path no longer falls back to English on German devices after a cancelled passkey prompt, resolving frontend issue #978.

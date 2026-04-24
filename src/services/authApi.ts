@@ -82,12 +82,32 @@ async function parseJsonError(response: Response): Promise<ApiError | null> {
   }
 }
 
+function parseRetryAfterSeconds(response: Response): number | undefined {
+  if (
+    !("headers" in response) ||
+    !response.headers ||
+    typeof response.headers.get !== "function"
+  ) {
+    return undefined;
+  }
+
+  const retryAfterHeader = response.headers.get("Retry-After");
+  const retryAfterSeconds = retryAfterHeader
+    ? Number.parseInt(retryAfterHeader, 10)
+    : Number.NaN;
+
+  return Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0
+    ? retryAfterSeconds
+    : undefined;
+}
+
 export class AuthApiError extends Error {
   constructor(
     message: string,
     public errors?: Record<string, string[]>,
     public status?: number,
-    public code?: string
+    public code?: string,
+    public retryAfterSeconds?: number
   ) {
     super(message);
     this.name = "AuthApiError";
@@ -100,16 +120,24 @@ async function createAuthApiError(
   nonJsonMessage = `${defaultMessage}: ${response.status} ${response.statusText}`
 ): Promise<AuthApiError> {
   const error = await parseJsonError(response);
+  const retryAfterSeconds = parseRetryAfterSeconds(response);
 
   if (!error) {
-    return new AuthApiError(nonJsonMessage, undefined, response.status);
+    return new AuthApiError(
+      nonJsonMessage,
+      undefined,
+      response.status,
+      undefined,
+      retryAfterSeconds
+    );
   }
 
   return new AuthApiError(
     error.message || defaultMessage,
     error.errors,
     response.status,
-    error.code
+    error.code,
+    retryAfterSeconds
   );
 }
 
