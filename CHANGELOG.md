@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time.
+
 ### Changed
 
 - Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to Lingui's filtered `linguiTransformerBabelPreset()`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).

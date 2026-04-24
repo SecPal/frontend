@@ -159,8 +159,7 @@ describe("Build Configuration and Source Verification", () => {
         .some((block) => block.includes('dest: "."'))
     ).toBe(true);
     expect(
-      viteConfig.split('rename: { stripBase: true, name: "assetlinks.json" }')
-        .length - 1
+      viteConfig.split('rename: "assetlinks.json"').length - 1
     ).toBe(2);
   });
 
