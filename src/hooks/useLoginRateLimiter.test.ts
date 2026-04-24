@@ -171,7 +171,9 @@ describe("useLoginRateLimiter", () => {
 
       expect(result.current.isLocked).toBe(true);
       expect(result.current.remainingAttempts).toBe(0);
-      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(119);
+      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(
+        119
+      );
       expect(result.current.remainingLockoutSeconds).toBeLessThanOrEqual(120);
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -196,7 +198,9 @@ describe("useLoginRateLimiter", () => {
       });
 
       expect(result.current.lockoutEndTime).toBe(lockoutEndTime);
-      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(109);
+      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(
+        109
+      );
       expect(result.current.remainingLockoutSeconds).toBeLessThanOrEqual(110);
     });
   });
