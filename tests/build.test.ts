@@ -152,7 +152,12 @@ describe("Build Configuration and Source Verification", () => {
       2
     );
     expect(viteConfig).toContain('dest: ".well-known"');
-    expect(viteConfig).toContain('dest: "."');
+    expect(
+      viteConfig
+        .split('src: "config/assetlinks.json"')
+        .slice(1)
+        .some((block) => block.includes('dest: "."'))
+    ).toBe(true);
     expect(
       viteConfig.split('rename: { stripBase: true, name: "assetlinks.json" }')
         .length - 1
