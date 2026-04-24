@@ -71,6 +71,76 @@ test.describe("Authentication", () => {
       ).toBeVisible({ timeout: 10_000 });
     });
 
+    test("should honor a server-authoritative login lockout after a 429 response", async ({
+      page,
+      context,
+    }) => {
+      test.skip(
+        isRemoteE2ETarget(),
+        "Deterministic server-lockout coverage uses local mocked auth routes only."
+      );
+
+      await context.unroute("**/v1/auth/login");
+      await context.route("**/v1/auth/login", async (route) => {
+        const requestBody = route.request().postDataJSON() as
+          | { email?: string }
+          | undefined;
+
+        if (requestBody?.email === "lockout-user@secpal.dev") {
+          await route.fulfill({
+            status: 429,
+            contentType: "application/json",
+            headers: {
+              "Retry-After": "120",
+            },
+            body: JSON.stringify({
+              message: "Too many login attempts. Please try again later.",
+            }),
+          });
+
+          return;
+        }
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            user: {
+              id: "42",
+              name: "Jane Example",
+              email: "test@example.com",
+              emailVerified: true,
+              roles: ["Manager"],
+              permissions: [],
+              hasOrganizationalScopes: true,
+              hasCustomerAccess: true,
+              hasSiteAccess: true,
+            },
+          }),
+        });
+      });
+
+      await page.goto("/login");
+      await page.waitForLoadState("networkidle");
+      await waitForLoginFormReady(page);
+
+      await page.locator("#email").fill("lockout-user@secpal.dev");
+      await page.locator("#password").fill("wrongpassword");
+      await page
+        .getByRole("button", { name: /log in|anmelden|einloggen/i })
+        .click();
+
+      await expect(page.locator("#lockout-warning")).toBeVisible();
+      await expect(
+        page.getByText(/too many login attempts\. please try again later\./i)
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /locked \(120s\)|locked \(119s\)/i })
+      ).toBeDisabled();
+      await expect(page.locator("#email")).toBeDisabled();
+      await expect(page.locator("#password")).toBeDisabled();
+    });
+
     test("should surface the current login readiness state on live targets", async ({
       page,
     }) => {

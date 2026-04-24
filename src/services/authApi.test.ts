@@ -321,6 +321,32 @@ describe("authApi", () => {
         });
       }
     });
+
+    it("captures retry-after metadata on 429 login errors", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+      } as Response);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({
+          "Content-Type": "application/json",
+          "Retry-After": "120",
+        }),
+        json: async () => ({
+          message: "Too many login attempts. Please try again later.",
+        }),
+      } as Response);
+
+      await expect(
+        login({ email: "test@secpal.dev", password: "wrong" })
+      ).rejects.toMatchObject({
+        message: "Too many login attempts. Please try again later.",
+        status: 429,
+        retryAfterSeconds: 120,
+      });
+    });
   });
 
   describe("logout", () => {
@@ -1204,6 +1230,18 @@ describe("authApi", () => {
 
       expect(error.status).toBe(409);
       expect(error.code).toBe("CONFLICT");
+    });
+
+    it("stores optional retry-after metadata", () => {
+      const error = new AuthApiError(
+        "Rate limited",
+        undefined,
+        429,
+        undefined,
+        90
+      );
+
+      expect(error.retryAfterSeconds).toBe(90);
     });
   });
 });

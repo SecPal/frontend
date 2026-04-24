@@ -155,6 +155,7 @@ export function Login() {
     remainingLockoutSeconds,
     canAttemptLogin,
     recordFailedAttempt,
+    syncAuthoritativeLockout,
     resetAttempts,
   } = useLoginRateLimiter();
   const isOnline = useOnlineStatus();
@@ -281,6 +282,12 @@ export function Login() {
       if (err instanceof AuthApiError) {
         if ((err.status ?? 0) >= 500) {
           setError(TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE);
+          return;
+        }
+
+        if (err.status === 429) {
+          syncAuthoritativeLockout(err.retryAfterSeconds);
+          setError(err.message);
           return;
         }
 

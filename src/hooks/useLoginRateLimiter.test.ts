@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
@@ -160,6 +160,44 @@ describe("useLoginRateLimiter", () => {
 
       // Lockout end time should not change
       expect(result.current.lockoutEndTime).toBe(lockoutEnd);
+    });
+
+    it("keeps a server-authoritative lockout active for the retry-after window", () => {
+      const { result } = renderHook(() => useLoginRateLimiter());
+
+      act(() => {
+        result.current.syncAuthoritativeLockout(120);
+      });
+
+      expect(result.current.isLocked).toBe(true);
+      expect(result.current.remainingAttempts).toBe(0);
+      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(119);
+      expect(result.current.remainingLockoutSeconds).toBeLessThanOrEqual(120);
+
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      expect(stored.attempts).toBe(5);
+    });
+
+    it("does not shorten an active authoritative lockout when a weaker retry-after arrives", () => {
+      const { result } = renderHook(() => useLoginRateLimiter());
+
+      act(() => {
+        result.current.syncAuthoritativeLockout(120);
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+
+      const lockoutEndTime = result.current.lockoutEndTime;
+
+      act(() => {
+        result.current.syncAuthoritativeLockout(30);
+      });
+
+      expect(result.current.lockoutEndTime).toBe(lockoutEndTime);
+      expect(result.current.remainingLockoutSeconds).toBeGreaterThanOrEqual(109);
+      expect(result.current.remainingLockoutSeconds).toBeLessThanOrEqual(110);
     });
   });
 

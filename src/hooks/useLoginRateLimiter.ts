@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -7,6 +7,7 @@ const STORAGE_KEY = "login_rate_limit";
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 30 * 1000; // 30 seconds
 const ATTEMPT_RESET_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_AUTHORITATIVE_LOCKOUT_DURATION_MS = 60 * 1000; // 60 seconds
 
 interface RateLimitState {
   attempts: number;
@@ -27,6 +28,8 @@ interface UseLoginRateLimiterResult {
   canAttemptLogin: () => boolean;
   /** Record a failed login attempt */
   recordFailedAttempt: () => void;
+  /** Mirror a server-authoritative lockout from a 429 response */
+  syncAuthoritativeLockout: (retryAfterSeconds?: number) => void;
   /** Reset all attempts (call after successful login) */
   resetAttempts: () => void;
 }
@@ -112,6 +115,34 @@ export function useLoginRateLimiter(): UseLoginRateLimiterResult {
     saveState(newState);
   }, [state.attempts, state.lockoutEndTime]);
 
+  const syncAuthoritativeLockout = useCallback(
+    (retryAfterSeconds?: number) => {
+      const currentTime = Date.now();
+      const retryAfterMs =
+        typeof retryAfterSeconds === "number" && retryAfterSeconds > 0
+          ? retryAfterSeconds * 1000
+          : DEFAULT_AUTHORITATIVE_LOCKOUT_DURATION_MS;
+      const requestedLockoutEndTime = currentTime + retryAfterMs;
+      const currentLockoutEndTime =
+        state.lockoutEndTime && state.lockoutEndTime > currentTime
+          ? state.lockoutEndTime
+          : null;
+
+      const newState: RateLimitState = {
+        attempts: MAX_ATTEMPTS,
+        lockoutEndTime: currentLockoutEndTime
+          ? Math.max(currentLockoutEndTime, requestedLockoutEndTime)
+          : requestedLockoutEndTime,
+        lastAttemptTime: currentTime,
+      };
+
+      setNow(currentTime);
+      setState(newState);
+      saveState(newState);
+    },
+    [state.lockoutEndTime]
+  );
+
   const resetAttempts = useCallback(() => {
     setState({
       attempts: 0,
@@ -128,6 +159,7 @@ export function useLoginRateLimiter(): UseLoginRateLimiterResult {
     remainingLockoutSeconds,
     canAttemptLogin,
     recordFailedAttempt,
+    syncAuthoritativeLockout,
     resetAttempts,
   };
 }

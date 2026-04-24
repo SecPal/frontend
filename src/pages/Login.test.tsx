@@ -639,7 +639,7 @@ describe("Login", () => {
       )
     ).rejects.toThrow("Passkeys are not available in this browser.");
 
-    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock {});
+    vi.stubGlobal("PublicKeyCredential", class PublicKeyCredentialMock { });
     Object.defineProperty(navigator, "credentials", {
       configurable: true,
       value: {
@@ -1316,7 +1316,7 @@ describe("Login", () => {
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockResolvedValueOnce({
       challenge: {
@@ -1392,7 +1392,7 @@ describe("Login", () => {
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     vi.mocked(authApi.verifyMfaChallenge).mockResolvedValueOnce({
       user: createAuthUser(),
       authentication: {
@@ -1453,7 +1453,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
 
     mockLogin.mockRejectedValueOnce(
       new authApi.AuthApiError("Server Error", undefined, 500)
@@ -1493,7 +1493,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce(new Error("Network error"));
 
     renderLogin();
@@ -1527,7 +1527,7 @@ describe("Login", () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => { });
     mockLogin.mockRejectedValueOnce("string error");
 
     renderLogin();
@@ -1934,6 +1934,53 @@ describe("Login", () => {
           screen.getByText(/too many failed attempts/i)
         ).toBeInTheDocument();
       });
+    });
+
+    it("applies a server-authoritative lockout when login returns 429 with retry-after", async () => {
+      const mockLogin = vi.mocked(authApi.login);
+      mockLogin.mockRejectedValueOnce(
+        new authApi.AuthApiError(
+          "Too many login attempts. Please try again later.",
+          undefined,
+          429,
+          undefined,
+          120
+        )
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "test@secpal.dev" },
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: "wrong" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/too many failed attempts/i)
+        ).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByText(/too many login attempts\. please try again later\./i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /locked \(120s\)|locked \(119s\)/i })
+      ).toBeDisabled();
+
+      const stored = JSON.parse(
+        localStorage.getItem("login_rate_limit") || "{}"
+      );
+      expect(stored.attempts).toBe(5);
     });
 
     it("disables form inputs and button during lockout", async () => {
