@@ -5,6 +5,15 @@ import { describe, expect, it, vi } from "vitest";
 import { resolveLinguiVitePluginExports } from "../../linguiVitePluginInterop";
 
 describe("resolveLinguiVitePluginExports", () => {
+  it("returns named exports directly when they are present", () => {
+    const lingui = vi.fn();
+    const linguiTransformerBabelPreset = vi.fn();
+
+    expect(
+      resolveLinguiVitePluginExports({ lingui, linguiTransformerBabelPreset })
+    ).toEqual({ lingui, linguiTransformerBabelPreset });
+  });
+
   it("falls back to CommonJS default exports when named exports are unavailable", () => {
     const lingui = vi.fn();
     const linguiTransformerBabelPreset = vi.fn();

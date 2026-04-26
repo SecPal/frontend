@@ -1,12 +1,10 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-type LinguiPluginFactory = (...args: unknown[]) => unknown;
-
-type LinguiVitePluginExports = {
-  lingui: LinguiPluginFactory;
-  linguiTransformerBabelPreset: LinguiPluginFactory;
-};
+type LinguiVitePluginExports = Pick<
+  typeof import("@lingui/vite-plugin"),
+  "lingui" | "linguiTransformerBabelPreset"
+>;
 
 function hasLinguiVitePluginExports(
   value: unknown
