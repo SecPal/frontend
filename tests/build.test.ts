@@ -297,7 +297,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(offlineVaultDesign).toContain("# Encrypted Offline Vault Design");
     expect(offlineVaultDesign).toContain("## Target Key Hierarchy");
     expect(offlineVaultDesign).toContain("## Device-Bound Key Options");
-    expect(offlineVaultDesign).toContain("## Lock, Unlock, and Logout Semantics");
+    expect(offlineVaultDesign).toContain(
+      "## Lock, Unlock, and Logout Semantics"
+    );
     expect(offlineVaultDesign).toContain(
       "## Security Boundaries and UX Trade-Offs"
     );
