@@ -292,7 +292,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
 - `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
 - `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol); `applyTo: "**"` auto-loading was later removed during governance context cleanup
-- `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` - deferred Phase 2 design notes for future encrypted offline data protection with device-bound key options
 
 ### Changed
 
