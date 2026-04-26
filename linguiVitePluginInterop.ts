@@ -33,9 +33,7 @@ export function resolveLinguiVitePluginExports(
   if (
     typeof moduleExports === "object" &&
     moduleExports !== null &&
-    hasLinguiVitePluginExports(
-      (moduleExports as { default?: unknown }).default
-    )
+    hasLinguiVitePluginExports((moduleExports as { default?: unknown }).default)
   ) {
     return (moduleExports as { default: LinguiVitePluginExports }).default;
   }
