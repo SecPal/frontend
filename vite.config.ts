@@ -3,7 +3,8 @@
 
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import babel from "@rolldown/plugin-babel";
+import babel, { defineRolldownBabelPreset } from "@rolldown/plugin-babel";
+import linguiMacroBabelPlugin from "@lingui/babel-plugin-lingui-macro";
 import * as linguiVitePlugin from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -16,8 +17,21 @@ import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifest
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const { lingui, linguiTransformerBabelPreset } =
-  resolveLinguiVitePluginExports(linguiVitePlugin);
+const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
+const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
+const linguiMacroBabelPreset = defineRolldownBabelPreset({
+  preset: [
+    () => ({
+      plugins: [linguiMacroBabelPlugin],
+    }),
+  ],
+  rolldown: {
+    filter: {
+      id: /\.[jt]sx?$/,
+      code: linguiMacroImportPattern,
+    },
+  },
+});
 
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
@@ -57,7 +71,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react({}),
       babel({
-        presets: [linguiTransformerBabelPreset()],
+        presets: [linguiMacroBabelPreset],
       }),
       lingui(),
       tailwindcss(),

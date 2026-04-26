@@ -3,7 +3,7 @@
 
 type LinguiVitePluginExports = Pick<
   typeof import("@lingui/vite-plugin"),
-  "lingui" | "linguiTransformerBabelPreset"
+  "lingui"
 >;
 
 function hasLinguiVitePluginExports(
@@ -15,10 +15,7 @@ function hasLinguiVitePluginExports(
 
   const candidate = value as Record<string, unknown>;
 
-  return (
-    typeof candidate.lingui === "function" &&
-    typeof candidate.linguiTransformerBabelPreset === "function"
-  );
+  return typeof candidate.lingui === "function";
 }
 
 export function resolveLinguiVitePluginExports(
@@ -37,6 +34,6 @@ export function resolveLinguiVitePluginExports(
   }
 
   throw new TypeError(
-    "@lingui/vite-plugin did not expose usable lingui() and linguiTransformerBabelPreset() exports"
+    "@lingui/vite-plugin did not expose a usable lingui() export"
   );
 }
