@@ -4,17 +4,20 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
-import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";
+import * as linguiVitePlugin from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
+import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
 import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { lingui, linguiTransformerBabelPreset } =
+  resolveLinguiVitePluginExports(linguiVitePlugin);
 
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
