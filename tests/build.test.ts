@@ -167,6 +167,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain("defineRolldownBabelPreset");
     expect(viteConfig).toContain("linguiMacroBabelPreset");
     expect(viteConfig).toContain("@lingui\\/(?:core|react)\\/macro");
+    expect(viteConfig).toMatch(/rolldown\s*:\s*\{\s*filter\s*:\s*\{/);
+    expect(viteConfig).toMatch(/filter\s*:\s*\{[\s\S]*\bid\s*:/);
+    expect(viteConfig).toMatch(/filter\s*:\s*\{[\s\S]*\bcode\s*:/);
     expect(viteConfig).toMatch(
       /presets\s*:\s*\[\s*linguiMacroBabelPreset\s*\]/
     );
