@@ -30,7 +30,7 @@ Legacy Secrets-era password-vault content has been removed from the current rout
 Important operational entry points for the current app:
 
 - `app.secpal.dev` is the canonical live frontend host
-- `api.secpal.dev` is the canonical API origin for production builds
+- `https://api.secpal.dev` is the canonical API origin for production builds
 - browser sessions use Laravel Sanctum SPA auth with CSRF bootstrapping
 - production deployments must preserve the SPA routing and header hardening documented below
 

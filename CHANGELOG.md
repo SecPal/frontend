@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Removed the unreferenced archived performance worklog `docs/development/PERFORMANCE_QUICK_WINS.md`; the repository now keeps active performance guidance in current validation, build, and issue-tracking surfaces only.
+- Removed the archived performance worklog `docs/development/PERFORMANCE_QUICK_WINS.md`; the repository now keeps active performance guidance in current validation, build, and issue-tracking surfaces only.
 - Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
 - Removed the stale offline follow-up notes `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` and `docs/OFFLINE_ORGANIZATIONAL_UNITS.md`; the active audit plus tracked issues now remain the source of truth for deferred offline-storage hardening and organization-cache follow-up work.
 
