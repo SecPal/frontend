@@ -21,7 +21,7 @@ The following open issues cover parts of the audit scope:
 | #495  | Security: design encrypted offline vault with device-bound key options | FINDING-08 (Phase 2 scope: long-term PII at rest)          |
 | #68   | Phase 4: Offline Data Management & Conflict Resolution                 | FINDING-03, -07 (sync queue, TTL, multi-tab)               |
 
-See also `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` for the phased architecture.
+See issue #495 for the deferred Phase 2 encrypted-offline-vault direction.
 
 **New findings (not covered by existing issues):**
 
