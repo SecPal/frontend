@@ -103,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` as the accepted Phase 2 design record for frontend issue #495, documenting the target vault key hierarchy, device-bound key comparison, lock/unlock/logout semantics, and follow-up implementation slices for offline PII protection.
 - Added native Android passkey registration fallback in Settings so the shared passkey enrollment flow can delegate attestation creation to the injected Android bridge when the embedded WebView does not support browser WebAuthn registration, while keeping browser behavior unchanged.
 - Added native-bridge passkey sign-in to the shared login flow so Android can complete token-based passkey authentication through the injected native auth bridge while browsers keep the existing WebAuthn ceremony and progress states.
 - Added a Bewacherregister management panel to employee detail so authorized users can review BWR status and timestamps, generate the initial export, download the generated file, and move supported BWR states through the dedicated backend endpoints with inline validation feedback.
