@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reframed the frontend `README.md` around the currently shipped workforce-operations routes and runtime guidance, removing stale Secrets-era password-vault, attachment-encryption, and migration-status sections that no longer matched the live app surface, resolving frontend issue #531.
 - Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to Lingui's filtered `linguiTransformerBabelPreset()`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
 - Migrated the frontend Lingui toolchain to the v6-compatible formatter and split macro entry points (`@lingui/core/macro`, `@lingui/react/macro`) so Dependabot Lingui update PRs no longer fail CI on mixed-version `I18n` types, stale `@lingui/macro` extraction, or the removed `format: "po"` setting.
 - Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the unreferenced archived performance worklog `docs/development/PERFORMANCE_QUICK_WINS.md`; the repository now keeps active performance guidance in current validation, build, and issue-tracking surfaces only.
 - Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
 - Removed the stale offline follow-up notes `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` and `docs/OFFLINE_ORGANIZATIONAL_UNITS.md`; the active audit plus tracked issues now remain the source of truth for deferred offline-storage hardening and organization-cache follow-up work.
 

@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -13,208 +13,33 @@ SPDX-License-Identifier: CC0-1.0
 
 React/TypeScript frontend for SecPal — operations software for German private security services.
 
-## 📱 Progressive Web App (PWA)
+## Product Scope
 
-SecPal is an **offline-first PWA** providing seamless experience regardless of network connectivity.
+The current frontend ships the browser and PWA surfaces for SecPal's workforce operations flows:
 
-**Core Features:**
+- authenticated browser sessions with httpOnly cookie auth, MFA, and passkeys
+- onboarding and activation flows for pre-contract users
+- customer, site, employee, and organizational-unit management
+- profile/settings, activity logs, and Android provisioning
+- installable PWA behavior with service-worker updates and guarded offline support
 
-- 📴 **Offline Support**: Service Worker with intelligent caching strategies
-- 📲 **Installable**: Add to home screen on mobile/desktop
-- 🔄 **Auto-Updates**: Automatic service worker updates
-- 🌐 **Network Detection**: Real-time online/offline status monitoring
-- 💾 **Smart Caching**: NetworkFirst for API, CacheFirst for static assets
+Legacy Secrets-era password-vault content has been removed from the current route surface and is no longer described in this README.
 
-**Phase 3 Features (Issue #67):**
+## Runtime and Deployment
 
-- 🔔 **Push Notifications**: Permission management, Service Worker integration, preference UI
-- 📤 **Share Target API**: Receive shared content (text, URLs, images, PDFs, documents) from other apps
-- 📊 **Offline Analytics**: Privacy-first event tracking with IndexedDB persistence
-  - **⚠️ Note**: Backend sync not yet implemented. Analytics events are tracked and stored locally in IndexedDB but are not currently sent to a server. Events are marked as "synced" locally for development/testing purposes only. Production implementation will require an analytics backend endpoint (Issue #101).
+Important operational entry points for the current app:
 
-**Using PWA Features:**
+- `app.secpal.dev` is the canonical live frontend host
+- `api.secpal.dev` is the canonical API origin for production builds
+- browser sessions use Laravel Sanctum SPA auth with CSRF bootstrapping
+- production deployments must preserve the SPA routing and header hardening documented below
 
-```tsx
-// Push Notifications
-import { useNotifications } from "@/hooks/useNotifications";
+Current operational references:
 
-const { permission, requestPermission, showNotification } = useNotifications();
-
-// Share Target API
-import { useShareTarget } from "@/hooks/useShareTarget";
-
-const { sharedData, clearSharedData } = useShareTarget();
-
-// Offline Analytics
-import { getAnalytics } from "@/lib/analytics";
-
-try {
-  const analytics = getAnalytics();
-  await analytics.trackPageView("/dashboard", "Dashboard");
-  await analytics.trackClick("submit-button", { form: "login" });
-} catch (error) {
-  // Handle analytics not available (older browsers)
-  console.warn("Analytics not supported:", error);
-}
-```
-
-See the project's `CONTRIBUTING.md` for development guides and testing instructions.
-
-## 🔐 Client-Side File Encryption
-
-SecPal implements **end-to-end client-side file encryption** for file attachments using the Web Crypto API with **AES-GCM-256**. Attachment contents are encrypted on the client before upload, giving those files a **zero-knowledge** path where the backend cannot decrypt file contents.
-
-Employee and tenant data outside attachment contents use server-side encryption at rest, not zero-knowledge encryption, and attachment metadata such as filenames and sizes remains visible to the server.
-
-**Key Features:**
-
-- 🔒 **Zero-Knowledge File Contents**: Backend cannot decrypt attachment contents
-- 🔑 **AES-GCM-256**: Industry-standard authenticated encryption
-- 🧬 **HKDF-SHA-256**: Secure key derivation per file
-- ✅ **Integrity Verification**: SHA-256 checksums detect tampering
-- 📱 **Share Target Integration**: Encrypt files shared from other apps
-- 🔄 **Background Sync**: Automatic retry on network failures
-- 📊 **Progress Tracking**: Real-time upload status with queue management
-
-**Usage Example:**
-
-```tsx
-import { encryptFile, deriveFileKey } from "@/lib/crypto/encryption";
-import { uploadEncryptedAttachment } from "@/services/secretApi";
-
-// Encrypt and upload a file
-const fileData = new Uint8Array(await file.arrayBuffer());
-const fileKey = await deriveFileKey(masterKey, file.name);
-const encrypted = await encryptFile(fileData, fileKey);
-
-await uploadEncryptedAttachment(secretId, encrypted, {
-  filename: file.name,
-  type: file.type,
-  size: file.size,
-  checksum: await calculateChecksum(fileData),
-});
-```
-
-**Security Documentation:**
-
-For comprehensive security details, threat model, and cryptographic guarantees, see:
-
-📘 **[CRYPTO_ARCHITECTURE.md](docs/CRYPTO_ARCHITECTURE.md)** - Complete encryption architecture documentation
-
-**Implementation Status:**
-
-- ✅ Phase 1: Crypto Utilities (PR #177, merged 19.11.2025)
-- ✅ Phase 2: ShareTarget Integration (PR #178, merged 19.11.2025)
-- ✅ Phase 3: Upload Integration (PR #187, merged 21.11.2025)
-- ✅ Phase 4: Download & Decryption (PR #188, merged 21.11.2025)
-- ✅ Phase 5: Security Audit & Documentation (PR #190, merged 22.11.2025)
-
-## 🔒 Authentication (httpOnly Cookies)
-
-SecPal uses **httpOnly cookie-based authentication** with Laravel Sanctum SPA mode for enhanced security. This protects authentication tokens from XSS attacks.
-
-**Security Benefits:**
-
-- 🛡️ **XSS Protection**: httpOnly cookies not accessible to JavaScript
-- 🔐 **CSRF Protection**: Sanctum CSRF token validation for state-changing requests
-- ✅ **Secure Attributes**: Cookies use `Secure`, `SameSite=Lax` in production
-- 🚫 **No localStorage**: Tokens never stored in localStorage (no XSS exposure)
-
-**Authentication Flow:**
-
-```typescript
-import { login, logout } from "@/services/authApi";
-
-// Login (CSRF token fetched automatically)
-const response = await login({
-  email: "user@secpal.app",
-  password: "SecurePassword123!",
-});
-// Response: { user: { id, name, email } }
-// Session cookie set by backend (httpOnly, not accessible to JS)
-
-// Logout (revokes session)
-await logout();
-```
-
-**Making Authenticated Requests:**
-
-```typescript
-import { fetchWithCsrf } from "@/services/csrf";
-
-// For state-changing requests (POST, PUT, PATCH, DELETE)
-const response = await fetchWithCsrf("https://api.secpal.dev/v1/secrets", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ title: "My Secret" }),
-});
-// ✅ credentials: include added automatically
-// ✅ X-XSRF-TOKEN header added automatically
-// ✅ 419 retry handled automatically
-
-// For GET requests (no CSRF needed)
-const response = await fetch("https://api.secpal.dev/v1/secrets", {
-  credentials: "include", // REQUIRED: Sends cookies
-});
-```
-
-**Migration from localStorage:**
-
-Previous versions used localStorage for token storage, which was vulnerable to XSS attacks. The migration to httpOnly cookies significantly improves security.
-
-📘 **[docs/authentication-migration.md](docs/authentication-migration.md)** - Complete migration guide with troubleshooting
-
-**Implementation Status:**
-
-- ✅ Backend PR-1: Sanctum SPA Configuration & CORS Setup (SecPal/api#209, merged 22.11.2025)
-- ✅ Backend PR-2: CSRF Token Endpoint & Security Hardening (SecPal/api#210, merged 23.11.2025)
-- ✅ Backend PR-3: Tests & API Documentation Update (SecPal/api#208, merged 23.11.2025)
-- ✅ Frontend PR-1: localStorage Removal & httpOnly Cookie Migration (#210, merged 23.11.2025)
-- ✅ Frontend PR-2: CSRF Token Handling & Request Interceptor (#211, merged 23.11.2025)
-- ✅ Frontend PR-3: Integration Tests & Developer Documentation (#212, current PR)
-
-## 🔐 Secret Management (Password Vault UI)
-
-SecPal provides a comprehensive **password vault UI** with encrypted storage, file attachments, and sharing capabilities.
-
-**Features (Phases 1-3 Complete):**
-
-- 📋 **Secret List & Detail Views**: Browse, search, and filter secrets with grid/list toggle
-  - Search by title, filter by tags/expiration status
-  - Pagination (20 items/page)
-  - Password show/hide toggle
-  - Expiration badges, attachment count, shared indicator
-- ✏️ **Create/Edit Forms**: Full CRUD operations with validation
-  - Title, username, password, URL, notes fields
-  - Client-side validation
-  - Loading states and error handling
-- 📎 **File Attachments**: Upload, download, preview encrypted files
-  - Drag-and-drop upload with file validation (10MB max)
-  - Image preview with zoom controls (50%-200%)
-  - PDF preview in modal
-  - File type validation (images, PDFs, documents)
-  - Download with automatic decryption
-
-**Usage Example:**
-
-```tsx
-import { SecretList } from "@/pages/Secrets/SecretList";
-import { SecretDetail } from "@/pages/Secrets/SecretDetail";
-
-// List all secrets
-<SecretList />
-
-// View secret details
-<SecretDetail secretId="uuid" />
-```
-
-**Implementation Status:**
-
-- ✅ Phase 1: Secret List & Detail Views (PR #197, merged 22.11.2025)
-- ✅ Phase 2: Secret Create/Edit Forms (PR #198, merged 22.11.2025)
-- ✅ Phase 3: File Attachments UI Integration (PR #200, merged 22.11.2025)
-- 🔜 Phase 4: Secret Sharing UI (Issue #195)
-- 🔜 Phase 5: Offline Support & PWA Integration (Issue #196)
+- [docs/deployment-spa-routing.md](docs/deployment-spa-routing.md) - Apache/Nginx SPA routing, security headers, and `VITE_API_URL` requirements
+- [PWA_OFFLINE_PERSISTENCE_AUDIT.md](PWA_OFFLINE_PERSISTENCE_AUDIT.md) - active offline-storage audit and follow-up issue mapping
+- [CONTRIBUTING.md](CONTRIBUTING.md) - local workflow, preflight usage, and PR rules
+- [SECURITY.md](SECURITY.md) - vulnerability reporting and security process
 
 ## 🌍 Internationalization (i18n)
 
@@ -469,7 +294,7 @@ This project is REUSE 3.3 compliant. All files contain SPDX license headers.
 
 - [Contracts](https://github.com/SecPal/contracts) - OpenAPI 3.1 specifications
 - [.github](https://github.com/SecPal/.github) - Organization-wide settings and documentation
-- API - Laravel backend (planned)
+- [api](https://github.com/SecPal/api) - Laravel backend
 
 ## 📞 Support
 
@@ -480,4 +305,3 @@ This project is REUSE 3.3 compliant. All files contain SPDX license headers.
 ---
 
 **Maintained by:** SecPal Team
-**Last Updated:** October 2025
