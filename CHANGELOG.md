@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hardened the Vite Lingui plugin wiring to resolve `lingui()` and `linguiTransformerBabelPreset()` from either named exports or a CommonJS `default` export, so frontend builds stay compatible with current Node/Vite CJS-interop behavior and issue #1003 is regression-covered.
 - Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time, resolving frontend issue #997.
 - Mirrored backend `429` login lockouts into the frontend login rate limiter via `Retry-After` and added Playwright regression coverage, so the login UI now stays in the authoritative cooldown state instead of falling back to local failed-attempt tracking, resolving frontend issue #803.
 - Fixed RFC-correct handling of `Retry-After: 0` on `429` login responses; the header value is now parsed as valid rather than discarded, and `syncAuthoritativeLockout(0)` clears the local lockout state so the form remains immediately usable, matching the server's intent to allow an instant retry.
