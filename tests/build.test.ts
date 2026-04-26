@@ -164,15 +164,21 @@ describe("Build Configuration and Source Verification", () => {
   it("scopes the Lingui macro Babel transform to files that import Lingui macros", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
-    expect(viteConfig).toMatch(/\blinguiTransformerBabelPreset\b/);
+    expect(viteConfig).toContain("defineRolldownBabelPreset");
+    expect(viteConfig).toContain("linguiMacroBabelPreset");
+    expect(viteConfig).toContain("@lingui\\/(?:core|react)\\/macro");
+    expect(viteConfig).toMatch(/rolldown\s*:\s*\{\s*filter\s*:\s*\{/);
+    expect(viteConfig).toMatch(/filter\s*:\s*\{[\s\S]*\bid\s*:/);
+    expect(viteConfig).toMatch(/filter\s*:\s*\{[\s\S]*\bcode\s*:/);
     expect(viteConfig).toMatch(
-      /presets\s*:\s*\[\s*linguiTransformerBabelPreset\(\)\s*\]/
+      /presets\s*:\s*\[\s*linguiMacroBabelPreset\s*\]/
     );
-    expect(viteConfig).not.toMatch(/@lingui\/babel-plugin-lingui-macro/);
+    expect(viteConfig).toContain("@lingui/babel-plugin-lingui-macro");
   });
 
   it("loads Lingui Vite exports through CJS-safe interop wiring", () => {
     const viteConfig = readRepoFile("vite.config.ts");
+    const interopHelper = readRepoFile("linguiVitePluginInterop.ts");
 
     expect(viteConfig).toContain(
       'import * as linguiVitePlugin from "@lingui/vite-plugin";'
@@ -186,6 +192,8 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).not.toContain(
       'import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";'
     );
+    expect(interopHelper).toContain('"lingui"');
+    expect(interopHelper).not.toContain('"linguiTransformerBabelPreset"');
   });
 
   it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {

@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Reframed the frontend `README.md` around the currently shipped workforce-operations routes and runtime guidance, removing stale Secrets-era password-vault, attachment-encryption, and migration-status sections that no longer matched the live app surface, resolving frontend issue #531.
-- Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to Lingui's filtered `linguiTransformerBabelPreset()`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
+- Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to a filtered Rolldown Babel preset around `@lingui/babel-plugin-lingui-macro`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
 - Migrated the frontend Lingui toolchain to the v6-compatible formatter and split macro entry points (`@lingui/core/macro`, `@lingui/react/macro`) so Dependabot Lingui update PRs no longer fail CI on mixed-version `I18n` types, stale `@lingui/macro` extraction, or the removed `format: "po"` setting.
 - Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
 - Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Hardened the Vite Lingui plugin wiring to resolve `lingui()` and `linguiTransformerBabelPreset()` from either named exports or a CommonJS `default` export, so frontend builds stay compatible with current Node/Vite CJS-interop behavior and issue #1003 is regression-covered.
+- Hardened the Vite Lingui plugin wiring to resolve `lingui()` from either named exports or a CommonJS `default` export, and paired it with a filtered local Rolldown preset for Lingui macros, so frontend builds stay compatible with the current Node/Vite CJS-interop behavior and issue #1003 is regression-covered.
 - Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time, resolving frontend issue #997.
 - Mirrored backend `429` login lockouts into the frontend login rate limiter via `Retry-After` and added Playwright regression coverage, so the login UI now stays in the authoritative cooldown state instead of falling back to local failed-attempt tracking, resolving frontend issue #803.
 - Fixed RFC-correct handling of `Retry-After: 0` on `429` login responses; the header value is now parsed as valid rather than discarded, and `syncAuthoritativeLockout(0)` clears the local lockout state so the form remains immediately usable, matching the server's intent to allow an instant retry.

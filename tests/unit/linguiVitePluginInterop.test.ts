@@ -5,35 +5,27 @@ import { describe, expect, it, vi } from "vitest";
 import { resolveLinguiVitePluginExports } from "../../linguiVitePluginInterop";
 
 describe("resolveLinguiVitePluginExports", () => {
-  it("returns named exports directly when they are present", () => {
+  it("returns the named lingui export directly when it is present", () => {
     const lingui = vi.fn();
-    const linguiTransformerBabelPreset = vi.fn();
 
-    expect(
-      resolveLinguiVitePluginExports({ lingui, linguiTransformerBabelPreset })
-    ).toEqual({ lingui, linguiTransformerBabelPreset });
+    expect(resolveLinguiVitePluginExports({ lingui })).toEqual({ lingui });
   });
 
-  it("falls back to CommonJS default exports when named exports are unavailable", () => {
+  it("falls back to CommonJS default exports when the named lingui export is unavailable", () => {
     const lingui = vi.fn();
-    const linguiTransformerBabelPreset = vi.fn();
 
     expect(
       resolveLinguiVitePluginExports({
         default: {
           lingui,
-          linguiTransformerBabelPreset,
         },
       })
-    ).toEqual({
-      lingui,
-      linguiTransformerBabelPreset,
-    });
+    ).toEqual({ lingui });
   });
 
-  it("throws when neither named exports nor default exports expose the required Lingui functions", () => {
+  it("throws when neither named exports nor default exports expose a usable lingui function", () => {
     expect(() => resolveLinguiVitePluginExports({})).toThrow(
-      "@lingui/vite-plugin did not expose usable lingui() and linguiTransformerBabelPreset() exports"
+      "@lingui/vite-plugin did not expose a usable lingui() export"
     );
   });
 });
