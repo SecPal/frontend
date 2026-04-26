@@ -21,7 +21,7 @@ The following open issues cover parts of the audit scope:
 | #495  | Security: design encrypted offline vault with device-bound key options | FINDING-08 (Phase 2 scope: long-term PII at rest)          |
 | #68   | Phase 4: Offline Data Management & Conflict Resolution                 | FINDING-03, -07 (sync queue, TTL, multi-tab)               |
 
-See issue #495 for the deferred Phase 2 encrypted-offline-vault direction.
+See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Phase 2 encrypted-offline-vault direction.
 
 **New findings (not covered by existing issues):**
 
@@ -188,7 +188,7 @@ See issue #495 for the deferred Phase 2 encrypted-offline-vault direction.
   - Logout barrier prevents BFCache restoration
   - Session-expired event triggers auto-logout on 401
   - Cross-tab sync clears other tabs on logout in any one tab
-- **Fix:** Consider whether `name` and `email` are actually needed in localStorage or whether an opaque identifier suffices, with display data held only in React state (after server revalidation). Trade-off: offline display of the username would not be possible.
+- **Fix:** Move long-term profile data out of `localStorage` into the encrypted offline vault described in `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md`, leaving only non-sensitive coordination flags outside the vault. Trade-off: the locked shell can no longer display username details before a local unlock.
 
 ### FINDING-09: `XSRF-TOKEN` cookie remains after logout
 

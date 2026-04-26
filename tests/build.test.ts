@@ -283,6 +283,31 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).not.toContain('url: "/reports/new"');
     expect(viteConfig).not.toContain('url: "/emergency"');
   });
+
+  it("documents the encrypted offline vault design for issue 495", () => {
+    expect(
+      existsSync(path.join(repoRoot, "docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md"))
+    ).toBe(true);
+
+    const offlineVaultDesign = readRepoFile(
+      "docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md"
+    );
+    const persistenceAudit = readRepoFile("PWA_OFFLINE_PERSISTENCE_AUDIT.md");
+
+    expect(offlineVaultDesign).toContain("# Encrypted Offline Vault Design");
+    expect(offlineVaultDesign).toContain("## Target Key Hierarchy");
+    expect(offlineVaultDesign).toContain("## Device-Bound Key Options");
+    expect(offlineVaultDesign).toContain(
+      "## Lock, Unlock, and Logout Semantics"
+    );
+    expect(offlineVaultDesign).toContain(
+      "## Security Boundaries and UX Trade-Offs"
+    );
+    expect(offlineVaultDesign).toContain("## Follow-Up Implementation Slices");
+    expect(persistenceAudit).toContain(
+      "docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md"
+    );
+  });
 });
 
 /**
