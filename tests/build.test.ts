@@ -170,7 +170,7 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toMatch(
       /presets\s*:\s*\[\s*linguiMacroBabelPreset\s*\]/
     );
-    expect(viteConfig).toContain('@lingui/babel-plugin-lingui-macro');
+    expect(viteConfig).toContain("@lingui/babel-plugin-lingui-macro");
   });
 
   it("loads Lingui Vite exports through CJS-safe interop wiring", () => {
