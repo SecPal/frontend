@@ -576,6 +576,48 @@ describe("OrganizationalUnitStore", () => {
         })
       );
     });
+
+    it("runs the vault org-unit index backfill scan at most once per vault session", async () => {
+      await saveOrganizationalUnit({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        parent_id: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+
+      // Strip index fields to force a backfill on the first query
+      const record = await db.vaultOrganizationalUnitCache.get("branch-1");
+      if (record) {
+        const legacyRecord = {
+          ...record,
+        } as Partial<VaultOrganizationalUnitCacheRecord>;
+        delete legacyRecord.type;
+        delete legacyRecord.parent_id;
+        delete legacyRecord.parentLookupKey;
+        await db.vaultOrganizationalUnitCache.put(
+          legacyRecord as VaultOrganizationalUnitCacheRecord
+        );
+      }
+
+      const decryptSpy = vi.spyOn(crypto.subtle, "decrypt");
+
+      // First query: backfill scan runs (decrypt for backfill + decrypt for query result)
+      await getOrganizationalUnitsByType("branch");
+      const decryptsAfterFirstCall = decryptSpy.mock.calls.length;
+
+      decryptSpy.mockClear();
+
+      // Second query in the same session: backfill flag is already set, only the indexed query decrypt happens
+      await getOrganizationalUnitsByType("branch");
+      const decryptsAfterSecondCall = decryptSpy.mock.calls.length;
+
+      expect(decryptsAfterSecondCall).toBeLessThan(decryptsAfterFirstCall);
+      expect(decryptsAfterSecondCall).toBe(1);
+    });
   });
 
   describe("searchOrganizationalUnits", () => {

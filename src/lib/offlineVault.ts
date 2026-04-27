@@ -103,6 +103,7 @@ type VaultOrganizationalUnitIndexFields = Pick<
 >;
 
 let activeVaultSession: VaultSession | null = null;
+let vaultOrgUnitIndexEnsured = false;
 
 function isAuthVaultStateEnvelopeV1(
   value: unknown
@@ -314,6 +315,7 @@ export function clearOfflineVaultSession(): void {
   }
 
   activeVaultSession = null;
+  vaultOrgUnitIndexEnsured = false;
 }
 
 export function clearStoredOfflineVaultState(): void {
@@ -968,11 +970,16 @@ async function decryptVaultOrganizationalUnitRecords(
 async function ensureVaultOrganizationalUnitIndexes(
   session: VaultSession
 ): Promise<void> {
+  if (vaultOrgUnitIndexEnsured) {
+    return;
+  }
+
   const legacyRecords = await db.vaultOrganizationalUnitCache
     .filter(needsVaultOrganizationalUnitIndexBackfill)
     .toArray();
 
   if (legacyRecords.length === 0) {
+    vaultOrgUnitIndexEnsured = true;
     return;
   }
 
@@ -1008,6 +1015,8 @@ async function ensureVaultOrganizationalUnitIndexes(
   if (invalidIds.length > 0) {
     await db.vaultOrganizationalUnitCache.bulkDelete(invalidIds);
   }
+
+  vaultOrgUnitIndexEnsured = true;
 }
 
 async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
