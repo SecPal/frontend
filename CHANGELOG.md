@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored indexed offline-vault organizational-unit lookups for `type` and parent filters by persisting plaintext vault index metadata and lazily backfilling older encrypted org-unit cache records, so filtered queries no longer decrypt the full vault cache on every lookup, resolving frontend issue #1013.
 - Hardened the Vite Lingui plugin wiring to resolve `lingui()` from either named exports or a CommonJS `default` export, and paired it with a filtered local Rolldown preset for Lingui macros, so frontend builds stay compatible with the current Node/Vite CJS-interop behavior and issue #1003 is regression-covered.
 - Changed both `viteStaticCopy` `rename` options for `assetlinks.json` from the unsupported object form (`{ stripBase: true, name: "assetlinks.json" }`) to the correct string form (`"assetlinks.json"`); the object form was silently producing wrong output paths for Android Digital Asset Links at build time, resolving frontend issue #997.
 - Mirrored backend `429` login lockouts into the frontend login rate limiter via `Retry-After` and added Playwright regression coverage, so the login UI now stays in the authoritative cooldown state instead of falling back to local failed-attempt tracking, resolving frontend issue #803.

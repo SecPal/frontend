@@ -28,6 +28,7 @@ const AUTH_VAULT_DERIVED_KEY_BYTES = AUTH_VAULT_HALF_KEY_BYTES * 2;
 const VAULT_RECORD_IV_BYTES = 12;
 const VAULT_RECORD_TAG_BYTES = 16;
 const PROFILE_RECORD_ID = "profile";
+const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -94,6 +95,11 @@ interface VaultSession {
 type VaultAnalyticsPayload = Omit<
   AnalyticsEvent,
   "id" | "synced" | "timestamp"
+>;
+
+type VaultOrganizationalUnitIndexFields = Pick<
+  VaultOrganizationalUnitCacheRecord,
+  "type" | "parent_id" | "parentLookupKey"
 >;
 
 let activeVaultSession: VaultSession | null = null;
@@ -881,6 +887,128 @@ async function decryptVaultRecord<T>(
   }
 }
 
+function getVaultOrganizationalUnitParentLookupKey(
+  parentId: string | null | undefined
+): string {
+  return parentId ?? ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY;
+}
+
+function buildVaultOrganizationalUnitIndexFields(
+  unit: Pick<OrganizationalUnitCacheEntry, "type" | "parent_id">
+): VaultOrganizationalUnitIndexFields {
+  return {
+    type: unit.type,
+    parent_id: unit.parent_id ?? null,
+    parentLookupKey: getVaultOrganizationalUnitParentLookupKey(unit.parent_id),
+  };
+}
+
+function needsVaultOrganizationalUnitIndexBackfill(
+  record: VaultOrganizationalUnitCacheRecord
+): boolean {
+  return (
+    typeof record.type !== "string" ||
+    record.parent_id === undefined ||
+    typeof record.parentLookupKey !== "string"
+  );
+}
+
+async function decryptVaultOrganizationalUnitRecord(
+  record: VaultOrganizationalUnitCacheRecord,
+  session: VaultSession
+): Promise<OrganizationalUnitCacheEntry | null> {
+  const decryptedRecord = await decryptVaultRecord<OrganizationalUnitCacheEntry>(
+    record,
+    "organizationalUnitCache",
+    session
+  );
+
+  if (!decryptedRecord) {
+    return null;
+  }
+
+  return {
+    ...decryptedRecord,
+    cachedAt: record.cachedAt,
+    lastSynced: record.lastSynced,
+  };
+}
+
+async function decryptVaultOrganizationalUnitRecords(
+  records: VaultOrganizationalUnitCacheRecord[],
+  session: VaultSession
+): Promise<OrganizationalUnitCacheEntry[]> {
+  const invalidIds: string[] = [];
+  const decryptedRecords = await Promise.all(
+    records.map(async (record) => {
+      const decryptedRecord = await decryptVaultOrganizationalUnitRecord(
+        record,
+        session
+      );
+
+      if (!decryptedRecord) {
+        invalidIds.push(record.id);
+        return null;
+      }
+
+      return decryptedRecord;
+    })
+  );
+
+  if (invalidIds.length > 0) {
+    await db.vaultOrganizationalUnitCache.bulkDelete(invalidIds);
+  }
+
+  return decryptedRecords.filter(
+    (record): record is OrganizationalUnitCacheEntry => record !== null
+  );
+}
+
+async function ensureVaultOrganizationalUnitIndexes(
+  session: VaultSession
+): Promise<void> {
+  const legacyRecords = await db.vaultOrganizationalUnitCache
+    .filter(needsVaultOrganizationalUnitIndexBackfill)
+    .toArray();
+
+  if (legacyRecords.length === 0) {
+    return;
+  }
+
+  const updates: Array<{
+    key: string;
+    changes: VaultOrganizationalUnitIndexFields;
+  }> = [];
+  const invalidIds: string[] = [];
+
+  await Promise.all(
+    legacyRecords.map(async (record) => {
+      const decryptedRecord = await decryptVaultOrganizationalUnitRecord(
+        record,
+        session
+      );
+
+      if (!decryptedRecord) {
+        invalidIds.push(record.id);
+        return;
+      }
+
+      updates.push({
+        key: record.id,
+        changes: buildVaultOrganizationalUnitIndexFields(decryptedRecord),
+      });
+    })
+  );
+
+  if (updates.length > 0) {
+    await db.vaultOrganizationalUnitCache.bulkUpdate(updates);
+  }
+
+  if (invalidIds.length > 0) {
+    await db.vaultOrganizationalUnitCache.bulkDelete(invalidIds);
+  }
+}
+
 async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
@@ -1092,6 +1220,7 @@ async function migrateLegacyOrganizationalUnitRecords(
 
       return {
         id: record.id,
+        ...buildVaultOrganizationalUnitIndexFields(record),
         cachedAt: record.cachedAt,
         lastSynced: record.lastSynced,
         ...encryptedPayload,
@@ -1301,6 +1430,7 @@ export async function saveVaultOrganizationalUnit(
 
   await db.vaultOrganizationalUnitCache.put({
     id: unit.id,
+    ...buildVaultOrganizationalUnitIndexFields(unit),
     cachedAt: unit.cachedAt,
     lastSynced: unit.lastSynced,
     ...encryptedPayload,
@@ -1326,23 +1456,17 @@ export async function getVaultOrganizationalUnit(
     return undefined;
   }
 
-  const decryptedRecord =
-    await decryptVaultRecord<OrganizationalUnitCacheEntry>(
-      record,
-      "organizationalUnitCache",
-      session
-    );
+  const decryptedRecord = await decryptVaultOrganizationalUnitRecord(
+    record,
+    session
+  );
 
   if (!decryptedRecord) {
     await db.vaultOrganizationalUnitCache.delete(id);
     return undefined;
   }
 
-  return {
-    ...decryptedRecord,
-    cachedAt: record.cachedAt,
-    lastSynced: record.lastSynced,
-  };
+  return decryptedRecord;
 }
 
 export async function listVaultOrganizationalUnits(): Promise<
@@ -1358,36 +1482,52 @@ export async function listVaultOrganizationalUnits(): Promise<
 
   await migrateLegacyOrganizationalUnitRecords(session);
 
-  const records = await db.vaultOrganizationalUnitCache.toArray();
-  const invalidIds: string[] = [];
-  const decryptedRecords = await Promise.all(
-    records.map(async (record) => {
-      const decryptedRecord =
-        await decryptVaultRecord<OrganizationalUnitCacheEntry>(
-          record,
-          "organizationalUnitCache",
-          session
-        );
-
-      if (!decryptedRecord) {
-        invalidIds.push(record.id);
-        return null;
-      }
-
-      return {
-        ...decryptedRecord,
-        cachedAt: record.cachedAt,
-        lastSynced: record.lastSynced,
-      };
-    })
+  return decryptVaultOrganizationalUnitRecords(
+    await db.vaultOrganizationalUnitCache.toArray(),
+    session
   );
+}
 
-  if (invalidIds.length > 0) {
-    await db.vaultOrganizationalUnitCache.bulkDelete(invalidIds);
+export async function listVaultOrganizationalUnitsByType(
+  type: OrganizationalUnitCacheEntry["type"]
+): Promise<OrganizationalUnitCacheEntry[]> {
+  const session = await ensureOfflineVaultSession();
+
+  if (!session) {
+    return [];
   }
 
-  return decryptedRecords.filter(
-    (record): record is OrganizationalUnitCacheEntry => record !== null
+  await ensureVaultDatabaseOpen();
+
+  await migrateLegacyOrganizationalUnitRecords(session);
+  await ensureVaultOrganizationalUnitIndexes(session);
+
+  return decryptVaultOrganizationalUnitRecords(
+    await db.vaultOrganizationalUnitCache.where("type").equals(type).toArray(),
+    session
+  );
+}
+
+export async function listVaultOrganizationalUnitsByParent(
+  parentId: string | null
+): Promise<OrganizationalUnitCacheEntry[]> {
+  const session = await ensureOfflineVaultSession();
+
+  if (!session) {
+    return [];
+  }
+
+  await ensureVaultDatabaseOpen();
+
+  await migrateLegacyOrganizationalUnitRecords(session);
+  await ensureVaultOrganizationalUnitIndexes(session);
+
+  return decryptVaultOrganizationalUnitRecords(
+    await db.vaultOrganizationalUnitCache
+      .where("parentLookupKey")
+      .equals(getVaultOrganizationalUnitParentLookupKey(parentId))
+      .toArray(),
+    session
   );
 }
 
