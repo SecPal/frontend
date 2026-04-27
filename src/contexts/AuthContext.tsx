@@ -19,6 +19,7 @@ import { authStorage } from "../services/storage";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
+import { AUTH_VAULT_STORAGE_KEY } from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
 
@@ -466,11 +467,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.storageArea !== localStorage || event.key !== "auth_user") {
+      if (event.storageArea !== localStorage) {
         return;
       }
 
-      if (event.newValue === null) {
+      if (event.key === "auth_logout_barrier" && event.newValue !== null) {
+        clearAuthenticatedState(true);
+        return;
+      }
+
+      if (
+        event.key !== "auth_user" &&
+        event.key !== AUTH_VAULT_STORAGE_KEY
+      ) {
+        return;
+      }
+
+      if (
+        event.newValue === null &&
+        localStorage.getItem("auth_user") === null &&
+        localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
+      ) {
         clearAuthenticatedState(true);
         return;
       }

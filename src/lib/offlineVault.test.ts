@@ -1,0 +1,108 @@
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { PersistedAuthUser } from "../services/authState";
+import { db, type OrganizationalUnitCacheEntry } from "./db";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+  initializeOfflineVault,
+  listVaultAnalyticsEvents,
+  listVaultOrganizationalUnits,
+  readPersistedAuthUserFromVault,
+} from "./offlineVault";
+
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
+describe("offlineVault", () => {
+  const persistedUser: PersistedAuthUser = {
+    id: "user-1",
+    name: "Vault User",
+    email: "vault@secpal.dev",
+    emailVerified: false,
+    roles: ["Admin"],
+  };
+
+  beforeEach(async () => {
+    await db.delete();
+    await db.open();
+    localStorage.clear();
+    sessionStorage.clear();
+    setCsrfTokenCookie("test-csrf-token");
+    clearOfflineVaultSession();
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
+  });
+
+  it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
+    await initializeOfflineVault(persistedUser);
+
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+
+    const storedProfile = await db.vaultProfile.get("profile");
+
+    expect(storedProfile).toEqual(
+      expect.objectContaining({
+        id: "profile",
+        ciphertext: expect.any(String),
+        iv: expect.any(String),
+        authTag: expect.any(String),
+      })
+    );
+  });
+
+  it("migrates legacy IndexedDB PII into vault-backed stores and clears plaintext records", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+      userId: persistedUser.id,
+    });
+
+    const organizationalUnit: OrganizationalUnitCacheEntry = {
+      id: "org-1",
+      type: "company",
+      name: "SecPal GmbH",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      cachedAt: new Date("2026-01-03T00:00:00Z"),
+      lastSynced: new Date("2026-01-03T00:00:00Z"),
+      parent_id: null,
+      parent: null,
+    };
+
+    await db.organizationalUnitCache.put(organizationalUnit);
+
+    await initializeOfflineVault(persistedUser);
+
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
+
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({
+        type: "page_view",
+        userId: persistedUser.id,
+        sessionId: "session-1",
+      }),
+    ]);
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual([
+      expect.objectContaining({
+        id: "org-1",
+        name: "SecPal GmbH",
+      }),
+    ]);
+  });
+});

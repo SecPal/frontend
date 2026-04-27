@@ -47,6 +47,9 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
     await Promise.all([
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
+      db.vaultProfile.clear(),
+      db.vaultAnalytics.clear(),
+      db.vaultOrganizationalUnitCache.clear(),
     ]);
   }
 }

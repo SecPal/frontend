@@ -16,6 +16,15 @@ import {
   searchOrganizationalUnits,
   clearOrganizationalUnitCache,
 } from "./organizationalUnitStore";
+import {
+  clearOfflineVaultSession,
+  initializeOfflineVault,
+} from "./offlineVault";
+
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
 
 describe("buildOrganizationalUnitCacheEntry", () => {
   const baseUnit: OrganizationalUnit = {
@@ -107,6 +116,15 @@ describe("OrganizationalUnitStore", () => {
     // Clear database before each test
     await db.delete();
     await db.open();
+    localStorage.clear();
+    clearOfflineVaultSession();
+    setCsrfTokenCookie("test-csrf-token");
+    await initializeOfflineVault({
+      id: "user-1",
+      name: "Vault User",
+      email: "vault@secpal.dev",
+      emailVerified: false,
+    });
   });
 
   describe("saveOrganizationalUnit", () => {
@@ -123,7 +141,7 @@ describe("OrganizationalUnitStore", () => {
 
       await saveOrganizationalUnit(unit);
 
-      const saved = await db.organizationalUnitCache.get("unit-1");
+      const saved = await getOrganizationalUnit("unit-1");
       expect(saved).toBeDefined();
       expect(saved?.name).toBe("Berlin Branch");
       expect(saved?.type).toBe("branch");
@@ -151,12 +169,12 @@ describe("OrganizationalUnitStore", () => {
 
       await saveOrganizationalUnit(updated);
 
-      const saved = await db.organizationalUnitCache.get("unit-1");
+      const saved = await getOrganizationalUnit("unit-1");
       expect(saved?.name).toBe("Berlin Branch (Updated)");
       expect(saved?.updated_at).toBe("2025-01-11T00:00:00Z");
 
       // Should still have only one entry
-      const allUnits = await db.organizationalUnitCache.toArray();
+      const allUnits = await listOrganizationalUnits();
       expect(allUnits).toHaveLength(1);
     });
   });
@@ -249,10 +267,10 @@ describe("OrganizationalUnitStore", () => {
       };
 
       await db.organizationalUnitCache.put(unit);
-      expect(await db.organizationalUnitCache.get("unit-1")).toBeDefined();
+      expect(await getOrganizationalUnit("unit-1")).toBeDefined();
 
       await deleteOrganizationalUnit("unit-1");
-      expect(await db.organizationalUnitCache.get("unit-1")).toBeUndefined();
+      expect(await getOrganizationalUnit("unit-1")).toBeUndefined();
     });
 
     it("should not throw error when deleting non-existent unit", async () => {
@@ -470,10 +488,10 @@ describe("OrganizationalUnitStore", () => {
       await Promise.all(
         units.map((unit) => db.organizationalUnitCache.put(unit))
       );
-      expect(await db.organizationalUnitCache.count()).toBe(2);
+      expect((await listOrganizationalUnits()).length).toBe(2);
 
       await clearOrganizationalUnitCache();
-      expect(await db.organizationalUnitCache.count()).toBe(0);
+      expect(await listOrganizationalUnits()).toEqual([]);
     });
   });
 });

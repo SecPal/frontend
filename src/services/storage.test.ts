@@ -4,10 +4,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { authStorage } from "./storage";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+} from "../lib/offlineVault";
 
-const LEGACY_AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
+const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const LEGACY_AUTH_STORAGE_VERSION = 1;
+const CURRENT_AUTH_STORAGE_VERSION = 2;
 const LEGACY_AUTH_STORAGE_PBKDF2_ITERATIONS = 5_000;
+const CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
 const textEncoder = new TextEncoder();
@@ -30,9 +36,13 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   ) as ArrayBuffer;
 }
 
-async function createLegacyEncryptedEnvelope(
+async function createEncryptedEnvelope(
   user: Record<string, unknown>,
-  csrfToken: string
+  csrfToken: string,
+  options: {
+    version: number;
+    iterations: number;
+  }
 ): Promise<string> {
   const keyMaterial = `secpal-auth-storage:${csrfToken}`;
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -49,7 +59,7 @@ async function createLegacyEncryptedEnvelope(
       name: "PBKDF2",
       hash: "SHA-256",
       salt: toArrayBuffer(salt),
-      iterations: LEGACY_AUTH_STORAGE_PBKDF2_ITERATIONS,
+      iterations: options.iterations,
     },
     baseKey,
     AUTH_STORAGE_DERIVED_KEY_BYTES * 8
@@ -83,8 +93,8 @@ async function createLegacyEncryptedEnvelope(
     )
   );
   const envelopeWithoutMac = {
-    scheme: LEGACY_AUTH_STORAGE_SCHEME,
-    version: LEGACY_AUTH_STORAGE_VERSION,
+    scheme: AUTH_STORAGE_SCHEME,
+    version: options.version,
     salt: encodeBase64(salt),
     iv: encodeBase64(iv),
     ciphertext: encodeBase64(ciphertext),
@@ -109,14 +119,16 @@ function setCsrfTokenCookie(value: string): void {
 describe("authStorage", () => {
   beforeEach(() => {
     localStorage.clear();
+    clearOfflineVaultSession();
     setCsrfTokenCookie("test-csrf-token");
   });
 
   afterEach(() => {
+    clearOfflineVaultSession();
     vi.restoreAllMocks();
   });
 
-  it("encrypts persisted auth state before writing to localStorage", async () => {
+  it("stores only wrapped vault state in localStorage and restores the encrypted profile from IndexedDB", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -128,15 +140,16 @@ describe("authStorage", () => {
 
     await authStorage.setUser(user);
 
-    const storedUser = localStorage.getItem("auth_user");
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
-    expect(storedUser).not.toBeNull();
-    const parsedStoredUser = JSON.parse(storedUser as string) as Record<
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(storedVaultState).not.toBeNull();
+    const parsedStoredVaultState = JSON.parse(storedVaultState as string) as Record<
       string,
       unknown
     >;
 
-    expect(parsedStoredUser).toEqual(
+    expect(parsedStoredVaultState).toEqual(
       expect.objectContaining({
         scheme: expect.any(String),
         version: expect.anything(),
@@ -146,10 +159,10 @@ describe("authStorage", () => {
         mac: expect.any(String),
       })
     );
-    expect(parsedStoredUser.salt).not.toBe("");
-    expect(parsedStoredUser.iv).not.toBe("");
-    expect(parsedStoredUser.ciphertext).not.toBe("");
-    expect(parsedStoredUser.mac).not.toBe("");
+    expect(parsedStoredVaultState.salt).not.toBe("");
+    expect(parsedStoredVaultState.iv).not.toBe("");
+    expect(parsedStoredVaultState.ciphertext).not.toBe("");
+    expect(parsedStoredVaultState.mac).not.toBe("");
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 
@@ -165,7 +178,28 @@ describe("authStorage", () => {
     setCsrfTokenCookie("rotated-csrf-token");
 
     await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
+    const legacyUser = {
+      id: "1",
+      name: "Legacy User",
+      email: "legacy@secpal.dev",
+      emailVerified: false,
+    };
+
+    localStorage.setItem(
+      "auth_user",
+      await createEncryptedEnvelope(legacyUser, "test-csrf-token", {
+        version: CURRENT_AUTH_STORAGE_VERSION,
+        iterations: CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS,
+      })
+    );
+
+    await expect(authStorage.getUser()).resolves.toEqual(legacyUser);
     expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
   });
 
   it("clears invalid JSON snapshots and logs the parse failure", () => {
@@ -276,7 +310,10 @@ describe("authStorage", () => {
 
     localStorage.setItem(
       "auth_user",
-      await createLegacyEncryptedEnvelope(legacyUser, "test-csrf-token")
+      await createEncryptedEnvelope(legacyUser, "test-csrf-token", {
+        version: LEGACY_AUTH_STORAGE_VERSION,
+        iterations: LEGACY_AUTH_STORAGE_PBKDF2_ITERATIONS,
+      })
     );
 
     await expect(authStorage.getUser()).resolves.toBeNull();

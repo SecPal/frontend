@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { User } from "../contexts/auth-context";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+  initializeOfflineVault,
+  readPersistedAuthUserFromVault,
+} from "../lib/offlineVault";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -9,8 +15,6 @@ import { getCsrfTokenFromCookie } from "./csrf";
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const AUTH_STORAGE_VERSION = 2;
 const AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
-const AUTH_STORAGE_SALT_BYTES = 16;
-const AUTH_STORAGE_IV_BYTES = 16;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
 
@@ -44,17 +48,6 @@ function getAuthStorageKeyMaterial(): string | null {
   }
 
   return `secpal-auth-storage:${csrfToken}`;
-}
-
-function encodeBase64(bytes: Uint8Array): string {
-  let binary = "";
-
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    const chunk = bytes.subarray(index, index + 0x8000);
-    binary += String.fromCharCode(...chunk);
-  }
-
-  return btoa(binary);
 }
 
 function decodeBase64(value: string): Uint8Array {
@@ -137,19 +130,6 @@ function hasStoredUserRecord(storageKey: string): boolean {
   return localStorage.getItem(storageKey) !== null;
 }
 
-async function signEnvelopeMac(
-  envelope: Omit<AuthStorageEnvelope, "mac">,
-  macKey: CryptoKey
-): Promise<string> {
-  const mac = await crypto.subtle.sign(
-    "HMAC",
-    macKey,
-    textEncoder.encode(buildEnvelopeMacPayload(envelope))
-  );
-
-  return encodeBase64(new Uint8Array(mac));
-}
-
 async function verifyEnvelopeMac(
   envelope: Omit<AuthStorageEnvelope, "mac">,
   mac: string,
@@ -161,23 +141,6 @@ async function verifyEnvelopeMac(
     toArrayBuffer(decodeBase64(mac)),
     textEncoder.encode(buildEnvelopeMacPayload(envelope))
   );
-}
-
-async function encryptAuthPayload(
-  plaintext: string,
-  encryptionKey: CryptoKey,
-  iv: Uint8Array
-): Promise<Uint8Array> {
-  const ciphertext = await crypto.subtle.encrypt(
-    {
-      name: "AES-CBC",
-      iv: toArrayBuffer(iv),
-    },
-    encryptionKey,
-    textEncoder.encode(plaintext)
-  );
-
-  return new Uint8Array(ciphertext);
 }
 
 async function decryptAuthPayload(
@@ -199,46 +162,6 @@ async function decryptAuthPayload(
   } catch {
     return null;
   }
-}
-
-function createRandomBytes(length: number): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(length));
-}
-
-async function encryptPersistedAuthUser(
-  user: PersistedAuthUser
-): Promise<string | null> {
-  const keyMaterial = getAuthStorageKeyMaterial();
-
-  if (!keyMaterial) {
-    return null;
-  }
-
-  const salt = createRandomBytes(AUTH_STORAGE_SALT_BYTES);
-  const iv = createRandomBytes(AUTH_STORAGE_IV_BYTES);
-  const { encryptionKey, macKey } = await deriveAuthStorageKeys(
-    keyMaterial,
-    salt,
-    getAuthStorageIterations()
-  );
-  const ciphertext = await encryptAuthPayload(
-    JSON.stringify(user),
-    encryptionKey,
-    iv
-  );
-
-  const envelopeWithoutMac = {
-    scheme: AUTH_STORAGE_SCHEME,
-    version: AUTH_STORAGE_VERSION,
-    salt: encodeBase64(salt),
-    iv: encodeBase64(iv),
-    ciphertext: encodeBase64(ciphertext),
-  } satisfies Omit<AuthStorageEnvelope, "mac">;
-
-  return JSON.stringify({
-    ...envelopeWithoutMac,
-    mac: await signEnvelopeMac(envelopeWithoutMac, macKey),
-  });
 }
 
 function isAuthStorageEnvelope(value: unknown): value is AuthStorageEnvelope {
@@ -337,6 +260,7 @@ export interface AuthStorage {
  */
 class LocalStorageAuthStorage implements AuthStorage {
   private readonly USER_KEY = "auth_user";
+  private readonly VAULT_KEY = AUTH_VAULT_STORAGE_KEY;
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
 
   /**
@@ -365,7 +289,11 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   hasStoredUser(): boolean {
-    return !this.hasLogoutBarrier() && hasStoredUserRecord(this.USER_KEY);
+    return (
+      !this.hasLogoutBarrier() &&
+      (localStorage.getItem(this.VAULT_KEY) !== null ||
+        hasStoredUserRecord(this.USER_KEY))
+    );
   }
 
   private clearInvalidStoredUser(): null {
@@ -381,6 +309,10 @@ class LocalStorageAuthStorage implements AuthStorage {
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
       this.removeUser();
+      return null;
+    }
+
+    if (localStorage.getItem(this.VAULT_KEY) !== null) {
       return null;
     }
 
@@ -412,6 +344,16 @@ class LocalStorageAuthStorage implements AuthStorage {
       return null;
     }
 
+    if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      const storedVaultUser = await readPersistedAuthUserFromVault();
+
+      if (!storedVaultUser) {
+        return this.clearInvalidStoredUser();
+      }
+
+      return storedVaultUser;
+    }
+
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (!storedUser) return null;
 
@@ -421,6 +363,8 @@ class LocalStorageAuthStorage implements AuthStorage {
       if (!sanitizedUser) {
         return this.clearInvalidStoredUser();
       }
+
+      await initializeOfflineVault(sanitizedUser);
 
       return sanitizedUser;
     } catch (error) {
@@ -439,30 +383,22 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
-    let encryptedUser: string | null;
-
     try {
-      encryptedUser = await encryptPersistedAuthUser(sanitizedUser);
+      await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
       this.removeUser();
       return;
     }
 
-    if (!encryptedUser) {
-      console.warn(
-        "Failed to derive auth storage key due to missing CSRF token/session context; clearing persisted auth state."
-      );
-      this.removeUser();
-      return;
-    }
-
     this.clearLogoutBarrier();
-    localStorage.setItem(this.USER_KEY, encryptedUser);
+    localStorage.removeItem(this.USER_KEY);
   }
 
   removeUser(): void {
+    clearOfflineVaultSession();
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.VAULT_KEY);
   }
 
   clear(): void {
