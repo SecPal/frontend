@@ -91,7 +91,12 @@ describe("offlineVault", () => {
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
-    installNativeVaultBridge({});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockRejectedValue(
+        new Error("bridge unavailable")
+      ),
+    });
 
     await initializeOfflineVault(persistedUser);
 
@@ -163,10 +168,8 @@ describe("offlineVault", () => {
   it("removes invalid vault state from localStorage when JSON is malformed", async () => {
     localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "not-valid-json{{{");
 
-    // initializeOfflineVault will trigger getStoredVaultState
     await initializeOfflineVault(persistedUser);
 
-    // Vault should now be initialized fresh (old invalid key replaced)
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
@@ -177,11 +180,9 @@ describe("offlineVault", () => {
     await initializeOfflineVault(persistedUser);
     expect(await db.vaultProfile.count()).toBe(1);
 
-    // Simulate a corrupted vault: clear only the profile table, leave vault state
     await clearOfflineVaultTables();
     clearOfflineVaultSession();
 
-    // Add legacy data to verify it gets cleared too
     await db.analytics.add({
       type: "page_view",
       category: "navigation",
@@ -200,22 +201,23 @@ describe("offlineVault", () => {
   });
 
   it("stores and restores the vault root key through the optional native device-bound wrapper", async () => {
-    const wrapVaultRootKey = vi.fn(
-      async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
-        wrappedRootKey: `wrapped:${rootKeyBase64}`,
-        metadata: "android-keystore",
-      })
-    );
-    const unwrapVaultRootKey = vi.fn(
-      async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
-        rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
-      })
-    );
+    const wrapVaultRootKey = vi.fn(async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
+      wrappedRootKey: `wrapped:${rootKeyBase64}`,
+      metadata: "android-keystore",
+    }));
+    const unwrapVaultRootKey = vi.fn(async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+      rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+    }));
     const nativeBridge = installNativeVaultBridge({
-      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      isVaultDeviceBoundWrapperAvailable: vi
+        .fn()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true),
       wrapVaultRootKey,
       unwrapVaultRootKey,
     });
+
+    await initializeOfflineVault(persistedUser);
 
     await initializeOfflineVault(persistedUser);
 

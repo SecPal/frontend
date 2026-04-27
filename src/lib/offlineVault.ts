@@ -271,6 +271,10 @@ function getStoredVaultWrapperCacheKey(
   return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
 }
 
+function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
+  return getStoredVaultWrapperCacheKey(state, getAuthVaultKeyMaterial()) ?? "native-device-bound";
+}
+
 function getStoredVaultState(): AuthVaultStateEnvelope | null {
   const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
@@ -668,9 +672,7 @@ async function encryptNativeDeviceBoundVaultRootKeyBytes(
     wrapper: {
       kind: "native-device-bound",
       wrappedRootKey: wrappedRootKey.wrappedRootKey,
-      ...(wrappedRootKey.metadata !== undefined
-        ? { metadata: wrappedRootKey.metadata }
-        : {}),
+      metadata: wrappedRootKey.metadata,
     },
   };
 }
@@ -689,9 +691,7 @@ async function decryptNativeDeviceBoundVaultRootKeyBytes(
     unwrappedRootKey = await nativeBridge.unwrapVaultRootKey?.({
       wrappedRootKey: state.wrapper.wrappedRootKey,
       subjectHash: state.subjectHash,
-      ...(state.wrapper.metadata !== undefined
-        ? { metadata: state.wrapper.metadata }
-        : {}),
+      metadata: state.wrapper.metadata,
     });
   } catch (error) {
     console.warn(
@@ -726,22 +726,18 @@ async function encryptVaultRootKeyBytes(
   const nativeBridge = await getNativeDeviceBoundVaultBridge();
 
   if (nativeBridge) {
-    const nativeDeviceBoundState =
-      await encryptNativeDeviceBoundVaultRootKeyBytes(
-        rootKeyBytes,
-        subjectHash,
-        nativeBridge
-      );
+    const nativeDeviceBoundState = await encryptNativeDeviceBoundVaultRootKeyBytes(
+      rootKeyBytes,
+      subjectHash,
+      nativeBridge
+    );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;
     }
   }
 
-  return encryptBrowserSessionWrappedVaultRootKeyBytes(
-    rootKeyBytes,
-    subjectHash
-  );
+  return encryptBrowserSessionWrappedVaultRootKeyBytes(rootKeyBytes, subjectHash);
 }
 
 async function decryptVaultRootKeyBytes(
@@ -931,7 +927,7 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   activeVaultSession = {
     rootKeyBytes,
     subjectHash: storedState.subjectHash,
-    wrapperCacheKey: storedWrapperCacheKey ?? "native-device-bound",
+    wrapperCacheKey: storedWrapperCacheKey ?? getSessionWrapperCacheKey(storedState),
   };
 
   return activeVaultSession;
@@ -969,11 +965,7 @@ async function maybeRewriteStoredVaultState(
 
   return {
     ...session,
-    wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(
-        rewrittenState,
-        getAuthVaultKeyMaterial()
-      ) ?? session.wrapperCacheKey,
+    wrapperCacheKey: getStoredVaultWrapperCacheKey(rewrittenState, getAuthVaultKeyMaterial()) ?? session.wrapperCacheKey,
   };
 }
 
@@ -1010,9 +1002,7 @@ async function ensureVaultSessionForUser(
   activeVaultSession = {
     rootKeyBytes,
     subjectHash,
-    wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(storedState, getAuthVaultKeyMaterial()) ??
-      "native-device-bound",
+    wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
 
   return activeVaultSession;
