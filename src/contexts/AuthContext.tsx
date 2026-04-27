@@ -476,10 +476,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (
-        event.key !== "auth_user" &&
-        event.key !== AUTH_VAULT_STORAGE_KEY
-      ) {
+      if (event.key !== "auth_user" && event.key !== AUTH_VAULT_STORAGE_KEY) {
         return;
       }
 

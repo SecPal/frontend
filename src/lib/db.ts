@@ -78,8 +78,7 @@ export interface VaultAnalyticsRecord extends EncryptedVaultRecord {
   timestamp: number;
 }
 
-export interface VaultOrganizationalUnitCacheRecord
-  extends EncryptedVaultRecord {
+export interface VaultOrganizationalUnitCacheRecord extends EncryptedVaultRecord {
   id: string;
   cachedAt: Date;
   lastSynced: Date;

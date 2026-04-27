@@ -144,10 +144,9 @@ describe("authStorage", () => {
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(storedVaultState).not.toBeNull();
-    const parsedStoredVaultState = JSON.parse(storedVaultState as string) as Record<
-      string,
-      unknown
-    >;
+    const parsedStoredVaultState = JSON.parse(
+      storedVaultState as string
+    ) as Record<string, unknown>;
 
     expect(parsedStoredVaultState).toEqual(
       expect.objectContaining({
