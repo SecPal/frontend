@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
 import {
   act,
   fireEvent,
@@ -20,6 +20,8 @@ import {
 import { AuthApiError } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
+import { db } from "../lib/db";
+import { clearOfflineVaultSession } from "../lib/offlineVault";
 
 const mockNavigate = vi.fn();
 const { mockGetCurrentUser, mockSendVerificationNotification } = vi.hoisted(
@@ -109,11 +111,22 @@ async function waitForProtectedRoute(
 const waitFor = waitForProtectedRoute;
 
 describe("ProtectedRoute", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // resetAllMocks clears implementations too, preventing leftover mockReturnValueOnce
     // entries from failed tests from leaking into subsequent tests.
     vi.resetAllMocks();
+    if (!db.isOpen()) {
+      await db.open();
+    }
+    await Promise.all([
+      db.analytics.clear(),
+      db.organizationalUnitCache.clear(),
+      db.vaultProfile.clear(),
+      db.vaultAnalytics.clear(),
+      db.vaultOrganizationalUnitCache.clear(),
+    ]);
     localStorage.clear();
+    clearOfflineVaultSession();
     setCsrfTokenCookie("test-csrf-token");
     i18n.load("en", {});
     i18n.activate("en");
@@ -122,6 +135,10 @@ describe("ProtectedRoute", () => {
         code: "HTTP_401",
       })
     );
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
   });
 
   it("redirects to login when not authenticated", async () => {

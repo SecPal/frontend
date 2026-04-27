@@ -272,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isActive = true;
     let didTimeout = false;
-    let timeoutId: number | null = null;
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
     const snapshotUser = authStorage.getUserSnapshot();
@@ -287,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const startBootstrapRevalidation = () => {
-      timeoutId = window.setTimeout(() => {
+      timeoutId = globalThis.setTimeout(() => {
         if (
           !isActive ||
           bootstrapRequestVersionRef.current !== requestVersion ||
@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .getCurrentUser()
         .then(async (currentUser) => {
           if (timeoutId !== null) {
-            window.clearTimeout(timeoutId);
+            globalThis.clearTimeout(timeoutId);
           }
 
           if (
@@ -341,7 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         .catch((error: unknown) => {
           if (timeoutId !== null) {
-            window.clearTimeout(timeoutId);
+            globalThis.clearTimeout(timeoutId);
           }
 
           if (
@@ -455,7 +455,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isActive = false;
       if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
+        globalThis.clearTimeout(timeoutId);
       }
     };
   }, [

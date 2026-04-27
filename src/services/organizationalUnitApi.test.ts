@@ -24,6 +24,7 @@ import type {
 // Mock apiFetch (central API wrapper)
 vi.mock("./csrf", () => ({
   apiFetch: vi.fn(),
+  getCsrfTokenFromCookie: vi.fn(() => "test-csrf-token"),
 }));
 
 import { apiFetch } from "./csrf";

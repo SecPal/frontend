@@ -154,7 +154,15 @@ export function clearStoredOfflineVaultState(): void {
   clearOfflineVaultSession();
 }
 
+async function ensureVaultDatabaseOpen(): Promise<void> {
+  if (!db.isOpen()) {
+    await db.open();
+  }
+}
+
 async function clearOfflineVaultTables(): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   await Promise.all([
     db.vaultProfile.clear(),
     db.vaultAnalytics.clear(),
@@ -491,16 +499,19 @@ async function decryptVaultRecord<T>(
 
 async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
+  const storedState = getStoredVaultState();
 
   if (activeVaultSession) {
-    if (activeVaultSession.wrapperKeyMaterial === currentKeyMaterial) {
+    if (
+      storedState &&
+      activeVaultSession.wrapperKeyMaterial === currentKeyMaterial &&
+      activeVaultSession.subjectHash === storedState.subjectHash
+    ) {
       return activeVaultSession;
     }
 
     clearOfflineVaultSession();
   }
-
-  const storedState = getStoredVaultState();
 
   if (!storedState) {
     return null;
@@ -560,6 +571,8 @@ async function persistProfileRecord(
   user: PersistedAuthUser,
   session: VaultSession
 ): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   const encryptedRecord = await encryptVaultRecord(
     user,
     "profile",
@@ -576,6 +589,8 @@ async function persistProfileRecord(
 async function migrateLegacyAnalyticsRecords(
   session: VaultSession
 ): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   const legacyRecords = await db.analytics.toArray();
 
   if (legacyRecords.length === 0) {
@@ -615,6 +630,8 @@ async function migrateLegacyAnalyticsRecords(
 async function migrateLegacyOrganizationalUnitRecords(
   session: VaultSession
 ): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   const legacyRecords = await db.organizationalUnitCache.toArray();
 
   if (legacyRecords.length === 0) {
@@ -664,6 +681,8 @@ export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUse
     return null;
   }
 
+  await ensureVaultDatabaseOpen();
+
   const storedProfile = await db.vaultProfile.get(PROFILE_RECORD_ID);
 
   if (!storedProfile) {
@@ -697,6 +716,8 @@ export async function storeVaultAnalyticsEvent(
   if (!session) {
     throw new Error("Offline vault is not available.");
   }
+
+  await ensureVaultDatabaseOpen();
 
   const recordId = createVaultRecordId("analytics");
   const { synced, timestamp, ...payloadWithId } = event;
@@ -773,6 +794,8 @@ export async function listVaultAnalyticsEvents(): Promise<AnalyticsEvent[]> {
 }
 
 export async function listUnsyncedVaultAnalyticsRecordIds(): Promise<number[]> {
+  await ensureVaultDatabaseOpen();
+
   const records = await db.vaultAnalytics.where("synced").equals(0).toArray();
 
   return records.flatMap((record) =>
@@ -787,6 +810,8 @@ export async function markVaultAnalyticsEventsSynced(
     return;
   }
 
+  await ensureVaultDatabaseOpen();
+
   await db.vaultAnalytics.bulkUpdate(
     ids.map((id) => ({
       key: id,
@@ -796,12 +821,15 @@ export async function markVaultAnalyticsEventsSynced(
 }
 
 export async function clearVaultAnalytics(): Promise<void> {
+  await ensureVaultDatabaseOpen();
   await db.vaultAnalytics.clear();
 }
 
 export async function clearOldVaultAnalyticsEvents(
   olderThanTimestamp: number
 ): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   await db.vaultAnalytics
     .where("synced")
     .equals(1)
@@ -817,6 +845,8 @@ export async function saveVaultOrganizationalUnit(
   if (!session) {
     throw new Error("Offline vault is not available.");
   }
+
+  await ensureVaultDatabaseOpen();
 
   const encryptedPayload = await encryptVaultRecord(
     unit,
@@ -841,6 +871,8 @@ export async function getVaultOrganizationalUnit(
   if (!session) {
     return undefined;
   }
+
+  await ensureVaultDatabaseOpen();
 
   await migrateLegacyOrganizationalUnitRecords(session);
 
@@ -874,6 +906,8 @@ export async function listVaultOrganizationalUnits(): Promise<
     return [];
   }
 
+  await ensureVaultDatabaseOpen();
+
   await migrateLegacyOrganizationalUnitRecords(session);
 
   const records = await db.vaultOrganizationalUnitCache.toArray();
@@ -906,6 +940,8 @@ export async function listVaultOrganizationalUnits(): Promise<
 }
 
 export async function deleteVaultOrganizationalUnit(id: string): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   await Promise.all([
     db.vaultOrganizationalUnitCache.delete(id),
     db.organizationalUnitCache.delete(id),
@@ -913,6 +949,8 @@ export async function deleteVaultOrganizationalUnit(id: string): Promise<void> {
 }
 
 export async function clearVaultOrganizationalUnits(): Promise<void> {
+  await ensureVaultDatabaseOpen();
+
   await Promise.all([
     db.vaultOrganizationalUnitCache.clear(),
     db.organizationalUnitCache.clear(),
