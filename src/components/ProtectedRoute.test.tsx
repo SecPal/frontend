@@ -368,7 +368,9 @@ describe("ProtectedRoute", () => {
     fireEvent.click(screen.getByRole("button", { name: /lock vault now/i }));
 
     expect(
-      await screen.findByRole("heading", { name: /unlock your secure offline data/i })
+      await screen.findByRole("heading", {
+        name: /unlock your secure offline data/i,
+      })
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(screen.queryByText("test@secpal.dev")).not.toBeInTheDocument();
