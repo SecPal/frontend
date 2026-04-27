@@ -121,5 +121,6 @@ db.version(DB_VERSION).stores({
   organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
   vaultProfile: "id",
   vaultAnalytics: "++id, synced, timestamp",
-  vaultOrganizationalUnitCache: "id, type, parentLookupKey, parent_id, cachedAt, lastSynced",
+  vaultOrganizationalUnitCache:
+    "id, type, parentLookupKey, parent_id, cachedAt, lastSynced",
 });

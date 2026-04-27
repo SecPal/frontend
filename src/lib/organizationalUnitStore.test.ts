@@ -537,8 +537,10 @@ describe("OrganizationalUnitStore", () => {
         lastSynced: new Date("2025-01-10T00:00:00Z"),
       });
 
-      const branchRecord = await db.vaultOrganizationalUnitCache.get("branch-1");
-      const companyRecord = await db.vaultOrganizationalUnitCache.get("company-1");
+      const branchRecord =
+        await db.vaultOrganizationalUnitCache.get("branch-1");
+      const companyRecord =
+        await db.vaultOrganizationalUnitCache.get("company-1");
 
       const toLegacyRecord = (record: VaultOrganizationalUnitCacheRecord) => {
         const legacyRecord = {
@@ -554,14 +556,19 @@ describe("OrganizationalUnitStore", () => {
 
       await db.vaultOrganizationalUnitCache.bulkPut(
         [branchRecord, companyRecord]
-          .filter((record): record is NonNullable<typeof record> => record !== undefined)
+          .filter(
+            (record): record is NonNullable<typeof record> =>
+              record !== undefined
+          )
           .map(toLegacyRecord)
       );
 
       await expect(getOrganizationalUnitsByType("branch")).resolves.toEqual([
         expect.objectContaining({ id: "branch-1" }),
       ]);
-      await expect(db.vaultOrganizationalUnitCache.get("branch-1")).resolves.toEqual(
+      await expect(
+        db.vaultOrganizationalUnitCache.get("branch-1")
+      ).resolves.toEqual(
         expect.objectContaining({
           type: "branch",
           parent_id: "company-1",

@@ -917,11 +917,12 @@ async function decryptVaultOrganizationalUnitRecord(
   record: VaultOrganizationalUnitCacheRecord,
   session: VaultSession
 ): Promise<OrganizationalUnitCacheEntry | null> {
-  const decryptedRecord = await decryptVaultRecord<OrganizationalUnitCacheEntry>(
-    record,
-    "organizationalUnitCache",
-    session
-  );
+  const decryptedRecord =
+    await decryptVaultRecord<OrganizationalUnitCacheEntry>(
+      record,
+      "organizationalUnitCache",
+      session
+    );
 
   if (!decryptedRecord) {
     return null;
