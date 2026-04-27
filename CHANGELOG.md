@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Added the Phase-2 offline-vault baseline for persisted frontend PII: the authenticated profile now moves out of `auth_user` localStorage into wrapped vault-backed IndexedDB storage, legacy encrypted `auth_user` records are migrated one-way into the vault, and long-term offline analytics plus organizational-unit cache records now persist encrypted at rest with focused regression coverage for frontend issue #1005.
+- Added an optional native device-bound wrapper boundary for the offline vault so native-capable runtimes can prefer bridge-backed root-key wrapping while browser and unsupported runtimes keep the browser-session wrapper fallback; the missing Android bridge implementation is now tracked separately in `SecPal/android#191`, resolving the frontend-side scope of issue #1006.
 - Added a local offline-vault lock flow that clears in-memory access without deleting encrypted at-rest data, exposes a non-PII unlock screen across protected routes, propagates lock state across tabs, and keeps explicit sign-out destructive for device cleanup, resolving frontend issue #1007.
 - Updated the transitive `basic-ftp` dependency from `5.2.2` to `5.3.0` in `package-lock.json`, clearing the high-severity `GHSA-rp42-5vxx-qpwr` npm audit finding tracked in issue #893.
 
