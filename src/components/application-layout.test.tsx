@@ -322,6 +322,31 @@ describe("ApplicationLayout", () => {
     );
 
     it(
+      "shows a lock action in the navbar dropdown without calling the logout API",
+      async () => {
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        await openUserMenu();
+
+        const lockItem = await screen.findByRole(
+          "menuitem",
+          { name: /lock app/i },
+          { timeout: QUERY_TIMEOUT }
+        );
+
+        fireEvent.click(lockItem);
+
+        expect(authApi.logout).not.toHaveBeenCalled();
+        expect(getStoredAuthState()).not.toBeNull();
+      },
+      SLOW_TEST_TIMEOUT
+    );
+
+    it(
       "triggers logout when clicking sign out in navbar dropdown",
       async () => {
         const user = userEvent.setup();

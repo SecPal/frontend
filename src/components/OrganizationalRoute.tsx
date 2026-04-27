@@ -8,6 +8,7 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RouteVaultLockedState,
 } from "./RouteGuardState";
 
 interface OrganizationalRouteProps {
@@ -23,9 +24,11 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
     bootstrapRecoveryReason,
     isAuthenticated,
     isLoading,
+    isVaultLocked = false,
     hasOrganizationalAccess,
     logout,
     retryBootstrap,
+    unlock,
     user,
   } = useAuth();
 
@@ -39,6 +42,15 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
         onRetry={retryBootstrap}
         onSignInAgain={logout}
         reason={bootstrapRecoveryReason}
+      />
+    );
+  }
+
+  if (isVaultLocked) {
+    return (
+      <RouteVaultLockedState
+        onUnlock={unlock ?? (async () => false)}
+        onSignInAgain={logout}
       />
     );
   }

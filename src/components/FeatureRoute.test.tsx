@@ -143,4 +143,44 @@ describe("FeatureRoute", () => {
       screen.queryByText("Android Provisioning Content")
     ).not.toBeInTheDocument();
   });
+
+  it("shows the locked vault state before redirecting unauthenticated users", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      isVaultLocked: true,
+      bootstrapRecoveryReason: null,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      lock: vi.fn(),
+      unlock: vi.fn(async () => true),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute feature="customers">
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /unlock your secure offline data/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
+  });
 });

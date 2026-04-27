@@ -181,6 +181,45 @@ describe("authStorage", () => {
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
   });
 
+  it("locks the offline vault without deleting encrypted records and restores them after unlock", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    authStorage.lockVault();
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(authStorage.hasVaultLock()).toBe(true);
+
+    await expect(authStorage.unlockVault()).resolves.toEqual(user);
+    expect(authStorage.hasVaultLock()).toBe(false);
+    await expect(authStorage.getUser()).resolves.toEqual(user);
+  });
+
+  it("clears auth state when unlockVault finds no readable user after removing the lock", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(user);
+    authStorage.lockVault();
+    expect(authStorage.hasVaultLock()).toBe(true);
+
+    // Corrupt the vault state so getUser returns null after unlock
+    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+
+    await expect(authStorage.unlockVault()).resolves.toBeNull();
+    expect(authStorage.hasStoredUser()).toBe(false);
+  });
+
   it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
     const legacyUser = {
       id: "1",

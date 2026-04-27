@@ -19,7 +19,10 @@ import { authStorage } from "../services/storage";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
-import { AUTH_VAULT_STORAGE_KEY } from "../lib/offlineVault";
+import {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
 
@@ -105,11 +108,22 @@ function isOfflineBootstrapError(error: unknown): boolean {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authTransport = useMemo(() => getAuthTransport(), []);
-  const [user, setUser] = useState<User | null>(() =>
-    authStorage.getUserSnapshot()
+  const [user, setUser] = useState<User | null>(() => {
+    if (authStorage.hasVaultLock?.()) {
+      return null;
+    }
+
+    return authStorage.getUserSnapshot();
+  });
+  const [isVaultLocked, setIsVaultLocked] = useState(
+    () => authStorage.hasVaultLock?.() === true
   );
   const [isLoading, setIsLoading] = useState(() => {
     const hasLogoutBarrier = authStorage.hasLogoutBarrier();
+
+    if (authStorage.hasVaultLock?.()) {
+      return false;
+    }
 
     if (!authStorage.hasStoredUser()) {
       return shouldBootstrapBrowserSessionWithoutStoredUser(
@@ -168,6 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authStorage.clear();
       resetAnalyticsState();
       setUser(null);
+      setIsVaultLocked(false);
       setIsLoading(false);
       syncOfflineAuthState(false);
 
@@ -204,6 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasLogoutBarrierRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(sanitizedUser);
+      setIsVaultLocked(false);
       setIsLoading(false);
       syncOfflineAuthState(true);
     },
@@ -217,6 +233,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     clearAuthenticatedState(true);
   }, [clearAuthenticatedState]);
+
+  const lock = useCallback(() => {
+    authStorage.lockVault?.();
+    invalidateBootstrapRevalidation();
+    setBootstrapRecoveryReason(null);
+    setUser(null);
+    setIsVaultLocked(true);
+    setIsLoading(false);
+    syncOfflineAuthState(false);
+  }, [invalidateBootstrapRevalidation, syncOfflineAuthState]);
+
+  const unlock = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+
+    try {
+      const restoredUser = await authStorage.unlockVault?.();
+
+      if (!restoredUser) {
+        clearAuthenticatedState(true);
+        return false;
+      }
+
+      hasLogoutBarrierRef.current = false;
+      setBootstrapRecoveryReason(null);
+      setUser(restoredUser);
+      setIsVaultLocked(false);
+      setIsLoading(false);
+      syncOfflineAuthState(true);
+      return true;
+    } catch (error) {
+      console.error("Failed to unlock offline vault:", error);
+      clearAuthenticatedState(true);
+      return false;
+    }
+  }, [clearAuthenticatedState, syncOfflineAuthState]);
 
   const retryBootstrap = useCallback(() => {
     if (!user || (authTransport.kind === "browser-session" && !isOnline())) {
@@ -372,6 +423,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const restoreAndRevalidate = async () => {
+      if (authStorage.hasVaultLock?.()) {
+        setBootstrapRecoveryReason(null);
+        setUser(null);
+        setIsVaultLocked(true);
+        setIsLoading(false);
+        syncOfflineAuthState(false);
+        return;
+      }
+
       const hadStoredUser = authStorage.hasStoredUser();
       const storedUser = await authStorage.getUser();
 
@@ -413,6 +473,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasLogoutBarrierRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(storedUser);
+      setIsVaultLocked(false);
       syncOfflineAuthState(true);
 
       if (authTransport.kind === "browser-session") {
@@ -476,6 +537,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (event.key === AUTH_VAULT_LOCK_KEY) {
+        if (event.newValue !== null) {
+          invalidateBootstrapRevalidation();
+          setBootstrapRecoveryReason(null);
+          setUser(null);
+          setIsVaultLocked(true);
+          setIsLoading(false);
+          syncOfflineAuthState(false);
+          return;
+        }
+
+        void (async () => {
+          try {
+            const unlockedUser = await authStorage.unlockVault?.();
+
+            if (!unlockedUser) {
+              clearAuthenticatedState(true);
+              return;
+            }
+
+            hasLogoutBarrierRef.current = false;
+            setBootstrapRecoveryReason(null);
+            invalidateBootstrapRevalidation();
+            setUser(unlockedUser);
+            setIsVaultLocked(false);
+            setIsLoading(false);
+            syncOfflineAuthState(true);
+          } catch (error) {
+            console.error("Failed to unlock cross-tab auth vault:", error);
+            clearAuthenticatedState(true);
+          }
+        })();
+      }
+
       if (event.key !== "auth_user" && event.key !== AUTH_VAULT_STORAGE_KEY) {
         return;
       }
@@ -511,6 +606,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setBootstrapRecoveryReason(null);
           invalidateBootstrapRevalidation();
           setUser(nextUser);
+          setIsVaultLocked(false);
           setIsLoading(false);
           syncOfflineAuthState(true);
         } catch (error) {
@@ -538,6 +634,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       void (async () => {
+        if (authStorage.hasVaultLock?.()) {
+          setBootstrapRecoveryReason(null);
+          setUser(null);
+          setIsVaultLocked(true);
+          setIsLoading(false);
+          syncOfflineAuthState(false);
+          return;
+        }
+
         const storedUser = await authStorage.getUser();
 
         // Re-check the in-memory barrier after the async decrypt.
@@ -558,6 +663,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBootstrapRecoveryReason(null);
         invalidateBootstrapRevalidation();
         setUser(storedUser);
+        setIsVaultLocked(false);
         setIsLoading(false);
         syncOfflineAuthState(true);
       })();
@@ -596,10 +702,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootstrapRecoveryReason,
       login,
       logout,
+      lock,
+      unlock,
       retryBootstrap,
       hasRole,
       hasPermission,
       hasOrganizationalAccess,
+      isVaultLocked,
     }),
     [
       user,
@@ -607,10 +716,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       bootstrapRecoveryReason,
       login,
       logout,
+      lock,
+      unlock,
       retryBootstrap,
       hasRole,
       hasPermission,
       hasOrganizationalAccess,
+      isVaultLocked,
     ]
   );
 

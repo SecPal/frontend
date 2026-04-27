@@ -22,6 +22,7 @@ import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { db } from "../lib/db";
 import { clearOfflineVaultSession } from "../lib/offlineVault";
+import { useAuth } from "../hooks/useAuth";
 
 const mockNavigate = vi.fn();
 const { mockGetCurrentUser, mockSendVerificationNotification } = vi.hoisted(
@@ -52,6 +53,18 @@ vi.mock("react-router-dom", async () => {
 });
 
 const TestComponent = () => <div>Protected Content</div>;
+const LockingTestComponent = () => {
+  const auth = useAuth();
+
+  return (
+    <div>
+      <button onClick={() => auth.lock?.()} type="button">
+        Lock vault now
+      </button>
+      <div>Protected Content</div>
+    </div>
+  );
+};
 const AUTH_ROUTE_TIMEOUT_MS = 20_000;
 const unverifiedUser = {
   id: 1,
@@ -76,6 +89,27 @@ const renderProtectedRoute = () => {
               element={
                 <ProtectedRoute>
                   <TestComponent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
+
+const renderLockingProtectedRoute = () => {
+  return render(
+    <BrowserRouter>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <LockingTestComponent />
                 </ProtectedRoute>
               }
             />
@@ -308,6 +342,46 @@ describe("ProtectedRoute", () => {
     });
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("shows a locked-screen flow after the user locks the offline vault and restores access on unlock", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
+
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
+
+    renderLockingProtectedRoute();
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /lock vault now/i }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /unlock your secure offline data/i,
+      })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(screen.queryByText("test@secpal.dev")).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /unlock/i }));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
   });
 
   it("shows loading state initially", () => {

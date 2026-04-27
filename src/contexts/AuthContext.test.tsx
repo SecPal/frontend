@@ -6,7 +6,10 @@ import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
 import { sanitizePersistedAuthUser } from "../services/authState";
-import { clearOfflineVaultSession } from "../lib/offlineVault";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+} from "../lib/offlineVault";
 import { authStorage } from "../services/storage";
 
 vi.mock("../services/authApi", () => ({
@@ -373,6 +376,83 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
+      });
+    });
+  });
+
+  describe("cross-tab storage event error path", () => {
+    it("clears auth state when getUser throws during cross-tab storage event", async () => {
+      const VaultStatusComponent = () => {
+        const auth = useAuth();
+        return (
+          <span data-testid="isVaultLocked">
+            {auth.isVaultLocked ? "true" : "false"}
+          </span>
+        );
+      };
+
+      vi.spyOn(authStorage, "getUser").mockRejectedValueOnce(
+        new Error("Simulated decrypt failure")
+      );
+
+      render(
+        <AuthProvider>
+          <VaultStatusComponent />
+        </AuthProvider>
+      );
+
+      await act(async () => {
+        const storageEvent = new Event("storage");
+        Object.defineProperties(storageEvent, {
+          key: { value: AUTH_VAULT_STORAGE_KEY },
+          newValue: { value: "corrupted-data" },
+          storageArea: { value: localStorage },
+        });
+        window.dispatchEvent(storageEvent);
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("isVaultLocked")).toHaveTextContent("false");
+      });
+    });
+  });
+
+  describe("pageshow vault lock detection", () => {
+    it("sets vault locked state when vault is locked on persisted page restore", async () => {
+      const user = {
+        id: "1",
+        name: "Test User",
+        email: "test@secpal.dev",
+        emailVerified: false,
+      };
+      await authStorage.setUser(user);
+      authStorage.lockVault();
+
+      const VaultStatusComponent = () => {
+        const auth = useAuth();
+        return (
+          <span data-testid="isVaultLocked">
+            {auth.isVaultLocked ? "true" : "false"}
+          </span>
+        );
+      };
+
+      render(
+        <AuthProvider>
+          <VaultStatusComponent />
+        </AuthProvider>
+      );
+
+      await act(async () => {
+        window.dispatchEvent(
+          Object.assign(new Event("pageshow"), { persisted: true })
+        );
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("isVaultLocked")).toHaveTextContent("true");
       });
     });
   });
