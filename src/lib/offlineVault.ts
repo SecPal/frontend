@@ -726,11 +726,12 @@ async function encryptVaultRootKeyBytes(
   const nativeBridge = await getNativeDeviceBoundVaultBridge();
 
   if (nativeBridge) {
-    const nativeDeviceBoundState = await encryptNativeDeviceBoundVaultRootKeyBytes(
-      rootKeyBytes,
-      subjectHash,
-      nativeBridge
-    );
+    const nativeDeviceBoundState =
+      await encryptNativeDeviceBoundVaultRootKeyBytes(
+        rootKeyBytes,
+        subjectHash,
+        nativeBridge
+      );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;

@@ -19,7 +19,9 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
-function setCapacitorNativeRuntime(value = { isNativePlatform: () => true }): void {
+function setCapacitorNativeRuntime(
+  value = { isNativePlatform: () => true }
+): void {
   Object.defineProperty(globalThis, "Capacitor", {
     configurable: true,
     writable: true,
@@ -94,7 +96,9 @@ describe("offlineVault", () => {
     await initializeOfflineVault(persistedUser);
 
     expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(readStoredVaultState().wrapper).toMatchObject({ kind: "browser-session" });
+    expect(readStoredVaultState().wrapper).toMatchObject({
+      kind: "browser-session",
+    });
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
@@ -196,21 +200,17 @@ describe("offlineVault", () => {
   });
 
   it("stores and restores the vault root key through the optional native device-bound wrapper", async () => {
-    const wrapVaultRootKey = vi.fn(async ({
-      rootKeyBase64,
-    }: {
-      rootKeyBase64: string;
-    }) => ({
-      wrappedRootKey: `wrapped:${rootKeyBase64}`,
-      metadata: "android-keystore",
-    }));
-    const unwrapVaultRootKey = vi.fn(async ({
-      wrappedRootKey,
-    }: {
-      wrappedRootKey: string;
-    }) => ({
-      rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
-    }));
+    const wrapVaultRootKey = vi.fn(
+      async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
+        wrappedRootKey: `wrapped:${rootKeyBase64}`,
+        metadata: "android-keystore",
+      })
+    );
+    const unwrapVaultRootKey = vi.fn(
+      async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+        rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+      })
+    );
     const nativeBridge = installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
       wrapVaultRootKey,
