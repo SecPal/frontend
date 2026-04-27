@@ -5,6 +5,7 @@ import type { User } from "../contexts/auth-context";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
+  clearOfflineVaultTables,
   initializeOfflineVault,
   readPersistedAuthUserFromVault,
 } from "../lib/offlineVault";
@@ -397,6 +398,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   removeUser(): void {
     clearOfflineVaultSession();
+    void clearOfflineVaultTables();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
   }

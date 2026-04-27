@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { db } from "./db";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+} from "./offlineVault";
 
 export const SENSITIVE_CACHE_NAMES = [
   "api-cache",
@@ -13,6 +17,7 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   "auth_user",
   "auth_token",
   "secpal-notification-preferences",
+  AUTH_VAULT_STORAGE_KEY,
 ] as const;
 
 async function clearSensitiveCaches(): Promise<void> {
@@ -55,6 +60,8 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
 }
 
 export async function clearSensitiveClientState(): Promise<void> {
+  clearOfflineVaultSession();
+
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }

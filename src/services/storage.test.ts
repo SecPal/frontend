@@ -8,6 +8,7 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
+import { db } from "../lib/db";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const LEGACY_AUTH_STORAGE_VERSION = 1;
@@ -317,5 +318,25 @@ describe("authStorage", () => {
 
     await expect(authStorage.getUser()).resolves.toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears vault IndexedDB tables when removeUser is called due to invalid persisted state", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    authStorage.removeUser();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    // clearOfflineVaultTables is fire-and-forget; give it a microtask cycle
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(await db.vaultProfile.count()).toBe(0);
   });
 });

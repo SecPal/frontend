@@ -128,6 +128,34 @@ describe("OrganizationalUnitStore", () => {
   });
 
   describe("saveOrganizationalUnit", () => {
+    it("returns Date instances for cachedAt and lastSynced after vault round-trip", async () => {
+      const cachedAt = new Date("2025-01-10T00:00:00Z");
+      const lastSynced = new Date("2025-01-10T00:00:00Z");
+      const unit: OrganizationalUnitCacheEntry = {
+        id: "unit-date-roundtrip",
+        type: "branch",
+        name: "Round-trip Branch",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt,
+        lastSynced,
+      };
+
+      await saveOrganizationalUnit(unit);
+
+      const saved = await getOrganizationalUnit("unit-date-roundtrip");
+      expect(saved).toBeDefined();
+      expect(saved?.cachedAt).toBeInstanceOf(Date);
+      expect(saved?.lastSynced).toBeInstanceOf(Date);
+      expect(saved?.cachedAt.getTime()).toBe(cachedAt.getTime());
+      expect(saved?.lastSynced.getTime()).toBe(lastSynced.getTime());
+
+      const listed = await listOrganizationalUnits();
+      const listedUnit = listed.find((u) => u.id === "unit-date-roundtrip");
+      expect(listedUnit?.cachedAt).toBeInstanceOf(Date);
+      expect(listedUnit?.lastSynced).toBeInstanceOf(Date);
+    });
+
     it("should save an organizational unit to IndexedDB", async () => {
       const unit: OrganizationalUnitCacheEntry = {
         id: "unit-1",

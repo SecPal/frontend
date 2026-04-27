@@ -160,7 +160,7 @@ async function ensureVaultDatabaseOpen(): Promise<void> {
   }
 }
 
-async function clearOfflineVaultTables(): Promise<void> {
+export async function clearOfflineVaultTables(): Promise<void> {
   await ensureVaultDatabaseOpen();
 
   await Promise.all([
@@ -894,7 +894,11 @@ export async function getVaultOrganizationalUnit(
     return undefined;
   }
 
-  return decryptedRecord;
+  return {
+    ...decryptedRecord,
+    cachedAt: record.cachedAt,
+    lastSynced: record.lastSynced,
+  };
 }
 
 export async function listVaultOrganizationalUnits(): Promise<
@@ -926,7 +930,11 @@ export async function listVaultOrganizationalUnits(): Promise<
         return null;
       }
 
-      return decryptedRecord;
+      return {
+        ...decryptedRecord,
+        cachedAt: record.cachedAt,
+        lastSynced: record.lastSynced,
+      };
     })
   );
 
