@@ -36,5 +36,15 @@ describe("IndexedDB Database", () => {
       expect(tableNames).not.toContain("syncQueue");
       expect(tableNames).not.toContain("apiCache");
     });
+
+    it("indexes vault organizational units by type and parent_id", () => {
+      const indexNames = db.vaultOrganizationalUnitCache.schema.indexes.map(
+        (index) => index.name
+      );
+
+      expect(indexNames).toEqual(
+        expect.arrayContaining(["type", "parentLookupKey", "parent_id"])
+      );
+    });
   });
 });

@@ -80,6 +80,9 @@ export interface VaultAnalyticsRecord extends EncryptedVaultRecord {
 
 export interface VaultOrganizationalUnitCacheRecord extends EncryptedVaultRecord {
   id: string;
+  type?: OrganizationalUnitCacheEntry["type"];
+  parent_id?: string | null;
+  parentLookupKey?: string;
   cachedAt: Date;
   lastSynced: Date;
 }
@@ -103,11 +106,21 @@ export const db = new Dexie(DB_NAME) as Dexie & {
 };
 
 // Schema version 11 - Adds encrypted vault-backed offline stores for long-term PII.
+db.version(11).stores({
+  analytics: "++id, synced, timestamp, sessionId, type",
+  organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
+  vaultProfile: "id",
+  vaultAnalytics: "++id, synced, timestamp",
+  vaultOrganizationalUnitCache: "id, cachedAt, lastSynced",
+});
+
+// Schema version 12 - Restores indexed vault organizational-unit lookups.
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
   vaultProfile: "id",
   vaultAnalytics: "++id, synced, timestamp",
-  vaultOrganizationalUnitCache: "id, cachedAt, lastSynced",
+  vaultOrganizationalUnitCache:
+    "id, type, parentLookupKey, parent_id, cachedAt, lastSynced",
 });

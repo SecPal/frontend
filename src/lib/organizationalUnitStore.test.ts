@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { db } from "./db";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { db, type VaultOrganizationalUnitCacheRecord } from "./db";
 import type { OrganizationalUnitCacheEntry } from "./db";
 import type { OrganizationalUnit } from "../types/organizational";
 import {
@@ -358,6 +358,43 @@ describe("OrganizationalUnitStore", () => {
       const units = await getOrganizationalUnitsByType("holding");
       expect(units).toEqual([]);
     });
+
+    it("decrypts only matching vault records for indexed type lookups", async () => {
+      await saveOrganizationalUnit({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+      await saveOrganizationalUnit({
+        id: "branch-2",
+        type: "branch",
+        name: "Hamburg Branch",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+      await saveOrganizationalUnit({
+        id: "company-1",
+        type: "company",
+        name: "SecPal GmbH",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+
+      const decryptSpy = vi.spyOn(crypto.subtle, "decrypt");
+
+      const branches = await getOrganizationalUnitsByType("branch");
+
+      expect(branches.map((unit) => unit.id)).toEqual(["branch-1", "branch-2"]);
+      expect(decryptSpy).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe("getOrganizationalUnitsByParent", () => {
@@ -436,6 +473,150 @@ describe("OrganizationalUnitStore", () => {
       const rootUnits = await getOrganizationalUnitsByParent(null);
       expect(rootUnits).toHaveLength(1);
       expect(rootUnits[0]!.name).toBe("Root Holding");
+    });
+
+    it("decrypts only matching vault records for indexed parent lookups", async () => {
+      await saveOrganizationalUnit({
+        id: "company-1",
+        type: "company",
+        name: "SecPal GmbH",
+        parent_id: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+      await saveOrganizationalUnit({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        parent_id: "company-1",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+      await saveOrganizationalUnit({
+        id: "branch-2",
+        type: "branch",
+        name: "Hamburg Branch",
+        parent_id: "company-2",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+
+      const decryptSpy = vi.spyOn(crypto.subtle, "decrypt");
+
+      const children = await getOrganizationalUnitsByParent("company-1");
+
+      expect(children.map((unit) => unit.id)).toEqual(["branch-1"]);
+      expect(decryptSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("backfills missing vault org-unit index fields during filtered lookups", async () => {
+      await saveOrganizationalUnit({
+        id: "company-1",
+        type: "company",
+        name: "SecPal GmbH",
+        parent_id: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+      await saveOrganizationalUnit({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        parent_id: "company-1",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+
+      const branchRecord =
+        await db.vaultOrganizationalUnitCache.get("branch-1");
+      const companyRecord =
+        await db.vaultOrganizationalUnitCache.get("company-1");
+
+      const toLegacyRecord = (record: VaultOrganizationalUnitCacheRecord) => {
+        const legacyRecord = {
+          ...record,
+        } as Partial<VaultOrganizationalUnitCacheRecord>;
+
+        delete legacyRecord.type;
+        delete legacyRecord.parent_id;
+        delete legacyRecord.parentLookupKey;
+
+        return legacyRecord as VaultOrganizationalUnitCacheRecord;
+      };
+
+      await db.vaultOrganizationalUnitCache.bulkPut(
+        [branchRecord, companyRecord]
+          .filter(
+            (record): record is NonNullable<typeof record> =>
+              record !== undefined
+          )
+          .map(toLegacyRecord)
+      );
+
+      await expect(getOrganizationalUnitsByType("branch")).resolves.toEqual([
+        expect.objectContaining({ id: "branch-1" }),
+      ]);
+      await expect(
+        db.vaultOrganizationalUnitCache.get("branch-1")
+      ).resolves.toEqual(
+        expect.objectContaining({
+          type: "branch",
+          parent_id: "company-1",
+          parentLookupKey: "company-1",
+        })
+      );
+    });
+
+    it("runs the vault org-unit index backfill scan at most once per vault session", async () => {
+      await saveOrganizationalUnit({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        parent_id: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+        cachedAt: new Date("2025-01-10T00:00:00Z"),
+        lastSynced: new Date("2025-01-10T00:00:00Z"),
+      });
+
+      // Strip index fields to force a backfill on the first query
+      const record = await db.vaultOrganizationalUnitCache.get("branch-1");
+      if (record) {
+        const legacyRecord = {
+          ...record,
+        } as Partial<VaultOrganizationalUnitCacheRecord>;
+        delete legacyRecord.type;
+        delete legacyRecord.parent_id;
+        delete legacyRecord.parentLookupKey;
+        await db.vaultOrganizationalUnitCache.put(
+          legacyRecord as VaultOrganizationalUnitCacheRecord
+        );
+      }
+
+      const decryptSpy = vi.spyOn(crypto.subtle, "decrypt");
+
+      // First query: backfill scan runs (decrypt for backfill + decrypt for query result)
+      await getOrganizationalUnitsByType("branch");
+      const decryptsAfterFirstCall = decryptSpy.mock.calls.length;
+
+      decryptSpy.mockClear();
+
+      // Second query in the same session: backfill flag is already set, only the indexed query decrypt happens
+      await getOrganizationalUnitsByType("branch");
+      const decryptsAfterSecondCall = decryptSpy.mock.calls.length;
+
+      expect(decryptsAfterSecondCall).toBeLessThan(decryptsAfterFirstCall);
+      expect(decryptsAfterSecondCall).toBe(1);
     });
   });
 

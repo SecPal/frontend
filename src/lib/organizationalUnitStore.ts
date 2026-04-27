@@ -7,6 +7,8 @@ import {
   clearVaultOrganizationalUnits,
   deleteVaultOrganizationalUnit,
   getVaultOrganizationalUnit,
+  listVaultOrganizationalUnitsByParent,
+  listVaultOrganizationalUnitsByType,
   listVaultOrganizationalUnits,
   saveVaultOrganizationalUnit,
 } from "./offlineVault";
@@ -127,9 +129,7 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
 export async function getOrganizationalUnitsByType(
   type: OrganizationalUnitCacheEntry["type"]
 ): Promise<OrganizationalUnitCacheEntry[]> {
-  const units = (await listVaultOrganizationalUnits()).filter(
-    (unit) => unit.type === type
-  );
+  const units = await listVaultOrganizationalUnitsByType(type);
 
   return units.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -149,13 +149,7 @@ export async function getOrganizationalUnitsByType(
 export async function getOrganizationalUnitsByParent(
   parentId: string | null
 ): Promise<OrganizationalUnitCacheEntry[]> {
-  const allUnits = await listVaultOrganizationalUnits();
-  const units =
-    parentId === null
-      ? allUnits.filter(
-          (unit) => unit.parent_id === null || unit.parent_id === undefined
-        )
-      : allUnits.filter((unit) => unit.parent_id === parentId);
+  const units = await listVaultOrganizationalUnitsByParent(parentId);
 
   return units.sort((a, b) => a.name.localeCompare(b.name));
 }
