@@ -248,4 +248,118 @@ describe("offlineVault", () => {
       })
     );
   });
+
+  it("decrypts a persisted auth user from a legacy v1 envelope after upgrade", async () => {
+    // 1. Create a real vault — produces V2 browser-session envelope with no native bridge installed
+    await initializeOfflineVault(persistedUser);
+
+    const v2State = readStoredVaultState() as {
+      subjectHash: string;
+      wrapper: { kind: string; salt: string; iv: string; ciphertext: string };
+    };
+
+    expect(v2State.wrapper.kind).toBe("browser-session");
+
+    // 2. Re-derive the PBKDF2 MAC key using the same key material + same salt
+    const b64ToBytes = (b64: string): Uint8Array => {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1)
+        bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    };
+    const saltBytes = b64ToBytes(v2State.wrapper.salt);
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode("secpal-auth-vault:test-csrf-token"),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: saltBytes.buffer as ArrayBuffer,
+        iterations: 600_000,
+      },
+      baseKey,
+      512
+    );
+    const macKey = await crypto.subtle.importKey(
+      "raw",
+      new Uint8Array(derivedBits).slice(32),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    // 3. Compute the V1 MAC (different payload format than V2)
+    const v1MacPayload = [
+      "pbkdf2-aes-cbc-hmac-sha256-vault",
+      "1",
+      v2State.subjectHash,
+      v2State.wrapper.salt,
+      v2State.wrapper.iv,
+      v2State.wrapper.ciphertext,
+    ].join(":");
+    const macBuf = await crypto.subtle.sign(
+      "HMAC",
+      macKey,
+      new TextEncoder().encode(v1MacPayload)
+    );
+    const mac = btoa(String.fromCharCode(...new Uint8Array(macBuf)));
+
+    // 4. Overwrite localStorage with a valid V1 envelope using the same ciphertext
+    localStorage.setItem(
+      AUTH_VAULT_STORAGE_KEY,
+      JSON.stringify({
+        scheme: "pbkdf2-aes-cbc-hmac-sha256-vault",
+        version: 1,
+        salt: v2State.wrapper.salt,
+        iv: v2State.wrapper.iv,
+        ciphertext: v2State.wrapper.ciphertext,
+        mac,
+        subjectHash: v2State.subjectHash,
+      })
+    );
+    clearOfflineVaultSession();
+
+    // 5. Confirm the V1 envelope is still readable after the wrapper upgrade
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+  });
+
+  it("returns null without clearing vault artifacts when native bridge is unavailable for a native-device-bound envelope", async () => {
+    // Initialize vault with an available native bridge → native-device-bound envelope
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(
+        async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
+          wrappedRootKey: `wrapped:${rootKeyBase64}`,
+        })
+      ),
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+    await initializeOfflineVault(persistedUser);
+
+    expect(readStoredVaultState()).toMatchObject({
+      wrapper: { kind: "native-device-bound" },
+    });
+
+    // Remove the bridge to simulate a transient unavailability
+    setNativeVaultBridge(null);
+    clearOfflineVaultSession();
+
+    // Vault must be locked (null) — not corrupted and not cleared
+    await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+  });
 });

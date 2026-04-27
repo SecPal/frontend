@@ -19,6 +19,7 @@ const AUTH_VAULT_LEGACY_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
 const AUTH_VAULT_SCHEME = "secpal-auth-vault";
 const AUTH_VAULT_LEGACY_VERSION = 1;
 const AUTH_VAULT_VERSION = 2;
+const AUTH_VAULT_RECORD_VERSION = 1;
 const AUTH_VAULT_PBKDF2_ITERATIONS = 600_000;
 const AUTH_VAULT_SALT_BYTES = 16;
 const AUTH_VAULT_IV_BYTES = 16;
@@ -798,7 +799,7 @@ function buildVaultAdditionalData(
 ): Uint8Array {
   return textEncoder.encode(
     JSON.stringify({
-      version: AUTH_VAULT_VERSION,
+      version: AUTH_VAULT_RECORD_VERSION,
       storeName,
       recordId,
       subjectHash,
@@ -836,7 +837,7 @@ async function encryptVaultRecord(
 
   return {
     recordId,
-    version: AUTH_VAULT_VERSION,
+    version: AUTH_VAULT_RECORD_VERSION,
     ciphertext: encodeBase64(ciphertext),
     iv: encodeBase64(iv),
     authTag: encodeBase64(authTag),
@@ -907,6 +908,15 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   const rootKeyBytes = await decryptVaultRootKeyBytes(storedState);
 
   if (!rootKeyBytes) {
+    if (
+      storedState.version === AUTH_VAULT_VERSION &&
+      storedState.wrapper.kind === "native-device-bound" &&
+      !(await getNativeDeviceBoundVaultBridge())
+    ) {
+      // Bridge is temporarily unavailable; treat the vault as locked, not corrupted.
+      return null;
+    }
+
     await clearInvalidOfflineVaultArtifacts();
     return null;
   }
