@@ -208,9 +208,9 @@ describe("offlineVault", () => {
         }),
       })
     );
-    expect(nativeBridge.isVaultDeviceBoundWrapperAvailable).toHaveBeenCalledTimes(
-      1
-    );
+    expect(
+      nativeBridge.isVaultDeviceBoundWrapperAvailable
+    ).toHaveBeenCalledTimes(1);
     expect(nativeBridge.wrapVaultRootKey).not.toHaveBeenCalled();
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser

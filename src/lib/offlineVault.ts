@@ -72,7 +72,9 @@ interface AuthVaultStateEnvelopeV2 {
   wrapper: BrowserSessionVaultWrapper | NativeDeviceBoundVaultWrapper;
 }
 
-type AuthVaultStateEnvelope = AuthVaultStateEnvelopeV1 | AuthVaultStateEnvelopeV2;
+type AuthVaultStateEnvelope =
+  | AuthVaultStateEnvelopeV1
+  | AuthVaultStateEnvelopeV2;
 
 interface VaultSession {
   rootKeyBytes: Uint8Array;
@@ -169,7 +171,9 @@ function isAuthVaultStateEnvelopeV2(
   );
 }
 
-function isAuthVaultStateEnvelope(value: unknown): value is AuthVaultStateEnvelope {
+function isAuthVaultStateEnvelope(
+  value: unknown
+): value is AuthVaultStateEnvelope {
   return isAuthVaultStateEnvelopeV1(value) || isAuthVaultStateEnvelopeV2(value);
 }
 
@@ -221,9 +225,7 @@ function getStoredVaultWrapperCacheKey(
   currentKeyMaterial: string | null
 ): string | null {
   if (state.version === AUTH_VAULT_LEGACY_VERSION) {
-    return currentKeyMaterial
-      ? `browser-session:${currentKeyMaterial}`
-      : null;
+    return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
   }
 
   if (state.wrapper.kind === "native-device-bound") {
@@ -480,7 +482,10 @@ async function encryptBrowserSessionWrappedVaultRootKeyBytes(
     wrapper: {
       ...wrapperWithoutMac,
       mac: await signMacPayload(
-        buildBrowserSessionVaultWrapperMacPayload(subjectHash, wrapperWithoutMac),
+        buildBrowserSessionVaultWrapperMacPayload(
+          subjectHash,
+          wrapperWithoutMac
+        ),
         macKey
       ),
     },
@@ -650,17 +655,21 @@ async function encryptVaultRootKeyBytes(
   subjectHash: string
 ): Promise<AuthVaultStateEnvelope | null> {
   if (await hasNativeDeviceBoundVaultWrapper()) {
-    const nativeDeviceBoundState = await encryptNativeDeviceBoundVaultRootKeyBytes(
-      rootKeyBytes,
-      subjectHash
-    );
+    const nativeDeviceBoundState =
+      await encryptNativeDeviceBoundVaultRootKeyBytes(
+        rootKeyBytes,
+        subjectHash
+      );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;
     }
   }
 
-  return encryptBrowserSessionWrappedVaultRootKeyBytes(rootKeyBytes, subjectHash);
+  return encryptBrowserSessionWrappedVaultRootKeyBytes(
+    rootKeyBytes,
+    subjectHash
+  );
 }
 
 async function decryptVaultRootKeyBytes(
@@ -885,8 +894,10 @@ async function maybeRewriteStoredVaultState(
   return {
     ...session,
     wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(rewrittenState, getAuthVaultKeyMaterial()) ??
-      session.wrapperCacheKey,
+      getStoredVaultWrapperCacheKey(
+        rewrittenState,
+        getAuthVaultKeyMaterial()
+      ) ?? session.wrapperCacheKey,
   };
 }
 
