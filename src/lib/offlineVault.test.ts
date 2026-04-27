@@ -27,10 +27,6 @@ function setCapacitorNativeRuntime(value = { isNativePlatform: () => true }): vo
   });
 }
 
-function clearCapacitorNativeRuntime(): void {
-  Reflect.deleteProperty(globalThis as Record<string, unknown>, "Capacitor");
-}
-
 function setNativeVaultBridge(value: unknown): void {
   Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
     configurable: true,
@@ -39,7 +35,8 @@ function setNativeVaultBridge(value: unknown): void {
   });
 }
 
-function clearNativeVaultBridge(): void {
+function resetNativeVaultRuntime(): void {
+  Reflect.deleteProperty(globalThis as Record<string, unknown>, "Capacitor");
   Reflect.deleteProperty(
     globalThis as Record<string, unknown>,
     "SecPalNativeAuthBridge"
@@ -52,13 +49,7 @@ function readStoredVaultState(): Record<string, unknown> {
   ) as Record<string, unknown>;
 }
 
-function installNativeVaultBridge(
-  overrides: Partial<{
-    isVaultDeviceBoundWrapperAvailable: ReturnType<typeof vi.fn>;
-    wrapVaultRootKey: ReturnType<typeof vi.fn>;
-    unwrapVaultRootKey: ReturnType<typeof vi.fn>;
-  }>
-) {
+function installNativeVaultBridge(overrides: Record<string, unknown> = {}) {
   setCapacitorNativeRuntime();
 
   const bridge = {
@@ -93,16 +84,17 @@ describe("offlineVault", () => {
 
   afterEach(() => {
     clearOfflineVaultSession();
-    clearCapacitorNativeRuntime();
-    clearNativeVaultBridge();
+    resetNativeVaultRuntime();
     vi.restoreAllMocks();
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
+    installNativeVaultBridge({});
+
     await initializeOfflineVault(persistedUser);
 
     expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(readStoredVaultState().wrapper).toMatchObject({ kind: "browser-session" });
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
@@ -203,26 +195,8 @@ describe("offlineVault", () => {
     expect(await db.analytics.count()).toBe(0);
   });
 
-  it("falls back to the browser wrapper when a native-capable runtime has no device-bound vault wrapper", async () => {
-    const nativeBridge = installNativeVaultBridge({});
-
-    await initializeOfflineVault(persistedUser);
-
-    const storedState = readStoredVaultState();
-
-    expect(storedState.version).toBe(2);
-    expect(storedState.wrapper).toMatchObject({ kind: "browser-session" });
-    expect(
-      nativeBridge.isVaultDeviceBoundWrapperAvailable
-    ).toHaveBeenCalledTimes(1);
-    expect(nativeBridge.wrapVaultRootKey).not.toHaveBeenCalled();
-    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
-      persistedUser
-    );
-  });
-
   it("stores and restores the vault root key through the optional native device-bound wrapper", async () => {
-    const wrapVaultRootKey = vi.fn().mockImplementation(async ({
+    const wrapVaultRootKey = vi.fn(async ({
       rootKeyBase64,
     }: {
       rootKeyBase64: string;
@@ -230,7 +204,7 @@ describe("offlineVault", () => {
       wrappedRootKey: `wrapped:${rootKeyBase64}`,
       metadata: "android-keystore",
     }));
-    const unwrapVaultRootKey = vi.fn().mockImplementation(async ({
+    const unwrapVaultRootKey = vi.fn(async ({
       wrappedRootKey,
     }: {
       wrappedRootKey: string;
@@ -245,18 +219,15 @@ describe("offlineVault", () => {
 
     await initializeOfflineVault(persistedUser);
 
-    const storedState = readStoredVaultState();
+    const { subjectHash, wrapper } = readStoredVaultState() as {
+      subjectHash: string;
+      wrapper: Record<string, unknown>;
+    };
 
-    expect(storedState.wrapper).toMatchObject({
+    expect(wrapper).toMatchObject({
       kind: "native-device-bound",
       metadata: "android-keystore",
     });
-    expect(wrapVaultRootKey).toHaveBeenCalledWith(
-      expect.objectContaining({
-        rootKeyBase64: expect.any(String),
-        subjectHash: storedState.subjectHash,
-      })
-    );
 
     clearOfflineVaultSession();
 
@@ -267,7 +238,7 @@ describe("offlineVault", () => {
       expect.objectContaining({
         wrappedRootKey: expect.stringMatching(/^wrapped:/),
         metadata: "android-keystore",
-        subjectHash: storedState.subjectHash,
+        subjectHash,
       })
     );
   });

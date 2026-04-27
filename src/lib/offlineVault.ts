@@ -13,11 +13,7 @@ import {
   type VaultAnalyticsRecord,
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
-import {
-  hasNativeDeviceBoundVaultWrapper,
-  unwrapVaultRootKeyWithNativeDeviceBoundWrapper,
-  wrapVaultRootKeyWithNativeDeviceBoundWrapper,
-} from "./nativeVaultWrapper";
+import { isCapacitorNativeRuntime } from "./nativeRuntime";
 
 const AUTH_VAULT_LEGACY_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
 const AUTH_VAULT_SCHEME = "secpal-auth-vault";
@@ -38,9 +34,6 @@ const textDecoder = new TextDecoder();
 export const AUTH_VAULT_STORAGE_KEY = "auth_vault_state";
 export const AUTH_VAULT_LOCK_KEY = "auth_vault_lock";
 
-type AuthVaultLegacyVersion = typeof AUTH_VAULT_LEGACY_VERSION;
-type AuthVaultVersion = typeof AUTH_VAULT_VERSION;
-
 interface BrowserSessionVaultWrapper {
   kind: "browser-session";
   salt: string;
@@ -55,9 +48,24 @@ interface NativeDeviceBoundVaultWrapper {
   metadata?: string;
 }
 
+type NativeDeviceBoundVaultBridge = {
+  isVaultDeviceBoundWrapperAvailable?: () => boolean | Promise<boolean>;
+  wrapVaultRootKey?: (options: {
+    rootKeyBase64: string;
+    subjectHash: string;
+  }) =>
+    | { wrappedRootKey: string; metadata?: string }
+    | Promise<{ wrappedRootKey: string; metadata?: string }>;
+  unwrapVaultRootKey?: (options: {
+    wrappedRootKey: string;
+    subjectHash: string;
+    metadata?: string;
+  }) => { rootKeyBase64: string } | Promise<{ rootKeyBase64: string }>;
+};
+
 interface AuthVaultStateEnvelopeV1 {
   scheme: typeof AUTH_VAULT_LEGACY_SCHEME;
-  version: AuthVaultLegacyVersion;
+  version: typeof AUTH_VAULT_LEGACY_VERSION;
   salt: string;
   iv: string;
   ciphertext: string;
@@ -67,7 +75,7 @@ interface AuthVaultStateEnvelopeV1 {
 
 interface AuthVaultStateEnvelopeV2 {
   scheme: typeof AUTH_VAULT_SCHEME;
-  version: AuthVaultVersion;
+  version: typeof AUTH_VAULT_VERSION;
   subjectHash: string;
   wrapper: BrowserSessionVaultWrapper | NativeDeviceBoundVaultWrapper;
 }
@@ -88,16 +96,6 @@ type VaultAnalyticsPayload = Omit<
 >;
 
 let activeVaultSession: VaultSession | null = null;
-
-function isAuthVaultLegacyVersion(
-  value: unknown
-): value is AuthVaultLegacyVersion {
-  return value === AUTH_VAULT_LEGACY_VERSION;
-}
-
-function isAuthVaultVersion(value: unknown): value is AuthVaultVersion {
-  return value === AUTH_VAULT_VERSION;
-}
 
 function isBrowserSessionVaultWrapper(
   value: unknown
@@ -144,7 +142,7 @@ function isAuthVaultStateEnvelopeV1(
 
   return (
     candidate.scheme === AUTH_VAULT_LEGACY_SCHEME &&
-    isAuthVaultLegacyVersion(candidate.version) &&
+    candidate.version === AUTH_VAULT_LEGACY_VERSION &&
     typeof candidate.salt === "string" &&
     typeof candidate.iv === "string" &&
     typeof candidate.ciphertext === "string" &&
@@ -164,7 +162,7 @@ function isAuthVaultStateEnvelopeV2(
 
   return (
     candidate.scheme === AUTH_VAULT_SCHEME &&
-    isAuthVaultVersion(candidate.version) &&
+    candidate.version === AUTH_VAULT_VERSION &&
     typeof candidate.subjectHash === "string" &&
     (isBrowserSessionVaultWrapper(candidate.wrapper) ||
       isNativeDeviceBoundVaultWrapper(candidate.wrapper))
@@ -185,6 +183,44 @@ function getAuthVaultKeyMaterial(): string | null {
   }
 
   return `secpal-auth-vault:${csrfToken}`;
+}
+
+async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVaultBridge | null> {
+  if (!isCapacitorNativeRuntime()) {
+    return null;
+  }
+
+  const bridge = (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: unknown;
+    }
+  ).SecPalNativeAuthBridge;
+
+  if (!bridge || typeof bridge !== "object") {
+    return null;
+  }
+
+  const candidate = bridge as NativeDeviceBoundVaultBridge;
+
+  if (
+    typeof candidate.isVaultDeviceBoundWrapperAvailable !== "function" ||
+    typeof candidate.wrapVaultRootKey !== "function" ||
+    typeof candidate.unwrapVaultRootKey !== "function"
+  ) {
+    return null;
+  }
+
+  try {
+    return (await candidate.isVaultDeviceBoundWrapperAvailable()) === true
+      ? candidate
+      : null;
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to detect native device-bound wrapper availability:",
+      error
+    );
+    return null;
+  }
 }
 
 function encodeBase64(bytes: Uint8Array): string {
@@ -597,14 +633,31 @@ async function decryptBrowserSessionWrappedVaultRootKeyBytes(
 
 async function encryptNativeDeviceBoundVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
-  subjectHash: string
+  subjectHash: string,
+  nativeBridge: NativeDeviceBoundVaultBridge
 ): Promise<AuthVaultStateEnvelopeV2 | null> {
-  const wrappedRootKey = await wrapVaultRootKeyWithNativeDeviceBoundWrapper({
-    rootKeyBase64: encodeBase64(rootKeyBytes),
-    subjectHash,
-  });
+  let wrappedRootKey;
 
-  if (!wrappedRootKey) {
+  try {
+    wrappedRootKey = await nativeBridge.wrapVaultRootKey?.({
+      rootKeyBase64: encodeBase64(rootKeyBytes),
+      subjectHash,
+    });
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to wrap the vault root key with the native device-bound wrapper:",
+      error
+    );
+    return null;
+  }
+
+  if (
+    !wrappedRootKey ||
+    typeof wrappedRootKey.wrappedRootKey !== "string" ||
+    wrappedRootKey.wrappedRootKey.length === 0 ||
+    (wrappedRootKey.metadata !== undefined &&
+      typeof wrappedRootKey.metadata !== "string")
+  ) {
     return null;
   }
 
@@ -623,19 +676,35 @@ async function encryptNativeDeviceBoundVaultRootKeyBytes(
 }
 
 async function decryptNativeDeviceBoundVaultRootKeyBytes(
-  state: AuthVaultStateEnvelopeV2
+  state: AuthVaultStateEnvelopeV2,
+  nativeBridge: NativeDeviceBoundVaultBridge
 ): Promise<Uint8Array | null> {
   if (state.wrapper.kind !== "native-device-bound") {
     return null;
   }
 
-  const rootKeyBase64 = await unwrapVaultRootKeyWithNativeDeviceBoundWrapper({
-    wrappedRootKey: state.wrapper.wrappedRootKey,
-    subjectHash: state.subjectHash,
-    ...(state.wrapper.metadata !== undefined
-      ? { metadata: state.wrapper.metadata }
-      : {}),
-  });
+  let unwrappedRootKey;
+
+  try {
+    unwrappedRootKey = await nativeBridge.unwrapVaultRootKey?.({
+      wrappedRootKey: state.wrapper.wrappedRootKey,
+      subjectHash: state.subjectHash,
+      ...(state.wrapper.metadata !== undefined
+        ? { metadata: state.wrapper.metadata }
+        : {}),
+    });
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to unwrap the vault root key with the native device-bound wrapper:",
+      error
+    );
+    return null;
+  }
+
+  const rootKeyBase64 =
+    unwrappedRootKey && typeof unwrappedRootKey.rootKeyBase64 === "string"
+      ? unwrappedRootKey.rootKeyBase64
+      : null;
 
   if (!rootKeyBase64) {
     return null;
@@ -654,12 +723,14 @@ async function encryptVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
   subjectHash: string
 ): Promise<AuthVaultStateEnvelope | null> {
-  if (await hasNativeDeviceBoundVaultWrapper()) {
-    const nativeDeviceBoundState =
-      await encryptNativeDeviceBoundVaultRootKeyBytes(
-        rootKeyBytes,
-        subjectHash
-      );
+  const nativeBridge = await getNativeDeviceBoundVaultBridge();
+
+  if (nativeBridge) {
+    const nativeDeviceBoundState = await encryptNativeDeviceBoundVaultRootKeyBytes(
+      rootKeyBytes,
+      subjectHash,
+      nativeBridge
+    );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;
@@ -680,7 +751,11 @@ async function decryptVaultRootKeyBytes(
   }
 
   if (state.wrapper.kind === "native-device-bound") {
-    return decryptNativeDeviceBoundVaultRootKeyBytes(state);
+    const nativeBridge = await getNativeDeviceBoundVaultBridge();
+
+    return nativeBridge
+      ? decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge)
+      : null;
   }
 
   return decryptBrowserSessionWrappedVaultRootKeyBytes(state);
@@ -865,7 +940,7 @@ async function maybeRewriteStoredVaultState(
   session: VaultSession,
   storedState: AuthVaultStateEnvelope
 ): Promise<VaultSession> {
-  const preferredWrapperKind = (await hasNativeDeviceBoundVaultWrapper())
+  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
     ? "native-device-bound"
     : "browser-session";
   const currentWrapperKind =
