@@ -582,6 +582,118 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
   });
 
+  it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const revalidatedUser = {
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(revalidatedUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.isVaultLocked).toBe(true);
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await result.current.unlock?.();
+    });
+
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("propagates vault lock and unlock state across tabs", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const revalidatedUser = {
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(revalidatedUser);
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(storedVaultState).not.toBeNull();
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.setItem("auth_vault_lock", "1");
+      const crossTabLockEvent = new Event("storage");
+      Object.defineProperties(crossTabLockEvent, {
+        key: { value: "auth_vault_lock" },
+        oldValue: { value: null },
+        newValue: { value: "1" },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(crossTabLockEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+    act(() => {
+      localStorage.removeItem("auth_vault_lock");
+      const crossTabUnlockEvent = new Event("storage");
+      Object.defineProperties(crossTabUnlockEvent, {
+        key: { value: "auth_vault_lock" },
+        oldValue: { value: "1" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(crossTabUnlockEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.user).toEqual(revalidatedUser);
+  });
+
   it("updates isAuthenticated when user changes", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,

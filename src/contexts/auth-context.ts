@@ -30,9 +30,12 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isVaultLocked?: boolean;
   bootstrapRecoveryReason: AuthBootstrapRecoveryReason | null;
   login: (user: User) => Promise<void>;
   logout: () => void;
+  lock?: () => void;
+  unlock?: () => Promise<boolean>;
   retryBootstrap: () => void;
   /**
    * Check if user has a specific role

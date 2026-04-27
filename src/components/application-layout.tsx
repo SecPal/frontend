@@ -54,6 +54,18 @@ function CogIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function LockClosedIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg data-slot="icon" viewBox="0 0 20 20" fill="currentColor" {...props}>
+      <path
+        fillRule="evenodd"
+        d="M10 1.5A3.75 3.75 0 0 0 6.25 5.25V7H5.5A2.5 2.5 0 0 0 3 9.5v6A2.5 2.5 0 0 0 5.5 18h9a2.5 2.5 0 0 0 2.5-2.5v-6A2.5 2.5 0 0 0 14.5 7h-.75V5.25A3.75 3.75 0 0 0 10 1.5Zm2.25 5.5V5.25a2.25 2.25 0 1 0-4.5 0V7h4.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function ArrowRightStartOnRectangleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg data-slot="icon" viewBox="0 0 20 20" fill="currentColor" {...props}>
@@ -135,7 +147,13 @@ function DevicePhoneMobileIcon(props: React.SVGProps<SVGSVGElement>) {
  * Shared user menu items for both navbar and sidebar dropdowns.
  * Extracted to maintain DRY principles and ensure consistency.
  */
-function UserMenuItems({ onLogout }: { onLogout: () => void }) {
+function UserMenuItems({
+  onLock,
+  onLogout,
+}: {
+  onLock?: () => void;
+  onLogout: () => void;
+}) {
   return (
     <>
       <DropdownItem href="/profile">
@@ -150,6 +168,14 @@ function UserMenuItems({ onLogout }: { onLogout: () => void }) {
           <Trans>Settings</Trans>
         </DropdownLabel>
       </DropdownItem>
+      {onLock ? (
+        <DropdownItem onClick={onLock}>
+          <LockClosedIcon />
+          <DropdownLabel>
+            <Trans>Lock app</Trans>
+          </DropdownLabel>
+        </DropdownItem>
+      ) : null}
       <DropdownDivider />
       <DropdownItem onClick={onLogout}>
         <ArrowRightStartOnRectangleIcon />
@@ -185,7 +211,7 @@ async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
 }
 
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { lock, user, logout } = useAuth();
   const capabilities = useUserCapabilities();
   const authTransport = useMemo(() => getAuthTransport(), []);
   const navigate = useNavigate();
@@ -274,7 +300,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 />
               </DropdownButton>
               <DropdownMenu className="min-w-64" anchor="bottom end">
-                <UserMenuItems onLogout={handleLogout} />
+                <UserMenuItems onLock={lock} onLogout={handleLogout} />
               </DropdownMenu>
             </Dropdown>
           </NavbarSection>

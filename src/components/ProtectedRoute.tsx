@@ -7,6 +7,7 @@ import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RouteVaultLockedState,
 } from "./RouteGuardState";
 
 interface ProtectedRouteProps {
@@ -18,8 +19,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     bootstrapRecoveryReason,
     isAuthenticated,
     isLoading,
+    isVaultLocked = false,
     logout,
     retryBootstrap,
+    unlock,
     user,
   } = useAuth();
 
@@ -33,6 +36,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         onRetry={retryBootstrap}
         onSignInAgain={logout}
         reason={bootstrapRecoveryReason}
+      />
+    );
+  }
+
+  if (isVaultLocked) {
+    return (
+      <RouteVaultLockedState
+        onUnlock={unlock ?? (async () => false)}
+        onSignInAgain={logout}
       />
     );
   }

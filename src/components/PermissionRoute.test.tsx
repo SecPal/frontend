@@ -273,4 +273,44 @@ describe("PermissionRoute", () => {
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(screen.queryByText("Access Denied")).not.toBeInTheDocument();
   });
+
+  it("shows the locked vault state before redirecting unauthenticated users", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(() => false),
+      isLoading: false,
+      isAuthenticated: false,
+      isVaultLocked: true,
+      bootstrapRecoveryReason: null,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      lock: vi.fn(),
+      unlock: vi.fn(async () => true),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/test"]}>
+          <Routes>
+            <Route
+              path="/test"
+              element={
+                <PermissionRoute permission="test.read">
+                  <div>Protected Content</div>
+                </PermissionRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /unlock your secure offline data/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+  });
 });

@@ -181,6 +181,27 @@ describe("authStorage", () => {
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
   });
 
+  it("locks the offline vault without deleting encrypted records and restores them after unlock", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    authStorage.lockVault();
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(authStorage.hasVaultLock()).toBe(true);
+
+    await expect(authStorage.unlockVault()).resolves.toEqual(user);
+    expect(authStorage.hasVaultLock()).toBe(false);
+    await expect(authStorage.getUser()).resolves.toEqual(user);
+  });
+
   it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
     const legacyUser = {
       id: "1",

@@ -167,4 +167,44 @@ describe("OrganizationalRoute", () => {
     expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
     expect(screen.queryByText("Access Denied")).not.toBeInTheDocument();
   });
+
+  it("shows the locked vault state before redirecting unauthenticated users", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: false,
+      isAuthenticated: false,
+      isVaultLocked: true,
+      bootstrapRecoveryReason: null,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      lock: vi.fn(),
+      unlock: vi.fn(async () => true),
+      retryBootstrap: vi.fn(),
+      hasRole: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => false),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /unlock your secure offline data/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
+  });
 });

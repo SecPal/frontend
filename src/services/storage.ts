@@ -3,10 +3,14 @@
 
 import type { User } from "../contexts/auth-context";
 import {
+  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultLockState,
   clearOfflineVaultSession,
   clearOfflineVaultTables,
+  isOfflineVaultLocked,
   initializeOfflineVault,
+  lockOfflineVault,
   readPersistedAuthUserFromVault,
 } from "../lib/offlineVault";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
@@ -248,9 +252,12 @@ async function decryptPersistedAuthUser(
  */
 export interface AuthStorage {
   hasStoredUser(): boolean;
+  hasVaultLock(): boolean;
   getUserSnapshot(): User | null;
   getUser(): Promise<User | null>;
   setUser(user: User): Promise<void>;
+  lockVault(): void;
+  unlockVault(): Promise<User | null>;
   removeUser(): void;
   clear(): void;
   hasLogoutBarrier(): boolean;
@@ -262,6 +269,7 @@ export interface AuthStorage {
 class LocalStorageAuthStorage implements AuthStorage {
   private readonly USER_KEY = "auth_user";
   private readonly VAULT_KEY = AUTH_VAULT_STORAGE_KEY;
+  private readonly VAULT_LOCK_KEY = AUTH_VAULT_LOCK_KEY;
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
 
   /**
@@ -289,9 +297,14 @@ class LocalStorageAuthStorage implements AuthStorage {
     return localStorage.getItem(this.LOGOUT_BARRIER_KEY) !== null;
   }
 
+  hasVaultLock(): boolean {
+    return isOfflineVaultLocked();
+  }
+
   hasStoredUser(): boolean {
     return (
       !this.hasLogoutBarrier() &&
+      !this.hasVaultLock() &&
       (localStorage.getItem(this.VAULT_KEY) !== null ||
         hasStoredUserRecord(this.USER_KEY))
     );
@@ -310,6 +323,10 @@ class LocalStorageAuthStorage implements AuthStorage {
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
       this.removeUser();
+      return null;
+    }
+
+    if (this.hasVaultLock()) {
       return null;
     }
 
@@ -342,6 +359,10 @@ class LocalStorageAuthStorage implements AuthStorage {
   async getUser(): Promise<User | null> {
     if (this.hasLogoutBarrier()) {
       this.removeUser();
+      return null;
+    }
+
+    if (this.hasVaultLock()) {
       return null;
     }
 
@@ -393,7 +414,27 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     this.clearLogoutBarrier();
+    clearOfflineVaultLockState();
     localStorage.removeItem(this.USER_KEY);
+  }
+
+  lockVault(): void {
+    this.clearLogoutBarrier();
+    lockOfflineVault();
+    localStorage.removeItem(this.USER_KEY);
+  }
+
+  async unlockVault(): Promise<User | null> {
+    clearOfflineVaultLockState();
+
+    const unlockedUser = await this.getUser();
+
+    if (!unlockedUser) {
+      this.removeUser();
+      return null;
+    }
+
+    return unlockedUser;
   }
 
   removeUser(): void {
@@ -403,6 +444,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     });
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
   }
 
   clear(): void {
