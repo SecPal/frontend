@@ -402,13 +402,13 @@ describe("AuthContext", () => {
       );
 
       await act(async () => {
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: AUTH_VAULT_STORAGE_KEY,
-            newValue: "corrupted-data",
-          })
-        );
-        // Allow async handler to settle
+        const storageEvent = new Event("storage");
+        Object.defineProperties(storageEvent, {
+          key: { value: AUTH_VAULT_STORAGE_KEY },
+          newValue: { value: "corrupted-data" },
+          storageArea: { value: localStorage },
+        });
+        window.dispatchEvent(storageEvent);
         await new Promise((r) => setTimeout(r, 0));
       });
 
