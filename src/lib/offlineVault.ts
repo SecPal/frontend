@@ -97,40 +97,6 @@ type VaultAnalyticsPayload = Omit<
 
 let activeVaultSession: VaultSession | null = null;
 
-function isBrowserSessionVaultWrapper(
-  value: unknown
-): value is BrowserSessionVaultWrapper {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return (
-    candidate.kind === "browser-session" &&
-    typeof candidate.salt === "string" &&
-    typeof candidate.iv === "string" &&
-    typeof candidate.ciphertext === "string" &&
-    typeof candidate.mac === "string"
-  );
-}
-
-function isNativeDeviceBoundVaultWrapper(
-  value: unknown
-): value is NativeDeviceBoundVaultWrapper {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return (
-    candidate.kind === "native-device-bound" &&
-    typeof candidate.wrappedRootKey === "string" &&
-    (candidate.metadata === undefined || typeof candidate.metadata === "string")
-  );
-}
-
 function isAuthVaultStateEnvelopeV1(
   value: unknown
 ): value is AuthVaultStateEnvelopeV1 {
@@ -159,13 +125,27 @@ function isAuthVaultStateEnvelopeV2(
   }
 
   const candidate = value as Record<string, unknown>;
+  const wrapper = candidate.wrapper;
+
+  if (typeof wrapper !== "object" || wrapper === null) {
+    return false;
+  }
+
+  const wrapperCandidate = wrapper as Record<string, unknown>;
 
   return (
     candidate.scheme === AUTH_VAULT_SCHEME &&
     candidate.version === AUTH_VAULT_VERSION &&
     typeof candidate.subjectHash === "string" &&
-    (isBrowserSessionVaultWrapper(candidate.wrapper) ||
-      isNativeDeviceBoundVaultWrapper(candidate.wrapper))
+    ((wrapperCandidate.kind === "browser-session" &&
+      typeof wrapperCandidate.salt === "string" &&
+      typeof wrapperCandidate.iv === "string" &&
+      typeof wrapperCandidate.ciphertext === "string" &&
+      typeof wrapperCandidate.mac === "string") ||
+      (wrapperCandidate.kind === "native-device-bound" &&
+        typeof wrapperCandidate.wrappedRootKey === "string" &&
+        (wrapperCandidate.metadata === undefined ||
+          typeof wrapperCandidate.metadata === "string")))
   );
 }
 
@@ -272,7 +252,10 @@ function getStoredVaultWrapperCacheKey(
 }
 
 function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
-  return getStoredVaultWrapperCacheKey(state, getAuthVaultKeyMaterial()) ?? "native-device-bound";
+  return (
+    getStoredVaultWrapperCacheKey(state, getAuthVaultKeyMaterial()) ??
+    "native-device-bound"
+  );
 }
 
 function getStoredVaultState(): AuthVaultStateEnvelope | null {
@@ -726,18 +709,22 @@ async function encryptVaultRootKeyBytes(
   const nativeBridge = await getNativeDeviceBoundVaultBridge();
 
   if (nativeBridge) {
-    const nativeDeviceBoundState = await encryptNativeDeviceBoundVaultRootKeyBytes(
-      rootKeyBytes,
-      subjectHash,
-      nativeBridge
-    );
+    const nativeDeviceBoundState =
+      await encryptNativeDeviceBoundVaultRootKeyBytes(
+        rootKeyBytes,
+        subjectHash,
+        nativeBridge
+      );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;
     }
   }
 
-  return encryptBrowserSessionWrappedVaultRootKeyBytes(rootKeyBytes, subjectHash);
+  return encryptBrowserSessionWrappedVaultRootKeyBytes(
+    rootKeyBytes,
+    subjectHash
+  );
 }
 
 async function decryptVaultRootKeyBytes(
@@ -927,7 +914,8 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   activeVaultSession = {
     rootKeyBytes,
     subjectHash: storedState.subjectHash,
-    wrapperCacheKey: storedWrapperCacheKey ?? getSessionWrapperCacheKey(storedState),
+    wrapperCacheKey:
+      storedWrapperCacheKey ?? getSessionWrapperCacheKey(storedState),
   };
 
   return activeVaultSession;
@@ -965,7 +953,11 @@ async function maybeRewriteStoredVaultState(
 
   return {
     ...session,
-    wrapperCacheKey: getStoredVaultWrapperCacheKey(rewrittenState, getAuthVaultKeyMaterial()) ?? session.wrapperCacheKey,
+    wrapperCacheKey:
+      getStoredVaultWrapperCacheKey(
+        rewrittenState,
+        getAuthVaultKeyMaterial()
+      ) ?? session.wrapperCacheKey,
   };
 }
 

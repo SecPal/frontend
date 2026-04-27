@@ -91,11 +91,11 @@ describe("offlineVault", () => {
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => { });
     installNativeVaultBridge({
-      isVaultDeviceBoundWrapperAvailable: vi.fn().mockRejectedValue(
-        new Error("bridge unavailable")
-      ),
+      isVaultDeviceBoundWrapperAvailable: vi
+        .fn()
+        .mockRejectedValue(new Error("bridge unavailable")),
     });
 
     await initializeOfflineVault(persistedUser);
@@ -201,13 +201,17 @@ describe("offlineVault", () => {
   });
 
   it("stores and restores the vault root key through the optional native device-bound wrapper", async () => {
-    const wrapVaultRootKey = vi.fn(async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
-      wrappedRootKey: `wrapped:${rootKeyBase64}`,
-      metadata: "android-keystore",
-    }));
-    const unwrapVaultRootKey = vi.fn(async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
-      rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
-    }));
+    const wrapVaultRootKey = vi.fn(
+      async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
+        wrappedRootKey: `wrapped:${rootKeyBase64}`,
+        metadata: "android-keystore",
+      })
+    );
+    const unwrapVaultRootKey = vi.fn(
+      async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+        rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+      })
+    );
     const nativeBridge = installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi
         .fn()
