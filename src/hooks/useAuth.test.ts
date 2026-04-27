@@ -17,6 +17,7 @@ import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import {
+  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
@@ -655,11 +656,10 @@ describe("useAuth", () => {
     });
 
     act(() => {
-      localStorage.setItem("auth_vault_lock", "1");
+      localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
       const crossTabLockEvent = new Event("storage");
       Object.defineProperties(crossTabLockEvent, {
-        key: { value: "auth_vault_lock" },
-        oldValue: { value: null },
+        key: { value: AUTH_VAULT_LOCK_KEY },
         newValue: { value: "1" },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
@@ -675,11 +675,10 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
     act(() => {
-      localStorage.removeItem("auth_vault_lock");
+      localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
       const crossTabUnlockEvent = new Event("storage");
       Object.defineProperties(crossTabUnlockEvent, {
-        key: { value: "auth_vault_lock" },
-        oldValue: { value: "1" },
+        key: { value: AUTH_VAULT_LOCK_KEY },
         newValue: { value: null },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);

@@ -53,7 +53,7 @@ export function RouteBootstrapRecoveryState({
       className="flex min-h-screen items-center justify-center p-4"
       data-route-guard-state="bootstrap-recovery"
     >
-      <div className="max-w-md text-center" role="status" aria-live="polite">
+      <div className="max-w-md text-center">
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Still loading your secure session</Trans>
         </h1>
@@ -115,7 +115,7 @@ export function RouteVaultLockedState({
       className="flex min-h-screen items-center justify-center p-4"
       data-route-guard-state="vault-locked"
     >
-      <div className="max-w-md text-center" role="status" aria-live="polite">
+      <div className="max-w-md text-center">
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Unlock your secure offline data</Trans>
         </h1>
@@ -126,11 +126,13 @@ export function RouteVaultLockedState({
             the device state.
           </Trans>
         </Text>
-        {errorMessage ? (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400">
-            {errorMessage}
-          </p>
-        ) : null}
+        <div role="status" aria-live="polite" aria-atomic="true">
+          {errorMessage ? (
+            <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {errorMessage}
+            </p>
+          ) : null}
+        </div>
         <div className="mt-6 flex justify-center gap-3">
           <Button
             onClick={() => {

@@ -19,7 +19,10 @@ import { authStorage } from "../services/storage";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
-import { AUTH_VAULT_STORAGE_KEY } from "../lib/offlineVault";
+import {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
 
@@ -534,7 +537,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (event.key === "auth_vault_lock") {
+      if (event.key === AUTH_VAULT_LOCK_KEY) {
         if (event.newValue !== null) {
           invalidateBootstrapRevalidation();
           setBootstrapRecoveryReason(null);
@@ -546,22 +549,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         void (async () => {
-          const unlockedUser = await authStorage.unlockVault?.();
+          try {
+            const unlockedUser = await authStorage.unlockVault?.();
 
-          if (!unlockedUser) {
+            if (!unlockedUser) {
+              clearAuthenticatedState(true);
+              return;
+            }
+
+            hasLogoutBarrierRef.current = false;
+            setBootstrapRecoveryReason(null);
+            invalidateBootstrapRevalidation();
+            setUser(unlockedUser);
+            setIsVaultLocked(false);
+            setIsLoading(false);
+            syncOfflineAuthState(true);
+          } catch (error) {
+            console.error("Failed to unlock cross-tab auth vault:", error);
             clearAuthenticatedState(true);
-            return;
           }
-
-          hasLogoutBarrierRef.current = false;
-          setBootstrapRecoveryReason(null);
-          invalidateBootstrapRevalidation();
-          setUser(unlockedUser);
-          setIsVaultLocked(false);
-          setIsLoading(false);
-          syncOfflineAuthState(true);
         })();
-        return;
       }
 
       if (event.key !== "auth_user" && event.key !== AUTH_VAULT_STORAGE_KEY) {
