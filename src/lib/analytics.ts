@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { db, type AnalyticsEvent, type AnalyticsEventType } from "./db";
+import type { AnalyticsEvent, AnalyticsEventType } from "./db";
+import {
+  clearOldVaultAnalyticsEvents,
+  clearVaultAnalytics,
+  listUnsyncedVaultAnalyticsRecordIds,
+  listVaultAnalyticsEvents,
+  markVaultAnalyticsEventsSynced,
+  storeVaultAnalyticsEvent,
+} from "./offlineVault";
 
 // Re-export types for external use
 export type { AnalyticsEvent, AnalyticsEventType };
@@ -102,7 +110,7 @@ class OfflineAnalytics {
       this.syncTimeout = undefined;
     }
 
-    await db.analytics.clear();
+    await clearVaultAnalytics();
   }
 
   /**
@@ -145,8 +153,7 @@ class OfflineAnalytics {
     };
 
     try {
-      // Store event in IndexedDB
-      await db.analytics.add(event);
+      await storeVaultAnalyticsEvent(event);
 
       // If online, debounce sync to avoid excessive syncing
       if (this.isOnline) {
@@ -351,12 +358,9 @@ class OfflineAnalytics {
 
     try {
       // Get all unsynced events
-      const unsyncedEvents = await db.analytics
-        .where("synced")
-        .equals(0)
-        .toArray();
+      const unsyncedEventIds = await listUnsyncedVaultAnalyticsRecordIds();
 
-      if (unsyncedEvents.length === 0) {
+      if (unsyncedEventIds.length === 0) {
         this.isSyncing = false;
         return;
       }
@@ -366,21 +370,9 @@ class OfflineAnalytics {
       // For now, we just mark them as synced for local testing
 
       // Simulate network request
-      console.log(`Syncing ${unsyncedEvents.length} analytics events...`);
-
-      // Mark events as synced - single-pass bulk update with proper type narrowing
-      const eventsWithId = unsyncedEvents.filter(
-        (e): e is AnalyticsEvent & { id: number } => e.id !== undefined
-      );
-
-      await db.analytics.bulkUpdate(
-        eventsWithId.map((e) => ({
-          key: e.id,
-          changes: { synced: true },
-        }))
-      );
-
-      console.log(`Successfully synced ${eventsWithId.length} events`);
+      console.log(`Syncing ${unsyncedEventIds.length} analytics events...`);
+      await markVaultAnalyticsEventsSynced(unsyncedEventIds);
+      console.log(`Successfully synced ${unsyncedEventIds.length} events`);
     } catch (error) {
       // Non-critical: Sync will be retried automatically
       console.warn("Failed to sync analytics events:", error);
@@ -398,7 +390,7 @@ class OfflineAnalytics {
     unsynced: number;
     byType: Record<AnalyticsEventType, number>;
   }> {
-    const allEvents = await db.analytics.toArray();
+    const allEvents = await listVaultAnalyticsEvents();
     const syncedEvents = allEvents.filter((e) => e.synced);
     const unsyncedEvents = allEvents.filter((e) => !e.synced);
 
@@ -425,11 +417,7 @@ class OfflineAnalytics {
   async clearOldEvents(): Promise<void> {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    await db.analytics
-      .where("synced")
-      .equals(1)
-      .and((event) => event.timestamp < thirtyDaysAgo)
-      .delete();
+    await clearOldVaultAnalyticsEvents(thirtyDaysAgo);
   }
 }
 

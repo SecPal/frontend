@@ -1,9 +1,15 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { db } from "./db";
 import type { OrganizationalUnitCacheEntry } from "./db";
 import type { OrganizationalUnit } from "../types/organizational";
+import {
+  clearVaultOrganizationalUnits,
+  deleteVaultOrganizationalUnit,
+  getVaultOrganizationalUnit,
+  listVaultOrganizationalUnits,
+  saveVaultOrganizationalUnit,
+} from "./offlineVault";
 
 export function buildOrganizationalUnitCacheEntry(
   unit: OrganizationalUnit,
@@ -50,7 +56,7 @@ export function buildOrganizationalUnitCacheEntry(
 export async function saveOrganizationalUnit(
   unit: OrganizationalUnitCacheEntry
 ): Promise<void> {
-  await db.organizationalUnitCache.put(unit);
+  await saveVaultOrganizationalUnit(unit);
 }
 
 /**
@@ -70,7 +76,7 @@ export async function saveOrganizationalUnit(
 export async function getOrganizationalUnit(
   id: string
 ): Promise<OrganizationalUnitCacheEntry | undefined> {
-  return db.organizationalUnitCache.get(id);
+  return await getVaultOrganizationalUnit(id);
 }
 
 /**
@@ -87,7 +93,7 @@ export async function getOrganizationalUnit(
 export async function listOrganizationalUnits(): Promise<
   OrganizationalUnitCacheEntry[]
 > {
-  const units = await db.organizationalUnitCache.toArray();
+  const units = await listVaultOrganizationalUnits();
 
   // Sort by name ascending
   return units.sort((a, b) => a.name.localeCompare(b.name));
@@ -104,7 +110,7 @@ export async function listOrganizationalUnits(): Promise<
  * ```
  */
 export async function deleteOrganizationalUnit(id: string): Promise<void> {
-  await db.organizationalUnitCache.delete(id);
+  await deleteVaultOrganizationalUnit(id);
 }
 
 /**
@@ -121,10 +127,9 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
 export async function getOrganizationalUnitsByType(
   type: OrganizationalUnitCacheEntry["type"]
 ): Promise<OrganizationalUnitCacheEntry[]> {
-  const units = await db.organizationalUnitCache
-    .where("type")
-    .equals(type)
-    .toArray();
+  const units = (await listVaultOrganizationalUnits()).filter(
+    (unit) => unit.type === type
+  );
 
   return units.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -144,20 +149,13 @@ export async function getOrganizationalUnitsByType(
 export async function getOrganizationalUnitsByParent(
   parentId: string | null
 ): Promise<OrganizationalUnitCacheEntry[]> {
-  let units: OrganizationalUnitCacheEntry[];
-
-  if (parentId === null) {
-    // For root units, we need to filter where parent_id is null or undefined
-    const allUnits = await db.organizationalUnitCache.toArray();
-    units = allUnits.filter(
-      (unit) => unit.parent_id === null || unit.parent_id === undefined
-    );
-  } else {
-    units = await db.organizationalUnitCache
-      .where("parent_id")
-      .equals(parentId)
-      .toArray();
-  }
+  const allUnits = await listVaultOrganizationalUnits();
+  const units =
+    parentId === null
+      ? allUnits.filter(
+          (unit) => unit.parent_id === null || unit.parent_id === undefined
+        )
+      : allUnits.filter((unit) => unit.parent_id === parentId);
 
   return units.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -177,9 +175,9 @@ export async function searchOrganizationalUnits(
   query: string
 ): Promise<OrganizationalUnitCacheEntry[]> {
   const lowerQuery = query.toLowerCase();
-  const units = await db.organizationalUnitCache
-    .filter((unit) => unit.name.toLowerCase().includes(lowerQuery))
-    .toArray();
+  const units = (await listVaultOrganizationalUnits()).filter((unit) =>
+    unit.name.toLowerCase().includes(lowerQuery)
+  );
 
   return units.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -193,5 +191,5 @@ export async function searchOrganizationalUnits(
  * ```
  */
 export async function clearOrganizationalUnitCache(): Promise<void> {
-  await db.organizationalUnitCache.clear();
+  await clearVaultOrganizationalUnits();
 }

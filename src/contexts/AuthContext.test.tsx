@@ -6,6 +6,7 @@ import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
 import { sanitizePersistedAuthUser } from "../services/authState";
+import { clearOfflineVaultSession } from "../lib/offlineVault";
 import { authStorage } from "../services/storage";
 
 vi.mock("../services/authApi", () => ({
@@ -63,8 +64,13 @@ async function seedStoredUser(user: Record<string, unknown>) {
 describe("AuthContext", () => {
   beforeEach(() => {
     localStorage.clear();
+    clearOfflineVaultSession();
     document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
     document.cookie = "XSRF-TOKEN=test-csrf-token;path=/";
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
   });
 
   describe("hasRole", () => {

@@ -60,6 +60,30 @@ export interface OrganizationalUnitCacheEntry {
   lastSynced: Date;
 }
 
+export interface EncryptedVaultRecord {
+  recordId: string;
+  version: number;
+  ciphertext: string;
+  iv: string;
+  authTag: string;
+}
+
+export interface EncryptedProfileRecord extends EncryptedVaultRecord {
+  id: "profile";
+}
+
+export interface VaultAnalyticsRecord extends EncryptedVaultRecord {
+  id?: number;
+  synced: boolean;
+  timestamp: number;
+}
+
+export interface VaultOrganizationalUnitCacheRecord extends EncryptedVaultRecord {
+  id: string;
+  cachedAt: Date;
+  lastSynced: Date;
+}
+
 /**
  * SecPal IndexedDB database
  *
@@ -70,11 +94,20 @@ export interface OrganizationalUnitCacheEntry {
 export const db = new Dexie(DB_NAME) as Dexie & {
   analytics: EntityTable<AnalyticsEvent, "id">;
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
+  vaultProfile: EntityTable<EncryptedProfileRecord, "id">;
+  vaultAnalytics: EntityTable<VaultAnalyticsRecord, "id">;
+  vaultOrganizationalUnitCache: EntityTable<
+    VaultOrganizationalUnitCacheRecord,
+    "id"
+  >;
 };
 
-// Schema version 10 - Current offline storage only
+// Schema version 11 - Adds encrypted vault-backed offline stores for long-term PII.
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
+  vaultProfile: "id",
+  vaultAnalytics: "++id, synced, timestamp",
+  vaultOrganizationalUnitCache: "id, cachedAt, lastSynced",
 });

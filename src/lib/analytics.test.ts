@@ -3,26 +3,22 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { analytics } from "./analytics";
-import { db } from "./db";
+import {
+  clearOldVaultAnalyticsEvents,
+  clearVaultAnalytics,
+  listUnsyncedVaultAnalyticsRecordIds,
+  listVaultAnalyticsEvents,
+  markVaultAnalyticsEventsSynced,
+  storeVaultAnalyticsEvent,
+} from "./offlineVault";
 
-// Mock IndexedDB
-vi.mock("./db", () => ({
-  db: {
-    analytics: {
-      add: vi.fn().mockResolvedValue(1),
-      clear: vi.fn().mockResolvedValue(undefined),
-      where: vi.fn(() => ({
-        equals: vi.fn(() => ({
-          toArray: vi.fn().mockResolvedValue([]),
-          and: vi.fn(() => ({
-            delete: vi.fn().mockResolvedValue(0),
-          })),
-        })),
-      })),
-      toArray: vi.fn().mockResolvedValue([]),
-      bulkUpdate: vi.fn().mockResolvedValue(0),
-    },
-  },
+vi.mock("./offlineVault", () => ({
+  storeVaultAnalyticsEvent: vi.fn().mockResolvedValue(1),
+  clearVaultAnalytics: vi.fn().mockResolvedValue(undefined),
+  listUnsyncedVaultAnalyticsRecordIds: vi.fn().mockResolvedValue([]),
+  markVaultAnalyticsEventsSynced: vi.fn().mockResolvedValue(undefined),
+  listVaultAnalyticsEvents: vi.fn().mockResolvedValue([]),
+  clearOldVaultAnalyticsEvents: vi.fn().mockResolvedValue(undefined),
 }));
 
 // NOTE: Singleton persistence across tests is intentional
@@ -127,7 +123,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.track("page_view", "navigation", "view_home");
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "page_view",
           category: "navigation",
@@ -148,7 +144,7 @@ describe("OfflineAnalytics", () => {
         metadata: { page: "/login" },
       });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "button_click",
           category: "interaction",
@@ -165,7 +161,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.track("page_view", "navigation", "view_dashboard");
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "user-456",
         })
@@ -177,7 +173,7 @@ describe("OfflineAnalytics", () => {
 
       const consoleWarn = vi.mocked(console.warn);
       const error = new Error("Database error");
-      vi.mocked(db.analytics!.add).mockRejectedValueOnce(error);
+      vi.mocked(storeVaultAnalyticsEvent).mockRejectedValueOnce(error);
 
       await analytics!.track("page_view", "test", "test");
 
@@ -194,7 +190,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackPageView("/dashboard", "Dashboard");
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "page_view",
           category: "navigation",
@@ -210,7 +206,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackClick("submit-button", { form: "login" });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "button_click",
           category: "interaction",
@@ -226,7 +222,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackFormSubmit("login-form", true, { method: "email" });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "form_submit",
           category: "interaction",
@@ -243,7 +239,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackFormSubmit("login-form", false);
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           value: 0,
         })
@@ -256,7 +252,7 @@ describe("OfflineAnalytics", () => {
       const error = new Error("Test error");
       await analytics!.trackError(error, { component: "LoginForm" });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "error",
           category: "error",
@@ -269,7 +265,7 @@ describe("OfflineAnalytics", () => {
       );
 
       // Ensure stack is NOT included by default
-      const call = vi.mocked(db.analytics!.add).mock.calls[0]?.[0];
+      const call = vi.mocked(storeVaultAnalyticsEvent).mock.calls[0]?.[0];
       expect(call?.metadata).not.toHaveProperty("stack");
     });
 
@@ -279,7 +275,7 @@ describe("OfflineAnalytics", () => {
       const error = new Error("Test error with stack");
       await analytics!.trackError(error, { component: "LoginForm" }, true);
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "error",
           category: "error",
@@ -298,7 +294,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackPerformance("page_load", 1234, { page: "/home" });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "performance",
           category: "performance",
@@ -314,7 +310,7 @@ describe("OfflineAnalytics", () => {
 
       await analytics!.trackFeatureUsage("dark-mode", { enabled: true });
 
-      expect(db.analytics!.add).toHaveBeenCalledWith(
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "feature_usage",
           category: "feature",
@@ -330,72 +326,38 @@ describe("OfflineAnalytics", () => {
     it("should sync unsynced events when online", async () => {
       analytics!.resumeAuthenticatedSession("test-user-123");
 
-      const mockEvents = [
-        {
-          id: 1,
-          type: "page_view",
-          category: "test",
-          action: "test",
-          synced: false,
-          timestamp: Date.now(),
-          sessionId: "test",
-        },
-        {
-          id: 2,
-          type: "button_click",
-          category: "test",
-          action: "test",
-          synced: false,
-          timestamp: Date.now(),
-          sessionId: "test",
-        },
-      ];
-
-      vi.mocked(db.analytics!.where).mockReturnValue({
-        equals: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue(mockEvents),
-          and: vi.fn(),
-        }),
-      } as never);
+      vi.mocked(listUnsyncedVaultAnalyticsRecordIds).mockResolvedValue([1, 2]);
 
       await analytics!.syncEvents();
 
-      expect(db.analytics!.bulkUpdate).toHaveBeenCalledWith([
-        { key: 1, changes: { synced: true } },
-        { key: 2, changes: { synced: true } },
-      ]);
+      expect(markVaultAnalyticsEventsSynced).toHaveBeenCalledWith([1, 2]);
     });
 
     it("clears persisted analytics state and disables tracking on logout reset", async () => {
       analytics!.resumeAuthenticatedSession("user-456");
 
       await analytics!.trackPageView("/dashboard", "Dashboard");
-      expect(db.analytics!.add).toHaveBeenCalledTimes(1);
+      expect(storeVaultAnalyticsEvent).toHaveBeenCalledTimes(1);
 
       vi.clearAllMocks();
 
       await analytics!.resetForLogout();
 
-      expect(db.analytics!.clear).toHaveBeenCalledTimes(1);
+      expect(clearVaultAnalytics).toHaveBeenCalledTimes(1);
 
       await analytics!.trackPageView("/login", "Login");
 
-      expect(db.analytics!.add).not.toHaveBeenCalled();
+      expect(storeVaultAnalyticsEvent).not.toHaveBeenCalled();
     });
 
     it("should not sync when no unsynced events", async () => {
       analytics!.resumeAuthenticatedSession("test-user-123");
 
-      vi.mocked(db.analytics!.where).mockReturnValue({
-        equals: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([]),
-          and: vi.fn(),
-        }),
-      } as never);
+      vi.mocked(listUnsyncedVaultAnalyticsRecordIds).mockResolvedValue([]);
 
       await analytics!.syncEvents();
 
-      expect(db.analytics!.bulkUpdate).not.toHaveBeenCalled();
+      expect(markVaultAnalyticsEventsSynced).not.toHaveBeenCalled();
     });
 
     it("should handle sync errors gracefully", async () => {
@@ -403,7 +365,7 @@ describe("OfflineAnalytics", () => {
 
       const consoleWarn = vi.mocked(console.warn);
       const error = new Error("Sync failed");
-      vi.mocked(db.analytics!.where).mockImplementation(() => {
+      vi.mocked(listUnsyncedVaultAnalyticsRecordIds).mockImplementation(() => {
         throw error;
       });
 
@@ -441,24 +403,7 @@ describe("OfflineAnalytics", () => {
     it("should not create duplicate syncs from debounce and manual trigger", async () => {
       analytics!.resumeAuthenticatedSession("test-user-123");
 
-      const mockEvents = [
-        {
-          id: 1,
-          type: "page_view",
-          category: "test",
-          action: "test",
-          synced: false,
-          timestamp: Date.now(),
-          sessionId: "test",
-        },
-      ];
-
-      vi.mocked(db.analytics!.where).mockReturnValue({
-        equals: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue(mockEvents),
-          and: vi.fn(),
-        }),
-      } as never);
+      vi.mocked(listUnsyncedVaultAnalyticsRecordIds).mockResolvedValue([1]);
 
       // Track an event (schedules debounced sync)
       await analytics!.trackPageView("/test", "Test");
@@ -467,13 +412,13 @@ describe("OfflineAnalytics", () => {
       await analytics!.syncEvents();
 
       // Verify sync was called (via bulkUpdate)
-      expect(db.analytics!.bulkUpdate).toHaveBeenCalledTimes(1);
+      expect(markVaultAnalyticsEventsSynced).toHaveBeenCalledTimes(1);
 
       // Wait for debounce timeout to potentially fire
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
       // Verify sync was NOT called again (debounce was cancelled)
-      expect(db.analytics!.bulkUpdate).toHaveBeenCalledTimes(1);
+      expect(markVaultAnalyticsEventsSynced).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -509,7 +454,7 @@ describe("OfflineAnalytics", () => {
         },
       ];
 
-      vi.mocked(db.analytics!.toArray).mockResolvedValue(mockEvents);
+      vi.mocked(listVaultAnalyticsEvents).mockResolvedValue(mockEvents);
 
       const stats = await analytics!.getStats();
 
@@ -525,7 +470,7 @@ describe("OfflineAnalytics", () => {
     });
 
     it("should return empty stats when no events", async () => {
-      vi.mocked(db.analytics!.toArray).mockResolvedValue([]);
+      vi.mocked(listVaultAnalyticsEvents).mockResolvedValue([]);
 
       const stats = await analytics!.getStats();
 
@@ -540,20 +485,11 @@ describe("OfflineAnalytics", () => {
 
   describe("clearOldEvents", () => {
     it("should delete old synced events", async () => {
-      const mockDelete = vi.fn().mockResolvedValue(5);
-
-      vi.mocked(db.analytics!.where).mockReturnValue({
-        equals: vi.fn().mockReturnValue({
-          and: vi.fn().mockReturnValue({
-            delete: mockDelete,
-          }),
-          toArray: vi.fn(),
-        }),
-      } as never);
-
       await analytics!.clearOldEvents();
 
-      expect(db.analytics!.where).toHaveBeenCalledWith("synced");
+      expect(clearOldVaultAnalyticsEvents).toHaveBeenCalledWith(
+        expect.any(Number)
+      );
     });
   });
 

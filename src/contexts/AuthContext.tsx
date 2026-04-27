@@ -19,6 +19,7 @@ import { authStorage } from "../services/storage";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission, hasUserRole } from "../lib/capabilities";
+import { AUTH_VAULT_STORAGE_KEY } from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
 
@@ -271,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isActive = true;
     let didTimeout = false;
-    let timeoutId: number | null = null;
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
     const snapshotUser = authStorage.getUserSnapshot();
@@ -286,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const startBootstrapRevalidation = () => {
-      timeoutId = window.setTimeout(() => {
+      timeoutId = globalThis.setTimeout(() => {
         if (
           !isActive ||
           bootstrapRequestVersionRef.current !== requestVersion ||
@@ -307,7 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .getCurrentUser()
         .then(async (currentUser) => {
           if (timeoutId !== null) {
-            window.clearTimeout(timeoutId);
+            globalThis.clearTimeout(timeoutId);
           }
 
           if (
@@ -340,7 +341,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         .catch((error: unknown) => {
           if (timeoutId !== null) {
-            window.clearTimeout(timeoutId);
+            globalThis.clearTimeout(timeoutId);
           }
 
           if (
@@ -454,7 +455,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isActive = false;
       if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
+        globalThis.clearTimeout(timeoutId);
       }
     };
   }, [
@@ -466,11 +467,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.storageArea !== localStorage || event.key !== "auth_user") {
+      if (event.storageArea !== localStorage) {
         return;
       }
 
-      if (event.newValue === null) {
+      if (event.key === "auth_logout_barrier" && event.newValue !== null) {
+        clearAuthenticatedState(true);
+        return;
+      }
+
+      if (event.key !== "auth_user" && event.key !== AUTH_VAULT_STORAGE_KEY) {
+        return;
+      }
+
+      if (
+        event.newValue === null &&
+        localStorage.getItem("auth_user") === null &&
+        localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
+      ) {
         clearAuthenticatedState(true);
         return;
       }

@@ -34,7 +34,22 @@ import type {
 async function cacheOrganizationalUnit(
   unit: OrganizationalUnit
 ): Promise<void> {
-  await saveToCache(buildOrganizationalUnitCacheEntry(unit));
+  try {
+    await saveToCache(buildOrganizationalUnitCacheEntry(unit));
+  } catch (error) {
+    console.warn("Failed to cache organizational unit for offline use:", error);
+  }
+}
+
+async function removeCachedOrganizationalUnit(id: string): Promise<void> {
+  try {
+    await deleteFromCache(id);
+  } catch (error) {
+    console.warn(
+      "Failed to remove cached organizational unit for offline use:",
+      error
+    );
+  }
 }
 
 /**
@@ -220,7 +235,7 @@ export async function deleteOrganizationalUnit(id: string): Promise<void> {
   }
 
   // Delete from cache immediately
-  await deleteFromCache(id);
+  await removeCachedOrganizationalUnit(id);
 }
 
 /**

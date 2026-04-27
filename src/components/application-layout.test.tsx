@@ -27,6 +27,11 @@ import * as authApi from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { db } from "../lib/db";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+} from "../lib/offlineVault";
 import { messages as deMessages } from "../locales/de/messages.mjs";
 
 type AuthenticatedUser = Awaited<ReturnType<typeof authApi.getCurrentUser>>;
@@ -37,6 +42,15 @@ vi.mock("../lib/clientStateCleanup", () => ({
 }));
 
 const QUERY_TIMEOUT = 15000;
+
+function setCsrfTokenCookie(value: string): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
+function getStoredAuthState(): string | null {
+  return localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+}
 
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
@@ -72,11 +86,20 @@ async function seedAuthenticatedUser(user: Record<string, unknown>) {
 
   const authenticatedUser: AuthenticatedUser = {
     ...persistedUser,
-    roles: [],
-    permissions: [],
-    hasOrganizationalScopes: false,
-    hasCustomerAccess: false,
-    hasSiteAccess: false,
+    roles: Array.isArray(user.roles) ? (user.roles as string[]) : [],
+    permissions: Array.isArray(user.permissions)
+      ? (user.permissions as string[])
+      : [],
+    hasOrganizationalScopes:
+      typeof user.hasOrganizationalScopes === "boolean"
+        ? user.hasOrganizationalScopes
+        : false,
+    hasCustomerAccess:
+      typeof user.hasCustomerAccess === "boolean"
+        ? user.hasCustomerAccess
+        : false,
+    hasSiteAccess:
+      typeof user.hasSiteAccess === "boolean" ? user.hasSiteAccess : false,
     emailVerified: persistedUser.emailVerified ?? false,
   };
 
@@ -112,11 +135,24 @@ describe("ApplicationLayout", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    await Promise.all([
+      db.analytics.clear(),
+      db.organizationalUnitCache.clear(),
+      db.vaultProfile.clear(),
+      db.vaultAnalytics.clear(),
+      db.vaultOrganizationalUnitCache.clear(),
+    ]);
     localStorage.clear();
+    clearOfflineVaultSession();
+    setCsrfTokenCookie("test-csrf-token");
     i18n.load("en", {});
     i18n.activate("en");
 
     await seedAuthenticatedUser(authenticatedUser);
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
   });
 
   describe("rendering", () => {
@@ -337,7 +373,7 @@ describe("ApplicationLayout", () => {
       });
 
       // User should be cleared from localStorage
-      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(getStoredAuthState()).toBeNull();
       expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
     });
 
@@ -346,8 +382,7 @@ describe("ApplicationLayout", () => {
 
       const mockLogout = vi.mocked(authApi.logout);
       mockLogout.mockImplementation(async () => {
-        wasLocalStorageClearedBeforeApiCall =
-          localStorage.getItem("auth_user") === null;
+        wasLocalStorageClearedBeforeApiCall = getStoredAuthState() === null;
       });
 
       renderWithProviders(
@@ -401,7 +436,7 @@ describe("ApplicationLayout", () => {
       });
 
       // User should still be cleared from localStorage
-      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(getStoredAuthState()).toBeNull();
 
       consoleSpy.mockRestore();
     });
@@ -430,12 +465,12 @@ describe("ApplicationLayout", () => {
         fireEvent.click(signOutButton);
 
         expect(mockLogout).toHaveBeenCalledTimes(1);
-        expect(localStorage.getItem("auth_user")).not.toBeNull();
+        expect(getStoredAuthState()).not.toBeNull();
 
         await act(async () => {
           await vi.advanceTimersByTimeAsync(7999);
         });
-        expect(localStorage.getItem("auth_user")).not.toBeNull();
+        expect(getStoredAuthState()).not.toBeNull();
 
         await act(async () => {
           await vi.advanceTimersByTimeAsync(1);
@@ -449,7 +484,7 @@ describe("ApplicationLayout", () => {
               error.message.includes("timed out after 8000ms")
           )
         ).toBe(true);
-        expect(localStorage.getItem("auth_user")).toBeNull();
+        expect(getStoredAuthState()).toBeNull();
         expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
       } finally {
         vi.useRealTimers();

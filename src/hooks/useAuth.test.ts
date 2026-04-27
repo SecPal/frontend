@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
 import {
   renderHook,
   act,
@@ -16,6 +16,10 @@ import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  clearOfflineVaultSession,
+} from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 const { mockGetCurrentUser } = vi.hoisted(() => ({
@@ -66,11 +70,16 @@ async function persistAuthUser(user: Record<string, unknown>): Promise<string> {
 
   await authStorage.setUser(persistedUser);
   mockGetCurrentUser.mockResolvedValue(persistedUser);
-  const storedUser = localStorage.getItem("auth_user");
+  const storedUser = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
   expect(storedUser).not.toBeNull();
 
   return storedUser as string;
+}
+
+function expectNoStoredAuthState(): void {
+  expect(localStorage.getItem("auth_user")).toBeNull();
+  expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
 }
 
 async function waitForAuthState(
@@ -87,7 +96,7 @@ const waitFor = waitForAuthState;
 async function expectEncryptedStoredUser(
   expectedUser: Record<string, unknown>
 ): Promise<void> {
-  const storedUser = localStorage.getItem("auth_user");
+  const storedUser = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
   expect(storedUser).not.toBeNull();
 
@@ -102,6 +111,7 @@ async function expectEncryptedStoredUser(
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    clearOfflineVaultSession();
     window.history.replaceState({}, "", "/login");
     setCsrfTokenCookie("test-csrf-token");
     vi.clearAllMocks();
@@ -118,6 +128,10 @@ describe("useAuth", () => {
     });
     vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -250,7 +264,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
 
     await act(async () => {
       deferred.resolve(revalidatedUser);
@@ -259,7 +273,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
@@ -289,7 +303,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
@@ -543,7 +557,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
@@ -612,7 +626,7 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
   });
 
@@ -645,10 +659,10 @@ describe("useAuth", () => {
     });
 
     act(() => {
-      localStorage.removeItem("auth_user");
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
       const crossTabLogoutEvent = new Event("storage");
       Object.defineProperties(crossTabLogoutEvent, {
-        key: { value: "auth_user" },
+        key: { value: AUTH_VAULT_STORAGE_KEY },
         oldValue: { value: storedUser },
         newValue: { value: null },
         storageArea: { value: localStorage },
@@ -678,7 +692,7 @@ describe("useAuth", () => {
     });
 
     act(() => {
-      localStorage.removeItem("auth_user");
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
       window.dispatchEvent(
         new PageTransitionEvent("pageshow", { persisted: true })
       );
@@ -717,7 +731,7 @@ describe("useAuth", () => {
       const newStoredValue = await persistAuthUser(mockUser);
       const staleAuthEvent = new Event("storage");
       Object.defineProperties(staleAuthEvent, {
-        key: { value: "auth_user" },
+        key: { value: AUTH_VAULT_STORAGE_KEY },
         oldValue: { value: null },
         newValue: { value: newStoredValue },
         storageArea: { value: localStorage },
@@ -731,8 +745,9 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     await waitFor(() => {
-      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
     });
+    expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
   it("rejects BFCache-style auth restoration after explicit logout", async () => {
@@ -769,8 +784,9 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     await waitFor(() => {
-      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
     });
+    expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
   it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", async () => {
@@ -786,11 +802,11 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expectNoStoredAuthState();
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
-  it("ignores storage events for keys other than auth_user", async () => {
+  it("ignores storage events for keys other than supported auth storage keys", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -829,7 +845,7 @@ describe("useAuth", () => {
       const storedUser = await persistAuthUser(newUser);
       const crossTabLoginEvent = new Event("storage");
       Object.defineProperties(crossTabLoginEvent, {
-        key: { value: "auth_user" },
+        key: { value: AUTH_VAULT_STORAGE_KEY },
         oldValue: { value: null },
         newValue: { value: storedUser },
         storageArea: { value: localStorage },
@@ -861,10 +877,10 @@ describe("useAuth", () => {
     act(() => {
       // Write the corrupt value so localStorage matches the event (real browser
       // cross-tab writes keep newValue and the actual storage in sync).
-      localStorage.setItem("auth_user", "{invalid json{{");
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "{invalid json{{");
       const invalidJsonEvent = new Event("storage");
       Object.defineProperties(invalidJsonEvent, {
-        key: { value: "auth_user" },
+        key: { value: AUTH_VAULT_STORAGE_KEY },
         oldValue: { value: storedUser },
         newValue: { value: "{invalid json{{" },
         storageArea: { value: localStorage },
