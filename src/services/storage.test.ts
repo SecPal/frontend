@@ -153,16 +153,13 @@ describe("authStorage", () => {
       expect.objectContaining({
         scheme: expect.any(String),
         version: expect.anything(),
-        salt: expect.any(String),
-        iv: expect.any(String),
-        ciphertext: expect.any(String),
-        mac: expect.any(String),
+        subjectHash: expect.any(String),
+        wrapper: expect.objectContaining({
+          kind: expect.any(String),
+        }),
       })
     );
-    expect(parsedStoredVaultState.salt).not.toBe("");
-    expect(parsedStoredVaultState.iv).not.toBe("");
-    expect(parsedStoredVaultState.ciphertext).not.toBe("");
-    expect(parsedStoredVaultState.mac).not.toBe("");
+    expect(parsedStoredVaultState.subjectHash).not.toBe("");
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 

@@ -13,9 +13,13 @@ import {
   type VaultAnalyticsRecord,
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
+import { isCapacitorNativeRuntime } from "./nativeRuntime";
 
-const AUTH_VAULT_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
-const AUTH_VAULT_VERSION = 1;
+const AUTH_VAULT_LEGACY_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
+const AUTH_VAULT_SCHEME = "secpal-auth-vault";
+const AUTH_VAULT_LEGACY_VERSION = 1;
+const AUTH_VAULT_VERSION = 2;
+const AUTH_VAULT_RECORD_VERSION = 1;
 const AUTH_VAULT_PBKDF2_ITERATIONS = 600_000;
 const AUTH_VAULT_SALT_BYTES = 16;
 const AUTH_VAULT_IV_BYTES = 16;
@@ -31,11 +35,38 @@ const textDecoder = new TextDecoder();
 export const AUTH_VAULT_STORAGE_KEY = "auth_vault_state";
 export const AUTH_VAULT_LOCK_KEY = "auth_vault_lock";
 
-type AuthVaultVersion = typeof AUTH_VAULT_VERSION;
+interface BrowserSessionVaultWrapper {
+  kind: "browser-session";
+  salt: string;
+  iv: string;
+  ciphertext: string;
+  mac: string;
+}
 
-interface AuthVaultStateEnvelope {
-  scheme: typeof AUTH_VAULT_SCHEME;
-  version: AuthVaultVersion;
+interface NativeDeviceBoundVaultWrapper {
+  kind: "native-device-bound";
+  wrappedRootKey: string;
+  metadata?: string;
+}
+
+type NativeDeviceBoundVaultBridge = {
+  isVaultDeviceBoundWrapperAvailable?: () => boolean | Promise<boolean>;
+  wrapVaultRootKey?: (options: {
+    rootKeyBase64: string;
+    subjectHash: string;
+  }) =>
+    | { wrappedRootKey: string; metadata?: string }
+    | Promise<{ wrappedRootKey: string; metadata?: string }>;
+  unwrapVaultRootKey?: (options: {
+    wrappedRootKey: string;
+    subjectHash: string;
+    metadata?: string;
+  }) => { rootKeyBase64: string } | Promise<{ rootKeyBase64: string }>;
+};
+
+interface AuthVaultStateEnvelopeV1 {
+  scheme: typeof AUTH_VAULT_LEGACY_SCHEME;
+  version: typeof AUTH_VAULT_LEGACY_VERSION;
   salt: string;
   iv: string;
   ciphertext: string;
@@ -43,10 +74,21 @@ interface AuthVaultStateEnvelope {
   subjectHash: string;
 }
 
+interface AuthVaultStateEnvelopeV2 {
+  scheme: typeof AUTH_VAULT_SCHEME;
+  version: typeof AUTH_VAULT_VERSION;
+  subjectHash: string;
+  wrapper: BrowserSessionVaultWrapper | NativeDeviceBoundVaultWrapper;
+}
+
+type AuthVaultStateEnvelope =
+  | AuthVaultStateEnvelopeV1
+  | AuthVaultStateEnvelopeV2;
+
 interface VaultSession {
   rootKeyBytes: Uint8Array;
   subjectHash: string;
-  wrapperKeyMaterial: string | null;
+  wrapperCacheKey: string;
 }
 
 type VaultAnalyticsPayload = Omit<
@@ -56,13 +98,9 @@ type VaultAnalyticsPayload = Omit<
 
 let activeVaultSession: VaultSession | null = null;
 
-function isAuthVaultVersion(value: unknown): value is AuthVaultVersion {
-  return value === AUTH_VAULT_VERSION;
-}
-
-function isAuthVaultStateEnvelope(
+function isAuthVaultStateEnvelopeV1(
   value: unknown
-): value is AuthVaultStateEnvelope {
+): value is AuthVaultStateEnvelopeV1 {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -70,14 +108,52 @@ function isAuthVaultStateEnvelope(
   const candidate = value as Record<string, unknown>;
 
   return (
-    candidate.scheme === AUTH_VAULT_SCHEME &&
-    isAuthVaultVersion(candidate.version) &&
+    candidate.scheme === AUTH_VAULT_LEGACY_SCHEME &&
+    candidate.version === AUTH_VAULT_LEGACY_VERSION &&
     typeof candidate.salt === "string" &&
     typeof candidate.iv === "string" &&
     typeof candidate.ciphertext === "string" &&
     typeof candidate.mac === "string" &&
     typeof candidate.subjectHash === "string"
   );
+}
+
+function isAuthVaultStateEnvelopeV2(
+  value: unknown
+): value is AuthVaultStateEnvelopeV2 {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const wrapper = candidate.wrapper;
+
+  if (typeof wrapper !== "object" || wrapper === null) {
+    return false;
+  }
+
+  const wrapperCandidate = wrapper as Record<string, unknown>;
+
+  return (
+    candidate.scheme === AUTH_VAULT_SCHEME &&
+    candidate.version === AUTH_VAULT_VERSION &&
+    typeof candidate.subjectHash === "string" &&
+    ((wrapperCandidate.kind === "browser-session" &&
+      typeof wrapperCandidate.salt === "string" &&
+      typeof wrapperCandidate.iv === "string" &&
+      typeof wrapperCandidate.ciphertext === "string" &&
+      typeof wrapperCandidate.mac === "string") ||
+      (wrapperCandidate.kind === "native-device-bound" &&
+        typeof wrapperCandidate.wrappedRootKey === "string" &&
+        (wrapperCandidate.metadata === undefined ||
+          typeof wrapperCandidate.metadata === "string")))
+  );
+}
+
+function isAuthVaultStateEnvelope(
+  value: unknown
+): value is AuthVaultStateEnvelope {
+  return isAuthVaultStateEnvelopeV1(value) || isAuthVaultStateEnvelopeV2(value);
 }
 
 function getAuthVaultKeyMaterial(): string | null {
@@ -88,6 +164,44 @@ function getAuthVaultKeyMaterial(): string | null {
   }
 
   return `secpal-auth-vault:${csrfToken}`;
+}
+
+async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVaultBridge | null> {
+  if (!isCapacitorNativeRuntime()) {
+    return null;
+  }
+
+  const bridge = (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: unknown;
+    }
+  ).SecPalNativeAuthBridge;
+
+  if (!bridge || typeof bridge !== "object") {
+    return null;
+  }
+
+  const candidate = bridge as NativeDeviceBoundVaultBridge;
+
+  if (
+    typeof candidate.isVaultDeviceBoundWrapperAvailable !== "function" ||
+    typeof candidate.wrapVaultRootKey !== "function" ||
+    typeof candidate.unwrapVaultRootKey !== "function"
+  ) {
+    return null;
+  }
+
+  try {
+    return (await candidate.isVaultDeviceBoundWrapperAvailable()) === true
+      ? candidate
+      : null;
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to detect native device-bound wrapper availability:",
+      error
+    );
+    return null;
+  }
 }
 
 function encodeBase64(bytes: Uint8Array): string {
@@ -121,6 +235,28 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 
 function createRandomBytes(length: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(length));
+}
+
+function getStoredVaultWrapperCacheKey(
+  state: AuthVaultStateEnvelope,
+  currentKeyMaterial: string | null
+): string | null {
+  if (state.version === AUTH_VAULT_LEGACY_VERSION) {
+    return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
+  }
+
+  if (state.wrapper.kind === "native-device-bound") {
+    return "native-device-bound";
+  }
+
+  return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
+}
+
+function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
+  return (
+    getStoredVaultWrapperCacheKey(state, getAuthVaultKeyMaterial()) ??
+    "native-device-bound"
+  );
 }
 
 function getStoredVaultState(): AuthVaultStateEnvelope | null {
@@ -275,8 +411,8 @@ async function deriveVaultWrapperKeys(
   return { encryptionKey, macKey };
 }
 
-function buildAuthVaultMacPayload(
-  envelope: Omit<AuthVaultStateEnvelope, "mac">
+function buildLegacyAuthVaultMacPayload(
+  envelope: Omit<AuthVaultStateEnvelopeV1, "mac">
 ): string {
   return [
     envelope.scheme,
@@ -288,21 +424,36 @@ function buildAuthVaultMacPayload(
   ].join(":");
 }
 
-async function signAuthVaultMac(
-  envelope: Omit<AuthVaultStateEnvelope, "mac">,
+function buildBrowserSessionVaultWrapperMacPayload(
+  subjectHash: string,
+  wrapper: Omit<BrowserSessionVaultWrapper, "kind" | "mac">
+): string {
+  return [
+    AUTH_VAULT_SCHEME,
+    String(AUTH_VAULT_VERSION),
+    "browser-session",
+    subjectHash,
+    wrapper.salt,
+    wrapper.iv,
+    wrapper.ciphertext,
+  ].join(":");
+}
+
+async function signMacPayload(
+  payload: string,
   macKey: CryptoKey
 ): Promise<string> {
   const mac = await crypto.subtle.sign(
     "HMAC",
     macKey,
-    textEncoder.encode(buildAuthVaultMacPayload(envelope))
+    textEncoder.encode(payload)
   );
 
   return encodeBase64(new Uint8Array(mac));
 }
 
-async function verifyAuthVaultMac(
-  envelope: Omit<AuthVaultStateEnvelope, "mac">,
+async function verifyMacPayload(
+  payload: string,
   mac: string,
   macKey: CryptoKey
 ): Promise<boolean> {
@@ -310,14 +461,14 @@ async function verifyAuthVaultMac(
     "HMAC",
     macKey,
     toArrayBuffer(decodeBase64(mac)),
-    textEncoder.encode(buildAuthVaultMacPayload(envelope))
+    textEncoder.encode(payload)
   );
 }
 
-async function encryptVaultRootKeyBytes(
+async function encryptBrowserSessionWrappedVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
   subjectHash: string
-): Promise<AuthVaultStateEnvelope | null> {
+): Promise<AuthVaultStateEnvelopeV2 | null> {
   const keyMaterial = getAuthVaultKeyMaterial();
 
   if (!keyMaterial) {
@@ -341,23 +492,32 @@ async function encryptVaultRootKeyBytes(
     )
   );
 
-  const envelopeWithoutMac = {
-    scheme: AUTH_VAULT_SCHEME,
-    version: AUTH_VAULT_VERSION,
+  const wrapperWithoutMac = {
+    kind: "browser-session" as const,
     salt: encodeBase64(salt),
     iv: encodeBase64(iv),
     ciphertext: encodeBase64(ciphertext),
-    subjectHash,
-  } satisfies Omit<AuthVaultStateEnvelope, "mac">;
+  };
 
   return {
-    ...envelopeWithoutMac,
-    mac: await signAuthVaultMac(envelopeWithoutMac, macKey),
+    subjectHash,
+    scheme: AUTH_VAULT_SCHEME,
+    version: AUTH_VAULT_VERSION,
+    wrapper: {
+      ...wrapperWithoutMac,
+      mac: await signMacPayload(
+        buildBrowserSessionVaultWrapperMacPayload(
+          subjectHash,
+          wrapperWithoutMac
+        ),
+        macKey
+      ),
+    },
   };
 }
 
-async function decryptVaultRootKeyBytes(
-  state: AuthVaultStateEnvelope
+async function decryptLegacyVaultRootKeyBytes(
+  state: AuthVaultStateEnvelopeV1
 ): Promise<Uint8Array | null> {
   const keyMaterial = getAuthVaultKeyMaterial();
 
@@ -372,13 +532,13 @@ async function decryptVaultRootKeyBytes(
     iv: state.iv,
     ciphertext: state.ciphertext,
     subjectHash: state.subjectHash,
-  } satisfies Omit<AuthVaultStateEnvelope, "mac">;
+  } satisfies Omit<AuthVaultStateEnvelopeV1, "mac">;
   const { encryptionKey, macKey } = await deriveVaultWrapperKeys(
     keyMaterial,
     decodeBase64(state.salt)
   );
-  const isMacValid = await verifyAuthVaultMac(
-    envelopeWithoutMac,
+  const isMacValid = await verifyMacPayload(
+    buildLegacyAuthVaultMacPayload(envelopeWithoutMac),
     state.mac,
     macKey
   );
@@ -403,6 +563,187 @@ async function decryptVaultRootKeyBytes(
   } catch {
     return null;
   }
+}
+
+async function decryptBrowserSessionWrappedVaultRootKeyBytes(
+  state: AuthVaultStateEnvelopeV2
+): Promise<Uint8Array | null> {
+  if (state.wrapper.kind !== "browser-session") {
+    return null;
+  }
+
+  const keyMaterial = getAuthVaultKeyMaterial();
+
+  if (!keyMaterial) {
+    return null;
+  }
+
+  const wrapperWithoutMac = {
+    kind: "browser-session" as const,
+    salt: state.wrapper.salt,
+    iv: state.wrapper.iv,
+    ciphertext: state.wrapper.ciphertext,
+  };
+  const { encryptionKey, macKey } = await deriveVaultWrapperKeys(
+    keyMaterial,
+    decodeBase64(state.wrapper.salt)
+  );
+  const isMacValid = await verifyMacPayload(
+    buildBrowserSessionVaultWrapperMacPayload(
+      state.subjectHash,
+      wrapperWithoutMac
+    ),
+    state.wrapper.mac,
+    macKey
+  );
+
+  if (!isMacValid) {
+    return null;
+  }
+
+  try {
+    const decrypted = await crypto.subtle.decrypt(
+      {
+        name: "AES-CBC",
+        iv: toArrayBuffer(decodeBase64(state.wrapper.iv)),
+      },
+      encryptionKey,
+      toArrayBuffer(decodeBase64(state.wrapper.ciphertext))
+    );
+
+    const rootKeyBytes = decodeBase64(textDecoder.decode(decrypted));
+
+    return rootKeyBytes.byteLength === 32 ? rootKeyBytes : null;
+  } catch {
+    return null;
+  }
+}
+
+async function encryptNativeDeviceBoundVaultRootKeyBytes(
+  rootKeyBytes: Uint8Array,
+  subjectHash: string,
+  nativeBridge: NativeDeviceBoundVaultBridge
+): Promise<AuthVaultStateEnvelopeV2 | null> {
+  let wrappedRootKey;
+
+  try {
+    wrappedRootKey = await nativeBridge.wrapVaultRootKey?.({
+      rootKeyBase64: encodeBase64(rootKeyBytes),
+      subjectHash,
+    });
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to wrap the vault root key with the native device-bound wrapper:",
+      error
+    );
+    return null;
+  }
+
+  if (
+    !wrappedRootKey ||
+    typeof wrappedRootKey.wrappedRootKey !== "string" ||
+    wrappedRootKey.wrappedRootKey.length === 0 ||
+    (wrappedRootKey.metadata !== undefined &&
+      typeof wrappedRootKey.metadata !== "string")
+  ) {
+    return null;
+  }
+
+  return {
+    scheme: AUTH_VAULT_SCHEME,
+    version: AUTH_VAULT_VERSION,
+    subjectHash,
+    wrapper: {
+      kind: "native-device-bound",
+      wrappedRootKey: wrappedRootKey.wrappedRootKey,
+      metadata: wrappedRootKey.metadata,
+    },
+  };
+}
+
+async function decryptNativeDeviceBoundVaultRootKeyBytes(
+  state: AuthVaultStateEnvelopeV2,
+  nativeBridge: NativeDeviceBoundVaultBridge
+): Promise<Uint8Array | null> {
+  if (state.wrapper.kind !== "native-device-bound") {
+    return null;
+  }
+
+  let unwrappedRootKey;
+
+  try {
+    unwrappedRootKey = await nativeBridge.unwrapVaultRootKey?.({
+      wrappedRootKey: state.wrapper.wrappedRootKey,
+      subjectHash: state.subjectHash,
+      metadata: state.wrapper.metadata,
+    });
+  } catch (error) {
+    console.warn(
+      "[Offline Vault] Failed to unwrap the vault root key with the native device-bound wrapper:",
+      error
+    );
+    return null;
+  }
+
+  const rootKeyBase64 =
+    unwrappedRootKey && typeof unwrappedRootKey.rootKeyBase64 === "string"
+      ? unwrappedRootKey.rootKeyBase64
+      : null;
+
+  if (!rootKeyBase64) {
+    return null;
+  }
+
+  try {
+    const rootKeyBytes = decodeBase64(rootKeyBase64);
+
+    return rootKeyBytes.byteLength === 32 ? rootKeyBytes : null;
+  } catch {
+    return null;
+  }
+}
+
+async function encryptVaultRootKeyBytes(
+  rootKeyBytes: Uint8Array,
+  subjectHash: string
+): Promise<AuthVaultStateEnvelope | null> {
+  const nativeBridge = await getNativeDeviceBoundVaultBridge();
+
+  if (nativeBridge) {
+    const nativeDeviceBoundState =
+      await encryptNativeDeviceBoundVaultRootKeyBytes(
+        rootKeyBytes,
+        subjectHash,
+        nativeBridge
+      );
+
+    if (nativeDeviceBoundState) {
+      return nativeDeviceBoundState;
+    }
+  }
+
+  return encryptBrowserSessionWrappedVaultRootKeyBytes(
+    rootKeyBytes,
+    subjectHash
+  );
+}
+
+async function decryptVaultRootKeyBytes(
+  state: AuthVaultStateEnvelope
+): Promise<Uint8Array | null> {
+  if (state.version === AUTH_VAULT_LEGACY_VERSION) {
+    return decryptLegacyVaultRootKeyBytes(state);
+  }
+
+  if (state.wrapper.kind === "native-device-bound") {
+    const nativeBridge = await getNativeDeviceBoundVaultBridge();
+
+    return nativeBridge
+      ? decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge)
+      : null;
+  }
+
+  return decryptBrowserSessionWrappedVaultRootKeyBytes(state);
 }
 
 async function computeSubjectHash(userId: string): Promise<string> {
@@ -458,7 +799,7 @@ function buildVaultAdditionalData(
 ): Uint8Array {
   return textEncoder.encode(
     JSON.stringify({
-      version: AUTH_VAULT_VERSION,
+      version: AUTH_VAULT_RECORD_VERSION,
       storeName,
       recordId,
       subjectHash,
@@ -496,7 +837,7 @@ async function encryptVaultRecord(
 
   return {
     recordId,
-    version: AUTH_VAULT_VERSION,
+    version: AUTH_VAULT_RECORD_VERSION,
     ciphertext: encodeBase64(ciphertext),
     iv: encodeBase64(iv),
     authTag: encodeBase64(authTag),
@@ -543,11 +884,15 @@ async function decryptVaultRecord<T>(
 async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
+  const storedWrapperCacheKey = storedState
+    ? getStoredVaultWrapperCacheKey(storedState, currentKeyMaterial)
+    : null;
 
   if (activeVaultSession) {
     if (
       storedState &&
-      activeVaultSession.wrapperKeyMaterial === currentKeyMaterial &&
+      storedWrapperCacheKey !== null &&
+      activeVaultSession.wrapperCacheKey === storedWrapperCacheKey &&
       activeVaultSession.subjectHash === storedState.subjectHash
     ) {
       return activeVaultSession;
@@ -563,6 +908,15 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   const rootKeyBytes = await decryptVaultRootKeyBytes(storedState);
 
   if (!rootKeyBytes) {
+    if (
+      storedState.version === AUTH_VAULT_VERSION &&
+      storedState.wrapper.kind === "native-device-bound" &&
+      !(await getNativeDeviceBoundVaultBridge())
+    ) {
+      // Bridge is temporarily unavailable; treat the vault as locked, not corrupted.
+      return null;
+    }
+
     await clearInvalidOfflineVaultArtifacts();
     return null;
   }
@@ -570,10 +924,51 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   activeVaultSession = {
     rootKeyBytes,
     subjectHash: storedState.subjectHash,
-    wrapperKeyMaterial: currentKeyMaterial,
+    wrapperCacheKey:
+      storedWrapperCacheKey ?? getSessionWrapperCacheKey(storedState),
   };
 
   return activeVaultSession;
+}
+
+async function maybeRewriteStoredVaultState(
+  session: VaultSession,
+  storedState: AuthVaultStateEnvelope
+): Promise<VaultSession> {
+  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
+    ? "native-device-bound"
+    : "browser-session";
+  const currentWrapperKind =
+    storedState.version === AUTH_VAULT_LEGACY_VERSION
+      ? "browser-session"
+      : storedState.wrapper.kind;
+
+  if (
+    storedState.version === AUTH_VAULT_VERSION &&
+    currentWrapperKind === preferredWrapperKind
+  ) {
+    return session;
+  }
+
+  const rewrittenState = await encryptVaultRootKeyBytes(
+    session.rootKeyBytes,
+    session.subjectHash
+  );
+
+  if (!rewrittenState) {
+    return session;
+  }
+
+  setStoredVaultState(rewrittenState);
+
+  return {
+    ...session,
+    wrapperCacheKey:
+      getStoredVaultWrapperCacheKey(
+        rewrittenState,
+        getAuthVaultKeyMaterial()
+      ) ?? session.wrapperCacheKey,
+  };
 }
 
 async function ensureVaultSessionForUser(
@@ -581,8 +976,13 @@ async function ensureVaultSessionForUser(
 ): Promise<VaultSession> {
   const subjectHash = await computeSubjectHash(user.id);
   const currentSession = await ensureOfflineVaultSession();
+  const existingStoredState = getStoredVaultState();
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
+    if (existingStoredState) {
+      return maybeRewriteStoredVaultState(currentSession, existingStoredState);
+    }
+
     return currentSession;
   }
 
@@ -604,7 +1004,7 @@ async function ensureVaultSessionForUser(
   activeVaultSession = {
     rootKeyBytes,
     subjectHash,
-    wrapperKeyMaterial: getAuthVaultKeyMaterial(),
+    wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
 
   return activeVaultSession;
