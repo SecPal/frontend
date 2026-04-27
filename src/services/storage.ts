@@ -398,7 +398,9 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   removeUser(): void {
     clearOfflineVaultSession();
-    void clearOfflineVaultTables();
+    void clearOfflineVaultTables().catch((error: unknown) => {
+      console.warn("Failed to clear offline vault tables on logout:", error);
+    });
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
   }
