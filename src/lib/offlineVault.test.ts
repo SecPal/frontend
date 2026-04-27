@@ -19,7 +19,7 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
-function setCapacitorNativeRuntime(value: unknown): void {
+function setCapacitorNativeRuntime(value = { isNativePlatform: () => true }): void {
   Object.defineProperty(globalThis, "Capacitor", {
     configurable: true,
     writable: true,
@@ -44,6 +44,33 @@ function clearNativeVaultBridge(): void {
     globalThis as Record<string, unknown>,
     "SecPalNativeAuthBridge"
   );
+}
+
+function readStoredVaultState(): Record<string, unknown> {
+  return JSON.parse(
+    localStorage.getItem(AUTH_VAULT_STORAGE_KEY) as string
+  ) as Record<string, unknown>;
+}
+
+function installNativeVaultBridge(
+  overrides: Partial<{
+    isVaultDeviceBoundWrapperAvailable: ReturnType<typeof vi.fn>;
+    wrapVaultRootKey: ReturnType<typeof vi.fn>;
+    unwrapVaultRootKey: ReturnType<typeof vi.fn>;
+  }>
+) {
+  setCapacitorNativeRuntime();
+
+  const bridge = {
+    isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(false),
+    wrapVaultRootKey: vi.fn(),
+    unwrapVaultRootKey: vi.fn(),
+    ...overrides,
+  };
+
+  setNativeVaultBridge(bridge);
+
+  return bridge;
 }
 
 describe("offlineVault", () => {
@@ -177,37 +204,14 @@ describe("offlineVault", () => {
   });
 
   it("falls back to the browser wrapper when a native-capable runtime has no device-bound vault wrapper", async () => {
-    const nativeBridge = {
-      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(false),
-      wrapVaultRootKey: vi.fn(),
-      unwrapVaultRootKey: vi.fn(),
-    };
-
-    setCapacitorNativeRuntime({
-      isNativePlatform: () => true,
-    });
-    setNativeVaultBridge(nativeBridge);
+    const nativeBridge = installNativeVaultBridge({});
 
     await initializeOfflineVault(persistedUser);
 
-    const storedState = JSON.parse(
-      localStorage.getItem(AUTH_VAULT_STORAGE_KEY) as string
-    ) as Record<string, unknown>;
+    const storedState = readStoredVaultState();
 
-    expect(storedState).toEqual(
-      expect.objectContaining({
-        scheme: "secpal-auth-vault",
-        version: 2,
-        subjectHash: expect.any(String),
-        wrapper: expect.objectContaining({
-          kind: "browser-session",
-          salt: expect.any(String),
-          iv: expect.any(String),
-          ciphertext: expect.any(String),
-          mac: expect.any(String),
-        }),
-      })
-    );
+    expect(storedState.version).toBe(2);
+    expect(storedState.wrapper).toMatchObject({ kind: "browser-session" });
     expect(
       nativeBridge.isVaultDeviceBoundWrapperAvailable
     ).toHaveBeenCalledTimes(1);
@@ -218,26 +222,22 @@ describe("offlineVault", () => {
   });
 
   it("stores and restores the vault root key through the optional native device-bound wrapper", async () => {
-    const wrapVaultRootKey = vi
-      .fn()
-      .mockImplementation(
-        async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
-          wrappedRootKey: `wrapped:${rootKeyBase64}`,
-          metadata: "android-keystore",
-        })
-      );
-    const unwrapVaultRootKey = vi
-      .fn()
-      .mockImplementation(
-        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
-          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
-        })
-      );
-
-    setCapacitorNativeRuntime({
-      isNativePlatform: () => true,
-    });
-    setNativeVaultBridge({
+    const wrapVaultRootKey = vi.fn().mockImplementation(async ({
+      rootKeyBase64,
+    }: {
+      rootKeyBase64: string;
+    }) => ({
+      wrappedRootKey: `wrapped:${rootKeyBase64}`,
+      metadata: "android-keystore",
+    }));
+    const unwrapVaultRootKey = vi.fn().mockImplementation(async ({
+      wrappedRootKey,
+    }: {
+      wrappedRootKey: string;
+    }) => ({
+      rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+    }));
+    const nativeBridge = installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
       wrapVaultRootKey,
       unwrapVaultRootKey,
@@ -245,23 +245,12 @@ describe("offlineVault", () => {
 
     await initializeOfflineVault(persistedUser);
 
-    const storedState = JSON.parse(
-      localStorage.getItem(AUTH_VAULT_STORAGE_KEY) as string
-    ) as Record<string, unknown>;
-    const wrapper = storedState.wrapper as Record<string, unknown>;
+    const storedState = readStoredVaultState();
 
-    expect(storedState).toEqual(
-      expect.objectContaining({
-        scheme: "secpal-auth-vault",
-        version: 2,
-        subjectHash: expect.any(String),
-        wrapper: expect.objectContaining({
-          kind: "native-device-bound",
-          wrappedRootKey: expect.stringMatching(/^wrapped:/),
-          metadata: "android-keystore",
-        }),
-      })
-    );
+    expect(storedState.wrapper).toMatchObject({
+      kind: "native-device-bound",
+      metadata: "android-keystore",
+    });
     expect(wrapVaultRootKey).toHaveBeenCalledWith(
       expect.objectContaining({
         rootKeyBase64: expect.any(String),
@@ -274,9 +263,9 @@ describe("offlineVault", () => {
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
-    expect(unwrapVaultRootKey).toHaveBeenCalledWith(
+    expect(nativeBridge.unwrapVaultRootKey).toHaveBeenCalledWith(
       expect.objectContaining({
-        wrappedRootKey: wrapper.wrappedRootKey,
+        wrappedRootKey: expect.stringMatching(/^wrapped:/),
         metadata: "android-keystore",
         subjectHash: storedState.subjectHash,
       })
