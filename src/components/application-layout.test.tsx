@@ -382,8 +382,7 @@ describe("ApplicationLayout", () => {
 
       const mockLogout = vi.mocked(authApi.logout);
       mockLogout.mockImplementation(async () => {
-        wasLocalStorageClearedBeforeApiCall =
-          getStoredAuthState() === null;
+        wasLocalStorageClearedBeforeApiCall = getStoredAuthState() === null;
       });
 
       renderWithProviders(

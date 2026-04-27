@@ -37,10 +37,7 @@ async function cacheOrganizationalUnit(
   try {
     await saveToCache(buildOrganizationalUnitCacheEntry(unit));
   } catch (error) {
-    console.warn(
-      "Failed to cache organizational unit for offline use:",
-      error
-    );
+    console.warn("Failed to cache organizational unit for offline use:", error);
   }
 }
 
