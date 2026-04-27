@@ -11,6 +11,7 @@ import {
   listVaultAnalyticsEvents,
   listVaultOrganizationalUnits,
   readPersistedAuthUserFromVault,
+  clearOfflineVaultTables,
 } from "./offlineVault";
 
 function setCsrfTokenCookie(value: string): void {
@@ -104,5 +105,44 @@ describe("offlineVault", () => {
         name: "SecPal GmbH",
       }),
     ]);
+  });
+
+  it("removes invalid vault state from localStorage when JSON is malformed", async () => {
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "not-valid-json{{{");
+
+    // initializeOfflineVault will trigger getStoredVaultState
+    await initializeOfflineVault(persistedUser);
+
+    // Vault should now be initialized fresh (old invalid key replaced)
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+  });
+
+  it("clears vault state and legacy tables when profile record is missing from vault", async () => {
+    await initializeOfflineVault(persistedUser);
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    // Simulate a corrupted vault: clear only the profile table, leave vault state
+    await clearOfflineVaultTables();
+    clearOfflineVaultSession();
+
+    // Add legacy data to verify it gets cleared too
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "open",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "test-session",
+    });
+
+    const result = await readPersistedAuthUserFromVault();
+
+    expect(result).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+    expect(await db.analytics.count()).toBe(0);
   });
 });

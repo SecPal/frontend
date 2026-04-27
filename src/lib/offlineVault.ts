@@ -131,8 +131,17 @@ function getStoredVaultState(): AuthVaultStateEnvelope | null {
 
   try {
     const parsedState = JSON.parse(storedState) as unknown;
-    return isAuthVaultStateEnvelope(parsedState) ? parsedState : null;
+
+    if (isAuthVaultStateEnvelope(parsedState)) {
+      return parsedState;
+    }
+
+    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+    clearOfflineVaultSession();
+    return null;
   } catch {
+    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+    clearOfflineVaultSession();
     return null;
   }
 }
@@ -172,7 +181,11 @@ export async function clearOfflineVaultTables(): Promise<void> {
 
 async function clearInvalidOfflineVaultArtifacts(): Promise<void> {
   clearStoredOfflineVaultState();
-  await clearOfflineVaultTables();
+  await Promise.all([
+    clearOfflineVaultTables(),
+    db.analytics.clear(),
+    db.organizationalUnitCache.clear(),
+  ]);
 }
 
 async function deriveVaultWrapperKeys(
@@ -686,6 +699,7 @@ export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUse
   const storedProfile = await db.vaultProfile.get(PROFILE_RECORD_ID);
 
   if (!storedProfile) {
+    await clearInvalidOfflineVaultArtifacts();
     return null;
   }
 
