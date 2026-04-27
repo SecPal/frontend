@@ -63,6 +63,10 @@ msgstr "Delete \"{unitName}\"?"
 msgid "Merkle Tree"
 msgstr "Merkle Tree"
 
+#: src/components/RouteGuardState.tsx
+msgid "Unlock your secure offline data"
+msgstr "Unlock your secure offline data"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Adding passkey..."
 msgstr "Adding passkey..."
@@ -778,6 +782,10 @@ msgstr "Previous"
 msgid "Postal Code"
 msgstr "Postal Code"
 
+#: src/components/RouteGuardState.tsx
+msgid "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
+msgstr "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
+
 #: src/components/NotificationPreferences.tsx
 msgid "Enable Notifications"
 msgstr "Enable Notifications"
@@ -933,6 +941,7 @@ msgstr "Failed to change language. Please try again."
 
 #: src/components/application-layout.tsx
 #: src/components/onboarding-layout.tsx
+#: src/components/RouteGuardState.tsx
 msgid "Sign out"
 msgstr "Sign out"
 
@@ -1335,6 +1344,10 @@ msgstr "Expires"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
 msgstr "First Name"
+
+#: src/components/application-layout.tsx
+msgid "Lock app"
+msgstr "Lock app"
 
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
@@ -2233,6 +2246,14 @@ msgstr "Send Test"
 msgid "Who can this user VIEW?"
 msgstr "Who can this user VIEW?"
 
+#: src/components/RouteGuardState.tsx
+msgid "Unlock"
+msgstr "Unlock"
+
+#: src/components/RouteGuardState.tsx
+msgid "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
+msgstr "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Last name is required"
@@ -2273,6 +2294,10 @@ msgstr "Reason"
 #: src/components/NotificationPreferences.tsx
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Reminders about upcoming shifts and duties"
+
+#: src/components/RouteGuardState.tsx
+msgid "Unlocking..."
+msgstr "Unlocking..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding..."

@@ -8,6 +8,7 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RouteVaultLockedState,
 } from "./RouteGuardState";
 
 interface PermissionRouteProps {
@@ -38,8 +39,10 @@ export function PermissionRoute({
     hasPermission,
     isAuthenticated,
     isLoading,
+    isVaultLocked = false,
     logout,
     retryBootstrap,
+    unlock,
     user,
   } = useAuth();
 
@@ -53,6 +56,15 @@ export function PermissionRoute({
         onRetry={retryBootstrap}
         onSignInAgain={logout}
         reason={bootstrapRecoveryReason}
+      />
+    );
+  }
+
+  if (isVaultLocked) {
+    return (
+      <RouteVaultLockedState
+        onUnlock={unlock ?? (async () => false)}
+        onSignInAgain={logout}
       />
     );
   }

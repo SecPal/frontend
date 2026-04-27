@@ -29,6 +29,7 @@ const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
 export const AUTH_VAULT_STORAGE_KEY = "auth_vault_state";
+export const AUTH_VAULT_LOCK_KEY = "auth_vault_lock";
 
 type AuthVaultVersion = typeof AUTH_VAULT_VERSION;
 
@@ -141,6 +142,21 @@ function setStoredVaultState(state: AuthVaultStateEnvelope): void {
   localStorage.setItem(AUTH_VAULT_STORAGE_KEY, JSON.stringify(state));
 }
 
+export function hasStoredOfflineVaultState(): boolean {
+  return localStorage.getItem(AUTH_VAULT_STORAGE_KEY) !== null;
+}
+
+export function isOfflineVaultLocked(): boolean {
+  const locked = localStorage.getItem(AUTH_VAULT_LOCK_KEY) !== null;
+
+  if (locked && !hasStoredOfflineVaultState()) {
+    localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
+    return false;
+  }
+
+  return locked;
+}
+
 export function clearOfflineVaultSession(): void {
   if (activeVaultSession) {
     activeVaultSession.rootKeyBytes.fill(0);
@@ -151,7 +167,21 @@ export function clearOfflineVaultSession(): void {
 
 export function clearStoredOfflineVaultState(): void {
   localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+  localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
   clearOfflineVaultSession();
+}
+
+export function lockOfflineVault(): void {
+  if (!hasStoredOfflineVaultState()) {
+    return;
+  }
+
+  localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
+  clearOfflineVaultSession();
+}
+
+export function clearOfflineVaultLockState(): void {
+  localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
 }
 
 async function ensureVaultDatabaseOpen(): Promise<void> {

@@ -63,6 +63,10 @@ msgstr "\"{unitName}\" löschen?"
 msgid "Merkle Tree"
 msgstr "Merkelbaum"
 
+#: src/components/RouteGuardState.tsx
+msgid "Unlock your secure offline data"
+msgstr "Entsperren Sie Ihre sicheren Offline-Daten"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Adding passkey..."
 msgstr "Passkey wird hinzugefügt..."
@@ -778,6 +782,10 @@ msgstr "Vorherige"
 msgid "Postal Code"
 msgstr "Postleitzahl"
 
+#: src/components/RouteGuardState.tsx
+msgid "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
+msgstr "SecPal hat den lokalen verschlüsselten Tresor auf diesem Gerät gesperrt. Entsperren Sie ihn, um zuvor zwischengespeicherte offlinefähige Daten wiederherzustellen, oder melden Sie sich ab, um den Gerätezustand zu löschen."
+
 #: src/components/NotificationPreferences.tsx
 msgid "Enable Notifications"
 msgstr "Benachrichtigungen aktivieren"
@@ -933,6 +941,7 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 
 #: src/components/application-layout.tsx
 #: src/components/onboarding-layout.tsx
+#: src/components/RouteGuardState.tsx
 msgid "Sign out"
 msgstr "Abmelden"
 
@@ -1335,6 +1344,10 @@ msgstr "Läuft ab"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
 msgstr "Vorname"
+
+#: src/components/application-layout.tsx
+msgid "Lock app"
+msgstr "App sperren"
 
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
@@ -2233,6 +2246,14 @@ msgstr "Test senden"
 msgid "Who can this user VIEW?"
 msgstr "Wen kann dieser Benutzer SEHEN?"
 
+#: src/components/RouteGuardState.tsx
+msgid "Unlock"
+msgstr "Entsperren"
+
+#: src/components/RouteGuardState.tsx
+msgid "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
+msgstr "SecPal konnte die verschlüsselten Offline-Daten auf diesem Gerät nicht entsperren. Melden Sie sich erneut an, um den lokalen Tresor neu aufzubauen."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Last name is required"
@@ -2273,6 +2294,10 @@ msgstr "Grund"
 #: src/components/NotificationPreferences.tsx
 msgid "Reminders about upcoming shifts and duties"
 msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
+
+#: src/components/RouteGuardState.tsx
+msgid "Unlocking..."
+msgstr "Wird entsperrt..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding..."

@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { msg } from "@lingui/core/macro";
 import { useState } from "react";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
   AuthApiError,
@@ -14,6 +16,11 @@ interface RouteBootstrapRecoveryStateProps {
   onRetry: () => void;
   onSignInAgain: () => void;
   reason: "timeout" | "network";
+}
+
+interface RouteVaultLockedStateProps {
+  onUnlock: () => Promise<boolean>;
+  onSignInAgain: () => void;
 }
 
 interface RouteEmailVerificationStateProps {
@@ -69,6 +76,74 @@ export function RouteBootstrapRecoveryState({
           </Button>
           <Button outline onClick={onSignInAgain} type="button">
             <Trans>Go to Login</Trans>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function RouteVaultLockedState({
+  onUnlock,
+  onSignInAgain,
+}: RouteVaultLockedStateProps) {
+  const { i18n } = useLingui();
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleUnlock = async () => {
+    setErrorMessage(null);
+    setIsUnlocking(true);
+
+    try {
+      const unlocked = await onUnlock();
+
+      if (!unlocked) {
+        setErrorMessage(
+          i18n._(
+            msg`SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault.`
+          )
+        );
+      }
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      data-route-guard-state="vault-locked"
+    >
+      <div className="max-w-md text-center" role="status" aria-live="polite">
+        <h1 className="mb-2 text-lg font-semibold">
+          <Trans>Unlock your secure offline data</Trans>
+        </h1>
+        <Text className="text-zinc-500 dark:text-zinc-400">
+          <Trans>
+            SecPal locked the local encrypted vault on this device. Unlock to
+            restore previously cached offline-safe data, or sign out to clear
+            the device state.
+          </Trans>
+        </Text>
+        {errorMessage ? (
+          <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+            {errorMessage}
+          </p>
+        ) : null}
+        <div className="mt-6 flex justify-center gap-3">
+          <Button
+            onClick={() => {
+              void handleUnlock();
+            }}
+            type="button"
+            disabled={isUnlocking}
+            aria-busy={isUnlocking}
+          >
+            {isUnlocking ? <Trans>Unlocking...</Trans> : <Trans>Unlock</Trans>}
+          </Button>
+          <Button outline onClick={onSignInAgain} type="button">
+            <Trans>Sign out</Trans>
           </Button>
         </div>
       </div>
