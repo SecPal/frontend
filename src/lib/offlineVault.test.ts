@@ -91,7 +91,7 @@ describe("offlineVault", () => {
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => { });
     installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi
         .fn()
@@ -118,6 +118,25 @@ describe("offlineVault", () => {
         authTag: expect.any(String),
       })
     );
+  });
+
+  it("keeps the vault readable when the browser-session CSRF token rotates", async () => {
+    await initializeOfflineVault(persistedUser);
+
+    const initialVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(initialVaultState).not.toBeNull();
+
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+
+    const rotatedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(rotatedVaultState).not.toBeNull();
+    expect(rotatedVaultState).not.toBe(initialVaultState);
   });
 
   it("migrates legacy IndexedDB PII into vault-backed stores and clears plaintext records", async () => {

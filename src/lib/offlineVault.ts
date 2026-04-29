@@ -1029,10 +1029,20 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   if (activeVaultSession) {
     if (
       storedState &&
-      storedWrapperCacheKey !== null &&
-      activeVaultSession.wrapperCacheKey === storedWrapperCacheKey &&
       activeVaultSession.subjectHash === storedState.subjectHash
     ) {
+      if (
+        storedWrapperCacheKey === null ||
+        activeVaultSession.wrapperCacheKey === storedWrapperCacheKey
+      ) {
+        return activeVaultSession;
+      }
+
+      activeVaultSession = await maybeRewriteStoredVaultState(
+        activeVaultSession,
+        storedState
+      );
+
       return activeVaultSession;
     }
 
@@ -1073,6 +1083,11 @@ async function maybeRewriteStoredVaultState(
   session: VaultSession,
   storedState: AuthVaultStateEnvelope
 ): Promise<VaultSession> {
+  const currentKeyMaterial = getAuthVaultKeyMaterial();
+  const currentStoredWrapperCacheKey = getStoredVaultWrapperCacheKey(
+    storedState,
+    currentKeyMaterial
+  );
   const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
     ? "native-device-bound"
     : "browser-session";
@@ -1083,7 +1098,9 @@ async function maybeRewriteStoredVaultState(
 
   if (
     storedState.version === AUTH_VAULT_VERSION &&
-    currentWrapperKind === preferredWrapperKind
+    currentWrapperKind === preferredWrapperKind &&
+    (currentStoredWrapperCacheKey === null ||
+      currentStoredWrapperCacheKey === session.wrapperCacheKey)
   ) {
     return session;
   }
@@ -1102,10 +1119,8 @@ async function maybeRewriteStoredVaultState(
   return {
     ...session,
     wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(
-        rewrittenState,
-        getAuthVaultKeyMaterial()
-      ) ?? session.wrapperCacheKey,
+      getStoredVaultWrapperCacheKey(rewrittenState, currentKeyMaterial) ??
+      session.wrapperCacheKey,
   };
 }
 
