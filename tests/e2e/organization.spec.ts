@@ -1,8 +1,11 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect } from "./auth.setup";
+import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
 import { getCachedOrgUnitsCount } from "../utils/offline-helpers";
+
+const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 
 /**
  * Organization Management E2E Tests
@@ -24,6 +27,79 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByRole("heading", { level: 1 }).first()
       ).toBeVisible();
+    });
+
+    test("should keep browser-session organization access after XSRF token rotation on authenticated GET refreshes", async ({
+      authenticatedPage: page,
+    }) => {
+      const context = page.context();
+      let organizationRequestCount = 0;
+
+      await context.route("**/v1/organizational-units**", async (route) => {
+        organizationRequestCount += 1;
+
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          headers:
+            organizationRequestCount === 1
+              ? {
+                  "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
+                }
+              : {},
+          body: JSON.stringify({
+            data: [offlineLiveMockOrganizationUnit],
+            meta: {
+              current_page: 1,
+              last_page: 1,
+              per_page: 100,
+              total: 1,
+              root_unit_ids: [offlineLiveMockOrganizationUnit.id],
+            },
+          }),
+        });
+      });
+
+      await page.goto("/organization");
+      await page.waitForLoadState("networkidle");
+
+      await expect(
+        page.getByRole("heading", { name: /organization structure/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /user menu/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Offline vault is not available.")
+      ).toHaveCount(0);
+
+      await expect
+        .poll(async () => {
+          const cookies = await context.cookies([page.url()]);
+
+          return cookies.find((cookie) => cookie.name === "XSRF-TOKEN")?.value;
+        })
+        .toBe(ROTATED_XSRF_TOKEN);
+
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+
+      await expect(
+        page.getByRole("heading", { name: /organization structure/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText(offlineLiveMockOrganizationUnit.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /user menu/i })
+      ).toBeVisible();
+      await expect(
+        page.getByText("Offline vault is not available.")
+      ).toHaveCount(0);
+      expect(organizationRequestCount).toBeGreaterThanOrEqual(2);
     });
   });
 
