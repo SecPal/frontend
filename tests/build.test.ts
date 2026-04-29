@@ -168,6 +168,9 @@ describe("Build Configuration and Source Verification", () => {
   it("emits assetlinks.json at the deployed root and .well-known paths", () => {
     const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-assetlinks-"));
 
+    const safeEnv = { ...process.env };
+    delete safeEnv.NODE_V8_COVERAGE;
+
     try {
       execFileSync(
         "npm",
@@ -175,6 +178,7 @@ describe("Build Configuration and Source Verification", () => {
         {
           cwd: repoRoot,
           stdio: "pipe",
+          env: safeEnv,
         }
       );
 
