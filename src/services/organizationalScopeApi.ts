@@ -3,6 +3,7 @@
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
+import { ApiError } from "./ApiError";
 import type { OrganizationalScope } from "../types/organizationalScope";
 
 export interface OrganizationalScopeFormData {
@@ -18,6 +19,22 @@ export interface OrganizationalScopeFormData {
   allow_self_access?: boolean;
 }
 
+async function buildScopeApiError(
+  response: Response,
+  fallbackMessage: string
+): Promise<ApiError> {
+  const error = await response
+    .json()
+    .catch(() => ({ message: fallbackMessage }));
+
+  return new ApiError(
+    error.message || fallbackMessage,
+    response.status,
+    error.errors,
+    response
+  );
+}
+
 /**
  * Fetch all scope assignments for an organizational unit
  */
@@ -29,7 +46,10 @@ export async function listOrganizationalScopes(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch organizational scopes");
+    throw await buildScopeApiError(
+      response,
+      "Failed to fetch organizational scopes"
+    );
   }
 
   return await response.json();
@@ -54,7 +74,10 @@ export async function createOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to create organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to create organizational scope"
+    );
   }
 
   return await response.json();
@@ -80,7 +103,10 @@ export async function updateOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to update organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to update organizational scope"
+    );
   }
 
   return await response.json();
@@ -101,7 +127,10 @@ export async function deleteOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to delete organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to delete organizational scope"
+    );
   }
 }
 
@@ -116,7 +145,10 @@ export async function getMyOrganizationalScopes(): Promise<{
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch my organizational scopes");
+    throw await buildScopeApiError(
+      response,
+      "Failed to fetch my organizational scopes"
+    );
   }
 
   return await response.json();
