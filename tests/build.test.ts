@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
@@ -165,27 +166,33 @@ describe("Build Configuration and Source Verification", () => {
   });
 
   it("emits assetlinks.json at the deployed root and .well-known paths", () => {
-    const distRoot = path.join(repoRoot, "dist");
+    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-assetlinks-"));
 
-    rmSync(distRoot, { recursive: true, force: true });
+    try {
+      execFileSync(
+        "npm",
+        ["exec", "--", "vite", "build", "--outDir", distRoot],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+        }
+      );
 
-    execFileSync("npm", ["run", "build"], {
-      cwd: repoRoot,
-      stdio: "pipe",
-    });
-
-    expect(existsSync(path.join(distRoot, "assetlinks.json"))).toBe(true);
-    expect(
-      existsSync(path.join(distRoot, ".well-known", "assetlinks.json"))
-    ).toBe(true);
-    expect(existsSync(path.join(distRoot, "config", "assetlinks.json"))).toBe(
-      false
-    );
-    expect(
-      existsSync(
-        path.join(distRoot, ".well-known", "config", "assetlinks.json")
-      )
-    ).toBe(false);
+      expect(existsSync(path.join(distRoot, "assetlinks.json"))).toBe(true);
+      expect(
+        existsSync(path.join(distRoot, ".well-known", "assetlinks.json"))
+      ).toBe(true);
+      expect(existsSync(path.join(distRoot, "config", "assetlinks.json"))).toBe(
+        false
+      );
+      expect(
+        existsSync(
+          path.join(distRoot, ".well-known", "config", "assetlinks.json")
+        )
+      ).toBe(false);
+    } finally {
+      rmSync(distRoot, { recursive: true, force: true });
+    }
   });
 
   it("scopes the Lingui macro Babel transform to files that import Lingui macros", () => {
