@@ -43,8 +43,8 @@ test.describe("Organization Management", () => {
           headers:
             organizationRequestCount === 1
               ? {
-                "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
-              }
+                  "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
+                }
               : {},
           body: JSON.stringify({
             data: [offlineLiveMockOrganizationUnit],
