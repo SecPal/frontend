@@ -524,16 +524,18 @@ function moveUnitInTree(
 
   const treeWithoutUnit = extractUnit(units);
 
-  if (!unitToMove) {
+  if (unitToMove === null) {
     return units; // Unit not found, return unchanged
   }
+
+  const extractedUnit = unitToMove as OrganizationalUnit;
 
   const nextParent = newParentId
     ? findUnitInTree(treeWithoutUnit, newParentId)
     : null;
 
   const movedUnit: OrganizationalUnit = {
-    ...unitToMove,
+    ...extractedUnit,
     parent: nextParent
       ? {
           id: nextParent.id,
