@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
+import { ApiError, type ApiValidationErrors } from "./ApiError";
 import type { OrganizationalScope } from "../types/organizationalScope";
 
 export interface OrganizationalScopeFormData {
@@ -18,6 +19,28 @@ export interface OrganizationalScopeFormData {
   allow_self_access?: boolean;
 }
 
+async function buildScopeApiError(
+  response: Response,
+  fallbackMessage: string
+): Promise<ApiError> {
+  const body: unknown = await response.json().catch(() => null);
+  const error =
+    typeof body === "object" && body !== null
+      ? (body as Record<string, unknown>)
+      : null;
+
+  return new ApiError(
+    typeof error?.message === "string" && error.message.length > 0
+      ? error.message
+      : fallbackMessage,
+    response.status,
+    typeof error?.errors === "object" && error.errors !== null
+      ? (error.errors as ApiValidationErrors)
+      : undefined,
+    response
+  );
+}
+
 /**
  * Fetch all scope assignments for an organizational unit
  */
@@ -29,7 +52,10 @@ export async function listOrganizationalScopes(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch organizational scopes");
+    throw await buildScopeApiError(
+      response,
+      "Failed to fetch organizational scopes"
+    );
   }
 
   return await response.json();
@@ -54,7 +80,10 @@ export async function createOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to create organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to create organizational scope"
+    );
   }
 
   return await response.json();
@@ -80,7 +109,10 @@ export async function updateOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to update organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to update organizational scope"
+    );
   }
 
   return await response.json();
@@ -101,7 +133,10 @@ export async function deleteOrganizationalScope(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to delete organizational scope");
+    throw await buildScopeApiError(
+      response,
+      "Failed to delete organizational scope"
+    );
   }
 }
 
@@ -116,7 +151,10 @@ export async function getMyOrganizationalScopes(): Promise<{
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch my organizational scopes");
+    throw await buildScopeApiError(
+      response,
+      "Failed to fetch my organizational scopes"
+    );
   }
 
   return await response.json();

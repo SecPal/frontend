@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept `/organization` hierarchy state consistent after child creation and moves by regression-covering the create/edit/reload and move/edit/reload flows, updating optimistic tree reparenting to refresh the moved unit's parent metadata, and surfacing backend scope-self-lockout `403` messages in the scope-assignment dialog instead of collapsing them into a generic save failure.
 - Stopped browser-session offline-vault state from being cleared when Laravel rotates the `XSRF-TOKEN` cookie on authenticated `GET` requests such as `/v1/me` and `/v1/organizational-units`; the frontend now rewraps the live in-memory vault session to the new CSRF token instead of treating the vault as corrupted, so `/organization` no longer falls into `Offline vault is not available.` on `app.secpal.dev` after a successful login.
 - Restored indexed offline-vault organizational-unit lookups for `type` and parent filters by persisting plaintext vault index metadata and lazily backfilling older encrypted org-unit cache records, so filtered queries no longer decrypt the full vault cache on every lookup, resolving frontend issue #1013.
 - Hardened the Vite Lingui plugin wiring to resolve `lingui()` from either named exports or a CommonJS `default` export, and paired it with a filtered local Rolldown preset for Lingui macros, so frontend builds stay compatible with the current Node/Vite CJS-interop behavior and issue #1003 is regression-covered.

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useCallback, useMemo, lazy, Suspense, memo } from "react";
@@ -468,6 +468,26 @@ function addUnitToTree(
   });
 }
 
+function findUnitInTree(
+  units: OrganizationalUnit[],
+  unitId: string
+): OrganizationalUnit | null {
+  for (const unit of units) {
+    if (unit.id === unitId) {
+      return unit;
+    }
+
+    if (unit.children && unit.children.length > 0) {
+      const nestedMatch = findUnitInTree(unit.children, unitId);
+      if (nestedMatch) {
+        return nestedMatch;
+      }
+    }
+  }
+
+  return null;
+}
+
 /**
  * Optimistic UI helper: Move a unit to a new parent in the tree
  * @param units - Current tree structure
@@ -504,12 +524,31 @@ function moveUnitInTree(
 
   const treeWithoutUnit = extractUnit(units);
 
-  if (!unitToMove) {
+  if (unitToMove === null) {
     return units; // Unit not found, return unchanged
   }
 
+  const extractedUnit = unitToMove as OrganizationalUnit;
+
+  const nextParent = newParentId
+    ? findUnitInTree(treeWithoutUnit, newParentId)
+    : null;
+
+  const movedUnit: OrganizationalUnit = {
+    ...extractedUnit,
+    parent: nextParent
+      ? {
+          id: nextParent.id,
+          type: nextParent.type,
+          name: nextParent.name,
+          created_at: nextParent.created_at,
+          updated_at: nextParent.updated_at,
+        }
+      : undefined,
+  };
+
   // Step 2: Insert the unit (with its children) at the new location
-  return addUnitToTree(treeWithoutUnit, unitToMove, newParentId);
+  return addUnitToTree(treeWithoutUnit, movedUnit, newParentId);
 }
 
 /**
