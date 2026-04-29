@@ -86,12 +86,18 @@ export default defineConfig(({ mode }) => {
           {
             src: "config/assetlinks.json",
             dest: ".well-known",
-            rename: "assetlinks.json",
+            rename: {
+              stripBase: true,
+              name: "assetlinks.json",
+            },
           },
           {
             src: "config/assetlinks.json",
             dest: ".",
-            rename: "assetlinks.json",
+            rename: {
+              stripBase: true,
+              name: "assetlinks.json",
+            },
           },
         ],
       }),
