@@ -483,7 +483,8 @@ describe("useAuth", () => {
 
     await persistAuthUser(mockUser);
 
-    // Rotate the CSRF token so the stored MAC becomes invalid — getUser() returns null
+    // Rotate the CSRF token to verify the stored vault state is rewrapped
+    // instead of being treated as unreadable while offline.
     setCsrfTokenCookie("rotated-csrf-token");
 
     const onLineSpy = vi
@@ -499,8 +500,8 @@ describe("useAuth", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
       expect(mockGetCurrentUser).not.toHaveBeenCalled();
     } finally {
       onLineSpy.mockRestore();
