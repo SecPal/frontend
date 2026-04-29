@@ -99,12 +99,21 @@ vi.mock("./MoveOrganizationalUnitDialog", () => ({
         <div>Move "{unit.name}"</div>
         <button
           onClick={() => {
-            // Simulate successful move
+            // Simulate successful move to a non-existent parent (default)
             onSuccess("new-parent-id");
             onClose();
           }}
         >
           Confirm Move
+        </button>
+        <button
+          onClick={() => {
+            // Simulate move to a nested existing unit (unit-2 = IT Department)
+            onSuccess("unit-2");
+            onClose();
+          }}
+        >
+          Confirm Move To Nested
         </button>
         <button onClick={onClose}>Cancel</button>
       </div>
@@ -554,6 +563,40 @@ describe("OrganizationalUnitTree", () => {
         expect(onMove).toHaveBeenCalledWith(
           expect.objectContaining({ id: "unit-3", name: "North Region" })
         );
+      });
+    });
+
+    it("refreshes moved unit parent metadata after move to an existing nested unit", async () => {
+      // Use "Confirm Move To Nested" which calls onSuccess("unit-2").
+      // unit-2 (IT Department) is nested under unit-1, so findUnitInTree must
+      // recurse to find it, exercising the recursive-return path and the parent
+      // metadata refresh inside moveUnitInTree.
+      const onMove = vi.fn();
+      renderWithI18n(<OrganizationalUnitTree onMove={onMove} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("North Region")).toBeInTheDocument();
+        expect(screen.getByText("IT Department")).toBeInTheDocument();
+      });
+
+      await clickActionForUnit("North Region", "Move");
+
+      await waitFor(() => {
+        expect(screen.getByTestId("mock-move-dialog")).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText("Confirm Move To Nested"));
+
+      await waitFor(() => {
+        expect(onMove).toHaveBeenCalledWith(
+          expect.objectContaining({ id: "unit-3", name: "North Region" })
+        );
+      });
+
+      // North Region (unit-3) is now a child of IT Department (unit-2, level 1).
+      // IT Department is auto-expanded (level 1 < 2), so North Region is visible.
+      await waitFor(() => {
+        expect(screen.getByText("North Region")).toBeInTheDocument();
       });
     });
   });
