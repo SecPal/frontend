@@ -3,6 +3,7 @@
 
 import { test, expect } from "./auth.setup";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
+import { getCachedOrgUnitsCount } from "../utils/offline-helpers";
 
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 
