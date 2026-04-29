@@ -473,7 +473,7 @@ describe("useAuth", () => {
     onLineSpy.mockRestore();
   });
 
-  it("collapses to logged-out state when stored user becomes unreadable while offline", async () => {
+  it("keeps user authenticated when the CSRF token rotates while offline", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",

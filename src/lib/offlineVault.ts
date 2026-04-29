@@ -1116,10 +1116,15 @@ async function maybeRewriteStoredVaultState(
 
   setStoredVaultState(rewrittenState);
 
+  // Re-read key material after the async encrypt so wrapperCacheKey is derived
+  // from the same key material that encryptVaultRootKeyBytes used internally,
+  // reducing drift if XSRF-TOKEN rotated during the await.
+  const postWriteKeyMaterial = getAuthVaultKeyMaterial();
+
   return {
     ...session,
     wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(rewrittenState, currentKeyMaterial) ??
+      getStoredVaultWrapperCacheKey(rewrittenState, postWriteKeyMaterial) ??
       session.wrapperCacheKey,
   };
 }
