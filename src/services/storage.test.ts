@@ -163,7 +163,7 @@ describe("authStorage", () => {
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 
-  it("clears encrypted auth state when the session-derived key material changes", async () => {
+  it("keeps encrypted auth state readable when the session-derived key material changes", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -174,8 +174,8 @@ describe("authStorage", () => {
     await authStorage.setUser(user);
     setCsrfTokenCookie("rotated-csrf-token");
 
-    await expect(authStorage.getUser()).resolves.toBeNull();
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    await expect(authStorage.getUser()).resolves.toEqual(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
   });
 
   it("locks the offline vault without deleting encrypted records and restores them after unlock", async () => {
