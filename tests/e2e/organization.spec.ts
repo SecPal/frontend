@@ -51,8 +51,8 @@ test.describe("Organization Management", () => {
           headers:
             organizationRequestCount === 1
               ? {
-                "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
-              }
+                  "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
+                }
               : {},
           body: JSON.stringify({
             data: [offlineLiveMockOrganizationUnit],
@@ -255,18 +255,21 @@ test.describe("Organization Management", () => {
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
-      await page.getByText(offlineLiveMockOrganizationUnit.name).first().click();
+      await page
+        .getByText(offlineLiveMockOrganizationUnit.name)
+        .first()
+        .click();
       await page.getByRole("button", { name: /add child unit/i }).click();
 
-      await expect(
-        page.getByText(/create organizational unit/i)
-      ).toBeVisible();
+      await expect(page.getByText(/create organizational unit/i)).toBeVisible();
 
       await page.getByLabel(/name/i).fill(CREATED_CHILD_UNIT_NAME);
       await page.getByRole("button", { name: /^create$/i }).click();
 
       const childTreeItem = page
-        .getByRole("treeitem", { name: new RegExp(CREATED_CHILD_UNIT_NAME, "i") })
+        .getByRole("treeitem", {
+          name: new RegExp(CREATED_CHILD_UNIT_NAME, "i"),
+        })
         .first();
 
       await expect(childTreeItem).toBeVisible();
@@ -274,9 +277,7 @@ test.describe("Organization Management", () => {
       await childTreeItem.click();
       await expect(page.getByRole("button", { name: /^edit$/i })).toBeVisible();
       await page.getByRole("button", { name: /^edit$/i }).click();
-      await expect(
-        page.getByText(/edit organizational unit/i)
-      ).toBeVisible();
+      await expect(page.getByText(/edit organizational unit/i)).toBeVisible();
 
       await page.getByLabel(/description/i).fill(UPDATED_CHILD_DESCRIPTION);
       await page.getByRole("button", { name: /save changes/i }).click();
@@ -287,16 +288,16 @@ test.describe("Organization Management", () => {
       await page.waitForLoadState("networkidle");
 
       const reloadedChildTreeItem = page
-        .getByRole("treeitem", { name: new RegExp(CREATED_CHILD_UNIT_NAME, "i") })
+        .getByRole("treeitem", {
+          name: new RegExp(CREATED_CHILD_UNIT_NAME, "i"),
+        })
         .first();
 
       await expect(reloadedChildTreeItem).toBeVisible();
 
       await reloadedChildTreeItem.click();
       await expect(page.getByText(UPDATED_CHILD_DESCRIPTION)).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /^edit$/i })
-      ).toBeVisible();
+      await expect(page.getByRole("button", { name: /^edit$/i })).toBeVisible();
     });
 
     test("should keep a moved unit visible and editable after reload", async ({
@@ -314,15 +315,15 @@ test.describe("Organization Management", () => {
         description: movedUnitDescription,
         parent: moveCompleted
           ? {
-            id: TARGET_PARENT_ID,
-            type: "company",
-            name: TARGET_PARENT_NAME,
-          }
+              id: TARGET_PARENT_ID,
+              type: "company",
+              name: TARGET_PARENT_NAME,
+            }
           : {
-            id: offlineLiveMockOrganizationUnit.id,
-            type: offlineLiveMockOrganizationUnit.type,
-            name: offlineLiveMockOrganizationUnit.name,
-          },
+              id: offlineLiveMockOrganizationUnit.id,
+              type: offlineLiveMockOrganizationUnit.type,
+              name: offlineLiveMockOrganizationUnit.name,
+            },
         created_at: "2026-04-29T10:00:00Z",
         updated_at: "2026-04-29T10:00:00Z",
       };
@@ -353,15 +354,15 @@ test.describe("Organization Management", () => {
                 description: movedUnitDescription,
                 parent: moveCompleted
                   ? {
-                    id: TARGET_PARENT_ID,
-                    type: "company",
-                    name: TARGET_PARENT_NAME,
-                  }
+                      id: TARGET_PARENT_ID,
+                      type: "company",
+                      name: TARGET_PARENT_NAME,
+                    }
                   : {
-                    id: offlineLiveMockOrganizationUnit.id,
-                    type: offlineLiveMockOrganizationUnit.type,
-                    name: offlineLiveMockOrganizationUnit.name,
-                  },
+                      id: offlineLiveMockOrganizationUnit.id,
+                      type: offlineLiveMockOrganizationUnit.type,
+                      name: offlineLiveMockOrganizationUnit.name,
+                    },
               },
             ],
             meta: {
@@ -369,7 +370,10 @@ test.describe("Organization Management", () => {
               last_page: 1,
               per_page: 100,
               total: 3,
-              root_unit_ids: [offlineLiveMockOrganizationUnit.id, TARGET_PARENT_ID],
+              root_unit_ids: [
+                offlineLiveMockOrganizationUnit.id,
+                TARGET_PARENT_ID,
+              ],
             },
           }),
         });
@@ -418,15 +422,15 @@ test.describe("Organization Management", () => {
                 description: movedUnitDescription,
                 parent: moveCompleted
                   ? {
-                    id: TARGET_PARENT_ID,
-                    type: "company",
-                    name: TARGET_PARENT_NAME,
-                  }
+                      id: TARGET_PARENT_ID,
+                      type: "company",
+                      name: TARGET_PARENT_NAME,
+                    }
                   : {
-                    id: offlineLiveMockOrganizationUnit.id,
-                    type: offlineLiveMockOrganizationUnit.type,
-                    name: offlineLiveMockOrganizationUnit.name,
-                  },
+                      id: offlineLiveMockOrganizationUnit.id,
+                      type: offlineLiveMockOrganizationUnit.type,
+                      name: offlineLiveMockOrganizationUnit.name,
+                    },
                 updated_at: "2026-04-29T10:06:00Z",
               },
             }),
@@ -450,9 +454,13 @@ test.describe("Organization Management", () => {
       await moveActionsButton.click();
       await page.getByRole("menuitem", { name: /move/i }).click();
 
-      await expect(page.getByText(new RegExp(`Move \"${MOVED_UNIT_NAME}\"`, "i"))).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`Move \"${MOVED_UNIT_NAME}\"`, "i"))
+      ).toBeVisible();
       await page.getByRole("button", { name: /select new parent/i }).click();
-      await page.getByRole("option", { name: new RegExp(TARGET_PARENT_NAME, "i") }).click();
+      await page
+        .getByRole("option", { name: new RegExp(TARGET_PARENT_NAME, "i") })
+        .click();
       await page.getByRole("button", { name: /^move$/i }).click();
 
       const reparentedTreeItem = page
