@@ -340,8 +340,6 @@ test.describe("Organization Management", () => {
       };
 
       await context.route("**/v1/organizational-units**", async (route) => {
-        const request = route.request();
-
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -455,7 +453,7 @@ test.describe("Organization Management", () => {
       await page.getByRole("menuitem", { name: /move/i }).click();
 
       await expect(
-        page.getByText(new RegExp(`Move \"${MOVED_UNIT_NAME}\"`, "i"))
+        page.getByText(new RegExp(`Move "${MOVED_UNIT_NAME}"`, "i"))
       ).toBeVisible();
       await page.getByRole("button", { name: /select new parent/i }).click();
       await page
