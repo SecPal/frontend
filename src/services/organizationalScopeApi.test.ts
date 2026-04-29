@@ -124,4 +124,20 @@ describe("organizationalScopeApi", () => {
       statusCode: 500,
     } satisfies Partial<ApiError>);
   });
+
+  it("falls back to built-in message when response body is null JSON", async () => {
+    mockApiFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => null,
+    } as unknown as Response);
+
+    await expect(
+      updateOrganizationalScope("unit-1", "scope-1", { access_level: "read" })
+    ).rejects.toMatchObject({
+      name: "ApiError",
+      message: "Failed to update organizational scope",
+      statusCode: 500,
+    } satisfies Partial<ApiError>);
+  });
 });

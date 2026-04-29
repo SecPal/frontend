@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { apiConfig } from "../config";
 import { apiFetch } from "./csrf";
-import { ApiError } from "./ApiError";
+import { ApiError, type ApiValidationErrors } from "./ApiError";
 import type { OrganizationalScope } from "../types/organizationalScope";
 
 export interface OrganizationalScopeFormData {
@@ -23,14 +23,20 @@ async function buildScopeApiError(
   response: Response,
   fallbackMessage: string
 ): Promise<ApiError> {
-  const error = await response
-    .json()
-    .catch(() => ({ message: fallbackMessage }));
+  const body: unknown = await response.json().catch(() => null);
+  const error =
+    typeof body === "object" && body !== null
+      ? (body as Record<string, unknown>)
+      : null;
 
   return new ApiError(
-    error.message || fallbackMessage,
+    typeof error?.message === "string" && error.message.length > 0
+      ? error.message
+      : fallbackMessage,
     response.status,
-    error.errors,
+    typeof error?.errors === "object" && error.errors !== null
+      ? (error.errors as ApiValidationErrors)
+      : undefined,
     response
   );
 }

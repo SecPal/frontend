@@ -149,7 +149,10 @@ test.describe("Organization Management", () => {
           return;
         }
 
-        if (method === "GET") {
+        if (
+          method === "GET" &&
+          /\/v1\/organizational-units(\?.*)?$/.test(url)
+        ) {
           const units: Array<Record<string, unknown>> = [
             offlineLiveMockOrganizationUnit,
           ];
@@ -157,7 +160,7 @@ test.describe("Organization Management", () => {
           if (childUnitCreated) {
             postCreateListRequestCount += 1;
 
-            if (postCreateListRequestCount > 1) {
+            if (postCreateListRequestCount >= 1) {
               units.push({
                 id: CREATED_CHILD_UNIT_ID,
                 type: "company",
@@ -313,17 +316,19 @@ test.describe("Organization Management", () => {
         name: MOVED_UNIT_NAME,
         custom_type_name: null,
         description: movedUnitDescription,
-        parent: moveCompleted
-          ? {
-              id: TARGET_PARENT_ID,
-              type: "company",
-              name: TARGET_PARENT_NAME,
-            }
-          : {
-              id: offlineLiveMockOrganizationUnit.id,
-              type: offlineLiveMockOrganizationUnit.type,
-              name: offlineLiveMockOrganizationUnit.name,
-            },
+        get parent() {
+          return moveCompleted
+            ? {
+                id: TARGET_PARENT_ID,
+                type: "company",
+                name: TARGET_PARENT_NAME,
+              }
+            : {
+                id: offlineLiveMockOrganizationUnit.id,
+                type: offlineLiveMockOrganizationUnit.type,
+                name: offlineLiveMockOrganizationUnit.name,
+              };
+        },
         created_at: "2026-04-29T10:00:00Z",
         updated_at: "2026-04-29T10:00:00Z",
       };
@@ -340,6 +345,11 @@ test.describe("Organization Management", () => {
       };
 
       await context.route("**/v1/organizational-units**", async (route) => {
+        if (!/\/v1\/organizational-units(\?.*)?$/.test(route.request().url())) {
+          await route.fallback();
+          return;
+        }
+
         await route.fulfill({
           status: 200,
           contentType: "application/json",
