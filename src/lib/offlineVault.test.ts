@@ -91,7 +91,7 @@ describe("offlineVault", () => {
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => { });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
     installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi
         .fn()
