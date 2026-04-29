@@ -78,7 +78,7 @@ test.describe("Organization Management", () => {
 
       await expect
         .poll(async () => {
-          const cookies = await context.cookies();
+          const cookies = await context.cookies([page.url()]);
 
           return cookies.find((cookie) => cookie.name === "XSRF-TOKEN")?.value;
         })
