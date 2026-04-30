@@ -517,7 +517,9 @@ describe("OrganizationPage", () => {
       await user.click(screen.getByRole("button", { name: /^Edit$/i }));
 
       await waitFor(() => {
-        expect(screen.getByText("Edit Organizational Unit")).toBeInTheDocument();
+        expect(
+          screen.getByText("Edit Organizational Unit")
+        ).toBeInTheDocument();
       });
 
       const nameInput = screen.getByDisplayValue("SecPal Holding");
