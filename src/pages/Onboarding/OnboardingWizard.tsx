@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useEffect, useState } from "react";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
   createOnboardingSubmission,
@@ -85,7 +87,12 @@ function getObjectSchema(
 
 function getArrayValue(value: unknown): string[] {
   return Array.isArray(value)
-    ? value.filter((entry): entry is string => typeof entry === "string")
+    ? value
+        .filter(
+          (entry): entry is string | number =>
+            typeof entry === "string" || typeof entry === "number"
+        )
+        .map(String)
     : [];
 }
 
@@ -180,6 +187,7 @@ function SchemaFieldRenderer({
   onChange: (fieldName: string, value: unknown) => void;
 }) {
   const title = property.title ?? fieldName;
+  const { _ } = useLingui();
 
   if (property.type === "string") {
     const options = getSchemaOptions(property);
@@ -197,10 +205,11 @@ function SchemaFieldRenderer({
           <Select
             aria-label={title}
             name={fieldName}
+            required={required}
             value={getTextValue(formData[fieldName])}
             onChange={(event) => onChange(fieldName, event.target.value)}
           >
-            <option value="">Select an option</option>
+            <option value="">{_(msg`Select an option`)}</option>
             {options.map((option) => (
               <option key={String(option.value)} value={String(option.value)}>
                 {option.label}
@@ -211,6 +220,7 @@ function SchemaFieldRenderer({
           <Input
             aria-label={title}
             name={fieldName}
+            required={required}
             value={getTextValue(formData[fieldName])}
             maxLength={property.maxLength}
             onChange={(event) => onChange(fieldName, event.target.value)}
@@ -236,12 +246,16 @@ function SchemaFieldRenderer({
           <Select
             aria-label={title}
             name={fieldName}
+            required={required}
             value={getNumberValue(formData[fieldName])}
             onChange={(event) =>
-              onChange(fieldName, Number(event.target.value))
+              onChange(
+                fieldName,
+                event.target.value === "" ? "" : Number(event.target.value)
+              )
             }
           >
-            <option value="">Select an option</option>
+            <option value="">{_(msg`Select an option`)}</option>
             {options.map((option) => (
               <option key={String(option.value)} value={String(option.value)}>
                 {option.label}
@@ -253,6 +267,7 @@ function SchemaFieldRenderer({
             aria-label={title}
             type="number"
             name={fieldName}
+            required={required}
             value={getNumberValue(formData[fieldName])}
             min={property.minimum}
             onChange={(event) => {
@@ -333,11 +348,12 @@ function SchemaFieldRenderer({
           {required ? " *" : null}
         </Label>
         <Description>
-          {property.description ?? "Enter one value per line."}
+          {property.description ?? _(msg`Enter one value per line.`)}
         </Description>
         <Textarea
           aria-label={title}
           name={fieldName}
+          required={required}
           rows={4}
           value={getArrayTextareaValue(formData[fieldName])}
           onChange={(event) =>
@@ -401,6 +417,7 @@ function StepNavigation({
 }
 
 export function OnboardingWizard() {
+  const { _ } = useLingui();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -540,8 +557,8 @@ export function OnboardingWizard() {
         err instanceof Error
           ? err.message
           : status === "draft"
-            ? "Failed to save draft"
-            : "Failed to submit"
+            ? _(msg`Failed to save draft`)
+            : _(msg`Failed to submit`)
       );
       return false;
     } finally {
@@ -553,7 +570,7 @@ export function OnboardingWizard() {
     if (await persistCurrentStep("draft")) {
       setFeedback({
         tone: "success",
-        message: "Draft saved. You can continue later.",
+        message: _(msg`Draft saved. You can continue later.`),
       });
     }
   }
@@ -595,7 +612,7 @@ export function OnboardingWizard() {
     if (await persistCurrentStep("submitted")) {
       setFeedback({
         tone: "success",
-        message: "Onboarding submitted. HR will review your information.",
+        message: _(msg`Onboarding submitted. HR will review your information.`),
       });
     }
   }
