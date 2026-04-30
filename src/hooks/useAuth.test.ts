@@ -200,7 +200,7 @@ describe("useAuth", () => {
     const storedUser = sanitizePersistedAuthUser(mockUser);
     const revalidatedUser = {
       ...mockUser,
-      roles: ["Admin"],
+      permissions: ["employees.read"],
     };
     const expectedRevalidatedUser = { ...revalidatedUser, id: "1" };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
@@ -242,7 +242,7 @@ describe("useAuth", () => {
     };
     const revalidatedUser = {
       ...mockUser,
-      roles: ["Admin"],
+      permissions: ["employees.read"],
     };
     const deferred = createDeferredPromise<typeof revalidatedUser>();
 

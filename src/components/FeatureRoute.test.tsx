@@ -57,7 +57,6 @@ describe("FeatureRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasPermission: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
@@ -103,7 +102,6 @@ describe("FeatureRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasPermission: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
@@ -156,7 +154,6 @@ describe("FeatureRoute", () => {
       lock: vi.fn(),
       unlock: vi.fn(async () => true),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasPermission: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
