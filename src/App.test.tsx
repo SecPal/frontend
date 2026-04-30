@@ -198,7 +198,7 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows not found for organization routes when the user only has scopes but no elevated feature capability", async () => {
+  it("shows the organization route when the user has organizational scopes", async () => {
     window.history.replaceState({}, "", "/organization");
 
     await seedPersistedAuthUser({
@@ -213,13 +213,11 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    expect(
-      await screen.findByText(
-        /Page Not Found/i,
-        {},
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/organization");
+    });
+
+    expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
 
   it("shows not found for customer routes when the user cannot discover that feature", async () => {
@@ -437,7 +435,6 @@ describe("App", () => {
       email: "user@secpal.dev",
       emailVerified: true,
       hasOrganizationalScopes: true,
-      roles: ["Manager"],
       permissions: [],
     });
 

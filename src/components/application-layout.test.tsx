@@ -648,14 +648,14 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
 
-    it("shows management links for elevated organization roles", async () => {
+    it("shows management links from explicit permissions and org scopes", async () => {
       await seedAuthenticatedUser({
         id: 1,
         name: "John Doe",
         email: "john@secpal.dev",
         hasOrganizationalScopes: true,
-        roles: ["Manager"],
-        permissions: [],
+        roles: [],
+        permissions: ["customers.read", "employees.read"],
       });
 
       renderWithProviders(
@@ -890,7 +890,7 @@ describe("ApplicationLayout", () => {
         name: "Admin User",
         email: "admin@secpal.dev",
         hasOrganizationalScopes: true,
-        roles: ["Manager"],
+        roles: [],
         permissions: ["android_enrollment.read"],
       });
 

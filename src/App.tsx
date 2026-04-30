@@ -385,7 +385,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Activity Log Route - Admin/Manager access via permissions */}
+            {/* Activity Log Route - explicit permission access */}
             <Route
               path="/activity-logs"
               element={

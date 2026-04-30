@@ -72,7 +72,6 @@ describe("offlineVault", () => {
     name: "Vault User",
     email: "vault@secpal.dev",
     emailVerified: false,
-    roles: ["Admin"],
   };
 
   beforeEach(async () => {
