@@ -60,7 +60,6 @@ function renderWizard() {
 describe("OnboardingWizard", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.stubGlobal("alert", vi.fn());
 
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
@@ -84,7 +83,8 @@ describe("OnboardingWizard", () => {
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
       .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
 
-    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
+    // step-1 has an existing submission, so saves go through updateOnboardingSubmission
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
       makeSubmission("template-1")
     );
   });
@@ -100,12 +100,12 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /next/i }));
 
+    // step-1 has an existing submission — component PATCHes it via updateOnboardingSubmission
     await waitFor(() => {
-      expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
-        form_template_id: "template-1",
-        form_data: { legal_name: "Jane Doe" },
-        status: "draft",
-      });
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-1",
+        { form_data: { legal_name: "Jane Doe" }, status: "draft" }
+      );
     });
 
     await waitFor(() => {
@@ -113,7 +113,7 @@ describe("OnboardingWizard", () => {
     });
   });
 
-  it("shows a success alert when saving the current step as draft", async () => {
+  it("shows inline success feedback when saving the current step as draft", async () => {
     renderWizard();
 
     await waitFor(() => {
@@ -124,15 +124,19 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /save draft/i }));
 
+    // step-1 has an existing submission — component PATCHes it via updateOnboardingSubmission
     await waitFor(() => {
-      expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
-        form_template_id: "template-1",
-        form_data: { legal_name: "Jane Doe" },
-        status: "draft",
-      });
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-1",
+        { form_data: { legal_name: "Jane Doe" }, status: "draft" }
+      );
     });
 
-    expect(globalThis.alert).toHaveBeenCalledWith("Draft saved successfully!");
+    await waitFor(() => {
+      expect(
+        screen.getByText("Draft saved. You can continue later.")
+      ).toBeInTheDocument();
+    });
   });
 
   it("submits the active step using the existing submission payload fallback", async () => {
@@ -158,12 +162,14 @@ describe("OnboardingWizard", () => {
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
       .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
 
-    vi.mocked(onboardingApi.createOnboardingSubmission)
-      .mockResolvedValueOnce(makeSubmission("template-1"))
-      .mockResolvedValueOnce({
-        ...makeSubmission("template-2"),
-        status: "submitted",
-      });
+    // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
+      makeSubmission("template-1")
+    );
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValueOnce({
+      ...makeSubmission("template-2"),
+      status: "submitted",
+    });
 
     renderWizard();
 
@@ -179,23 +185,24 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
+    // step-2 has an existing submission — component PATCHes it using its stored form_data
     await waitFor(() => {
-      expect(onboardingApi.createOnboardingSubmission).toHaveBeenLastCalledWith(
-        {
-          form_template_id: "template-2",
-          form_data: { legal_name: "Jane Doe" },
-          status: "submitted",
-        }
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenLastCalledWith(
+        "submission-template-2",
+        { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
       );
     });
 
-    expect(globalThis.alert).toHaveBeenCalledWith(
-      "Onboarding submitted successfully! HR will review your submission."
-    );
+    await waitFor(() => {
+      expect(
+        screen.getByText("Onboarding submitted. HR will review your information.")
+      ).toBeInTheDocument();
+    });
   });
 
   it("keeps the user on the current step and shows an error when saving fails", async () => {
-    vi.mocked(onboardingApi.createOnboardingSubmission).mockRejectedValueOnce(
+    // step-1 has an existing submission — rejection must come from updateOnboardingSubmission
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
       new Error("Failed to save draft")
     );
 
@@ -211,7 +218,7 @@ describe("OnboardingWizard", () => {
       expect(screen.getByText("Failed to save draft")).toBeInTheDocument();
     });
 
-    expect(globalThis.alert).not.toHaveBeenCalled();
+    expect(screen.queryByText("Tax Details")).not.toBeInTheDocument();
   });
 
   it("renders the template loading error inside the wizard when steps are already available", async () => {

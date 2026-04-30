@@ -177,6 +177,10 @@ msgstr "Messages from team members and supervisors"
 msgid "No Organizational Units"
 msgstr "No Organizational Units"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "This onboarding step uses a schema we cannot render yet."
+msgstr "This onboarding step uses a schema we cannot render yet."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -2559,7 +2563,3 @@ msgstr "Phone"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "This session has already been used to complete device bootstrap."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Form fields will be rendered based on schema"
-msgstr "Form fields will be rendered based on schema"
