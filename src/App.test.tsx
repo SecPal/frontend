@@ -213,10 +213,13 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/organization");
-    });
-
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /Organization Structure/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
 
