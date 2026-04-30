@@ -334,6 +334,52 @@ describe("OrganizationalUnitTree", () => {
     });
   });
 
+  it("hides restricted tree actions when unit permissions deny them", async () => {
+    const restrictedUnits: OrganizationalUnit[] = [
+      {
+        id: "restricted-unit",
+        type: "department",
+        name: "Restricted Unit",
+        permissions: {
+          create_child: false,
+          update: false,
+          delete: false,
+          manage_scopes: false,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      },
+    ];
+
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: restrictedUnits,
+      rootUnitIds: ["restricted-unit"],
+    });
+
+    renderWithI18n(
+      <OrganizationalUnitTree
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onMove={vi.fn()}
+        onCreateChild={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Restricted Unit")).toBeInTheDocument();
+    });
+
+    const treeItem = screen.getByRole("treeitem", { name: /restricted unit/i });
+    const actionsButton = treeItem.querySelector('button[aria-label*="Actions"]');
+
+    expect(actionsButton).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /add child/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /move/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /delete/i })).not.toBeInTheDocument();
+  });
+
   it("calls deleteOrganizationalUnit on delete confirmation", async () => {
     vi.mocked(deleteOrganizationalUnit).mockResolvedValue(undefined);
     window.confirm = vi.fn(() => true);

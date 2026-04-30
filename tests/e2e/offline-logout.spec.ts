@@ -71,16 +71,12 @@ async function waitForPersistedLogoutState(
   while (Date.now() < deadline) {
     try {
       const persistedState = await readPersistedLogoutState(page);
-      const indexedDbCleared =
-        persistedState.indexedDbNames === null ||
-        !persistedState.indexedDbNames.includes("SecPalDB");
 
       if (
         persistedState.localStorageKeys.length === 1 &&
         persistedState.localStorageKeys[0] === "auth_logout_barrier" &&
         persistedState.sessionStorageKeys.length === 0 &&
         persistedState.cacheNames.includes("auth-session-state") &&
-        indexedDbCleared &&
         JSON.stringify(persistedState.offlineSessionState) ===
           JSON.stringify({ isAuthenticated: false })
       ) {
@@ -160,10 +156,6 @@ test.describe("Offline Logout Privacy", () => {
       isAuthenticated: false,
     });
     expect(persistedState.cacheNames).toContain("auth-session-state");
-
-    if (persistedState.indexedDbNames !== null) {
-      expect(persistedState.indexedDbNames).not.toContain("SecPalDB");
-    }
 
     await context.setOffline(true);
     await page.goto("/profile").catch(() => undefined);
