@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Replaced the placeholder pre-contract onboarding wizard with a schema-driven Catalyst form that renders localized template fields, restores saved draft answers, uses inline feedback instead of browser alerts, and updates existing onboarding submissions via `PATCH` before navigation or review submission.
 - Corrected the `/organization` Playwright XSRF-rotation regression to rotate the browser-visible app cookie instead of asserting a brittle cross-origin cookie detail, added end-to-end coverage that keeps restricted child-unit delete actions hidden across reloads, guarded the repaired live parent relationship on `app.secpal.dev`, and added an opt-in live CRUD proof for creating and deleting a child unit under `Headquarters` against the real live stack.
 - Hid `/organization` tree actions when the current unit permissions deny them and extended the child-create reload regression to assert the selected unit still shows its parent after refresh, so users no longer get offered unauthorized delete/edit/move actions and the child-create cache regression stays covered end-to-end
 - Kept `/organization` hierarchy state consistent after child creation and moves by regression-covering the create/edit/reload and move/edit/reload flows, updating optimistic tree reparenting to refresh the moved unit's parent metadata, and surfacing backend scope-self-lockout `403` messages in the scope-assignment dialog instead of collapsing them into a generic save failure.

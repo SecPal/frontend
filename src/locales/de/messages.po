@@ -177,6 +177,10 @@ msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 msgid "No Organizational Units"
 msgstr "Keine organisatorischen Einheiten"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "This onboarding step uses a schema we cannot render yet."
+msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "weitere Optionen"
@@ -911,6 +915,10 @@ msgstr "Der Name darf maximal 255 Zeichen lang sein"
 msgid "Review the passkeys currently enrolled for this account."
 msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to submit"
+msgstr "Senden fehlgeschlagen"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Bootstrap completed"
 msgstr "Bootstrap abgeschlossen"
@@ -1104,6 +1112,10 @@ msgstr "Taste für manuelle Einstellungen"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Which rank range can this user ASSIGN or REMOVE?"
 msgstr "Welchen Rangbereich kann dieser Benutzer ZUWEISEN oder ENTFERNEN?"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Select an option"
+msgstr "Option auswählen"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Failed to save scope assignment."
@@ -1958,6 +1970,10 @@ msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Au
 msgid "Invalid Link"
 msgstr "Ungültiger Link"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Enter one value per line."
+msgstr "Einen Wert pro Zeile eingeben."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Welcome to SecPal!"
 msgstr "Willkommen bei SecPal!"
@@ -2089,6 +2105,10 @@ msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Save"
 msgstr "Speichern"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to save draft"
+msgstr "Entwurf konnte nicht gespeichert werden"
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Back to Customers"
@@ -2340,6 +2360,10 @@ msgstr "Mitarbeiter-ID fehlt."
 msgid "No unit selected"
 msgstr "Keine Einheit ausgewählt"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding submitted. HR will review your information."
+msgstr "Onboarding eingereicht. Die Personalabteilung wird Ihre Angaben prüfen."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Log Name"
@@ -2522,6 +2546,10 @@ msgstr "Authenticator-Code"
 msgid "Current parent:"
 msgstr "Aktuelle übergeordnete Einheit:"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Draft saved. You can continue later."
+msgstr "Entwurf gespeichert. Sie können später fortfahren."
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "OK"
 msgstr "OK"
@@ -2559,7 +2587,3 @@ msgstr "Telefon"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Form fields will be rendered based on schema"
-msgstr "Formularfelder werden basierend auf dem Schema gerendert"

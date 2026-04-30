@@ -177,6 +177,10 @@ msgstr "Messages from team members and supervisors"
 msgid "No Organizational Units"
 msgstr "No Organizational Units"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "This onboarding step uses a schema we cannot render yet."
+msgstr "This onboarding step uses a schema we cannot render yet."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -911,6 +915,10 @@ msgstr "Name must be at most 255 characters"
 msgid "Review the passkeys currently enrolled for this account."
 msgstr "Review the passkeys currently enrolled for this account."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to submit"
+msgstr "Failed to submit"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Bootstrap completed"
 msgstr "Bootstrap completed"
@@ -1104,6 +1112,10 @@ msgstr "Manual setup key"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Which rank range can this user ASSIGN or REMOVE?"
 msgstr "Which rank range can this user ASSIGN or REMOVE?"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Select an option"
+msgstr "Select an option"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Failed to save scope assignment."
@@ -1958,6 +1970,10 @@ msgstr "MFA is currently off for this account. Set up an authenticator app now t
 msgid "Invalid Link"
 msgstr "Invalid Link"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Enter one value per line."
+msgstr "Enter one value per line."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
@@ -2089,6 +2105,10 @@ msgstr "Viewing cached data. Some units may be outdated."
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Save"
 msgstr "Save"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to save draft"
+msgstr "Failed to save draft"
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Back to Customers"
@@ -2340,6 +2360,10 @@ msgstr "Employee ID is missing."
 msgid "No unit selected"
 msgstr "No unit selected"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding submitted. HR will review your information."
+msgstr "Onboarding submitted. HR will review your information."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Log Name"
@@ -2522,6 +2546,10 @@ msgstr "Authenticator code"
 msgid "Current parent:"
 msgstr "Current parent:"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Draft saved. You can continue later."
+msgstr "Draft saved. You can continue later."
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "OK"
 msgstr "OK"
@@ -2559,7 +2587,3 @@ msgstr "Phone"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "This session has already been used to complete device bootstrap."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Form fields will be rendered based on schema"
-msgstr "Form fields will be rendered based on schema"
