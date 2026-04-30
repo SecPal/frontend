@@ -34,32 +34,52 @@ async function cleanupLiveOrganizationalUnit(
     return;
   }
 
-  await page.evaluate(
-    async ({ apiBaseUrl, targetUnitId }) => {
-      const xsrfCookie = document.cookie
-        .split(";")
-        .map((cookie) => cookie.trim())
-        .find((cookie) => cookie.startsWith("XSRF-TOKEN="));
+  try {
+    const result = await page.evaluate(
+      async ({ apiBaseUrl, targetUnitId }) => {
+        const xsrfCookie = document.cookie
+          .split(";")
+          .map((cookie) => cookie.trim())
+          .find((cookie) => cookie.startsWith("XSRF-TOKEN="));
 
-      const headers = new Headers({
-        Accept: "application/json",
-      });
+        const headers = new Headers({
+          Accept: "application/json",
+        });
 
-      if (xsrfCookie) {
-        headers.set(
-          "X-XSRF-TOKEN",
-          decodeURIComponent(xsrfCookie.substring("XSRF-TOKEN=".length))
-        );
-      }
+        if (xsrfCookie) {
+          headers.set(
+            "X-XSRF-TOKEN",
+            decodeURIComponent(xsrfCookie.substring("XSRF-TOKEN=".length))
+          );
+        }
 
-      await fetch(`${apiBaseUrl}/v1/organizational-units/${targetUnitId}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers,
-      }).catch(() => undefined);
-    },
-    { apiBaseUrl: API_BASE_URL, targetUnitId: unitId }
-  );
+        try {
+          const response = await fetch(
+            `${apiBaseUrl}/v1/organizational-units/${targetUnitId}`,
+            { method: "DELETE", credentials: "include", headers }
+          );
+          return { ok: response.ok, status: response.status };
+        } catch (err) {
+          return { ok: false, status: 0, error: String(err) };
+        }
+      },
+      { apiBaseUrl: API_BASE_URL, targetUnitId: unitId }
+    );
+
+    if (!result.ok) {
+      console.warn(
+        `Live org-unit cleanup failed for ${unitId}: HTTP ${result.status}${
+          "error" in result ? ` (${result.error})` : ""
+        }`
+      );
+    }
+  } catch (err) {
+    console.warn(
+      `Live org-unit cleanup could not run for ${unitId}: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+  }
 }
 
 /**

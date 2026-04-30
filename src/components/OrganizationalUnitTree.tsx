@@ -188,11 +188,11 @@ const TreeNode = memo(
     const hasChildren = unit.children && unit.children.length > 0;
     const isSelected = selectedId === unit.id;
     const canCreateChild =
-      onCreateChild && unit.permissions?.create_child !== false;
-    const canUpdate = unit.permissions?.update !== false;
-    const canEdit = onEdit && canUpdate;
-    const canMove = onMove && canUpdate;
-    const canDelete = onDelete && unit.permissions?.delete !== false;
+      !!onCreateChild && unit.permissions?.create_child === true;
+    const canUpdate = unit.permissions?.update === true;
+    const canEdit = !!onEdit && canUpdate;
+    const canMove = !!onMove && canUpdate;
+    const canDelete = !!onDelete && unit.permissions?.delete === true;
     const hasActions = canEdit || canDelete || canMove || canCreateChild;
 
     const handleToggle = useCallback(

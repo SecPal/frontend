@@ -190,11 +190,19 @@ async function clickActionForUnit(unitName: string, actionName: string) {
  * Uses useOrganizationalUnitsWithOffline hook for data fetching.
  */
 describe("OrganizationalUnitTree", () => {
+  const mockPermissions = {
+    create_child: true,
+    update: true,
+    delete: true,
+    manage_scopes: true,
+  };
+
   const mockUnits: OrganizationalUnit[] = [
     {
       id: "unit-1",
       type: "company",
       name: "Test Company",
+      permissions: mockPermissions,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -202,6 +210,7 @@ describe("OrganizationalUnitTree", () => {
       id: "unit-2",
       type: "department",
       name: "IT Department",
+      permissions: mockPermissions,
       parent: {
         id: "unit-1",
         type: "company",
@@ -216,6 +225,7 @@ describe("OrganizationalUnitTree", () => {
       id: "unit-3",
       type: "region",
       name: "North Region",
+      permissions: mockPermissions,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -759,6 +769,7 @@ describe("OrganizationalUnitTree", () => {
           id: "parent-1",
           type: "company",
           name: "Parent Company",
+          permissions: mockPermissions,
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         },
@@ -766,6 +777,7 @@ describe("OrganizationalUnitTree", () => {
           id: "dept-1",
           type: "department",
           name: "Sales Department",
+          permissions: mockPermissions,
           parent: {
             id: "parent-1",
             type: "company",
@@ -780,6 +792,7 @@ describe("OrganizationalUnitTree", () => {
           id: "team-1",
           type: "division",
           name: "Sales Team A",
+          permissions: mockPermissions,
           parent: {
             id: "dept-1",
             type: "department",
@@ -794,6 +807,7 @@ describe("OrganizationalUnitTree", () => {
           id: "parent-2",
           type: "company",
           name: "Target Company",
+          permissions: mockPermissions,
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         },
