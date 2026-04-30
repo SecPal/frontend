@@ -41,11 +41,11 @@ import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizational
  * Each update has a unique key to ensure React triggers the useEffect
  */
 interface OptimisticTreeUpdate {
-  createdUnit: {
+  createdUnits: Array<{
     unit: OrganizationalUnit;
     parentId: string | null;
     key: number;
-  } | null;
+  }>;
   updatedUnit: { unit: OrganizationalUnit; key: number } | null;
 }
 
@@ -88,7 +88,7 @@ export function OrganizationPage() {
   // Optimistic UI state for tree updates (Issue #303)
   const [optimisticUpdate, setOptimisticUpdate] =
     useState<OptimisticTreeUpdate>({
-      createdUnit: null,
+      createdUnits: [],
       updatedUnit: null,
     });
 
@@ -218,15 +218,18 @@ export function OrganizationPage() {
       // Optimistic UI update (Issue #303) - update tree without reload
       // Use Date.now() as key to ensure each update triggers useEffect
       if (dialogMode === "create") {
-        setOptimisticUpdate({
-          createdUnit: { unit, parentId: dialogParentId, key: Date.now() },
+        setOptimisticUpdate((current) => ({
+          createdUnits: [
+            ...current.createdUnits.filter((entry) => entry.unit.id !== unit.id),
+            { unit, parentId: dialogParentId, key: Date.now() },
+          ],
           updatedUnit: null,
-        });
+        }));
       } else {
-        setOptimisticUpdate({
-          createdUnit: null,
+        setOptimisticUpdate((current) => ({
+          createdUnits: current.createdUnits,
           updatedUnit: { unit, key: Date.now() },
-        });
+        }));
         // Update selected unit if editing
         setSelectedUnit(unit);
       }
@@ -292,7 +295,7 @@ export function OrganizationPage() {
             onCreateChild={handleCreateChild}
             onCreate={handleCreate}
             onMove={handleMove}
-            createdUnit={optimisticUpdate.createdUnit}
+            createdUnits={optimisticUpdate.createdUnits}
             updatedUnit={optimisticUpdate.updatedUnit}
             selectedId={selectedUnit?.id}
           />

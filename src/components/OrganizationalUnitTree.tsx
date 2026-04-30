@@ -475,6 +475,17 @@ function addUnitToTree(
   });
 }
 
+function upsertCreatedUnitInTree(
+  units: OrganizationalUnit[],
+  createdUnit: { unit: OrganizationalUnit; parentId: string | null }
+): OrganizationalUnit[] {
+  if (findUnitInTree(units, createdUnit.unit.id)) {
+    return updateUnitInTree(units, createdUnit.unit);
+  }
+
+  return addUnitToTree(units, createdUnit.unit, createdUnit.parentId);
+}
+
 function findUnitInTree(
   units: OrganizationalUnit[],
   unitId: string
@@ -667,6 +678,16 @@ export interface OrganizationalUnitTreeProps {
     key: number;
   } | null;
   /**
+   * Optimistic UI: When provided, applies multiple pending creations in order.
+   * Used when the parent component needs to preserve back-to-back creations until
+   * the offline hook refresh catches up.
+   */
+  createdUnits?: Array<{
+    unit: OrganizationalUnit;
+    parentId: string | null;
+    key: number;
+  }>;
+  /**
    * Optimistic UI: When provided, updates the unit in the tree after editing
    * without reloading. Should contain the updated unit and a unique key.
    */
@@ -706,6 +727,7 @@ export function OrganizationalUnitTree({
   onCreateChild,
   onCreate,
   createdUnit,
+  createdUnits,
   updatedUnit,
   selectedId,
   typeFilter,
@@ -744,13 +766,10 @@ export function OrganizationalUnitTree({
 
   const units = useMemo(() => {
     let nextUnits = baseUnits;
+    const pendingCreatedUnits = createdUnits ?? (createdUnit ? [createdUnit] : []);
 
-    if (createdUnit) {
-      nextUnits = addUnitToTree(
-        nextUnits,
-        createdUnit.unit,
-        createdUnit.parentId
-      );
+    for (const pendingCreatedUnit of pendingCreatedUnits) {
+      nextUnits = upsertCreatedUnitInTree(nextUnits, pendingCreatedUnit);
     }
 
     if (updatedUnit) {
@@ -769,6 +788,7 @@ export function OrganizationalUnitTree({
   }, [
     baseUnits,
     createdUnit,
+    createdUnits,
     updatedUnit,
     locallyDeletedUnitIds,
     locallyMovedParents,
