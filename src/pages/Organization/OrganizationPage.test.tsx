@@ -477,6 +477,64 @@ describe("OrganizationPage", () => {
     SLOW_TEST_TIMEOUT
   );
 
+  it(
+    "updates the selected unit after a successful edit",
+    async () => {
+      const user = userEvent.setup();
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding",
+        name: "SecPal Holding Updated",
+        description: "Root organizational unit",
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: true,
+          manage_scopes: true,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-02T00:00:00Z",
+      };
+
+      vi.mocked(
+        organizationalUnitApi.updateOrganizationalUnit
+      ).mockResolvedValueOnce(updatedUnit);
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: /^Edit$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Edit Organizational Unit")).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByDisplayValue("SecPal Holding");
+      await user.clear(nameInput);
+      await user.type(nameInput, updatedUnit.name);
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(`"${updatedUnit.name}" updated successfully`)
+        ).toBeInTheDocument();
+        expect(screen.getAllByText(updatedUnit.name).length).toBeGreaterThan(0);
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
   it("shows all type labels translated correctly", async () => {
     const user = userEvent.setup();
     renderWithProviders(<OrganizationPage />);
