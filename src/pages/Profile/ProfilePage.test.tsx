@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -28,7 +28,6 @@ const renderWithProviders = (
     login: vi.fn(),
     logout: vi.fn(),
     retryBootstrap: vi.fn(),
-    hasRole: vi.fn().mockReturnValue(false),
     hasPermission: vi.fn().mockReturnValue(false),
     hasOrganizationalAccess: vi.fn().mockReturnValue(false),
     ...authValue,

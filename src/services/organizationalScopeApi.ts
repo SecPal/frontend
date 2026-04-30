@@ -9,7 +9,7 @@ import type { OrganizationalScope } from "../types/organizationalScope";
 export interface OrganizationalScopeFormData {
   user_id: string;
   organizational_unit_id: string;
-  access_level: "none" | "read" | "write" | "manage" | "admin";
+  access_level: "none" | "read" | "write" | "manage";
   include_descendants?: boolean;
   // Leadership-based access control fields (ADR-009)
   min_viewable_rank?: number | null;

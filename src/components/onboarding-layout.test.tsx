@@ -28,7 +28,6 @@ const authContext = {
   login: vi.fn(),
   logout: vi.fn(),
   retryBootstrap: vi.fn(),
-  hasRole: vi.fn(),
   hasPermission: vi.fn(),
   hasOrganizationalAccess: vi.fn(),
 };

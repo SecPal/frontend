@@ -118,7 +118,7 @@ describe("authApi", () => {
           id: 1,
           name: "Test User",
           email: "test@secpal.dev",
-          roles: ["Admin"],
+          roles: [],
           permissions: ["users.read", "customers.*"],
           hasOrganizationalScopes: true,
           hasCustomerAccess: true,
@@ -143,7 +143,7 @@ describe("authApi", () => {
 
       expect("user" in result).toBe(true);
       if ("user" in result) {
-        expect(result.user.roles).toEqual(["Admin"]);
+        expect(result.user.roles).toEqual([]);
         expect(result.user.permissions).toEqual(["users.read", "customers.*"]);
         expect(result.user.hasOrganizationalScopes).toBe(true);
         expect(result.user.hasCustomerAccess).toBe(true);
@@ -485,7 +485,7 @@ describe("authApi", () => {
         id: 1,
         name: "Test User",
         email: "test@secpal.dev",
-        roles: ["Admin"],
+        roles: [],
       };
 
       mockFetch.mockResolvedValueOnce({

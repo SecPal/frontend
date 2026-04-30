@@ -3,8 +3,6 @@
 
 import type { User } from "../contexts/auth-context";
 
-const ELEVATED_UI_ROLES = ["Admin", "Manager", "HR"] as const;
-
 const CUSTOMER_FEATURE_VIEW_PERMISSIONS = [
   "customers.read",
   "customers.*",
@@ -156,20 +154,6 @@ export type RestrictedFeature = Exclude<
   "home" | "profile" | "settings" | "actions"
 >;
 
-export function hasUserRole(
-  user: User | null | undefined,
-  role: string
-): boolean {
-  return user?.roles?.includes(role) ?? false;
-}
-
-export function hasAnyUserRole(
-  user: User | null | undefined,
-  roles: readonly string[]
-): boolean {
-  return roles.some((role) => hasUserRole(user, role));
-}
-
 export function hasUserPermission(
   user: User | null | undefined,
   permission: string
@@ -205,95 +189,72 @@ export function getUserCapabilities(
   const hasOrganizationalScopes = user?.hasOrganizationalScopes ?? false;
   const hasCustomerAccess = user?.hasCustomerAccess ?? false;
   const hasSiteAccess = user?.hasSiteAccess ?? false;
-  const hasElevatedUiRole = hasAnyUserRole(user, ELEVATED_UI_ROLES);
   const canCreateCustomers =
-    isAuthenticated &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, CUSTOMER_CREATE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_CREATE_PERMISSIONS);
   const canUpdateCustomers =
-    isAuthenticated &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, CUSTOMER_UPDATE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_UPDATE_PERMISSIONS);
   const canDeleteCustomers =
-    isAuthenticated &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, CUSTOMER_DELETE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_DELETE_PERMISSIONS);
   const canCreateSites =
-    isAuthenticated &&
-    (hasElevatedUiRole || hasAnyUserPermission(user, SITE_CREATE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, SITE_CREATE_PERMISSIONS);
   const canUpdateSites =
-    isAuthenticated &&
-    (hasElevatedUiRole || hasAnyUserPermission(user, SITE_UPDATE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, SITE_UPDATE_PERMISSIONS);
   const canDeleteSites =
-    isAuthenticated &&
-    (hasElevatedUiRole || hasAnyUserPermission(user, SITE_DELETE_PERMISSIONS));
+    isAuthenticated && hasAnyUserPermission(user, SITE_DELETE_PERMISSIONS);
   const canCreateEmployees =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_CREATE_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_CREATE_PERMISSIONS);
   const canUpdateEmployees =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_UPDATE_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_UPDATE_PERMISSIONS);
   const canDeleteEmployees =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_DELETE_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_DELETE_PERMISSIONS);
   const canActivateEmployees =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_ACTIVATE_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_ACTIVATE_PERMISSIONS);
   const canTerminateEmployees =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_TERMINATE_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_TERMINATE_PERMISSIONS);
   const canConfirmEmployeeOnboarding =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS));
+    hasAnyUserPermission(user, EMPLOYEE_CONFIRM_ONBOARDING_PERMISSIONS);
   const canAccessAndroidProvisioning =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, ANDROID_PROVISIONING_FEATURE_PERMISSIONS));
+    hasAnyUserPermission(user, ANDROID_PROVISIONING_FEATURE_PERMISSIONS);
   const canCreateAndroidProvisioningSessions =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, ANDROID_PROVISIONING_CREATE_PERMISSIONS));
+    hasAnyUserPermission(user, ANDROID_PROVISIONING_CREATE_PERMISSIONS);
   const canRevokeAndroidProvisioningSessions =
     isAuthenticated &&
     hasOrganizationalScopes &&
-    (hasElevatedUiRole ||
-      hasAnyUserPermission(user, ANDROID_PROVISIONING_REVOKE_PERMISSIONS));
+    hasAnyUserPermission(user, ANDROID_PROVISIONING_REVOKE_PERMISSIONS);
 
   return {
     home: isAuthenticated,
     profile: isAuthenticated,
     settings: isAuthenticated,
-    organization:
-      isAuthenticated && hasOrganizationalScopes && hasElevatedUiRole,
+    organization: isAuthenticated && hasOrganizationalScopes,
     customers:
       isAuthenticated &&
-      (hasElevatedUiRole ||
-        hasCustomerAccess ||
+      (hasCustomerAccess ||
         hasAnyUserPermission(user, CUSTOMER_FEATURE_VIEW_PERMISSIONS)),
     sites:
       isAuthenticated &&
-      (hasElevatedUiRole ||
-        hasSiteAccess ||
+      (hasSiteAccess ||
         hasAnyUserPermission(user, SITE_FEATURE_VIEW_PERMISSIONS)),
     employees:
       isAuthenticated &&
       hasOrganizationalScopes &&
-      (hasElevatedUiRole ||
-        hasAnyUserPermission(user, EMPLOYEE_FEATURE_PERMISSIONS)),
+      hasAnyUserPermission(user, EMPLOYEE_FEATURE_PERMISSIONS),
     activityLogs:
       isAuthenticated &&
       hasAnyUserPermission(user, ACTIVITY_LOG_FEATURE_PERMISSIONS),

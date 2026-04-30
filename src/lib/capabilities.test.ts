@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { getUserCapabilities } from "./capabilities";
 
 describe("getUserCapabilities", () => {
-  it("keeps scope-only users in self-service areas", () => {
+  it("keeps scope-only users in organization and self-service areas", () => {
     const capabilities = getUserCapabilities({
       id: "1",
       name: "Scope User",
@@ -18,7 +18,7 @@ describe("getUserCapabilities", () => {
     expect(capabilities.home).toBe(true);
     expect(capabilities.profile).toBe(true);
     expect(capabilities.settings).toBe(true);
-    expect(capabilities.organization).toBe(false);
+    expect(capabilities.organization).toBe(true);
     expect(capabilities.customers).toBe(false);
     expect(capabilities.sites).toBe(false);
     expect(capabilities.employees).toBe(false);
@@ -28,14 +28,21 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.employees.activate).toBe(false);
   });
 
-  it("enables management areas for elevated organization roles", () => {
+  it("enables management areas from explicit permissions and org scopes", () => {
     const capabilities = getUserCapabilities({
       id: "1",
-      name: "Manager User",
-      email: "manager.user@secpal.dev",
+      name: "Scoped Manager",
+      email: "scoped.manager@secpal.dev",
       hasOrganizationalScopes: true,
-      roles: ["Manager"],
-      permissions: [],
+      roles: [],
+      permissions: [
+        "customers.read",
+        "customers.create",
+        "sites.read",
+        "sites.delete",
+        "employees.read",
+        "employees.terminate",
+      ],
     });
 
     expect(capabilities.organization).toBe(true);

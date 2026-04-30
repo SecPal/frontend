@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -11,7 +11,7 @@ export interface OrganizationalScope {
   id: string;
   user_id: string;
   organizational_unit_id: string;
-  access_level: "none" | "read" | "write" | "manage" | "admin";
+  access_level: "none" | "read" | "write" | "manage";
   include_descendants: boolean;
   // Leadership-based access control fields (ADR-009)
   min_viewable_rank: number | null;
