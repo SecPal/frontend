@@ -584,6 +584,76 @@ describe("OrganizationalUnitTree", () => {
         expect(screen.getByText("New Branch")).toBeInTheDocument();
       });
     });
+
+    it("applies multiple pending optimistic creations in order", async () => {
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        units: [
+          {
+            id: "holding-1",
+            type: "holding",
+            name: "SecPal Holding",
+            permissions: mockPermissions,
+            created_at: "2025-01-01T00:00:00Z",
+            updated_at: "2025-01-01T00:00:00Z",
+          },
+        ],
+        rootUnitIds: ["holding-1"],
+      });
+
+      const createdCompany: OrganizationalUnit = {
+        id: "company-1",
+        type: "company",
+        name: "SecPal GmbH",
+        parent: {
+          id: "holding-1",
+          type: "holding",
+          name: "SecPal Holding",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      };
+
+      const createdBranch: OrganizationalUnit = {
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        parent: {
+          id: "company-1",
+          type: "company",
+          name: "SecPal GmbH",
+          created_at: "2025-01-15T00:00:00Z",
+          updated_at: "2025-01-15T00:00:00Z",
+        },
+        created_at: "2025-01-16T00:00:00Z",
+        updated_at: "2025-01-16T00:00:00Z",
+      };
+
+      const { rerender } = renderWithI18n(<OrganizationalUnitTree />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OrganizationalUnitTree
+            createdUnits={[
+              { unit: createdCompany, parentId: "holding-1", key: 1 },
+              { unit: createdBranch, parentId: "company-1", key: 2 },
+            ]}
+          />
+        </I18nProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+        expect(screen.getByText("SecPal GmbH")).toBeInTheDocument();
+        expect(screen.getByText("Berlin Branch")).toBeInTheDocument();
+      });
+    });
   });
 
   describe("Optimistic Move (Issue #303)", () => {

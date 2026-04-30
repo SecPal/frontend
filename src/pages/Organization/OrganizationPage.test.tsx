@@ -333,6 +333,210 @@ describe("OrganizationPage", () => {
     SLOW_TEST_TIMEOUT
   );
 
+  it(
+    "keeps a newly created company visible when a child branch is created before hook refresh catches up",
+    async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(
+        organizationalUnitsHook.useOrganizationalUnitsWithOffline
+      ).mockReturnValue({
+        units: [
+          {
+            id: "holding-1",
+            type: "holding",
+            name: "SecPal Holding",
+            description: "Root organizational unit",
+            created_at: "2025-01-01T00:00:00Z",
+            updated_at: "2025-01-01T00:00:00Z",
+            permissions: {
+              create_child: true,
+              update: true,
+              delete: true,
+              manage_scopes: true,
+            },
+          },
+        ],
+        loading: false,
+        error: null,
+        isOffline: false,
+        isStale: false,
+        rootUnitIds: ["holding-1"],
+        lastSynced: null,
+        refresh: vi.fn(),
+      });
+
+      vi.mocked(
+        organizationalUnitApi.createOrganizationalUnit
+      ).mockResolvedValueOnce({
+        id: "company-1",
+        type: "company",
+        name: "SecPal GmbH",
+        description: null,
+        parent: {
+          id: "holding-1",
+          type: "holding",
+          name: "SecPal Holding",
+          created_at: "2025-01-01T00:00:00Z",
+          updated_at: "2025-01-01T00:00:00Z",
+        },
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: true,
+          manage_scopes: true,
+        },
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: "2025-01-15T00:00:00Z",
+      });
+
+      vi.mocked(
+        organizationalUnitApi.createOrganizationalUnit
+      ).mockResolvedValueOnce({
+        id: "branch-1",
+        type: "branch",
+        name: "Berlin Branch",
+        description: null,
+        parent: {
+          id: "company-1",
+          type: "company",
+          name: "SecPal GmbH",
+          created_at: "2025-01-15T00:00:00Z",
+          updated_at: "2025-01-15T00:00:00Z",
+        },
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: true,
+          manage_scopes: true,
+        },
+        created_at: "2025-01-16T00:00:00Z",
+        updated_at: "2025-01-16T00:00:00Z",
+      });
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Add Child Unit/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: /Add Child Unit/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Create Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      await user.type(
+        screen.getByPlaceholderText(/e\.g\., Berlin Branch/i),
+        "SecPal GmbH"
+      );
+      await user.click(screen.getByRole("button", { name: /^Create$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal GmbH")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("SecPal GmbH"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Add Child Unit/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: /Add Child Unit/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Create Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      await user.type(
+        screen.getByPlaceholderText(/e\.g\., Berlin Branch/i),
+        "Berlin Branch"
+      );
+      await user.click(screen.getByRole("button", { name: /^Create$/i }));
+
+      await waitFor(() => {
+        expect(screen.getAllByText("SecPal Holding").length).toBeGreaterThan(0);
+        expect(screen.getAllByText("SecPal GmbH").length).toBeGreaterThan(0);
+        expect(screen.getAllByText("Berlin Branch").length).toBeGreaterThan(0);
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
+    "updates the selected unit after a successful edit",
+    async () => {
+      const user = userEvent.setup();
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding",
+        name: "SecPal Holding Updated",
+        description: "Root organizational unit",
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: true,
+          manage_scopes: true,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-02T00:00:00Z",
+      };
+
+      vi.mocked(
+        organizationalUnitApi.updateOrganizationalUnit
+      ).mockResolvedValueOnce(updatedUnit);
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("SecPal Holding"));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: /^Edit$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Edit Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByDisplayValue("SecPal Holding");
+      await user.clear(nameInput);
+      await user.type(nameInput, updatedUnit.name);
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(`"${updatedUnit.name}" updated successfully`)
+        ).toBeInTheDocument();
+        expect(screen.getAllByText(updatedUnit.name).length).toBeGreaterThan(0);
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
   it("shows all type labels translated correctly", async () => {
     const user = userEvent.setup();
     renderWithProviders(<OrganizationPage />);
