@@ -187,6 +187,13 @@ const TreeNode = memo(
     const [isExpanded, setIsExpanded] = useState(level < 2);
     const hasChildren = unit.children && unit.children.length > 0;
     const isSelected = selectedId === unit.id;
+    const canCreateChild =
+      !!onCreateChild && unit.permissions?.create_child === true;
+    const canUpdate = unit.permissions?.update === true;
+    const canEdit = !!onEdit && canUpdate;
+    const canMove = !!onMove && canUpdate;
+    const canDelete = !!onDelete && unit.permissions?.delete === true;
+    const hasActions = canEdit || canDelete || canMove || canCreateChild;
 
     const handleToggle = useCallback(
       (e: React.MouseEvent) => {
@@ -287,7 +294,7 @@ const TreeNode = memo(
           </span>
 
           {/* Actions Menu */}
-          {(onEdit || onDelete || onMove || onCreateChild) && (
+          {hasActions && (
             <Dropdown>
               <DropdownButton
                 plain
@@ -310,7 +317,7 @@ const TreeNode = memo(
                 </svg>
               </DropdownButton>
               <DropdownMenu anchor="bottom end">
-                {onCreateChild && (
+                {canCreateChild && (
                   <DropdownItem onClick={handleCreateChild}>
                     <svg
                       data-slot="icon"
@@ -329,7 +336,7 @@ const TreeNode = memo(
                     <Trans>Add child</Trans>
                   </DropdownItem>
                 )}
-                {onEdit && (
+                {canEdit && (
                   <DropdownItem onClick={handleEdit}>
                     <svg
                       data-slot="icon"
@@ -348,7 +355,7 @@ const TreeNode = memo(
                     <Trans>Edit</Trans>
                   </DropdownItem>
                 )}
-                {onMove && (
+                {canMove && (
                   <DropdownItem onClick={handleMove}>
                     <svg
                       data-slot="icon"
@@ -367,7 +374,7 @@ const TreeNode = memo(
                     <Trans>Move</Trans>
                   </DropdownItem>
                 )}
-                {onDelete && (
+                {canDelete && (
                   <DropdownItem onClick={handleDelete}>
                     <svg
                       data-slot="icon"

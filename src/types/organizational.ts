@@ -35,6 +35,12 @@ export interface OrganizationalUnit {
   description?: string | null;
   metadata?: Record<string, unknown> | null;
   parent?: OrganizationalUnit | null;
+  permissions?: {
+    create_child: boolean;
+    update: boolean;
+    delete: boolean;
+    manage_scopes: boolean;
+  };
   children?: OrganizationalUnit[];
   ancestors?: OrganizationalUnit[];
   descendants?: OrganizationalUnit[];

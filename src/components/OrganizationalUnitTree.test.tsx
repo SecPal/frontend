@@ -190,11 +190,19 @@ async function clickActionForUnit(unitName: string, actionName: string) {
  * Uses useOrganizationalUnitsWithOffline hook for data fetching.
  */
 describe("OrganizationalUnitTree", () => {
+  const mockPermissions = {
+    create_child: true,
+    update: true,
+    delete: true,
+    manage_scopes: true,
+  };
+
   const mockUnits: OrganizationalUnit[] = [
     {
       id: "unit-1",
       type: "company",
       name: "Test Company",
+      permissions: mockPermissions,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -202,6 +210,7 @@ describe("OrganizationalUnitTree", () => {
       id: "unit-2",
       type: "department",
       name: "IT Department",
+      permissions: mockPermissions,
       parent: {
         id: "unit-1",
         type: "company",
@@ -216,6 +225,7 @@ describe("OrganizationalUnitTree", () => {
       id: "unit-3",
       type: "region",
       name: "North Region",
+      permissions: mockPermissions,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -332,6 +342,62 @@ describe("OrganizationalUnitTree", () => {
         screen.getByText("Create Organizational Unit")
       ).toBeInTheDocument();
     });
+  });
+
+  it("hides restricted tree actions when unit permissions deny them", async () => {
+    const restrictedUnits: OrganizationalUnit[] = [
+      {
+        id: "restricted-unit",
+        type: "department",
+        name: "Restricted Unit",
+        permissions: {
+          create_child: false,
+          update: false,
+          delete: false,
+          manage_scopes: false,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      },
+    ];
+
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: restrictedUnits,
+      rootUnitIds: ["restricted-unit"],
+    });
+
+    renderWithI18n(
+      <OrganizationalUnitTree
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onMove={vi.fn()}
+        onCreateChild={vi.fn()}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Restricted Unit")).toBeInTheDocument();
+    });
+
+    const treeItem = screen.getByRole("treeitem", { name: /restricted unit/i });
+    const actionsButton = treeItem.querySelector(
+      'button[aria-label*="Actions"]'
+    );
+
+    expect(actionsButton).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: /add child/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /move/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /delete/i })
+    ).not.toBeInTheDocument();
   });
 
   it("calls deleteOrganizationalUnit on delete confirmation", async () => {
@@ -703,6 +769,7 @@ describe("OrganizationalUnitTree", () => {
           id: "parent-1",
           type: "company",
           name: "Parent Company",
+          permissions: mockPermissions,
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         },
@@ -710,6 +777,7 @@ describe("OrganizationalUnitTree", () => {
           id: "dept-1",
           type: "department",
           name: "Sales Department",
+          permissions: mockPermissions,
           parent: {
             id: "parent-1",
             type: "company",
@@ -724,6 +792,7 @@ describe("OrganizationalUnitTree", () => {
           id: "team-1",
           type: "division",
           name: "Sales Team A",
+          permissions: mockPermissions,
           parent: {
             id: "dept-1",
             type: "department",
@@ -738,6 +807,7 @@ describe("OrganizationalUnitTree", () => {
           id: "parent-2",
           type: "company",
           name: "Target Company",
+          permissions: mockPermissions,
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
         },
