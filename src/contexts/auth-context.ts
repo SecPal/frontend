@@ -38,10 +38,6 @@ export interface AuthContextType {
   unlock?: () => Promise<boolean>;
   retryBootstrap: () => void;
   /**
-   * Check if user has a specific role
-   */
-  hasRole: (role: string) => boolean;
-  /**
    * Check if user has a specific permission.
    * Supports wildcard matching (e.g., "employees.*" matches "employees.read").
    */

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -29,7 +29,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -63,7 +62,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -100,7 +98,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -136,7 +133,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -171,7 +167,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -205,7 +200,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -246,7 +240,6 @@ describe("PermissionRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 
@@ -287,7 +280,6 @@ describe("PermissionRoute", () => {
       lock: vi.fn(),
       unlock: vi.fn(async () => true),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(),
     });
 

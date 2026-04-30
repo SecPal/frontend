@@ -154,13 +154,6 @@ export type RestrictedFeature = Exclude<
   "home" | "profile" | "settings" | "actions"
 >;
 
-export function hasUserRole(
-  user: User | null | undefined,
-  role: string
-): boolean {
-  return user?.roles?.includes(role) ?? false;
-}
-
 export function hasUserPermission(
   user: User | null | undefined,
   permission: string

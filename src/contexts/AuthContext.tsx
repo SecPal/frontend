@@ -18,7 +18,7 @@ import { sanitizeAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
-import { hasUserPermission, hasUserRole } from "../lib/capabilities";
+import { hasUserPermission } from "../lib/capabilities";
 import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -280,16 +280,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setBootstrapRetryKey((currentValue) => currentValue + 1);
   }, [authTransport.kind, user]);
-
-  /**
-   * Check if user has a specific role
-   */
-  const hasRole = useCallback(
-    (role: string): boolean => {
-      return hasUserRole(user, role);
-    },
-    [user]
-  );
 
   /**
    * Check if user has a specific permission.
@@ -705,7 +695,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       lock,
       unlock,
       retryBootstrap,
-      hasRole,
       hasPermission,
       hasOrganizationalAccess,
       isVaultLocked,
@@ -719,7 +708,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       lock,
       unlock,
       retryBootstrap,
-      hasRole,
       hasPermission,
       hasOrganizationalAccess,
       isVaultLocked,

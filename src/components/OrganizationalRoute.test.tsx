@@ -28,7 +28,6 @@ describe("OrganizationalRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(() => true),
     });
 
@@ -62,7 +61,6 @@ describe("OrganizationalRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(() => false),
     });
 
@@ -100,7 +98,6 @@ describe("OrganizationalRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(() => false),
     });
 
@@ -140,7 +137,6 @@ describe("OrganizationalRoute", () => {
       login: vi.fn(),
       logout: vi.fn(),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(() => true),
     });
 
@@ -181,7 +177,6 @@ describe("OrganizationalRoute", () => {
       lock: vi.fn(),
       unlock: vi.fn(async () => true),
       retryBootstrap: vi.fn(),
-      hasRole: vi.fn(),
       hasOrganizationalAccess: vi.fn(() => false),
     });
 

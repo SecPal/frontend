@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -24,21 +24,10 @@ vi.mock("../services/sessionEvents", () => ({
 }));
 
 // Test component for permission checks
-function PermissionTestComponent({
-  role,
-  permission,
-}: {
-  role?: string;
-  permission?: string;
-}) {
+function PermissionTestComponent({ permission }: { permission?: string }) {
   const auth = useAuth();
   return (
     <div>
-      {role && (
-        <span data-testid="hasRole">
-          {auth.hasRole(role) ? "true" : "false"}
-        </span>
-      )}
       {permission && (
         <span data-testid="hasPermission">
           {auth.hasPermission(permission) ? "true" : "false"}
@@ -74,74 +63,6 @@ describe("AuthContext", () => {
 
   afterEach(() => {
     clearOfflineVaultSession();
-  });
-
-  describe("hasRole", () => {
-    it("returns true when user has the specified role", async () => {
-      await seedStoredUser({
-        id: 1,
-        name: "Test User",
-        email: "test@secpal.dev",
-        roles: ["Admin", "Manager"],
-      });
-
-      render(
-        <AuthProvider>
-          <PermissionTestComponent role="Admin" />
-        </AuthProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("hasRole")).toHaveTextContent("true");
-      });
-    });
-
-    it("returns false when user does not have the specified role", async () => {
-      await seedStoredUser({
-        id: 1,
-        name: "Test User",
-        email: "test@secpal.dev",
-        roles: ["Guard"],
-      });
-
-      render(
-        <AuthProvider>
-          <PermissionTestComponent role="Admin" />
-        </AuthProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
-      });
-    });
-
-    it("returns false when user has no roles", async () => {
-      await seedStoredUser({
-        id: 1,
-        name: "Test User",
-        email: "test@secpal.dev",
-      });
-
-      render(
-        <AuthProvider>
-          <PermissionTestComponent role="Admin" />
-        </AuthProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
-      });
-    });
-
-    it("returns false when user is null", () => {
-      render(
-        <AuthProvider>
-          <PermissionTestComponent role="Admin" />
-        </AuthProvider>
-      );
-
-      expect(screen.getByTestId("hasRole")).toHaveTextContent("false");
-    });
   });
 
   describe("hasPermission", () => {
