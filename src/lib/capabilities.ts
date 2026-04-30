@@ -197,14 +197,11 @@ export function getUserCapabilities(
   const hasCustomerAccess = user?.hasCustomerAccess ?? false;
   const hasSiteAccess = user?.hasSiteAccess ?? false;
   const canCreateCustomers =
-    isAuthenticated &&
-    hasAnyUserPermission(user, CUSTOMER_CREATE_PERMISSIONS);
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_CREATE_PERMISSIONS);
   const canUpdateCustomers =
-    isAuthenticated &&
-    hasAnyUserPermission(user, CUSTOMER_UPDATE_PERMISSIONS);
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_UPDATE_PERMISSIONS);
   const canDeleteCustomers =
-    isAuthenticated &&
-    hasAnyUserPermission(user, CUSTOMER_DELETE_PERMISSIONS);
+    isAuthenticated && hasAnyUserPermission(user, CUSTOMER_DELETE_PERMISSIONS);
   const canCreateSites =
     isAuthenticated && hasAnyUserPermission(user, SITE_CREATE_PERMISSIONS);
   const canUpdateSites =
