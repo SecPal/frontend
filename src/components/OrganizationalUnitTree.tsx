@@ -187,7 +187,8 @@ const TreeNode = memo(
     const [isExpanded, setIsExpanded] = useState(level < 2);
     const hasChildren = unit.children && unit.children.length > 0;
     const isSelected = selectedId === unit.id;
-    const canCreateChild = onCreateChild && unit.permissions?.create_child !== false;
+    const canCreateChild =
+      onCreateChild && unit.permissions?.create_child !== false;
     const canUpdate = unit.permissions?.update !== false;
     const canEdit = onEdit && canUpdate;
     const canMove = onMove && canUpdate;
@@ -241,10 +242,11 @@ const TreeNode = memo(
     return (
       <div className="select-none">
         <div
-          className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${isSelected
+          className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
+            isSelected
               ? "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
               : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-            }`}
+          }`}
           style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
           onClick={handleSelect}
           role="treeitem"
@@ -261,10 +263,11 @@ const TreeNode = memo(
           {/* Expand/Collapse Button */}
           <button
             type="button"
-            className={`shrink-0 p-0.5 rounded transition-colors ${hasChildren
+            className={`shrink-0 p-0.5 rounded transition-colors ${
+              hasChildren
                 ? "hover:bg-gray-200 dark:hover:bg-gray-700"
                 : "invisible"
-              }`}
+            }`}
             onClick={handleToggle}
             aria-label={isExpanded ? t`Collapse` : t`Expand`}
           >
@@ -542,12 +545,12 @@ function moveUnitInTree(
     ...extractedUnit,
     parent: nextParent
       ? {
-        id: nextParent.id,
-        type: nextParent.type,
-        name: nextParent.name,
-        created_at: nextParent.created_at,
-        updated_at: nextParent.updated_at,
-      }
+          id: nextParent.id,
+          type: nextParent.type,
+          name: nextParent.name,
+          created_at: nextParent.created_at,
+          updated_at: nextParent.updated_at,
+        }
       : undefined,
   };
 

@@ -371,13 +371,23 @@ describe("OrganizationalUnitTree", () => {
     });
 
     const treeItem = screen.getByRole("treeitem", { name: /restricted unit/i });
-    const actionsButton = treeItem.querySelector('button[aria-label*="Actions"]');
+    const actionsButton = treeItem.querySelector(
+      'button[aria-label*="Actions"]'
+    );
 
     expect(actionsButton).toBeNull();
-    expect(screen.queryByRole("menuitem", { name: /add child/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: /edit/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: /move/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: /delete/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /add child/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /edit/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /move/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /delete/i })
+    ).not.toBeInTheDocument();
   });
 
   it("calls deleteOrganizationalUnit on delete confirmation", async () => {

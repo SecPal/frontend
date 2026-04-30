@@ -90,31 +90,33 @@ test.describe("Organization Management", () => {
       let organizationRequestCount = 0;
       let rotationMockApplied = false;
 
-      await page.context().route("**/v1/organizational-units**", async (route) => {
-        organizationRequestCount += 1;
-        rotationMockApplied ||= organizationRequestCount === 1;
+      await page
+        .context()
+        .route("**/v1/organizational-units**", async (route) => {
+          organizationRequestCount += 1;
+          rotationMockApplied ||= organizationRequestCount === 1;
 
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers:
-            organizationRequestCount === 1
-              ? {
-                "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
-              }
-              : {},
-          body: JSON.stringify({
-            data: [offlineLiveMockOrganizationUnit],
-            meta: {
-              current_page: 1,
-              last_page: 1,
-              per_page: 100,
-              total: 1,
-              root_unit_ids: [offlineLiveMockOrganizationUnit.id],
-            },
-          }),
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            headers:
+              organizationRequestCount === 1
+                ? {
+                    "set-cookie": `XSRF-TOKEN=${ROTATED_XSRF_TOKEN}; Path=/; SameSite=Lax`,
+                  }
+                : {},
+            body: JSON.stringify({
+              data: [offlineLiveMockOrganizationUnit],
+              meta: {
+                current_page: 1,
+                last_page: 1,
+                per_page: 100,
+                total: 1,
+                root_unit_ids: [offlineLiveMockOrganizationUnit.id],
+              },
+            }),
+          });
         });
-      });
 
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
@@ -485,15 +487,15 @@ test.describe("Organization Management", () => {
         get parent() {
           return moveCompleted
             ? {
-              id: TARGET_PARENT_ID,
-              type: "company",
-              name: TARGET_PARENT_NAME,
-            }
+                id: TARGET_PARENT_ID,
+                type: "company",
+                name: TARGET_PARENT_NAME,
+              }
             : {
-              id: offlineLiveMockOrganizationUnit.id,
-              type: offlineLiveMockOrganizationUnit.type,
-              name: offlineLiveMockOrganizationUnit.name,
-            };
+                id: offlineLiveMockOrganizationUnit.id,
+                type: offlineLiveMockOrganizationUnit.type,
+                name: offlineLiveMockOrganizationUnit.name,
+              };
         },
         created_at: "2026-04-29T10:00:00Z",
         updated_at: "2026-04-29T10:00:00Z",
@@ -528,15 +530,15 @@ test.describe("Organization Management", () => {
                 description: movedUnitDescription,
                 parent: moveCompleted
                   ? {
-                    id: TARGET_PARENT_ID,
-                    type: "company",
-                    name: TARGET_PARENT_NAME,
-                  }
+                      id: TARGET_PARENT_ID,
+                      type: "company",
+                      name: TARGET_PARENT_NAME,
+                    }
                   : {
-                    id: offlineLiveMockOrganizationUnit.id,
-                    type: offlineLiveMockOrganizationUnit.type,
-                    name: offlineLiveMockOrganizationUnit.name,
-                  },
+                      id: offlineLiveMockOrganizationUnit.id,
+                      type: offlineLiveMockOrganizationUnit.type,
+                      name: offlineLiveMockOrganizationUnit.name,
+                    },
               },
             ],
             meta: {
@@ -596,15 +598,15 @@ test.describe("Organization Management", () => {
                 description: movedUnitDescription,
                 parent: moveCompleted
                   ? {
-                    id: TARGET_PARENT_ID,
-                    type: "company",
-                    name: TARGET_PARENT_NAME,
-                  }
+                      id: TARGET_PARENT_ID,
+                      type: "company",
+                      name: TARGET_PARENT_NAME,
+                    }
                   : {
-                    id: offlineLiveMockOrganizationUnit.id,
-                    type: offlineLiveMockOrganizationUnit.type,
-                    name: offlineLiveMockOrganizationUnit.name,
-                  },
+                      id: offlineLiveMockOrganizationUnit.id,
+                      type: offlineLiveMockOrganizationUnit.type,
+                      name: offlineLiveMockOrganizationUnit.name,
+                    },
                 updated_at: "2026-04-29T10:06:00Z",
               },
             }),
