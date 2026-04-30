@@ -38,7 +38,8 @@ import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizational
 /**
  * Optimistic UI state for tree updates without reloading
  * @see Issue #303: UX improvement - avoid full tree reload
- * Each update has a unique key to ensure React triggers the useEffect
+ * Each create entry has a unique key so that replacing an entry with the same unit id
+ * changes the array reference and triggers the memoized tree recomputation.
  */
 interface OptimisticTreeUpdate {
   createdUnits: Array<{

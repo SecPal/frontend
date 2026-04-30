@@ -480,7 +480,7 @@ function upsertCreatedUnitInTree(
   createdUnit: { unit: OrganizationalUnit; parentId: string | null }
 ): OrganizationalUnit[] {
   if (findUnitInTree(units, createdUnit.unit.id)) {
-    return updateUnitInTree(units, createdUnit.unit);
+    return units;
   }
 
   return addUnitToTree(units, createdUnit.unit, createdUnit.parentId);
