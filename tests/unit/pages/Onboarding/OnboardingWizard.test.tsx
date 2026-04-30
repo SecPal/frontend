@@ -195,7 +195,9 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Onboarding submitted. HR will review your information.")
+        screen.getByText(
+          "Onboarding submitted. HR will review your information."
+        )
       ).toBeInTheDocument();
     });
   });
