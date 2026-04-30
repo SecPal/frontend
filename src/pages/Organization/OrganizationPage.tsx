@@ -220,7 +220,9 @@ export function OrganizationPage() {
       if (dialogMode === "create") {
         setOptimisticUpdate((current) => ({
           createdUnits: [
-            ...current.createdUnits.filter((entry) => entry.unit.id !== unit.id),
+            ...current.createdUnits.filter(
+              (entry) => entry.unit.id !== unit.id
+            ),
             { unit, parentId: dialogParentId, key: Date.now() },
           ],
           updatedUnit: null,

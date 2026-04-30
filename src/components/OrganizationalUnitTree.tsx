@@ -766,7 +766,8 @@ export function OrganizationalUnitTree({
 
   const units = useMemo(() => {
     let nextUnits = baseUnits;
-    const pendingCreatedUnits = createdUnits ?? (createdUnit ? [createdUnit] : []);
+    const pendingCreatedUnits =
+      createdUnits ?? (createdUnit ? [createdUnit] : []);
 
     for (const pendingCreatedUnit of pendingCreatedUnits) {
       nextUnits = upsertCreatedUnitInTree(nextUnits, pendingCreatedUnit);
