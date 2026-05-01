@@ -276,6 +276,74 @@ async function cleanupLiveEmployee(
   }
 }
 
+async function getFirstSelectableOrganizationalUnitId(
+  page: Page
+): Promise<string> {
+  const organizationalUnitSelect = page.getByLabel(/Organizational Unit/i);
+  await expect(organizationalUnitSelect).toBeEnabled();
+
+  return organizationalUnitSelect.evaluate((selectElement) => {
+    const select = selectElement as HTMLSelectElement;
+    const firstSelectableOption = Array.from(select.options).find(
+      (option) => option.value && !option.disabled
+    );
+
+    return firstSelectableOption?.value ?? "";
+  });
+}
+
+async function createLiveEmployeeViaUi(
+  page: Page,
+  email: string,
+  options?: {
+    organizationalUnitId?: string;
+    managementLevel?: number;
+  }
+): Promise<{
+  employeeId: string | null;
+  organizationalUnitId: string;
+  requestPayload: Record<string, unknown>;
+}> {
+  const organizationalUnitId =
+    options?.organizationalUnitId ??
+    (await getFirstSelectableOrganizationalUnitId(page));
+
+  expect(organizationalUnitId).not.toBe("");
+
+  const createResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/v1\/employees$/.test(response.url()) &&
+      response.request().method() === "POST"
+  );
+
+  await fillRequiredEmployeeFields(page, email, organizationalUnitId);
+
+  if ((options?.managementLevel ?? 0) > 0) {
+    await page.getByRole("switch", { name: /Leadership Position/i }).click();
+    await page.getByRole("spinbutton").fill(String(options?.managementLevel));
+  }
+
+  await page.getByRole("button", { name: /Create Employee/i }).click();
+
+  const createResponse = await createResponsePromise;
+  expect(createResponse.ok()).toBe(true);
+
+  const requestPayload =
+    (createResponse.request().postDataJSON() as Record<
+      string,
+      unknown
+    > | null) ?? {};
+  const createPayload = (await createResponse.json()) as {
+    data?: { id?: string };
+  };
+
+  return {
+    employeeId: createPayload.data?.id ?? null,
+    organizationalUnitId,
+    requestPayload,
+  };
+}
+
 test.describe("Management level employee flows", () => {
   test("shows the current leadership controls in employee create form", async ({
     authenticatedPage: page,
@@ -422,49 +490,12 @@ test.describe("Live employee proof", () => {
       await page.goto("/employees/create");
       await page.waitForLoadState("networkidle");
 
-      const organizationalUnitSelect = page.getByLabel(/Organizational Unit/i);
-      await expect(organizationalUnitSelect).toBeEnabled();
+      const { employeeId, requestPayload: createRequestPayload } =
+        await createLiveEmployeeViaUi(page, employeeEmail);
 
-      const liveOrganizationalUnitId = await organizationalUnitSelect.evaluate(
-        (selectElement) => {
-          const select = selectElement as HTMLSelectElement;
-          const firstSelectableOption = Array.from(select.options).find(
-            (option) => option.value && !option.disabled
-          );
-
-          return firstSelectableOption?.value ?? "";
-        }
-      );
-
-      expect(liveOrganizationalUnitId).not.toBe("");
-
-      const createResponsePromise = page.waitForResponse(
-        (response) =>
-          /\/v1\/employees$/.test(response.url()) &&
-          response.request().method() === "POST"
-      );
-
-      await fillRequiredEmployeeFields(
-        page,
-        employeeEmail,
-        liveOrganizationalUnitId
-      );
-      await page.getByRole("button", { name: /Create Employee/i }).click();
-
-      const createResponse = await createResponsePromise;
-      expect(createResponse.ok()).toBe(true);
-
-      const createRequestPayload =
-        (createResponse.request().postDataJSON() as Record<
-          string,
-          unknown
-        > | null) ?? {};
       expect(createRequestPayload).not.toHaveProperty("management_level");
 
-      const createPayload = (await createResponse.json()) as {
-        data?: { id?: string };
-      };
-      createdEmployeeId = createPayload.data?.id ?? null;
+      createdEmployeeId = employeeId;
       expect(createdEmployeeId).not.toBeNull();
 
       await expect(page).toHaveURL(
@@ -472,6 +503,50 @@ test.describe("Live employee proof", () => {
       );
       await expect(page.getByText(employeeEmail)).toBeVisible();
       await expect(page.getByText(/No management position/i)).toBeVisible();
+    } finally {
+      await cleanupLiveEmployee(page, createdEmployeeId);
+    }
+  });
+
+  test("creates a leadership employee against the live stack", async ({
+    authenticatedPage: page,
+  }, testInfo) => {
+    test.skip(
+      !isRemoteE2ETarget() ||
+        !LIVE_EMPLOYEE_CRUD_ENABLED ||
+        testInfo.project.name !== "chromium",
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against app.secpal.dev/api.secpal.dev."
+    );
+
+    const timestamp = Date.now();
+    const employeeEmail = `playwright.live.employee.leadership.${timestamp}@secpal.dev`;
+    const managementLevel = 9;
+    let createdEmployeeId: string | null = null;
+
+    try {
+      await page.goto("/employees/create");
+      await page.waitForLoadState("networkidle");
+
+      const { employeeId, requestPayload: createRequestPayload } =
+        await createLiveEmployeeViaUi(page, employeeEmail, {
+          managementLevel,
+        });
+
+      createdEmployeeId = employeeId;
+      expect(createdEmployeeId).not.toBeNull();
+      expect(createRequestPayload).toMatchObject({
+        email: employeeEmail,
+        management_level: managementLevel,
+      });
+
+      await expect(page).toHaveURL(
+        new RegExp(`/employees/${createdEmployeeId}$`)
+      );
+      await expect(page.getByText(employeeEmail)).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`ML ${managementLevel}`))
+      ).toBeVisible();
+      await expect(page.getByText(/No management position/i)).toHaveCount(0);
     } finally {
       await cleanupLiveEmployee(page, createdEmployeeId);
     }
