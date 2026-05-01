@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -12,6 +12,7 @@ import {
   type OnboardingFormTemplate,
   type OnboardingStep,
   type OnboardingSubmission,
+  uploadOnboardingFile,
   updateOnboardingSubmission,
 } from "../../services/onboardingApi";
 import {
@@ -63,6 +64,15 @@ interface WizardFeedback {
 }
 
 type FieldErrors = Record<string, string>;
+type OnboardingDocumentType = "contract" | "id_document" | "banking_details";
+
+interface UploadedOnboardingFile {
+  id: string;
+  filename: string;
+  documentType: OnboardingDocumentType;
+}
+
+const ONBOARDING_UPLOAD_ACCEPT = ".pdf,.jpg,.jpeg,.png";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -183,6 +193,16 @@ function validateRequiredFields(
 
     return errors;
   }, {});
+}
+
+function isEditableSubmission(
+  submission: OnboardingSubmission | null
+): boolean {
+  return (
+    submission === null ||
+    submission.status === "draft" ||
+    submission.status === "rejected"
+  );
 }
 
 function ProgressIndicator({
@@ -485,8 +505,31 @@ export function OnboardingWizard() {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<WizardFeedback | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadDocumentType, setUploadDocumentType] =
+    useState<OnboardingDocumentType>("contract");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFeedback, setUploadFeedback] = useState<WizardFeedback | null>(
+    null
+  );
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedOnboardingFile[]>(
+    []
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
+  const isCurrentStepEditable = isEditableSubmission(submission);
+
+  function resetUploadState() {
+    setUploadDocumentType("contract");
+    setUploadFile(null);
+    setUploadFeedback(null);
+    setUploadedFiles([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -579,9 +622,9 @@ export function OnboardingWizard() {
 
   async function persistCurrentStep(
     status: "draft" | "submitted"
-  ): Promise<boolean> {
+  ): Promise<OnboardingSubmission | null> {
     if (!template) {
-      return false;
+      return null;
     }
 
     try {
@@ -608,7 +651,7 @@ export function OnboardingWizard() {
 
       setSubmission(savedSubmission);
       updateCurrentStep(savedSubmission, status);
-      return true;
+      return savedSubmission;
     } catch (err) {
       setError(
         err instanceof Error
@@ -617,7 +660,7 @@ export function OnboardingWizard() {
             ? _(msg`Failed to save draft`)
             : _(msg`Failed to submit`)
       );
-      return false;
+      return null;
     } finally {
       setSaving(false);
     }
@@ -644,6 +687,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      resetUploadState();
       setTemplate(null);
       setSubmission(nextStepState.submission);
       setFormData(nextStepState.formData);
@@ -660,6 +704,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      resetUploadState();
       setTemplate(null);
       setSubmission(previousStepState.submission);
       setFormData(previousStepState.formData);
@@ -721,6 +766,70 @@ export function OnboardingWizard() {
       delete nextFieldErrors[fieldName];
       return nextFieldErrors;
     });
+  }
+
+  async function handleUpload() {
+    if (!uploadFile) {
+      return;
+    }
+
+    if (!isCurrentStepEditable) {
+      setUploadFeedback({
+        tone: "error",
+        message: _(
+          msg`Files can only be uploaded while this onboarding step is still editable.`
+        ),
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError(null);
+      setUploadFeedback(null);
+
+      const targetSubmission = submission ?? (await persistCurrentStep("draft"));
+      if (!targetSubmission) {
+        setUploadFeedback({
+          tone: "error",
+          message: _(
+            msg`We couldn't prepare this step for file uploads. Please try saving your draft again.`
+          ),
+        });
+        return;
+      }
+
+      const uploadedFileResponse = await uploadOnboardingFile(
+        targetSubmission.id,
+        uploadFile,
+        uploadDocumentType
+      );
+
+      setUploadedFiles((currentFiles) => [
+        ...currentFiles,
+        {
+          ...uploadedFileResponse,
+          documentType: uploadDocumentType,
+        },
+      ]);
+      setUploadFeedback({
+        tone: "success",
+        message: _(msg`File uploaded successfully.`),
+      });
+      setUploadFile(null);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      setUploadFeedback({
+        tone: "error",
+        message:
+          err instanceof Error ? err.message : _(msg`Failed to upload file`),
+      });
+    } finally {
+      setUploading(false);
+    }
   }
 
   if (loading && steps.length === 0) {
@@ -825,6 +934,160 @@ export function OnboardingWizard() {
               </div>
             )}
 
+            <div className="mt-8 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+              <Heading level={3} className="mb-3">
+                <Trans>Supporting Documents</Trans>
+              </Heading>
+              <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                <Trans>
+                  Upload PDF, JPG, or PNG files up to 10 MB for contract,
+                  identity, or banking verification.
+                </Trans>
+              </Text>
+
+              {!submission ? (
+                <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                  <Trans>
+                    Your current answers will be saved as a draft before the
+                    first file upload.
+                  </Trans>
+                </Text>
+              ) : null}
+
+              {uploadFeedback ? (
+                <div
+                  role={uploadFeedback.tone === "error" ? "alert" : "status"}
+                  aria-live={
+                    uploadFeedback.tone === "error" ? "assertive" : "polite"
+                  }
+                  aria-atomic="true"
+                  className={
+                    uploadFeedback.tone === "error"
+                      ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+                      : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                  }
+                >
+                  <Text
+                    className={
+                      uploadFeedback.tone === "error"
+                        ? "text-red-800 dark:text-red-200"
+                        : "text-emerald-800 dark:text-emerald-200"
+                    }
+                  >
+                    {uploadFeedback.message}
+                  </Text>
+                </div>
+              ) : null}
+
+              {isCurrentStepEditable ? (
+                <>
+                  <Fieldset>
+                    <FieldGroup>
+                      <Field>
+                        <Label>
+                          <Trans>Document Type</Trans>
+                        </Label>
+                        <Description>
+                          <Trans>
+                            Choose the attachment category that best matches the
+                            file.
+                          </Trans>
+                        </Description>
+                        <Select
+                          aria-label={_(msg`Document Type`)}
+                          value={uploadDocumentType}
+                          onChange={(event) =>
+                            setUploadDocumentType(
+                              event.target.value as OnboardingDocumentType
+                            )
+                          }
+                        >
+                          <option value="contract">{_(msg`Contract`)}</option>
+                          <option value="id_document">
+                            {_(msg`Identity Document`)}
+                          </option>
+                          <option value="banking_details">
+                            {_(msg`Banking Details`)}
+                          </option>
+                        </Select>
+                      </Field>
+
+                      <Field>
+                        <Label>
+                          <Trans>Attachment</Trans>
+                        </Label>
+                        <Description>
+                          <Trans>Accepted formats: PDF, JPG, JPEG, PNG.</Trans>
+                        </Description>
+                        <input
+                          ref={fileInputRef}
+                          aria-label={_(msg`Attachment`)}
+                          accept={ONBOARDING_UPLOAD_ACCEPT}
+                          className="block w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm text-zinc-950 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-white"
+                          type="file"
+                          onChange={(event) =>
+                            setUploadFile(event.target.files?.[0] ?? null)
+                          }
+                        />
+                      </Field>
+                    </FieldGroup>
+                  </Fieldset>
+
+                  <div className="mt-4 flex items-center gap-4">
+                    <Button
+                      disabled={!uploadFile || saving || uploading}
+                      onClick={handleUpload}
+                    >
+                      {uploading ? (
+                        <Trans>Uploading...</Trans>
+                      ) : (
+                        <Trans>Upload File</Trans>
+                      )}
+                    </Button>
+                    {uploadFile ? (
+                      <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {uploadFile.name}
+                      </Text>
+                    ) : null}
+                  </div>
+
+                  {uploadedFiles.length > 0 ? (
+                    <div className="mt-4">
+                      <Text className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <Trans>Uploaded in this session</Trans>
+                      </Text>
+                      <ul className="space-y-2">
+                        {uploadedFiles.map((uploadedFile) => (
+                          <li
+                            key={uploadedFile.id}
+                            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                          >
+                            <span className="font-medium">
+                              {uploadedFile.filename}
+                            </span>
+                            <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                              {uploadedFile.documentType === "contract"
+                                ? _(msg`Contract`)
+                                : uploadedFile.documentType === "id_document"
+                                  ? _(msg`Identity Document`)
+                                  : _(msg`Banking Details`)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <Trans>
+                    Files can only be uploaded while this onboarding step is
+                    still editable.
+                  </Trans>
+                </Text>
+              )}
+            </div>
+
             <StepNavigation
               currentStep={currentStepIndex + 1}
               totalSteps={steps.length}
@@ -832,7 +1095,7 @@ export function OnboardingWizard() {
               onNext={handleNext}
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
-              canGoNext={!saving}
+              canGoNext={!saving && !uploading}
             />
           </div>
         )}

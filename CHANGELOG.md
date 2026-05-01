@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added an inline onboarding-wizard attachment upload section for editable steps, automatically creating a draft submission before the first upload when needed, surfacing upload success/failure inline, and wiring the flow to the current `/v1/onboarding/submissions/{submission}/files` API contract (closes #1029)
 - Renamed the onboarding review and Android provisioning frontend API clients to the neutral `/v1/onboarding-review/...` and `/v1/android-enrollment-sessions...` endpoints, and aligned supporting fixtures/examples with the removed Admin model.
 - Removed the frontend's role-list based elevated UI gating and obsolete `hasRole` auth-context helper: organization access now follows the authoritative `hasOrganizationalScopes` flag, customer/site/employee/android capability checks now depend on explicit permissions plus scope/access flags, and the obsolete `admin` organizational-scope access level was dropped from frontend types and tests to match the API's removed Admin model (breaking change, closes #1031)
 - Reframed the frontend `README.md` around the currently shipped workforce-operations routes and runtime guidance, removing stale Secrets-era password-vault, attachment-encryption, and migration-status sections that no longer matched the live app surface, resolving frontend issue #531.
