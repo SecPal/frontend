@@ -82,8 +82,8 @@ function getObjectSchema(
     >,
     required: Array.isArray(formSchema.required)
       ? formSchema.required.filter(
-        (entry): entry is string => typeof entry === "string"
-      )
+          (entry): entry is string => typeof entry === "string"
+        )
       : [],
   };
 }
@@ -91,11 +91,11 @@ function getObjectSchema(
 function getArrayValue(value: unknown): string[] {
   return Array.isArray(value)
     ? value
-      .filter(
-        (entry): entry is string | number =>
-          typeof entry === "string" || typeof entry === "number"
-      )
-      .map(String)
+        .filter(
+          (entry): entry is string | number =>
+            typeof entry === "string" || typeof entry === "number"
+        )
+        .map(String)
     : [];
 }
 
@@ -378,8 +378,8 @@ function SchemaFieldRenderer({
                       const nextValues = checked
                         ? [...selectedValues, optionValue]
                         : selectedValues.filter(
-                          (entry) => entry !== optionValue
-                        );
+                            (entry) => entry !== optionValue
+                          );
 
                       onChange(fieldName, nextValues);
                     }}
@@ -568,10 +568,10 @@ export function OnboardingWizard() {
       currentSteps.map((step, index) =>
         index === currentStepIndex
           ? {
-            ...step,
-            is_completed: status === "submitted" ? true : step.is_completed,
-            submission: savedSubmission,
-          }
+              ...step,
+              is_completed: status === "submitted" ? true : step.is_completed,
+              submission: savedSubmission,
+            }
           : step
       )
     );
@@ -597,14 +597,14 @@ export function OnboardingWizard() {
 
       const savedSubmission = submission
         ? await updateOnboardingSubmission(submission.id, {
-          form_data: nextFormData,
-          status,
-        })
+            form_data: nextFormData,
+            status,
+          })
         : await createOnboardingSubmission({
-          form_template_id: template.id,
-          form_data: nextFormData,
-          status,
-        });
+            form_template_id: template.id,
+            form_data: nextFormData,
+            status,
+          });
 
       setSubmission(savedSubmission);
       updateCurrentStep(savedSubmission, status);
