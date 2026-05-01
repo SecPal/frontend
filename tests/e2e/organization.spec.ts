@@ -95,7 +95,7 @@ async function createLiveChildUnit(
   unitName: string,
   unitType: "company" | "branch",
   unitDescription: string
-): Promise<string | null> {
+): Promise<string> {
   const createResponsePromise = page.waitForResponse(
     (response) =>
       /\/v1\/organizational-units$/.test(response.url()) &&
@@ -121,11 +121,25 @@ async function createLiveChildUnit(
   await page.getByRole("button", { name: /^create$/i }).click();
 
   const createResponse = await createResponsePromise;
+  if (!createResponse.ok()) {
+    throw new Error(
+      `createLiveChildUnit: POST /v1/organizational-units returned HTTP ${
+        createResponse.status()
+      } for unit "${unitName}"`
+    );
+  }
+
   const createPayload = (await createResponse.json()) as {
     data?: { id?: string };
   };
+  const id = createPayload.data?.id;
+  if (typeof id !== "string" || id.trim() === "") {
+    throw new Error(
+      `createLiveChildUnit: response did not include a valid id for unit "${unitName}"`
+    );
+  }
 
-  return createPayload.data?.id ?? null;
+  return id;
 }
 
 /**
@@ -1053,6 +1067,11 @@ test.describe("Organization Management", () => {
           "branch",
           `Branch created under ${sourceCompanyName}`
         );
+        if (typeof branchId !== "string" || branchId.trim() === "") {
+          throw new Error(
+            `createLiveChildUnit() returned an invalid branch id for "${branchName}"`
+          );
+        }
 
         const branchTreeItem = page
           .getByRole("treeitem", { name: branchNamePattern })
@@ -1062,9 +1081,9 @@ test.describe("Organization Management", () => {
 
         const moveResponsePromise = page.waitForResponse(
           (response) =>
-            new RegExp(`/v1/organizational-units/${branchId}/parent$`).test(
-              response.url()
-            ) && response.request().method() === "POST"
+            new URL(response.url()).pathname ===
+              `/v1/organizational-units/${branchId}/parent` &&
+            response.request().method() === "POST"
         );
 
         await branchTreeItem
