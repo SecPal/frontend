@@ -43,6 +43,15 @@ export const offlineLiveMockUser = {
   hasSiteAccess: true,
 };
 
+export function buildOfflineLiveMockUser(
+  overrides: Partial<typeof offlineLiveMockUser> = {}
+) {
+  return {
+    ...offlineLiveMockUser,
+    ...overrides,
+  };
+}
+
 async function ensureMockSessionCookie(
   context: BrowserContext,
   value = "authenticated"
@@ -87,7 +96,8 @@ export const offlineLiveMockOrganizationUnit = {
 };
 
 export async function installMockAuthRoutes(
-  context: BrowserContext
+  context: BrowserContext,
+  user = offlineLiveMockUser
 ): Promise<void> {
   await ensureMockXsrfCookie(context);
 
@@ -147,7 +157,7 @@ export async function installMockAuthRoutes(
       headers: {
         "set-cookie": `${MOCK_SESSION_COOKIE_NAME}=authenticated; Path=/; SameSite=Lax${isHttps ? "; Secure" : ""}; HttpOnly`,
       },
-      body: JSON.stringify({ user: offlineLiveMockUser }),
+      body: JSON.stringify({ user }),
     });
   });
 
@@ -167,7 +177,7 @@ export async function installMockAuthRoutes(
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(offlineLiveMockUser),
+      body: JSON.stringify(user),
     });
   });
 

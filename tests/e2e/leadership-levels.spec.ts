@@ -3,6 +3,24 @@
 
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./auth.setup";
+import { isRemoteE2ETarget } from "./auth-helpers";
+import {
+  buildOfflineLiveMockUser,
+  installMockAuthRoutes,
+  installStoredMockBrowserSession,
+} from "./offline-live-helpers";
+
+const playwrightEnv = globalThis as typeof globalThis & {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+};
+
+const API_BASE_URL =
+  playwrightEnv.process?.env?.PLAYWRIGHT_API_BASE_URL ||
+  "https://api.secpal.dev";
+const LIVE_EMPLOYEE_CRUD_ENABLED =
+  playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_EMPLOYEE_CRUD === "1";
 
 const mockUnit = {
   id: "org-root-1",
@@ -57,6 +75,10 @@ const seededEmployees = [
     },
   },
 ];
+
+const employeeManagementMockUser = buildOfflineLiveMockUser({
+  permissions: ["employees.read", "employees.create", "employees.update"],
+});
 
 interface MockEmployeeRoutes {
   createdPayloads: Array<Record<string, unknown>>;
@@ -177,9 +199,15 @@ async function installMockEmployeeRoutes(
   return { createdPayloads };
 }
 
+async function installEmployeeManagementMockSession(page: Page): Promise<void> {
+  await installMockAuthRoutes(page.context(), employeeManagementMockUser);
+  await installStoredMockBrowserSession(page, employeeManagementMockUser);
+}
+
 async function fillRequiredEmployeeFields(
   page: Page,
-  email: string
+  email: string,
+  organizationalUnitId = mockUnit.id
 ): Promise<void> {
   await page.getByLabel(/First Name/i).fill("Taylor");
   await page.getByLabel(/Last Name/i).fill("Example");
@@ -187,13 +215,140 @@ async function fillRequiredEmployeeFields(
   await page.getByLabel(/Date of Birth/i).fill("01/01/1990");
   await page.locator("#position").fill("Operations Lead");
   await page.getByLabel(/Contract Start Date/i).fill("01/01/2026");
-  await page.getByLabel(/Organizational Unit/i).selectOption(mockUnit.id);
+  await page
+    .getByLabel(/Organizational Unit/i)
+    .selectOption(organizationalUnitId);
+}
+
+async function cleanupLiveEmployee(
+  page: Page,
+  employeeId: string | null
+): Promise<void> {
+  if (!employeeId) {
+    return;
+  }
+
+  try {
+    const result = await page.evaluate(
+      async ({ apiBaseUrl, targetEmployeeId }) => {
+        const xsrfCookie = document.cookie
+          .split(";")
+          .map((cookie) => cookie.trim())
+          .find((cookie) => cookie.startsWith("XSRF-TOKEN="));
+
+        const headers = new Headers({
+          Accept: "application/json",
+        });
+
+        if (xsrfCookie) {
+          headers.set(
+            "X-XSRF-TOKEN",
+            decodeURIComponent(xsrfCookie.substring("XSRF-TOKEN=".length))
+          );
+        }
+
+        try {
+          const response = await fetch(
+            `${apiBaseUrl}/v1/employees/${targetEmployeeId}`,
+            { method: "DELETE", credentials: "include", headers }
+          );
+          return { ok: response.ok, status: response.status };
+        } catch (err) {
+          return { ok: false, status: 0, error: String(err) };
+        }
+      },
+      { apiBaseUrl: API_BASE_URL, targetEmployeeId: employeeId }
+    );
+
+    if (!result.ok) {
+      console.warn(
+        `Live employee cleanup failed for ${employeeId}: HTTP ${result.status}${
+          "error" in result ? ` (${result.error})` : ""
+        }`
+      );
+    }
+  } catch (err) {
+    console.warn(
+      `Live employee cleanup could not run for ${employeeId}: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+  }
+}
+
+async function getFirstSelectableOrganizationalUnitId(
+  page: Page
+): Promise<string> {
+  const organizationalUnitSelect = page.getByLabel(/Organizational Unit/i);
+  await expect(organizationalUnitSelect).toBeEnabled();
+
+  return organizationalUnitSelect.evaluate((selectElement) => {
+    const select = selectElement as HTMLSelectElement;
+    const firstSelectableOption = Array.from(select.options).find(
+      (option) => option.value && !option.disabled
+    );
+
+    return firstSelectableOption?.value ?? "";
+  });
+}
+
+async function createLiveEmployeeViaUi(
+  page: Page,
+  email: string,
+  options?: {
+    organizationalUnitId?: string;
+    managementLevel?: number;
+  }
+): Promise<{
+  employeeId: string | null;
+  organizationalUnitId: string;
+  requestPayload: Record<string, unknown>;
+}> {
+  const organizationalUnitId =
+    options?.organizationalUnitId ??
+    (await getFirstSelectableOrganizationalUnitId(page));
+
+  expect(organizationalUnitId).not.toBe("");
+
+  const createResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/v1\/employees$/.test(response.url()) &&
+      response.request().method() === "POST"
+  );
+
+  await fillRequiredEmployeeFields(page, email, organizationalUnitId);
+
+  if ((options?.managementLevel ?? 0) > 0) {
+    await page.getByRole("switch", { name: /Leadership Position/i }).click();
+    await page.getByRole("spinbutton").fill(String(options?.managementLevel));
+  }
+
+  await page.getByRole("button", { name: /Create Employee/i }).click();
+
+  const createResponse = await createResponsePromise;
+  expect(createResponse.ok()).toBe(true);
+
+  const requestPayload =
+    (createResponse.request().postDataJSON() as Record<
+      string,
+      unknown
+    > | null) ?? {};
+  const createPayload = (await createResponse.json()) as {
+    data?: { id?: string };
+  };
+
+  return {
+    employeeId: createPayload.data?.id ?? null,
+    organizationalUnitId,
+    requestPayload,
+  };
 }
 
 test.describe("Management level employee flows", () => {
   test("shows the current leadership controls in employee create form", async ({
     authenticatedPage: page,
   }) => {
+    await installEmployeeManagementMockSession(page);
     await installMockEmployeeRoutes(page.context());
 
     await page.goto("/employees/create");
@@ -215,6 +370,7 @@ test.describe("Management level employee flows", () => {
   test("enables and clears management level when leadership is toggled", async ({
     authenticatedPage: page,
   }) => {
+    await installEmployeeManagementMockSession(page);
     await installMockEmployeeRoutes(page.context());
 
     await page.goto("/employees/create");
@@ -241,6 +397,7 @@ test.describe("Management level employee flows", () => {
   test("validates management level range against the current form rules", async ({
     authenticatedPage: page,
   }) => {
+    await installEmployeeManagementMockSession(page);
     await installMockEmployeeRoutes(page.context());
 
     await page.goto("/employees/create");
@@ -273,6 +430,7 @@ test.describe("Management level employee flows", () => {
   test("submits the current management level payload and navigates to the created employee", async ({
     authenticatedPage: page,
   }) => {
+    await installEmployeeManagementMockSession(page);
     const mockRoutes = await installMockEmployeeRoutes(page.context());
 
     await page.goto("/employees/create");
@@ -298,6 +456,7 @@ test.describe("Management level employee flows", () => {
   test("displays management level badges in employee list rows", async ({
     authenticatedPage: page,
   }) => {
+    await installEmployeeManagementMockSession(page);
     await installMockEmployeeRoutes(page.context());
 
     await page.goto("/employees");
@@ -309,5 +468,87 @@ test.describe("Management level employee flows", () => {
     await expect(page.getByText(/ML 3/)).toBeVisible();
     await expect(page.getByText(/Branch Manager/)).toBeVisible();
     await expect(page.getByText(/Security Officer/)).toBeVisible();
+  });
+});
+
+test.describe("Live employee proof", () => {
+  test("creates a non-management employee against the live stack", async ({
+    authenticatedPage: page,
+  }, testInfo) => {
+    test.skip(
+      !isRemoteE2ETarget() ||
+        !LIVE_EMPLOYEE_CRUD_ENABLED ||
+        testInfo.project.name !== "chromium",
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against app.secpal.dev/api.secpal.dev."
+    );
+
+    const timestamp = Date.now();
+    const employeeEmail = `playwright.live.employee.${timestamp}@secpal.dev`;
+    let createdEmployeeId: string | null = null;
+
+    try {
+      await page.goto("/employees/create");
+      await page.waitForLoadState("networkidle");
+
+      const { employeeId, requestPayload: createRequestPayload } =
+        await createLiveEmployeeViaUi(page, employeeEmail);
+
+      expect(createRequestPayload).not.toHaveProperty("management_level");
+
+      createdEmployeeId = employeeId;
+      expect(createdEmployeeId).not.toBeNull();
+
+      await expect(page).toHaveURL(
+        new RegExp(`/employees/${createdEmployeeId}$`)
+      );
+      await expect(page.getByText(employeeEmail)).toBeVisible();
+      await expect(page.getByText(/No management position/i)).toBeVisible();
+    } finally {
+      await cleanupLiveEmployee(page, createdEmployeeId);
+    }
+  });
+
+  test("creates a leadership employee against the live stack", async ({
+    authenticatedPage: page,
+  }, testInfo) => {
+    test.skip(
+      !isRemoteE2ETarget() ||
+        !LIVE_EMPLOYEE_CRUD_ENABLED ||
+        testInfo.project.name !== "chromium",
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against app.secpal.dev/api.secpal.dev."
+    );
+
+    const timestamp = Date.now();
+    const employeeEmail = `playwright.live.employee.leadership.${timestamp}@secpal.dev`;
+    const managementLevel = 9;
+    let createdEmployeeId: string | null = null;
+
+    try {
+      await page.goto("/employees/create");
+      await page.waitForLoadState("networkidle");
+
+      const { employeeId, requestPayload: createRequestPayload } =
+        await createLiveEmployeeViaUi(page, employeeEmail, {
+          managementLevel,
+        });
+
+      createdEmployeeId = employeeId;
+      expect(createdEmployeeId).not.toBeNull();
+      expect(createRequestPayload).toMatchObject({
+        email: employeeEmail,
+        management_level: managementLevel,
+      });
+
+      await expect(page).toHaveURL(
+        new RegExp(`/employees/${createdEmployeeId}$`)
+      );
+      await expect(page.getByText(employeeEmail)).toBeVisible();
+      await expect(
+        page.getByText(new RegExp(`ML ${managementLevel}`))
+      ).toBeVisible();
+      await expect(page.getByText(/No management position/i)).toHaveCount(0);
+    } finally {
+      await cleanupLiveEmployee(page, createdEmployeeId);
+    }
   });
 });
