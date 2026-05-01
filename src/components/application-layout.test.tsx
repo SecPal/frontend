@@ -55,9 +55,9 @@ function getStoredAuthState(): string | null {
 // Mock ResizeObserver for HeadlessUI Menu component
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
-    observe() { }
-    unobserve() { }
-    disconnect() { }
+    observe() {}
+    unobserve() {}
+    disconnect() {}
   };
 });
 
@@ -438,7 +438,7 @@ describe("ApplicationLayout", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       renderWithProviders(
         <ApplicationLayout>
@@ -472,7 +472,7 @@ describe("ApplicationLayout", () => {
 
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => { });
+        .mockImplementation(() => {});
 
       renderWithProviders(
         <ApplicationLayout>

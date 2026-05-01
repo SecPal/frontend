@@ -152,14 +152,14 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     const payload = (await response
       .json()
       .catch(() => ({ message: response.statusText }))) as {
-        errors?: Record<string, string[]>;
-        message?: string;
-      };
+      errors?: Record<string, string[]>;
+      message?: string;
+    };
 
     throw new ApiError(
       payload.message ||
-      response.statusText ||
-      "Android provisioning request failed",
+        response.statusText ||
+        "Android provisioning request failed",
       response.status,
       payload.errors,
       response
