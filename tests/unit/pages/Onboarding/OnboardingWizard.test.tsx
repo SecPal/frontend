@@ -197,18 +197,20 @@ describe("OnboardingWizard", () => {
         is_completed: false,
       },
     ]);
-    vi.mocked(onboardingApi.fetchOnboardingTemplate).mockReset().mockResolvedValue(
-      makeTemplate("template-1", "Personal Information", undefined, {
-        type: "object",
-        properties: {
-          legal_name: {
-            type: "string",
-            title: "Legal Name",
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate("template-1", "Personal Information", undefined, {
+          type: "object",
+          properties: {
+            legal_name: {
+              type: "string",
+              title: "Legal Name",
+            },
           },
-        },
-        required: [],
-      })
-    );
+          required: [],
+        })
+      );
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
       makeSubmission("template-1", {
         legal_name: "Casey Example",

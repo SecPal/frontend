@@ -788,7 +788,8 @@ export function OnboardingWizard() {
       setError(null);
       setUploadFeedback(null);
 
-      const targetSubmission = submission ?? (await persistCurrentStep("draft"));
+      const targetSubmission =
+        submission ?? (await persistCurrentStep("draft"));
       if (!targetSubmission) {
         setUploadFeedback({
           tone: "error",

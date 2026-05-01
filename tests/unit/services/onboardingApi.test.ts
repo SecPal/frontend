@@ -547,9 +547,7 @@ describe("uploadOnboardingFile", () => {
 
     await expect(
       uploadOnboardingFile("submission-9", file, "id_document")
-    ).rejects.toThrow(
-      "The file must be a file of type: pdf, jpg, jpeg, png."
-    );
+    ).rejects.toThrow("The file must be a file of type: pdf, jpg, jpeg, png.");
   });
 });
 
