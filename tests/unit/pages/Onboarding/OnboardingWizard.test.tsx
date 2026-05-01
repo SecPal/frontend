@@ -285,6 +285,70 @@ describe("OnboardingWizard", () => {
     });
   });
 
+  it("treats incomplete numeric input (e.g. '-') as unfilled for required number fields", async () => {
+    const numericSchema = {
+      type: "object",
+      required: ["age"],
+      properties: {
+        age: {
+          type: "integer",
+          title: "Age",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Numeric Step",
+        description: "Numeric Step description",
+        template_id: "template-num",
+        is_completed: false,
+        submission: makeSubmission("template-num", {}),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-num",
+          "Numeric Step",
+          "Numeric Step description",
+          numericSchema
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /submit for review/i })
+      ).toBeInTheDocument();
+    });
+
+    const ageInput = screen.getByLabelText("Age");
+
+    // Partial numeric input like "-" must not count as filled
+    fireEvent.change(ageInput, { target: { value: "-" } });
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This field is required.")).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+
+    // A valid finite number must clear the error and allow submission
+    fireEvent.change(ageInput, { target: { value: "30" } });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("This field is required.")
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("keeps the user on the current step and shows an error when saving fails", async () => {
     // step-1 has an existing submission — rejection must come from updateOnboardingSubmission
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
