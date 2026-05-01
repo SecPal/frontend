@@ -228,7 +228,7 @@ msgstr "Fehler beim Laden eines Mitarbeiters"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to upload file"
-msgstr ""
+msgstr "Datei konnte nicht hochgeladen werden"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
@@ -373,7 +373,7 @@ msgstr "Qualifikationen laden..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Document Type"
-msgstr ""
+msgstr "Dokumenttyp"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
@@ -548,7 +548,7 @@ msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Accepted formats: PDF, JPG, JPEG, PNG."
-msgstr ""
+msgstr "Akzeptierte Formate: PDF, JPG, JPEG, PNG."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Device label"
@@ -584,7 +584,7 @@ msgstr "Standort löschen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your current answers will be saved as a draft before the first file upload."
-msgstr ""
+msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf gespeichert."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -674,7 +674,7 @@ msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbe
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
-msgstr ""
+msgstr "Laden Sie PDF-, JPG- oder PNG-Dateien mit bis zu 10 MB für die Vertrags-, Identitäts- oder Bankverifizierung hoch."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -1022,7 +1022,7 @@ msgstr "Validierungsfehler"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
-msgstr ""
+msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte versuchen Sie erneut, Ihren Entwurf zu speichern."
 
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
@@ -1079,7 +1079,7 @@ msgstr "Detailfenster schließen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Uploading..."
-msgstr ""
+msgstr "Wird hochgeladen..."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revoke"
@@ -1100,7 +1100,7 @@ msgstr "Aktivitätsprotokolle"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Banking Details"
-msgstr ""
+msgstr "Bankverbindung"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Sent"
@@ -1202,7 +1202,7 @@ msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere 
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File uploaded successfully."
-msgstr ""
+msgstr "Datei erfolgreich hochgeladen."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "No activity logs found."
@@ -1230,7 +1230,7 @@ msgstr "Vorname:"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
-msgstr ""
+msgstr "Datei hochladen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -1316,7 +1316,7 @@ msgstr "Land"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Choose the attachment category that best matches the file."
-msgstr ""
+msgstr "Wählen Sie die Anhangskategorie, die am besten zur Datei passt."
 
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -1403,7 +1403,7 @@ msgstr "Vorname"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Contract"
-msgstr ""
+msgstr "Vertrag"
 
 #: src/components/application-layout.tsx
 msgid "Lock app"
@@ -1748,7 +1748,7 @@ msgstr "Beschreibung"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Supporting Documents"
-msgstr ""
+msgstr "Zusätzliche Unterlagen"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "You can inspect BWR data, but write permission is required to manage it."
@@ -2074,7 +2074,7 @@ msgstr "Aktiviert"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Files can only be uploaded while this onboarding step is still editable."
-msgstr ""
+msgstr "Dateien können nur hochgeladen werden, solange dieser Onboarding-Schritt noch bearbeitbar ist."
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -2129,7 +2129,7 @@ msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherste
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Uploaded in this session"
-msgstr ""
+msgstr "In dieser Sitzung hochgeladen"
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
@@ -2308,7 +2308,7 @@ msgstr "Hash-Kette (Link)"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment"
-msgstr ""
+msgstr "Anhang"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Notes"
@@ -2472,7 +2472,7 @@ msgstr "Standort bearbeiten"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity Document"
-msgstr ""
+msgstr "Ausweisdokument"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
