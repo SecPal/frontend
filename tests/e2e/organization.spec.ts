@@ -123,9 +123,7 @@ async function createLiveChildUnit(
   const createResponse = await createResponsePromise;
   if (!createResponse.ok()) {
     throw new Error(
-      `createLiveChildUnit: POST /v1/organizational-units returned HTTP ${
-        createResponse.status()
-      } for unit "${unitName}"`
+      `createLiveChildUnit: POST /v1/organizational-units returned HTTP ${createResponse.status()} for unit "${unitName}"`
     );
   }
 
