@@ -573,7 +573,7 @@ export function EmployeeEdit() {
 
                 <Field>
                   <Label>
-                    <Trans>Status</Trans> *
+                    <Trans>Status</Trans>
                   </Label>
                   <Select name="status" value={formData.status} disabled>
                     <EmployeeStatusOptions />
