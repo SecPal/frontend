@@ -264,7 +264,9 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
 
       expect(result.onboarding_workflow?.status).toBe("ready_for_activation");
       expect(mockFetch).toHaveBeenLastCalledWith(
-        expect.stringContaining("/v1/admin/onboarding/employees/emp-1/confirm"),
+        expect.stringContaining(
+          "/v1/onboarding-review/employees/emp-1/confirm"
+        ),
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify({ notes: "Contract signed and reviewed." }),

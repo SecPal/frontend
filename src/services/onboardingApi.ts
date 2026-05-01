@@ -447,7 +447,7 @@ export async function uploadOnboardingFile(
 export async function approveOnboardingSubmission(
   submissionId: string
 ): Promise<OnboardingSubmission> {
-  const url = `${apiConfig.baseUrl}/v1/admin/onboarding/submissions/${submissionId}/approve`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding-review/submissions/${submissionId}/approve`;
   const response = await apiFetch(url, {
     method: "POST",
   });
@@ -473,7 +473,7 @@ export async function rejectOnboardingSubmission(
   submissionId: string,
   reason: string
 ): Promise<OnboardingSubmission> {
-  const url = `${apiConfig.baseUrl}/v1/admin/onboarding/submissions/${submissionId}/reject`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding-review/submissions/${submissionId}/reject`;
   const response = await apiFetch(url, {
     method: "POST",
     headers: {

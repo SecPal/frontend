@@ -82,7 +82,7 @@ describe("AndroidProvisioningPage", () => {
       screen.getByRole("button", { name: /create enrollment session/i })
     ).toBeInTheDocument();
     expect(apiFetch).toHaveBeenCalledWith(
-      `${apiConfig.baseUrl}/v1/admin/android-enrollment-sessions?per_page=15`,
+      `${apiConfig.baseUrl}/v1/android-enrollment-sessions?per_page=15`,
       expect.objectContaining({ headers: expect.any(Headers) })
     );
     const [, init] = vi.mocked(apiFetch).mock.calls[0]!;
@@ -247,7 +247,7 @@ describe("AndroidProvisioningPage", () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText("Reception kiosk")).toHaveLength(2);
     expect(apiFetch).toHaveBeenLastCalledWith(
-      `${apiConfig.baseUrl}/v1/admin/android-enrollment-sessions`,
+      `${apiConfig.baseUrl}/v1/android-enrollment-sessions`,
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({
