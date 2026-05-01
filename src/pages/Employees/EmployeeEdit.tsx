@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee, EmployeeFormData, EmployeeStatus } from "@/types/api";
+import type { Employee, EmployeeFormData } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -253,7 +253,9 @@ export function EmployeeEdit() {
     try {
       setLoading(true);
       setError(null);
-      await updateEmployee(id, formData);
+      const updatePayload: Partial<EmployeeFormData> = { ...formData };
+      delete updatePayload.status;
+      await updateEmployee(id, updatePayload);
       navigate(`/employees/${id}`);
     } catch (err) {
       console.error("Failed to update employee:", err);
@@ -573,14 +575,7 @@ export function EmployeeEdit() {
                   <Label>
                     <Trans>Status</Trans> *
                   </Label>
-                  <Select
-                    name="status"
-                    required
-                    value={formData.status}
-                    onChange={(e) =>
-                      handleChange("status", e.target.value as EmployeeStatus)
-                    }
-                  >
+                  <Select name="status" value={formData.status} disabled>
                     <EmployeeStatusOptions />
                   </Select>
                   <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">

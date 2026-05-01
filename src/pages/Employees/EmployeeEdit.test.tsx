@@ -219,7 +219,6 @@ describe("EmployeeEdit", () => {
         contract_start_date: "2025-01-01",
         organizational_unit_id: "unit-1",
         management_level: 0,
-        status: "active",
         contract_type: "full_time",
       });
     });
@@ -293,12 +292,9 @@ describe("EmployeeEdit", () => {
     });
   });
 
-  it("should allow changing the employee status to on leave", async () => {
+  it("should keep status read-only in the generic edit form", async () => {
     const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
-    mockUpdateEmployee.mockResolvedValue({
-      ...mockEmployee,
-      status: "on_leave",
-    });
+    mockUpdateEmployee.mockResolvedValue(mockEmployee);
 
     renderWithProviders("emp-1");
 
@@ -306,17 +302,17 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    fireEvent.change(screen.getByLabelText(/status/i), {
-      target: { value: "on_leave" },
-    });
+    const statusSelect = screen.getByLabelText(/status/i);
+    expect(statusSelect).toBeDisabled();
+    expect(statusSelect).toHaveValue("active");
 
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
       expect(mockUpdateEmployee).toHaveBeenCalledWith(
         "emp-1",
-        expect.objectContaining({
-          status: "on_leave",
+        expect.not.objectContaining({
+          status: expect.anything(),
         })
       );
     });
