@@ -3,12 +3,14 @@
 
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import {
+  approveOnboardingSubmission,
   completeOnboarding,
   createOnboardingSubmission,
   fetchOnboardingSteps,
   fetchOnboardingTemplate,
   fetchOnboardingSubmissions,
   fetchOnboardingTemplates,
+  rejectOnboardingSubmission,
   validateOnboardingToken,
 } from "../../../src/services/onboardingApi";
 import { apiFetch } from "../../../src/services/csrf";
@@ -499,5 +501,80 @@ describe("createOnboardingSubmission", () => {
         status: "draft",
       })
     ).rejects.toThrow("Missing onboarding form template identifier");
+  });
+});
+
+describe("approveOnboardingSubmission", () => {
+  it("posts the onboarding review approval action to the neutral runtime path", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(200, {
+        data: {
+          id: "submission-9",
+          employee_id: "employee-1",
+          form_template_id: "template-9",
+          form_data: { legal_name: "Casey Example" },
+          status: "approved",
+          reviewed_by: "reviewer-1",
+          reviewed_at: "2026-05-01T12:00:00Z",
+          created_at: "2026-05-01T11:00:00Z",
+          updated_at: "2026-05-01T12:00:00Z",
+        },
+      })
+    );
+
+    await expect(approveOnboardingSubmission("submission-9")).resolves.toEqual(
+      expect.objectContaining({
+        id: "submission-9",
+        status: "approved",
+      })
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "/v1/onboarding-review/submissions/submission-9/approve"
+      ),
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+});
+
+describe("rejectOnboardingSubmission", () => {
+  it("posts the onboarding review rejection action to the neutral runtime path", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(200, {
+        data: {
+          id: "submission-9",
+          employee_id: "employee-1",
+          form_template_id: "template-9",
+          form_data: { legal_name: "Casey Example" },
+          status: "rejected",
+          review_notes: "Missing signature",
+          reviewed_by: "reviewer-1",
+          reviewed_at: "2026-05-01T12:00:00Z",
+          created_at: "2026-05-01T11:00:00Z",
+          updated_at: "2026-05-01T12:00:00Z",
+        },
+      })
+    );
+
+    await expect(
+      rejectOnboardingSubmission("submission-9", "Missing signature")
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: "submission-9",
+        status: "rejected",
+        review_notes: "Missing signature",
+      })
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "/v1/onboarding-review/submissions/submission-9/reject"
+      ),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ reason: "Missing signature" }),
+      })
+    );
   });
 });

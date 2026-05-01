@@ -272,7 +272,7 @@ export async function confirmEmployeeOnboarding(
   id: string,
   payload?: ConfirmEmployeeOnboardingPayload
 ): Promise<Employee> {
-  const url = `${apiConfig.baseUrl}/v1/admin/onboarding/employees/${id}/confirm`;
+  const url = `${apiConfig.baseUrl}/v1/onboarding-review/employees/${id}/confirm`;
   const response = await apiFetch(url, {
     method: "POST",
     headers: {

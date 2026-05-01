@@ -540,8 +540,8 @@ describe("ApplicationLayout", () => {
     it("generates correct initials for single-word name", async () => {
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin",
-        email: "admin@secpal.dev",
+        name: "Operations",
+        email: "operations@secpal.dev",
       });
 
       renderWithProviders(
@@ -551,7 +551,7 @@ describe("ApplicationLayout", () => {
       );
 
       // Avatar in navbar (stacked layout has avatar only in navbar)
-      const avatars = await screen.findAllByText("A");
+      const avatars = await screen.findAllByText("O");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -799,8 +799,8 @@ describe("ApplicationLayout", () => {
     it("shows Activity Logs menu item when user has permission", async () => {
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin User",
-        email: "admin@secpal.dev",
+        name: "Operations User",
+        email: "operations@secpal.dev",
         permissions: ["activity_log.read"],
       });
 
@@ -833,8 +833,8 @@ describe("ApplicationLayout", () => {
     it("highlights Activity Logs when on that page", async () => {
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin User",
-        email: "admin@secpal.dev",
+        name: "Operations User",
+        email: "operations@secpal.dev",
         permissions: ["activity_log.read"],
       });
 
@@ -854,8 +854,8 @@ describe("ApplicationLayout", () => {
     it("links to /activity-logs route", async () => {
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin User",
-        email: "admin@secpal.dev",
+        name: "Operations User",
+        email: "operations@secpal.dev",
         permissions: ["activity_log.read"],
       });
 
@@ -887,8 +887,8 @@ describe("ApplicationLayout", () => {
 
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin User",
-        email: "admin@secpal.dev",
+        name: "Operations User",
+        email: "operations@secpal.dev",
         hasOrganizationalScopes: true,
         roles: [],
         permissions: ["android_enrollment.read"],
@@ -909,8 +909,8 @@ describe("ApplicationLayout", () => {
     it("hides the Android provisioning navigation entry without read access", async () => {
       await seedAuthenticatedUser({
         id: 1,
-        name: "Admin User",
-        email: "admin@secpal.dev",
+        name: "Operations User",
+        email: "operations@secpal.dev",
         hasOrganizationalScopes: true,
         roles: [],
         permissions: ["activity_log.read"],

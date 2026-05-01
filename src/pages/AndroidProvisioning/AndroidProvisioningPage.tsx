@@ -189,7 +189,7 @@ export default function AndroidProvisioningPage() {
     let active = true;
 
     void requestJson<AndroidSessionListResponse>(
-      "/v1/admin/android-enrollment-sessions?per_page=15"
+      "/v1/android-enrollment-sessions?per_page=15"
     )
       .then((response) => {
         if (!active) {
@@ -226,7 +226,7 @@ export default function AndroidProvisioningPage() {
 
     try {
       const response = await requestJson<AndroidCreateSessionResponse>(
-        "/v1/admin/android-enrollment-sessions",
+        "/v1/android-enrollment-sessions",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -263,7 +263,7 @@ export default function AndroidProvisioningPage() {
 
     try {
       const response = await requestJson<ApiEnvelope<AndroidEnrollmentSession>>(
-        `/v1/admin/android-enrollment-sessions/${session.id}/revoke`,
+        `/v1/android-enrollment-sessions/${session.id}/revoke`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
