@@ -14,14 +14,15 @@ vi.mock("../../../../src/services/onboardingApi");
 function makeTemplate(
   id: string,
   title: string,
-  description = `${title} description`
+  description = `${title} description`,
+  formSchema: Record<string, unknown> = {}
 ) {
   return {
     id,
     name: title,
     title,
     description,
-    form_schema: {},
+    form_schema: formSchema,
     sort_order: Number(id.split("-")[1] ?? 1) * 10,
     step_number: Number(id.split("-")[1] ?? 1),
     is_required: true,
@@ -31,12 +32,15 @@ function makeTemplate(
   };
 }
 
-function makeSubmission(formTemplateId: string) {
+function makeSubmission(
+  formTemplateId: string,
+  formData: Record<string, unknown> = { legal_name: "Jane Doe" }
+) {
   return {
     id: `submission-${formTemplateId}`,
     employee_id: "employee-1",
     form_template_id: formTemplateId,
-    form_data: { legal_name: "Jane Doe" },
+    form_data: formData,
     status: "draft" as const,
     submitted_at: null,
     reviewed_by: null,
@@ -199,6 +203,149 @@ describe("OnboardingWizard", () => {
           "Onboarding submitted. HR will review your information."
         )
       ).toBeInTheDocument();
+    });
+  });
+
+  it("blocks submit for missing required schema fields and clears field errors as the user fixes them", async () => {
+    const personalInformationSchema = {
+      type: "object",
+      required: ["gender", "nationalities", "intended_activities"],
+      properties: {
+        gender: {
+          type: "string",
+          title: "Gender",
+          enum: ["female", "male"],
+          enumNames: ["Female", "Male"],
+        },
+        nationalities: {
+          type: "array",
+          title: "Nationalities",
+          items: {
+            type: "string",
+            enum: ["de", "fr"],
+            enumNames: ["German", "French"],
+          },
+        },
+        intended_activities: {
+          type: "array",
+          title: "Intended Activities",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_completed: false,
+        submission: makeSubmission("template-1", {
+          gender: "female",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-1",
+          "Personal Information",
+          "Personal Information description",
+          personalInformationSchema
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /submit for review/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "We couldn't submit the form yet. Please review the highlighted fields."
+        )
+      ).toBeInTheDocument();
+      expect(screen.getAllByText("This field is required.")).toHaveLength(2);
+    });
+
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByLabelText("German"));
+
+    await waitFor(() => {
+      expect(screen.getAllByText("This field is required.")).toHaveLength(1);
+    });
+  });
+
+  it("treats incomplete numeric input (e.g. '-') as unfilled for required number fields", async () => {
+    const numericSchema = {
+      type: "object",
+      required: ["age"],
+      properties: {
+        age: {
+          type: "integer",
+          title: "Age",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Numeric Step",
+        description: "Numeric Step description",
+        template_id: "template-num",
+        is_completed: false,
+        submission: makeSubmission("template-num", {}),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-num",
+          "Numeric Step",
+          "Numeric Step description",
+          numericSchema
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /submit for review/i })
+      ).toBeInTheDocument();
+    });
+
+    const ageInput = screen.getByLabelText("Age");
+
+    // Partial numeric input like "-" must not count as filled
+    fireEvent.change(ageInput, { target: { value: "-" } });
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This field is required.")).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+
+    // A valid finite number must clear the error and allow submission
+    fireEvent.change(ageInput, { target: { value: "30" } });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("This field is required.")
+      ).not.toBeInTheDocument();
     });
   });
 

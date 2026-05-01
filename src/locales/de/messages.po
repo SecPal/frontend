@@ -2115,6 +2115,7 @@ msgid "Back to Customers"
 msgstr "Zurück zu den Kunden"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
@@ -2230,6 +2231,10 @@ msgstr "Anwendung jetzt aktualisieren"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Street"
 msgstr "Straße"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "This field is required."
+msgstr "Dieses Feld ist erforderlich."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
