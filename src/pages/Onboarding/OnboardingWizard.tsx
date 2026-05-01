@@ -521,6 +521,7 @@ export function OnboardingWizard() {
   const isCurrentStepEditable = isEditableSubmission(submission);
 
   function resetUploadState() {
+    setUploading(false);
     setUploadDocumentType("contract");
     setUploadFile(null);
     setUploadFeedback(null);
