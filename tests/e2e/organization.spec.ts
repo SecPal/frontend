@@ -7,10 +7,17 @@ import { isRemoteE2ETarget } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
 import { getCachedOrgUnitsCount } from "../utils/offline-helpers";
 
+const playwrightEnv = globalThis as typeof globalThis & {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+};
+
 const API_BASE_URL =
-  process.env.PLAYWRIGHT_API_BASE_URL || "https://api.secpal.dev";
+  playwrightEnv.process?.env?.PLAYWRIGHT_API_BASE_URL ||
+  "https://api.secpal.dev";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
-  process.env.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
+  playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
 const CREATED_CHILD_UNIT_NAME = "Operations Branch";
@@ -80,6 +87,39 @@ async function cleanupLiveOrganizationalUnit(
       }`
     );
   }
+}
+
+async function createLiveChildUnit(
+  page: Page,
+  parentName: string,
+  unitName: string,
+  unitType: "company" | "branch",
+  unitDescription: string
+): Promise<string | null> {
+  const createResponsePromise = page.waitForResponse(
+    (response) =>
+      /\/v1\/organizational-units$/.test(response.url()) &&
+      response.request().method() === "POST"
+  );
+
+  await page
+    .getByRole("treeitem", { name: new RegExp(escapeRegExp(parentName), "i") })
+    .first()
+    .click();
+  await page.getByRole("button", { name: /add child unit/i }).click();
+  await expect(page.getByText(/create organizational unit/i)).toBeVisible();
+
+  await page.getByLabel(/name/i).fill(unitName);
+  await page.getByLabel(/type/i).selectOption(unitType);
+  await page.getByLabel(/description/i).fill(unitDescription);
+  await page.getByRole("button", { name: /^create$/i }).click();
+
+  const createResponse = await createResponsePromise;
+  const createPayload = (await createResponse.json()) as {
+    data?: { id?: string };
+  };
+
+  return createPayload.data?.id ?? null;
 }
 
 /**
@@ -504,6 +544,12 @@ test.describe("Organization Management", () => {
         name: MOVED_UNIT_NAME,
         custom_type_name: null,
         description: movedUnitDescription,
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: false,
+          manage_scopes: false,
+        },
         get parent() {
           return moveCompleted
             ? {
@@ -527,6 +573,12 @@ test.describe("Organization Management", () => {
         name: TARGET_PARENT_NAME,
         custom_type_name: null,
         description: null,
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: false,
+          manage_scopes: false,
+        },
         parent: null,
         created_at: "2026-04-29T09:00:00Z",
         updated_at: "2026-04-29T09:00:00Z",
@@ -644,7 +696,7 @@ test.describe("Organization Management", () => {
       await movedUnitTreeItem.click();
       await expect(page.getByRole("button", { name: /^edit$/i })).toBeVisible();
 
-      const moveActionsButton = page.getByRole("button", {
+      const moveActionsButton = movedUnitTreeItem.getByRole("button", {
         name: new RegExp(`Actions for ${MOVED_UNIT_NAME}`, "i"),
       });
       await moveActionsButton.click();
@@ -882,6 +934,71 @@ test.describe("Organization Management", () => {
         createdUnitId = null;
       } finally {
         await cleanupLiveOrganizationalUnit(page, createdUnitId);
+      }
+    });
+
+    test("should keep a live company visible while immediately creating a branch under it", async ({
+      authenticatedPage: page,
+    }, testInfo) => {
+      test.skip(
+        !isRemoteE2ETarget() ||
+          !LIVE_ORGANIZATION_CRUD_ENABLED ||
+          testInfo.project.name !== "chromium",
+        "Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against app.secpal.dev/api.secpal.dev."
+      );
+
+      const timestamp = Date.now();
+      const companyName = `Playwright Live Company ${timestamp}`;
+      const branchName = `Playwright Live Branch ${timestamp}`;
+      const companyDescription = `Created by Playwright at ${new Date().toISOString()}`;
+      const branchDescription = `Created immediately under ${companyName}`;
+      const companyNamePattern = new RegExp(escapeRegExp(companyName), "i");
+      const branchNamePattern = new RegExp(escapeRegExp(branchName), "i");
+      let createdCompanyId: string | null = null;
+      let createdBranchId: string | null = null;
+
+      try {
+        await page.goto("/organization");
+        await page.waitForLoadState("networkidle");
+
+        createdCompanyId = await createLiveChildUnit(
+          page,
+          "Headquarters",
+          companyName,
+          "company",
+          companyDescription
+        );
+
+        const createdCompanyTreeItem = page
+          .getByRole("treeitem", { name: companyNamePattern })
+          .first();
+        await expect(createdCompanyTreeItem).toBeVisible();
+
+        createdBranchId = await createLiveChildUnit(
+          page,
+          companyName,
+          branchName,
+          "branch",
+          branchDescription
+        );
+
+        const createdBranchTreeItem = page
+          .getByRole("treeitem", { name: branchNamePattern })
+          .first();
+        await expect(createdCompanyTreeItem).toBeVisible();
+        await expect(createdBranchTreeItem).toBeVisible();
+
+        await createdBranchTreeItem.click();
+        await expect(page.getByText(/^Parent$/i)).toBeVisible();
+        await expect(
+          page
+            .locator("dt", { hasText: /^Parent$/i })
+            .locator("xpath=following-sibling::dd[1]")
+        ).toHaveText(companyName);
+        await expect(page.getByText(branchDescription)).toBeVisible();
+      } finally {
+        await cleanupLiveOrganizationalUnit(page, createdBranchId);
+        await cleanupLiveOrganizationalUnit(page, createdCompanyId);
       }
     });
   });
