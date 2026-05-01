@@ -175,12 +175,12 @@ describe("AuthContext", () => {
         id: 1,
         name: "Test User",
         email: "test@secpal.dev",
-        permissions: ["reports.generate"],
+        permissions: ["manage"],
       });
 
       render(
         <AuthProvider>
-          <PermissionTestComponent permission="reports.generate" />
+          <PermissionTestComponent permission="manage" />
         </AuthProvider>
       );
 
