@@ -102,11 +102,17 @@ async function createLiveChildUnit(
       response.request().method() === "POST"
   );
 
-  await page
+  const parentTreeItem = page
     .getByRole("treeitem", { name: new RegExp(escapeRegExp(parentName), "i") })
-    .first()
+    .first();
+
+  await expect(parentTreeItem).toBeVisible();
+  await parentTreeItem
+    .getByRole("button", {
+      name: new RegExp(`Actions for ${escapeRegExp(parentName)}`, "i"),
+    })
     .click();
-  await page.getByRole("button", { name: /add child unit/i }).click();
+  await page.getByRole("menuitem", { name: /add child/i }).click();
   await expect(page.getByText(/create organizational unit/i)).toBeVisible();
 
   await page.getByLabel(/name/i).fill(unitName);
@@ -999,6 +1005,112 @@ test.describe("Organization Management", () => {
       } finally {
         await cleanupLiveOrganizationalUnit(page, createdBranchId);
         await cleanupLiveOrganizationalUnit(page, createdCompanyId);
+      }
+    });
+
+    test("should move a live branch to a different live parent and keep it editable", async ({
+      authenticatedPage: page,
+    }, testInfo) => {
+      test.skip(
+        !isRemoteE2ETarget() ||
+          !LIVE_ORGANIZATION_CRUD_ENABLED ||
+          testInfo.project.name !== "chromium",
+        "Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against app.secpal.dev/api.secpal.dev."
+      );
+
+      const timestamp = Date.now();
+      const sourceCompanyName = `Playwright Move Source ${timestamp}`;
+      const targetCompanyName = `Playwright Move Target ${timestamp}`;
+      const branchName = `Playwright Move Branch ${timestamp}`;
+      const movedBranchDescription = `Moved by Playwright at ${new Date().toISOString()}`;
+      const branchNamePattern = new RegExp(escapeRegExp(branchName), "i");
+      let sourceCompanyId: string | null = null;
+      let targetCompanyId: string | null = null;
+      let branchId: string | null = null;
+
+      try {
+        await page.goto("/organization");
+        await page.waitForLoadState("networkidle");
+
+        sourceCompanyId = await createLiveChildUnit(
+          page,
+          "Headquarters",
+          sourceCompanyName,
+          "company",
+          `Source parent created at ${new Date().toISOString()}`
+        );
+        targetCompanyId = await createLiveChildUnit(
+          page,
+          "Headquarters",
+          targetCompanyName,
+          "company",
+          `Target parent created at ${new Date().toISOString()}`
+        );
+        branchId = await createLiveChildUnit(
+          page,
+          sourceCompanyName,
+          branchName,
+          "branch",
+          `Branch created under ${sourceCompanyName}`
+        );
+
+        const branchTreeItem = page
+          .getByRole("treeitem", { name: branchNamePattern })
+          .first();
+        await expect(branchTreeItem).toBeVisible();
+        await branchTreeItem.click();
+
+        const moveResponsePromise = page.waitForResponse(
+          (response) =>
+            new RegExp(`/v1/organizational-units/${branchId}/parent$`).test(
+              response.url()
+            ) && response.request().method() === "POST"
+        );
+
+        await branchTreeItem
+          .getByRole("button", {
+            name: new RegExp(`Actions for ${escapeRegExp(branchName)}`, "i"),
+          })
+          .click();
+        await page.getByRole("menuitem", { name: /move/i }).click();
+
+        await expect(
+          page.getByText(new RegExp(`Move "${escapeRegExp(branchName)}"`, "i"))
+        ).toBeVisible();
+        await page.getByRole("button", { name: /select new parent/i }).click();
+        await page
+          .getByRole("option", {
+            name: new RegExp(escapeRegExp(targetCompanyName), "i"),
+          })
+          .click();
+        await page.getByRole("button", { name: /^move$/i }).click();
+
+        const moveResponse = await moveResponsePromise;
+        expect(moveResponse.ok()).toBe(true);
+
+        const movedBranchTreeItem = page
+          .getByRole("treeitem", { name: branchNamePattern })
+          .first();
+        await expect(movedBranchTreeItem).toBeVisible();
+        await movedBranchTreeItem.click();
+
+        await expect(page.getByText(/^Parent$/i)).toBeVisible();
+        await expect(
+          page
+            .locator("dt", { hasText: /^Parent$/i })
+            .locator("xpath=following-sibling::dd[1]")
+        ).toHaveText(targetCompanyName);
+
+        await page.getByRole("button", { name: /^edit$/i }).click();
+        await expect(page.getByText(/edit organizational unit/i)).toBeVisible();
+        await page.getByLabel(/description/i).fill(movedBranchDescription);
+        await page.getByRole("button", { name: /save changes/i }).click();
+
+        await expect(page.getByText(movedBranchDescription)).toBeVisible();
+      } finally {
+        await cleanupLiveOrganizationalUnit(page, branchId);
+        await cleanupLiveOrganizationalUnit(page, targetCompanyId);
+        await cleanupLiveOrganizationalUnit(page, sourceCompanyId);
       }
     });
   });
