@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Blocked onboarding review submission when the current schema-rendered step still has empty required fields, surfaced inline field errors plus a clear review-blocked status message, and kept those field errors clearing as users complete the missing inputs, resolving frontend issue #1030.
 - Treated an empty production `VITE_API_URL` on `app.secpal.dev` the same as other leaked SPA-side API origins by collapsing it to the canonical `https://api.secpal.dev` host, so browser-session login can fetch `/sanctum/csrf-cookie` and bootstrap remote Playwright auth without failing immediately on the live app, resolving frontend issue #1046.
 - Stopped the generic employee edit form from sending `status` through `PATCH /v1/employees/:id` and made the status control read-only there, so non-status edits such as management-level or position updates no longer trip the backend's dedicated status-transition guard, resolving frontend issue #1045.
 - Repaired the red Playwright organization and employee management suites on current `main` by scoping explicit employee permissions to the management-level mock session, aligning the moved-unit flow with the current tree-actions UI, and adding live server-backed proofs for the exact sequential company-then-branch create flow, live branch reparenting, and both non-management and leadership employee creation against `app.secpal.dev` and `api.secpal.dev`.

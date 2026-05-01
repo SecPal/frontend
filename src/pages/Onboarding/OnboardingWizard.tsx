@@ -23,6 +23,7 @@ import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import {
   Description,
+  ErrorMessage,
   Field,
   FieldGroup,
   Fieldset,
@@ -60,6 +61,8 @@ interface WizardFeedback {
   tone: "success" | "error";
   message: string;
 }
+
+type FieldErrors = Record<string, string>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -142,6 +145,45 @@ function parseArrayTextareaValue(value: string): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+function isRequiredFieldFilled(
+  property: OnboardingSchemaProperty,
+  value: unknown
+): boolean {
+  if (property.type === "string") {
+    return getTextValue(value).trim().length > 0;
+  }
+
+  if (property.type === "integer" || property.type === "number") {
+    return getNumberValue(value).trim().length > 0;
+  }
+
+  if (property.type === "boolean") {
+    return getBooleanValue(value);
+  }
+
+  if (property.type === "array") {
+    return getArrayValue(value).length > 0;
+  }
+
+  return false;
+}
+
+function validateRequiredFields(
+  schema: OnboardingObjectSchema,
+  formData: Record<string, unknown>,
+  requiredFieldMessage: string
+): FieldErrors {
+  return schema.required.reduce<FieldErrors>((errors, fieldName) => {
+    const property = schema.properties[fieldName];
+
+    if (property && !isRequiredFieldFilled(property, formData[fieldName])) {
+      errors[fieldName] = requiredFieldMessage;
+    }
+
+    return errors;
+  }, {});
+}
+
 function ProgressIndicator({
   currentStep,
   totalSteps,
@@ -178,12 +220,14 @@ function SchemaFieldRenderer({
   property,
   required,
   formData,
+  error,
   onChange,
 }: {
   fieldName: string;
   property: OnboardingSchemaProperty;
   required: boolean;
   formData: Record<string, unknown>;
+  error?: string;
   onChange: (fieldName: string, value: unknown) => void;
 }) {
   const title = property.title ?? fieldName;
@@ -204,6 +248,7 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            invalid={Boolean(error)}
             name={fieldName}
             required={required}
             value={getTextValue(formData[fieldName])}
@@ -219,6 +264,7 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            invalid={Boolean(error)}
             name={fieldName}
             required={required}
             value={getTextValue(formData[fieldName])}
@@ -226,6 +272,7 @@ function SchemaFieldRenderer({
             onChange={(event) => onChange(fieldName, event.target.value)}
           />
         )}
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
       </Field>
     );
   }
@@ -245,6 +292,7 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            invalid={Boolean(error)}
             name={fieldName}
             required={required}
             value={getNumberValue(formData[fieldName])}
@@ -265,6 +313,7 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            invalid={Boolean(error)}
             type="number"
             name={fieldName}
             required={required}
@@ -276,6 +325,7 @@ function SchemaFieldRenderer({
             }}
           />
         )}
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
       </Field>
     );
   }
@@ -295,6 +345,7 @@ function SchemaFieldRenderer({
         {property.description ? (
           <Description>{property.description}</Description>
         ) : null}
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
       </CheckboxField>
     );
   }
@@ -337,6 +388,7 @@ function SchemaFieldRenderer({
               );
             })}
           </CheckboxGroup>
+          {error ? <ErrorMessage>{error}</ErrorMessage> : null}
         </Field>
       );
     }
@@ -352,6 +404,7 @@ function SchemaFieldRenderer({
         </Description>
         <Textarea
           aria-label={title}
+          invalid={Boolean(error)}
           name={fieldName}
           required={required}
           rows={4}
@@ -360,6 +413,7 @@ function SchemaFieldRenderer({
             onChange(fieldName, parseArrayTextareaValue(event.target.value))
           }
         />
+        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
       </Field>
     );
   }
@@ -429,6 +483,7 @@ export function OnboardingWizard() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<WizardFeedback | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
 
@@ -532,6 +587,7 @@ export function OnboardingWizard() {
       setSaving(true);
       setError(null);
       setFeedback(null);
+      setFieldErrors({});
 
       const nextFormData =
         Object.keys(formData).length > 0
@@ -586,6 +642,7 @@ export function OnboardingWizard() {
       setLoading(true);
       setError(null);
       setFeedback(null);
+      setFieldErrors({});
       setTemplate(null);
       setSubmission(nextStepState.submission);
       setFormData(nextStepState.formData);
@@ -601,6 +658,7 @@ export function OnboardingWizard() {
       setLoading(true);
       setError(null);
       setFeedback(null);
+      setFieldErrors({});
       setTemplate(null);
       setSubmission(previousStepState.submission);
       setFormData(previousStepState.formData);
@@ -609,12 +667,59 @@ export function OnboardingWizard() {
   }
 
   async function handleSubmit() {
+    if (schema) {
+      const nextFieldErrors = validateRequiredFields(
+        schema,
+        formData,
+        _(msg`This field is required.`)
+      );
+
+      if (Object.keys(nextFieldErrors).length > 0) {
+        setError(null);
+        setFieldErrors(nextFieldErrors);
+        setFeedback({
+          tone: "error",
+          message: _(
+            msg`We couldn't submit the form yet. Please review the highlighted fields.`
+          ),
+        });
+        return;
+      }
+    }
+
     if (await persistCurrentStep("submitted")) {
       setFeedback({
         tone: "success",
         message: _(msg`Onboarding submitted. HR will review your information.`),
       });
     }
+  }
+
+  function handleFieldChange(fieldName: string, value: unknown) {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [fieldName]: value,
+    }));
+
+    const property = schema?.properties[fieldName];
+
+    if (!property) {
+      return;
+    }
+
+    setFieldErrors((currentFieldErrors) => {
+      if (!currentFieldErrors[fieldName]) {
+        return currentFieldErrors;
+      }
+
+      if (!isRequiredFieldFilled(property, value)) {
+        return currentFieldErrors;
+      }
+
+      const nextFieldErrors = { ...currentFieldErrors };
+      delete nextFieldErrors[fieldName];
+      return nextFieldErrors;
+    });
   }
 
   if (loading && steps.length === 0) {
@@ -700,14 +805,10 @@ export function OnboardingWizard() {
                         key={fieldName}
                         fieldName={fieldName}
                         property={property}
+                        error={fieldErrors[fieldName]}
                         required={schema.required.includes(fieldName)}
                         formData={formData}
-                        onChange={(nextFieldName, value) =>
-                          setFormData((currentFormData) => ({
-                            ...currentFormData,
-                            [nextFieldName]: value,
-                          }))
-                        }
+                        onChange={handleFieldChange}
                       />
                     )
                   )}
