@@ -133,15 +133,19 @@ describe("config", () => {
     );
   });
 
-  it("resolveApiBaseUrl throws ApiBaseUrlConfigurationError on app.secpal.dev when VITE_API_URL is empty", async () => {
+  it("resolveApiBaseUrl returns the canonical live origin on app.secpal.dev when VITE_API_URL is empty", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");
 
-    const { resolveApiBaseUrl, ApiBaseUrlConfigurationError } =
-      await import("./config");
+    const { resolveApiBaseUrl, buildApiUrl } = await import("./config");
 
-    expect(() =>
-      resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })
-    ).toThrow(ApiBaseUrlConfigurationError);
+    expect(resolveApiBaseUrl({ runtimeHostname: "app.secpal.dev" })).toBe(
+      "https://api.secpal.dev"
+    );
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "app.secpal.dev",
+      })
+    ).toBe("https://api.secpal.dev/sanctum/csrf-cookie");
   });
 });

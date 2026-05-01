@@ -67,7 +67,7 @@ function shouldUseCanonicalLiveApiOrigin(
   }
 
   if (!normalizedConfiguredBaseUrl) {
-    return false;
+    return true;
   }
 
   if (!isAbsoluteHttpUrl(normalizedConfiguredBaseUrl)) {

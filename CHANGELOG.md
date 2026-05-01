@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Treated an empty production `VITE_API_URL` on `app.secpal.dev` the same as other leaked SPA-side API origins by collapsing it to the canonical `https://api.secpal.dev` host, so browser-session login can fetch `/sanctum/csrf-cookie` and bootstrap remote Playwright auth without failing immediately on the live app, resolving frontend issue #1046.
 - Preserved `/organization` tree state across back-to-back optimistic creates by keeping newly created parent units in the local tree overlay until the offline-sync hook has fetched them for real, so creating a company and then an immediate child branch no longer collapses the tree back to only the holding until a manual reload.
 - Replaced the placeholder pre-contract onboarding wizard with a schema-driven Catalyst form that renders localized template fields, restores saved draft answers, uses inline feedback instead of browser alerts, and updates existing onboarding submissions via `PATCH` before navigation or review submission.
 - Corrected the `/organization` Playwright XSRF-rotation regression to rotate the browser-visible app cookie instead of asserting a brittle cross-origin cookie detail, added end-to-end coverage that keeps restricted child-unit delete actions hidden across reloads, guarded the repaired live parent relationship on `app.secpal.dev`, and added an opt-in live CRUD proof for creating and deleting a child unit under `Headquarters` against the real live stack.
