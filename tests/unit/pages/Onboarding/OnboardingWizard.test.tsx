@@ -215,8 +215,9 @@ describe("OnboardingWizard", () => {
   });
 
   it("disables step navigation and draft actions while an upload is in flight", async () => {
-    let resolveUpload: ((value: { id: string; filename: string }) => void) | null =
-      null;
+    let resolveUpload:
+      | ((value: { id: string; filename: string }) => void)
+      | null = null;
 
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
@@ -281,7 +282,9 @@ describe("OnboardingWizard", () => {
     resolveUpload?.({ id: "file-3", filename: "tax.pdf" });
 
     await waitFor(() => {
-      expect(screen.getByText("File uploaded successfully.")).toBeInTheDocument();
+      expect(
+        screen.getByText("File uploaded successfully.")
+      ).toBeInTheDocument();
     });
   });
 
