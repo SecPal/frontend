@@ -450,6 +450,7 @@ function StepNavigation({
   onSaveDraft,
   onSubmit,
   canGoNext,
+  isBusy,
 }: {
   currentStep: number;
   totalSteps: number;
@@ -458,6 +459,7 @@ function StepNavigation({
   onSaveDraft: () => void;
   onSubmit: () => void;
   canGoNext: boolean;
+  isBusy: boolean;
 }) {
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
@@ -466,14 +468,14 @@ function StepNavigation({
     <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6 dark:border-zinc-800">
       <div>
         {!isFirstStep && (
-          <Button onClick={onPrevious} outline>
+          <Button disabled={isBusy} onClick={onPrevious} outline>
             <Trans>Previous</Trans>
           </Button>
         )}
       </div>
 
       <div className="flex gap-4">
-        <Button onClick={onSaveDraft} outline>
+        <Button disabled={isBusy} onClick={onSaveDraft} outline>
           <Trans>Save Draft</Trans>
         </Button>
 
@@ -516,6 +518,7 @@ export function OnboardingWizard() {
     []
   );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const currentStepIndexRef = useRef(0);
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
   const isCurrentStepEditable = isEditableSubmission(submission);
@@ -531,6 +534,10 @@ export function OnboardingWizard() {
       fileInputRef.current.value = "";
     }
   }
+
+  useEffect(() => {
+    currentStepIndexRef.current = currentStepIndex;
+  }, [currentStepIndex]);
 
   useEffect(() => {
     let active = true;
@@ -668,6 +675,10 @@ export function OnboardingWizard() {
   }
 
   async function handleSaveDraft() {
+    if (saving || uploading) {
+      return;
+    }
+
     if (await persistCurrentStep("draft")) {
       setFeedback({
         tone: "success",
@@ -697,6 +708,10 @@ export function OnboardingWizard() {
   }
 
   function handlePrevious() {
+    if (saving || uploading) {
+      return;
+    }
+
     if (currentStepIndex > 0) {
       const previousStep = steps[currentStepIndex - 1];
       const previousStepState = getOnboardingStepState(previousStep);
@@ -785,6 +800,7 @@ export function OnboardingWizard() {
     }
 
     try {
+      const startedStepIndex = currentStepIndexRef.current;
       setUploading(true);
       setError(null);
       setUploadFeedback(null);
@@ -808,6 +824,10 @@ export function OnboardingWizard() {
         uploadDocumentType
       );
 
+      if (currentStepIndexRef.current !== startedStepIndex) {
+        return;
+      }
+
       setUploadedFiles((currentFiles) => [
         ...currentFiles,
         {
@@ -828,7 +848,9 @@ export function OnboardingWizard() {
       setUploadFeedback({
         tone: "error",
         message:
-          err instanceof Error ? err.message : _(msg`Failed to upload file`),
+          err instanceof Error && err.message !== "Failed to upload file"
+            ? err.message
+            : _(msg`Failed to upload file`),
       });
     } finally {
       setUploading(false);
@@ -1099,6 +1121,7 @@ export function OnboardingWizard() {
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
               canGoNext={!saving && !uploading}
+              isBusy={saving || uploading}
             />
           </div>
         )}
