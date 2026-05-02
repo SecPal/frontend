@@ -9,6 +9,13 @@ describe("offlineLiveHelpers", () => {
     vi.unstubAllEnvs();
   });
 
+  it("ignores a missing API base URL for remote targets", () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    delete process.env.PLAYWRIGHT_API_BASE_URL;
+
+    expect(getMockCookieDomains()).toEqual(["app.secpal.dev"]);
+  });
+
   it("returns both app and API domains for split-host remote targets", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");

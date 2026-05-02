@@ -9,7 +9,7 @@ const MOCK_XSRF_TOKEN = "test-xsrf-token";
 const MOCK_SESSION_COOKIE_NAME = "secpal-playwright-session";
 
 function getMockCookieHostname(url: string | undefined): string | null {
-  if (!isRemoteE2ETarget(url)) {
+  if (!url || !isRemoteE2ETarget(url)) {
     return null;
   }
 
