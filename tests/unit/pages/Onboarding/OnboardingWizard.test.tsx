@@ -65,6 +65,8 @@ function renderWizard() {
 describe("OnboardingWizard", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
 
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
