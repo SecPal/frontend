@@ -846,7 +846,7 @@ test.describe("Organization Management", () => {
   });
 
   test.describe("Live organization proof", () => {
-    test("should show WSiS Nordwest under Headquarters on live targets", async ({
+    test("should show the Headquarters root unit on live targets", async ({
       authenticatedPage: page,
     }) => {
       test.skip(
@@ -857,19 +857,22 @@ test.describe("Organization Management", () => {
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
-      const wsisTreeItem = page
-        .getByRole("treeitem", { name: /WSiS Nordwest/i })
+      const headquartersTreeItem = page
+        .getByRole("treeitem", { name: /Headquarters/i })
         .first();
 
-      await expect(wsisTreeItem).toBeVisible();
-      await wsisTreeItem.click();
+      await expect(headquartersTreeItem).toBeVisible();
+      await headquartersTreeItem.click();
 
-      await expect(page.getByText(/^Parent$/i)).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 3, name: /Headquarters/i })
+      ).toBeVisible();
       await expect(
         page
-          .locator("dt", { hasText: /^Parent$/i })
+          .locator("dt", { hasText: /^Type$/i })
           .locator("xpath=following-sibling::dd[1]")
-      ).toHaveText("Headquarters");
+      ).toHaveText(/Holding/i);
+      await expect(page.locator("dt", { hasText: /^Parent$/i })).toHaveCount(0);
     });
 
     test("should create and remove a live child unit under Headquarters", async ({

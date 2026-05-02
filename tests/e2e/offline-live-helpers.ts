@@ -8,27 +8,55 @@ import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
 const MOCK_XSRF_TOKEN = "test-xsrf-token";
 const MOCK_SESSION_COOKIE_NAME = "secpal-playwright-session";
 
-function getMockCookieDomain(): string {
-  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
-  if (isRemoteE2ETarget(baseUrl)) {
-    return new URL(baseUrl).hostname;
+function getMockCookieHostname(url: string | undefined): string | null {
+  if (!url || !isRemoteE2ETarget(url)) {
+    return null;
   }
-  return "localhost";
+
+  return new URL(url).hostname;
+}
+
+export function getMockCookieDomains(
+  baseUrl = process.env.PLAYWRIGHT_BASE_URL,
+  apiBaseUrl = process.env.PLAYWRIGHT_API_BASE_URL
+): string[] {
+  const domains = new Set<string>();
+  const baseHostname = getMockCookieHostname(baseUrl);
+  const apiHostname = getMockCookieHostname(apiBaseUrl);
+
+  if (baseHostname) {
+    domains.add(baseHostname);
+  }
+
+  if (apiHostname) {
+    domains.add(apiHostname);
+  }
+
+  if (domains.size === 0) {
+    domains.add("localhost");
+  }
+
+  return [...domains];
+}
+
+function shouldUseSecureMockCookies(): boolean {
+  return getMockCookieDomains().every((domain) => domain !== "localhost");
 }
 
 async function ensureMockXsrfCookie(context: BrowserContext): Promise<void> {
-  const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
-  await context.addCookies([
-    {
+  const secure = shouldUseSecureMockCookies();
+
+  await context.addCookies(
+    getMockCookieDomains().map((domain) => ({
       name: "XSRF-TOKEN",
       value: MOCK_XSRF_TOKEN,
-      domain: getMockCookieDomain(),
+      domain,
       path: "/",
-      sameSite: "Lax",
-      secure: isHttps,
+      sameSite: "Lax" as const,
+      secure,
       httpOnly: false,
-    },
-  ]);
+    }))
+  );
 }
 
 export const offlineLiveMockUser = {
@@ -56,19 +84,19 @@ async function ensureMockSessionCookie(
   context: BrowserContext,
   value = "authenticated"
 ): Promise<void> {
-  const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
+  const secure = shouldUseSecureMockCookies();
 
-  await context.addCookies([
-    {
+  await context.addCookies(
+    getMockCookieDomains().map((domain) => ({
       name: MOCK_SESSION_COOKIE_NAME,
       value,
-      domain: getMockCookieDomain(),
+      domain,
       path: "/",
-      sameSite: "Lax",
-      secure: isHttps,
+      sameSite: "Lax" as const,
+      secure,
       httpOnly: true,
-    },
-  ]);
+    }))
+  );
 }
 
 function requestHasMockSessionCookie(cookieHeader: string | null): boolean {
