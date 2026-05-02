@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Seeded Playwright's live mock-session cookies for both the browser host and the configured API host, so split-host remote runs against `app.secpal.dev` plus `api.secpal.dev` no longer fall back to `/login` when employee, Android provisioning, and onboarding-review specs install mocked auth routes.
+- Replaced the brittle live organization proof that hard-coded `WSiS Nordwest` with a stable `Headquarters` root-unit assertion, so default remote Playwright runs no longer fail when the live seed data changes while the shipped organization UI still behaves correctly.
 - Blocked onboarding review submission when the current schema-rendered step still has empty required fields, surfaced inline field errors plus a clear review-blocked status message, and kept those field errors clearing as users complete the missing inputs, resolving frontend issue #1030.
 - Treated an empty production `VITE_API_URL` on `app.secpal.dev` the same as other leaked SPA-side API origins by collapsing it to the canonical `https://api.secpal.dev` host, so browser-session login can fetch `/sanctum/csrf-cookie` and bootstrap remote Playwright auth without failing immediately on the live app, resolving frontend issue #1046.
 - Stopped the generic employee edit form from sending `status` through `PATCH /v1/employees/:id` and made the status control read-only there, so non-status edits such as management-level or position updates no longer trip the backend's dedicated status-transition guard, resolving frontend issue #1045.
