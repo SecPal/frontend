@@ -11,6 +11,7 @@ import {
   fetchOnboardingSubmissions,
   fetchOnboardingTemplates,
   rejectOnboardingSubmission,
+  uploadOnboardingFile,
   validateOnboardingToken,
 } from "../../../src/services/onboardingApi";
 import { apiFetch } from "../../../src/services/csrf";
@@ -501,6 +502,52 @@ describe("createOnboardingSubmission", () => {
         status: "draft",
       })
     ).rejects.toThrow("Missing onboarding form template identifier");
+  });
+});
+
+describe("uploadOnboardingFile", () => {
+  it("posts onboarding attachments as multipart form data to the submission files endpoint", async () => {
+    const file = new File(["contract"], "contract.pdf", {
+      type: "application/pdf",
+    });
+
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(201, {
+        data: {
+          id: "file-9",
+          filename: "contract.pdf",
+        },
+      })
+    );
+
+    await expect(
+      uploadOnboardingFile("submission-9", file, "contract")
+    ).resolves.toEqual({
+      id: "file-9",
+      filename: "contract.pdf",
+    });
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/v1/onboarding/submissions/submission-9/files"),
+      expect.objectContaining({
+        method: "POST",
+        body: expect.any(FormData),
+      })
+    );
+  });
+
+  it("falls back to the backend message when onboarding attachment upload fails", async () => {
+    const file = new File(["id"], "passport.png", { type: "image/png" });
+
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(422, {
+        message: "The file must be a file of type: pdf, jpg, jpeg, png.",
+      })
+    );
+
+    await expect(
+      uploadOnboardingFile("submission-9", file, "id_document")
+    ).rejects.toThrow("The file must be a file of type: pdf, jpg, jpeg, png.");
   });
 });
 

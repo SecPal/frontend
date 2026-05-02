@@ -13,6 +13,7 @@ const onboardingApiMocks = vi.hoisted(() => ({
   createOnboardingSubmission: vi.fn(),
   fetchOnboardingSteps: vi.fn(),
   fetchOnboardingTemplate: vi.fn(),
+  uploadOnboardingFile: vi.fn(),
   updateOnboardingSubmission: vi.fn(),
 }));
 
@@ -107,6 +108,10 @@ describe("OnboardingWizard", () => {
       status: "draft",
       created_at: "2026-04-30T00:00:00Z",
       updated_at: "2026-04-30T00:00:00Z",
+    });
+    onboardingApiMocks.uploadOnboardingFile.mockResolvedValue({
+      id: "file-1",
+      filename: "contract.pdf",
     });
   });
 

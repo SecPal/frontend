@@ -226,6 +226,10 @@ msgstr "Editing organizational units is not possible while offline. Please recon
 msgid "Error Loading Employee"
 msgstr "Error Loading Employee"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to upload file"
+msgstr "Failed to upload file"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
 msgstr "BWR status updated."
@@ -366,6 +370,10 @@ msgstr "Select new parent"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading qualifications..."
 msgstr "Loading qualifications..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Document Type"
+msgstr "Document Type"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
@@ -538,6 +546,10 @@ msgstr "Make root unit (no parent)"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Accepted formats: PDF, JPG, JPEG, PNG."
+msgstr "Accepted formats: PDF, JPG, JPEG, PNG."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Device label"
 msgstr "Device label"
@@ -569,6 +581,10 @@ msgstr "Minimum 8 characters"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
 msgstr "Delete Site"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Your current answers will be saved as a draft before the first file upload."
+msgstr "Your current answers will be saved as a draft before the first file upload."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -655,6 +671,10 @@ msgstr "No documents uploaded"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
+msgstr "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -1000,6 +1020,10 @@ msgstr "Holding"
 msgid "Validation Error"
 msgstr "Validation Error"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
+msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
@@ -1053,6 +1077,10 @@ msgstr "Invitation Requested"
 msgid "Close detail panel"
 msgstr "Close detail panel"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Uploading..."
+msgstr "Uploading..."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revoke"
 msgstr "Revoke"
@@ -1069,6 +1097,10 @@ msgstr "Not enabled"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Activity Logs"
 msgstr "Activity Logs"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Banking Details"
+msgstr "Banking Details"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Sent"
@@ -1168,6 +1200,10 @@ msgstr "BWR Submission Date"
 msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "File uploaded successfully."
+msgstr "File uploaded successfully."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "No activity logs found."
 msgstr "No activity logs found."
@@ -1191,6 +1227,10 @@ msgstr "All units"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First Name:"
 msgstr "First Name:"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Upload File"
+msgstr "Upload File"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -1274,6 +1314,10 @@ msgstr "Add Child Unit"
 msgid "Country"
 msgstr "Country"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Choose the attachment category that best matches the file."
+msgstr "Choose the attachment category that best matches the file."
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1356,6 +1400,10 @@ msgstr "Expires"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
 msgstr "First Name"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Contract"
+msgstr "Contract"
 
 #: src/components/application-layout.tsx
 msgid "Lock app"
@@ -1698,6 +1746,10 @@ msgstr "Choose a new parent unit or make this a root unit."
 msgid "Description"
 msgstr "Description"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Supporting Documents"
+msgstr "Supporting Documents"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "You can inspect BWR data, but write permission is required to manage it."
 msgstr "You can inspect BWR data, but write permission is required to manage it."
@@ -2020,6 +2072,10 @@ msgstr "Updating..."
 msgid "Enabled"
 msgstr "Enabled"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Files can only be uploaded while this onboarding step is still editable."
+msgstr "Files can only be uploaded while this onboarding step is still editable."
+
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2070,6 +2126,10 @@ msgstr "Error"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Uploaded in this session"
+msgstr "Uploaded in this session"
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
@@ -2246,6 +2306,10 @@ msgstr "Last Name"
 msgid "Hash Chain (Link)"
 msgstr "Hash Chain (Link)"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Attachment"
+msgstr "Attachment"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Notes"
 msgstr "BWR Notes"
@@ -2405,6 +2469,10 @@ msgstr "Add Employee"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Edit Site"
 msgstr "Edit Site"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity Document"
+msgstr "Identity Document"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"

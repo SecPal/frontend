@@ -226,6 +226,10 @@ msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Error Loading Employee"
 msgstr "Fehler beim Laden eines Mitarbeiters"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to upload file"
+msgstr "Datei konnte nicht hochgeladen werden"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
 msgstr "BWR-Status aktualisiert."
@@ -366,6 +370,10 @@ msgstr "neue übergeordnete Einheit auswählen"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading qualifications..."
 msgstr "Qualifikationen laden..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Document Type"
+msgstr "Dokumenttyp"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
@@ -538,6 +546,10 @@ msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Accepted formats: PDF, JPG, JPEG, PNG."
+msgstr "Akzeptierte Formate: PDF, JPG, JPEG, PNG."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Device label"
 msgstr "Gerätebezeichnung"
@@ -569,6 +581,10 @@ msgstr "Mindestens 8 Zeichen"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
 msgstr "Standort löschen"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Your current answers will be saved as a draft before the first file upload."
+msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf gespeichert."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -655,6 +671,10 @@ msgstr "Keine Dokumente hochgeladen"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbeiters über die dedizierten Runtime-Endpunkte."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
+msgstr "Laden Sie PDF-, JPG- oder PNG-Dateien mit bis zu 10 MB für die Vertrags-, Identitäts- oder Bankverifizierung hoch."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -1000,6 +1020,10 @@ msgstr "Holding"
 msgid "Validation Error"
 msgstr "Validierungsfehler"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
+msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte versuchen Sie erneut, Ihren Entwurf zu speichern."
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
@@ -1053,6 +1077,10 @@ msgstr "Einladung angefordert"
 msgid "Close detail panel"
 msgstr "Detailfenster schließen"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Uploading..."
+msgstr "Wird hochgeladen..."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revoke"
 msgstr "Widerrufen"
@@ -1069,6 +1097,10 @@ msgstr "Nicht aktiviert"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Activity Logs"
 msgstr "Aktivitätsprotokolle"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Banking Details"
+msgstr "Bankverbindung"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Sent"
@@ -1168,6 +1200,10 @@ msgstr "BWR-Übermittlungsdatum"
 msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "File uploaded successfully."
+msgstr "Datei erfolgreich hochgeladen."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
@@ -1191,6 +1227,10 @@ msgstr "Alle Einheiten"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First Name:"
 msgstr "Vorname:"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Upload File"
+msgstr "Datei hochladen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -1274,6 +1314,10 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Country"
 msgstr "Land"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Choose the attachment category that best matches the file."
+msgstr "Wählen Sie die Anhangskategorie, die am besten zur Datei passt."
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1356,6 +1400,10 @@ msgstr "Läuft ab"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
 msgstr "Vorname"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Contract"
+msgstr "Vertrag"
 
 #: src/components/application-layout.tsx
 msgid "Lock app"
@@ -1698,6 +1746,10 @@ msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu ei
 msgid "Description"
 msgstr "Beschreibung"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Supporting Documents"
+msgstr "Zusätzliche Unterlagen"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "You can inspect BWR data, but write permission is required to manage it."
 msgstr "Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich."
@@ -2020,6 +2072,10 @@ msgstr "Aktualisiere ..."
 msgid "Enabled"
 msgstr "Aktiviert"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Files can only be uploaded while this onboarding step is still editable."
+msgstr "Dateien können nur hochgeladen werden, solange dieser Onboarding-Schritt noch bearbeitbar ist."
+
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2070,6 +2126,10 @@ msgstr "Fehler"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Uploaded in this session"
+msgstr "In dieser Sitzung hochgeladen"
 
 #. placeholder {0}: formData.max_viewable_rank
 #. placeholder {1}: formData.max_assignable_rank
@@ -2246,6 +2306,10 @@ msgstr "Nachname"
 msgid "Hash Chain (Link)"
 msgstr "Hash-Kette (Link)"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Attachment"
+msgstr "Anhang"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Notes"
 msgstr "BWR-Notizen"
@@ -2405,6 +2469,10 @@ msgstr "Mitarbeiter hinzufügen"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Edit Site"
 msgstr "Standort bearbeiten"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity Document"
+msgstr "Ausweisdokument"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"

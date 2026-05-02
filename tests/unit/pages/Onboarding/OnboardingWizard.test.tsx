@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
 import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWizard";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
 
@@ -64,6 +65,8 @@ function renderWizard() {
 describe("OnboardingWizard", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
 
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
@@ -91,6 +94,10 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
       makeSubmission("template-1")
     );
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValue({
+      id: "file-1",
+      filename: "contract.pdf",
+    });
   });
 
   it("loads the current runtime templates and advances after saving the active template draft", async () => {
@@ -141,6 +148,268 @@ describe("OnboardingWizard", () => {
         screen.getByText("Draft saved. You can continue later.")
       ).toBeInTheDocument();
     });
+  });
+
+  it("uploads onboarding attachments for the current editable step and shows inline upload feedback", async () => {
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-2",
+      filename: "passport.png",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /upload file/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Document Type"), {
+      target: { value: "id_document" },
+    });
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        file,
+        "id_document"
+      );
+    });
+
+    expect(screen.getByText("File uploaded successfully.")).toBeInTheDocument();
+    expect(screen.getByText("passport.png")).toBeInTheDocument();
+    expect(screen.getAllByText("Identity Document")).toHaveLength(2);
+  });
+
+  it("localizes the generic upload fallback error and keeps the selected file for retry", async () => {
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new Error("Failed to upload file")
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /datei hochladen/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Anhang"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /datei hochladen/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Datei konnte nicht hochgeladen werden")
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("passport.png")).toBeInTheDocument();
+  });
+
+  it("disables step navigation and draft actions while an upload is in flight", async () => {
+    let resolveUpload:
+      | ((value: { id: string; filename: string }) => void)
+      | null = null;
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_completed: false,
+        submission: makeSubmission("template-1"),
+      },
+      {
+        step_number: 2,
+        title: "Tax Details",
+        description: "Tax Details description",
+        template_id: "template-2",
+        is_completed: false,
+        submission: makeSubmission("template-2"),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
+      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveUpload = resolve;
+        })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: {
+        files: [new File(["tax"], "tax.pdf", { type: "application/pdf" })],
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /uploading/i })).toBeDisabled();
+    });
+
+    expect(screen.getByRole("button", { name: /previous/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /save draft/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /submit for review/i })
+    ).toBeDisabled();
+
+    resolveUpload?.({ id: "file-3", filename: "tax.pdf" });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("File uploaded successfully.")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("creates a draft before the first upload when the current step has no submission yet", async () => {
+    const file = new File(["contract"], "contract.pdf", {
+      type: "application/pdf",
+    });
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_completed: false,
+      },
+    ]);
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate("template-1", "Personal Information", undefined, {
+          type: "object",
+          properties: {
+            legal_name: {
+              type: "string",
+              title: "Legal Name",
+            },
+          },
+          required: [],
+        })
+      );
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Casey Example",
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Legal Name")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Legal Name"), {
+      target: { value: "Casey Example" },
+    });
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
+        form_template_id: "template-1",
+        form_data: { legal_name: "Casey Example" },
+        status: "draft",
+      });
+    });
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        file,
+        "contract"
+      );
+    });
+  });
+
+  it("shows only inline upload feedback when draft preparation fails before the first upload", async () => {
+    const file = new File(["contract"], "contract.pdf", {
+      type: "application/pdf",
+    });
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_completed: false,
+      },
+    ]);
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate("template-1", "Personal Information", undefined, {
+          type: "object",
+          properties: {
+            legal_name: {
+              type: "string",
+              title: "Legal Name",
+            },
+          },
+          required: [],
+        })
+      );
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockRejectedValueOnce(
+      new Error("Failed to save draft")
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Legal Name")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Legal Name"), {
+      target: { value: "Casey Example" },
+    });
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "We couldn't prepare this step for file uploads. Please try saving your draft again."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Failed to save draft")).not.toBeInTheDocument();
   });
 
   it("submits the active step using the existing submission payload fallback", async () => {
