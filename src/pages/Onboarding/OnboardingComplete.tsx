@@ -60,11 +60,8 @@ interface TokenValidationState {
   retryAfterSeconds?: number;
 }
 
-type Translate = ReturnType<typeof useLingui>["_"];
-
 function mapOnboardingFieldErrors(
-  backendErrors: Record<string, string[]> | undefined,
-  translate: Translate
+  backendErrors: Record<string, string[]> | undefined
 ): ValidationErrors {
   const errors: ValidationErrors = {};
 
@@ -95,9 +92,6 @@ function mapOnboardingFieldErrors(
         errors.password_confirmation = fieldMessage;
         break;
       default:
-        errors.general = translate(
-          msg`Please review the highlighted fields and try again.`
-        );
         break;
     }
   }
@@ -434,7 +428,7 @@ export function OnboardingComplete() {
       if (isOnboardingApiError(error)) {
         if (error.response.status === 422) {
           const backendErrors = getErrorValidationErrors(error);
-          const formattedErrors = mapOnboardingFieldErrors(backendErrors, _);
+          const formattedErrors = mapOnboardingFieldErrors(backendErrors);
           const hasFieldErrors = Object.keys(formattedErrors).some(
             (fieldName) => fieldName !== "general"
           );
