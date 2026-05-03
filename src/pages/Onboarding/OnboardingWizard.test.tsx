@@ -199,6 +199,31 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /you're all set/i })
     ).toBeInTheDocument();
   });
+
+  it("shows the API validation message when a file upload is rejected", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.uploadOnboardingFile.mockRejectedValue(
+      new ApiError("The file must be a PDF, JPG, or PNG", 422, {})
+    );
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    const attachmentInput = await screen.findByLabelText(/attachment/i);
+    await user.upload(
+      attachmentInput,
+      new File(["invalid"], "document.pdf", { type: "application/pdf" })
+    );
+
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The file must be a PDF, JPG, or PNG"
+    );
+  });
 });
 
 describe("OnboardingWizard optional emergency contact schema", () => {
@@ -590,30 +615,5 @@ describe("OnboardingWizard skip step behavior", () => {
     expect(
       onboardingApiMocks.createOnboardingSubmission
     ).not.toHaveBeenCalled();
-  });
-
-  it("shows the API validation message when a file upload is rejected", async () => {
-    const user = userEvent.setup();
-    onboardingApiMocks.uploadOnboardingFile.mockRejectedValue(
-      new ApiError("The file must be a PDF, JPG, or PNG", 422, {})
-    );
-
-    renderWithProviders();
-
-    expect(
-      await screen.findByRole("heading", { name: /personal information form/i })
-    ).toBeInTheDocument();
-
-    const attachmentInput = await screen.findByLabelText(/attachment/i);
-    await user.upload(
-      attachmentInput,
-      new File(["invalid"], "document.pdf", { type: "application/pdf" })
-    );
-
-    await user.click(screen.getByRole("button", { name: /upload file/i }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "The file must be a PDF, JPG, or PNG"
-    );
   });
 });
