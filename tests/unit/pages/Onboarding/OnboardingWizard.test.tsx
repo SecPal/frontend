@@ -485,17 +485,19 @@ describe("OnboardingWizard", () => {
         )
       );
 
-    // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it
+    // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it.
+    // submitRequiredDraftSteps() runs first (before persistCurrentStep) and submits step-1's draft,
+    // then persistCurrentStep("submitted") submits step-2 (the current last step).
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
       makeSubmission("template-1")
     );
     vi.mocked(onboardingApi.updateOnboardingSubmission)
       .mockResolvedValueOnce({
-        ...makeSubmission("template-2"),
+        ...makeSubmission("template-1"),
         status: "submitted",
       })
       .mockResolvedValueOnce({
-        ...makeSubmission("template-1"),
+        ...makeSubmission("template-2"),
         status: "submitted",
       });
 
@@ -516,12 +518,12 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
         1,
-        "submission-template-2",
+        "submission-template-1",
         { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
       );
       expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
         2,
-        "submission-template-1",
+        "submission-template-2",
         { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
       );
     });
