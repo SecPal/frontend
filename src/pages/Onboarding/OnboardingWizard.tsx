@@ -751,7 +751,7 @@ export function OnboardingWizard() {
         continue;
       }
 
-      if (step.submission === null) {
+      if (step.submission == null) {
         setError(_(msg`Failed to submit`));
         return false;
       }
