@@ -693,16 +693,6 @@ export function OnboardingWizard() {
     };
   }, [navigate]);
 
-  useEffect(() => {
-    if (steps.length === 0) {
-      return;
-    }
-
-    if (isOnboardingAwaitingHrReview(steps)) {
-      navigate("/onboarding/submitted", { replace: true });
-    }
-  }, [navigate, steps]);
-
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
   useEffect(() => {
@@ -908,6 +898,10 @@ export function OnboardingWizard() {
   }
 
   async function handleSubmit() {
+    if (saving || uploading) {
+      return;
+    }
+
     if (schema && template) {
       const isOptionalTemplate = template.is_required === false;
       const skipRequiredValidation =
