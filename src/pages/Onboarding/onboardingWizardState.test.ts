@@ -83,7 +83,7 @@ describe("isOnboardingAwaitingHrReview", () => {
     expect(isOnboardingAwaitingHrReview([])).toBe(false);
   });
 
-  it("is true when the last step is submitted or approved", () => {
+  it("is true when all required steps are submitted or approved", () => {
     const base = (
       status: "draft" | "submitted" | "approved"
     ): OnboardingStep[] => [
@@ -110,7 +110,108 @@ describe("isOnboardingAwaitingHrReview", () => {
     expect(isOnboardingAwaitingHrReview(base("draft"))).toBe(false);
   });
 
-  it("is false when the last step was rejected or has no submission yet", () => {
+  it("is false when any required step is still incomplete", () => {
+    const steps: OnboardingStep[] = [
+      {
+        step_number: 1,
+        title: "First",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {},
+          status: "draft",
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Last",
+        template_id: "template-2",
+        is_required: true,
+        is_completed: true,
+        submission: {
+          id: "submission-2",
+          employee_id: "employee-1",
+          form_template_id: "template-2",
+          form_data: {},
+          status: "submitted",
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(steps)).toBe(false);
+  });
+
+  it("ignores incomplete optional steps once required steps are submitted", () => {
+    const steps: OnboardingStep[] = [
+      {
+        step_number: 1,
+        title: "Required",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: true,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {},
+          status: "submitted",
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Optional",
+        template_id: "template-2",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(steps)).toBe(true);
+  });
+
+  it("falls back to the last step status when there are no required steps", () => {
+    const steps: OnboardingStep[] = [
+      {
+        step_number: 1,
+        title: "Optional one",
+        template_id: "template-1",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+      {
+        step_number: 2,
+        title: "Optional two",
+        template_id: "template-2",
+        is_required: false,
+        is_completed: true,
+        submission: {
+          id: "submission-2",
+          employee_id: "employee-1",
+          form_template_id: "template-2",
+          form_data: {},
+          status: "submitted",
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(steps)).toBe(true);
+  });
+
+  it("is false when a required step was rejected or has no submission yet", () => {
     const rejected: OnboardingStep[] = [
       {
         step_number: 1,

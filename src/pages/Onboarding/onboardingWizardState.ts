@@ -6,16 +6,22 @@ import type {
   OnboardingSubmission,
 } from "../../services/onboardingApi";
 
-/** Last step submitted or approved — employee flow finished; HR review pending or done at contract level. */
+/** Every required step submitted or approved — employee flow finished; HR review pending or done at contract level. */
 export function isOnboardingAwaitingHrReview(steps: OnboardingStep[]): boolean {
-  const last = steps[steps.length - 1];
-  if (last === undefined) {
+  if (steps.length === 0) {
     return false;
   }
 
-  const status = last.submission?.status;
+  const requiredSteps = steps.filter((step) => step.is_required);
+  if (requiredSteps.length === 0) {
+    const status = steps[steps.length - 1]?.submission?.status;
+    return status === "submitted" || status === "approved";
+  }
 
-  return status === "submitted" || status === "approved";
+  return requiredSteps.every((step) => {
+    const status = step.submission?.status;
+    return status === "submitted" || status === "approved";
+  });
 }
 
 export function getOnboardingStepState(step: OnboardingStep | undefined): {
