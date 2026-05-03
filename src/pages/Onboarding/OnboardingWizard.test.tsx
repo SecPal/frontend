@@ -8,6 +8,7 @@ import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OnboardingWizard } from "./OnboardingWizard";
+import { ApiError } from "../../services/ApiError";
 
 const onboardingApiMocks = vi.hoisted(() => ({
   createOnboardingSubmission: vi.fn(),
@@ -155,5 +156,30 @@ describe("OnboardingWizard", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(/draft saved/i);
 
     alertSpy.mockRestore();
+  });
+
+  it("shows the API validation message when a file upload is rejected", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.uploadOnboardingFile.mockRejectedValue(
+      new ApiError("The file must be a PDF, JPG, or PNG", 422, {})
+    );
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    const attachmentInput = await screen.findByLabelText(/attachment/i);
+    await user.upload(
+      attachmentInput,
+      new File(["invalid"], "document.pdf", { type: "application/pdf" })
+    );
+
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The file must be a PDF, JPG, or PNG"
+    );
   });
 });

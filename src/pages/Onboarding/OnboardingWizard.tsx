@@ -35,6 +35,7 @@ import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
 import { getLocalizedErrorMessage } from "../../lib/errorUtils";
+import { ApiError } from "../../services/ApiError";
 import { getOnboardingStepState } from "./onboardingWizardState";
 
 interface OnboardingSchemaArrayItems {
@@ -859,10 +860,14 @@ export function OnboardingWizard() {
     } catch (err) {
       setUploadFeedback({
         tone: "error",
-        message: getLocalizedErrorMessage(err, _, {
-          fallback: msg`Failed to upload file`,
-          validation: msg`Please review the highlighted fields and try again.`,
-        }),
+        message:
+          err instanceof ApiError &&
+          err.statusCode === 422 &&
+          err.message !== "Failed to upload file"
+            ? err.message
+            : getLocalizedErrorMessage(err, _, {
+                fallback: msg`Failed to upload file`,
+              }),
       });
     } finally {
       setUploading(false);
