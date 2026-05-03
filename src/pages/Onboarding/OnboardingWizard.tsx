@@ -1000,12 +1000,14 @@ export function OnboardingWizard() {
       }
     }
 
+    if (currentStepIndex >= steps.length - 1) {
+      if (!(await submitRequiredDraftSteps())) {
+        return;
+      }
+    }
+
     if (await persistCurrentStep("submitted")) {
       if (currentStepIndex >= steps.length - 1) {
-        if (!(await submitRequiredDraftSteps())) {
-          return;
-        }
-
         navigate("/onboarding/submitted", { replace: true });
         return;
       }
