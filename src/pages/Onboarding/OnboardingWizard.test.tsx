@@ -157,3 +157,97 @@ describe("OnboardingWizard", () => {
     alertSpy.mockRestore();
   });
 });
+
+describe("OnboardingWizard optional emergency contact schema", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Emergency Contact",
+        description: "Optional emergency contacts.",
+        template_id: "template-emergency",
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-emergency",
+      name: "Emergency Contact",
+      title: "Emergency Contact",
+      description: "Optional emergency contact persons",
+      form_schema: {
+        title: "Emergency Contact",
+        description: "Optional emergency contact persons",
+        type: "object",
+        required: [],
+        properties: {
+          contact_1_name: {
+            type: "string",
+            title: "Contact 1: Name",
+            maxLength: 100,
+          },
+          contact_1_phone: {
+            type: "string",
+            title: "Contact 1: Phone",
+          },
+          contact_1_relationship: {
+            type: "string",
+            title: "Contact 1: Relationship",
+            enum: ["spouse", "friend"],
+          },
+        },
+      },
+      is_required: false,
+      is_system_template: true,
+      sort_order: 3,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    onboardingApiMocks.createOnboardingSubmission.mockResolvedValue({
+      id: "submission-emergency",
+      employee_id: "employee-1",
+      form_template_id: "template-emergency",
+      form_data: {},
+      status: "submitted",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+  });
+
+  it("does not mark emergency contact fields required and submits empty data", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    expect(screen.getByLabelText(/contact 1: name/i)).not.toHaveAttribute(
+      "required"
+    );
+    expect(screen.getByLabelText(/contact 1: phone/i)).not.toHaveAttribute(
+      "required"
+    );
+    expect(screen.getByLabelText(/contact 1: relationship/i)).not.toHaveAttribute(
+      "required"
+    );
+
+    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(onboardingApiMocks.createOnboardingSubmission).toHaveBeenCalledWith(
+        expect.objectContaining({
+          form_template_id: "template-emergency",
+          status: "submitted",
+          form_data: {},
+        })
+      );
+    });
+  });
+});
