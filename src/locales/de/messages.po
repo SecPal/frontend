@@ -59,6 +59,10 @@ msgstr "Kunde bearbeiten"
 msgid "Delete \"{unitName}\"?"
 msgstr "\"{unitName}\" löschen?"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Skip this step"
+msgstr "Diesen Schritt überspringen"
+
 #: src/components/VerificationDots.tsx
 msgid "Merkle Tree"
 msgstr "Merkelbaum"
@@ -1465,6 +1469,10 @@ msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
 msgstr "Validierung Ihres Links..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional"
+msgstr "Optional"
 
 #: src/pages/Login.tsx
 msgid "Sign in with passkey"

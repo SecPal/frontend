@@ -59,6 +59,10 @@ msgstr "Edit Customer"
 msgid "Delete \"{unitName}\"?"
 msgstr "Delete \"{unitName}\"?"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Skip this step"
+msgstr "Skip this step"
+
 #: src/components/VerificationDots.tsx
 msgid "Merkle Tree"
 msgstr "Merkle Tree"
@@ -1465,6 +1469,10 @@ msgstr "Management level must be between 1 and 255"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
 msgstr "Validating your link..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional"
+msgstr "Optional"
 
 #: src/pages/Login.tsx
 msgid "Sign in with passkey"

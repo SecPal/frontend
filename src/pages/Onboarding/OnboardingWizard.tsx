@@ -195,6 +195,22 @@ function validateRequiredFields(
   }, {});
 }
 
+/** True when every schema field is empty — optional steps can be skipped without validation. */
+function isSchemaFormSemanticallyEmpty(
+  schema: OnboardingObjectSchema,
+  formData: Record<string, unknown>
+): boolean {
+  return Object.keys(schema.properties).every((fieldName) => {
+    const property = schema.properties[fieldName];
+
+    if (!property) {
+      return true;
+    }
+
+    return !isRequiredFieldFilled(property, formData[fieldName]);
+  });
+}
+
 function isEditableSubmission(
   submission: OnboardingSubmission | null
 ): boolean {
@@ -449,6 +465,8 @@ function StepNavigation({
   onNext,
   onSaveDraft,
   onSubmit,
+  onSkipStep,
+  showSkipStep,
   canGoNext,
   isBusy,
 }: {
@@ -458,6 +476,8 @@ function StepNavigation({
   onNext: () => void;
   onSaveDraft: () => void;
   onSubmit: () => void;
+  onSkipStep?: () => void;
+  showSkipStep?: boolean;
   canGoNext: boolean;
   isBusy: boolean;
 }) {
@@ -474,10 +494,16 @@ function StepNavigation({
         )}
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-wrap items-center justify-end gap-4">
         <Button disabled={isBusy} onClick={onSaveDraft} outline>
           <Trans>Save Draft</Trans>
         </Button>
+
+        {showSkipStep && onSkipStep && !isLastStep ? (
+          <Button disabled={isBusy} onClick={onSkipStep} outline>
+            <Trans>Skip this step</Trans>
+          </Button>
+        ) : null}
 
         {isLastStep ? (
           <Button onClick={onSubmit} disabled={!canGoNext}>
@@ -729,23 +755,30 @@ export function OnboardingWizard() {
   }
 
   async function handleSubmit() {
-    if (schema) {
-      const nextFieldErrors = validateRequiredFields(
-        schema,
-        formData,
-        _(msg`This field is required.`)
-      );
+    if (schema && template) {
+      const isOptionalTemplate = template.is_required === false;
+      const skipRequiredValidation =
+        isOptionalTemplate &&
+        isSchemaFormSemanticallyEmpty(schema, formData);
 
-      if (Object.keys(nextFieldErrors).length > 0) {
-        setError(null);
-        setFieldErrors(nextFieldErrors);
-        setFeedback({
-          tone: "error",
-          message: _(
-            msg`We couldn't submit the form yet. Please review the highlighted fields.`
-          ),
-        });
-        return;
+      if (!skipRequiredValidation) {
+        const nextFieldErrors = validateRequiredFields(
+          schema,
+          formData,
+          _(msg`This field is required.`)
+        );
+
+        if (Object.keys(nextFieldErrors).length > 0) {
+          setError(null);
+          setFieldErrors(nextFieldErrors);
+          setFeedback({
+            tone: "error",
+            message: _(
+              msg`We couldn't submit the form yet. Please review the highlighted fields.`
+            ),
+          });
+          return;
+        }
       }
     }
 
@@ -921,9 +954,16 @@ export function OnboardingWizard() {
 
         {template && (
           <div>
-            <Heading level={2} className="mb-4">
-              {template.title ?? template.name}
-            </Heading>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Heading level={2} className="mb-0">
+                {template.title ?? template.name}
+              </Heading>
+              {template.is_required === false ? (
+                <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  <Trans>Optional</Trans>
+                </span>
+              ) : null}
+            </div>
 
             {template.description ? (
               <Text className="mb-6 text-zinc-600 dark:text-zinc-400">
@@ -1120,6 +1160,8 @@ export function OnboardingWizard() {
               onNext={handleNext}
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
+              onSkipStep={handleNext}
+              showSkipStep={template.is_required === false}
               canGoNext={!saving && !uploading}
               isBusy={saving || uploading}
             />

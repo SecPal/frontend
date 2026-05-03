@@ -16,7 +16,8 @@ function makeTemplate(
   id: string,
   title: string,
   description = `${title} description`,
-  formSchema: Record<string, unknown> = {}
+  formSchema: Record<string, unknown> = {},
+  isRequired = true
 ) {
   return {
     id,
@@ -26,7 +27,7 @@ function makeTemplate(
     form_schema: formSchema,
     sort_order: Number(id.split("-")[1] ?? 1) * 10,
     step_number: Number(id.split("-")[1] ?? 1),
-    is_required: true,
+    is_required: isRequired,
     is_system_template: true,
     can_be_deleted: false,
     can_be_edited: false,
@@ -655,5 +656,196 @@ describe("OnboardingWizard", () => {
     expect(
       screen.getByText("Welcome to SecPal Onboarding")
     ).toBeInTheDocument();
+  });
+
+  it("submits an optional template without validating schema required fields when the step is empty", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional extras",
+        description: "Optional extras description",
+        template_id: "template-opt",
+        is_completed: false,
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-opt",
+          "Optional extras",
+          "Optional extras description",
+          {
+            type: "object",
+            required: ["extra_note"],
+            properties: {
+              extra_note: {
+                type: "string",
+                title: "Extra note",
+              },
+            },
+          },
+          false
+        )
+      );
+
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue({
+      ...makeSubmission("template-opt", {}),
+      status: "submitted",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Optional extras")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/^Optional$/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
+        form_template_id: "template-opt",
+        form_data: {},
+        status: "submitted",
+      });
+    });
+  });
+
+  it("validates schema required fields on an optional template when the user started filling the step", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional extras",
+        description: "Optional extras description",
+        template_id: "template-opt",
+        is_completed: false,
+        submission: makeSubmission("template-opt", {}),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-opt",
+          "Optional extras",
+          "Optional extras description",
+          {
+            type: "object",
+            required: ["note_a", "note_b"],
+            properties: {
+              note_a: { type: "string", title: "Note A" },
+              note_b: { type: "string", title: "Note B" },
+            },
+          },
+          false
+        )
+      );
+
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue({
+      ...makeSubmission("template-opt", { note_a: "x" }),
+      status: "submitted",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Note A")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Note A"), {
+      target: { value: "started" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "We couldn't submit the form yet. Please review the highlighted fields."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("This field is required.")).toBeInTheDocument();
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
+  it("shows Skip this step for an optional step that is not the last step", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional first",
+        description: "First description",
+        template_id: "template-opt",
+        is_completed: false,
+        submission: null,
+      },
+      {
+        step_number: 2,
+        title: "Required last",
+        description: "Last description",
+        template_id: "template-req",
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-opt",
+          "Optional first",
+          "First description",
+          {
+            type: "object",
+            required: [],
+            properties: {
+              note: { type: "string", title: "Note" },
+            },
+          },
+          false
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-req",
+          "Required last",
+          "Last description",
+          {
+            type: "object",
+            required: [],
+            properties: {
+              code: { type: "string", title: "Code" },
+            },
+          },
+          true
+        )
+      );
+
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-opt", {})
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /skip this step/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /skip this step/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Required last")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /skip this step/i })
+    ).not.toBeInTheDocument();
   });
 });

@@ -228,6 +228,11 @@ describe("OnboardingWizard optional emergency contact schema", () => {
       await screen.findByRole("heading", { name: /emergency contact/i })
     ).toBeInTheDocument();
 
+    expect(screen.getByText(/^Optional$/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /skip this step/i })
+    ).not.toBeInTheDocument();
+
     expect(screen.getByLabelText(/contact 1: name/i)).not.toHaveAttribute(
       "required"
     );
