@@ -37,6 +37,7 @@ import {
   validateNameChange,
   type ValidationSeverity,
 } from "../../utils/nameValidation";
+import { getOnboardingPasswordIssue } from "../../utils/onboardingPasswordValidation";
 
 interface FormData {
   first_name: string;
@@ -119,7 +120,8 @@ function mapOnboardingFieldErrors(
  *
  * Security:
  * - Token is single-use and expires after 7 days (backend enforced)
- * - Client-side validation mirrors backend Password::defaults()
+ * - Client-side validation mirrors backend password defaults (min 12, mixed
+ *   case, numbers, symbols; breach checks are server-side only)
  */
 export function OnboardingComplete() {
   const [searchParams] = useSearchParams();
@@ -363,8 +365,19 @@ export function OnboardingComplete() {
 
     if (!formData.password) {
       newErrors.password = _(msg`Password is required`);
-    } else if (formData.password.length < 8) {
-      newErrors.password = _(msg`Password must be at least 8 characters`);
+    } else {
+      const issue = getOnboardingPasswordIssue(formData.password);
+      if (issue === "too_short") {
+        newErrors.password = _(msg`Password must be at least 12 characters`);
+      } else if (issue === "mixed_case") {
+        newErrors.password = _(
+          msg`Password must include both uppercase and lowercase letters`
+        );
+      } else if (issue === "number") {
+        newErrors.password = _(msg`Password must include at least one number`);
+      } else if (issue === "symbol") {
+        newErrors.password = _(msg`Password must include at least one symbol`);
+      }
     }
 
     if (formData.password !== formData.password_confirmation) {
@@ -400,7 +413,8 @@ export function OnboardingComplete() {
         id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
-        emailVerified: response.data.user.email_verified ?? true,
+        // Magic-link completion verifies email server-side; only explicit false blocks access.
+        emailVerified: response.data.user.email_verified !== false,
         employeeStatus: response.data.employee.status,
       });
 
@@ -823,7 +837,11 @@ export function OnboardingComplete() {
               </Text>
             )}
             <Text className="text-sm text-zinc-500 mt-1">
-              <Trans>Minimum 8 characters</Trans>
+              <Trans>
+                Use at least 12 characters with uppercase and lowercase letters,
+                a number, and a symbol. Passwords that appear in known data
+                breaches cannot be used.
+              </Trans>
             </Text>
           </Field>
 

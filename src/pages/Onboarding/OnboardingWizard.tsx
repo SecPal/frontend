@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { useNavigate } from "react-router-dom";
 import {
   createOnboardingSubmission,
   fetchOnboardingSteps,
@@ -15,6 +16,7 @@ import {
   uploadOnboardingFile,
   updateOnboardingSubmission,
 } from "../../services/onboardingApi";
+import { ApiError } from "../../services/ApiError";
 import {
   Checkbox,
   CheckboxField,
@@ -35,7 +37,10 @@ import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
 import { getLocalizedErrorMessage } from "../../lib/errorUtils";
-import { getOnboardingStepState } from "./onboardingWizardState";
+import {
+  getOnboardingStepState,
+  isOnboardingAwaitingHrReview,
+} from "./onboardingWizardState";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
@@ -241,6 +246,7 @@ function SchemaFieldRenderer({
   fieldName,
   property,
   required,
+  readOnly,
   formData,
   error,
   onChange,
@@ -248,12 +254,15 @@ function SchemaFieldRenderer({
   fieldName: string;
   property: OnboardingSchemaProperty;
   required: boolean;
+  readOnly: boolean;
   formData: Record<string, unknown>;
   error?: string;
   onChange: (fieldName: string, value: unknown) => void;
 }) {
   const title = property.title ?? fieldName;
   const { _ } = useLingui();
+  const showRequiredMarker = required && !readOnly;
+  const fieldRequired = required && !readOnly;
 
   if (property.type === "string") {
     const options = getSchemaOptions(property);
@@ -262,7 +271,7 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -270,9 +279,10 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getTextValue(formData[fieldName])}
             onChange={(event) => onChange(fieldName, event.target.value)}
           >
@@ -286,9 +296,10 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getTextValue(formData[fieldName])}
             maxLength={property.maxLength}
             onChange={(event) => onChange(fieldName, event.target.value)}
@@ -306,7 +317,7 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -314,9 +325,10 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getNumberValue(formData[fieldName])}
             onChange={(event) =>
               onChange(
@@ -335,10 +347,11 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             type="number"
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getNumberValue(formData[fieldName])}
             min={property.minimum}
             onChange={(event) => {
@@ -358,11 +371,12 @@ function SchemaFieldRenderer({
         <Checkbox
           aria-label={title}
           checked={getBooleanValue(formData[fieldName])}
+          disabled={readOnly}
           onChange={(checked) => onChange(fieldName, checked)}
         />
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -381,7 +395,7 @@ function SchemaFieldRenderer({
         <Field>
           <Label>
             {title}
-            {required ? " *" : null}
+            {showRequiredMarker ? " *" : null}
           </Label>
           {property.description ? (
             <Description>{property.description}</Description>
@@ -395,6 +409,7 @@ function SchemaFieldRenderer({
                   <Checkbox
                     aria-label={option.label}
                     checked={selectedValues.includes(optionValue)}
+                    disabled={readOnly}
                     onChange={(checked) => {
                       const nextValues = checked
                         ? [...selectedValues, optionValue]
@@ -419,16 +434,17 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         <Description>
           {property.description ?? _(msg`Enter one value per line.`)}
         </Description>
         <Textarea
           aria-label={title}
+          disabled={readOnly}
           invalid={Boolean(error)}
           name={fieldName}
-          required={required}
+          required={fieldRequired}
           rows={4}
           value={getArrayTextareaValue(formData[fieldName])}
           onChange={(event) =>
@@ -443,6 +459,69 @@ function SchemaFieldRenderer({
   return null;
 }
 
+function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
+  const { _ } = useLingui();
+  const requiredSteps = steps.filter((step) => step.is_required);
+  const optionalSteps = steps.filter((step) => !step.is_required);
+
+  return (
+    <div className="mb-8 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+      <Heading level={3} className="mb-3">
+        <Trans>Before you begin</Trans>
+      </Heading>
+      <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <Trans>
+          Here is what the onboarding wizard will ask for. Required sections
+          must be completed; optional sections can be skipped when empty.
+        </Trans>
+      </Text>
+
+      {requiredSteps.length > 0 ? (
+        <div className="mb-4">
+          <Text className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <Trans>Required information</Trans>
+          </Text>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            {requiredSteps.map((step) => (
+              <li key={step.template_id}>
+                {_(msg`Step ${step.step_number}: ${step.title}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {optionalSteps.length > 0 ? (
+        <div className="mb-4">
+          <Text className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <Trans>Optional sections</Trans>
+          </Text>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            {optionalSteps.map((step) => (
+              <li key={step.template_id}>
+                {_(msg`Step ${step.step_number}: ${step.title}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+        <Text className="mb-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          <Trans>Supporting documents</Trans>
+        </Text>
+        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+          <Trans>
+            On every onboarding step you can upload PDF, JPG, or PNG files up to
+            10 MB — choose contract, identity document, or banking verification
+            as appropriate.
+          </Trans>
+        </Text>
+      </div>
+    </div>
+  );
+}
+
 function StepNavigation({
   currentStep,
   totalSteps,
@@ -450,6 +529,9 @@ function StepNavigation({
   onNext,
   onSaveDraft,
   onSubmit,
+  onSkipStep,
+  showSkipStep,
+  isStepEditable,
   canGoNext,
   isBusy,
 }: {
@@ -459,6 +541,9 @@ function StepNavigation({
   onNext: () => void;
   onSaveDraft: () => void;
   onSubmit: () => void;
+  onSkipStep?: () => void;
+  showSkipStep?: boolean;
+  isStepEditable: boolean;
   canGoNext: boolean;
   isBusy: boolean;
 }) {
@@ -475,15 +560,25 @@ function StepNavigation({
         )}
       </div>
 
-      <div className="flex gap-4">
-        <Button disabled={isBusy} onClick={onSaveDraft} outline>
-          <Trans>Save Draft</Trans>
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-4">
+        {isStepEditable ? (
+          <Button disabled={isBusy} onClick={onSaveDraft} outline>
+            <Trans>Save Draft</Trans>
+          </Button>
+        ) : null}
+
+        {showSkipStep && onSkipStep && !isLastStep && isStepEditable ? (
+          <Button disabled={isBusy} onClick={onSkipStep} outline>
+            <Trans>Skip this step</Trans>
+          </Button>
+        ) : null}
 
         {isLastStep ? (
-          <Button onClick={onSubmit} disabled={!canGoNext}>
-            <Trans>Submit for Review</Trans>
-          </Button>
+          isStepEditable ? (
+            <Button onClick={onSubmit} disabled={!canGoNext}>
+              <Trans>Submit for Review</Trans>
+            </Button>
+          ) : null
         ) : (
           <Button onClick={onNext} disabled={!canGoNext}>
             <Trans>Next</Trans>
@@ -497,6 +592,7 @@ function StepNavigation({
 export function OnboardingWizard() {
   const { _ } = useLingui();
   const translateRef = useRef(_);
+  const navigate = useNavigate();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -556,6 +652,14 @@ export function OnboardingWizard() {
 
         setError(null);
         setFeedback(null);
+
+        if (isOnboardingAwaitingHrReview(data)) {
+          setSteps(data);
+          setLoading(false);
+          navigate("/onboarding/submitted", { replace: true });
+          return;
+        }
+
         setLoading(data.length > 0);
         setSteps(data);
 
@@ -579,7 +683,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [navigate]);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
@@ -621,13 +725,14 @@ export function OnboardingWizard() {
     };
   }, [currentStepIndex, currentStepTemplateId]);
 
-  function updateCurrentStep(
+  function updateStepAtIndex(
+    stepIndex: number,
     savedSubmission: OnboardingSubmission,
     status: "draft" | "submitted"
   ) {
     setSteps((currentSteps) =>
       currentSteps.map((step, index) =>
-        index === currentStepIndex
+        index === stepIndex
           ? {
               ...step,
               is_completed: status === "submitted" ? true : step.is_completed,
@@ -636,6 +741,70 @@ export function OnboardingWizard() {
           : step
       )
     );
+  }
+
+  function updateCurrentStep(
+    savedSubmission: OnboardingSubmission,
+    status: "draft" | "submitted"
+  ) {
+    updateStepAtIndex(currentStepIndex, savedSubmission, status);
+  }
+
+  async function submitRequiredDraftSteps(): Promise<boolean> {
+    const stepsToSubmit: Array<{
+      index: number;
+      submission: OnboardingSubmission;
+    }> = [];
+
+    for (const [index, step] of steps.entries()) {
+      if (!step.is_required || index === currentStepIndex) {
+        continue;
+      }
+
+      if (step.submission == null) {
+        setError(_(msg`Failed to submit`));
+        return false;
+      }
+
+      if (step.submission.status !== "draft") {
+        continue;
+      }
+
+      stepsToSubmit.push({
+        index,
+        submission: step.submission,
+      });
+    }
+
+    if (stepsToSubmit.length === 0) {
+      return true;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      for (const { index, submission: stepSubmission } of stepsToSubmit) {
+        const savedSubmission = await updateOnboardingSubmission(
+          stepSubmission.id,
+          {
+            form_data:
+              (stepSubmission.form_data as Record<string, unknown> | null) ??
+              {},
+            status: "submitted",
+          }
+        );
+
+        updateStepAtIndex(index, savedSubmission, "submitted");
+      }
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : _(msg`Failed to submit`));
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function persistCurrentStep(
@@ -671,6 +840,53 @@ export function OnboardingWizard() {
       updateCurrentStep(savedSubmission, status);
       return savedSubmission;
     } catch (err) {
+      if (
+        err instanceof ApiError &&
+        err.statusCode === 422 &&
+        err.errors &&
+        status === "submitted"
+      ) {
+        const nextFieldErrors: FieldErrors = {};
+        for (const [key, messages] of Object.entries(err.errors)) {
+          if (
+            key === "form_data" ||
+            key === "onboarding_workflow_status" ||
+            key === "status"
+          ) {
+            continue;
+          }
+          // The API returns Laravel-style nested keys such as "form_data.iban".
+          // Strip the "form_data." prefix so errors map to bare field names.
+          const fieldKey = key.startsWith("form_data.")
+            ? key.slice("form_data.".length)
+            : key;
+          const first = messages[0];
+          if (first) {
+            nextFieldErrors[fieldKey] = first;
+          }
+        }
+        setError(null);
+        setFieldErrors(nextFieldErrors);
+        const supplemental =
+          err.errors.form_data?.[0] ??
+          err.errors.onboarding_workflow_status?.[0];
+        const hasInline = Object.keys(nextFieldErrors).length > 0;
+        setFeedback({
+          tone: "error",
+          message: supplemental
+            ? supplemental
+            : hasInline
+              ? _(
+                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
+                )
+              : err.message ||
+                _(
+                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
+                ),
+        });
+        return null;
+      }
+
       setError(
         getLocalizedErrorMessage(err, _, {
           fallback:
@@ -687,7 +903,7 @@ export function OnboardingWizard() {
   }
 
   async function handleSaveDraft() {
-    if (saving || uploading) {
+    if (saving || uploading || !isEditableSubmission(submission)) {
       return;
     }
 
@@ -700,10 +916,17 @@ export function OnboardingWizard() {
   }
 
   async function handleNext() {
-    if (
-      (await persistCurrentStep("draft")) &&
-      currentStepIndex < steps.length - 1
-    ) {
+    if (saving || uploading) {
+      return;
+    }
+
+    const shouldPersistDraft = isEditableSubmission(submission);
+
+    if (shouldPersistDraft && !(await persistCurrentStep("draft"))) {
+      return;
+    }
+
+    if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
       const nextStepState = getOnboardingStepState(nextStep);
 
@@ -717,6 +940,25 @@ export function OnboardingWizard() {
       setFormData(nextStepState.formData);
       setCurrentStepIndex(currentStepIndex + 1);
     }
+  }
+
+  function handleSkipStep() {
+    if (saving || uploading || currentStepIndex >= steps.length - 1) {
+      return;
+    }
+
+    const nextStep = steps[currentStepIndex + 1];
+    const nextStepState = getOnboardingStepState(nextStep);
+
+    setLoading(true);
+    setError(null);
+    setFeedback(null);
+    setFieldErrors({});
+    resetUploadState();
+    setTemplate(null);
+    setSubmission(nextStepState.submission);
+    setFormData(nextStepState.formData);
+    setCurrentStepIndex(currentStepIndex + 1);
   }
 
   function handlePrevious() {
@@ -741,27 +983,47 @@ export function OnboardingWizard() {
   }
 
   async function handleSubmit() {
-    if (schema) {
-      const nextFieldErrors = validateRequiredFields(
-        schema,
-        formData,
-        _(msg`This field is required.`)
-      );
+    if (saving || uploading) {
+      return;
+    }
 
-      if (Object.keys(nextFieldErrors).length > 0) {
-        setError(null);
-        setFieldErrors(nextFieldErrors);
-        setFeedback({
-          tone: "error",
-          message: _(
-            msg`We couldn't submit the form yet. Please review the highlighted fields.`
-          ),
-        });
+    if (schema && template) {
+      const isOptionalTemplate = template.is_required === false;
+      const skipRequiredValidation = isOptionalTemplate;
+
+      if (!skipRequiredValidation) {
+        const nextFieldErrors = validateRequiredFields(
+          schema,
+          formData,
+          _(msg`This field is required.`)
+        );
+
+        if (Object.keys(nextFieldErrors).length > 0) {
+          setError(null);
+          setFieldErrors(nextFieldErrors);
+          setFeedback({
+            tone: "error",
+            message: _(
+              msg`We couldn't submit the form yet. Please review the highlighted fields.`
+            ),
+          });
+          return;
+        }
+      }
+    }
+
+    if (currentStepIndex >= steps.length - 1) {
+      if (!(await submitRequiredDraftSteps())) {
         return;
       }
     }
 
     if (await persistCurrentStep("submitted")) {
+      if (currentStepIndex >= steps.length - 1) {
+        navigate("/onboarding/submitted", { replace: true });
+        return;
+      }
+
       setFeedback({
         tone: "success",
         message: _(msg`Onboarding submitted. HR will review your information.`),
@@ -933,9 +1195,20 @@ export function OnboardingWizard() {
 
         {template && (
           <div>
-            <Heading level={2} className="mb-4">
-              {template.title ?? template.name}
-            </Heading>
+            {currentStepIndex === 0 ? (
+              <OnboardingStepsOverview steps={steps} />
+            ) : null}
+
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <Heading level={2} className="mb-0">
+                {template.title ?? template.name}
+              </Heading>
+              {template.is_required === false ? (
+                <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  <Trans>Optional</Trans>
+                </span>
+              ) : null}
+            </div>
 
             {template.description ? (
               <Text className="mb-6 text-zinc-600 dark:text-zinc-400">
@@ -953,6 +1226,7 @@ export function OnboardingWizard() {
                         fieldName={fieldName}
                         property={property}
                         error={fieldErrors[fieldName]}
+                        readOnly={!isCurrentStepEditable}
                         required={schema.required.includes(fieldName)}
                         formData={formData}
                         onChange={handleFieldChange}
@@ -977,8 +1251,9 @@ export function OnboardingWizard() {
               </Heading>
               <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
                 <Trans>
-                  Upload PDF, JPG, or PNG files up to 10 MB for contract,
-                  identity, or banking verification.
+                  On every onboarding step you can upload PDF, JPG, or PNG files
+                  up to 10 MB — choose contract, identity document, or banking
+                  verification as appropriate.
                 </Trans>
               </Text>
 
@@ -1132,6 +1407,9 @@ export function OnboardingWizard() {
               onNext={handleNext}
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
+              onSkipStep={handleSkipStep}
+              showSkipStep={template.is_required === false}
+              isStepEditable={isCurrentStepEditable}
               canGoNext={!saving && !uploading}
               isBusy={saving || uploading}
             />

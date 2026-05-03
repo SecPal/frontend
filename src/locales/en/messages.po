@@ -59,6 +59,10 @@ msgstr "Edit Customer"
 msgid "Delete \"{unitName}\"?"
 msgstr "Delete \"{unitName}\"?"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Skip this step"
+msgstr "Skip this step"
+
 #: src/components/VerificationDots.tsx
 msgid "Merkle Tree"
 msgstr "Merkle Tree"
@@ -233,6 +237,10 @@ msgstr "Error Loading Employee"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to upload file"
 msgstr "Failed to upload file"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
+msgstr "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
@@ -519,6 +527,10 @@ msgstr "First Names (all)"
 msgid "App updates and maintenance notifications"
 msgstr "App updates and maintenance notifications"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+msgstr "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
@@ -546,9 +558,17 @@ msgstr "Select a new parent for this organizational unit."
 msgid "Contract Type"
 msgstr "Contract Type"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Before you begin"
+msgstr "Before you begin"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Supporting documents"
+msgstr "Supporting documents"
 
 #: src/components/RouteGuardState.tsx
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
@@ -581,10 +601,6 @@ msgstr "Team Messages"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
 msgstr "Create New Employee"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Minimum 8 characters"
-msgstr "Minimum 8 characters"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
@@ -649,6 +665,10 @@ msgstr "My profile"
 msgid "BWR export generated. Download the file below."
 msgstr "BWR export generated. Download the file below."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
+msgstr "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
@@ -680,9 +700,9 @@ msgstr "No documents uploaded"
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
-msgstr "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
+msgstr "You do not need to take further action right now. If we need anything else, we will contact you directly."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -781,6 +801,10 @@ msgstr "Maximum Viewable Rank"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generate the initial export to move this employee into the pending BWR state."
 msgstr "Generate the initial export to move this employee into the pending BWR state."
+
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "Thank you for submitting your onboarding information. Our HR team will review your details."
+msgstr "Thank you for submitting your onboarding information. Our HR team will review your details."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
@@ -985,6 +1009,10 @@ msgstr "Failed to change language. Please try again."
 msgid "Sign out"
 msgstr "Sign out"
 
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You're all set"
+msgstr "You're all set"
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Delete Customer"
 msgstr "Delete Customer"
@@ -1031,6 +1059,10 @@ msgstr "Holding"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Validation Error"
 msgstr "Validation Error"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Required information"
+msgstr "Required information"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
@@ -1299,6 +1331,12 @@ msgstr "OpenTimestamp"
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
 
+#. placeholder {0}: step.step_number
+#. placeholder {1}: step.title
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Step {0}: {1}"
+msgstr "Step {0}: {1}"
+
 #: src/components/RouteGuardState.tsx
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
@@ -1312,6 +1350,10 @@ msgstr "Contact"
 #: src/pages/Employees/EmployeeStatusOptions.tsx
 msgid "Applicant"
 msgstr "Applicant"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must be at least 12 characters"
+msgstr "Password must be at least 12 characters"
 
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Add Child Unit"
@@ -1473,6 +1515,10 @@ msgstr "Management level must be between 1 and 255"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
 msgstr "Validating your link..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional"
+msgstr "Optional"
 
 #: src/pages/Login.tsx
 msgid "Sign in with passkey"
@@ -1703,6 +1749,10 @@ msgstr "Enrollment Sessions"
 msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Moving organizational units is not possible while offline. Please reconnect to make changes."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include at least one number"
+msgstr "Password must include at least one number"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
 msgstr "No action available"
@@ -1922,6 +1972,10 @@ msgstr "Terminated"
 msgid "Contract type is required"
 msgstr "Contract type is required"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include at least one symbol"
+msgstr "Password must include at least one symbol"
+
 #: src/components/Footer.tsx
 msgid "Source Code"
 msgstr "Source Code"
@@ -2054,6 +2108,10 @@ msgstr "Enter one value per line."
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
 
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You will be notified when your submission has been reviewed."
+msgstr "You will be notified when your submission has been reviewed."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
 msgstr "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
@@ -2082,6 +2140,10 @@ msgstr "Please correct the highlighted fields before submitting."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Submit for Review"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional sections"
+msgstr "Optional sections"
 
 #: src/App.tsx
 #: src/components/RouteGuardState.tsx
@@ -2428,10 +2490,6 @@ msgstr "Search by name or email..."
 msgid "Access Denied"
 msgstr "Access Denied"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Password must be at least 8 characters"
-msgstr "Password must be at least 8 characters"
-
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading employee..."
@@ -2664,6 +2722,10 @@ msgstr "OK"
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Deleting organizational units is not possible while offline. Please reconnect to make changes."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include both uppercase and lowercase letters"
+msgstr "Password must include both uppercase and lowercase letters"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx

@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
@@ -16,7 +17,8 @@ function makeTemplate(
   id: string,
   title: string,
   description = `${title} description`,
-  formSchema: Record<string, unknown> = {}
+  formSchema: Record<string, unknown> = {},
+  isRequired = true
 ) {
   return {
     id,
@@ -26,7 +28,7 @@ function makeTemplate(
     form_schema: formSchema,
     sort_order: Number(id.split("-")[1] ?? 1) * 10,
     step_number: Number(id.split("-")[1] ?? 1),
-    is_required: true,
+    is_required: isRequired,
     is_system_template: true,
     can_be_deleted: false,
     can_be_edited: false,
@@ -54,11 +56,27 @@ function makeSubmission(
   };
 }
 
+function OnboardingCompletionStub() {
+  return (
+    <div>
+      <h1>You&apos;re all set</h1>
+    </div>
+  );
+}
+
 function renderWizard() {
   return render(
-    <I18nProvider i18n={i18n}>
-      <OnboardingWizard />
-    </I18nProvider>
+    <MemoryRouter initialEntries={["/onboarding"]}>
+      <I18nProvider i18n={i18n}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingWizard />} />
+          <Route
+            path="/onboarding/submitted"
+            element={<OnboardingCompletionStub />}
+          />
+        </Routes>
+      </I18nProvider>
+    </MemoryRouter>
   );
 }
 
@@ -74,6 +92,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1"),
       },
@@ -82,13 +101,22 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
       },
     ]);
 
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
+      );
 
     // step-1 has an existing submission, so saves go through updateOnboardingSubmission
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
@@ -227,6 +255,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1"),
       },
@@ -235,6 +264,7 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
         submission: makeSubmission("template-2"),
       },
@@ -243,7 +273,15 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockReset()
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
+      );
 
     vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
       () =>
@@ -301,6 +339,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
     ]);
@@ -366,6 +405,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
     ]);
@@ -419,6 +459,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
       {
@@ -426,6 +467,7 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
         submission: makeSubmission("template-2"),
       },
@@ -433,16 +475,31 @@ describe("OnboardingWizard", () => {
 
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
+      );
 
-    // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it
+    // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it.
+    // submitRequiredDraftSteps() runs first (before persistCurrentStep) and submits step-1's draft,
+    // then persistCurrentStep("submitted") submits step-2 (the current last step).
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
       makeSubmission("template-1")
     );
-    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValueOnce({
-      ...makeSubmission("template-2"),
-      status: "submitted",
-    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission)
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-1"),
+        status: "submitted",
+      })
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-2"),
+        status: "submitted",
+      });
 
     renderWizard();
 
@@ -458,9 +515,14 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
-    // step-2 has an existing submission — component PATCHes it using its stored form_data
     await waitFor(() => {
-      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenLastCalledWith(
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
+        1,
+        "submission-template-1",
+        { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
+      );
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
+        2,
         "submission-template-2",
         { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
       );
@@ -468,9 +530,7 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "Onboarding submitted. HR will review your information."
-        )
+        screen.getByRole("heading", { name: /you're all set/i })
       ).toBeInTheDocument();
     });
   });
@@ -508,6 +568,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1", {
           gender: "female",
@@ -572,6 +633,7 @@ describe("OnboardingWizard", () => {
         title: "Numeric Step",
         description: "Numeric Step description",
         template_id: "template-num",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-num", {}),
       },
@@ -661,5 +723,215 @@ describe("OnboardingWizard", () => {
     expect(
       screen.getByText("Welcome to SecPal Onboarding")
     ).toBeInTheDocument();
+  });
+
+  it("submits an optional template without validating schema required fields when the step is empty", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional extras",
+        description: "Optional extras description",
+        template_id: "template-opt",
+        is_required: false,
+        is_completed: false,
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-opt",
+          "Optional extras",
+          "Optional extras description",
+          {
+            type: "object",
+            required: ["extra_note"],
+            properties: {
+              extra_note: {
+                type: "string",
+                title: "Extra note",
+              },
+            },
+          },
+          false
+        )
+      );
+
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue({
+      ...makeSubmission("template-opt", {}),
+      status: "submitted",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Optional extras")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/^Optional$/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
+        form_template_id: "template-opt",
+        form_data: {},
+        status: "submitted",
+      });
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+  });
+
+  it("submits an optional template even when schema required fields are only partially filled", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional extras",
+        description: "Optional extras description",
+        template_id: "template-opt",
+        is_required: false,
+        is_completed: false,
+        submission: makeSubmission("template-opt", {}),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-opt",
+          "Optional extras",
+          "Optional extras description",
+          {
+            type: "object",
+            required: ["note_a", "note_b"],
+            properties: {
+              note_a: { type: "string", title: "Note A" },
+              note_b: { type: "string", title: "Note B" },
+            },
+          },
+          false
+        )
+      );
+
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue({
+      ...makeSubmission("template-opt", { note_a: "started" }),
+      status: "submitted",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Note A")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Note A"), {
+      target: { value: "started" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-opt",
+        {
+          form_data: { note_a: "started" },
+          status: "submitted",
+        }
+      );
+    });
+
+    expect(
+      screen.queryByText(
+        "We couldn't submit the form yet. Please review the highlighted fields."
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("This field is required.")
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+  });
+
+  it("shows Skip this step for an optional step that is not the last step", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Optional first",
+        description: "First description",
+        template_id: "template-opt",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+      {
+        step_number: 2,
+        title: "Required last",
+        description: "Last description",
+        template_id: "template-req",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-opt",
+          "Optional first",
+          "First description",
+          {
+            type: "object",
+            required: [],
+            properties: {
+              note: { type: "string", title: "Note" },
+            },
+          },
+          false
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-req",
+          "Required last",
+          "Last description",
+          {
+            type: "object",
+            required: [],
+            properties: {
+              code: { type: "string", title: "Code" },
+            },
+          },
+          true
+        )
+      );
+
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-opt", {})
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /skip this step/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /skip this step/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Required last")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /skip this step/i })
+    ).not.toBeInTheDocument();
   });
 });

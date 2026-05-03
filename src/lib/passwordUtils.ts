@@ -122,7 +122,7 @@ export interface PasswordStrengthResult {
  * Assess password strength
  *
  * Checks for:
- * - Length (minimum 8 characters)
+ * - Length (minimum 12 characters for a positive length score)
  * - Character diversity (uppercase, lowercase, numbers, symbols)
  * - Common patterns (e.g., "12345", "password")
  *
@@ -142,11 +142,9 @@ export function assessPasswordStrength(
   const feedback: string[] = [];
   let score = 0;
 
-  // Length check
-  if (password.length < 8) {
-    feedback.push("Password should be at least 8 characters");
-  } else if (password.length >= 8 && password.length < 12) {
-    score += 20;
+  // Length check (aligned with application password policy baseline)
+  if (password.length < 12) {
+    feedback.push("Password should be at least 12 characters");
   } else if (password.length >= 12 && password.length < 16) {
     score += 30;
   } else {
