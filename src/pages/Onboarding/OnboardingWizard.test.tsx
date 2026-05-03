@@ -469,7 +469,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
   it("shows API field validation messages inline after Submit for Review", async () => {
     onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
       new ApiError("The given data was invalid.", 422, {
-        iban: ["The string does not match the required pattern."],
+        "form_data.iban": ["The string does not match the required pattern."],
       })
     );
 
@@ -490,5 +490,105 @@ describe("OnboardingWizard server-side validation feedback", () => {
     expect(
       await screen.findByText(/does not match the required pattern/i)
     ).toBeInTheDocument();
+  });
+});
+
+describe("OnboardingWizard skip step behavior", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Emergency Contact",
+        description: "Optional emergency contacts.",
+        template_id: "template-emergency",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-emergency") {
+          return {
+            id: "template-emergency",
+            name: "Emergency Contact",
+            title: "Emergency Contact",
+            description: "Optional emergency contact persons",
+            form_schema: {
+              title: "Emergency Contact",
+              type: "object",
+              required: [],
+              properties: {
+                contact_1_name: {
+                  type: "string",
+                  title: "Contact 1: Name",
+                  maxLength: 100,
+                },
+              },
+            },
+            is_required: false,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Bank info",
+          form_schema: {
+            type: "object",
+            required: ["iban"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+  });
+
+  it("advances to the next step without creating a submission when Skip this step is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    const skipButton = screen.getByRole("button", { name: /skip this step/i });
+    expect(skipButton).toBeInTheDocument();
+
+    await user.click(skipButton);
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
   });
 });

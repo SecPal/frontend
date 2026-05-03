@@ -796,9 +796,14 @@ export function OnboardingWizard() {
           ) {
             continue;
           }
+          // The API returns Laravel-style nested keys such as "form_data.iban".
+          // Strip the "form_data." prefix so errors map to bare field names.
+          const fieldKey = key.startsWith("form_data.")
+            ? key.slice("form_data.".length)
+            : key;
           const first = messages[0];
           if (first) {
-            nextFieldErrors[key] = first;
+            nextFieldErrors[fieldKey] = first;
           }
         }
         setError(null);
@@ -874,6 +879,25 @@ export function OnboardingWizard() {
       setFormData(nextStepState.formData);
       setCurrentStepIndex(currentStepIndex + 1);
     }
+  }
+
+  function handleSkipStep() {
+    if (saving || uploading || currentStepIndex >= steps.length - 1) {
+      return;
+    }
+
+    const nextStep = steps[currentStepIndex + 1];
+    const nextStepState = getOnboardingStepState(nextStep);
+
+    setLoading(true);
+    setError(null);
+    setFeedback(null);
+    setFieldErrors({});
+    resetUploadState();
+    setTemplate(null);
+    setSubmission(nextStepState.submission);
+    setFormData(nextStepState.formData);
+    setCurrentStepIndex(currentStepIndex + 1);
   }
 
   function handlePrevious() {
@@ -1317,7 +1341,7 @@ export function OnboardingWizard() {
               onNext={handleNext}
               onSaveDraft={handleSaveDraft}
               onSubmit={handleSubmit}
-              onSkipStep={handleNext}
+              onSkipStep={handleSkipStep}
               showSkipStep={template.is_required === false}
               isStepEditable={isCurrentStepEditable}
               canGoNext={!saving && !uploading}
