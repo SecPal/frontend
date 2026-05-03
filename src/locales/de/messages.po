@@ -519,6 +519,10 @@ msgstr "Vornamen (alle)"
 msgid "App updates and maintenance notifications"
 msgstr "App-Updates und Wartungsbenachrichtigungen"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+msgstr "So setzt sich der Onboarding-Assistent zusammen. Erforderliche Abschnitte müssen ausgefüllt werden; leere optionale Abschnitte können übersprungen werden."
+
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
@@ -546,9 +550,17 @@ msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinh
 msgid "Contract Type"
 msgstr "Vertragsart"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Before you begin"
+msgstr "Bevor Sie starten"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Make root unit (no parent)"
 msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Supporting documents"
+msgstr "Belege und Nachweise"
 
 #: src/components/RouteGuardState.tsx
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
@@ -645,6 +657,10 @@ msgstr "Mein Profil"
 msgid "BWR export generated. Download the file below."
 msgstr "BWR-Export erstellt. Laden Sie die Datei unten herunter."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
+msgstr "In jedem Onboarding-Schritt können Sie PDF-, JPG- oder PNG-Dateien bis 10 MB hochladen — wählen Sie je nach Datei die Kategorie Vertrag, Ausweisdokument oder Banknachweis."
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
@@ -679,10 +695,6 @@ msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbe
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
 msgstr "Sie müssen vorerst nichts weiter tun. Falls wir noch etwas benötigen, melden wir uns bei Ihnen."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
-msgstr "Laden Sie PDF-, JPG- oder PNG-Dateien mit bis zu 10 MB für die Vertrags-, Identitäts- oder Bankverifizierung hoch."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -1037,6 +1049,10 @@ msgid "Validation Error"
 msgstr "Validierungsfehler"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Required information"
+msgstr "Erforderliche Angaben"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte versuchen Sie erneut, Ihren Entwurf zu speichern."
 
@@ -1302,6 +1318,12 @@ msgstr "OpenTimestamp"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
+
+#. placeholder {0}: step.step_number
+#. placeholder {1}: step.title
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Step {0}: {1}"
+msgstr "Schritt {0}: {1}"
 
 #: src/components/RouteGuardState.tsx
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
@@ -2094,6 +2116,10 @@ msgstr "Bitte korrigieren Sie die hervorgehobenen Felder vor dem Absenden."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional sections"
+msgstr "Optionale Abschnitte"
 
 #: src/App.tsx
 #: src/components/RouteGuardState.tsx

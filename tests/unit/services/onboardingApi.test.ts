@@ -327,6 +327,7 @@ describe("fetchOnboardingSteps", () => {
         title: "Personal Information",
         description: "Describe yourself",
         template_id: "template-1",
+        is_required: true,
         is_completed: true,
         submission: {
           id: "submission-1",
@@ -343,6 +344,7 @@ describe("fetchOnboardingSteps", () => {
         title: "Tax Details",
         description: undefined,
         template_id: "template-2",
+        is_required: true,
         is_completed: false,
         submission: null,
       },

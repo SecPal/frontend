@@ -474,6 +474,69 @@ function SchemaFieldRenderer({
   return null;
 }
 
+function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
+  const { _ } = useLingui();
+  const requiredSteps = steps.filter((step) => step.is_required);
+  const optionalSteps = steps.filter((step) => !step.is_required);
+
+  return (
+    <div className="mb-8 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+      <Heading level={3} className="mb-3">
+        <Trans>Before you begin</Trans>
+      </Heading>
+      <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <Trans>
+          Here is what the onboarding wizard will ask for. Required sections
+          must be completed; optional sections can be skipped when empty.
+        </Trans>
+      </Text>
+
+      {requiredSteps.length > 0 ? (
+        <div className="mb-4">
+          <Text className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <Trans>Required information</Trans>
+          </Text>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            {requiredSteps.map((step) => (
+              <li key={step.template_id}>
+                {_(msg`Step ${step.step_number}: ${step.title}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {optionalSteps.length > 0 ? (
+        <div className="mb-4">
+          <Text className="mb-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            <Trans>Optional sections</Trans>
+          </Text>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            {optionalSteps.map((step) => (
+              <li key={step.template_id}>
+                {_(msg`Step ${step.step_number}: ${step.title}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+        <Text className="mb-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          <Trans>Supporting documents</Trans>
+        </Text>
+        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+          <Trans>
+            On every onboarding step you can upload PDF, JPG, or PNG files up to
+            10 MB — choose contract, identity document, or banking verification
+            as appropriate.
+          </Trans>
+        </Text>
+      </div>
+    </div>
+  );
+}
+
 function StepNavigation({
   currentStep,
   totalSteps,
@@ -1049,6 +1112,10 @@ export function OnboardingWizard() {
 
         {template && (
           <div>
+            {currentStepIndex === 0 ? (
+              <OnboardingStepsOverview steps={steps} />
+            ) : null}
+
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <Heading level={2} className="mb-0">
                 {template.title ?? template.name}
@@ -1101,8 +1168,9 @@ export function OnboardingWizard() {
               </Heading>
               <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
                 <Trans>
-                  Upload PDF, JPG, or PNG files up to 10 MB for contract,
-                  identity, or banking verification.
+                  On every onboarding step you can upload PDF, JPG, or PNG files
+                  up to 10 MB — choose contract, identity document, or banking
+                  verification as appropriate.
                 </Trans>
               </Text>
 

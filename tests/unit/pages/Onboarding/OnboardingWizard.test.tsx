@@ -92,6 +92,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1"),
       },
@@ -100,13 +101,16 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
       },
     ]);
 
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+      );
 
     // step-1 has an existing submission, so saves go through updateOnboardingSubmission
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
@@ -245,6 +249,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1"),
       },
@@ -253,6 +258,7 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
         submission: makeSubmission("template-2"),
       },
@@ -261,7 +267,9 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockReset()
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+      );
 
     vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
       () =>
@@ -319,6 +327,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
     ]);
@@ -384,6 +393,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
     ]);
@@ -437,6 +447,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
       },
       {
@@ -444,6 +455,7 @@ describe("OnboardingWizard", () => {
         title: "Tax Details",
         description: "Tax Details description",
         template_id: "template-2",
+        is_required: false,
         is_completed: false,
         submission: makeSubmission("template-2"),
       },
@@ -451,7 +463,9 @@ describe("OnboardingWizard", () => {
 
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(makeTemplate("template-2", "Tax Details"));
+      .mockResolvedValueOnce(
+        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+      );
 
     // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
@@ -524,6 +538,7 @@ describe("OnboardingWizard", () => {
         title: "Personal Information",
         description: "Personal Information description",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-1", {
           gender: "female",
@@ -588,6 +603,7 @@ describe("OnboardingWizard", () => {
         title: "Numeric Step",
         description: "Numeric Step description",
         template_id: "template-num",
+        is_required: true,
         is_completed: false,
         submission: makeSubmission("template-num", {}),
       },
@@ -680,6 +696,7 @@ describe("OnboardingWizard", () => {
         title: "Optional extras",
         description: "Optional extras description",
         template_id: "template-opt",
+        is_required: false,
         is_completed: false,
       },
     ]);
@@ -740,6 +757,7 @@ describe("OnboardingWizard", () => {
         title: "Optional extras",
         description: "Optional extras description",
         template_id: "template-opt",
+        is_required: false,
         is_completed: false,
         submission: makeSubmission("template-opt", {}),
       },
@@ -799,6 +817,7 @@ describe("OnboardingWizard", () => {
         title: "Optional first",
         description: "First description",
         template_id: "template-opt",
+        is_required: false,
         is_completed: false,
         submission: null,
       },
@@ -807,6 +826,7 @@ describe("OnboardingWizard", () => {
         title: "Required last",
         description: "Last description",
         template_id: "template-req",
+        is_required: true,
         is_completed: false,
         submission: null,
       },

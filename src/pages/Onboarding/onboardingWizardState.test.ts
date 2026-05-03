@@ -14,6 +14,7 @@ describe("getOnboardingStepState", () => {
       step_number: 1,
       title: "Personal Information",
       template_id: "template-1",
+      is_required: true,
       is_completed: false,
       submission: {
         id: "submission-1",
@@ -41,6 +42,7 @@ describe("getOnboardingStepState", () => {
       step_number: 2,
       title: "Identity Documents",
       template_id: "template-2",
+      is_required: true,
       is_completed: false,
       submission: null,
     };
@@ -56,6 +58,7 @@ describe("getOnboardingStepState", () => {
       step_number: 3,
       title: "Bank Details",
       template_id: "template-3",
+      is_required: true,
       is_completed: false,
       submission: {
         id: "submission-3",
@@ -88,6 +91,7 @@ describe("isOnboardingAwaitingHrReview", () => {
         step_number: 1,
         title: "First",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: {
           id: "submission-1",
@@ -112,6 +116,7 @@ describe("isOnboardingAwaitingHrReview", () => {
         step_number: 1,
         title: "Only",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: {
           id: "submission-1",
@@ -132,6 +137,7 @@ describe("isOnboardingAwaitingHrReview", () => {
         step_number: 1,
         title: "Only",
         template_id: "template-1",
+        is_required: true,
         is_completed: false,
         submission: null,
       },

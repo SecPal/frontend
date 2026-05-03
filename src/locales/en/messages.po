@@ -519,6 +519,10 @@ msgstr "First Names (all)"
 msgid "App updates and maintenance notifications"
 msgstr "App updates and maintenance notifications"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+msgstr "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
@@ -546,9 +550,17 @@ msgstr "Select a new parent for this organizational unit."
 msgid "Contract Type"
 msgstr "Contract Type"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Before you begin"
+msgstr "Before you begin"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Supporting documents"
+msgstr "Supporting documents"
 
 #: src/components/RouteGuardState.tsx
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
@@ -645,6 +657,10 @@ msgstr "My profile"
 msgid "BWR export generated. Download the file below."
 msgstr "BWR export generated. Download the file below."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
+msgstr "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
@@ -679,10 +695,6 @@ msgstr "Manage the employee's BWR export and registration state from the dedicat
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
 msgstr "You do not need to take further action right now. If we need anything else, we will contact you directly."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
-msgstr "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
@@ -1037,6 +1049,10 @@ msgid "Validation Error"
 msgstr "Validation Error"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Required information"
+msgstr "Required information"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
 
@@ -1302,6 +1318,12 @@ msgstr "OpenTimestamp"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
+
+#. placeholder {0}: step.step_number
+#. placeholder {1}: step.title
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Step {0}: {1}"
+msgstr "Step {0}: {1}"
 
 #: src/components/RouteGuardState.tsx
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
@@ -2094,6 +2116,10 @@ msgstr "Please correct the highlighted fields before submitting."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Submit for Review"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional sections"
+msgstr "Optional sections"
 
 #: src/App.tsx
 #: src/components/RouteGuardState.tsx

@@ -14,6 +14,8 @@ export interface OnboardingStep {
   title: string;
   description?: string;
   template_id: string;
+  /** Mirrors template `is_required`: optional wizard steps may be skipped when empty. */
+  is_required: boolean;
   is_completed: boolean;
   submission?: OnboardingSubmission | null;
 }
@@ -288,6 +290,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
         title: template.title ?? template.name,
         description: template.description ?? undefined,
         template_id: template.id,
+        is_required: template.is_required,
         is_completed:
           submission !== null &&
           ["submitted", "approved"].includes(submission.status),
