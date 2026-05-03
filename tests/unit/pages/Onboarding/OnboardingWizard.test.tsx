@@ -153,6 +153,73 @@ describe("OnboardingWizard", () => {
     });
   });
 
+  it("blocks moving to the next step until required fields are filled", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-1", {}),
+      },
+      {
+        step_number: 2,
+        title: "Tax Details",
+        description: "Tax Details description",
+        template_id: "template-2",
+        is_required: false,
+        is_completed: false,
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate("template-1", "Personal Information", undefined, {
+          type: "object",
+          required: ["legal_name"],
+          properties: {
+            legal_name: {
+              type: "string",
+              title: "Legal Name",
+            },
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Legal Name")).toBeRequired();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This field is required.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "We couldn't submit the form yet. Please review the highlighted fields."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    expect(screen.queryByText("Tax Details")).not.toBeInTheDocument();
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
   it("shows inline success feedback when saving the current step as draft", async () => {
     renderWizard();
 
@@ -621,6 +688,7 @@ describe("OnboardingWizard", () => {
         screen.getByRole("button", { name: /submit for review/i })
       ).toBeInTheDocument();
     });
+    expect(screen.queryByText("Intended Activities")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
@@ -630,7 +698,7 @@ describe("OnboardingWizard", () => {
           "We couldn't submit the form yet. Please review the highlighted fields."
         )
       ).toBeInTheDocument();
-      expect(screen.getAllByText("This field is required.")).toHaveLength(2);
+      expect(screen.getAllByText("This field is required.")).toHaveLength(1);
     });
 
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
@@ -638,7 +706,9 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByLabelText("German"));
 
     await waitFor(() => {
-      expect(screen.getAllByText("This field is required.")).toHaveLength(1);
+      expect(
+        screen.queryByText("This field is required.")
+      ).not.toBeInTheDocument();
     });
   });
 

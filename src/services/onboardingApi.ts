@@ -184,14 +184,69 @@ function buildOnboardingApiError(
   };
 }
 
+const TAX_IDENTIFICATION_TEMPLATE_KEY = "tax_identification_number";
+const TAX_IDENTIFICATION_REQUIRED_DESCRIPTION =
+  "Erforderliche elfstellige Steueridentifikationsnummer (§ 39e EStG) und Sozialversicherungsnummer.";
+const SOCIAL_SECURITY_NUMBER_PATTERN = "^\\d{2}\\s?\\d{6}\\s?[A-Z]\\s?\\d{3}$";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getTemplateKey(template: OnboardingFormTemplate): string | null {
+  const key = (template as unknown as Record<string, unknown>).template_key;
+  return typeof key === "string" && key.length > 0 ? key : null;
+}
+
+function normalizeTaxIdentificationTemplate(
+  template: OnboardingFormTemplate
+): OnboardingFormTemplate {
+  if (getTemplateKey(template) !== TAX_IDENTIFICATION_TEMPLATE_KEY) {
+    return template;
+  }
+
+  const formSchema = isRecord(template.form_schema) ? template.form_schema : {};
+  const existingProperties = isRecord(formSchema.properties)
+    ? formSchema.properties
+    : {};
+  const properties = {
+    ...existingProperties,
+    social_security_number: {
+      type: "string",
+      title: "Sozialversicherungsnummer",
+      pattern: SOCIAL_SECURITY_NUMBER_PATTERN,
+    },
+  };
+  const existingRequired = Array.isArray(formSchema.required)
+    ? formSchema.required.filter(
+        (entry): entry is string => typeof entry === "string"
+      )
+    : [];
+  const required = Array.from(
+    new Set([...existingRequired, "tax_id", "social_security_number"])
+  );
+
+  return {
+    ...template,
+    is_required: true,
+    description: TAX_IDENTIFICATION_REQUIRED_DESCRIPTION,
+    form_schema: {
+      ...formSchema,
+      description: TAX_IDENTIFICATION_REQUIRED_DESCRIPTION,
+      properties,
+      required,
+    },
+  };
+}
+
 function normalizeOnboardingTemplate(
   template: OnboardingFormTemplate
 ): OnboardingFormTemplate {
-  return {
+  return normalizeTaxIdentificationTemplate({
     ...template,
     title: template.title ?? template.name,
     step_number: template.step_number ?? template.sort_order,
-  };
+  });
 }
 
 /**

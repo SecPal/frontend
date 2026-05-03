@@ -382,6 +382,68 @@ describe("fetchOnboardingTemplate", () => {
       })
     );
   });
+
+  it("preserves backend-provided tax identification schema rules", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(200, {
+        data: {
+          id: "template-tax",
+          name: "Steueridentifikationsnummer",
+          template_key: "tax_identification_number",
+          title: "Steueridentifikationsnummer",
+          description:
+            "Optionale elfstellige Steueridentifikationsnummer (§ 39e EStG)",
+          form_schema: {
+            type: "object",
+            description:
+              "Optionale elfstellige Steueridentifikationsnummer (§ 39e EStG)",
+            properties: {
+              tax_id: {
+                type: "string",
+                title: "Steueridentifikationsnummer",
+                pattern: "^\\d{11}$",
+              },
+              children_count: {
+                type: "integer",
+                title: "Anzahl Kinder",
+                minimum: 0,
+              },
+            },
+            required: [],
+          },
+          sort_order: 40,
+          step_number: null,
+          is_required: false,
+          is_system_template: true,
+          can_be_deleted: false,
+          can_be_edited: false,
+        },
+      })
+    );
+
+    await expect(
+      fetchOnboardingTemplate("template-tax")
+    ).resolves.toMatchObject({
+      id: "template-tax",
+      is_required: false,
+      description:
+        "Optionale elfstellige Steueridentifikationsnummer (§ 39e EStG)",
+      form_schema: {
+        description:
+          "Optionale elfstellige Steueridentifikationsnummer (§ 39e EStG)",
+        properties: {
+          tax_id: {
+            title: "Steueridentifikationsnummer",
+            pattern: "^\\d{11}$",
+          },
+          children_count: {
+            type: "integer",
+          },
+        },
+        required: [],
+      },
+    });
+  });
 });
 
 describe("fetchOnboardingTemplates", () => {
