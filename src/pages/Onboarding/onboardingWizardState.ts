@@ -6,6 +6,18 @@ import type {
   OnboardingSubmission,
 } from "../../services/onboardingApi";
 
+/** Last step submitted or approved — employee flow finished; HR review pending or done at contract level. */
+export function isOnboardingAwaitingHrReview(steps: OnboardingStep[]): boolean {
+  const last = steps[steps.length - 1];
+  if (last === undefined) {
+    return false;
+  }
+
+  const status = last.submission?.status;
+
+  return status === "submitted" || status === "approved";
+}
+
 export function getOnboardingStepState(step: OnboardingStep | undefined): {
   submission: OnboardingSubmission | null;
   formData: Record<string, unknown>;

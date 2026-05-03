@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OnboardingWizard } from "./OnboardingWizard";
@@ -21,9 +21,19 @@ vi.mock("../../services/onboardingApi", () => onboardingApiMocks);
 
 function renderWithProviders() {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={["/onboarding"]}>
       <I18nProvider i18n={i18n}>
-        <OnboardingWizard />
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingWizard />} />
+          <Route
+            path="/onboarding/submitted"
+            element={
+              <div>
+                <h1>You&apos;re all set</h1>
+              </div>
+            }
+          />
+        </Routes>
       </I18nProvider>
     </MemoryRouter>
   );
@@ -156,6 +166,36 @@ describe("OnboardingWizard", () => {
 
     alertSpy.mockRestore();
   });
+
+  it("opens the completion page when onboarding was already submitted", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Tell us who you are.",
+        template_id: "template-1",
+        is_completed: true,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {
+            birth_name: "Lovelace",
+            gender: "female",
+          },
+          status: "submitted",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+  });
 });
 
 describe("OnboardingWizard optional emergency contact schema", () => {
@@ -254,6 +294,10 @@ describe("OnboardingWizard optional emergency contact schema", () => {
         })
       );
     });
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
   });
 });
 
@@ -356,5 +400,9 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
 
     const call = onboardingApiMocks.createOnboardingSubmission.mock.calls[0]?.[0];
     expect(call?.form_data).not.toHaveProperty("intended_activities");
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
@@ -55,11 +56,27 @@ function makeSubmission(
   };
 }
 
+function OnboardingCompletionStub() {
+  return (
+    <div>
+      <h1>You&apos;re all set</h1>
+    </div>
+  );
+}
+
 function renderWizard() {
   return render(
-    <I18nProvider i18n={i18n}>
-      <OnboardingWizard />
-    </I18nProvider>
+    <MemoryRouter initialEntries={["/onboarding"]}>
+      <I18nProvider i18n={i18n}>
+        <Routes>
+          <Route path="/onboarding" element={<OnboardingWizard />} />
+          <Route
+            path="/onboarding/submitted"
+            element={<OnboardingCompletionStub />}
+          />
+        </Routes>
+      </I18nProvider>
+    </MemoryRouter>
   );
 }
 
@@ -469,9 +486,7 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "Onboarding submitted. HR will review your information."
-        )
+        screen.getByRole("heading", { name: /you're all set/i })
       ).toBeInTheDocument();
     });
   });
@@ -712,6 +727,10 @@ describe("OnboardingWizard", () => {
         status: "submitted",
       });
     });
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
   });
 
   it("validates schema required fields on an optional template when the user started filling the step", async () => {

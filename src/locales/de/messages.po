@@ -676,6 +676,10 @@ msgstr "Keine Dokumente hochgeladen"
 msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbeiters über die dedizierten Runtime-Endpunkte."
 
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
+msgstr "Sie müssen vorerst nichts weiter tun. Falls wir noch etwas benötigen, melden wir uns bei Ihnen."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload PDF, JPG, or PNG files up to 10 MB for contract, identity, or banking verification."
 msgstr "Laden Sie PDF-, JPG- oder PNG-Dateien mit bis zu 10 MB für die Vertrags-, Identitäts- oder Bankverifizierung hoch."
@@ -773,6 +777,10 @@ msgstr "Maximal sichtbarer Rang"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generate the initial export to move this employee into the pending BWR state."
 msgstr "Erstellen Sie den initialen Export, um diesen Mitarbeiter in den ausstehenden BWR-Status zu überführen."
+
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "Thank you for submitting your onboarding information. Our HR team will review your details."
+msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team wird Ihre Daten prüfen."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
@@ -976,6 +984,10 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
 msgstr "Abmelden"
+
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You're all set"
+msgstr "Onboarding abgeschlossen"
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Delete Customer"
@@ -2049,6 +2061,10 @@ msgstr "Einen Wert pro Zeile eingeben."
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Welcome to SecPal!"
 msgstr "Willkommen bei SecPal!"
+
+#: src/pages/Onboarding/OnboardingSubmitted.tsx
+msgid "You will be notified when your submission has been reviewed."
+msgstr "Sie werden benachrichtigt, sobald Ihre Angaben geprüft wurden."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."

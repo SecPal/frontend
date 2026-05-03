@@ -3,7 +3,10 @@
 
 import { describe, expect, it } from "vitest";
 import type { OnboardingStep } from "../../services/onboardingApi";
-import { getOnboardingStepState } from "./onboardingWizardState";
+import {
+  getOnboardingStepState,
+  isOnboardingAwaitingHrReview,
+} from "./onboardingWizardState";
 
 describe("getOnboardingStepState", () => {
   it("returns submission data for the current onboarding step", () => {
@@ -69,5 +72,71 @@ describe("getOnboardingStepState", () => {
       submission: step.submission,
       formData: {},
     });
+  });
+});
+
+describe("isOnboardingAwaitingHrReview", () => {
+  it("is false for an empty step list", () => {
+    expect(isOnboardingAwaitingHrReview([])).toBe(false);
+  });
+
+  it("is true when the last step is submitted or approved", () => {
+    const base = (
+      status: "draft" | "submitted" | "approved"
+    ): OnboardingStep[] => [
+      {
+        step_number: 1,
+        title: "First",
+        template_id: "template-1",
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {},
+          status,
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(base("submitted"))).toBe(true);
+    expect(isOnboardingAwaitingHrReview(base("approved"))).toBe(true);
+    expect(isOnboardingAwaitingHrReview(base("draft"))).toBe(false);
+  });
+
+  it("is false when the last step was rejected or has no submission yet", () => {
+    const rejected: OnboardingStep[] = [
+      {
+        step_number: 1,
+        title: "Only",
+        template_id: "template-1",
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {},
+          status: "rejected",
+          created_at: "2026-04-18T00:00:00Z",
+          updated_at: "2026-04-18T00:00:00Z",
+        },
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(rejected)).toBe(false);
+
+    const noSubmission: OnboardingStep[] = [
+      {
+        step_number: 1,
+        title: "Only",
+        template_id: "template-1",
+        is_completed: false,
+        submission: null,
+      },
+    ];
+
+    expect(isOnboardingAwaitingHrReview(noSubmission)).toBe(false);
   });
 });

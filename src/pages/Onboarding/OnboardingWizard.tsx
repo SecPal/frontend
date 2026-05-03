@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { useNavigate } from "react-router-dom";
 import {
   createOnboardingSubmission,
   fetchOnboardingSteps,
@@ -34,7 +35,10 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
-import { getOnboardingStepState } from "./onboardingWizardState";
+import {
+  getOnboardingStepState,
+  isOnboardingAwaitingHrReview,
+} from "./onboardingWizardState";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
@@ -256,6 +260,7 @@ function SchemaFieldRenderer({
   fieldName,
   property,
   required,
+  readOnly,
   formData,
   error,
   onChange,
@@ -263,12 +268,15 @@ function SchemaFieldRenderer({
   fieldName: string;
   property: OnboardingSchemaProperty;
   required: boolean;
+  readOnly: boolean;
   formData: Record<string, unknown>;
   error?: string;
   onChange: (fieldName: string, value: unknown) => void;
 }) {
   const title = property.title ?? fieldName;
   const { _ } = useLingui();
+  const showRequiredMarker = required && !readOnly;
+  const fieldRequired = required && !readOnly;
 
   if (property.type === "string") {
     const options = getSchemaOptions(property);
@@ -277,7 +285,7 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -285,9 +293,10 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getTextValue(formData[fieldName])}
             onChange={(event) => onChange(fieldName, event.target.value)}
           >
@@ -301,9 +310,10 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getTextValue(formData[fieldName])}
             maxLength={property.maxLength}
             onChange={(event) => onChange(fieldName, event.target.value)}
@@ -321,7 +331,7 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -329,9 +339,10 @@ function SchemaFieldRenderer({
         {options.length > 0 ? (
           <Select
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getNumberValue(formData[fieldName])}
             onChange={(event) =>
               onChange(
@@ -350,10 +361,11 @@ function SchemaFieldRenderer({
         ) : (
           <Input
             aria-label={title}
+            disabled={readOnly}
             invalid={Boolean(error)}
             type="number"
             name={fieldName}
-            required={required}
+            required={fieldRequired}
             value={getNumberValue(formData[fieldName])}
             min={property.minimum}
             onChange={(event) => {
@@ -373,11 +385,12 @@ function SchemaFieldRenderer({
         <Checkbox
           aria-label={title}
           checked={getBooleanValue(formData[fieldName])}
+          disabled={readOnly}
           onChange={(checked) => onChange(fieldName, checked)}
         />
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         {property.description ? (
           <Description>{property.description}</Description>
@@ -396,7 +409,7 @@ function SchemaFieldRenderer({
         <Field>
           <Label>
             {title}
-            {required ? " *" : null}
+            {showRequiredMarker ? " *" : null}
           </Label>
           {property.description ? (
             <Description>{property.description}</Description>
@@ -410,6 +423,7 @@ function SchemaFieldRenderer({
                   <Checkbox
                     aria-label={option.label}
                     checked={selectedValues.includes(optionValue)}
+                    disabled={readOnly}
                     onChange={(checked) => {
                       const nextValues = checked
                         ? [...selectedValues, optionValue]
@@ -434,16 +448,17 @@ function SchemaFieldRenderer({
       <Field>
         <Label>
           {title}
-          {required ? " *" : null}
+          {showRequiredMarker ? " *" : null}
         </Label>
         <Description>
           {property.description ?? _(msg`Enter one value per line.`)}
         </Description>
         <Textarea
           aria-label={title}
+          disabled={readOnly}
           invalid={Boolean(error)}
           name={fieldName}
-          required={required}
+          required={fieldRequired}
           rows={4}
           value={getArrayTextareaValue(formData[fieldName])}
           onChange={(event) =>
@@ -467,6 +482,7 @@ function StepNavigation({
   onSubmit,
   onSkipStep,
   showSkipStep,
+  isStepEditable,
   canGoNext,
   isBusy,
 }: {
@@ -478,6 +494,7 @@ function StepNavigation({
   onSubmit: () => void;
   onSkipStep?: () => void;
   showSkipStep?: boolean;
+  isStepEditable: boolean;
   canGoNext: boolean;
   isBusy: boolean;
 }) {
@@ -495,20 +512,24 @@ function StepNavigation({
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-4">
-        <Button disabled={isBusy} onClick={onSaveDraft} outline>
-          <Trans>Save Draft</Trans>
-        </Button>
+        {isStepEditable ? (
+          <Button disabled={isBusy} onClick={onSaveDraft} outline>
+            <Trans>Save Draft</Trans>
+          </Button>
+        ) : null}
 
-        {showSkipStep && onSkipStep && !isLastStep ? (
+        {showSkipStep && onSkipStep && !isLastStep && isStepEditable ? (
           <Button disabled={isBusy} onClick={onSkipStep} outline>
             <Trans>Skip this step</Trans>
           </Button>
         ) : null}
 
         {isLastStep ? (
-          <Button onClick={onSubmit} disabled={!canGoNext}>
-            <Trans>Submit for Review</Trans>
-          </Button>
+          isStepEditable ? (
+            <Button onClick={onSubmit} disabled={!canGoNext}>
+              <Trans>Submit for Review</Trans>
+            </Button>
+          ) : null
         ) : (
           <Button onClick={onNext} disabled={!canGoNext}>
             <Trans>Next</Trans>
@@ -521,6 +542,7 @@ function StepNavigation({
 
 export function OnboardingWizard() {
   const { _ } = useLingui();
+  const navigate = useNavigate();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -576,6 +598,14 @@ export function OnboardingWizard() {
 
         setError(null);
         setFeedback(null);
+
+        if (isOnboardingAwaitingHrReview(data)) {
+          setSteps(data);
+          setLoading(false);
+          navigate("/onboarding/submitted", { replace: true });
+          return;
+        }
+
         setLoading(data.length > 0);
         setSteps(data);
 
@@ -597,7 +627,17 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (steps.length === 0) {
+      return;
+    }
+
+    if (isOnboardingAwaitingHrReview(steps)) {
+      navigate("/onboarding/submitted", { replace: true });
+    }
+  }, [navigate, steps]);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
@@ -701,7 +741,7 @@ export function OnboardingWizard() {
   }
 
   async function handleSaveDraft() {
-    if (saving || uploading) {
+    if (saving || uploading || !isEditableSubmission(submission)) {
       return;
     }
 
@@ -714,10 +754,17 @@ export function OnboardingWizard() {
   }
 
   async function handleNext() {
-    if (
-      (await persistCurrentStep("draft")) &&
-      currentStepIndex < steps.length - 1
-    ) {
+    if (saving || uploading) {
+      return;
+    }
+
+    const shouldPersistDraft = isEditableSubmission(submission);
+
+    if (shouldPersistDraft && !(await persistCurrentStep("draft"))) {
+      return;
+    }
+
+    if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
       const nextStepState = getOnboardingStepState(nextStep);
 
@@ -783,6 +830,11 @@ export function OnboardingWizard() {
     }
 
     if (await persistCurrentStep("submitted")) {
+      if (currentStepIndex >= steps.length - 1) {
+        navigate("/onboarding/submitted", { replace: true });
+        return;
+      }
+
       setFeedback({
         tone: "success",
         message: _(msg`Onboarding submitted. HR will review your information.`),
@@ -981,6 +1033,7 @@ export function OnboardingWizard() {
                         fieldName={fieldName}
                         property={property}
                         error={fieldErrors[fieldName]}
+                        readOnly={!isCurrentStepEditable}
                         required={schema.required.includes(fieldName)}
                         formData={formData}
                         onChange={handleFieldChange}
@@ -1162,6 +1215,7 @@ export function OnboardingWizard() {
               onSubmit={handleSubmit}
               onSkipStep={handleNext}
               showSkipStep={template.is_required === false}
+              isStepEditable={isCurrentStepEditable}
               canGoNext={!saving && !uploading}
               isBusy={saving || uploading}
             />
