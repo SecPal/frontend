@@ -359,27 +359,33 @@ function getPatternValidationMessage(
   message: string,
   schema: OnboardingObjectSchema | null
 ): string | null {
-  const patternMatch = /pattern:?\s*(.+)$/i.exec(message);
-  if (!patternMatch) {
+  // Only trigger on messages that mention "pattern" (case-insensitive).
+  if (!/pattern/i.test(message)) {
     return null;
   }
 
-  const pattern = patternMatch[1]?.trim();
+  // Try to extract an actual pattern value from "pattern: <value>" form.
+  const patternMatch = /pattern:\s*(.+)$/i.exec(message);
+  const pattern = patternMatch?.[1]?.trim();
+  // Reject captures that are only punctuation (e.g., trailing "." from
+  // "…does not match the required pattern.").
+  const actualPattern = pattern && !/^[.,;!?]+$/.test(pattern) ? pattern : null;
+
   const resolvedFieldKey =
-    pattern && fieldKey === "form_data"
-      ? (findSchemaFieldKeyForPattern(pattern, schema) ?? fieldKey)
+    actualPattern && fieldKey === "form_data"
+      ? (findSchemaFieldKeyForPattern(actualPattern, schema) ?? fieldKey)
       : fieldKey;
   const label =
     resolvedFieldKey === "form_data"
       ? "This field"
       : getSchemaFieldLabel(resolvedFieldKey, schema);
 
-  if (pattern === "^[A-Z]{2}$") {
+  if (actualPattern === "^[A-Z]{2}$") {
     return `${label}: Use a two-letter country code in uppercase, for example DE.`;
   }
 
-  return pattern
-    ? `${label}: Please use the required format (${pattern}).`
+  return actualPattern
+    ? `${label}: Please use the required format (${actualPattern}).`
     : `${label}: Please use the required format.`;
 }
 
