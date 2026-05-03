@@ -2566,6 +2566,10 @@ msgstr "Edit Site"
 msgid "Identity Document"
 msgstr "Identity Document"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "The file could not be uploaded. Please check the file type and size."
+msgstr "The file could not be uploaded. Please check the file type and size."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
 msgstr "Saving passkey…"
