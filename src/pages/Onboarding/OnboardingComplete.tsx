@@ -446,7 +446,7 @@ export function OnboardingComplete() {
               fallback: msg`Failed to complete onboarding. Please try again or contact support.`,
               validation: hasFieldErrors
                 ? msg`Please review the highlighted fields and try again.`
-                : msg`Invalid onboarding link. Please check your email and try again.`,
+                : msg`Failed to complete onboarding. Please try again or contact support.`,
             }),
           }));
         } else if (error.response.status === 429) {
