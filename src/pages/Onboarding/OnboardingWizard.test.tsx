@@ -65,7 +65,7 @@ describe("OnboardingWizard", () => {
       form_schema: {
         title: "Personal Information Form",
         type: "object",
-        required: ["gender", "nationalities", "intended_activities"],
+        required: ["gender", "nationalities"],
         properties: {
           gender: {
             type: "string",
@@ -249,5 +249,107 @@ describe("OnboardingWizard optional emergency contact schema", () => {
         })
       );
     });
+  });
+});
+
+describe("OnboardingWizard optional intended activities (BWR)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Your details.",
+        template_id: "template-personal",
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-personal",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "Personal details for onboarding.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "AT"],
+            },
+          },
+          intended_activities: {
+            type: "array",
+            title: "Intended Activities",
+            items: {
+              type: "string",
+              enum: ["door_control", "event_security"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    onboardingApiMocks.createOnboardingSubmission.mockResolvedValue({
+      id: "submission-personal",
+      employee_id: "employee-1",
+      form_template_id: "template-personal",
+      form_data: {
+        gender: "female",
+        nationalities: ["DE"],
+      },
+      status: "submitted",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+  });
+
+  it("does not require intended activities for Submit for Review when schema omits them from required", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await user.click(screen.getByLabelText(/^DE$/));
+
+    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(onboardingApiMocks.createOnboardingSubmission).toHaveBeenCalledWith(
+        expect.objectContaining({
+          form_template_id: "template-personal",
+          status: "submitted",
+          form_data: expect.objectContaining({
+            gender: "female",
+            nationalities: ["DE"],
+          }),
+        })
+      );
+    });
+
+    const call = onboardingApiMocks.createOnboardingSubmission.mock.calls[0]?.[0];
+    expect(call?.form_data).not.toHaveProperty("intended_activities");
   });
 });
