@@ -269,6 +269,20 @@ describe("OnboardingWizard optional emergency contact schema", () => {
             title: "Contact 1: Relationship",
             enum: ["spouse", "friend"],
           },
+          contact_2_name: {
+            type: "string",
+            title: "Contact 2: Name",
+            maxLength: 100,
+          },
+          contact_2_phone: {
+            type: "string",
+            title: "Contact 2: Phone",
+          },
+          contact_2_relationship: {
+            type: "string",
+            title: "Contact 2: Relationship",
+            enum: ["spouse", "friend"],
+          },
         },
       },
       is_required: false,
@@ -332,9 +346,151 @@ describe("OnboardingWizard optional emergency contact schema", () => {
       await screen.findByRole("heading", { name: /you're all set/i })
     ).toBeInTheDocument();
   });
+
+  it("shows the second emergency contact only after the first contact has details", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    expect(screen.queryByLabelText(/contact 2: name/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/contact 2: phone/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/contact 2: relationship/i)
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
+
+    expect(screen.getByLabelText(/contact 2: name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/contact 2: phone/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/contact 2: relationship/i)
+    ).toBeInTheDocument();
+  });
+
+  it("requires a phone number for each emergency contact with a name", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/contact 1: phone/i)).not.toHaveAttribute(
+      "required"
+    );
+
+    await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
+
+    expect(screen.getByLabelText(/contact 1: phone/i)).toBeRequired();
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText("This field is required.")
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText(/contact 1: phone/i), "+491234567");
+    await user.type(screen.getByLabelText(/contact 2: name/i), "Grace Hopper");
+
+    expect(screen.getByLabelText(/contact 2: phone/i)).toBeRequired();
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText("This field is required.")
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+
+    await user.type(screen.getByLabelText(/contact 2: phone/i), "+499876543");
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.createOnboardingSubmission
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          form_template_id: "template-emergency",
+          status: "submitted",
+          form_data: expect.objectContaining({
+            contact_1_name: "Ada Lovelace",
+            contact_1_phone: "+491234567",
+            contact_2_name: "Grace Hopper",
+            contact_2_phone: "+499876543",
+          }),
+        })
+      );
+    });
+  });
+
+  it("keeps second-contact data when first-contact details are temporarily cleared", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
+    await user.type(screen.getByLabelText(/contact 2: name/i), "Grace Hopper");
+    await user.type(screen.getByLabelText(/contact 2: phone/i), "+499876543");
+
+    await user.clear(screen.getByLabelText(/contact 1: name/i));
+    await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
+
+    expect(screen.getByLabelText(/contact 2: name/i)).toHaveValue(
+      "Grace Hopper"
+    );
+    expect(screen.getByLabelText(/contact 2: phone/i)).toHaveValue(
+      "+499876543"
+    );
+  });
+
+  it("clears conditional phone required errors when the corresponding contact name is removed", async () => {
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
+    await user.type(screen.getByLabelText(/contact 1: phone/i), "+491234567");
+    await user.type(screen.getByLabelText(/contact 2: name/i), "Grace Hopper");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText("This field is required.")
+    ).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/contact 2: name/i));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("This field is required.")
+      ).not.toBeInTheDocument();
+    });
+  });
 });
 
-describe("OnboardingWizard optional intended activities (BWR)", () => {
+describe("OnboardingWizard HR-managed intended activities (BWR)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     i18n.load("en", {});
@@ -360,7 +516,7 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
       form_schema: {
         title: "Personal Information Form",
         type: "object",
-        required: ["gender", "nationalities"],
+        required: ["gender", "nationalities", "intended_activities"],
         properties: {
           gender: {
             type: "string",
@@ -406,13 +562,14 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
     });
   });
 
-  it("does not require intended activities for Submit for Review when schema omits them from required", async () => {
+  it("does not show or submit intended activities in employee onboarding", async () => {
     const user = userEvent.setup();
     renderWithProviders();
 
     expect(
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
+    expect(screen.queryByText(/intended activities/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
     await user.click(screen.getByLabelText(/^DE$/));
@@ -513,8 +670,198 @@ describe("OnboardingWizard server-side validation feedback", () => {
     );
 
     expect(
-      await screen.findByText(/does not match the required pattern/i)
+      await screen.findByText(/IBAN: Please use the required format/i)
     ).toBeInTheDocument();
+  });
+
+  it("names the affected array field when the API rejects a nested value", async () => {
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-bank",
+      name: "Personal Information",
+      title: "Personal Information",
+      description: "Personal details",
+      form_schema: {
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["female", "male"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "FR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: ["The string should match pattern: ^[A-Z]{2}$"],
+        "form_data.nationalities.0": [
+          "The string should match pattern: ^[A-Z]{2}$",
+        ],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await user.click(screen.getByLabelText(/^DE$/));
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        "Nationalities: Use a two-letter country code in uppercase, for example DE."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "We couldn't submit the form yet. Please review the highlighted fields."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("The string should match pattern: ^[A-Z]{2}$")
+    ).not.toBeInTheDocument();
+  });
+
+  it("rewrites global pattern validation messages with the affected field name", async () => {
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-bank",
+      name: "Personal Information",
+      title: "Personal Information",
+      description: "Personal details",
+      form_schema: {
+        type: "object",
+        required: ["birth_country"],
+        properties: {
+          birth_country: {
+            type: "string",
+            title: "Birth Country",
+            pattern: "^[A-Z]{2}$",
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: ["The string should match pattern: ^[A-Z]{2}$"],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^birth country$/i), "D1");
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        "Birth Country: Use a two-letter country code in uppercase, for example DE."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("The string should match pattern: ^[A-Z]{2}$")
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows supplemental feedback when API errors target hidden HR-managed fields", async () => {
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-bank",
+      name: "Personal Information",
+      title: "Personal Information",
+      description: "Personal details",
+      form_schema: {
+        type: "object",
+        required: ["gender", "nationalities", "intended_activities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["female", "male"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "FR"],
+            },
+          },
+          intended_activities: {
+            type: "array",
+            title: "Intended Activities",
+            items: {
+              type: "string",
+              enum: ["door_control"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: ["Submission contains HR-managed fields."],
+        "form_data.intended_activities": ["The selected value is invalid."],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await user.click(screen.getByLabelText(/^DE$/));
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        "form_data: Submission contains HR-managed fields."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "We couldn't submit the form yet. Please review the highlighted fields."
+      )
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -614,6 +961,103 @@ describe("OnboardingWizard skip step behavior", () => {
 
     expect(
       onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+  });
+
+  it("allows advancing from read-only steps without running required-field validation", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Submitted already.",
+        template_id: "template-read-only",
+        is_required: true,
+        is_completed: true,
+        submission: {
+          id: "submission-read-only",
+          employee_id: "employee-1",
+          form_template_id: "template-read-only",
+          form_data: {},
+          status: "submitted",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-read-only") {
+          return {
+            id: "template-read-only",
+            name: "Personal Information",
+            title: "Personal Information",
+            description: "Read-only schema",
+            form_schema: {
+              type: "object",
+              required: ["gender"],
+              properties: {
+                gender: { type: "string", title: "Gender" },
+              },
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Bank info",
+          form_schema: {
+            type: "object",
+            required: ["iban"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("This field is required.")
+    ).not.toBeInTheDocument();
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+    expect(
+      onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalled();
   });
 });

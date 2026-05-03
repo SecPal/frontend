@@ -45,6 +45,7 @@ import {
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
   enumNames?: string[];
+  pattern?: string;
   type?: "string" | "integer" | "number";
 }
 
@@ -55,6 +56,7 @@ interface OnboardingSchemaProperty {
   items?: OnboardingSchemaArrayItems;
   maxLength?: number;
   minimum?: number;
+  pattern?: string;
   title?: string;
   type: "string" | "integer" | "number" | "boolean" | "array";
 }
@@ -79,6 +81,88 @@ interface UploadedOnboardingFile {
 }
 
 const ONBOARDING_UPLOAD_ACCEPT = ".pdf,.jpg,.jpeg,.png";
+const EMPLOYEE_ONBOARDING_HR_MANAGED_FIELDS = new Set(["intended_activities"]);
+const FIRST_EMERGENCY_CONTACT_FIELD_PREFIX = "contact_1_";
+const SECOND_EMERGENCY_CONTACT_FIELD_PREFIX = "contact_2_";
+const EMERGENCY_CONTACT_NAME_FIELDS = ["contact_1_name", "contact_2_name"];
+
+function isEmployeeEditableOnboardingField(fieldName: string): boolean {
+  return !EMPLOYEE_ONBOARDING_HR_MANAGED_FIELDS.has(fieldName);
+}
+
+function isMeaningfulOnboardingValue(value: unknown): boolean {
+  if (typeof value === "string") {
+    return value.trim().length > 0;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  return value != null;
+}
+
+function hasFirstEmergencyContactDetails(
+  formData: Record<string, unknown>
+): boolean {
+  return Object.entries(formData).some(
+    ([fieldName, value]) =>
+      fieldName.startsWith(FIRST_EMERGENCY_CONTACT_FIELD_PREFIX) &&
+      isMeaningfulOnboardingValue(value)
+  );
+}
+
+function isSecondEmergencyContactField(fieldName: string): boolean {
+  return fieldName.startsWith(SECOND_EMERGENCY_CONTACT_FIELD_PREFIX);
+}
+
+function getEmergencyContactPhoneField(fieldName: string): string | null {
+  const match = /^contact_(\d+)_name$/.exec(fieldName);
+  return match ? `contact_${match[1]}_phone` : null;
+}
+
+function isConditionallyRequiredOnboardingField(
+  fieldName: string,
+  formData: Record<string, unknown>
+): boolean {
+  return EMERGENCY_CONTACT_NAME_FIELDS.some(
+    (nameField) =>
+      getEmergencyContactPhoneField(nameField) === fieldName &&
+      isMeaningfulOnboardingValue(formData[nameField])
+  );
+}
+
+function isOnboardingFieldVisible(
+  fieldName: string,
+  formData: Record<string, unknown>
+): boolean {
+  if (!isEmployeeEditableOnboardingField(fieldName)) {
+    return false;
+  }
+
+  return (
+    !isSecondEmergencyContactField(fieldName) ||
+    hasFirstEmergencyContactDetails(formData)
+  );
+}
+
+function sanitizeEmployeeOnboardingFormData(
+  formData: Record<string, unknown>
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(formData).filter(([fieldName]) =>
+      isOnboardingFieldVisible(fieldName, formData)
+    )
+  );
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -91,14 +175,22 @@ function getObjectSchema(
     return null;
   }
 
+  const properties = formSchema.properties as Record<
+    string,
+    OnboardingSchemaProperty
+  >;
+
   return {
-    properties: formSchema.properties as Record<
-      string,
-      OnboardingSchemaProperty
-    >,
+    properties: Object.fromEntries(
+      Object.entries(properties).filter(([fieldName]) =>
+        isEmployeeEditableOnboardingField(fieldName)
+      )
+    ),
     required: Array.isArray(formSchema.required)
       ? formSchema.required.filter(
-          (entry): entry is string => typeof entry === "string"
+          (entry): entry is string =>
+            typeof entry === "string" &&
+            isEmployeeEditableOnboardingField(entry)
         )
       : [],
   };
@@ -190,8 +282,19 @@ function validateRequiredFields(
   formData: Record<string, unknown>,
   requiredFieldMessage: string
 ): FieldErrors {
-  return schema.required.reduce<FieldErrors>((errors, fieldName) => {
+  const requiredFields = new Set([
+    ...schema.required,
+    ...Object.keys(schema.properties).filter((fieldName) =>
+      isConditionallyRequiredOnboardingField(fieldName, formData)
+    ),
+  ]);
+
+  return Array.from(requiredFields).reduce<FieldErrors>((errors, fieldName) => {
     const property = schema.properties[fieldName];
+
+    if (!isOnboardingFieldVisible(fieldName, formData)) {
+      return errors;
+    }
 
     if (!property || !isRequiredFieldFilled(property, formData[fieldName])) {
       errors[fieldName] = requiredFieldMessage;
@@ -199,6 +302,112 @@ function validateRequiredFields(
 
     return errors;
   }, {});
+}
+
+function getServerValidationFieldKey(
+  key: string,
+  schema: OnboardingObjectSchema | null
+): string {
+  const fieldKey = key.startsWith("form_data.")
+    ? key.slice("form_data.".length)
+    : key;
+  const directKey = schema?.properties[fieldKey] ? fieldKey : null;
+
+  if (directKey) {
+    return directKey;
+  }
+
+  const [rootKey] = fieldKey.split(".");
+  return rootKey && schema?.properties[rootKey] ? rootKey : fieldKey;
+}
+
+function getSchemaFieldLabel(
+  fieldKey: string,
+  schema: OnboardingObjectSchema | null
+): string {
+  return schema?.properties[fieldKey]?.title ?? fieldKey;
+}
+
+function findSchemaFieldKeyForPattern(
+  pattern: string,
+  schema: OnboardingObjectSchema | null
+): string | null {
+  if (!schema) {
+    return null;
+  }
+
+  const matchingEntry = Object.entries(schema.properties).find(
+    ([, property]) =>
+      property.pattern === pattern || property.items?.pattern === pattern
+  );
+  if (matchingEntry) {
+    return matchingEntry[0];
+  }
+
+  if (pattern === "^[A-Z]{2}$") {
+    const countryEntry = Object.keys(schema.properties).find((fieldName) =>
+      /country|nationalit/i.test(fieldName)
+    );
+    return countryEntry ?? null;
+  }
+
+  return null;
+}
+
+function getPatternValidationMessage(
+  fieldKey: string,
+  message: string,
+  schema: OnboardingObjectSchema | null
+): string | null {
+  // Only trigger on messages that mention "pattern" (case-insensitive).
+  if (!/pattern/i.test(message)) {
+    return null;
+  }
+
+  // Try to extract an actual pattern value from "pattern: <value>" form.
+  const patternMatch = /pattern:\s*(.+)$/i.exec(message);
+  const pattern = patternMatch?.[1]?.trim();
+  // Reject captures that are only punctuation (e.g., trailing "." from
+  // "…does not match the required pattern.").
+  const actualPattern = pattern && !/^[.,;!?]+$/.test(pattern) ? pattern : null;
+
+  const resolvedFieldKey =
+    actualPattern && fieldKey === "form_data"
+      ? (findSchemaFieldKeyForPattern(actualPattern, schema) ?? fieldKey)
+      : fieldKey;
+  const label =
+    resolvedFieldKey === "form_data"
+      ? "This field"
+      : getSchemaFieldLabel(resolvedFieldKey, schema);
+
+  if (actualPattern === "^[A-Z]{2}$") {
+    return `${label}: Use a two-letter country code in uppercase, for example DE.`;
+  }
+
+  return actualPattern
+    ? `${label}: Please use the required format (${actualPattern}).`
+    : `${label}: Please use the required format.`;
+}
+
+function formatServerValidationMessage(
+  fieldKey: string,
+  message: string,
+  schema: OnboardingObjectSchema | null
+): string {
+  const patternMessage = getPatternValidationMessage(fieldKey, message, schema);
+  if (patternMessage) {
+    return patternMessage;
+  }
+
+  const label = getSchemaFieldLabel(fieldKey, schema);
+  return message.startsWith(`${label}:`) ? message : `${label}: ${message}`;
+}
+
+function formatSupplementalValidationMessage(
+  message: string,
+  schema: OnboardingObjectSchema | null
+): string {
+  return formatServerValidationMessage("form_data", message, schema);
 }
 
 function isEditableSubmission(
@@ -299,6 +508,7 @@ function SchemaFieldRenderer({
             disabled={readOnly}
             invalid={Boolean(error)}
             name={fieldName}
+            pattern={property.pattern}
             required={fieldRequired}
             value={getTextValue(formData[fieldName])}
             maxLength={property.maxLength}
@@ -616,6 +826,7 @@ export function OnboardingWizard() {
     []
   );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const onboardingErrorRef = useRef<HTMLDivElement | null>(null);
   const currentStepIndexRef = useRef(0);
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
@@ -640,6 +851,22 @@ export function OnboardingWizard() {
   useEffect(() => {
     translateRef.current = _;
   }, [_]);
+
+  useEffect(() => {
+    if (feedback?.tone !== "error" && !error) {
+      return;
+    }
+
+    const errorElement = onboardingErrorRef.current;
+    if (!errorElement) {
+      return;
+    }
+
+    if (typeof errorElement.scrollIntoView === "function") {
+      errorElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    errorElement.focus({ preventScroll: true });
+  }, [feedback, error, currentStepIndex]);
 
   useEffect(() => {
     let active = true;
@@ -788,9 +1015,9 @@ export function OnboardingWizard() {
         const savedSubmission = await updateOnboardingSubmission(
           stepSubmission.id,
           {
-            form_data:
-              (stepSubmission.form_data as Record<string, unknown> | null) ??
-              {},
+            form_data: sanitizeEmployeeOnboardingFormData(
+              (stepSubmission.form_data as Record<string, unknown> | null) ?? {}
+            ),
             status: "submitted",
           }
         );
@@ -820,10 +1047,11 @@ export function OnboardingWizard() {
       setFeedback(null);
       setFieldErrors({});
 
-      const nextFormData =
+      const nextFormData = sanitizeEmployeeOnboardingFormData(
         Object.keys(formData).length > 0
           ? formData
-          : ((submission?.form_data as Record<string, unknown> | null) ?? {});
+          : ((submission?.form_data as Record<string, unknown> | null) ?? {})
+      );
 
       const savedSubmission = submission
         ? await updateOnboardingSubmission(submission.id, {
@@ -847,6 +1075,7 @@ export function OnboardingWizard() {
         status === "submitted"
       ) {
         const nextFieldErrors: FieldErrors = {};
+        let hiddenFieldValidationMessage: string | null = null;
         for (const [key, messages] of Object.entries(err.errors)) {
           if (
             key === "form_data" ||
@@ -855,30 +1084,50 @@ export function OnboardingWizard() {
           ) {
             continue;
           }
-          // The API returns Laravel-style nested keys such as "form_data.iban".
-          // Strip the "form_data." prefix so errors map to bare field names.
-          const fieldKey = key.startsWith("form_data.")
-            ? key.slice("form_data.".length)
-            : key;
+          // API validation keys may be nested, e.g. "form_data.nationalities.0".
+          // Map them back to the rendered schema field before showing the error.
+          const fieldKey = getServerValidationFieldKey(key, schema);
           const first = messages[0];
-          if (first) {
-            nextFieldErrors[fieldKey] = first;
+          if (!first) {
+            continue;
           }
+
+          const isInlineFieldError =
+            Boolean(schema?.properties[fieldKey]) &&
+            isOnboardingFieldVisible(fieldKey, formData);
+
+          if (!isInlineFieldError) {
+            hiddenFieldValidationMessage ??= formatServerValidationMessage(
+              fieldKey,
+              first,
+              schema
+            );
+            continue;
+          }
+
+          nextFieldErrors[fieldKey] = formatServerValidationMessage(
+            fieldKey,
+            first,
+            schema
+          );
         }
         setError(null);
         setFieldErrors(nextFieldErrors);
-        const supplemental =
+        const supplementalRaw =
           err.errors.form_data?.[0] ??
           err.errors.onboarding_workflow_status?.[0];
+        const supplemental = supplementalRaw
+          ? formatSupplementalValidationMessage(supplementalRaw, schema)
+          : hiddenFieldValidationMessage;
         const hasInline = Object.keys(nextFieldErrors).length > 0;
         setFeedback({
           tone: "error",
-          message: supplemental
-            ? supplemental
-            : hasInline
-              ? _(
-                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
-                )
+          message: hasInline
+            ? _(
+                msg`We couldn't submit the form yet. Please review the highlighted fields.`
+              )
+            : supplemental
+              ? supplemental
               : err.message ||
                 _(
                   msg`We couldn't submit the form yet. Please review the highlighted fields.`
@@ -915,12 +1164,44 @@ export function OnboardingWizard() {
     }
   }
 
+  function validateCurrentStepRequiredFields(): boolean {
+    if (!schema || !template) {
+      return true;
+    }
+
+    const requiredSchema =
+      template.is_required === false ? { ...schema, required: [] } : schema;
+    const nextFieldErrors = validateRequiredFields(
+      requiredSchema,
+      formData,
+      _(msg`This field is required.`)
+    );
+
+    if (Object.keys(nextFieldErrors).length === 0) {
+      return true;
+    }
+
+    setError(null);
+    setFieldErrors(nextFieldErrors);
+    setFeedback({
+      tone: "error",
+      message: _(
+        msg`We couldn't submit the form yet. Please review the highlighted fields.`
+      ),
+    });
+    return false;
+  }
+
   async function handleNext() {
     if (saving || uploading) {
       return;
     }
 
     const shouldPersistDraft = isEditableSubmission(submission);
+
+    if (shouldPersistDraft && !validateCurrentStepRequiredFields()) {
+      return;
+    }
 
     if (shouldPersistDraft && !(await persistCurrentStep("draft"))) {
       return;
@@ -987,29 +1268,8 @@ export function OnboardingWizard() {
       return;
     }
 
-    if (schema && template) {
-      const isOptionalTemplate = template.is_required === false;
-      const skipRequiredValidation = isOptionalTemplate;
-
-      if (!skipRequiredValidation) {
-        const nextFieldErrors = validateRequiredFields(
-          schema,
-          formData,
-          _(msg`This field is required.`)
-        );
-
-        if (Object.keys(nextFieldErrors).length > 0) {
-          setError(null);
-          setFieldErrors(nextFieldErrors);
-          setFeedback({
-            tone: "error",
-            message: _(
-              msg`We couldn't submit the form yet. Please review the highlighted fields.`
-            ),
-          });
-          return;
-        }
-      }
+    if (!validateCurrentStepRequiredFields()) {
+      return;
     }
 
     if (currentStepIndex >= steps.length - 1) {
@@ -1032,29 +1292,56 @@ export function OnboardingWizard() {
   }
 
   function handleFieldChange(fieldName: string, value: unknown) {
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      [fieldName]: value,
-    }));
+    setFormData((currentFormData) => {
+      const nextFormData = {
+        ...currentFormData,
+        [fieldName]: value,
+      };
+      const property = schema?.properties[fieldName];
+      const requiredFieldMessage = _(msg`This field is required.`);
+      const requiredSchema =
+        schema && template?.is_required === false
+          ? { ...schema, required: [] }
+          : schema;
+      const requiredFieldErrors = requiredSchema
+        ? validateRequiredFields(
+            requiredSchema,
+            nextFormData,
+            requiredFieldMessage
+          )
+        : {};
 
-    const property = schema?.properties[fieldName];
+      setFieldErrors((currentFieldErrors) => {
+        let changed = false;
+        const nextFieldErrors: FieldErrors = {};
 
-    if (!property) {
-      return;
-    }
+        for (const [errorFieldName, errorMessage] of Object.entries(
+          currentFieldErrors
+        )) {
+          if (
+            errorMessage === requiredFieldMessage &&
+            !requiredFieldErrors[errorFieldName]
+          ) {
+            changed = true;
+            continue;
+          }
 
-    setFieldErrors((currentFieldErrors) => {
-      if (!currentFieldErrors[fieldName]) {
-        return currentFieldErrors;
-      }
+          nextFieldErrors[errorFieldName] = errorMessage;
+        }
 
-      if (!isRequiredFieldFilled(property, value)) {
-        return currentFieldErrors;
-      }
+        if (
+          property &&
+          nextFieldErrors[fieldName] &&
+          isRequiredFieldFilled(property, value)
+        ) {
+          delete nextFieldErrors[fieldName];
+          changed = true;
+        }
 
-      const nextFieldErrors = { ...currentFieldErrors };
-      delete nextFieldErrors[fieldName];
-      return nextFieldErrors;
+        return changed ? nextFieldErrors : currentFieldErrors;
+      });
+
+      return nextFormData;
     });
   }
 
@@ -1167,6 +1454,8 @@ export function OnboardingWizard() {
 
         {feedback ? (
           <div
+            ref={feedback.tone === "error" ? onboardingErrorRef : null}
+            tabIndex={feedback.tone === "error" ? -1 : undefined}
             role={feedback.tone === "error" ? "alert" : "status"}
             aria-live={feedback.tone === "error" ? "assertive" : "polite"}
             aria-atomic="true"
@@ -1189,6 +1478,8 @@ export function OnboardingWizard() {
         ) : null}
         {error ? (
           <div
+            ref={onboardingErrorRef}
+            tabIndex={-1}
             role="alert"
             aria-live="assertive"
             className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
@@ -1223,20 +1514,28 @@ export function OnboardingWizard() {
             {schema ? (
               <Fieldset>
                 <FieldGroup>
-                  {Object.entries(schema.properties).map(
-                    ([fieldName, property]) => (
+                  {Object.entries(schema.properties)
+                    .filter(([fieldName]) =>
+                      isOnboardingFieldVisible(fieldName, formData)
+                    )
+                    .map(([fieldName, property]) => (
                       <SchemaFieldRenderer
                         key={fieldName}
                         fieldName={fieldName}
                         property={property}
                         error={fieldErrors[fieldName]}
                         readOnly={!isCurrentStepEditable}
-                        required={schema.required.includes(fieldName)}
+                        required={
+                          schema.required.includes(fieldName) ||
+                          isConditionallyRequiredOnboardingField(
+                            fieldName,
+                            formData
+                          )
+                        }
                         formData={formData}
                         onChange={handleFieldChange}
                       />
-                    )
-                  )}
+                    ))}
                 </FieldGroup>
               </Fieldset>
             ) : (
