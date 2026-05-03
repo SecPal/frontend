@@ -496,6 +496,7 @@ function StepNavigation({
 
 export function OnboardingWizard() {
   const { _ } = useLingui();
+  const translateRef = useRef(_);
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -541,6 +542,10 @@ export function OnboardingWizard() {
   }, [currentStepIndex]);
 
   useEffect(() => {
+    translateRef.current = _;
+  }, [_]);
+
+  useEffect(() => {
     let active = true;
 
     void fetchOnboardingSteps()
@@ -564,7 +569,7 @@ export function OnboardingWizard() {
         }
 
         setError(
-          getLocalizedErrorMessage(err, _, {
+          getLocalizedErrorMessage(err, translateRef.current, {
             fallback: msg`Failed to load onboarding steps`,
           })
         );
@@ -574,7 +579,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [_]);
+  }, []);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
@@ -600,7 +605,7 @@ export function OnboardingWizard() {
         }
 
         setError(
-          getLocalizedErrorMessage(err, _, {
+          getLocalizedErrorMessage(err, translateRef.current, {
             fallback: msg`Failed to load form template`,
           })
         );
@@ -614,7 +619,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [currentStepIndex, currentStepTemplateId, _]);
+  }, [currentStepIndex, currentStepTemplateId]);
 
   function updateCurrentStep(
     savedSubmission: OnboardingSubmission,

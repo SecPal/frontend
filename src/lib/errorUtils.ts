@@ -155,20 +155,3 @@ export function getLocalizedErrorMessage(
 
   return translateMessage(translate, options.fallback);
 }
-
-/**
- * Format validation errors from API responses
- * @param err Error object that may contain validation errors
- * @returns Formatted error message or null
- */
-export function formatValidationErrors(err: unknown): string | null {
-  const errors = getErrorValidationErrors(err);
-
-  if (!errors) {
-    return null;
-  }
-
-  return Object.entries(errors)
-    .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-    .join("; ");
-}
