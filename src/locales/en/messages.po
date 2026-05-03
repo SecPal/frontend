@@ -578,10 +578,6 @@ msgstr "Team Messages"
 msgid "Create New Employee"
 msgstr "Create New Employee"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-#~ msgid "Minimum 8 characters"
-#~ msgstr "Minimum 8 characters"
-
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
 msgstr "Delete Site"
@@ -2415,10 +2411,6 @@ msgstr "Search by name or email..."
 #: src/components/RouteGuardState.tsx
 msgid "Access Denied"
 msgstr "Access Denied"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-#~ msgid "Password must be at least 8 characters"
-#~ msgstr "Password must be at least 8 characters"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
