@@ -107,6 +107,7 @@ export interface OnboardingCompleteResponse {
     user: {
       id: string | number;
       email: string;
+      /** Present from API after onboarding completion; absence treated as verified client-side. */
       email_verified?: boolean;
       name: string;
     };

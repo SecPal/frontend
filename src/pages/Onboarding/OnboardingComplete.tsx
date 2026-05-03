@@ -362,7 +362,8 @@ export function OnboardingComplete() {
         id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
-        emailVerified: response.data.user.email_verified ?? true,
+        // Magic-link completion verifies email server-side; only explicit false blocks access.
+        emailVerified: response.data.user.email_verified !== false,
         employeeStatus: response.data.employee.status,
       });
 

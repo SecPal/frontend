@@ -295,6 +295,77 @@ describe("OnboardingComplete", () => {
     });
   });
 
+  it("sets emailVerified from API when email_verified is omitted (legacy response)", async () => {
+    const mockResponse = {
+      message: "Onboarding completed successfully",
+      data: {
+        user: {
+          id: 1,
+          email: "john@secpal.dev",
+          name: "John Doe",
+        },
+        employee: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          first_name: "John",
+          last_name: "Doe",
+          status: "pre_contract",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockResolvedValue(mockResponse);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+    fillValidFormAndSubmit();
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: true })
+      );
+    });
+  });
+
+  it("respects email_verified false from API", async () => {
+    const mockResponse = {
+      message: "Onboarding completed successfully",
+      data: {
+        user: {
+          id: 1,
+          email: "john@secpal.dev",
+          email_verified: false,
+          name: "John Doe",
+        },
+        employee: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          first_name: "John",
+          last_name: "Doe",
+          status: "pre_contract",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockResolvedValue(mockResponse);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+    fillValidFormAndSubmit();
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: false })
+      );
+    });
+  });
+
   it("handles API error (invalid token)", async () => {
     const mockError = {
       response: {

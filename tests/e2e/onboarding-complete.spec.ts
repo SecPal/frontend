@@ -218,6 +218,9 @@ async function installMockOnboardingRoutes(
   const isHttps = isRemoteE2ETarget(baseUrl);
   const mockDomain = isHttps ? new URL(baseUrl).hostname : "localhost";
 
+  /** After magic-link completion the SPA session is valid; /v1/me must reflect a verified user. */
+  let onboardingSessionEstablished = false;
+
   // Live app.secpal.dev can still ship a broken absolute API origin that the
   // browser blocks before Playwright network routing sees the request. For the
   // deterministic onboarding contract spec we therefore mock the public fetches
@@ -251,10 +254,29 @@ async function installMockOnboardingRoutes(
   });
 
   await context.route("**/v1/me", async (route) => {
+    if (!onboardingSessionEstablished) {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Unauthenticated." }),
+      });
+      return;
+    }
+
     await route.fulfill({
-      status: 401,
+      status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ message: "Unauthenticated." }),
+      body: JSON.stringify({
+        id: "user-1",
+        name: "John Doe",
+        email: validOnboardingEmail,
+        emailVerified: true,
+        roles: [],
+        permissions: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      }),
     });
   });
 
@@ -309,6 +331,8 @@ async function installMockOnboardingRoutes(
     }
 
     await new Promise((resolve) => setTimeout(resolve, responseDelayMs));
+
+    onboardingSessionEstablished = true;
 
     await route.fulfill({
       status: 200,
@@ -412,6 +436,9 @@ test.describe("Onboarding Complete Flow", () => {
     await expect(
       page.getByRole("heading", { name: /Welcome to SecPal Onboarding/i })
     ).toBeVisible();
+    await expect(
+      page.getByText(/until the email address is verified/i)
+    ).toHaveCount(0);
   });
 
   test("shows the invalid link state for an invalid token", async ({
