@@ -452,8 +452,12 @@ describe("OnboardingWizard optional emergency contact schema", () => {
     await user.clear(screen.getByLabelText(/contact 1: name/i));
     await user.type(screen.getByLabelText(/contact 1: name/i), "Ada Lovelace");
 
-    expect(screen.getByLabelText(/contact 2: name/i)).toHaveValue("Grace Hopper");
-    expect(screen.getByLabelText(/contact 2: phone/i)).toHaveValue("+499876543");
+    expect(screen.getByLabelText(/contact 2: name/i)).toHaveValue(
+      "Grace Hopper"
+    );
+    expect(screen.getByLabelText(/contact 2: phone/i)).toHaveValue(
+      "+499876543"
+    );
   });
 
   it("clears conditional phone required errors when the corresponding contact name is removed", async () => {
@@ -849,7 +853,9 @@ describe("OnboardingWizard server-side validation feedback", () => {
     );
 
     expect(
-      await screen.findByText("form_data: Submission contains HR-managed fields.")
+      await screen.findByText(
+        "form_data: Submission contains HR-managed fields."
+      )
     ).toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -1044,7 +1050,9 @@ describe("OnboardingWizard skip step behavior", () => {
     expect(
       await screen.findByRole("heading", { name: /bank account details/i })
     ).toBeInTheDocument();
-    expect(screen.queryByText("This field is required.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("This field is required.")
+    ).not.toBeInTheDocument();
     expect(
       onboardingApiMocks.createOnboardingSubmission
     ).not.toHaveBeenCalled();
