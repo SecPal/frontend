@@ -11,9 +11,11 @@ import {
   fetchOnboardingSubmissions,
   fetchOnboardingTemplates,
   rejectOnboardingSubmission,
+  updateOnboardingSubmission,
   uploadOnboardingFile,
   validateOnboardingToken,
 } from "../../../src/services/onboardingApi";
+import { ApiError } from "../../../src/services/ApiError";
 import { apiFetch } from "../../../src/services/csrf";
 
 vi.mock("../../../src/services/csrf", async () => {
@@ -504,6 +506,102 @@ describe("createOnboardingSubmission", () => {
         status: "draft",
       })
     ).rejects.toThrow("Missing onboarding form template identifier");
+  });
+
+  it("throws ApiError with validation errors when the API returns 422", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(422, {
+        message: "The form data is invalid.",
+        errors: {
+          "form_data.iban": ["The IBAN field is required."],
+        },
+      })
+    );
+
+    await expect(
+      createOnboardingSubmission({
+        form_template_id: "template-9",
+        form_data: {},
+        status: "submitted",
+      })
+    ).rejects.toSatisfy(
+      (err) =>
+        err instanceof ApiError &&
+        err.status === 422 &&
+        err.errors?.["form_data.iban"]?.[0] === "The IBAN field is required."
+    );
+  });
+
+  it("throws ApiError using statusText when the API error body has no message", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(500, { errors: null })
+    );
+
+    await expect(
+      createOnboardingSubmission({
+        form_template_id: "template-9",
+        form_data: {},
+        status: "submitted",
+      })
+    ).rejects.toSatisfy((err) => err instanceof ApiError && err.status === 500);
+  });
+});
+
+describe("updateOnboardingSubmission", () => {
+  it("patches the submission and returns updated data", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(200, {
+        data: {
+          id: "submission-3",
+          employee_id: "employee-1",
+          form_template_id: "template-9",
+          form_data: { iban: "DE89370400440532013000" },
+          status: "draft",
+          created_at: "2026-05-03T10:00:00Z",
+          updated_at: "2026-05-03T11:00:00Z",
+        },
+      })
+    );
+
+    await expect(
+      updateOnboardingSubmission("submission-3", {
+        form_data: { iban: "DE89370400440532013000" },
+        status: "draft",
+      })
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: "submission-3",
+        status: "draft",
+      })
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/v1/onboarding/submissions/submission-3"),
+      expect.objectContaining({ method: "PATCH" })
+    );
+  });
+
+  it("throws ApiError with validation errors when update returns 422", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(422, {
+        message: "Form data is required",
+        errors: {
+          form_data: ["Form data is required"],
+        },
+      })
+    );
+
+    await expect(
+      updateOnboardingSubmission("submission-3", {
+        form_data: {},
+        status: "submitted",
+      })
+    ).rejects.toSatisfy(
+      (err) =>
+        err instanceof ApiError &&
+        err.status === 422 &&
+        err.errors?.["form_data"]?.[0] === "Form data is required"
+    );
   });
 });
 
