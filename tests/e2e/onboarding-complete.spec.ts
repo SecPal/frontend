@@ -448,8 +448,8 @@ test.describe("Onboarding Complete Flow", () => {
       `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
     );
 
-    await passwordInput(page).fill("password1");
-    await passwordConfirmationInput(page).fill("password2");
+    await passwordInput(page).fill("SecurePass123!");
+    await passwordConfirmationInput(page).fill("DifferentPass123!");
     await page.getByRole("button", { name: /Complete Account Setup/i }).click();
 
     await expect(page.getByText(/Passwords do not match/i)).toBeVisible();
@@ -462,12 +462,13 @@ test.describe("Onboarding Complete Flow", () => {
       `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
     );
 
-    await passwordInput(page).fill("short");
-    await passwordConfirmationInput(page).fill("short");
+    // 11 characters with complexity — fails only the minimum length rule
+    await passwordInput(page).fill("Abcdefghi1!");
+    await passwordConfirmationInput(page).fill("Abcdefghi1!");
     await page.getByRole("button", { name: /Complete Account Setup/i }).click();
 
     await expect(
-      page.getByText(/Password must be at least 8 characters/i)
+      page.getByText(/Password must be at least 12 characters/i)
     ).toBeVisible();
   });
 

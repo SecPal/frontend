@@ -230,6 +230,10 @@ msgstr "Error Loading Employee"
 msgid "Failed to upload file"
 msgstr "Failed to upload file"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
+msgstr "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
 msgstr "BWR status updated."
@@ -575,8 +579,8 @@ msgid "Create New Employee"
 msgstr "Create New Employee"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Minimum 8 characters"
-msgstr "Minimum 8 characters"
+#~ msgid "Minimum 8 characters"
+#~ msgstr "Minimum 8 characters"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
@@ -1301,6 +1305,10 @@ msgstr "Contact"
 msgid "Applicant"
 msgstr "Applicant"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must be at least 12 characters"
+msgstr "Password must be at least 12 characters"
+
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
@@ -1683,6 +1691,10 @@ msgstr "Enrollment Sessions"
 msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Moving organizational units is not possible while offline. Please reconnect to make changes."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include at least one number"
+msgstr "Password must include at least one number"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
 msgstr "No action available"
@@ -1901,6 +1913,10 @@ msgstr "Terminated"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract type is required"
 msgstr "Contract type is required"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include at least one symbol"
+msgstr "Password must include at least one symbol"
 
 #: src/components/Footer.tsx
 msgid "Source Code"
@@ -2401,8 +2417,8 @@ msgid "Access Denied"
 msgstr "Access Denied"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Password must be at least 8 characters"
-msgstr "Password must be at least 8 characters"
+#~ msgid "Password must be at least 8 characters"
+#~ msgstr "Password must be at least 8 characters"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -2630,6 +2646,10 @@ msgstr "OK"
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Deleting organizational units is not possible while offline. Please reconnect to make changes."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Password must include both uppercase and lowercase letters"
+msgstr "Password must include both uppercase and lowercase letters"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx

@@ -90,13 +90,14 @@ describe("password Utils", () => {
       expect(result.feedback).toContain("Avoid common words and patterns");
     });
 
-    it("should rate 8-character simple password as weak to medium", () => {
+    it("should rate short password without full length score as weak", () => {
       const result = assessPasswordStrength("abcd1234");
-      expect(["weak", "medium"]).toContain(result.strength);
+      expect(result.strength).toBe("weak");
     });
 
     it("should rate password with mixed characters as strong", () => {
-      const result = assessPasswordStrength("MyP@ssw0rd!");
+      // Avoid substrings like `passw0rd` that trigger the common-pattern penalty.
+      const result = assessPasswordStrength("Zy9$xKm4pLw!");
       expect(["strong", "very-strong"]).toContain(result.strength);
     });
 
@@ -132,7 +133,7 @@ describe("password Utils", () => {
       const result = assessPasswordStrength("abc");
       expect(result.feedback.length).toBeGreaterThan(0);
       expect(result.feedback).toContain(
-        "Password should be at least 8 characters"
+        "Password should be at least 12 characters"
       );
     });
 
@@ -152,11 +153,13 @@ describe("password Utils", () => {
     it("should categorize scores correctly", () => {
       // Test boundary conditions
       const testCases = [
-        { password: "ab" }, // < 30 - weak
-        { password: "abcd1234" }, // ~30-50 - weak to medium
-        { password: "Abcd1234" }, // ~50-60 - medium
-        { password: "Abcd1234!" }, // ~60-85 - strong
-        { password: "Xy7#aB2$cD9!" }, // ~85+ - strong/very-strong
+        { password: "ab" }, // weak
+        { password: "abcd1234" }, // weak (under 12 chars)
+        { password: "Abcd1234" }, // weak (under 12 chars)
+        { password: "Abcd1234!" }, // weak (under 12 chars)
+        { password: "Abcdefgh1!" }, // 10 chars — weak
+        { password: "ValidPass12!" }, // 12+ with diversity — strong band
+        { password: "Xy7#aB2$cD9!" }, // strong / very-strong
       ];
 
       testCases.forEach(({ password }) => {
