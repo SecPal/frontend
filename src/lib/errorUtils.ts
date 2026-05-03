@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { msg, type MacroMessageDescriptor } from "@lingui/core/macro";
@@ -6,8 +6,8 @@ import type { ApiValidationErrors } from "../services/ApiError";
 import { ApiError } from "../services/ApiError";
 import { AuthApiError } from "../services/authApi";
 
-type TranslateableDescriptor = { id: string; message?: string };
-type Translate = (descriptor: TranslateableDescriptor) => string;
+type TranslatableDescriptor = { id: string; message?: string };
+type Translate = (descriptor: TranslatableDescriptor) => string;
 
 interface OnboardingLikeError {
   response?: {
@@ -34,7 +34,7 @@ function translateMessage(
   translate: Translate,
   descriptor: MacroMessageDescriptor
 ): string {
-  return translate(descriptor as TranslateableDescriptor);
+  return translate(descriptor as TranslatableDescriptor);
 }
 
 function getErrorStatus(error: unknown): number | undefined {
