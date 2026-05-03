@@ -170,4 +170,27 @@ describe("authState", () => {
     expect(sanitizedUser?.emailVerified).toBe(false);
     expect(persistedUser?.emailVerified).toBe(false);
   });
+
+  it("maps email_verified to emailVerified when emailVerified is absent", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Snake User",
+      email: "snake@secpal.dev",
+      email_verified: true,
+    });
+
+    expect(sanitizedUser?.emailVerified).toBe(true);
+  });
+
+  it("prefers explicit emailVerified over email_verified when both are present", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Explicit User",
+      email: "explicit@secpal.dev",
+      emailVerified: false,
+      email_verified: true,
+    });
+
+    expect(sanitizedUser?.emailVerified).toBe(false);
+  });
 });

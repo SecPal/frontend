@@ -41,6 +41,9 @@ const OnboardingComplete = lazy(() =>
     default: m.OnboardingComplete,
   }))
 );
+const OnboardingSubmitted = lazy(
+  () => import("./pages/Onboarding/OnboardingSubmitted")
+);
 const OrganizationPage = lazy(
   () => import("./pages/Organization/OrganizationPage")
 );
@@ -380,6 +383,18 @@ function App() {
                   <OnboardingOnlyRoute>
                     <OnboardingLayout>
                       <OnboardingWizard />
+                    </OnboardingLayout>
+                  </OnboardingOnlyRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/submitted"
+              element={
+                <ProtectedRoute>
+                  <OnboardingOnlyRoute>
+                    <OnboardingLayout>
+                      <OnboardingSubmitted />
                     </OnboardingLayout>
                   </OnboardingOnlyRoute>
                 </ProtectedRoute>

@@ -51,7 +51,7 @@ async function waitForFormReady() {
 function fillValidFormAndSubmit({
   firstName = "John",
   lastName = "Doe",
-  password = "password123",
+  password = "SecurePass123!",
   confirmPassword = password,
 }: {
   firstName?: string;
@@ -205,7 +205,7 @@ describe("OnboardingComplete", () => {
     expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
   });
 
-  it("validates password minimum length (8 characters)", async () => {
+  it("validates password minimum length (12 characters)", async () => {
     renderWithProviders(
       <OnboardingComplete />,
       "/onboarding/complete?token=abc&email=test@secpal.dev"
@@ -219,7 +219,9 @@ describe("OnboardingComplete", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/at least 8 characters/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/^Password must be at least 12 characters$/i)
+      ).toBeInTheDocument();
     });
 
     expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
@@ -278,7 +280,7 @@ describe("OnboardingComplete", () => {
         email: "test@secpal.dev",
         first_name: "John",
         last_name: "Doe",
-        password: "password123",
+        password: "SecurePass123!",
       });
     });
 
@@ -290,6 +292,77 @@ describe("OnboardingComplete", () => {
         employeeStatus: "pre_contract",
         name: "John Doe",
       });
+    });
+  });
+
+  it("sets emailVerified from API when email_verified is omitted (legacy response)", async () => {
+    const mockResponse = {
+      message: "Onboarding completed successfully",
+      data: {
+        user: {
+          id: 1,
+          email: "john@secpal.dev",
+          name: "John Doe",
+        },
+        employee: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          first_name: "John",
+          last_name: "Doe",
+          status: "pre_contract",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockResolvedValue(mockResponse);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+    fillValidFormAndSubmit();
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: true })
+      );
+    });
+  });
+
+  it("respects email_verified false from API", async () => {
+    const mockResponse = {
+      message: "Onboarding completed successfully",
+      data: {
+        user: {
+          id: 1,
+          email: "john@secpal.dev",
+          email_verified: false,
+          name: "John Doe",
+        },
+        employee: {
+          id: "550e8400-e29b-41d4-a716-446655440000",
+          first_name: "John",
+          last_name: "Doe",
+          status: "pre_contract",
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockResolvedValue(mockResponse);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+    fillValidFormAndSubmit();
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith(
+        expect.objectContaining({ emailVerified: false })
+      );
     });
   });
 
@@ -431,7 +504,7 @@ describe("OnboardingComplete", () => {
           message: "The given data was invalid.",
           errors: {
             first_name: ["The first name field is required."],
-            password: ["The password must be at least 8 characters."],
+            password: ["The password must be at least 12 characters."],
           },
         },
       },
@@ -447,8 +520,8 @@ describe("OnboardingComplete", () => {
     await waitForFormReady();
 
     fillValidFormAndSubmit({
-      password: "validPassword123",
-      confirmPassword: "validPassword123",
+      password: "ValidPassword123!",
+      confirmPassword: "ValidPassword123!",
     });
 
     await waitFor(() => {

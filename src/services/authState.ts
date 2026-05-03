@@ -25,6 +25,26 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
+/**
+ * Prefer `emailVerified` (SPA contract); accept legacy/alternate `email_verified`
+ * so session bootstrap matches Laravel JSON whether camelCase or snake_case.
+ */
+function sanitizeEmailVerifiedFlag(
+  candidate: Record<string, unknown>
+): boolean {
+  const camel = sanitizeBoolean(candidate.emailVerified);
+  if (camel !== undefined) {
+    return camel;
+  }
+
+  const snake = sanitizeBoolean(candidate.email_verified);
+  if (snake !== undefined) {
+    return snake;
+  }
+
+  return false;
+}
+
 const EMPLOYEE_STATUSES = new Set<NonNullable<User["employeeStatus"]>>([
   "applicant",
   "pre_contract",
@@ -102,7 +122,7 @@ export function sanitizeAuthUser(
     id: sanitizedId,
     name: candidate.name,
     email: candidate.email,
-    emailVerified: sanitizeBoolean(candidate.emailVerified) ?? false,
+    emailVerified: sanitizeEmailVerifiedFlag(candidate),
   };
 
   const roles = sanitizeStringArray(candidate.roles);

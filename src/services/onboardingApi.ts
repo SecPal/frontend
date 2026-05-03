@@ -3,6 +3,7 @@
 
 import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
+import { ApiError } from "./ApiError";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
 /**
@@ -13,6 +14,8 @@ export interface OnboardingStep {
   title: string;
   description?: string;
   template_id: string;
+  /** Mirrors template `is_required`: optional wizard steps may be skipped when empty. */
+  is_required: boolean;
   is_completed: boolean;
   submission?: OnboardingSubmission | null;
 }
@@ -107,6 +110,7 @@ export interface OnboardingCompleteResponse {
     user: {
       id: string | number;
       email: string;
+      /** Present from API after onboarding completion; absence treated as verified client-side. */
       email_verified?: boolean;
       name: string;
     };
@@ -136,6 +140,28 @@ async function parseErrorData(
   response: Response
 ): Promise<OnboardingApiErrorData> {
   return response.json().catch(() => ({ message: response.statusText }));
+}
+
+function parseValidationErrors(
+  data: OnboardingApiErrorData
+): Record<string, string[]> | undefined {
+  const raw = data.errors;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as Record<string, string[]>;
+  }
+
+  return undefined;
+}
+
+async function throwSubmissionHttpError(response: Response): Promise<never> {
+  const data = await parseErrorData(response);
+  const message =
+    typeof data.message === "string" && data.message.length > 0
+      ? data.message
+      : response.statusText;
+  const errors = parseValidationErrors(data);
+
+  throw new ApiError(message, response.status, errors, response);
 }
 
 function buildOnboardingApiError(
@@ -262,6 +288,7 @@ export async function fetchOnboardingSteps(): Promise<OnboardingStep[]> {
         title: template.title ?? template.name,
         description: template.description ?? undefined,
         template_id: template.id,
+        is_required: template.is_required,
         is_completed:
           submission !== null &&
           ["submitted", "approved"].includes(submission.status),
@@ -371,10 +398,7 @@ export async function createOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create onboarding submission");
+    await throwSubmissionHttpError(response);
   }
 
   const result = await response.json();
@@ -398,10 +422,7 @@ export async function updateOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update onboarding submission");
+    await throwSubmissionHttpError(response);
   }
 
   const result = await response.json();
