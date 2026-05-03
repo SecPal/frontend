@@ -16,6 +16,7 @@ import {
   uploadOnboardingFile,
   updateOnboardingSubmission,
 } from "../../services/onboardingApi";
+import { ApiError } from "../../services/ApiError";
 import {
   Checkbox,
   CheckboxField,
@@ -727,6 +728,48 @@ export function OnboardingWizard() {
       updateCurrentStep(savedSubmission, status);
       return savedSubmission;
     } catch (err) {
+      if (
+        err instanceof ApiError &&
+        err.statusCode === 422 &&
+        err.errors &&
+        status === "submitted"
+      ) {
+        const nextFieldErrors: FieldErrors = {};
+        for (const [key, messages] of Object.entries(err.errors)) {
+          if (
+            key === "form_data" ||
+            key === "onboarding_workflow_status" ||
+            key === "status"
+          ) {
+            continue;
+          }
+          const first = messages[0];
+          if (first) {
+            nextFieldErrors[key] = first;
+          }
+        }
+        setError(null);
+        setFieldErrors(nextFieldErrors);
+        const supplemental =
+          err.errors.form_data?.[0] ??
+          err.errors.onboarding_workflow_status?.[0];
+        const hasInline = Object.keys(nextFieldErrors).length > 0;
+        setFeedback({
+          tone: "error",
+          message: supplemental
+            ? supplemental
+            : hasInline
+              ? _(
+                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
+                )
+              : err.message ||
+                _(
+                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
+                ),
+        });
+        return null;
+      }
+
       setError(
         err instanceof Error
           ? err.message

@@ -3,6 +3,7 @@
 
 import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
+import { ApiError } from "./ApiError";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
 /**
@@ -137,6 +138,30 @@ async function parseErrorData(
   response: Response
 ): Promise<OnboardingApiErrorData> {
   return response.json().catch(() => ({ message: response.statusText }));
+}
+
+function parseValidationErrors(
+  data: OnboardingApiErrorData
+): Record<string, string[]> | undefined {
+  const raw = data.errors;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    return raw as Record<string, string[]>;
+  }
+
+  return undefined;
+}
+
+async function throwSubmissionHttpError(
+  response: Response
+): Promise<never> {
+  const data = await parseErrorData(response);
+  const message =
+    typeof data.message === "string" && data.message.length > 0
+      ? data.message
+      : response.statusText;
+  const errors = parseValidationErrors(data);
+
+  throw new ApiError(message, response.status, errors, response);
 }
 
 function buildOnboardingApiError(
@@ -372,10 +397,7 @@ export async function createOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create onboarding submission");
+    await throwSubmissionHttpError(response);
   }
 
   const result = await response.json();
@@ -399,10 +421,7 @@ export async function updateOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update onboarding submission");
+    await throwSubmissionHttpError(response);
   }
 
   const result = await response.json();

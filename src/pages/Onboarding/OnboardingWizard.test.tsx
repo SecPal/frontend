@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { ApiError } from "../../services/ApiError";
 import { OnboardingWizard } from "./OnboardingWizard";
 
 const onboardingApiMocks = vi.hoisted(() => ({
@@ -403,6 +404,78 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
 
     expect(
       await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+  });
+});
+
+describe("OnboardingWizard server-side validation feedback", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-bank",
+      name: "Bank Account Details",
+      title: "Bank Account Details",
+      description: "Bank info",
+      form_schema: {
+        type: "object",
+        required: ["iban", "account_holder"],
+        properties: {
+          iban: {
+            type: "string",
+            title: "IBAN",
+          },
+          account_holder: {
+            type: "string",
+            title: "Account Holder",
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+  });
+
+  it("shows API field validation messages inline after Submit for Review", async () => {
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        iban: ["The string does not match the required pattern."],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText(/^iban$/i),
+      "DE44500105175407324931"
+    );
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    expect(
+      await screen.findByText(/does not match the required pattern/i)
     ).toBeInTheDocument();
   });
 });
