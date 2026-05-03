@@ -731,13 +731,14 @@ export function OnboardingWizard() {
     };
   }, [currentStepIndex, currentStepTemplateId]);
 
-  function updateCurrentStep(
+  function updateStepAtIndex(
+    stepIndex: number,
     savedSubmission: OnboardingSubmission,
     status: "draft" | "submitted"
   ) {
     setSteps((currentSteps) =>
       currentSteps.map((step, index) =>
-        index === currentStepIndex
+        index === stepIndex
           ? {
               ...step,
               is_completed: status === "submitted" ? true : step.is_completed,
@@ -746,6 +747,70 @@ export function OnboardingWizard() {
           : step
       )
     );
+  }
+
+  function updateCurrentStep(
+    savedSubmission: OnboardingSubmission,
+    status: "draft" | "submitted"
+  ) {
+    updateStepAtIndex(currentStepIndex, savedSubmission, status);
+  }
+
+  async function submitRequiredDraftSteps(): Promise<boolean> {
+    const stepsToSubmit: Array<{
+      index: number;
+      submission: OnboardingSubmission;
+    }> = [];
+
+    for (const [index, step] of steps.entries()) {
+      if (!step.is_required || index === currentStepIndex) {
+        continue;
+      }
+
+      if (step.submission === null) {
+        setError(_(msg`Failed to submit`));
+        return false;
+      }
+
+      if (step.submission.status !== "draft") {
+        continue;
+      }
+
+      stepsToSubmit.push({
+        index,
+        submission: step.submission,
+      });
+    }
+
+    if (stepsToSubmit.length === 0) {
+      return true;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      for (const { index, submission: stepSubmission } of stepsToSubmit) {
+        const savedSubmission = await updateOnboardingSubmission(
+          stepSubmission.id,
+          {
+            form_data:
+              (stepSubmission.form_data as Record<string, unknown> | null) ??
+              {},
+            status: "submitted",
+          }
+        );
+
+        updateStepAtIndex(index, savedSubmission, "submitted");
+      }
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : _(msg`Failed to submit`));
+      return false;
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function persistCurrentStep(
@@ -954,6 +1019,10 @@ export function OnboardingWizard() {
 
     if (await persistCurrentStep("submitted")) {
       if (currentStepIndex >= steps.length - 1) {
+        if (!(await submitRequiredDraftSteps())) {
+          return;
+        }
+
         navigate("/onboarding/submitted", { replace: true });
         return;
       }

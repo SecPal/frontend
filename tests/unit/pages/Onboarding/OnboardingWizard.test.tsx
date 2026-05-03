@@ -489,10 +489,15 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
       makeSubmission("template-1")
     );
-    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValueOnce({
-      ...makeSubmission("template-2"),
-      status: "submitted",
-    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission)
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-2"),
+        status: "submitted",
+      })
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-1"),
+        status: "submitted",
+      });
 
     renderWizard();
 
@@ -508,10 +513,15 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
-    // step-2 has an existing submission — component PATCHes it using its stored form_data
     await waitFor(() => {
-      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenLastCalledWith(
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
+        1,
         "submission-template-2",
+        { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
+      );
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenNthCalledWith(
+        2,
+        "submission-template-1",
         { form_data: { legal_name: "Jane Doe" }, status: "submitted" }
       );
     });
