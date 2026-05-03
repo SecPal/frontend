@@ -186,4 +186,163 @@ describe("preflight changed-file detection", () => {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  it("runs markdownlint for committed markdown changes even when local staged edits exist", () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-preflight-"));
+
+    try {
+      const preflightScriptPath = prepareScript(tempDir);
+      const binDir = installMockBinaries(tempDir);
+      const npxLogPath = path.join(tempDir, "npx.log");
+      const reuseLogPath = path.join(tempDir, "reuse.log");
+      const remoteDir = path.join(tempDir, "remote.git");
+
+      run("git", ["init", "--bare", remoteDir], tempDir);
+      run("git", ["init", "-b", "main"], tempDir);
+      run("git", ["config", "user.name", "SecPal Test"], tempDir);
+      run("git", ["config", "user.email", "test@secpal.dev"], tempDir);
+
+      writeFileSync(path.join(tempDir, "README.md"), "# SecPal\n", "utf8");
+      writeFileSync(
+        path.join(tempDir, "other.ts"),
+        "export const x = 1;\n",
+        "utf8"
+      );
+      run("git", ["add", "."], tempDir);
+      run("git", ["commit", "-m", "init"], tempDir);
+      run("git", ["remote", "add", "origin", remoteDir], tempDir);
+      run("git", ["push", "-u", "origin", "main"], tempDir);
+      run(
+        "git",
+        [
+          "symbolic-ref",
+          "refs/remotes/origin/HEAD",
+          "refs/remotes/origin/main",
+        ],
+        tempDir
+      );
+
+      run("git", ["checkout", "-b", "topic/md-plus-staged"], tempDir);
+      writeFileSync(
+        path.join(tempDir, "README.md"),
+        "# SecPal\n\nCommitted update.\n",
+        "utf8"
+      );
+      run("git", ["commit", "-am", "update markdown"], tempDir);
+
+      // Simulate local staged edit unrelated to markdown – this must not mask the committed md change.
+      writeFileSync(
+        path.join(tempDir, "other.ts"),
+        "export const x = 2;\n",
+        "utf8"
+      );
+      run("git", ["add", "other.ts"], tempDir);
+
+      const preflight = spawnSync("bash", [preflightScriptPath], {
+        cwd: tempDir,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${binDir}:${process.env.PATH ?? ""}`,
+          NPX_LOG_PATH: npxLogPath,
+          REUSE_LOG_PATH: reuseLogPath,
+        },
+      });
+
+      expect(preflight.error).toBeUndefined();
+      expect(preflight.status, preflight.stderr).toBe(0);
+
+      const npxLog = readFileSync(npxLogPath, "utf8");
+      expect(npxLog).toContain("markdownlint-cli2");
+      expect(preflight.stdout + preflight.stderr).not.toContain(
+        "No markdown files changed, skipping markdownlint"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("runs reuse lint for committed .license sidecar changes even when local staged edits exist", () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-preflight-"));
+
+    try {
+      const preflightScriptPath = prepareScript(tempDir);
+      const binDir = installMockBinaries(tempDir);
+      const npxLogPath = path.join(tempDir, "npx.log");
+      const reuseLogPath = path.join(tempDir, "reuse.log");
+      const remoteDir = path.join(tempDir, "remote.git");
+
+      run("git", ["init", "--bare", remoteDir], tempDir);
+      run("git", ["init", "-b", "main"], tempDir);
+      run("git", ["config", "user.name", "SecPal Test"], tempDir);
+      run("git", ["config", "user.email", "test@secpal.dev"], tempDir);
+
+      writeFileSync(
+        path.join(tempDir, "src.ts"),
+        "export const v = 1;\n",
+        "utf8"
+      );
+      writeFileSync(
+        path.join(tempDir, "src.ts.license"),
+        "SPDX-FileCopyrightText: 2026 SecPal\nSPDX-License-Identifier: AGPL-3.0-or-later\n",
+        "utf8"
+      );
+      writeFileSync(
+        path.join(tempDir, "other.ts"),
+        "export const x = 1;\n",
+        "utf8"
+      );
+      run("git", ["add", "."], tempDir);
+      run("git", ["commit", "-m", "init"], tempDir);
+      run("git", ["remote", "add", "origin", remoteDir], tempDir);
+      run("git", ["push", "-u", "origin", "main"], tempDir);
+      run(
+        "git",
+        [
+          "symbolic-ref",
+          "refs/remotes/origin/HEAD",
+          "refs/remotes/origin/main",
+        ],
+        tempDir
+      );
+
+      run("git", ["checkout", "-b", "topic/license-plus-staged"], tempDir);
+      writeFileSync(
+        path.join(tempDir, "src.ts.license"),
+        "SPDX-FileCopyrightText: 2026 SecPal Contributors\nSPDX-License-Identifier: AGPL-3.0-or-later\n",
+        "utf8"
+      );
+      run("git", ["commit", "-am", "update license sidecar"], tempDir);
+
+      // Simulate local staged edit that would otherwise mask the committed license change.
+      writeFileSync(
+        path.join(tempDir, "other.ts"),
+        "export const x = 2;\n",
+        "utf8"
+      );
+      run("git", ["add", "other.ts"], tempDir);
+
+      const preflight = spawnSync("bash", [preflightScriptPath], {
+        cwd: tempDir,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${binDir}:${process.env.PATH ?? ""}`,
+          NPX_LOG_PATH: npxLogPath,
+          REUSE_LOG_PATH: reuseLogPath,
+        },
+      });
+
+      expect(preflight.error).toBeUndefined();
+      expect(preflight.status, preflight.stderr).toBe(0);
+
+      const reuseLog = readFileSync(reuseLogPath, "utf8");
+      expect(reuseLog).toContain("reuse lint");
+      expect(preflight.stdout + preflight.stderr).not.toContain(
+        "No new files or license changes, skipping REUSE lint"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });

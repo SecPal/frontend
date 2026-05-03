@@ -45,17 +45,22 @@ echo "Using base branch: $BASE"
 # Fetch base branch for PR size check (failure is handled later)
 git fetch origin "$BASE" 2>/dev/null || true
 
-# Get list of changed files for conditional checks
-CHANGED_FILES="$(git diff --name-only --cached 2>/dev/null || true)"
-if [ -z "$CHANGED_FILES" ]; then
-  CHANGED_FILES="$(git diff --name-only HEAD 2>/dev/null || true)"
+# Compute merge-base once for reuse across all branch-aware gates.
+MERGE_BASE=""
+if git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
+  MERGE_BASE="$(git merge-base "origin/$BASE" HEAD 2>/dev/null || true)"
 fi
-if [ -z "$CHANGED_FILES" ] && git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
-  MERGE_BASE_FOR_CHANGED_FILES="$(git merge-base "origin/$BASE" HEAD 2>/dev/null || true)"
-  if [ -n "$MERGE_BASE_FOR_CHANGED_FILES" ]; then
-    CHANGED_FILES="$(git diff --name-only "$MERGE_BASE_FOR_CHANGED_FILES"..HEAD 2>/dev/null || true)"
-  fi
+
+# Collect changed files: staged, unstaged, and always the committed branch delta
+# so gates fire for pushed commits even when local edits are also present.
+_cf_staged="$(git diff --name-only --cached 2>/dev/null || true)"
+_cf_head="$(git diff --name-only HEAD 2>/dev/null || true)"
+_cf_branch=""
+if [ -n "$MERGE_BASE" ]; then
+  _cf_branch="$(git diff --name-only "$MERGE_BASE"..HEAD 2>/dev/null || true)"
 fi
+CHANGED_FILES="$(printf '%s\n%s\n%s\n' "$_cf_staged" "$_cf_head" "$_cf_branch" | grep -v '^[[:space:]]*$' | sort -u || true)"
+unset _cf_staged _cf_head _cf_branch
 
 # 0) Formatting & Compliance
 FORMAT_EXIT=0
@@ -85,18 +90,20 @@ fi
 # Only run REUSE lint if new files were added or license-related files changed
 if command -v reuse >/dev/null 2>&1; then
   if [ -n "$CHANGED_FILES" ]; then
-    # Check if any new files were added (A) or license files changed.
-    NAME_STATUS_CHANGED="$(git diff --name-status --cached 2>/dev/null || true)"
-    if [ -z "$NAME_STATUS_CHANGED" ]; then
-      NAME_STATUS_CHANGED="$(git diff --name-status HEAD 2>/dev/null || true)"
+    # Collect name-status from staged, unstaged, and always the committed branch
+    # delta so .license sidecars and REUSE.toml changes are caught even when
+    # local edits are present.
+    _ns_staged="$(git diff --name-status --cached 2>/dev/null || true)"
+    _ns_head="$(git diff --name-status HEAD 2>/dev/null || true)"
+    _ns_branch=""
+    if [ -n "$MERGE_BASE" ]; then
+      _ns_branch="$(git diff --name-status "$MERGE_BASE"..HEAD 2>/dev/null || true)"
     fi
-    if [ -z "$NAME_STATUS_CHANGED" ] && git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
-      MERGE_BASE_FOR_NAME_STATUS="$(git merge-base "origin/$BASE" HEAD 2>/dev/null || true)"
-      if [ -n "$MERGE_BASE_FOR_NAME_STATUS" ]; then
-        NAME_STATUS_CHANGED="$(git diff --name-status "$MERGE_BASE_FOR_NAME_STATUS"..HEAD 2>/dev/null || true)"
-      fi
-    fi
-    NEW_OR_LICENSE=$(echo "$NAME_STATUS_CHANGED" | grep -E '^(A|M[[:space:]].*LICENSE)' || true)
+    NAME_STATUS_CHANGED="$(printf '%s\n%s\n%s\n' "$_ns_staged" "$_ns_head" "$_ns_branch" | grep -v '^[[:space:]]*$' || true)"
+    unset _ns_staged _ns_head _ns_branch
+    # Trigger REUSE lint for any new file or changes to .license sidecars,
+    # REUSE.toml, or LICENSE files.
+    NEW_OR_LICENSE=$(echo "$NAME_STATUS_CHANGED" | grep -E '^A|^[MD][[:space:]]+.*(LICENSE|\.license$|REUSE\.toml$)' || true)
     if [ -n "$NEW_OR_LICENSE" ]; then
       reuse lint || FORMAT_EXIT=1
     else
