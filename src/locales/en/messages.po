@@ -146,6 +146,10 @@ msgstr "Notes"
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to load form template"
+msgstr "Failed to load form template"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name Change Detected"
 msgstr "Name Change Detected"
@@ -463,6 +467,10 @@ msgstr "Billing Address"
 msgid "Refresh data"
 msgstr "Refresh data"
 
+#: src/lib/errorUtils.ts
+msgid "A server error occurred. Please try again later or contact support if the problem persists."
+msgstr "A server error occurred. Please try again later or contact support if the problem persists."
+
 #: src/lib/organizationalUnitUtils.ts
 msgid "Custom"
 msgstr "Custom"
@@ -761,6 +769,10 @@ msgstr "Part Time"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Created"
 msgstr "Created"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to load onboarding steps"
+msgstr "Failed to load onboarding steps"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "System"
@@ -1700,6 +1712,10 @@ msgstr "No management position"
 msgid "MFA status could not be loaded."
 msgstr "MFA status could not be loaded."
 
+#: src/lib/errorUtils.ts
+msgid "Your session has expired or your sign-in could not be verified. Please sign in again."
+msgstr "Your session has expired or your sign-in could not be verified. Please sign in again."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
@@ -1712,6 +1728,10 @@ msgstr "Error Loading Employees"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Removing..."
 msgstr "Removing..."
+
+#: src/lib/errorUtils.ts
+msgid "Too many requests. Please try again later."
+msgstr "Too many requests. Please try again later."
 
 #: src/components/RouteGuardState.tsx
 msgid "I have verified my email"
@@ -1996,6 +2016,10 @@ msgstr "Update now"
 msgid "The new employee will receive an onboarding email immediately after creation."
 msgstr "The new employee will receive an onboarding email immediately after creation."
 
+#: src/lib/errorUtils.ts
+msgid "You do not have permission to perform this action."
+msgstr "You do not have permission to perform this action."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
@@ -2276,6 +2300,10 @@ msgstr "Organization"
 msgid "Optional description..."
 msgstr "Optional description..."
 
+#: src/lib/errorUtils.ts
+msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
+msgstr "This action could not be completed because the data changed in the meantime. Please reload and try again."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Organizational unit is required"
 msgstr "Organizational unit is required"
@@ -2503,6 +2531,12 @@ msgstr "Notifications are not supported in your browser. Please use a modern bro
 #: src/pages/Login.tsx
 msgid "Verifying passkey…"
 msgstr "Verifying passkey…"
+
+#: src/lib/errorUtils.ts
+#: src/pages/Onboarding/OnboardingComplete.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please review the highlighted fields and try again."
+msgstr "Please review the highlighted fields and try again."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"

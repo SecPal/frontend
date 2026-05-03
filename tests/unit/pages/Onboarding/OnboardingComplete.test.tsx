@@ -388,10 +388,11 @@ describe("OnboardingComplete", () => {
     fillValidFormAndSubmit();
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/invalid or expired onboarding link/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText(/invalid or expired onboarding link/i)
+    ).not.toBeInTheDocument();
 
     expect(mockLogin).not.toHaveBeenCalled();
   });
@@ -526,9 +527,18 @@ describe("OnboardingComplete", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("The given data was invalid.")
+        screen.getByText("Please review the highlighted fields and try again.")
       ).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText("The given data was invalid.")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("The first name field is required.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The password must be at least 12 characters.")
+    ).toBeInTheDocument();
   });
 
   it("handles generic API errors (500)", async () => {
@@ -553,8 +563,15 @@ describe("OnboardingComplete", () => {
     fillValidFormAndSubmit();
 
     await waitFor(() => {
-      expect(screen.getByText(/internal server error/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /a server error occurred\. please try again later or contact support if the problem persists\./i
+        )
+      ).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText(/internal server error/i)
+    ).not.toBeInTheDocument();
   });
 
   it("handles network errors (no response)", async () => {

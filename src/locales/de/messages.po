@@ -146,6 +146,10 @@ msgstr "Anmerkungen"
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to load form template"
+msgstr "Formularvorlage konnte nicht geladen werden"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name Change Detected"
 msgstr "Namensänderung erkannt"
@@ -463,6 +467,10 @@ msgstr "Rechnungsadresse"
 msgid "Refresh data"
 msgstr "Daten aktualisieren"
 
+#: src/lib/errorUtils.ts
+msgid "A server error occurred. Please try again later or contact support if the problem persists."
+msgstr "Ein Serverfehler ist aufgetreten. Bitte versuchen Sie es spaeter erneut oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht."
+
 #: src/lib/organizationalUnitUtils.ts
 msgid "Custom"
 msgstr "Benutzerdefiniert"
@@ -761,6 +769,10 @@ msgstr "Teilzeit"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Created"
 msgstr "Erstellt"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to load onboarding steps"
+msgstr "Onboarding-Schritte konnten nicht geladen werden"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "System"
@@ -1700,6 +1712,10 @@ msgstr "Keine Führungsposition"
 msgid "MFA status could not be loaded."
 msgstr "Der MFA-Status konnte nicht geladen werden."
 
+#: src/lib/errorUtils.ts
+msgid "Your session has expired or your sign-in could not be verified. Please sign in again."
+msgstr "Ihre Sitzung ist abgelaufen oder Ihre Anmeldung konnte nicht bestaetigt werden. Bitte melden Sie sich erneut an."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
@@ -1712,6 +1728,10 @@ msgstr "Fehler beim Laden von Mitarbeitern"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Removing..."
 msgstr "Wird entfernt..."
+
+#: src/lib/errorUtils.ts
+msgid "Too many requests. Please try again later."
+msgstr "Zu viele Anfragen. Bitte versuchen Sie es spaeter erneut."
 
 #: src/components/RouteGuardState.tsx
 msgid "I have verified my email"
@@ -1996,6 +2016,10 @@ msgstr "Jetzt aktualisieren"
 msgid "The new employee will receive an onboarding email immediately after creation."
 msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einführungs-E-Mail."
 
+#: src/lib/errorUtils.ts
+msgid "You do not have permission to perform this action."
+msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
 msgstr "Keine Qualifikationen zugewiesen"
@@ -2276,6 +2300,10 @@ msgstr "Organisation"
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
+#: src/lib/errorUtils.ts
+msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
+msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten inzwischen geaendert haben. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Organizational unit is required"
 msgstr "Organisatorische Einheit ist erforderlich"
@@ -2503,6 +2531,12 @@ msgstr "Benachrichtigungen werden von Ihrem Browser nicht unterstützt. Bitte ve
 #: src/pages/Login.tsx
 msgid "Verifying passkey…"
 msgstr "Passkey wird überprüft …"
+
+#: src/lib/errorUtils.ts
+#: src/pages/Onboarding/OnboardingComplete.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please review the highlighted fields and try again."
+msgstr "Bitte pruefen Sie die markierten Felder und versuchen Sie es erneut."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"

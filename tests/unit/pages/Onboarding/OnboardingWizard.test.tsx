@@ -10,6 +10,7 @@ import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
 import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWizard";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
+import { ApiError } from "../../../../src/services/ApiError";
 
 vi.mock("../../../../src/services/onboardingApi");
 
@@ -242,6 +243,32 @@ describe("OnboardingWizard", () => {
     });
 
     expect(screen.getByText("passport.png")).toBeInTheDocument();
+  });
+
+  it("shows upload-specific validation message for 422 rejections instead of raw status text", async () => {
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new ApiError("", 422)
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /upload file/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Please review the highlighted fields and try again.")
+      ).toBeInTheDocument();
+    });
   });
 
   it("disables step navigation and draft actions while an upload is in flight", async () => {
@@ -683,7 +710,7 @@ describe("OnboardingWizard", () => {
   it("keeps the user on the current step and shows an error when saving fails", async () => {
     // step-1 has an existing submission — rejection must come from updateOnboardingSubmission
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
-      new Error("Failed to save draft")
+      new Error("Database connection lost")
     );
 
     renderWizard();
@@ -697,6 +724,9 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(screen.getByText("Failed to save draft")).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText("Database connection lost")
+    ).not.toBeInTheDocument();
 
     expect(screen.queryByText("Tax Details")).not.toBeInTheDocument();
   });
@@ -704,7 +734,7 @@ describe("OnboardingWizard", () => {
   it("renders the template loading error inside the wizard when steps are already available", async () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockReset()
-      .mockRejectedValueOnce(new Error("Failed to load form template"));
+      .mockRejectedValueOnce(new Error("Backend template loader failed"));
 
     renderWizard();
 
@@ -713,6 +743,9 @@ describe("OnboardingWizard", () => {
         screen.getByText("Failed to load form template")
       ).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText("Backend template loader failed")
+    ).not.toBeInTheDocument();
 
     expect(
       screen.getByText("Welcome to SecPal Onboarding")

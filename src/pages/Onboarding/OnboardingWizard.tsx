@@ -36,6 +36,7 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
+import { getLocalizedErrorMessage } from "../../lib/errorUtils";
 import {
   getOnboardingStepState,
   isOnboardingAwaitingHrReview,
@@ -590,6 +591,7 @@ function StepNavigation({
 
 export function OnboardingWizard() {
   const { _ } = useLingui();
+  const translateRef = useRef(_);
   const navigate = useNavigate();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -636,6 +638,10 @@ export function OnboardingWizard() {
   }, [currentStepIndex]);
 
   useEffect(() => {
+    translateRef.current = _;
+  }, [_]);
+
+  useEffect(() => {
     let active = true;
 
     void fetchOnboardingSteps()
@@ -667,7 +673,9 @@ export function OnboardingWizard() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to load onboarding steps"
+          getLocalizedErrorMessage(err, translateRef.current, {
+            fallback: msg`Failed to load onboarding steps`,
+          })
         );
         setLoading(false);
       });
@@ -701,7 +709,9 @@ export function OnboardingWizard() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to load form template"
+          getLocalizedErrorMessage(err, translateRef.current, {
+            fallback: msg`Failed to load form template`,
+          })
         );
       })
       .finally(() => {
@@ -878,11 +888,13 @@ export function OnboardingWizard() {
       }
 
       setError(
-        err instanceof Error
-          ? err.message
-          : status === "draft"
-            ? _(msg`Failed to save draft`)
-            : _(msg`Failed to submit`)
+        getLocalizedErrorMessage(err, _, {
+          fallback:
+            status === "draft"
+              ? msg`Failed to save draft`
+              : msg`Failed to submit`,
+          validation: msg`Please review the highlighted fields and try again.`,
+        })
       );
       return null;
     } finally {
@@ -1110,9 +1122,13 @@ export function OnboardingWizard() {
       setUploadFeedback({
         tone: "error",
         message:
-          err instanceof Error && err.message !== "Failed to upload file"
+          err instanceof ApiError &&
+          err.statusCode === 422 &&
+          err.message.length > 0
             ? err.message
-            : _(msg`Failed to upload file`),
+            : getLocalizedErrorMessage(err, _, {
+                fallback: msg`Failed to upload file`,
+              }),
       });
     } finally {
       setUploading(false);
