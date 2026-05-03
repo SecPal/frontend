@@ -12,6 +12,11 @@ import { Field, Label, FieldGroup } from "../../components/fieldset";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import {
+  getErrorRetryAfterSeconds,
+  getErrorValidationErrors,
+  getLocalizedErrorMessage,
+} from "../../lib/errorUtils";
+import {
   Dialog,
   DialogTitle,
   DialogDescription,
@@ -52,6 +57,45 @@ interface TokenValidationState {
   kind: "validating" | "ready" | "invalid" | "rate_limited";
   message?: string;
   retryAfterSeconds?: number;
+}
+
+type Translate = ReturnType<typeof useLingui>["_"];
+
+function mapOnboardingFieldErrors(
+  backendErrors: Record<string, string[]> | undefined,
+  translate: Translate
+): ValidationErrors {
+  const errors: ValidationErrors = {};
+
+  if (!backendErrors) {
+    return errors;
+  }
+
+  for (const fieldName of Object.keys(backendErrors)) {
+    switch (fieldName) {
+      case "first_name":
+        errors.first_name = translate(msg`First name is required`);
+        break;
+      case "last_name":
+        errors.last_name = translate(msg`Last name is required`);
+        break;
+      case "password":
+        errors.password = translate(
+          msg`Password must be at least 8 characters`
+        );
+        break;
+      case "password_confirmation":
+        errors.password_confirmation = translate(msg`Passwords do not match`);
+        break;
+      default:
+        errors.general = translate(
+          msg`Please review the highlighted fields and try again.`
+        );
+        break;
+    }
+  }
+
+  return errors;
 }
 
 /**
@@ -275,7 +319,7 @@ export function OnboardingComplete() {
             message: _(
               msg`Too many onboarding attempts. Please try again later.`
             ),
-            retryAfterSeconds: error.response.retryAfterSeconds,
+            retryAfterSeconds: getErrorRetryAfterSeconds(error),
           });
 
           return;
@@ -283,12 +327,13 @@ export function OnboardingComplete() {
 
         setTokenValidationState({
           kind: "invalid",
-          message: isOnboardingApiError(error)
-            ? error.response.data.message ||
-              _(msg`Failed to validate onboarding link`)
-            : error instanceof Error
-              ? error.message
-              : _(msg`Failed to validate onboarding link`),
+          message: getLocalizedErrorMessage(error, _, {
+            fallback: msg`Failed to validate onboarding link`,
+            validation: msg`Invalid onboarding link. Please check your email and try again.`,
+            authentication: msg`Invalid onboarding link. Please check your email and try again.`,
+            authorization: msg`Invalid onboarding link. Please check your email and try again.`,
+            notFound: msg`Invalid onboarding link. Please check your email and try again.`,
+          }),
         });
       }
     };
@@ -368,40 +413,31 @@ export function OnboardingComplete() {
 
       if (isOnboardingApiError(error)) {
         if (error.response.status === 422) {
-          // Validation errors from backend
-          const backendErrors = error.response.data.errors || {};
-          const formattedErrors: ValidationErrors = {};
-
-          // Convert Laravel validation errors array format to single strings
-          Object.entries(backendErrors).forEach(([key, value]) => {
-            formattedErrors[key as keyof ValidationErrors] = Array.isArray(
-              value
-            )
-              ? value[0]
-              : value;
-          });
+          const backendErrors = getErrorValidationErrors(error);
+          const formattedErrors = mapOnboardingFieldErrors(backendErrors, _);
+          const hasFieldErrors = Object.keys(formattedErrors).length > 0;
 
           setErrors(formattedErrors);
-
-          if (error.response.data.message) {
-            setErrors((prev) => ({
-              ...prev,
-              general: error.response.data.message,
-            }));
-          }
+          setErrors((prev) => ({
+            ...prev,
+            general: getLocalizedErrorMessage(error, _, {
+              fallback: msg`Failed to complete onboarding. Please try again or contact support.`,
+              validation: hasFieldErrors
+                ? msg`Please review the highlighted fields and try again.`
+                : msg`Invalid onboarding link. Please check your email and try again.`,
+            }),
+          }));
         } else if (error.response.status === 429) {
           // Rate limit exceeded
           setErrors({
-            general: buildRateLimitMessage(error.response.retryAfterSeconds),
+            general: buildRateLimitMessage(getErrorRetryAfterSeconds(error)),
           });
         } else {
           // Generic error
           setErrors({
-            general:
-              error.response.data.message ||
-              _(
-                msg`Failed to complete onboarding. Please try again or contact support.`
-              ),
+            general: getLocalizedErrorMessage(error, _, {
+              fallback: msg`Failed to complete onboarding. Please try again or contact support.`,
+            }),
           });
         }
       } else {

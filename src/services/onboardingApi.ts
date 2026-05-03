@@ -3,6 +3,7 @@
 
 import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
+import { ApiError } from "./ApiError";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
 /**
@@ -136,6 +137,14 @@ async function parseErrorData(
   response: Response
 ): Promise<OnboardingApiErrorData> {
   return response.json().catch(() => ({ message: response.statusText }));
+}
+
+async function createApiError(
+  response: Response,
+  fallbackMessage: string
+): Promise<ApiError> {
+  const error = await parseErrorData(response);
+  return new ApiError(fallbackMessage, response.status, error.errors, response);
 }
 
 function buildOnboardingApiError(
@@ -282,10 +291,10 @@ export async function fetchOnboardingTemplates(): Promise<
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch onboarding templates");
+    throw await createApiError(
+      response,
+      "Failed to fetch onboarding templates"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: [] }));
@@ -308,10 +317,7 @@ export async function fetchOnboardingTemplate(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch onboarding template");
+    throw await createApiError(response, "Failed to fetch onboarding template");
   }
 
   const data = await response.json().catch(() => ({ data: null }));
@@ -333,10 +339,10 @@ export async function fetchOnboardingSubmissions(): Promise<
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to fetch onboarding submissions");
+    throw await createApiError(
+      response,
+      "Failed to fetch onboarding submissions"
+    );
   }
 
   const data = await response.json().catch(() => ({ data: [] }));
@@ -371,10 +377,10 @@ export async function createOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to create onboarding submission");
+    throw await createApiError(
+      response,
+      "Failed to create onboarding submission"
+    );
   }
 
   const result = await response.json();
@@ -398,10 +404,10 @@ export async function updateOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to update onboarding submission");
+    throw await createApiError(
+      response,
+      "Failed to update onboarding submission"
+    );
   }
 
   const result = await response.json();
@@ -428,10 +434,7 @@ export async function uploadOnboardingFile(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to upload file");
+    throw await createApiError(response, "Failed to upload file");
   }
 
   const data = await response.json().catch(() => ({ data: null }));
@@ -453,10 +456,7 @@ export async function approveOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to approve submission");
+    throw await createApiError(response, "Failed to approve submission");
   }
 
   const data = await response.json().catch(() => ({ data: null }));
@@ -483,10 +483,7 @@ export async function rejectOnboardingSubmission(
   });
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Failed to reject submission");
+    throw await createApiError(response, "Failed to reject submission");
   }
 
   const data = await response.json().catch(() => ({ data: null }));

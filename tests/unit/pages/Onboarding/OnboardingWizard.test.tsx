@@ -621,7 +621,7 @@ describe("OnboardingWizard", () => {
   it("keeps the user on the current step and shows an error when saving fails", async () => {
     // step-1 has an existing submission — rejection must come from updateOnboardingSubmission
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
-      new Error("Failed to save draft")
+      new Error("Database connection lost")
     );
 
     renderWizard();
@@ -635,6 +635,9 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(screen.getByText("Failed to save draft")).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText("Database connection lost")
+    ).not.toBeInTheDocument();
 
     expect(screen.queryByText("Tax Details")).not.toBeInTheDocument();
   });
@@ -642,7 +645,7 @@ describe("OnboardingWizard", () => {
   it("renders the template loading error inside the wizard when steps are already available", async () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockReset()
-      .mockRejectedValueOnce(new Error("Failed to load form template"));
+      .mockRejectedValueOnce(new Error("Backend template loader failed"));
 
     renderWizard();
 
@@ -651,6 +654,9 @@ describe("OnboardingWizard", () => {
         screen.getByText("Failed to load form template")
       ).toBeInTheDocument();
     });
+    expect(
+      screen.queryByText("Backend template loader failed")
+    ).not.toBeInTheDocument();
 
     expect(
       screen.getByText("Welcome to SecPal Onboarding")

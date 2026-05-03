@@ -34,6 +34,7 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
+import { getLocalizedErrorMessage } from "../../lib/errorUtils";
 import { getOnboardingStepState } from "./onboardingWizardState";
 
 interface OnboardingSchemaArrayItems {
@@ -563,7 +564,9 @@ export function OnboardingWizard() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to load onboarding steps"
+          getLocalizedErrorMessage(err, _, {
+            fallback: msg`Failed to load onboarding steps`,
+          })
         );
         setLoading(false);
       });
@@ -571,7 +574,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [_]);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
@@ -597,7 +600,9 @@ export function OnboardingWizard() {
         }
 
         setError(
-          err instanceof Error ? err.message : "Failed to load form template"
+          getLocalizedErrorMessage(err, _, {
+            fallback: msg`Failed to load form template`,
+          })
         );
       })
       .finally(() => {
@@ -609,7 +614,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [currentStepIndex, currentStepTemplateId]);
+  }, [currentStepIndex, currentStepTemplateId, _]);
 
   function updateCurrentStep(
     savedSubmission: OnboardingSubmission,
@@ -662,11 +667,13 @@ export function OnboardingWizard() {
       return savedSubmission;
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : status === "draft"
-            ? _(msg`Failed to save draft`)
-            : _(msg`Failed to submit`)
+        getLocalizedErrorMessage(err, _, {
+          fallback:
+            status === "draft"
+              ? msg`Failed to save draft`
+              : msg`Failed to submit`,
+          validation: msg`Please review the highlighted fields and try again.`,
+        })
       );
       return null;
     } finally {
@@ -847,10 +854,10 @@ export function OnboardingWizard() {
     } catch (err) {
       setUploadFeedback({
         tone: "error",
-        message:
-          err instanceof Error && err.message !== "Failed to upload file"
-            ? err.message
-            : _(msg`Failed to upload file`),
+        message: getLocalizedErrorMessage(err, _, {
+          fallback: msg`Failed to upload file`,
+          validation: msg`Please review the highlighted fields and try again.`,
+        }),
       });
     } finally {
       setUploading(false);
