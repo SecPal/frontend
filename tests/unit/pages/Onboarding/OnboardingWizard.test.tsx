@@ -778,7 +778,7 @@ describe("OnboardingWizard", () => {
     ).toBeInTheDocument();
   });
 
-  it("validates schema required fields on an optional template when the user started filling the step", async () => {
+  it("submits an optional template even when schema required fields are only partially filled", async () => {
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
         step_number: 1,
@@ -811,7 +811,7 @@ describe("OnboardingWizard", () => {
       );
 
     vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue({
-      ...makeSubmission("template-opt", { note_a: "x" }),
+      ...makeSubmission("template-opt", { note_a: "started" }),
       status: "submitted",
     });
 
@@ -827,15 +827,26 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "We couldn't submit the form yet. Please review the highlighted fields."
-        )
-      ).toBeInTheDocument();
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-opt",
+        {
+          form_data: { note_a: "started" },
+          status: "submitted",
+        }
+      );
     });
 
-    expect(screen.getByText("This field is required.")).toBeInTheDocument();
-    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText(
+        "We couldn't submit the form yet. Please review the highlighted fields."
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("This field is required.")
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
   });
 
   it("shows Skip this step for an optional step that is not the last step", async () => {

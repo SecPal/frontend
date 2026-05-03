@@ -200,22 +200,6 @@ function validateRequiredFields(
   }, {});
 }
 
-/** True when every schema field is empty — optional steps can be skipped without validation. */
-function isSchemaFormSemanticallyEmpty(
-  schema: OnboardingObjectSchema,
-  formData: Record<string, unknown>
-): boolean {
-  return Object.keys(schema.properties).every((fieldName) => {
-    const property = schema.properties[fieldName];
-
-    if (!property) {
-      return true;
-    }
-
-    return !isRequiredFieldFilled(property, formData[fieldName]);
-  });
-}
-
 function isEditableSubmission(
   submission: OnboardingSubmission | null
 ): boolean {
@@ -993,8 +977,7 @@ export function OnboardingWizard() {
 
     if (schema && template) {
       const isOptionalTemplate = template.is_required === false;
-      const skipRequiredValidation =
-        isOptionalTemplate && isSchemaFormSemanticallyEmpty(schema, formData);
+      const skipRequiredValidation = isOptionalTemplate;
 
       if (!skipRequiredValidation) {
         const nextFieldErrors = validateRequiredFields(
