@@ -144,7 +144,8 @@ async function createApiError(
   fallbackMessage: string
 ): Promise<ApiError> {
   const error = await parseErrorData(response);
-  return new ApiError(fallbackMessage, response.status, error.errors, response);
+  const message = error.message ?? fallbackMessage;
+  return new ApiError(message, response.status, error.errors, response);
 }
 
 function buildOnboardingApiError(
