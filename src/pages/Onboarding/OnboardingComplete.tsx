@@ -415,7 +415,9 @@ export function OnboardingComplete() {
         if (error.response.status === 422) {
           const backendErrors = getErrorValidationErrors(error);
           const formattedErrors = mapOnboardingFieldErrors(backendErrors, _);
-          const hasFieldErrors = Object.keys(formattedErrors).length > 0;
+          const hasFieldErrors = Object.keys(formattedErrors).some(
+            (fieldName) => fieldName !== "general"
+          );
 
           setErrors(formattedErrors);
           setErrors((prev) => ({
