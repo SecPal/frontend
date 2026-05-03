@@ -2566,10 +2566,6 @@ msgstr "Standort bearbeiten"
 msgid "Identity Document"
 msgstr "Ausweisdokument"
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "The file could not be uploaded. Please check the file type and size."
-msgstr "Die Datei konnte nicht hochgeladen werden. Bitte überprüfe Dateityp und Dateigröße."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
 msgstr "Passkey speichern …"

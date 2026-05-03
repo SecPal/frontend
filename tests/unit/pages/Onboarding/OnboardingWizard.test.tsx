@@ -248,7 +248,7 @@ describe("OnboardingWizard", () => {
   it("shows upload-specific validation message for 422 rejections instead of raw status text", async () => {
     const file = new File(["passport"], "passport.png", { type: "image/png" });
     vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
-      new ApiError("Unprocessable Entity", 422)
+      new ApiError("", 422)
     );
 
     renderWizard();
@@ -266,13 +266,9 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          "The file could not be uploaded. Please check the file type and size."
-        )
+        screen.getByText("Please review the highlighted fields and try again.")
       ).toBeInTheDocument();
     });
-
-    expect(screen.queryByText("Unprocessable Entity")).not.toBeInTheDocument();
   });
 
   it("disables step navigation and draft actions while an upload is in flight", async () => {

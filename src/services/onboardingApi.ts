@@ -158,7 +158,7 @@ async function throwSubmissionHttpError(response: Response): Promise<never> {
   const message =
     typeof data.message === "string" && data.message.length > 0
       ? data.message
-      : response.statusText;
+      : "";
   const errors = parseValidationErrors(data);
 
   throw new ApiError(message, response.status, errors, response);
