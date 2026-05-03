@@ -1121,14 +1121,10 @@ export function OnboardingWizard() {
     } catch (err) {
       setUploadFeedback({
         tone: "error",
-        message:
-          err instanceof ApiError &&
-          err.statusCode === 422 &&
-          err.message !== "Failed to upload file"
-            ? err.message
-            : getLocalizedErrorMessage(err, _, {
-                fallback: msg`Failed to upload file`,
-              }),
+        message: getLocalizedErrorMessage(err, _, {
+          fallback: msg`Failed to upload file`,
+          validation: msg`The file could not be uploaded. Please check the file type and size.`,
+        }),
       });
     } finally {
       setUploading(false);

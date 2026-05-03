@@ -10,6 +10,7 @@ import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
 import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWizard";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
+import { ApiError } from "../../../../src/services/ApiError";
 
 vi.mock("../../../../src/services/onboardingApi");
 
@@ -242,6 +243,36 @@ describe("OnboardingWizard", () => {
     });
 
     expect(screen.getByText("passport.png")).toBeInTheDocument();
+  });
+
+  it("shows upload-specific validation message for 422 rejections instead of raw status text", async () => {
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new ApiError("Unprocessable Entity", 422)
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /upload file/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "The file could not be uploaded. Please check the file type and size."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Unprocessable Entity")).not.toBeInTheDocument();
   });
 
   it("disables step navigation and draft actions while an upload is in flight", async () => {
