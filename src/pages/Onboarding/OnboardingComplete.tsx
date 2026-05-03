@@ -71,21 +71,27 @@ function mapOnboardingFieldErrors(
     return errors;
   }
 
-  for (const fieldName of Object.keys(backendErrors)) {
+  for (const [fieldName, fieldMessages] of Object.entries(backendErrors)) {
+    const fieldMessage = fieldMessages.find(
+      (message) => message.trim().length > 0
+    );
+
+    if (!fieldMessage) {
+      continue;
+    }
+
     switch (fieldName) {
       case "first_name":
-        errors.first_name = translate(msg`First name is required`);
+        errors.first_name = fieldMessage;
         break;
       case "last_name":
-        errors.last_name = translate(msg`Last name is required`);
+        errors.last_name = fieldMessage;
         break;
       case "password":
-        errors.password = translate(
-          msg`Password must be at least 8 characters`
-        );
+        errors.password = fieldMessage;
         break;
       case "password_confirmation":
-        errors.password_confirmation = translate(msg`Passwords do not match`);
+        errors.password_confirmation = fieldMessage;
         break;
       default:
         errors.general = translate(

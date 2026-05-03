@@ -431,8 +431,8 @@ describe("OnboardingComplete", () => {
         data: {
           message: "The given data was invalid.",
           errors: {
-            first_name: ["The first name field is required."],
-            password: ["The password must be at least 8 characters."],
+            first_name: ["The first name may not be greater than 255 characters."],
+            password: ["The password field is required."],
           },
         },
       },
@@ -460,10 +460,10 @@ describe("OnboardingComplete", () => {
     expect(
       screen.queryByText("The given data was invalid.")
     ).not.toBeInTheDocument();
-    expect(screen.getByText("First name is required")).toBeInTheDocument();
     expect(
-      screen.getByText("Password must be at least 8 characters")
+      screen.getByText("The first name may not be greater than 255 characters.")
     ).toBeInTheDocument();
+    expect(screen.getByText("The password field is required.")).toBeInTheDocument();
   });
 
   it("handles generic API errors (500)", async () => {
