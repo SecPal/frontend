@@ -18,14 +18,14 @@ export function OnboardingSubmitted() {
         </Heading>
         <Text className="mb-4 text-zinc-600 dark:text-zinc-400">
           <Trans>
-            Thank you for submitting your onboarding information. Our HR team will
-            review your details.
+            Thank you for submitting your onboarding information. Our HR team
+            will review your details.
           </Trans>
         </Text>
         <Text className="mb-4 text-zinc-600 dark:text-zinc-400">
           <Trans>
-            You do not need to take further action right now. If we need anything
-            else, we will contact you directly.
+            You do not need to take further action right now. If we need
+            anything else, we will contact you directly.
           </Trans>
         </Text>
         <Text className="text-zinc-600 dark:text-zinc-400">

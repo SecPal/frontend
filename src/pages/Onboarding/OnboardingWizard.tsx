@@ -905,8 +905,7 @@ export function OnboardingWizard() {
     if (schema && template) {
       const isOptionalTemplate = template.is_required === false;
       const skipRequiredValidation =
-        isOptionalTemplate &&
-        isSchemaFormSemanticallyEmpty(schema, formData);
+        isOptionalTemplate && isSchemaFormSemanticallyEmpty(schema, formData);
 
       if (!skipRequiredValidation) {
         const nextFieldErrors = validateRequiredFields(

@@ -109,7 +109,13 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
       .mockResolvedValueOnce(
-        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
       );
 
     // step-1 has an existing submission, so saves go through updateOnboardingSubmission
@@ -268,7 +274,13 @@ describe("OnboardingWizard", () => {
       .mockReset()
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
       .mockResolvedValueOnce(
-        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
       );
 
     vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
@@ -464,7 +476,13 @@ describe("OnboardingWizard", () => {
     vi.mocked(onboardingApi.fetchOnboardingTemplate)
       .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
       .mockResolvedValueOnce(
-        makeTemplate("template-2", "Tax Details", "Tax Details description", {}, false)
+        makeTemplate(
+          "template-2",
+          "Tax Details",
+          "Tax Details description",
+          {},
+          false
+        )
       );
 
     // step-1 has no submission → first Next creates it; step-2 has a submission → Submit PATCHes it

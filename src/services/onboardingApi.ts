@@ -153,9 +153,7 @@ function parseValidationErrors(
   return undefined;
 }
 
-async function throwSubmissionHttpError(
-  response: Response
-): Promise<never> {
+async function throwSubmissionHttpError(response: Response): Promise<never> {
   const data = await parseErrorData(response);
   const message =
     typeof data.message === "string" && data.message.length > 0

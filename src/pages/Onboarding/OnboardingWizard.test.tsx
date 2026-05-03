@@ -283,14 +283,18 @@ describe("OnboardingWizard optional emergency contact schema", () => {
     expect(screen.getByLabelText(/contact 1: phone/i)).not.toHaveAttribute(
       "required"
     );
-    expect(screen.getByLabelText(/contact 1: relationship/i)).not.toHaveAttribute(
-      "required"
+    expect(
+      screen.getByLabelText(/contact 1: relationship/i)
+    ).not.toHaveAttribute("required");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
     );
 
-    await user.click(screen.getByRole("button", { name: /submit for review/i }));
-
     await waitFor(() => {
-      expect(onboardingApiMocks.createOnboardingSubmission).toHaveBeenCalledWith(
+      expect(
+        onboardingApiMocks.createOnboardingSubmission
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           form_template_id: "template-emergency",
           status: "submitted",
@@ -388,10 +392,14 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
     await user.click(screen.getByLabelText(/^DE$/));
 
-    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
 
     await waitFor(() => {
-      expect(onboardingApiMocks.createOnboardingSubmission).toHaveBeenCalledWith(
+      expect(
+        onboardingApiMocks.createOnboardingSubmission
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           form_template_id: "template-personal",
           status: "submitted",
@@ -403,7 +411,8 @@ describe("OnboardingWizard optional intended activities (BWR)", () => {
       );
     });
 
-    const call = onboardingApiMocks.createOnboardingSubmission.mock.calls[0]?.[0];
+    const call =
+      onboardingApiMocks.createOnboardingSubmission.mock.calls[0]?.[0];
     expect(call?.form_data).not.toHaveProperty("intended_activities");
 
     expect(
@@ -471,13 +480,12 @@ describe("OnboardingWizard server-side validation feedback", () => {
       await screen.findByRole("heading", { name: /bank account details/i })
     ).toBeInTheDocument();
 
-    await user.type(
-      screen.getByLabelText(/^iban$/i),
-      "DE44500105175407324931"
-    );
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
     await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
 
-    await user.click(screen.getByRole("button", { name: /submit for review/i }));
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
 
     expect(
       await screen.findByText(/does not match the required pattern/i)

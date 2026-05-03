@@ -29,7 +29,9 @@ function sanitizeBoolean(value: unknown): boolean | undefined {
  * Prefer `emailVerified` (SPA contract); accept legacy/alternate `email_verified`
  * so session bootstrap matches Laravel JSON whether camelCase or snake_case.
  */
-function sanitizeEmailVerifiedFlag(candidate: Record<string, unknown>): boolean {
+function sanitizeEmailVerifiedFlag(
+  candidate: Record<string, unknown>
+): boolean {
   const camel = sanitizeBoolean(candidate.emailVerified);
   if (camel !== undefined) {
     return camel;
