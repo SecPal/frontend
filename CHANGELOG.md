@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Repaired `scripts/preflight.sh` changed-file detection for pre-push runs with a clean index/worktree by falling back to branch-vs-base (`merge-base..HEAD`) diffs for markdown and REUSE gating, and added regression tests that cover both unstaged markdown edits and committed markdown-only branch deltas.
 - Seeded Playwright's live mock-session cookies for both the browser host and the configured API host, so split-host remote runs against `app.secpal.dev` plus `api.secpal.dev` no longer fall back to `/login` when employee, Android provisioning, and onboarding-review specs install mocked auth routes.
 - Replaced the brittle live organization proof that hard-coded `WSiS Nordwest` with a stable `Headquarters` root-unit assertion, so default remote Playwright runs no longer fail when the live seed data changes while the shipped organization UI still behaves correctly.
 - Blocked onboarding review submission when the current schema-rendered step still has empty required fields, surfaced inline field errors plus a clear review-blocked status message, and kept those field errors clearing as users complete the missing inputs, resolving frontend issue #1030.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 # SPDX-License-Identifier: MIT
 
 set -euo pipefail
@@ -36,7 +36,8 @@ done
 
 # Auto-detect default branch (fallback to main)
 # Use symbolic-ref instead of remote show to avoid network hang
-BASE="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')"
+BASE_REF="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || true)"
+BASE="${BASE_REF#refs/remotes/origin/}"
 [ -z "${BASE:-}" ] && BASE="main"
 
 echo "Using base branch: $BASE"
@@ -45,7 +46,16 @@ echo "Using base branch: $BASE"
 git fetch origin "$BASE" 2>/dev/null || true
 
 # Get list of changed files for conditional checks
-CHANGED_FILES=$(git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD 2>/dev/null || echo "")
+CHANGED_FILES="$(git diff --name-only --cached 2>/dev/null || true)"
+if [ -z "$CHANGED_FILES" ]; then
+  CHANGED_FILES="$(git diff --name-only HEAD 2>/dev/null || true)"
+fi
+if [ -z "$CHANGED_FILES" ] && git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
+  MERGE_BASE_FOR_CHANGED_FILES="$(git merge-base "origin/$BASE" HEAD 2>/dev/null || true)"
+  if [ -n "$MERGE_BASE_FOR_CHANGED_FILES" ]; then
+    CHANGED_FILES="$(git diff --name-only "$MERGE_BASE_FOR_CHANGED_FILES"..HEAD 2>/dev/null || true)"
+  fi
+fi
 
 # 0) Formatting & Compliance
 FORMAT_EXIT=0
@@ -75,8 +85,18 @@ fi
 # Only run REUSE lint if new files were added or license-related files changed
 if command -v reuse >/dev/null 2>&1; then
   if [ -n "$CHANGED_FILES" ]; then
-    # Check if any new files were added (A) or license files changed
-    NEW_OR_LICENSE=$(git diff --name-status --cached 2>/dev/null | grep -E '^(A|M.*LICENSE)' || echo "")
+    # Check if any new files were added (A) or license files changed.
+    NAME_STATUS_CHANGED="$(git diff --name-status --cached 2>/dev/null || true)"
+    if [ -z "$NAME_STATUS_CHANGED" ]; then
+      NAME_STATUS_CHANGED="$(git diff --name-status HEAD 2>/dev/null || true)"
+    fi
+    if [ -z "$NAME_STATUS_CHANGED" ] && git rev-parse -q --verify "origin/$BASE" >/dev/null 2>&1; then
+      MERGE_BASE_FOR_NAME_STATUS="$(git merge-base "origin/$BASE" HEAD 2>/dev/null || true)"
+      if [ -n "$MERGE_BASE_FOR_NAME_STATUS" ]; then
+        NAME_STATUS_CHANGED="$(git diff --name-status "$MERGE_BASE_FOR_NAME_STATUS"..HEAD 2>/dev/null || true)"
+      fi
+    fi
+    NEW_OR_LICENSE=$(echo "$NAME_STATUS_CHANGED" | grep -E '^(A|M[[:space:]].*LICENSE)' || true)
     if [ -n "$NEW_OR_LICENSE" ]; then
       reuse lint || FORMAT_EXIT=1
     else
