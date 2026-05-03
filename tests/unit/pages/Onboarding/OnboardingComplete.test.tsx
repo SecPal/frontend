@@ -536,7 +536,9 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByText("The first name field is required.")
     ).toBeInTheDocument();
-    expect(screen.getByText("The password must be at least 12 characters.")).toBeInTheDocument();
+    expect(
+      screen.getByText("The password must be at least 12 characters.")
+    ).toBeInTheDocument();
   });
 
   it("handles generic API errors (500)", async () => {
