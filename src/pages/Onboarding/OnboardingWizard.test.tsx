@@ -765,12 +765,6 @@ describe("OnboardingWizard server-side validation feedback", () => {
       can_be_deleted: false,
       can_be_edited: false,
     });
-    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
-      new ApiError("The given data was invalid.", 422, {
-        form_data: ["The string should match pattern: ^[A-Z]{2}$"],
-      })
-    );
-
     const user = userEvent.setup();
     renderWithProviders();
 
@@ -791,6 +785,9 @@ describe("OnboardingWizard server-side validation feedback", () => {
     expect(
       screen.queryByText("The string should match pattern: ^[A-Z]{2}$")
     ).not.toBeInTheDocument();
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
   });
 
   it("shows supplemental feedback when API errors target hidden HR-managed fields", async () => {

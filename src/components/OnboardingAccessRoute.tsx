@@ -33,7 +33,9 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
 
   if (isPreContractUser(user)) {
-    return <Navigate to="/onboarding" replace state={{ onboardingRequired: true }} />;
+    return (
+      <Navigate to="/onboarding" replace state={{ onboardingRequired: true }} />
+    );
   }
 
   return <>{children}</>;

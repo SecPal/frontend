@@ -609,7 +609,9 @@ describe("EmployeeEdit", () => {
       renderWithProviders("emp-1");
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue("01.01.1990");
+        expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue(
+          "01.01.1990"
+        );
       });
 
       const birthDateInput = screen.getByLabelText(/geburtsdatum/i);

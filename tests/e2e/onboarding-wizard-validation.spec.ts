@@ -133,7 +133,10 @@ async function installWizardValidationRoutes(
       | undefined;
     const submissionId = route.request().url().split("/").at(-1);
 
-    if (submissionId === countrySubmission.id && requestBody?.status === "draft") {
+    if (
+      submissionId === countrySubmission.id &&
+      requestBody?.status === "draft"
+    ) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",

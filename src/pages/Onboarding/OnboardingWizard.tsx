@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -74,6 +74,27 @@ interface WizardFeedback {
 interface OnboardingRouteState {
   onboardingRequired?: boolean;
   message?: string;
+}
+
+function getPersistentOnboardingRouteState(
+  routeState: OnboardingRouteState | null
+): OnboardingRouteState | null {
+  if (!routeState) {
+    return null;
+  }
+
+  if (routeState.onboardingRequired === true) {
+    return { onboardingRequired: true };
+  }
+
+  if (typeof routeState.message === "string") {
+    const trimmedMessage = routeState.message.trim();
+    if (trimmedMessage.length > 0) {
+      return { message: trimmedMessage };
+    }
+  }
+
+  return null;
 }
 
 function getEntryFeedbackFromRouteState(
@@ -929,6 +950,11 @@ export function OnboardingWizard() {
   const translateRef = useRef(_);
   const navigate = useNavigate();
   const location = useLocation();
+  const [entryRouteState] = useState<OnboardingRouteState | null>(() =>
+    getPersistentOnboardingRouteState(
+      location.state as OnboardingRouteState | null
+    )
+  );
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -940,11 +966,9 @@ export function OnboardingWizard() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<WizardFeedback | null>(null);
-  const [entryFeedback] = useState<WizardFeedback | null>(() =>
-    getEntryFeedbackFromRouteState(
-      location.state as OnboardingRouteState | null,
-      _
-    )
+  const entryFeedback = useMemo(
+    () => getEntryFeedbackFromRouteState(entryRouteState, _),
+    [entryRouteState, _]
   );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [uploading, setUploading] = useState(false);
@@ -1063,6 +1087,13 @@ export function OnboardingWizard() {
       return;
     }
 
+    const cachedTemplate = templateCacheRef.current.get(currentStepTemplateId);
+    if (cachedTemplate) {
+      setTemplate(cachedTemplate);
+      setLoading(false);
+      return;
+    }
+
     let active = true;
 
     void fetchOnboardingTemplate(currentStepTemplateId)
@@ -1073,7 +1104,6 @@ export function OnboardingWizard() {
 
         templateCacheRef.current.set(currentStepTemplateId, templateData);
         setTemplate(templateData);
-        setError(null);
       })
       .catch((err) => {
         if (!active) {
@@ -1341,7 +1371,7 @@ export function OnboardingWizard() {
             ? validationReviewMessage
             : supplemental
               ? supplemental
-              : fallbackValidationMessage ?? validationReviewMessage,
+              : (fallbackValidationMessage ?? validationReviewMessage),
         });
         return null;
       }
@@ -1534,7 +1564,11 @@ export function OnboardingWizard() {
           )
         : {};
       const patternFieldErrors = requiredSchema
-        ? validatePatternFields(requiredSchema, nextFormData, requiredFieldErrors)
+        ? validatePatternFields(
+            requiredSchema,
+            nextFormData,
+            requiredFieldErrors
+          )
         : {};
 
       setFieldErrors((currentFieldErrors) => {
@@ -1559,13 +1593,13 @@ export function OnboardingWizard() {
           const requiredErrorForField = requiredFieldErrors[fieldName];
           const patternErrorForField = requiredErrorForField
             ? null
-            : patternFieldErrors[fieldName] ??
+            : (patternFieldErrors[fieldName] ??
               getFieldPatternValidationError(
                 fieldName,
                 property,
                 nextFormData,
                 requiredSchema
-              );
+              ));
 
           if (requiredErrorForField) {
             if (nextFieldErrors[fieldName] !== requiredErrorForField) {

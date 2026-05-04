@@ -165,7 +165,9 @@ describe("OnboardingWizard", () => {
     });
 
     expect(
-      screen.getByText(/your onboarding is not complete yet\. please complete onboarding/i)
+      screen.getByText(
+        /your onboarding is not complete yet\. please complete onboarding/i
+      )
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /next/i }));
@@ -704,7 +706,11 @@ describe("OnboardingWizard", () => {
         )
       )
       .mockResolvedValueOnce(
-        makeTemplate("template-final", "Final Review", "Final Review description")
+        makeTemplate(
+          "template-final",
+          "Final Review",
+          "Final Review description"
+        )
       )
       .mockResolvedValueOnce(
         makeTemplate(
@@ -727,7 +733,9 @@ describe("OnboardingWizard", () => {
 
     vi.mocked(onboardingApi.updateOnboardingSubmission)
       // Step 1 draft-save on "Next"
-      .mockResolvedValueOnce(makeSubmission("template-country", { country_code: "DE" }))
+      .mockResolvedValueOnce(
+        makeSubmission("template-country", { country_code: "DE" })
+      )
       // Step 1 submit from submitRequiredDraftSteps on final submit
       .mockRejectedValueOnce(
         new ApiError("The string should match pattern: ^[A-Z]{2}$", 422)
@@ -807,7 +815,11 @@ describe("OnboardingWizard", () => {
         )
       )
       .mockResolvedValueOnce(
-        makeTemplate("template-final", "Final Review", "Final Review description")
+        makeTemplate(
+          "template-final",
+          "Final Review",
+          "Final Review description"
+        )
       );
 
     renderWizard();
