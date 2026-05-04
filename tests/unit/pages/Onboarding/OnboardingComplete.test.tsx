@@ -7,6 +7,8 @@ import "@testing-library/jest-dom";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
+import { messages as enMessages } from "../../../../src/locales/en/messages.mjs";
 import { OnboardingComplete } from "../../../../src/pages/Onboarding/OnboardingComplete";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
 import { AuthProvider } from "../../../../src/contexts/AuthContext";
@@ -44,7 +46,7 @@ function renderWithProviders(ui: React.ReactElement, route?: string) {
 // Helper to wait for token validation to complete
 async function waitForFormReady() {
   await waitFor(() => {
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/first name|vorname/i)).toBeInTheDocument();
   });
 }
 
@@ -59,12 +61,17 @@ function fillValidFormAndSubmit({
   password?: string;
   confirmPassword?: string;
 } = {}) {
-  const firstNameInput = screen.getByLabelText(/first name/i);
-  const lastNameInput = screen.getByLabelText(/last name/i);
-  const passwordInput = screen.getByLabelText(/^password$/i);
-  const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+  const firstNameInput = screen.getByLabelText(/first name|vorname/i);
+  const lastNameInput = screen.getByLabelText(/last name|nachname/i);
+  const passwordInput = screen.getByLabelText(/^password$|^passwort$/i);
+  const confirmPasswordInput = document.querySelector(
+    'input[name="password_confirmation"]'
+  ) as HTMLInputElement | null;
+  if (!confirmPasswordInput) {
+    throw new Error("password_confirmation input not found");
+  }
   const submitButton = screen.getByRole("button", {
-    name: /complete account setup/i,
+    name: /complete account setup|vollständige kontoeinrichtung/i,
   });
 
   fireEvent.change(firstNameInput, { target: { value: firstName } });
@@ -79,6 +86,9 @@ function fillValidFormAndSubmit({
 describe("OnboardingComplete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+    i18n.activate("en");
 
     // Mock validateOnboardingToken to return employee data
     // Using John/Doe to match test data and avoid triggering name change dialog
@@ -539,6 +549,46 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByText("The password must be at least 12 characters.")
     ).toBeInTheDocument();
+  });
+
+  it("localizes known password leak message in German", async () => {
+    i18n.activate("de");
+    const mockError = {
+      response: {
+        status: 422,
+        data: {
+          message: "The given data was invalid.",
+          errors: {
+            password: [
+              "The given password has appeared in a data leak. Please choose a different password.",
+            ],
+          },
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+    fillValidFormAndSubmit({
+      password: "ValidPassword123!",
+      confirmPassword: "ValidPassword123!",
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Das angegebene Passwort ist in einem Datenleck aufgetaucht. Bitte wählen Sie ein anderes Passwort."
+        )
+      ).toBeInTheDocument();
+    });
+
+    i18n.activate("en");
   });
 
   it("handles generic API errors (500)", async () => {

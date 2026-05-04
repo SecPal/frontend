@@ -601,6 +601,34 @@ describe("EmployeeEdit", () => {
       });
     });
 
+    it("should accept and normalize short German date format", async () => {
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue(
+          "01.01.1990"
+        );
+      });
+
+      const birthDateInput = screen.getByLabelText(/geburtsdatum/i);
+
+      fireEvent.change(birthDateInput, { target: { value: "1.1.90" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(birthDateInput).toHaveValue("01.01.1990");
+        expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
+
     it("should validate contract start date", async () => {
       renderWithProviders("emp-1");
 

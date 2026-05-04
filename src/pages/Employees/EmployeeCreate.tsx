@@ -26,6 +26,7 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
+import { parseEmployeeDateToISO } from "./employeeDateUtils";
 
 type EmployeeFormField = keyof EmployeeFormData;
 type EmployeeFormErrors = Partial<Record<EmployeeFormField, string>>;
@@ -183,7 +184,11 @@ export function EmployeeCreate() {
     if (!normalizedBirthDateDisplay) {
       errors.date_of_birth = i18n._(msg`Date of birth is required`);
     } else {
-      const birthDate = parseDateToISO(normalizedBirthDateDisplay, i18n.locale);
+      const birthDate = parseEmployeeDateToISO(
+        normalizedBirthDateDisplay,
+        i18n.locale,
+        { allowIsoInput: true }
+      );
       if (!birthDate.valid) {
         errors.date_of_birth =
           i18n.locale === "de"
@@ -210,9 +215,10 @@ export function EmployeeCreate() {
     if (!normalizedContractDateDisplay) {
       errors.contract_start_date = i18n._(msg`Contract start date is required`);
     } else {
-      const contractDate = parseDateToISO(
+      const contractDate = parseEmployeeDateToISO(
         normalizedContractDateDisplay,
-        i18n.locale
+        i18n.locale,
+        { allowIsoInput: true }
       );
       if (!contractDate.valid) {
         errors.contract_start_date =
@@ -265,86 +271,6 @@ export function EmployeeCreate() {
       normalizedContractDateDisplay,
     };
   }
-
-  // Helper function to parse display format to ISO date with validation
-  const parseDateToISO = (
-    displayDate: string,
-    locale: string
-  ): { iso: string; formatted: string; valid: boolean } => {
-    if (!displayDate) return { iso: "", formatted: "", valid: false };
-
-    let parts: string[];
-    let day: number, month: number, year: number;
-
-    try {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(displayDate)) {
-        parts = displayDate.split("-");
-        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-          return { iso: "", formatted: displayDate, valid: false };
-        }
-        year = parseInt(parts[0], 10);
-        month = parseInt(parts[1], 10);
-        day = parseInt(parts[2], 10);
-      } else if (locale === "de") {
-        // DD.MM.YYYY
-        parts = displayDate.split(".");
-        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-          return { iso: "", formatted: displayDate, valid: false };
-        }
-        day = parseInt(parts[0], 10);
-        month = parseInt(parts[1], 10);
-        year = parseInt(parts[2], 10);
-      } else {
-        // MM/DD/YYYY
-        parts = displayDate.split("/");
-        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-          return { iso: "", formatted: displayDate, valid: false };
-        }
-        month = parseInt(parts[0], 10);
-        day = parseInt(parts[1], 10);
-        year = parseInt(parts[2], 10);
-      }
-
-      // Validate ranges
-      if (
-        isNaN(day) ||
-        isNaN(month) ||
-        isNaN(year) ||
-        year < 1900 ||
-        year > 2100 ||
-        month < 1 ||
-        month > 12 ||
-        day < 1 ||
-        day > 31
-      ) {
-        return { iso: "", formatted: displayDate, valid: false };
-      }
-
-      // Check if date is valid (e.g., not 31.02.2025)
-      const testDate = new Date(year, month - 1, day);
-      if (
-        testDate.getDate() !== day ||
-        testDate.getMonth() !== month - 1 ||
-        testDate.getFullYear() !== year
-      ) {
-        return { iso: "", formatted: displayDate, valid: false };
-      }
-
-      // Format ISO and display
-      const dayStr = day.toString().padStart(2, "0");
-      const monthStr = month.toString().padStart(2, "0");
-      const yearStr = year.toString();
-      const iso = `${yearStr}-${monthStr}-${dayStr}`;
-      const formatted =
-        locale === "de"
-          ? `${dayStr}.${monthStr}.${yearStr}`
-          : `${monthStr}/${dayStr}/${yearStr}`;
-
-      return { iso, formatted, valid: true };
-    } catch {
-      return { iso: "", formatted: displayDate, valid: false };
-    }
-  };
 
   useEffect(() => {
     async function loadOrganizationalUnits() {
@@ -541,9 +467,10 @@ export function EmployeeCreate() {
                       clearSubmitMessages();
                     }}
                     onBlur={(e) => {
-                      const result = parseDateToISO(
+                      const result = parseEmployeeDateToISO(
                         e.target.value,
-                        i18n.locale
+                        i18n.locale,
+                        { allowIsoInput: true }
                       );
                       if (result.valid) {
                         setBirthDateDisplay(result.formatted);
@@ -664,9 +591,10 @@ export function EmployeeCreate() {
                       clearSubmitMessages();
                     }}
                     onBlur={(e) => {
-                      const result = parseDateToISO(
+                      const result = parseEmployeeDateToISO(
                         e.target.value,
-                        i18n.locale
+                        i18n.locale,
+                        { allowIsoInput: true }
                       );
                       if (result.valid) {
                         setContractDateDisplay(result.formatted);

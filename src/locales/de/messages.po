@@ -574,6 +574,10 @@ msgstr "Belege und Nachweise"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "The given password has appeared in a data leak. Please choose a different password."
+msgstr "Das angegebene Passwort ist in einem Datenleck aufgetaucht. Bitte wählen Sie ein anderes Passwort."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Accepted formats: PDF, JPG, JPEG, PNG."
 msgstr "Akzeptierte Formate: PDF, JPG, JPEG, PNG."
@@ -859,6 +863,10 @@ msgstr "Verifizierungs-E-Mail erneut senden"
 msgid "Back to Employees"
 msgstr "Zurück zu Mitarbeitern"
 
+#: src/pages/Login.tsx
+msgid "The provided credentials are incorrect."
+msgstr "Die angegebenen Zugangsdaten sind falsch."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Edit Organizational Scope"
 msgstr "Organisatorischen Umfang bearbeiten"
@@ -1008,6 +1016,10 @@ msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
 msgstr "Abmelden"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
+msgstr "Sie wurden erfolgreich angemeldet, aber Ihr Onboarding ist noch nicht abgeschlossen. Bitte schließen Sie das Onboarding ab, um SecPal weiter zu nutzen."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"

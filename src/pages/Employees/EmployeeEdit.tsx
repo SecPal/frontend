@@ -24,6 +24,10 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
+import {
+  formatEmployeeDateForDisplay,
+  parseEmployeeDateToISO,
+} from "./employeeDateUtils";
 
 /**
  * Employee Edit Form
@@ -63,93 +67,6 @@ export function EmployeeEdit() {
     status: "pre_contract",
     contract_type: "full_time",
   });
-
-  // Helper function to format ISO date to display format
-  const formatDateForDisplay = (isoDate: string, locale: string): string => {
-    if (!isoDate) return "";
-    const date = new Date(isoDate);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-
-    if (locale === "de") {
-      return `${day}.${month}.${year}`;
-    } else {
-      return `${month}/${day}/${year}`;
-    }
-  };
-
-  // Helper function to parse display format to ISO date with validation
-  const parseDateToISO = (
-    displayDate: string,
-    locale: string
-  ): { iso: string; formatted: string; valid: boolean } => {
-    if (!displayDate) return { iso: "", formatted: "", valid: false };
-
-    let parts: string[];
-    let day: number, month: number, year: number;
-
-    try {
-      if (locale === "de") {
-        // DD.MM.YYYY
-        parts = displayDate.split(".");
-        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-          return { iso: "", formatted: displayDate, valid: false };
-        }
-        day = parseInt(parts[0], 10);
-        month = parseInt(parts[1], 10);
-        year = parseInt(parts[2], 10);
-      } else {
-        // MM/DD/YYYY
-        parts = displayDate.split("/");
-        if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-          return { iso: "", formatted: displayDate, valid: false };
-        }
-        month = parseInt(parts[0], 10);
-        day = parseInt(parts[1], 10);
-        year = parseInt(parts[2], 10);
-      }
-
-      // Validate ranges
-      if (
-        isNaN(day) ||
-        isNaN(month) ||
-        isNaN(year) ||
-        year < 1900 ||
-        year > 2100 ||
-        month < 1 ||
-        month > 12 ||
-        day < 1 ||
-        day > 31
-      ) {
-        return { iso: "", formatted: displayDate, valid: false };
-      }
-
-      // Check if date is valid (e.g., not 31.02.2025)
-      const testDate = new Date(year, month - 1, day);
-      if (
-        testDate.getDate() !== day ||
-        testDate.getMonth() !== month - 1 ||
-        testDate.getFullYear() !== year
-      ) {
-        return { iso: "", formatted: displayDate, valid: false };
-      }
-
-      // Format ISO and display
-      const dayStr = day.toString().padStart(2, "0");
-      const monthStr = month.toString().padStart(2, "0");
-      const yearStr = year.toString();
-      const iso = `${yearStr}-${monthStr}-${dayStr}`;
-      const formatted =
-        locale === "de"
-          ? `${dayStr}.${monthStr}.${yearStr}`
-          : `${monthStr}/${dayStr}/${yearStr}`;
-
-      return { iso, formatted, valid: true };
-    } catch {
-      return { iso: "", formatted: displayDate, valid: false };
-    }
-  };
 
   useEffect(() => {
     async function loadOrganizationalUnits() {
@@ -197,17 +114,23 @@ export function EmployeeEdit() {
 
         if (i18n.locale === "de") {
           setBirthDateDisplay(
-            formatDateForDisplay(employee.date_of_birth || "", "de")
+            formatEmployeeDateForDisplay(employee.date_of_birth || "", "de")
           );
           setContractDateDisplay(
-            formatDateForDisplay(employee.contract_start_date || "", "de")
+            formatEmployeeDateForDisplay(
+              employee.contract_start_date || "",
+              "de"
+            )
           );
         } else {
           setBirthDateDisplay(
-            formatDateForDisplay(employee.date_of_birth || "", "en")
+            formatEmployeeDateForDisplay(employee.date_of_birth || "", "en")
           );
           setContractDateDisplay(
-            formatDateForDisplay(employee.contract_start_date || "", "en")
+            formatEmployeeDateForDisplay(
+              employee.contract_start_date || "",
+              "en"
+            )
           );
         }
       })
@@ -373,7 +296,7 @@ export function EmployeeEdit() {
                       setBirthDateError(null); // Clear error on change
                     }}
                     onBlur={(e) => {
-                      const result = parseDateToISO(
+                      const result = parseEmployeeDateToISO(
                         e.target.value,
                         i18n.locale
                       );
@@ -462,7 +385,7 @@ export function EmployeeEdit() {
                       setContractDateError(null); // Clear error on change
                     }}
                     onBlur={(e) => {
-                      const result = parseDateToISO(
+                      const result = parseEmployeeDateToISO(
                         e.target.value,
                         i18n.locale
                       );
