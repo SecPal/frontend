@@ -1477,10 +1477,6 @@ export function OnboardingWizard() {
       return;
     }
 
-    if (!validateCurrentStepRequiredFields()) {
-      return;
-    }
-
     const nextStep = steps[currentStepIndex + 1];
     const nextStepState = getOnboardingStepState(nextStep);
 

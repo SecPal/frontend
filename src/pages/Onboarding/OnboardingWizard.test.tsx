@@ -961,6 +961,104 @@ describe("OnboardingWizard skip step behavior", () => {
     ).not.toHaveBeenCalled();
   });
 
+  it("allows skipping optional steps even when existing draft values do not match pattern rules", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Emergency Contact",
+        description: "Optional emergency contacts.",
+        template_id: "template-emergency",
+        is_required: false,
+        is_completed: false,
+        submission: {
+          id: "submission-emergency",
+          employee_id: "employee-1",
+          form_template_id: "template-emergency",
+          form_data: {
+            contact_1_country: "d1",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-emergency") {
+          return {
+            id: "template-emergency",
+            name: "Emergency Contact",
+            title: "Emergency Contact",
+            description: "Optional emergency contact persons",
+            form_schema: {
+              title: "Emergency Contact",
+              type: "object",
+              required: [],
+              properties: {
+                contact_1_country: {
+                  type: "string",
+                  title: "Contact 1: Country",
+                  pattern: "^[A-Z]{2}$",
+                },
+              },
+            },
+            is_required: false,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Bank info",
+          form_schema: {
+            type: "object",
+            required: ["iban"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /skip this step/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Use a two-letter country code in uppercase/i)
+    ).not.toBeInTheDocument();
+  });
+
   it("allows advancing from read-only steps without running required-field validation", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
