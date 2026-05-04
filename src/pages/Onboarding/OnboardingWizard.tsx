@@ -373,7 +373,8 @@ function getFieldPatternValidationError(
   fieldName: string,
   property: OnboardingSchemaProperty,
   formData: Record<string, unknown>,
-  schema: OnboardingObjectSchema
+  schema: OnboardingObjectSchema,
+  translate: ReturnType<typeof useLingui>["_"]
 ): string | null {
   if (property.type === "string" && property.pattern) {
     const value = getTextValue(formData[fieldName]).trim();
@@ -384,7 +385,8 @@ function getFieldPatternValidationError(
     return formatServerValidationMessage(
       fieldName,
       `pattern: ${property.pattern}`,
-      schema
+      schema,
+      translate
     );
   }
 
@@ -401,7 +403,8 @@ function getFieldPatternValidationError(
     return formatServerValidationMessage(
       fieldName,
       `pattern: ${itemPattern}`,
-      schema
+      schema,
+      translate
     );
   }
 
@@ -411,7 +414,8 @@ function getFieldPatternValidationError(
 function validatePatternFields(
   schema: OnboardingObjectSchema,
   formData: Record<string, unknown>,
-  requiredFieldErrors: FieldErrors
+  requiredFieldErrors: FieldErrors,
+  translate: ReturnType<typeof useLingui>["_"]
 ): FieldErrors {
   return Object.entries(schema.properties).reduce<FieldErrors>(
     (errors, [fieldName, property]) => {
@@ -427,7 +431,8 @@ function validatePatternFields(
         fieldName,
         property,
         formData,
-        schema
+        schema,
+        translate
       );
       if (patternError) {
         errors[fieldName] = patternError;
@@ -492,7 +497,8 @@ function findSchemaFieldKeyForPattern(
 function getPatternValidationMessage(
   fieldKey: string,
   message: string,
-  schema: OnboardingObjectSchema | null
+  schema: OnboardingObjectSchema | null,
+  translate: ReturnType<typeof useLingui>["_"]
 ): string | null {
   // Only trigger on messages that mention "pattern" (case-insensitive).
   if (!/pattern/i.test(message)) {
@@ -512,24 +518,34 @@ function getPatternValidationMessage(
       : fieldKey;
   const label =
     resolvedFieldKey === "form_data"
-      ? "This field"
+      ? translate(msg`This field`)
       : getSchemaFieldLabel(resolvedFieldKey, schema);
 
   if (actualPattern === "^[A-Z]{2}$") {
-    return `${label}: Use a two-letter country code in uppercase, for example DE.`;
+    return `${label}: ${translate(
+      msg`Use a two-letter country code in uppercase, for example DE.`
+    )}`;
   }
 
   return actualPattern
-    ? `${label}: Please use the required format (${actualPattern}).`
-    : `${label}: Please use the required format.`;
+    ? `${label}: ${translate(
+        msg`Please use the required format (${actualPattern}).`
+      )}`
+    : `${label}: ${translate(msg`Please use the required format.`)}`;
 }
 
 function formatServerValidationMessage(
   fieldKey: string,
   message: string,
-  schema: OnboardingObjectSchema | null
+  schema: OnboardingObjectSchema | null,
+  translate: ReturnType<typeof useLingui>["_"]
 ): string {
-  const patternMessage = getPatternValidationMessage(fieldKey, message, schema);
+  const patternMessage = getPatternValidationMessage(
+    fieldKey,
+    message,
+    schema,
+    translate
+  );
   if (patternMessage) {
     return patternMessage;
   }
@@ -540,17 +556,19 @@ function formatServerValidationMessage(
 
 function formatSupplementalValidationMessage(
   message: string,
-  schema: OnboardingObjectSchema | null
+  schema: OnboardingObjectSchema | null,
+  translate: ReturnType<typeof useLingui>["_"]
 ): string {
-  return formatServerValidationMessage("form_data", message, schema);
+  return formatServerValidationMessage("form_data", message, schema, translate);
 }
 
 function formatValidationFallbackMessage(
   message: string,
-  schema: OnboardingObjectSchema | null
+  schema: OnboardingObjectSchema | null,
+  translate: ReturnType<typeof useLingui>["_"]
 ): string {
   if (/pattern/i.test(message)) {
-    return formatSupplementalValidationMessage(message, schema);
+    return formatSupplementalValidationMessage(message, schema, translate);
   }
 
   return message;
@@ -1259,7 +1277,8 @@ export function OnboardingWizard() {
             err.message.length > 0
               ? formatValidationFallbackMessage(
                   err.message,
-                  validationSchemaForMessage
+                  validationSchemaForMessage,
+                  _
                 )
               : _(msg`Please review the highlighted fields and try again.`),
         });
@@ -1338,7 +1357,8 @@ export function OnboardingWizard() {
             hiddenFieldValidationMessage ??= formatServerValidationMessage(
               fieldKey,
               first,
-              schema
+              schema,
+              _
             );
             continue;
           }
@@ -1346,7 +1366,8 @@ export function OnboardingWizard() {
           nextFieldErrors[fieldKey] = formatServerValidationMessage(
             fieldKey,
             first,
-            schema
+            schema,
+            _
           );
         }
         setError(null);
@@ -1355,7 +1376,7 @@ export function OnboardingWizard() {
           err.errors.form_data?.[0] ??
           err.errors.onboarding_workflow_status?.[0];
         const supplemental = supplementalRaw
-          ? formatSupplementalValidationMessage(supplementalRaw, schema)
+          ? formatSupplementalValidationMessage(supplementalRaw, schema, _)
           : hiddenFieldValidationMessage;
         const hasInline = Object.keys(nextFieldErrors).length > 0;
         const validationReviewMessage = _(
@@ -1363,7 +1384,7 @@ export function OnboardingWizard() {
         );
         const fallbackValidationMessage =
           err.message.length > 0
-            ? formatValidationFallbackMessage(err.message, schema)
+            ? formatValidationFallbackMessage(err.message, schema, _)
             : null;
         setFeedback({
           tone: "error",
@@ -1419,7 +1440,8 @@ export function OnboardingWizard() {
     const patternFieldErrors = validatePatternFields(
       requiredSchema,
       formData,
-      requiredFieldErrors
+      requiredFieldErrors,
+      _
     );
     const nextFieldErrors = {
       ...requiredFieldErrors,
@@ -1563,7 +1585,8 @@ export function OnboardingWizard() {
         ? validatePatternFields(
             requiredSchema,
             nextFormData,
-            requiredFieldErrors
+            requiredFieldErrors,
+            _
           )
         : {};
 
@@ -1594,7 +1617,8 @@ export function OnboardingWizard() {
                 fieldName,
                 property,
                 nextFormData,
-                requiredSchema
+                requiredSchema,
+                _
               ));
 
           if (requiredErrorForField) {
@@ -1684,7 +1708,7 @@ export function OnboardingWizard() {
       const validationMessage =
         err instanceof ApiError && err.statusCode === 422
           ? err.message.length > 0
-            ? formatValidationFallbackMessage(err.message, schema)
+            ? formatValidationFallbackMessage(err.message, schema, _)
             : _(msg`Please review the highlighted fields and try again.`)
           : null;
 

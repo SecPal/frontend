@@ -842,6 +842,82 @@ describe("OnboardingWizard", () => {
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
   });
 
+  it("localizes country-code pattern guidance in German via Lingui catalogs", async () => {
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Country Details",
+        description: "Country Details description",
+        template_id: "template-country",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-country", {
+          country_code: "de",
+        }),
+      },
+      {
+        step_number: 2,
+        title: "Final Review",
+        description: "Final Review description",
+        template_id: "template-final",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-final", {
+          legal_name: "Jane Doe",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-final",
+          "Final Review",
+          "Final Review description"
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Country Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /weiter/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Country Code: Verwenden Sie einen zweistelligen Ländercode in Großbuchstaben, zum Beispiel DE."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Final Review")).not.toBeInTheDocument();
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
   it("blocks submit for missing required schema fields and clears field errors as the user fixes them", async () => {
     const personalInformationSchema = {
       type: "object",
