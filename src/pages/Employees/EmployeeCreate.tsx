@@ -305,6 +305,10 @@ export function EmployeeCreate() {
         year = parseInt(parts[2], 10);
       }
 
+      if (year >= 0 && year <= 99) {
+        year += year >= 50 ? 1900 : 2000;
+      }
+
       // Validate ranges
       if (
         isNaN(day) ||

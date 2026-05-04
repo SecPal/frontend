@@ -60,8 +60,12 @@ interface TokenValidationState {
   retryAfterSeconds?: number;
 }
 
+const COMPROMISED_PASSWORD_ERROR =
+  "The given password has appeared in a data leak. Please choose a different password.";
+
 function mapOnboardingFieldErrors(
-  backendErrors: Record<string, string[]> | undefined
+  backendErrors: Record<string, string[]> | undefined,
+  localizedCompromisedPasswordError: string
 ): ValidationErrors {
   const errors: ValidationErrors = {};
 
@@ -78,18 +82,25 @@ function mapOnboardingFieldErrors(
       continue;
     }
 
+    const localizedFieldMessage =
+      fieldName === "password" &&
+      fieldMessage.trim().toLowerCase() ===
+        COMPROMISED_PASSWORD_ERROR.toLowerCase()
+        ? localizedCompromisedPasswordError
+        : fieldMessage;
+
     switch (fieldName) {
       case "first_name":
-        errors.first_name = fieldMessage;
+        errors.first_name = localizedFieldMessage;
         break;
       case "last_name":
-        errors.last_name = fieldMessage;
+        errors.last_name = localizedFieldMessage;
         break;
       case "password":
-        errors.password = fieldMessage;
+        errors.password = localizedFieldMessage;
         break;
       case "password_confirmation":
-        errors.password_confirmation = fieldMessage;
+        errors.password_confirmation = localizedFieldMessage;
         break;
       default:
         break;
@@ -122,6 +133,9 @@ export function OnboardingComplete() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { _ } = useLingui();
+  const localizedCompromisedPasswordError = _(
+    msg`The given password has appeared in a data leak. Please choose a different password.`
+  );
 
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -428,7 +442,10 @@ export function OnboardingComplete() {
       if (isOnboardingApiError(error)) {
         if (error.response.status === 422) {
           const backendErrors = getErrorValidationErrors(error);
-          const formattedErrors = mapOnboardingFieldErrors(backendErrors);
+          const formattedErrors = mapOnboardingFieldErrors(
+            backendErrors,
+            localizedCompromisedPasswordError
+          );
           const hasFieldErrors = Object.keys(formattedErrors).some(
             (fieldName) => fieldName !== "general"
           );
@@ -763,7 +780,7 @@ export function OnboardingComplete() {
               </Text>
             )}
             {errors.first_name && (
-              <Text className="text-sm text-red-600 dark:text-red-400 mt-1">
+              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.first_name}
               </Text>
             )}
@@ -803,7 +820,7 @@ export function OnboardingComplete() {
               </Text>
             )}
             {errors.last_name && (
-              <Text className="text-sm text-red-600 mt-1">
+              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.last_name}
               </Text>
             )}
@@ -826,7 +843,7 @@ export function OnboardingComplete() {
               invalid={!!errors.password}
             />
             {errors.password && (
-              <Text className="text-sm text-red-600 mt-1">
+              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.password}
               </Text>
             )}
@@ -858,7 +875,7 @@ export function OnboardingComplete() {
               invalid={!!errors.password_confirmation}
             />
             {errors.password_confirmation && (
-              <Text className="text-sm text-red-600 mt-1">
+              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.password_confirmation}
               </Text>
             )}

@@ -65,9 +65,13 @@ function OnboardingCompletionStub() {
   );
 }
 
-function renderWizard() {
+function renderWizard(routeState?: Record<string, unknown>) {
+  const initialEntries = routeState
+    ? [{ pathname: "/onboarding", state: routeState }]
+    : ["/onboarding"];
+
   return render(
-    <MemoryRouter initialEntries={["/onboarding"]}>
+    <MemoryRouter initialEntries={initialEntries}>
       <I18nProvider i18n={i18n}>
         <Routes>
           <Route path="/onboarding" element={<OnboardingWizard />} />
@@ -151,6 +155,30 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(screen.getByText("Tax Details")).toBeInTheDocument();
     });
+  });
+
+  it("shows onboarding-required entry feedback only on the first step", async () => {
+    renderWizard({ onboardingRequired: true });
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(/your onboarding is not complete yet\. please complete onboarding/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(
+        /your onboarding is not complete yet\. please complete onboarding/i
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("blocks moving to the next step until required fields are filled", async () => {
@@ -629,6 +657,179 @@ describe("OnboardingWizard", () => {
     });
   });
 
+  it("shows a user-friendly message when required draft-step submission fails with a pattern error", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Country Details",
+        description: "Country Details description",
+        template_id: "template-country",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-country", {
+          country_code: "DE",
+        }),
+      },
+      {
+        step_number: 2,
+        title: "Final Review",
+        description: "Final Review description",
+        template_id: "template-final",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-final", {
+          legal_name: "Jane Doe",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate("template-final", "Final Review", "Final Review description")
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      );
+
+    vi.mocked(onboardingApi.updateOnboardingSubmission)
+      // Step 1 draft-save on "Next"
+      .mockResolvedValueOnce(makeSubmission("template-country", { country_code: "DE" }))
+      // Step 1 submit from submitRequiredDraftSteps on final submit
+      .mockRejectedValueOnce(
+        new ApiError("The string should match pattern: ^[A-Z]{2}$", 422)
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Country Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Final Review")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Country Code: Use a two-letter country code in uppercase, for example DE."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText("The string should match pattern: ^[A-Z]{2}$")
+    ).not.toBeInTheDocument();
+  });
+
+  it("validates schema patterns before moving to the next step", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Country Details",
+        description: "Country Details description",
+        template_id: "template-country",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-country", {
+          country_code: "de",
+        }),
+      },
+      {
+        step_number: 2,
+        title: "Final Review",
+        description: "Final Review description",
+        template_id: "template-final",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-final", {
+          legal_name: "Jane Doe",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate("template-final", "Final Review", "Final Review description")
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Country Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Country Code: Use a two-letter country code in uppercase, for example DE."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Final Review")).not.toBeInTheDocument();
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
   it("blocks submit for missing required schema fields and clears field errors as the user fixes them", async () => {
     const personalInformationSchema = {
       type: "object",
@@ -775,6 +976,69 @@ describe("OnboardingWizard", () => {
         screen.queryByText("This field is required.")
       ).not.toBeInTheDocument();
     });
+  });
+
+  it("replaces raw top-level pattern validation errors with a user-friendly message", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Country Details",
+        description: "Country Details description",
+        template_id: "template-country",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-country", {
+          country_code: "de",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      );
+
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
+      new ApiError("The string should match pattern: ^[A-Z]{2}$", 422, {
+        status: ["Validation failed"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Country Code")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Country Code: Use a two-letter country code in uppercase, for example DE."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText("The string should match pattern: ^[A-Z]{2}$")
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the user on the current step and shows an error when saving fails", async () => {

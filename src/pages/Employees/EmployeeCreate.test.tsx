@@ -6,6 +6,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
@@ -66,6 +67,7 @@ describe("EmployeeCreate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
     i18n.activate("en");
 
     // Mock organizational units loading
@@ -870,6 +872,27 @@ describe("EmployeeCreate", () => {
         expect(birthDateInput).toHaveValue("01/15/1990");
         expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
       });
+    });
+
+    it("should accept and normalize short German date format", async () => {
+      i18n.activate("de");
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const birthDateInput = screen.getByLabelText(/geburtsdatum/i);
+
+      fireEvent.change(birthDateInput, { target: { value: "1.1.90" } });
+      fireEvent.blur(birthDateInput);
+
+      await waitFor(() => {
+        expect(birthDateInput).toHaveValue("01.01.1990");
+        expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      i18n.activate("en");
     });
 
     it("should validate contract start date format", async () => {

@@ -1418,7 +1418,9 @@ describe("Login", () => {
 
   it("displays error message on login failure", async () => {
     const mockLogin = vi.mocked(authApi.login);
-    const testError = new authApi.AuthApiError("Invalid credentials");
+    const testError = new authApi.AuthApiError(
+      "The provided credentials are incorrect."
+    );
     // Keep rejection active for every invocation in this test flow
     // (e.g., rerenders/retries), so the failure path remains deterministic.
     mockLogin.mockRejectedValue(testError);
@@ -1442,11 +1444,48 @@ describe("Login", () => {
 
     // Wait for the error to appear with explicit screen query
     const errorElement = await screen.findByText(
-      /invalid credentials/i,
+      /the provided credentials are incorrect/i,
       {},
       { timeout: 3000 }
     );
     expect(errorElement).toBeInTheDocument();
+  });
+
+  it("localizes invalid-credentials login errors with the active locale", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockRejectedValue(
+      new authApi.AuthApiError("The provided credentials are incorrect.")
+    );
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in|einloggen|anmelden/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/e-?mail|email/i), {
+      target: { value: "wrong@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/passwort|password/i), {
+      target: { value: "wrongpass" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /log in|einloggen|anmelden/i })
+    );
+
+    expect(
+      await screen.findByText(/angegebenen zugangsdaten.*falsch/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
   });
 
   it("replaces raw 5xx login errors with a controlled temporary-unavailable message", async () => {

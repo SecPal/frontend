@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   createOnboardingSubmission,
   fetchOnboardingSteps,
@@ -69,6 +69,41 @@ interface OnboardingObjectSchema {
 interface WizardFeedback {
   tone: "success" | "error";
   message: string;
+}
+
+interface OnboardingRouteState {
+  onboardingRequired?: boolean;
+  message?: string;
+}
+
+function getEntryFeedbackFromRouteState(
+  routeState: OnboardingRouteState | null,
+  translate: ReturnType<typeof useLingui>["_"]
+): WizardFeedback | null {
+  if (!routeState) {
+    return null;
+  }
+
+  if (routeState.onboardingRequired === true) {
+    return {
+      tone: "error",
+      message: translate(
+        msg`You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal.`
+      ),
+    };
+  }
+
+  if (typeof routeState.message === "string") {
+    const trimmedMessage = routeState.message.trim();
+    if (trimmedMessage.length > 0) {
+      return {
+        tone: "success",
+        message: trimmedMessage,
+      };
+    }
+  }
+
+  return null;
 }
 
 type FieldErrors = Record<string, string>;
@@ -304,6 +339,85 @@ function validateRequiredFields(
   }, {});
 }
 
+function matchesSchemaPattern(value: string, pattern: string): boolean {
+  try {
+    return new RegExp(pattern).test(value);
+  } catch {
+    // Ignore malformed backend patterns and avoid blocking form progress.
+    return true;
+  }
+}
+
+function getFieldPatternValidationError(
+  fieldName: string,
+  property: OnboardingSchemaProperty,
+  formData: Record<string, unknown>,
+  schema: OnboardingObjectSchema
+): string | null {
+  if (property.type === "string" && property.pattern) {
+    const value = getTextValue(formData[fieldName]).trim();
+    if (value.length === 0 || matchesSchemaPattern(value, property.pattern)) {
+      return null;
+    }
+
+    return formatServerValidationMessage(
+      fieldName,
+      `pattern: ${property.pattern}`,
+      schema
+    );
+  }
+
+  if (property.type === "array" && property.items?.pattern) {
+    const itemPattern = property.items.pattern;
+    const values = getArrayValue(formData[fieldName]);
+    if (
+      values.length === 0 ||
+      values.every((value) => matchesSchemaPattern(value, itemPattern))
+    ) {
+      return null;
+    }
+
+    return formatServerValidationMessage(
+      fieldName,
+      `pattern: ${itemPattern}`,
+      schema
+    );
+  }
+
+  return null;
+}
+
+function validatePatternFields(
+  schema: OnboardingObjectSchema,
+  formData: Record<string, unknown>,
+  requiredFieldErrors: FieldErrors
+): FieldErrors {
+  return Object.entries(schema.properties).reduce<FieldErrors>(
+    (errors, [fieldName, property]) => {
+      if (!isOnboardingFieldVisible(fieldName, formData)) {
+        return errors;
+      }
+
+      if (requiredFieldErrors[fieldName]) {
+        return errors;
+      }
+
+      const patternError = getFieldPatternValidationError(
+        fieldName,
+        property,
+        formData,
+        schema
+      );
+      if (patternError) {
+        errors[fieldName] = patternError;
+      }
+
+      return errors;
+    },
+    {}
+  );
+}
+
 function getServerValidationFieldKey(
   key: string,
   schema: OnboardingObjectSchema | null
@@ -408,6 +522,17 @@ function formatSupplementalValidationMessage(
   schema: OnboardingObjectSchema | null
 ): string {
   return formatServerValidationMessage("form_data", message, schema);
+}
+
+function formatValidationFallbackMessage(
+  message: string,
+  schema: OnboardingObjectSchema | null
+): string {
+  if (/pattern/i.test(message)) {
+    return formatSupplementalValidationMessage(message, schema);
+  }
+
+  return message;
 }
 
 function isEditableSubmission(
@@ -803,6 +928,7 @@ export function OnboardingWizard() {
   const { _ } = useLingui();
   const translateRef = useRef(_);
   const navigate = useNavigate();
+  const location = useLocation();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
@@ -814,6 +940,12 @@ export function OnboardingWizard() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<WizardFeedback | null>(null);
+  const [entryFeedback] = useState<WizardFeedback | null>(() =>
+    getEntryFeedbackFromRouteState(
+      location.state as OnboardingRouteState | null,
+      _
+    )
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [uploading, setUploading] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] =
@@ -828,6 +960,9 @@ export function OnboardingWizard() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const onboardingErrorRef = useRef<HTMLDivElement | null>(null);
   const currentStepIndexRef = useRef(0);
+  const templateCacheRef = useRef<Map<string, OnboardingFormTemplate>>(
+    new Map()
+  );
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
   const isCurrentStepEditable = isEditableSubmission(submission);
@@ -851,6 +986,15 @@ export function OnboardingWizard() {
   useEffect(() => {
     translateRef.current = _;
   }, [_]);
+
+  useEffect(() => {
+    const routeState = location.state as OnboardingRouteState | null;
+    if (!routeState) {
+      return;
+    }
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (feedback?.tone !== "error" && !error) {
@@ -927,6 +1071,7 @@ export function OnboardingWizard() {
           return;
         }
 
+        templateCacheRef.current.set(currentStepTemplateId, templateData);
         setTemplate(templateData);
         setError(null);
       })
@@ -977,6 +1122,31 @@ export function OnboardingWizard() {
     updateStepAtIndex(currentStepIndex, savedSubmission, status);
   }
 
+  async function resolveStepValidationSchema(
+    step: OnboardingStep | undefined
+  ): Promise<OnboardingObjectSchema | null> {
+    if (!step) {
+      return null;
+    }
+
+    if (template && step.template_id === currentStepTemplateId) {
+      return getObjectSchema(template.form_schema);
+    }
+
+    const cachedTemplate = templateCacheRef.current.get(step.template_id);
+    if (cachedTemplate) {
+      return getObjectSchema(cachedTemplate.form_schema);
+    }
+
+    try {
+      const stepTemplate = await fetchOnboardingTemplate(step.template_id);
+      templateCacheRef.current.set(step.template_id, stepTemplate);
+      return getObjectSchema(stepTemplate.form_schema);
+    } catch {
+      return null;
+    }
+  }
+
   async function submitRequiredDraftSteps(): Promise<boolean> {
     const stepsToSubmit: Array<{
       index: number;
@@ -1007,11 +1177,14 @@ export function OnboardingWizard() {
       return true;
     }
 
+    let failingStepIndex: number | null = null;
+
     try {
       setSaving(true);
       setError(null);
 
       for (const { index, submission: stepSubmission } of stepsToSubmit) {
+        failingStepIndex = index;
         const savedSubmission = await updateOnboardingSubmission(
           stepSubmission.id,
           {
@@ -1023,11 +1196,46 @@ export function OnboardingWizard() {
         );
 
         updateStepAtIndex(index, savedSubmission, "submitted");
+        failingStepIndex = null;
       }
 
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : _(msg`Failed to submit`));
+      let validationSchemaForMessage: OnboardingObjectSchema | null = schema;
+
+      if (failingStepIndex !== null) {
+        const failedStep = steps[failingStepIndex];
+        const failedStepState = getOnboardingStepState(failedStep);
+        const failedStepSchema = await resolveStepValidationSchema(failedStep);
+        if (failedStepSchema) {
+          validationSchemaForMessage = failedStepSchema;
+        }
+
+        setLoading(true);
+        setFeedback(null);
+        setFieldErrors({});
+        resetUploadState();
+        setTemplate(null);
+        setSubmission(failedStepState.submission);
+        setFormData(failedStepState.formData);
+        setCurrentStepIndex(failingStepIndex);
+      }
+
+      if (err instanceof ApiError && err.statusCode === 422) {
+        setError(null);
+        setFeedback({
+          tone: "error",
+          message:
+            err.message.length > 0
+              ? formatValidationFallbackMessage(
+                  err.message,
+                  validationSchemaForMessage
+                )
+              : _(msg`Please review the highlighted fields and try again.`),
+        });
+      } else {
+        setError(err instanceof Error ? err.message : _(msg`Failed to submit`));
+      }
       return false;
     } finally {
       setSaving(false);
@@ -1120,18 +1328,20 @@ export function OnboardingWizard() {
           ? formatSupplementalValidationMessage(supplementalRaw, schema)
           : hiddenFieldValidationMessage;
         const hasInline = Object.keys(nextFieldErrors).length > 0;
+        const validationReviewMessage = _(
+          msg`We couldn't submit the form yet. Please review the highlighted fields.`
+        );
+        const fallbackValidationMessage =
+          err.message.length > 0
+            ? formatValidationFallbackMessage(err.message, schema)
+            : null;
         setFeedback({
           tone: "error",
           message: hasInline
-            ? _(
-                msg`We couldn't submit the form yet. Please review the highlighted fields.`
-              )
+            ? validationReviewMessage
             : supplemental
               ? supplemental
-              : err.message ||
-                _(
-                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
-                ),
+              : fallbackValidationMessage ?? validationReviewMessage,
         });
         return null;
       }
@@ -1171,11 +1381,20 @@ export function OnboardingWizard() {
 
     const requiredSchema =
       template.is_required === false ? { ...schema, required: [] } : schema;
-    const nextFieldErrors = validateRequiredFields(
+    const requiredFieldErrors = validateRequiredFields(
       requiredSchema,
       formData,
       _(msg`This field is required.`)
     );
+    const patternFieldErrors = validatePatternFields(
+      requiredSchema,
+      formData,
+      requiredFieldErrors
+    );
+    const nextFieldErrors = {
+      ...requiredFieldErrors,
+      ...patternFieldErrors,
+    };
 
     if (Object.keys(nextFieldErrors).length === 0) {
       return true;
@@ -1225,6 +1444,10 @@ export function OnboardingWizard() {
 
   function handleSkipStep() {
     if (saving || uploading || currentStepIndex >= steps.length - 1) {
+      return;
+    }
+
+    if (!validateCurrentStepRequiredFields()) {
       return;
     }
 
@@ -1310,6 +1533,9 @@ export function OnboardingWizard() {
             requiredFieldMessage
           )
         : {};
+      const patternFieldErrors = requiredSchema
+        ? validatePatternFields(requiredSchema, nextFormData, requiredFieldErrors)
+        : {};
 
       setFieldErrors((currentFieldErrors) => {
         let changed = false;
@@ -1329,13 +1555,32 @@ export function OnboardingWizard() {
           nextFieldErrors[errorFieldName] = errorMessage;
         }
 
-        if (
-          property &&
-          nextFieldErrors[fieldName] &&
-          isRequiredFieldFilled(property, value)
-        ) {
-          delete nextFieldErrors[fieldName];
-          changed = true;
+        if (property && requiredSchema) {
+          const requiredErrorForField = requiredFieldErrors[fieldName];
+          const patternErrorForField = requiredErrorForField
+            ? null
+            : patternFieldErrors[fieldName] ??
+              getFieldPatternValidationError(
+                fieldName,
+                property,
+                nextFormData,
+                requiredSchema
+              );
+
+          if (requiredErrorForField) {
+            if (nextFieldErrors[fieldName] !== requiredErrorForField) {
+              nextFieldErrors[fieldName] = requiredErrorForField;
+              changed = true;
+            }
+          } else if (patternErrorForField) {
+            if (nextFieldErrors[fieldName] !== patternErrorForField) {
+              nextFieldErrors[fieldName] = patternErrorForField;
+              changed = true;
+            }
+          } else if (nextFieldErrors[fieldName]) {
+            delete nextFieldErrors[fieldName];
+            changed = true;
+          }
         }
 
         return changed ? nextFieldErrors : currentFieldErrors;
@@ -1406,21 +1651,46 @@ export function OnboardingWizard() {
         fileInputRef.current.value = "";
       }
     } catch (err) {
+      const validationMessage =
+        err instanceof ApiError && err.statusCode === 422
+          ? err.message.length > 0
+            ? formatValidationFallbackMessage(err.message, schema)
+            : _(msg`Please review the highlighted fields and try again.`)
+          : null;
+
       setUploadFeedback({
         tone: "error",
         message:
-          err instanceof ApiError &&
-          err.statusCode === 422 &&
-          err.message.length > 0
-            ? err.message
-            : getLocalizedErrorMessage(err, _, {
-                fallback: msg`Failed to upload file`,
-              }),
+          validationMessage ??
+          getLocalizedErrorMessage(err, _, {
+            fallback: msg`Failed to upload file`,
+          }),
       });
     } finally {
       setUploading(false);
     }
   }
+
+  const entryFeedbackBanner =
+    entryFeedback && currentStepIndex === 0 ? (
+      <div
+        className={
+          entryFeedback.tone === "error"
+            ? "mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+            : "mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+        }
+      >
+        <Text
+          className={
+            entryFeedback.tone === "error"
+              ? "text-red-800 dark:text-red-200"
+              : "text-emerald-800 dark:text-emerald-200"
+          }
+        >
+          {entryFeedback.message}
+        </Text>
+      </div>
+    ) : null;
 
   if (loading && steps.length === 0) {
     return (
@@ -1434,8 +1704,11 @@ export function OnboardingWizard() {
 
   if (error && steps.length === 0) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-        <Text className="text-red-800">{error}</Text>
+      <div>
+        {entryFeedbackBanner}
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <Text className="text-red-800">{error}</Text>
+        </div>
       </div>
     );
   }
@@ -1451,6 +1724,8 @@ export function OnboardingWizard() {
           currentStep={currentStepIndex + 1}
           totalSteps={steps.length}
         />
+
+        {entryFeedbackBanner}
 
         {feedback ? (
           <div

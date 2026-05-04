@@ -450,7 +450,7 @@ describe("App", () => {
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
 
-  it("redirects pre-contract authenticated users from the app home route to onboarding", async () => {
+  it("redirects pre-contract authenticated users from the app home route to onboarding and shows a clear notice", async () => {
     window.history.replaceState({}, "", "/");
 
     await seedPersistedAuthUser({
@@ -472,6 +472,11 @@ describe("App", () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe("/onboarding");
     });
+    expect(
+      await screen.findByText(
+        /your onboarding is not complete yet\. please complete onboarding/i
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {

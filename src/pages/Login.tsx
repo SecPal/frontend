@@ -45,6 +45,8 @@ import { Input } from "../components/input";
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
+const INVALID_CREDENTIALS_PATTERN =
+  /^The provided credentials are incorrect\.?$/i;
 const NATIVE_PASSKEY_CANCELLED_PATTERN = /^Passkey sign-in was cancelled\.?$/i;
 const NATIVE_PASSKEY_INTERRUPTED_PATTERN =
   /^Passkey sign-in was interrupted\.?$/i;
@@ -118,6 +120,17 @@ function getPasskeySignInErrorMessage(
   return translate(
     msg`An unexpected passkey sign-in error occurred. Please try again.`
   );
+}
+
+function getLocalizedLoginErrorMessage(
+  message: string,
+  translate: Translate
+): string {
+  if (INVALID_CREDENTIALS_PATTERN.test(message)) {
+    return translate(msg`The provided credentials are incorrect.`);
+  }
+
+  return message;
 }
 
 function formatDateTime(value: string): string {
@@ -287,15 +300,15 @@ export function Login() {
 
         if (err.status === 429) {
           syncAuthoritativeLockout(err.retryAfterSeconds);
-          setError(err.message);
+          setError(getLocalizedLoginErrorMessage(err.message, _));
           return;
         }
 
         recordFailedAttempt(); // Record failed attempt for rate limiting
-        setError(err.message);
+        setError(getLocalizedLoginErrorMessage(err.message, _));
       } else if (err instanceof Error) {
         recordFailedAttempt();
-        setError(err.message);
+        setError(getLocalizedLoginErrorMessage(err.message, _));
       } else {
         recordFailedAttempt();
         setError(

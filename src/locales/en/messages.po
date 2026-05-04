@@ -574,6 +574,10 @@ msgstr "Supporting documents"
 msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 msgstr "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "The given password has appeared in a data leak. Please choose a different password."
+msgstr "The given password has appeared in a data leak. Please choose a different password."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Accepted formats: PDF, JPG, JPEG, PNG."
 msgstr "Accepted formats: PDF, JPG, JPEG, PNG."
@@ -859,6 +863,10 @@ msgstr "Send verification email again"
 msgid "Back to Employees"
 msgstr "Back to Employees"
 
+#: src/pages/Login.tsx
+msgid "The provided credentials are incorrect."
+msgstr "The provided credentials are incorrect."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Edit Organizational Scope"
 msgstr "Edit Organizational Scope"
@@ -1008,6 +1016,10 @@ msgstr "Failed to change language. Please try again."
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
 msgstr "Sign out"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
+msgstr "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"
