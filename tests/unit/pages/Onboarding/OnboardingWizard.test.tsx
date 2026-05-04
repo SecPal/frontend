@@ -918,6 +918,137 @@ describe("OnboardingWizard", () => {
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
   });
 
+  it("shows generic pattern guidance for non-country regex constraints", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Address Details",
+        description: "Address Details description",
+        template_id: "template-address",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-address", {
+          postal_code: "12A45",
+        }),
+      },
+      {
+        step_number: 2,
+        title: "Final Review",
+        description: "Final Review description",
+        template_id: "template-final",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-final", {
+          legal_name: "Jane Doe",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-address",
+          "Address Details",
+          "Address Details description",
+          {
+            type: "object",
+            required: ["postal_code"],
+            properties: {
+              postal_code: {
+                type: "string",
+                title: "Postal Code",
+                pattern: "^\\d{5}$",
+              },
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        makeTemplate(
+          "template-final",
+          "Final Review",
+          "Final Review description"
+        )
+      );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Address Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Postal Code: Please use the required format (^\\d{5}$)."
+        )
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Final Review")).not.toBeInTheDocument();
+    expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
+  it("replaces pattern fallback errors without a concrete regex with generic guidance", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Country Details",
+        description: "Country Details description",
+        template_id: "template-country",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-country", {
+          country_code: "DE",
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-country",
+          "Country Details",
+          "Country Details description",
+          {
+            type: "object",
+            required: ["country_code"],
+            properties: {
+              country_code: {
+                type: "string",
+                title: "Country Code",
+                pattern: "^[A-Z]{2}$",
+              },
+            },
+          }
+        )
+      );
+
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockRejectedValueOnce(
+      new ApiError("The value does not match the required pattern.", 422, {
+        status: ["Validation failed"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Country Code")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("This field: Please use the required format.")
+      ).toBeInTheDocument();
+    });
+  });
+
   it("blocks submit for missing required schema fields and clears field errors as the user fixes them", async () => {
     const personalInformationSchema = {
       type: "object",
