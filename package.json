@@ -113,7 +113,7 @@
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "jsdom-testing-mocks": "^1.16.0",
-    "lighthouse": "^13.1.0",
+    "lighthouse": "^13.2.0",
     "playwright-lighthouse": "^4.0.0",
     "prettier": "^3.8.3",
     "rollup-plugin-visualizer": "^7.0.1",
