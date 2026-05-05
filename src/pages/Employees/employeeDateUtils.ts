@@ -7,21 +7,31 @@ export interface ParsedEmployeeDate {
   valid: boolean;
 }
 
+export const GERMAN_CONTRACT_START_DATE_HINT =
+  "Erwartetes Format: TT.MM.JJJJ. Optional ist TT.MM.; das aktuelle Jahr wird automatisch ergänzt.";
+export const GERMAN_CONTRACT_START_DATE_FORMAT =
+  "TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr)";
+export const GERMAN_CONTRACT_START_DATE_ERROR =
+  "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr).";
+
 interface ParseEmployeeDateToIsoOptions {
   allowIsoInput?: boolean;
+  defaultCurrentYearForMissingYear?: boolean;
 }
 
 function parseDateParts(
   displayDate: string,
   locale: string,
-  allowIsoInput: boolean
+  allowIsoInput: boolean,
+  defaultCurrentYearForMissingYear: boolean
 ): { day: number; month: number; year: number } | null {
   let day: number;
   let month: number;
   let year: number;
+  const normalizedDisplayDate = displayDate.trim();
 
-  if (allowIsoInput && /^\d{4}-\d{2}-\d{2}$/.test(displayDate)) {
-    const parts = displayDate.split("-");
+  if (allowIsoInput && /^\d{4}-\d{2}-\d{2}$/.test(normalizedDisplayDate)) {
+    const parts = normalizedDisplayDate.split("-");
     if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
       return null;
     }
@@ -29,7 +39,23 @@ function parseDateParts(
     month = parseInt(parts[1], 10);
     day = parseInt(parts[2], 10);
   } else if (locale === "de") {
-    const parts = displayDate.split(".");
+    const shortDateMatch = normalizedDisplayDate.match(
+      /^(\d{1,2})\.(\d{1,2})\.?$/
+    );
+    if (defaultCurrentYearForMissingYear && shortDateMatch) {
+      const shortDay = shortDateMatch[1];
+      const shortMonth = shortDateMatch[2];
+      if (!shortDay || !shortMonth) {
+        return null;
+      }
+
+      day = parseInt(shortDay, 10);
+      month = parseInt(shortMonth, 10);
+      year = new Date().getFullYear();
+      return { day, month, year };
+    }
+
+    const parts = normalizedDisplayDate.split(".");
     if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
       return null;
     }
@@ -37,7 +63,7 @@ function parseDateParts(
     month = parseInt(parts[1], 10);
     year = parseInt(parts[2], 10);
   } else {
-    const parts = displayDate.split("/");
+    const parts = normalizedDisplayDate.split("/");
     if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
       return null;
     }
@@ -89,7 +115,8 @@ export function parseEmployeeDateToISO(
     const parsedDate = parseDateParts(
       displayDate,
       locale,
-      options.allowIsoInput === true
+      options.allowIsoInput === true,
+      options.defaultCurrentYearForMissingYear === true
     );
     if (!parsedDate) {
       return { iso: "", formatted: displayDate, valid: false };
