@@ -36,6 +36,14 @@ export type EmployeeBwrManagedStatus = Exclude<
 
 export type EmployeeBwrExportFormat = "csv" | "xml";
 
+export interface EmployeeEmergencyContact {
+  name: string;
+  relationship?: string | null;
+  phone: string;
+  email?: string | null;
+  notes?: string | null;
+}
+
 export interface EmployeeUserSummary {
   id: string;
   name: string;
@@ -88,6 +96,14 @@ export interface Employee {
   full_name: string;
   email: string;
   phone?: string | null;
+  address_street?: string | null;
+  address_house_number?: string | null;
+  address_postal_code?: string | null;
+  address_city?: string | null;
+  address_supplement?: string | null;
+  address_country?: string | null;
+  address_state?: string | null;
+  emergency_contacts?: EmployeeEmergencyContact[] | null;
   date_of_birth: string | null;
   hire_date?: string | null;
   contract_start_date: string | null;
@@ -132,6 +148,14 @@ export interface EmployeeFormData {
   last_name: string;
   email: string;
   phone?: string;
+  address_street?: string | null;
+  address_house_number?: string | null;
+  address_postal_code?: string | null;
+  address_city?: string | null;
+  address_supplement?: string | null;
+  address_country?: string | null;
+  address_state?: string | null;
+  emergency_contacts?: EmployeeEmergencyContact[] | null;
   date_of_birth: string;
   contract_start_date: string;
   position: string;

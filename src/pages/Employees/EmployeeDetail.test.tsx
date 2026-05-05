@@ -116,6 +116,7 @@ describe("EmployeeDetail", () => {
 
     // Setup default mocks
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
+    vi.mocked(employeeApi.updateEmployee).mockResolvedValue(mockEmployee);
     vi.mocked(qualificationApi.fetchEmployeeQualifications).mockResolvedValue(
       []
     );
@@ -132,11 +133,198 @@ describe("EmployeeDetail", () => {
     });
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
-    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
-    expect(screen.getByText("+1234567890")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("should render contact details in the contacts tab", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
+    expect(screen.getByText("+1234567890")).toBeInTheDocument();
+    expect(screen.getByText("No postal address stored yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No emergency contacts stored yet.")
+    ).toBeInTheDocument();
+  });
+
+  it("should open contacts tab when URL hash is #contacts", async () => {
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/employees/emp-1#contacts"]}>
+          <Routes>
+            <Route path="/employees/:id" element={<EmployeeDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
+    });
+  });
+
+  it("should edit email from the contacts tab row overlay", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit email/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Email")).toBeInTheDocument();
+    });
+
+    const input = screen.getByDisplayValue("john.doe@secpal.dev");
+    fireEvent.change(input, { target: { value: "max@mustermann.de" } });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        email: "max@mustermann.de",
+      });
+    });
+  });
+
+  it("should edit postal address from the contacts tab row overlay", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit postal address/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Postal Address")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Straße"), {
+      target: { value: "Musterstraße" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Hausnummer"), {
+      target: { value: "12A" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Postleitzahl"), {
+      target: { value: "10115" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Stadt"), {
+      target: { value: "Berlin" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Land (ISO-2, z. B. DE)"), {
+      target: { value: "de" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        address_street: "Musterstraße",
+        address_house_number: "12A",
+        address_postal_code: "10115",
+        address_city: "Berlin",
+        address_supplement: null,
+        address_country: "DE",
+        address_state: null,
+      });
+    });
+  });
+
+  it("should edit emergency contacts from the contacts tab row overlay", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit emergency contacts/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Name"), {
+      target: { value: "Maria Mustermann" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+      target: { value: "+491234567890" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Beziehung"), {
+      target: { value: "Sister" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("E-Mail"), {
+      target: { value: "maria@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        emergency_contacts: [
+          {
+            name: "Maria Mustermann",
+            relationship: "Sister",
+            phone: "+491234567890",
+            email: "maria@example.com",
+            notes: null,
+          },
+        ],
+      });
+    });
+  });
+
+  it("should trim emergency contact email before validating in dialog edit flow", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit emergency contacts/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText("Name"), {
+      target: { value: "Maria Mustermann" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+      target: { value: "+491234567890" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("E-Mail"), {
+      target: { value: " maria@example.com " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        emergency_contacts: [
+          {
+            name: "Maria Mustermann",
+            relationship: null,
+            phone: "+491234567890",
+            email: "maria@example.com",
+            notes: null,
+          },
+        ],
+      });
+    });
   });
 
   it("should display onboarding invitation failure details", async () => {
@@ -225,6 +413,11 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
+      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
+
+    await waitFor(() => {
       expect(
         screen.getByRole("heading", { name: /bewacherregister/i })
       ).toBeInTheDocument();
@@ -261,6 +454,11 @@ describe("EmployeeDetail", () => {
     });
 
     renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
     await waitFor(() => {
       expect(
@@ -306,6 +504,11 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
+      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
+
+    await waitFor(() => {
       expect(
         screen.getByRole("button", { name: /generate bwr export/i })
       ).toBeInTheDocument();
@@ -348,6 +551,11 @@ describe("EmployeeDetail", () => {
     });
 
     renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
     await waitFor(() => {
       expect(screen.getByLabelText(/^BWR Status$/i)).toBeInTheDocument();
@@ -421,6 +629,18 @@ describe("EmployeeDetail", () => {
 
     const editLink = screen.getByRole("link", { name: /^edit$/i });
     expect(editLink).toHaveAttribute("href", "/employees/emp-1/edit");
+  });
+
+  it("should use contacts edit page from top edit button in contacts tab", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    const editLink = screen.getByRole("link", { name: /^edit$/i });
+    expect(editLink).toHaveAttribute("href", "/employees/emp-1/edit/contacts");
   });
 
   it("should display loading state", () => {

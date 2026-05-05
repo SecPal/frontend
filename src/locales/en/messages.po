@@ -95,9 +95,17 @@ msgstr "Certificate:"
 msgid "Disable MFA"
 msgstr "Disable MFA"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Edit Contact Details"
+msgstr "Edit Contact Details"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Front desk tablet"
 msgstr "Front desk tablet"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit Phone"
+msgstr "Edit Phone"
 
 #: src/components/NotificationPreferences.tsx
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
@@ -116,6 +124,11 @@ msgstr "Still loading your secure session"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Valid Until"
 msgstr "Valid Until"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contacts"
+msgstr "Emergency Contacts"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
@@ -200,6 +213,7 @@ msgstr "Choose which notifications you want to receive"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -328,6 +342,10 @@ msgstr "Type is required"
 msgid "Android Provisioning"
 msgstr "Android Provisioning"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency contact name is required."
+msgstr "Emergency contact name is required."
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Retry"
@@ -353,6 +371,10 @@ msgstr "Invalid combination: No employees will be visible with this range."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Qualifications"
 msgstr "Qualifications"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit Emergency Contacts"
+msgstr "Edit Emergency Contacts"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
@@ -508,6 +530,7 @@ msgid "Employee #"
 msgstr "Employee #"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
@@ -656,6 +679,10 @@ msgstr "Page Not Found"
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "House Number"
+msgstr "House Number"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
 msgstr "Unnamed Android enrollment session"
@@ -766,6 +793,7 @@ msgid "Organizational units are still loading. Please wait a moment and try agai
 msgstr "Organizational units are still loading. Please wait a moment and try again."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Not registered"
 msgstr "Not registered"
 
@@ -825,7 +853,9 @@ msgstr "Thank you for submitting your onboarding information. Our HR team will r
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx
 #: src/pages/Settings/SettingsPage.tsx
@@ -853,6 +883,7 @@ msgstr "Please use the required format."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
@@ -883,6 +914,11 @@ msgstr "The provided credentials are incorrect."
 msgid "Edit Organizational Scope"
 msgstr "Edit Organizational Scope"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Postal Address"
+msgstr "Postal Address"
+
 #: src/components/onboarding-layout.tsx
 msgid "We could not complete the sign out request. Please try again."
 msgstr "We could not complete the sign out request. Please try again."
@@ -895,7 +931,12 @@ msgstr "Done"
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit Email"
+msgstr "Edit Email"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "BWR Status"
 msgstr "BWR Status"
 
@@ -1069,6 +1110,7 @@ msgid "My Organization"
 msgstr "My Organization"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Suspended"
 msgstr "Suspended"
 
@@ -1198,6 +1240,10 @@ msgstr "New parent"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please use the required format ({actualPattern})."
 msgstr "Please use the required format ({actualPattern})."
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Address Supplement"
+msgstr "Address Supplement"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Loading enrollment sessions..."
@@ -1370,6 +1416,7 @@ msgid "SecPal signed you in as {email}, but this account cannot access the prote
 msgstr "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Contact"
 msgstr "Contact"
 
@@ -1457,6 +1504,10 @@ msgstr "Pre-Contract"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Terminate"
 msgstr "Terminate"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to update contact field."
+msgstr "Failed to update contact field."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -1744,6 +1795,16 @@ msgstr "MFA status could not be loaded."
 msgid "Your session has expired or your sign-in could not be verified. Please sign in again."
 msgstr "Your session has expired or your sign-in could not be verified. Please sign in again."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Remove Contact"
+msgstr "Remove Contact"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Add Contact"
+msgstr "Add Contact"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
@@ -1765,7 +1826,9 @@ msgstr "Too many requests. Please try again later."
 msgid "I have verified my email"
 msgstr "I have verified my email"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Email address is required"
 msgstr "Email address is required"
 
@@ -1865,6 +1928,7 @@ msgstr "Date/Time"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -1879,9 +1943,17 @@ msgstr "Email"
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 msgstr "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency contact phone is required."
+msgstr "Emergency contact phone is required."
+
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Country (ISO-2)"
+msgstr "Country (ISO-2)"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Batch ID"
@@ -1920,7 +1992,9 @@ msgstr "Obtainium"
 msgid "Organization Structure"
 msgstr "Organization Structure"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Please enter a valid email address"
 msgstr "Please enter a valid email address"
 
@@ -2028,6 +2102,7 @@ msgstr "Description must be at most 1000 characters"
 msgid "Failed to validate onboarding link"
 msgstr "Failed to validate onboarding link"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Employee ID is missing. Cannot submit form."
 msgstr "Employee ID is missing. Cannot submit form."
@@ -2052,6 +2127,7 @@ msgstr "You do not have permission to perform this action."
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
@@ -2165,6 +2241,10 @@ msgstr "Loading employees..."
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "State"
+msgstr "State"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Submit for Review"
@@ -2229,6 +2309,10 @@ msgstr "Management Level"
 msgid "Site Name"
 msgstr "Site Name"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Emergency contact name and phone are required."
+msgstr "Emergency contact name and phone are required."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Confirm and enable MFA"
@@ -2241,6 +2325,10 @@ msgstr "Error"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Please enter a valid emergency contact email."
+msgstr "Please enter a valid emergency contact email."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Uploaded in this session"
 msgstr "Uploaded in this session"
@@ -2250,6 +2338,10 @@ msgstr "Uploaded in this session"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
 msgstr "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "No emergency contacts stored yet."
+msgstr "No emergency contacts stored yet."
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Branch"
@@ -2277,8 +2369,14 @@ msgid "Viewing cached data. Some units may be outdated."
 msgstr "Viewing cached data. Some units may be outdated."
 
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Save"
 msgstr "Save"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "No postal address stored yet."
+msgstr "No postal address stored yet."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to save draft"
@@ -2317,6 +2415,7 @@ msgid "Status"
 msgstr "Status"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Pending"
 msgstr "Pending"
 
@@ -2389,6 +2488,10 @@ msgstr "Multi-factor authentication"
 msgid "Edit Organizational Unit"
 msgstr "Edit Organizational Unit"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Kontaktdaten"
+msgstr "Kontaktdaten"
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Details"
 msgstr "Details"
@@ -2404,6 +2507,7 @@ msgstr "Update application now"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2518,6 +2622,7 @@ msgstr "Search by name or email..."
 msgid "Access Denied"
 msgstr "Access Denied"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading employee..."
@@ -2535,6 +2640,7 @@ msgstr "Creating enrollment session..."
 msgid "Add passkey"
 msgstr "Add passkey"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Employee ID is missing."
 msgstr "Employee ID is missing."
@@ -2551,6 +2657,10 @@ msgstr "Onboarding submitted. HR will review your information."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Log Name"
 msgstr "Log Name"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit Postal Address"
+msgstr "Edit Postal Address"
 
 #: src/components/NotificationPreferences.tsx
 msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
@@ -2600,6 +2710,7 @@ msgstr "Saving passkey…"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Employees/EmployeeBwrPanel.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Revoked"
 msgstr "Revoked"
 
@@ -2614,6 +2725,8 @@ msgstr "Verification Status"
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Saving..."
@@ -2772,6 +2885,7 @@ msgstr "Create enrollment session"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx

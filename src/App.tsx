@@ -33,6 +33,9 @@ const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
 const EmployeeDetail = lazy(() => import("./pages/Employees/EmployeeDetail"));
 const EmployeeCreate = lazy(() => import("./pages/Employees/EmployeeCreate"));
 const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
+const EmployeeContactsEdit = lazy(
+  () => import("./pages/Employees/EmployeeContactsEdit")
+);
 const OnboardingWizard = lazy(
   () => import("./pages/Onboarding/OnboardingWizard")
 );
@@ -361,6 +364,21 @@ function App() {
                 >
                   <ApplicationLayout>
                     <EmployeeEdit />
+                  </ApplicationLayout>
+                </AppFeatureRoute>
+              }
+            />
+            <Route
+              path="/employees/:id/edit/contacts"
+              element={
+                <AppFeatureRoute
+                  feature="employees"
+                  requiredAction={(capabilities) =>
+                    capabilities.actions.employees.update
+                  }
+                >
+                  <ApplicationLayout>
+                    <EmployeeContactsEdit />
                   </ApplicationLayout>
                 </AppFeatureRoute>
               }
