@@ -601,6 +601,52 @@ describe("EmployeeEdit", () => {
       });
     });
 
+    it("should submit changed birth date without blur", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+      fireEvent.change(birthDateInput, { target: { value: "06/15/1985" } });
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(mockUpdateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.objectContaining({
+            date_of_birth: "1985-06-15",
+          })
+        );
+      });
+    });
+
+    it("should block submit when changed birth date is invalid without blur", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+      fireEvent.change(birthDateInput, { target: { value: "invalid" } });
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/invalid date.*mm\/dd\/yyyy/i)
+        ).toBeInTheDocument();
+      });
+      expect(mockUpdateEmployee).not.toHaveBeenCalled();
+    });
+
     it("should accept and normalize short German date format", async () => {
       await act(async () => {
         i18n.activate("de");
@@ -714,6 +760,45 @@ describe("EmployeeEdit", () => {
           })
         );
       });
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
+
+    it("should block submit when changed german contract start date is invalid without blur", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/datum des vertragsbeginns/i)).toHaveValue(
+          "01.01.2025"
+        );
+      });
+
+      fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
+        target: { value: "invalid" },
+      });
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /save changes|änderungen speichern/i,
+        })
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            /ungültiges datum\. bitte verwenden sie das format tt\.mm\.jjjj/i
+          )
+        ).toBeInTheDocument();
+      });
+      expect(mockUpdateEmployee).not.toHaveBeenCalled();
 
       await act(async () => {
         i18n.activate("en");
