@@ -79,7 +79,9 @@ export function EmployeeContactsEdit() {
         setAddressSupplement(employee.address_supplement ?? "");
         setAddressState(employee.address_state ?? "");
         setAddressCountry(employee.address_country ?? "");
-        setEmergencyContacts(emergencyContactsToDrafts(employee.emergency_contacts));
+        setEmergencyContacts(
+          emergencyContactsToDrafts(employee.emergency_contacts)
+        );
         setEmployeeLoaded(true);
       })
       .catch((err) => {
@@ -129,7 +131,8 @@ export function EmployeeContactsEdit() {
       return;
     }
 
-    const emergencyContactError = validateEmergencyContactDrafts(emergencyContacts);
+    const emergencyContactError =
+      validateEmergencyContactDrafts(emergencyContacts);
     if (emergencyContactError !== null) {
       setEmergencyFieldError(emergencyContactError);
       if (emergencyContactError.field === "name") {
@@ -144,7 +147,8 @@ export function EmployeeContactsEdit() {
       return;
     }
 
-    const normalizedContacts = normalizeEmergencyContactDrafts(emergencyContacts);
+    const normalizedContacts =
+      normalizeEmergencyContactDrafts(emergencyContacts);
 
     try {
       setLoading(true);

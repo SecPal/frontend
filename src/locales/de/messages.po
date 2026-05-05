@@ -2522,10 +2522,6 @@ msgstr "Multi-Faktor-Authentifizierung"
 msgid "Edit Organizational Unit"
 msgstr "Organisatorische Einheit bearbeiten"
 
-#: src/pages/Employees/EmployeeDetail.tsx
-#~ msgid "Kontaktdaten"
-#~ msgstr "Kontaktdaten"
-
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Details"
 msgstr "Details"

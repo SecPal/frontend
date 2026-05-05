@@ -612,13 +612,6 @@ export function EmployeeDetail() {
     useState<EmergencyContactValidationError | null>(null);
   const activeTab = selectedTab;
 
-  useEffect(() => {
-    const tabFromHash = parseEmployeeDetailTabHash(location.hash);
-    if (tabFromHash !== null) {
-      setSelectedTab(tabFromHash);
-    }
-  }, [location.hash]);
-
   async function refreshEmployee(): Promise<Employee | null> {
     if (!id) {
       return null;
@@ -769,9 +762,7 @@ export function EmployeeDetail() {
     };
   }
 
-  function employeeEmergencyDraft(
-    source: Employee
-  ): EmergencyContactDraft[] {
+  function employeeEmergencyDraft(source: Employee): EmergencyContactDraft[] {
     return emergencyContactsToDrafts(source.emergency_contacts);
   }
 
@@ -1375,7 +1366,8 @@ export function EmployeeDetail() {
                             data-emergency-field="name"
                             aria-invalid={
                               (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "name") ||
+                                contactEmergencyInvalidField.field ===
+                                  "name") ||
                               undefined
                             }
                             onChange={(event) => {
@@ -1439,7 +1431,8 @@ export function EmployeeDetail() {
                             data-emergency-field="phone"
                             aria-invalid={
                               (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "phone") ||
+                                contactEmergencyInvalidField.field ===
+                                  "phone") ||
                               undefined
                             }
                             onChange={(event) => {
@@ -1481,7 +1474,8 @@ export function EmployeeDetail() {
                             data-emergency-field="email"
                             aria-invalid={
                               (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "email") ||
+                                contactEmergencyInvalidField.field ===
+                                  "email") ||
                               undefined
                             }
                             onChange={(event) => {

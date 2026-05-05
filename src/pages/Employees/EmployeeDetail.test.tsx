@@ -193,9 +193,7 @@ describe("EmployeeDetail", () => {
     fireEvent.click(screen.getByRole("button", { name: /^profile$/i }));
 
     await waitFor(() => {
-      expect(
-        screen.queryByText("john.doe@secpal.dev")
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText("john.doe@secpal.dev")).not.toBeInTheDocument();
     });
     expect(screen.getByText("BWR Status")).toBeInTheDocument();
   });
@@ -420,7 +418,9 @@ describe("EmployeeDetail", () => {
     ) as HTMLFormElement;
 
     fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
-    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(2);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      2
+    );
 
     const emergencyName = screen.getAllByLabelText(
       /^Emergency Contact Name$/i
