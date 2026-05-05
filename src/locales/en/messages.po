@@ -342,6 +342,7 @@ msgstr "Type is required"
 msgid "Android Provisioning"
 msgstr "Android Provisioning"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact name is required."
 msgstr "Emergency contact name is required."
@@ -628,6 +629,10 @@ msgstr "Team Messages"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
 msgstr "Create New Employee"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Failed to load employee"
+msgstr "Failed to load employee"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
@@ -1943,6 +1948,7 @@ msgstr "Email"
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 msgstr "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact phone is required."
 msgstr "Emergency contact phone is required."
@@ -2309,10 +2315,6 @@ msgstr "Management Level"
 msgid "Site Name"
 msgstr "Site Name"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-msgid "Emergency contact name and phone are required."
-msgstr "Emergency contact name and phone are required."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Confirm and enable MFA"
@@ -2325,6 +2327,7 @@ msgstr "Error"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Please enter a valid emergency contact email."
 msgstr "Please enter a valid emergency contact email."

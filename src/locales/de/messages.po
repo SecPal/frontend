@@ -342,6 +342,7 @@ msgstr "Typ ist erforderlich"
 msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact name is required."
 msgstr "Name des Notfallkontakts ist erforderlich."
@@ -628,6 +629,10 @@ msgstr "Team-Nachrichten"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
 msgstr "Neuen Mitarbeiter anlegen"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Failed to load employee"
+msgstr "Mitarbeiter konnte nicht geladen werden"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
@@ -1943,6 +1948,7 @@ msgstr "E-Mail-Adresse"
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
 msgstr "Der eigene Rang des Benutzers (FE{userRank}) liegt im sichtbaren Bereich. Sollte dieser Benutzer seine eigenen HR-Daten einsehen/bearbeiten können?"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact phone is required."
 msgstr "Telefonnummer des Notfallkontakts ist erforderlich."
@@ -2309,10 +2315,6 @@ msgstr "Führungsebene"
 msgid "Site Name"
 msgstr "Name des Standorts"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-msgid "Emergency contact name and phone are required."
-msgstr "Name und Telefonnummer für Notfallkontakt sind erforderlich."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Bestätigen und Aktivieren von MFA"
@@ -2325,6 +2327,7 @@ msgstr "Fehler"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Please enter a valid emergency contact email."
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse für den Notfallkontakt ein."
