@@ -780,12 +780,6 @@ export function EmployeeDetail() {
     return emergencyContactsToDrafts(source.emergency_contacts);
   }
 
-  function normalizeEmergencyContactsForSave(
-    drafts: EmergencyContactDraft[]
-  ): EmployeeEmergencyContact[] {
-    return normalizeEmergencyContactDrafts(drafts);
-  }
-
   function openContactEditDialog(field: EditableContactField) {
     if (!employee) {
       return;
@@ -914,7 +908,7 @@ export function EmployeeDetail() {
           }
         }
 
-        const normalizedContacts = normalizeEmergencyContactsForSave(
+        const normalizedContacts = normalizeEmergencyContactDrafts(
           contactEmergencyDrafts
         );
 
