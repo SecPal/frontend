@@ -75,6 +75,7 @@ describe("App", () => {
       import("./pages/Employees/EmployeeDetail"),
       import("./pages/Employees/EmployeeCreate"),
       import("./pages/Employees/EmployeeEdit"),
+      import("./pages/Employees/EmployeeContactsEdit"),
       import("./pages/Onboarding/OnboardingWizard"),
       import("./pages/Onboarding/OnboardingComplete"),
       import("./pages/Organization/OrganizationPage"),
@@ -427,6 +428,30 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/employees/123/edit");
+  });
+
+  it("renders employee contacts edit route for users with employee update permission", async () => {
+    window.history.replaceState({}, "", "/employees/123/edit/contacts");
+
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "User",
+      email: "user@secpal.dev",
+      emailVerified: true,
+      hasOrganizationalScopes: true,
+      permissions: ["employees.read", "employees.update"],
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole(
+        "button",
+        { name: /back to employee/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/employees/123/edit/contacts");
   });
 
   it("redirects the legacy organizational-units route to the canonical organization route for authorized users", async () => {

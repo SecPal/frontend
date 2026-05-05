@@ -341,6 +341,177 @@ describe("EmployeeDetail", () => {
     });
   });
 
+  it("should mark inline email input invalid when trying to save an empty value", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit email/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Email")).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByDisplayValue("john.doe@secpal.dev");
+    fireEvent.change(emailInput, { target: { value: "" } });
+    fireEvent.submit(
+      document.querySelector("form.contents") as HTMLFormElement
+    );
+
+    await waitFor(() => {
+      expect(emailInput).toHaveAttribute("aria-invalid", "true");
+    });
+    expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
+  });
+
+  it("should validate emergency contact fields and support add/remove in dialog edit flow", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit emergency contacts/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
+    });
+    vi.spyOn(HTMLFormElement.prototype, "reportValidity").mockReturnValue(true);
+    const dialogForm = document.querySelector(
+      "form.contents"
+    ) as HTMLFormElement;
+
+    fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
+    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
+
+    const emergencyName = screen.getAllByPlaceholderText("Name")[0];
+    const emergencyPhone = screen.getAllByPlaceholderText("Telefon")[0];
+    const emergencyEmail = screen.getAllByPlaceholderText("E-Mail")[0];
+    const emergencyNotes = screen.getAllByPlaceholderText("Notizen")[0];
+
+    fireEvent.change(emergencyPhone, { target: { value: "+49111111111" } });
+    fireEvent.submit(dialogForm);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Emergency contact name is required."
+      );
+    });
+    expect(emergencyName).toHaveAttribute("aria-invalid", "true");
+
+    fireEvent.change(emergencyName, { target: { value: "Maria Muster" } });
+    fireEvent.change(emergencyPhone, { target: { value: "" } });
+    fireEvent.submit(dialogForm);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Emergency contact phone is required."
+      );
+    });
+    expect(emergencyPhone).toHaveAttribute("aria-invalid", "true");
+
+    fireEvent.change(emergencyPhone, { target: { value: "+49111111111" } });
+    fireEvent.change(emergencyEmail, { target: { value: "broken-email" } });
+    fireEvent.submit(dialogForm);
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Please enter a valid emergency contact email."
+      );
+    });
+    expect(emergencyEmail).toHaveAttribute("aria-invalid", "true");
+
+    fireEvent.change(emergencyEmail, {
+      target: { value: "maria@example.com" },
+    });
+    fireEvent.change(emergencyNotes, {
+      target: { value: "Reach after 18:00" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /remove contact/i })[0]
+    );
+    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
+  });
+
+  it("should show fallback error when contact field update fails with unknown error", async () => {
+    vi.mocked(employeeApi.updateEmployee).mockRejectedValueOnce({});
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit phone/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Phone")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByDisplayValue("+1234567890"), {
+      target: { value: "+491701234567" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Failed to update contact field."
+      );
+    });
+  });
+
+  it("should clear dialog errors when closing with cancel", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit emergency contacts/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
+    });
+    vi.spyOn(HTMLFormElement.prototype, "reportValidity").mockReturnValue(true);
+    const dialogForm = document.querySelector(
+      "form.contents"
+    ) as HTMLFormElement;
+
+    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+      target: { value: "+491701112233" },
+    });
+    fireEvent.submit(dialogForm);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Emergency contact name is required."
+      );
+    });
+
+    fireEvent.click(screen.getAllByRole("button", { name: /^cancel$/i })[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("Emergency contact name is required.")
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("should display onboarding invitation failure details", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
       ...mockEmployee,
