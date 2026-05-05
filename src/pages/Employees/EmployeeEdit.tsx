@@ -387,7 +387,10 @@ export function EmployeeEdit() {
                     onBlur={(e) => {
                       const result = parseEmployeeDateToISO(
                         e.target.value,
-                        i18n.locale
+                        i18n.locale,
+                        {
+                          defaultCurrentYearForMissingYear: i18n.locale === "de",
+                        }
                       );
                       if (result.valid) {
                         setContractDateDisplay(result.formatted);

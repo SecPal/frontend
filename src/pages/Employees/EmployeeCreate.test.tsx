@@ -895,6 +895,28 @@ describe("EmployeeCreate", () => {
       i18n.activate("en");
     });
 
+    it("should normalize short German contract start date without year to current year", async () => {
+      i18n.activate("de");
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const currentYear = new Date().getFullYear();
+      const contractStartDateInput = screen.getByLabelText(/datum des vertragsbeginns/i);
+
+      fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
+      fireEvent.blur(contractStartDateInput);
+
+      await waitFor(() => {
+        expect(contractStartDateInput).toHaveValue(`01.06.${currentYear}`);
+        expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      i18n.activate("en");
+    });
+
     it("should validate contract start date format", async () => {
       renderWithProviders(<EmployeeCreate />);
 

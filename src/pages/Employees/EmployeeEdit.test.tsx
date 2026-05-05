@@ -629,6 +629,37 @@ describe("EmployeeEdit", () => {
       });
     });
 
+    it("should normalize short German contract start date without year to current year", async () => {
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/datum des vertragsbeginns/i)).toHaveValue(
+          "01.01.2025"
+        );
+      });
+
+      const currentYear = new Date().getFullYear();
+      const contractStartDateInput = screen.getByLabelText(
+        /datum des vertragsbeginns/i
+      );
+
+      fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
+      fireEvent.blur(contractStartDateInput);
+
+      await waitFor(() => {
+        expect(contractStartDateInput).toHaveValue(`01.06.${currentYear}`);
+        expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
+
     it("should validate contract start date", async () => {
       renderWithProviders("emp-1");
 

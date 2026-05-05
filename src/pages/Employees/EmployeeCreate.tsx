@@ -218,7 +218,10 @@ export function EmployeeCreate() {
       const contractDate = parseEmployeeDateToISO(
         normalizedContractDateDisplay,
         i18n.locale,
-        { allowIsoInput: true }
+        {
+          allowIsoInput: true,
+          defaultCurrentYearForMissingYear: i18n.locale === "de",
+        }
       );
       if (!contractDate.valid) {
         errors.contract_start_date =
@@ -594,7 +597,10 @@ export function EmployeeCreate() {
                       const result = parseEmployeeDateToISO(
                         e.target.value,
                         i18n.locale,
-                        { allowIsoInput: true }
+                        {
+                          allowIsoInput: true,
+                          defaultCurrentYearForMissingYear: i18n.locale === "de",
+                        }
                       );
                       if (result.valid) {
                         setContractDateDisplay(result.formatted);
