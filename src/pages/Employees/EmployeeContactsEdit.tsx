@@ -22,17 +22,11 @@ import { Input } from "../../components/input";
 import {
   emergencyContactsToDrafts,
   emptyEmergencyContactDraft,
-  hasEmergencyContactContent,
   normalizeEmergencyContactDrafts,
+  validateEmergencyContactDrafts,
   type EmergencyContactDraft,
+  type EmergencyContactValidationError,
 } from "./emergencyContactDrafts";
-
-type EmergencyContactErrorField = "name" | "phone" | "email";
-
-interface EmergencyContactFieldError {
-  index: number;
-  field: EmergencyContactErrorField;
-}
 
 export function EmployeeContactsEdit() {
   const { i18n } = useLingui();
@@ -60,7 +54,7 @@ export function EmployeeContactsEdit() {
   const [employeeLoaded, setEmployeeLoaded] = useState(false);
   const [emailInvalid, setEmailInvalid] = useState(false);
   const [emergencyFieldError, setEmergencyFieldError] =
-    useState<EmergencyContactFieldError | null>(null);
+    useState<EmergencyContactValidationError | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -135,31 +129,19 @@ export function EmployeeContactsEdit() {
       return;
     }
 
-    for (const [index, contact] of emergencyContacts.entries()) {
-      if (!hasEmergencyContactContent(contact)) {
-        continue;
-      }
-
-      if (contact.name.trim().length === 0) {
-        setEmergencyFieldError({ index, field: "name" });
+    const emergencyContactError = validateEmergencyContactDrafts(emergencyContacts);
+    if (emergencyContactError !== null) {
+      setEmergencyFieldError(emergencyContactError);
+      if (emergencyContactError.field === "name") {
         setError(i18n._(msg`Emergency contact name is required.`));
         return;
       }
-
-      if (contact.phone.trim().length === 0) {
-        setEmergencyFieldError({ index, field: "phone" });
+      if (emergencyContactError.field === "phone") {
         setError(i18n._(msg`Emergency contact phone is required.`));
         return;
       }
-
-      if (
-        contact.email.trim().length > 0 &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())
-      ) {
-        setEmergencyFieldError({ index, field: "email" });
-        setError(i18n._(msg`Please enter a valid emergency contact email.`));
-        return;
-      }
+      setError(i18n._(msg`Please enter a valid emergency contact email.`));
+      return;
     }
 
     const normalizedContacts = normalizeEmergencyContactDrafts(emergencyContacts);

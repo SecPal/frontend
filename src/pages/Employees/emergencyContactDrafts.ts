@@ -11,6 +11,15 @@ export interface EmergencyContactDraft {
   notes: string;
 }
 
+export type EmergencyContactValidationErrorField = "name" | "phone" | "email";
+
+export interface EmergencyContactValidationError {
+  index: number;
+  field: EmergencyContactValidationErrorField;
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function emptyEmergencyContactDraft(): EmergencyContactDraft {
   return {
     name: "",
@@ -69,4 +78,29 @@ export function normalizeEmergencyContactDrafts(
         (contact.relationship ?? "").length > 0 ||
         (contact.notes ?? "").length > 0
     );
+}
+
+export function validateEmergencyContactDrafts(
+  drafts: EmergencyContactDraft[]
+): EmergencyContactValidationError | null {
+  for (const [index, draft] of drafts.entries()) {
+    if (!hasEmergencyContactContent(draft)) {
+      continue;
+    }
+
+    if (draft.name.trim().length === 0) {
+      return { index, field: "name" };
+    }
+
+    if (draft.phone.trim().length === 0) {
+      return { index, field: "phone" };
+    }
+
+    const trimmedEmail = draft.email.trim();
+    if (trimmedEmail.length > 0 && !emailPattern.test(trimmedEmail)) {
+      return { index, field: "email" };
+    }
+  }
+
+  return null;
 }

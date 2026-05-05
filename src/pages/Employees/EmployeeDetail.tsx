@@ -56,7 +56,9 @@ import {
   emptyEmergencyContactDraft,
   hasEmergencyContactContent,
   normalizeEmergencyContactDrafts,
+  validateEmergencyContactDrafts,
   type EmergencyContactDraft,
+  type EmergencyContactValidationError,
 } from "./emergencyContactDrafts";
 
 function InvitationStatusLabel({
@@ -261,13 +263,6 @@ interface ContactAddressDraft {
   supplement: string;
   country: string;
   state: string;
-}
-
-type ContactEmergencyErrorField = "name" | "phone" | "email";
-
-interface ContactEmergencyFieldError {
-  index: number;
-  field: ContactEmergencyErrorField;
 }
 
 const baseContactInputClass =
@@ -614,7 +609,7 @@ export function EmployeeDetail() {
     "email" | "phone" | null
   >(null);
   const [contactEmergencyInvalidField, setContactEmergencyInvalidField] =
-    useState<ContactEmergencyFieldError | null>(null);
+    useState<EmergencyContactValidationError | null>(null);
   const activeTab = selectedTab;
 
   useEffect(() => {
@@ -830,7 +825,7 @@ export function EmployeeDetail() {
 
         const emergencyIndex = invalidField?.dataset.emergencyIndex;
         const emergencyField = invalidField?.dataset.emergencyField as
-          | ContactEmergencyErrorField
+          | EmergencyContactValidationError["field"]
           | undefined;
         if (emergencyIndex !== undefined && emergencyField) {
           setContactEmergencyInvalidField({
@@ -876,36 +871,27 @@ export function EmployeeDetail() {
           address_state: contactAddressDraft.state.trim() || null,
         });
       } else {
-        for (const [index, contact] of contactEmergencyDrafts.entries()) {
-          if (!hasEmergencyContactContent(contact)) {
-            continue;
-          }
-
-          if (contact.name.trim().length === 0) {
-            setContactEmergencyInvalidField({ index, field: "name" });
+        const emergencyContactError = validateEmergencyContactDrafts(
+          contactEmergencyDrafts
+        );
+        if (emergencyContactError !== null) {
+          setContactEmergencyInvalidField(emergencyContactError);
+          if (emergencyContactError.field === "name") {
             setContactSaveError(
               i18n._(msg`Emergency contact name is required.`)
             );
             return;
           }
-          if (contact.phone.trim().length === 0) {
-            setContactEmergencyInvalidField({ index, field: "phone" });
+          if (emergencyContactError.field === "phone") {
             setContactSaveError(
               i18n._(msg`Emergency contact phone is required.`)
             );
             return;
           }
-          const trimmedEmergencyEmail = contact.email.trim();
-          if (
-            trimmedEmergencyEmail.length > 0 &&
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmergencyEmail)
-          ) {
-            setContactEmergencyInvalidField({ index, field: "email" });
-            setContactSaveError(
-              i18n._(msg`Please enter a valid emergency contact email.`)
-            );
-            return;
-          }
+          setContactSaveError(
+            i18n._(msg`Please enter a valid emergency contact email.`)
+          );
+          return;
         }
 
         const normalizedContacts = normalizeEmergencyContactDrafts(
