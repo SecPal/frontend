@@ -278,7 +278,9 @@ export function EmployeeContactsEdit() {
       <div className="space-y-4">
         <Button
           plain
-          onClick={() => navigate(id ? `/employees/${id}#contacts` : "/employees")}
+          onClick={() =>
+            navigate(id ? `/employees/${id}#contacts` : "/employees")
+          }
         >
           <Trans>← Back to Employee</Trans>
         </Button>

@@ -280,7 +280,9 @@ function contactInputClass(hasError: boolean): string {
   return hasError ? errorContactInputClass : defaultContactInputClass;
 }
 
-function hasEmergencyContactContent(draft: ContactEmergencyDraftEntry): boolean {
+function hasEmergencyContactContent(
+  draft: ContactEmergencyDraftEntry
+): boolean {
   return (
     draft.name.trim().length > 0 ||
     draft.phone.trim().length > 0 ||
@@ -357,102 +359,98 @@ interface ContactsTabProps {
   onEditField: (field: EditableContactField) => void;
 }
 
-function ContactsTab({
-  employee,
-  canManage,
-  onEditField,
-}: ContactsTabProps) {
+function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
   const postalAddress = formatPostalAddress(employee);
   const emergencyContacts = employee.emergency_contacts ?? [];
 
   return (
     <DescriptionList>
-        <DescriptionTerm>
-          <Trans>Email</Trans>
-        </DescriptionTerm>
-        <DescriptionDetails className="group flex items-center justify-between gap-3">
-          <span>{employee.email}</span>
-          {canManage && (
-            <button
-              type="button"
-              aria-label="Edit email"
-              onClick={() => onEditField("email")}
-              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            >
-              <PencilSquareIcon className="size-4" />
-            </button>
-          )}
-        </DescriptionDetails>
+      <DescriptionTerm>
+        <Trans>Email</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails className="group flex items-center justify-between gap-3">
+        <span>{employee.email}</span>
+        {canManage && (
+          <button
+            type="button"
+            aria-label="Edit email"
+            onClick={() => onEditField("email")}
+            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            <PencilSquareIcon className="size-4" />
+          </button>
+        )}
+      </DescriptionDetails>
 
-        <DescriptionTerm>
-          <Trans>Phone</Trans>
-        </DescriptionTerm>
-        <DescriptionDetails className="group flex items-center justify-between gap-3">
-          <span>{employee.phone || "-"}</span>
-          {canManage && (
-            <button
-              type="button"
-              aria-label="Edit phone"
-              onClick={() => onEditField("phone")}
-              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            >
-              <PencilSquareIcon className="size-4" />
-            </button>
-          )}
-        </DescriptionDetails>
+      <DescriptionTerm>
+        <Trans>Phone</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails className="group flex items-center justify-between gap-3">
+        <span>{employee.phone || "-"}</span>
+        {canManage && (
+          <button
+            type="button"
+            aria-label="Edit phone"
+            onClick={() => onEditField("phone")}
+            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            <PencilSquareIcon className="size-4" />
+          </button>
+        )}
+      </DescriptionDetails>
 
-        <DescriptionTerm>
-          <Trans>Postal Address</Trans>
-        </DescriptionTerm>
-        <DescriptionDetails className="group flex items-center justify-between gap-3">
-          {postalAddress ? (
-            <span>{postalAddress}</span>
-          ) : (
-            <Text className="text-zinc-500 dark:text-zinc-400">
-              <Trans>No postal address stored yet.</Trans>
-            </Text>
-          )}
-          {canManage && (
-            <button
-              type="button"
-              aria-label="Edit postal address"
-              onClick={() => onEditField("postal_address")}
-              className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            >
-              <PencilSquareIcon className="size-4" />
-            </button>
-          )}
-        </DescriptionDetails>
+      <DescriptionTerm>
+        <Trans>Postal Address</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails className="group flex items-center justify-between gap-3">
+        {postalAddress ? (
+          <span>{postalAddress}</span>
+        ) : (
+          <Text className="text-zinc-500 dark:text-zinc-400">
+            <Trans>No postal address stored yet.</Trans>
+          </Text>
+        )}
+        {canManage && (
+          <button
+            type="button"
+            aria-label="Edit postal address"
+            onClick={() => onEditField("postal_address")}
+            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            <PencilSquareIcon className="size-4" />
+          </button>
+        )}
+      </DescriptionDetails>
 
-        <DescriptionTerm>
-          <Trans>Emergency Contacts</Trans>
-        </DescriptionTerm>
-        <DescriptionDetails className="group flex items-start justify-between gap-3">
-          {emergencyContacts.length > 0 ? (
-            <ul className="space-y-1">
-              {emergencyContacts.map((contact, index) => (
-                <li key={`${contact.name}-${contact.phone}-${index}`}>
-                  {formatEmergencyContactLine(contact)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Text className="text-zinc-500 dark:text-zinc-400">
-              <Trans>No emergency contacts stored yet.</Trans>
-            </Text>
-          )}
-          {canManage && (
-            <button
-              type="button"
-              aria-label="Edit emergency contacts"
-              onClick={() => onEditField("emergency_contacts")}
-              className="mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-            >
-              <PencilSquareIcon className="size-4" />
-            </button>
-          )}
-        </DescriptionDetails>
-      </DescriptionList>
+      <DescriptionTerm>
+        <Trans>Emergency Contacts</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails className="group flex items-start justify-between gap-3">
+        {emergencyContacts.length > 0 ? (
+          <ul className="space-y-1">
+            {emergencyContacts.map((contact, index) => (
+              <li key={`${contact.name}-${contact.phone}-${index}`}>
+                {formatEmergencyContactLine(contact)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Text className="text-zinc-500 dark:text-zinc-400">
+            <Trans>No emergency contacts stored yet.</Trans>
+          </Text>
+        )}
+        {canManage && (
+          <button
+            type="button"
+            aria-label="Edit emergency contacts"
+            onClick={() => onEditField("emergency_contacts")}
+            className="mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            <PencilSquareIcon className="size-4" />
+          </button>
+        )}
+      </DescriptionDetails>
+    </DescriptionList>
   );
 }
 
@@ -868,9 +866,8 @@ export function EmployeeDetail() {
 
       const contactDialogForm = contactDialogFormRef.current;
       if (contactDialogForm && !contactDialogForm.reportValidity()) {
-        const invalidField = contactDialogForm.querySelector<HTMLInputElement>(
-          "input:invalid"
-        );
+        const invalidField =
+          contactDialogForm.querySelector<HTMLInputElement>("input:invalid");
         if (invalidField?.dataset.contactField === "email") {
           setContactInvalidField("email");
         } else if (invalidField?.dataset.contactField === "phone") {
@@ -878,8 +875,9 @@ export function EmployeeDetail() {
         }
 
         const emergencyIndex = invalidField?.dataset.emergencyIndex;
-        const emergencyField = invalidField?.dataset
-          .emergencyField as ContactEmergencyErrorField | undefined;
+        const emergencyField = invalidField?.dataset.emergencyField as
+          | ContactEmergencyErrorField
+          | undefined;
         if (emergencyIndex !== undefined && emergencyField) {
           setContactEmergencyInvalidField({
             index: Number(emergencyIndex),
@@ -931,7 +929,9 @@ export function EmployeeDetail() {
 
           if (contact.name.trim().length === 0) {
             setContactEmergencyInvalidField({ index, field: "name" });
-            setContactSaveError(i18n._(msg`Emergency contact name is required.`));
+            setContactSaveError(
+              i18n._(msg`Emergency contact name is required.`)
+            );
             return;
           }
           if (contact.phone.trim().length === 0) {
@@ -954,8 +954,9 @@ export function EmployeeDetail() {
           }
         }
 
-        const normalizedContacts =
-          normalizeEmergencyContactsForSave(contactEmergencyDrafts);
+        const normalizedContacts = normalizeEmergencyContactsForSave(
+          contactEmergencyDrafts
+        );
 
         await updateEmployee(id, {
           emergency_contacts:
@@ -1215,7 +1216,8 @@ export function EmployeeDetail() {
           }}
         >
           <DialogBody className="space-y-3">
-            {(editingContactField === "email" || editingContactField === "phone") && (
+            {(editingContactField === "email" ||
+              editingContactField === "phone") && (
               <>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   {editingContactField === "email" ? (
@@ -1340,7 +1342,8 @@ export function EmployeeDetail() {
             {editingContactField === "emergency_contacts" && (
               <div className="space-y-4">
                 {contactEmergencyDrafts.map((contact, index) => {
-                  const requiresCoreFields = hasEmergencyContactContent(contact);
+                  const requiresCoreFields =
+                    hasEmergencyContactContent(contact);
 
                   return (
                     <div
@@ -1494,14 +1497,19 @@ export function EmployeeDetail() {
                 <Button
                   type="button"
                   outline
-                  onClick={() => addEmergencyDraftEntry(setContactEmergencyDrafts)}
+                  onClick={() =>
+                    addEmergencyDraftEntry(setContactEmergencyDrafts)
+                  }
                 >
                   <Trans>Add Contact</Trans>
                 </Button>
               </div>
             )}
             {contactSaveError && (
-              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              <p
+                className="text-sm text-red-600 dark:text-red-400"
+                role="alert"
+              >
                 {contactSaveError}
               </p>
             )}
@@ -1521,12 +1529,15 @@ export function EmployeeDetail() {
               <Trans>Cancel</Trans>
             </Button>
             <Button type="submit" disabled={contactSaveLoading}>
-              {contactSaveLoading ? <Trans>Saving...</Trans> : <Trans>Save</Trans>}
+              {contactSaveLoading ? (
+                <Trans>Saving...</Trans>
+              ) : (
+                <Trans>Save</Trans>
+              )}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
-
     </div>
   );
 }

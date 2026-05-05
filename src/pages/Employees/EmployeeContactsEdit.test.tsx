@@ -102,7 +102,9 @@ describe("EmployeeContactsEdit", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("Load failed");
     });
 
-    expect(screen.queryByRole("button", { name: /^save$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^save$/i })
+    ).not.toBeInTheDocument();
     expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
   });
 });

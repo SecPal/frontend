@@ -142,14 +142,18 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
 
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("+1234567890")).toBeInTheDocument();
-    expect(screen.getByText("No postal address stored yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No postal address stored yet.")
+    ).toBeInTheDocument();
     expect(
       screen.getByText("No emergency contacts stored yet.")
     ).toBeInTheDocument();
@@ -175,7 +179,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
@@ -200,11 +206,15 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
-    fireEvent.click(screen.getByRole("button", { name: /edit postal address/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit postal address/i })
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Edit Postal Address")).toBeInTheDocument();
@@ -244,7 +254,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
@@ -289,7 +301,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
@@ -413,7 +427,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /bewacherregister/i })
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
@@ -456,7 +472,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /bewacherregister/i })
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
@@ -504,7 +522,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /bewacherregister/i })
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
@@ -553,7 +573,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /bewacherregister/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /bewacherregister/i })
+      ).toBeInTheDocument();
     });
     fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
 
@@ -635,7 +657,9 @@ describe("EmployeeDetail", () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /kontaktdaten/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /kontaktdaten/i })
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
