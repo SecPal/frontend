@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Repaired employee-detail tab switching so hash deep links like `#contacts` no longer lock users on one tab, localized all new employee contact editing placeholders/labels, added explicit non-submit button types for emergency-contact add/remove actions, and centralized shared emergency-contact draft normalization helpers to avoid duplicate logic drift.
+- Blocked the dedicated employee contacts edit page from submitting partial overwrite payloads after an initial employee-load failure, and aligned dialog emergency-contact email handling to trim whitespace before validation so optional values behave consistently.
 - Routed onboarding pattern-validation guidance strings through Lingui catalogs (including the country-code helper text) so German onboarding flows no longer show hardcoded English validation copy.
 - Repaired `scripts/preflight.sh` changed-file detection for pre-push runs with a clean index/worktree by falling back to branch-vs-base (`merge-base..HEAD`) diffs for markdown and REUSE gating, and added regression tests that cover both unstaged markdown edits and committed markdown-only branch deltas.
 - Fixed onboarding wizard schema-validation regressions by preserving hidden second-contact values during in-progress edits, clearing conditional required-field errors when their triggering condition is removed, falling back to supplemental submit feedback when backend 422 keys target non-rendered HR-managed fields, and preserving backend-provided `tax_identification_number` onboarding schema rules instead of forcing additional frontend-only tax/SSN requirements.
