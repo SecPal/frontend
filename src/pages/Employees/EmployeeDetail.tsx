@@ -51,6 +51,13 @@ import {
   type EmployeeQualification,
 } from "../../services/qualificationApi";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
+import {
+  emergencyContactsToDrafts,
+  emptyEmergencyContactDraft,
+  hasEmergencyContactContent,
+  normalizeEmergencyContactDrafts,
+  type EmergencyContactDraft,
+} from "./emergencyContactDrafts";
 
 function InvitationStatusLabel({
   status,
@@ -256,14 +263,6 @@ interface ContactAddressDraft {
   state: string;
 }
 
-interface ContactEmergencyDraftEntry {
-  name: string;
-  relationship: string;
-  phone: string;
-  email: string;
-  notes: string;
-}
-
 type ContactEmergencyErrorField = "name" | "phone" | "email";
 
 interface ContactEmergencyFieldError {
@@ -278,28 +277,6 @@ const errorContactInputClass = `${baseContactInputClass} border-red-500 focus:bo
 
 function contactInputClass(hasError: boolean): string {
   return hasError ? errorContactInputClass : defaultContactInputClass;
-}
-
-function hasEmergencyContactContent(
-  draft: ContactEmergencyDraftEntry
-): boolean {
-  return (
-    draft.name.trim().length > 0 ||
-    draft.phone.trim().length > 0 ||
-    draft.email.trim().length > 0 ||
-    draft.relationship.trim().length > 0 ||
-    draft.notes.trim().length > 0
-  );
-}
-
-function emptyEmergencyContactDraft(): ContactEmergencyDraftEntry {
-  return {
-    name: "",
-    relationship: "",
-    phone: "",
-    email: "",
-    notes: "",
-  };
 }
 
 function formatPostalAddress(employee: Employee): string | null {
@@ -611,7 +588,9 @@ export function EmployeeDetail() {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<EmployeeDetailTab>("profile");
+  const [selectedTab, setSelectedTab] = useState<EmployeeDetailTab>(
+    () => parseEmployeeDetailTabHash(location.hash) ?? "profile"
+  );
   const [actionLoading, setActionLoading] = useState(false);
   const [editingContactField, setEditingContactField] =
     useState<EditableContactField | null>(null);
@@ -627,7 +606,7 @@ export function EmployeeDetail() {
       state: "",
     });
   const [contactEmergencyDrafts, setContactEmergencyDrafts] = useState<
-    ContactEmergencyDraftEntry[]
+    EmergencyContactDraft[]
   >([]);
   const [contactSaveError, setContactSaveError] = useState<string | null>(null);
   const [contactSaveLoading, setContactSaveLoading] = useState(false);
@@ -636,7 +615,14 @@ export function EmployeeDetail() {
   >(null);
   const [contactEmergencyInvalidField, setContactEmergencyInvalidField] =
     useState<ContactEmergencyFieldError | null>(null);
-  const activeTab = parseEmployeeDetailTabHash(location.hash) ?? selectedTab;
+  const activeTab = selectedTab;
+
+  useEffect(() => {
+    const tabFromHash = parseEmployeeDetailTabHash(location.hash);
+    if (tabFromHash !== null) {
+      setSelectedTab(tabFromHash);
+    }
+  }, [location.hash]);
 
   async function refreshEmployee(): Promise<Employee | null> {
     if (!id) {
@@ -790,40 +776,14 @@ export function EmployeeDetail() {
 
   function employeeEmergencyDraft(
     source: Employee
-  ): ContactEmergencyDraftEntry[] {
-    const contacts = source.emergency_contacts ?? [];
-    if (contacts.length === 0) {
-      return [emptyEmergencyContactDraft()];
-    }
-
-    return contacts.map((contact) => ({
-      name: contact.name ?? "",
-      relationship: contact.relationship ?? "",
-      phone: contact.phone ?? "",
-      email: contact.email ?? "",
-      notes: contact.notes ?? "",
-    }));
+  ): EmergencyContactDraft[] {
+    return emergencyContactsToDrafts(source.emergency_contacts);
   }
 
   function normalizeEmergencyContactsForSave(
-    drafts: ContactEmergencyDraftEntry[]
+    drafts: EmergencyContactDraft[]
   ): EmployeeEmergencyContact[] {
-    return drafts
-      .map((draft) => ({
-        name: draft.name.trim(),
-        relationship: draft.relationship.trim() || null,
-        phone: draft.phone.trim(),
-        email: draft.email.trim() || null,
-        notes: draft.notes.trim() || null,
-      }))
-      .filter(
-        (contact) =>
-          contact.name.length > 0 ||
-          contact.phone.length > 0 ||
-          (contact.email ?? "").length > 0 ||
-          (contact.relationship ?? "").length > 0 ||
-          (contact.notes ?? "").length > 0
-      );
+    return normalizeEmergencyContactDrafts(drafts);
   }
 
   function openContactEditDialog(field: EditableContactField) {
@@ -981,9 +941,9 @@ export function EmployeeDetail() {
   }
 
   function updateEmergencyDraftEntry(
-    setter: Dispatch<SetStateAction<ContactEmergencyDraftEntry[]>>,
+    setter: Dispatch<SetStateAction<EmergencyContactDraft[]>>,
     index: number,
-    field: keyof ContactEmergencyDraftEntry,
+    field: keyof EmergencyContactDraft,
     value: string
   ) {
     setter((prev) =>
@@ -994,13 +954,13 @@ export function EmployeeDetail() {
   }
 
   function addEmergencyDraftEntry(
-    setter: Dispatch<SetStateAction<ContactEmergencyDraftEntry[]>>
+    setter: Dispatch<SetStateAction<EmergencyContactDraft[]>>
   ) {
     setter((prev) => [...prev, emptyEmergencyContactDraft()]);
   }
 
   function removeEmergencyDraftEntry(
-    setter: Dispatch<SetStateAction<ContactEmergencyDraftEntry[]>>,
+    setter: Dispatch<SetStateAction<EmergencyContactDraft[]>>,
     index: number
   ) {
     setter((prev) => {
@@ -1108,6 +1068,7 @@ export function EmployeeDetail() {
         <div className="border-b border-zinc-950/5 dark:border-white/5">
           <nav className="flex gap-6 px-6" aria-label="Tabs">
             <button
+              type="button"
               onClick={() => setSelectedTab("profile")}
               className={
                 activeTab === "profile"
@@ -1118,6 +1079,7 @@ export function EmployeeDetail() {
               <Trans>Profile</Trans>
             </button>
             <button
+              type="button"
               onClick={() => setSelectedTab("contacts")}
               className={
                 activeTab === "contacts"
@@ -1125,9 +1087,10 @@ export function EmployeeDetail() {
                   : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
               }
             >
-              <Trans>Kontaktdaten</Trans>
+              <Trans>Contact</Trans>
             </button>
             <button
+              type="button"
               onClick={() => setSelectedTab("qualifications")}
               className={
                 activeTab === "qualifications"
@@ -1138,6 +1101,7 @@ export function EmployeeDetail() {
               <Trans>Qualifications</Trans>
             </button>
             <button
+              type="button"
               onClick={() => setSelectedTab("documents")}
               className={
                 activeTab === "documents"
@@ -1148,6 +1112,7 @@ export function EmployeeDetail() {
               <Trans>Documents</Trans>
             </button>
             <button
+              type="button"
               onClick={() => setSelectedTab("bwr")}
               className={
                 activeTab === "bwr"
@@ -1248,95 +1213,158 @@ export function EmployeeDetail() {
             {editingContactField === "postal_address" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <input
-                    type="text"
-                    value={contactAddressDraft.street}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        street: event.target.value,
-                      }))
-                    }
-                    placeholder="Straße"
-                    className={defaultContactInputClass}
-                  />
-                  <input
-                    type="text"
-                    value={contactAddressDraft.houseNumber}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        houseNumber: event.target.value,
-                      }))
-                    }
-                    placeholder="Hausnummer"
-                    className={defaultContactInputClass}
-                  />
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-street"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>Street</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-street"
+                      type="text"
+                      value={contactAddressDraft.street}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          street: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`Street`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-house-number"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>House Number</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-house-number"
+                      type="text"
+                      value={contactAddressDraft.houseNumber}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          houseNumber: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`House Number`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <input
-                    type="text"
-                    value={contactAddressDraft.postalCode}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        postalCode: event.target.value,
-                      }))
-                    }
-                    placeholder="Postleitzahl"
-                    className={defaultContactInputClass}
-                  />
-                  <input
-                    type="text"
-                    value={contactAddressDraft.city}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        city: event.target.value,
-                      }))
-                    }
-                    placeholder="Stadt"
-                    className={defaultContactInputClass}
-                  />
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-postal-code"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>Postal Code</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-postal-code"
+                      type="text"
+                      value={contactAddressDraft.postalCode}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          postalCode: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`Postal Code`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-city"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>City</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-city"
+                      type="text"
+                      value={contactAddressDraft.city}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          city: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`City`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-supplement"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>Address Supplement</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-supplement"
+                      type="text"
+                      value={contactAddressDraft.supplement}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          supplement: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`Address Supplement`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label
+                      htmlFor="detail-contact-address-state"
+                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                    >
+                      <Trans>State</Trans>
+                    </label>
+                    <input
+                      id="detail-contact-address-state"
+                      type="text"
+                      value={contactAddressDraft.state}
+                      onChange={(event) =>
+                        setContactAddressDraft((prev) => ({
+                          ...prev,
+                          state: event.target.value,
+                        }))
+                      }
+                      placeholder={i18n._(msg`State`)}
+                      className={defaultContactInputClass}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    htmlFor="detail-contact-address-country"
+                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <Trans>Country (ISO-2)</Trans>
+                  </label>
                   <input
+                    id="detail-contact-address-country"
                     type="text"
-                    value={contactAddressDraft.supplement}
+                    value={contactAddressDraft.country}
                     onChange={(event) =>
                       setContactAddressDraft((prev) => ({
                         ...prev,
-                        supplement: event.target.value,
+                        country: event.target.value,
                       }))
                     }
-                    placeholder="Adresszusatz"
-                    className={defaultContactInputClass}
-                  />
-                  <input
-                    type="text"
-                    value={contactAddressDraft.state}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        state: event.target.value,
-                      }))
-                    }
-                    placeholder="Bundesland"
+                    placeholder={i18n._(msg`Country (ISO-2)`)}
                     className={defaultContactInputClass}
                   />
                 </div>
-                <input
-                  type="text"
-                  value={contactAddressDraft.country}
-                  onChange={(event) =>
-                    setContactAddressDraft((prev) => ({
-                      ...prev,
-                      country: event.target.value,
-                    }))
-                  }
-                  placeholder="Land (ISO-2, z. B. DE)"
-                  className={defaultContactInputClass}
-                />
               </div>
             )}
             {editingContactField === "emergency_contacts" && (
@@ -1351,132 +1379,177 @@ export function EmployeeDetail() {
                       className="space-y-2 rounded-lg border border-zinc-950/10 p-3 dark:border-white/10"
                     >
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <input
-                          type="text"
-                          value={contact.name}
-                          required={requiresCoreFields}
-                          data-emergency-index={index}
-                          data-emergency-field="name"
-                          aria-invalid={
-                            (contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "name") ||
-                            undefined
-                          }
-                          onChange={(event) => {
-                            updateEmergencyDraftEntry(
-                              setContactEmergencyDrafts,
-                              index,
-                              "name",
-                              event.target.value
-                            );
-                            setContactSaveError(null);
-                            if (
-                              contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "name"
-                            ) {
-                              setContactEmergencyInvalidField(null);
+                        <div className="space-y-1">
+                          <label
+                            htmlFor={`detail-emergency-${index}-name`}
+                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                          >
+                            <Trans>Emergency Contact Name</Trans>
+                          </label>
+                          <input
+                            id={`detail-emergency-${index}-name`}
+                            type="text"
+                            value={contact.name}
+                            required={requiresCoreFields}
+                            data-emergency-index={index}
+                            data-emergency-field="name"
+                            aria-invalid={
+                              (contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "name") ||
+                              undefined
                             }
-                          }}
-                          placeholder="Name"
-                          className={contactInputClass(
-                            contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "name"
-                          )}
-                        />
+                            onChange={(event) => {
+                              updateEmergencyDraftEntry(
+                                setContactEmergencyDrafts,
+                                index,
+                                "name",
+                                event.target.value
+                              );
+                              setContactSaveError(null);
+                              if (
+                                contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "name"
+                              ) {
+                                setContactEmergencyInvalidField(null);
+                              }
+                            }}
+                            placeholder={i18n._(msg`Name`)}
+                            className={contactInputClass(
+                              contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "name"
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor={`detail-emergency-${index}-relationship`}
+                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                          >
+                            <Trans>Emergency Contact Relationship</Trans>
+                          </label>
+                          <input
+                            id={`detail-emergency-${index}-relationship`}
+                            type="text"
+                            value={contact.relationship}
+                            onChange={(event) =>
+                              updateEmergencyDraftEntry(
+                                setContactEmergencyDrafts,
+                                index,
+                                "relationship",
+                                event.target.value
+                              )
+                            }
+                            placeholder={i18n._(msg`Relationship`)}
+                            className={defaultContactInputClass}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor={`detail-emergency-${index}-phone`}
+                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                          >
+                            <Trans>Emergency Contact Phone</Trans>
+                          </label>
+                          <input
+                            id={`detail-emergency-${index}-phone`}
+                            type="tel"
+                            value={contact.phone}
+                            required={requiresCoreFields}
+                            data-emergency-index={index}
+                            data-emergency-field="phone"
+                            aria-invalid={
+                              (contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "phone") ||
+                              undefined
+                            }
+                            onChange={(event) => {
+                              updateEmergencyDraftEntry(
+                                setContactEmergencyDrafts,
+                                index,
+                                "phone",
+                                event.target.value
+                              );
+                              setContactSaveError(null);
+                              if (
+                                contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "phone"
+                              ) {
+                                setContactEmergencyInvalidField(null);
+                              }
+                            }}
+                            placeholder={i18n._(msg`Phone`)}
+                            className={contactInputClass(
+                              contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "phone"
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label
+                            htmlFor={`detail-emergency-${index}-email`}
+                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                          >
+                            <Trans>Emergency Contact Email</Trans>
+                          </label>
+                          <input
+                            id={`detail-emergency-${index}-email`}
+                            type="text"
+                            inputMode="email"
+                            autoComplete="email"
+                            value={contact.email}
+                            data-emergency-index={index}
+                            data-emergency-field="email"
+                            aria-invalid={
+                              (contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "email") ||
+                              undefined
+                            }
+                            onChange={(event) => {
+                              updateEmergencyDraftEntry(
+                                setContactEmergencyDrafts,
+                                index,
+                                "email",
+                                event.target.value
+                              );
+                              setContactSaveError(null);
+                              if (
+                                contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "email"
+                              ) {
+                                setContactEmergencyInvalidField(null);
+                              }
+                            }}
+                            placeholder={i18n._(msg`Email`)}
+                            className={contactInputClass(
+                              contactEmergencyInvalidField?.index === index &&
+                                contactEmergencyInvalidField.field === "email"
+                            )}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor={`detail-emergency-${index}-notes`}
+                          className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <Trans>Emergency Contact Notes</Trans>
+                        </label>
                         <input
+                          id={`detail-emergency-${index}-notes`}
                           type="text"
-                          value={contact.relationship}
+                          value={contact.notes}
                           onChange={(event) =>
                             updateEmergencyDraftEntry(
                               setContactEmergencyDrafts,
                               index,
-                              "relationship",
+                              "notes",
                               event.target.value
                             )
                           }
-                          placeholder="Beziehung"
+                          placeholder={i18n._(msg`Notes`)}
                           className={defaultContactInputClass}
                         />
-                        <input
-                          type="tel"
-                          value={contact.phone}
-                          required={requiresCoreFields}
-                          data-emergency-index={index}
-                          data-emergency-field="phone"
-                          aria-invalid={
-                            (contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "phone") ||
-                            undefined
-                          }
-                          onChange={(event) => {
-                            updateEmergencyDraftEntry(
-                              setContactEmergencyDrafts,
-                              index,
-                              "phone",
-                              event.target.value
-                            );
-                            setContactSaveError(null);
-                            if (
-                              contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "phone"
-                            ) {
-                              setContactEmergencyInvalidField(null);
-                            }
-                          }}
-                          placeholder="Telefon"
-                          className={contactInputClass(
-                            contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "phone"
-                          )}
-                        />
-                        <input
-                          type="text"
-                          inputMode="email"
-                          autoComplete="email"
-                          value={contact.email}
-                          data-emergency-index={index}
-                          data-emergency-field="email"
-                          aria-invalid={
-                            (contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "email") ||
-                            undefined
-                          }
-                          onChange={(event) => {
-                            updateEmergencyDraftEntry(
-                              setContactEmergencyDrafts,
-                              index,
-                              "email",
-                              event.target.value
-                            );
-                            setContactSaveError(null);
-                            if (
-                              contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "email"
-                            ) {
-                              setContactEmergencyInvalidField(null);
-                            }
-                          }}
-                          placeholder="E-Mail"
-                          className={contactInputClass(
-                            contactEmergencyInvalidField?.index === index &&
-                              contactEmergencyInvalidField.field === "email"
-                          )}
-                        />
                       </div>
-                      <input
-                        type="text"
-                        value={contact.notes}
-                        onChange={(event) =>
-                          updateEmergencyDraftEntry(
-                            setContactEmergencyDrafts,
-                            index,
-                            "notes",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Notizen"
-                        className={defaultContactInputClass}
-                      />
                       <div className="flex justify-end">
                         <Button
                           type="button"

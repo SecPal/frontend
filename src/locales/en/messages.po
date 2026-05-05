@@ -45,6 +45,11 @@ msgstr "Edit Employee"
 msgid "Activity Information"
 msgstr "Activity Information"
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contact Email"
+msgstr "Emergency Contact Email"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -149,6 +154,8 @@ msgstr "Expand"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -214,6 +221,7 @@ msgstr "Choose which notifications you want to receive"
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -278,6 +286,11 @@ msgstr "First name is required"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
 msgstr "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contact Phone"
+msgstr "Emergency Contact Phone"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -382,6 +395,8 @@ msgstr "Edit Emergency Contacts"
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Profile/ProfilePage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -685,6 +700,12 @@ msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contact Name"
+msgstr "Emergency Contact Name"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "House Number"
 msgstr "House Number"
 
@@ -889,6 +910,7 @@ msgstr "Please use the required format."
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
@@ -1247,6 +1269,7 @@ msgid "Please use the required format ({actualPattern})."
 msgstr "Please use the required format ({actualPattern})."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Address Supplement"
 msgstr "Address Supplement"
 
@@ -1420,8 +1443,14 @@ msgstr "Step {0}: {1}"
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contact Notes"
+msgstr "Emergency Contact Notes"
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Contact"
 msgstr "Contact"
 
@@ -1958,6 +1987,7 @@ msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "Country (ISO-2)"
 msgstr "Country (ISO-2)"
 
@@ -2248,6 +2278,7 @@ msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 msgid "State"
 msgstr "State"
 
@@ -2492,8 +2523,8 @@ msgid "Edit Organizational Unit"
 msgstr "Edit Organizational Unit"
 
 #: src/pages/Employees/EmployeeDetail.tsx
-msgid "Kontaktdaten"
-msgstr "Kontaktdaten"
+#~ msgid "Kontaktdaten"
+#~ msgstr "Kontaktdaten"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Details"
@@ -2511,6 +2542,7 @@ msgstr "Update application now"
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2627,6 +2659,11 @@ msgstr "Access Denied"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
+msgid "Relationship"
+msgstr "Relationship"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading employee..."
 msgstr "Loading employee..."
@@ -2642,6 +2679,11 @@ msgstr "Creating enrollment session..."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Add passkey"
 msgstr "Add passkey"
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Emergency Contact Relationship"
+msgstr "Emergency Contact Relationship"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx

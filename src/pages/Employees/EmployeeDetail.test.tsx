@@ -143,11 +143,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
 
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("+1234567890")).toBeInTheDocument();
@@ -175,16 +175,41 @@ describe("EmployeeDetail", () => {
     });
   });
 
+  it("should allow switching tabs after loading from #contacts hash", async () => {
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/employees/emp-1#contacts"]}>
+          <Routes>
+            <Route path="/employees/:id" element={<EmployeeDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^profile$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText("john.doe@secpal.dev")
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("BWR Status")).toBeInTheDocument();
+  });
+
   it("should edit email from the contacts tab row overlay", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(screen.getByRole("button", { name: /edit email/i }));
 
     await waitFor(() => {
@@ -207,11 +232,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(
       screen.getByRole("button", { name: /edit postal address/i })
     );
@@ -220,19 +245,19 @@ describe("EmployeeDetail", () => {
       expect(screen.getByText("Edit Postal Address")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Straße"), {
+    fireEvent.change(screen.getByLabelText(/^Street$/i), {
       target: { value: "Musterstraße" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Hausnummer"), {
+    fireEvent.change(screen.getByLabelText(/^House Number$/i), {
       target: { value: "12A" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Postleitzahl"), {
+    fireEvent.change(screen.getByLabelText(/^Postal Code$/i), {
       target: { value: "10115" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Stadt"), {
+    fireEvent.change(screen.getByLabelText(/^City$/i), {
       target: { value: "Berlin" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Land (ISO-2, z. B. DE)"), {
+    fireEvent.change(screen.getByLabelText(/^Country \(ISO-2\)$/i), {
       target: { value: "de" },
     });
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
@@ -255,11 +280,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(
       screen.getByRole("button", { name: /edit emergency contacts/i })
     );
@@ -268,16 +293,19 @@ describe("EmployeeDetail", () => {
       expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Name"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Name$/i), {
       target: { value: "Maria Mustermann" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Phone$/i), {
       target: { value: "+491234567890" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Beziehung"), {
-      target: { value: "Sister" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("E-Mail"), {
+    fireEvent.change(
+      screen.getByLabelText(/^Emergency Contact Relationship$/i),
+      {
+        target: { value: "Sister" },
+      }
+    );
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Email$/i), {
       target: { value: "maria@example.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
@@ -302,11 +330,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(
       screen.getByRole("button", { name: /edit emergency contacts/i })
     );
@@ -315,13 +343,13 @@ describe("EmployeeDetail", () => {
       expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText("Name"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Name$/i), {
       target: { value: "Maria Mustermann" },
     });
-    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Phone$/i), {
       target: { value: "+491234567890" },
     });
-    fireEvent.change(screen.getByPlaceholderText("E-Mail"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Email$/i), {
       target: { value: " maria@example.com " },
     });
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
@@ -346,11 +374,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(screen.getByRole("button", { name: /edit email/i }));
 
     await waitFor(() => {
@@ -374,11 +402,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(
       screen.getByRole("button", { name: /edit emergency contacts/i })
     );
@@ -392,12 +420,20 @@ describe("EmployeeDetail", () => {
     ) as HTMLFormElement;
 
     fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(2);
 
-    const emergencyName = screen.getAllByPlaceholderText("Name")[0]!;
-    const emergencyPhone = screen.getAllByPlaceholderText("Telefon")[0]!;
-    const emergencyEmail = screen.getAllByPlaceholderText("E-Mail")[0]!;
-    const emergencyNotes = screen.getAllByPlaceholderText("Notizen")[0]!;
+    const emergencyName = screen.getAllByLabelText(
+      /^Emergency Contact Name$/i
+    )[0]!;
+    const emergencyPhone = screen.getAllByLabelText(
+      /^Emergency Contact Phone$/i
+    )[0]!;
+    const emergencyEmail = screen.getAllByLabelText(
+      /^Emergency Contact Email$/i
+    )[0]!;
+    const emergencyNotes = screen.getAllByLabelText(
+      /^Emergency Contact Notes$/i
+    )[0]!;
 
     fireEvent.change(emergencyPhone, { target: { value: "+49111111111" } });
     fireEvent.submit(dialogForm);
@@ -437,7 +473,9 @@ describe("EmployeeDetail", () => {
     fireEvent.click(
       screen.getAllByRole("button", { name: /remove contact/i })[0]!
     );
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      1
+    );
   });
 
   it("should show fallback error when contact field update fails with unknown error", async () => {
@@ -447,11 +485,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(screen.getByRole("button", { name: /edit phone/i }));
 
     await waitFor(() => {
@@ -475,11 +513,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     fireEvent.click(
       screen.getByRole("button", { name: /edit emergency contacts/i })
     );
@@ -492,7 +530,7 @@ describe("EmployeeDetail", () => {
       "form.contents"
     ) as HTMLFormElement;
 
-    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Phone$/i), {
       target: { value: "+491701112233" },
     });
     fireEvent.submit(dialogForm);
@@ -829,11 +867,11 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /kontaktdaten/i })
+        screen.getByRole("button", { name: /^contact$/i })
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /kontaktdaten/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
     const editLink = screen.getByRole("link", { name: /^edit$/i });
     expect(editLink).toHaveAttribute("href", "/employees/emp-1/edit/contacts");
   });

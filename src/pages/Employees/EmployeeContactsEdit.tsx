@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee, EmployeeEmergencyContact } from "@/types/api";
+import type { Employee } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
@@ -19,40 +19,19 @@ import {
   Label,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
-
-interface EmergencyContactDraft {
-  name: string;
-  relationship: string;
-  phone: string;
-  email: string;
-  notes: string;
-}
+import {
+  emergencyContactsToDrafts,
+  emptyEmergencyContactDraft,
+  hasEmergencyContactContent,
+  normalizeEmergencyContactDrafts,
+  type EmergencyContactDraft,
+} from "./emergencyContactDrafts";
 
 type EmergencyContactErrorField = "name" | "phone" | "email";
 
 interface EmergencyContactFieldError {
   index: number;
   field: EmergencyContactErrorField;
-}
-
-function emptyEmergencyContactDraft(): EmergencyContactDraft {
-  return {
-    name: "",
-    relationship: "",
-    phone: "",
-    email: "",
-    notes: "",
-  };
-}
-
-function hasEmergencyContactContent(contact: EmergencyContactDraft): boolean {
-  return (
-    contact.name.trim().length > 0 ||
-    contact.phone.trim().length > 0 ||
-    contact.email.trim().length > 0 ||
-    contact.relationship.trim().length > 0 ||
-    contact.notes.trim().length > 0
-  );
 }
 
 export function EmployeeContactsEdit() {
@@ -106,20 +85,8 @@ export function EmployeeContactsEdit() {
         setAddressSupplement(employee.address_supplement ?? "");
         setAddressState(employee.address_state ?? "");
         setAddressCountry(employee.address_country ?? "");
+        setEmergencyContacts(emergencyContactsToDrafts(employee.emergency_contacts));
         setEmployeeLoaded(true);
-
-        const loadedEmergency = employee.emergency_contacts ?? [];
-        if (loadedEmergency.length > 0) {
-          setEmergencyContacts(
-            loadedEmergency.map((contact) => ({
-              name: contact.name ?? "",
-              relationship: contact.relationship ?? "",
-              phone: contact.phone ?? "",
-              email: contact.email ?? "",
-              notes: contact.notes ?? "",
-            }))
-          );
-        }
       })
       .catch((err) => {
         if (!active) {
@@ -145,25 +112,6 @@ export function EmployeeContactsEdit() {
       active = false;
     };
   }, [id]);
-
-  function normalizedEmergencyContacts(): EmployeeEmergencyContact[] {
-    return emergencyContacts
-      .map((entry) => ({
-        name: entry.name.trim(),
-        relationship: entry.relationship.trim() || null,
-        phone: entry.phone.trim(),
-        email: entry.email.trim() || null,
-        notes: entry.notes.trim() || null,
-      }))
-      .filter(
-        (contact) =>
-          contact.name.length > 0 ||
-          contact.phone.length > 0 ||
-          (contact.email ?? "").length > 0 ||
-          (contact.relationship ?? "").length > 0 ||
-          (contact.notes ?? "").length > 0
-      );
-  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -214,7 +162,7 @@ export function EmployeeContactsEdit() {
       }
     }
 
-    const normalizedContacts = normalizedEmergencyContacts();
+    const normalizedContacts = normalizeEmergencyContactDrafts(emergencyContacts);
 
     try {
       setLoading(true);
@@ -464,128 +412,178 @@ export function EmployeeContactsEdit() {
                     className="space-y-3 rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Input
-                        type="text"
-                        value={contact.name}
-                        onChange={(event) => {
-                          updateEmergency(index, "name", event.target.value);
-                          setError(null);
-                          if (
+                      <div className="space-y-1">
+                        <label
+                          htmlFor={`emergency-contact-${index}-name`}
+                          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <Trans>Emergency Contact Name</Trans>
+                        </label>
+                        <Input
+                          id={`emergency-contact-${index}-name`}
+                          type="text"
+                          value={contact.name}
+                          onChange={(event) => {
+                            updateEmergency(index, "name", event.target.value);
+                            setError(null);
+                            if (
+                              emergencyFieldError?.index === index &&
+                              emergencyFieldError.field === "name"
+                            ) {
+                              setEmergencyFieldError(null);
+                            }
+                          }}
+                          placeholder={i18n._(msg`Name`)}
+                          invalid={
                             emergencyFieldError?.index === index &&
                             emergencyFieldError.field === "name"
-                          ) {
-                            setEmergencyFieldError(null);
                           }
-                        }}
-                        placeholder="Name"
-                        invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "name"
-                        }
-                        data-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "name"
-                            ? true
-                            : undefined
-                        }
-                        aria-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "name"
-                            ? true
-                            : undefined
-                        }
-                      />
-                      <Input
-                        type="text"
-                        value={contact.relationship}
-                        onChange={(event) =>
-                          updateEmergency(
-                            index,
-                            "relationship",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Beziehung"
-                      />
-                      <Input
-                        type="tel"
-                        value={contact.phone}
-                        onChange={(event) => {
-                          updateEmergency(index, "phone", event.target.value);
-                          setError(null);
-                          if (
+                          data-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "name"
+                              ? true
+                              : undefined
+                          }
+                          aria-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "name"
+                              ? true
+                              : undefined
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor={`emergency-contact-${index}-relationship`}
+                          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <Trans>Emergency Contact Relationship</Trans>
+                        </label>
+                        <Input
+                          id={`emergency-contact-${index}-relationship`}
+                          type="text"
+                          value={contact.relationship}
+                          onChange={(event) =>
+                            updateEmergency(
+                              index,
+                              "relationship",
+                              event.target.value
+                            )
+                          }
+                          placeholder={i18n._(msg`Relationship`)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor={`emergency-contact-${index}-phone`}
+                          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <Trans>Emergency Contact Phone</Trans>
+                        </label>
+                        <Input
+                          id={`emergency-contact-${index}-phone`}
+                          type="tel"
+                          value={contact.phone}
+                          onChange={(event) => {
+                            updateEmergency(index, "phone", event.target.value);
+                            setError(null);
+                            if (
+                              emergencyFieldError?.index === index &&
+                              emergencyFieldError.field === "phone"
+                            ) {
+                              setEmergencyFieldError(null);
+                            }
+                          }}
+                          placeholder={i18n._(msg`Phone`)}
+                          invalid={
                             emergencyFieldError?.index === index &&
                             emergencyFieldError.field === "phone"
-                          ) {
-                            setEmergencyFieldError(null);
                           }
-                        }}
-                        placeholder="Telefon"
-                        invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "phone"
-                        }
-                        data-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "phone"
-                            ? true
-                            : undefined
-                        }
-                        aria-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "phone"
-                            ? true
-                            : undefined
-                        }
-                      />
-                      <Input
-                        type="email"
-                        value={contact.email}
-                        onChange={(event) => {
-                          updateEmergency(index, "email", event.target.value);
-                          setError(null);
-                          if (
+                          data-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "phone"
+                              ? true
+                              : undefined
+                          }
+                          aria-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "phone"
+                              ? true
+                              : undefined
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          htmlFor={`emergency-contact-${index}-email`}
+                          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        >
+                          <Trans>Emergency Contact Email</Trans>
+                        </label>
+                        <Input
+                          id={`emergency-contact-${index}-email`}
+                          type="email"
+                          value={contact.email}
+                          onChange={(event) => {
+                            updateEmergency(index, "email", event.target.value);
+                            setError(null);
+                            if (
+                              emergencyFieldError?.index === index &&
+                              emergencyFieldError.field === "email"
+                            ) {
+                              setEmergencyFieldError(null);
+                            }
+                          }}
+                          placeholder={i18n._(msg`Email`)}
+                          invalid={
                             emergencyFieldError?.index === index &&
                             emergencyFieldError.field === "email"
-                          ) {
-                            setEmergencyFieldError(null);
                           }
-                        }}
-                        placeholder="E-Mail"
-                        invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "email"
+                          data-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "email"
+                              ? true
+                              : undefined
+                          }
+                          aria-invalid={
+                            emergencyFieldError?.index === index &&
+                            emergencyFieldError.field === "email"
+                              ? true
+                              : undefined
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label
+                        htmlFor={`emergency-contact-${index}-notes`}
+                        className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                      >
+                        <Trans>Emergency Contact Notes</Trans>
+                      </label>
+                      <Input
+                        id={`emergency-contact-${index}-notes`}
+                        type="text"
+                        value={contact.notes}
+                        onChange={(event) =>
+                          updateEmergency(index, "notes", event.target.value)
                         }
-                        data-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "email"
-                            ? true
-                            : undefined
-                        }
-                        aria-invalid={
-                          emergencyFieldError?.index === index &&
-                          emergencyFieldError.field === "email"
-                            ? true
-                            : undefined
-                        }
+                        placeholder={i18n._(msg`Notes`)}
                       />
                     </div>
-                    <Input
-                      type="text"
-                      value={contact.notes}
-                      onChange={(event) =>
-                        updateEmergency(index, "notes", event.target.value)
-                      }
-                      placeholder="Notizen"
-                    />
                     <div className="flex justify-end">
-                      <Button outline onClick={() => removeEmergency(index)}>
+                      <Button
+                        type="button"
+                        outline
+                        onClick={() => removeEmergency(index)}
+                      >
                         <Trans>Remove Contact</Trans>
                       </Button>
                     </div>
                   </div>
                 ))}
                 <Button
+                  type="button"
                   outline
                   onClick={() =>
                     setEmergencyContacts((prev) => [

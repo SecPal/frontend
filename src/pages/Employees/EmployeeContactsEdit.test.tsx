@@ -208,9 +208,9 @@ describe("EmployeeContactsEdit", () => {
     renderWithProviders("emp-1");
     await waitForLoadedForm();
 
-    const emergencyName = screen.getByPlaceholderText("Name");
-    const emergencyPhone = screen.getByPlaceholderText("Telefon");
-    const emergencyEmail = screen.getByPlaceholderText("E-Mail");
+    const emergencyName = screen.getByLabelText(/^Emergency Contact Name$/i);
+    const emergencyPhone = screen.getByLabelText(/^Emergency Contact Phone$/i);
+    const emergencyEmail = screen.getByLabelText(/^Emergency Contact Email$/i);
 
     fireEvent.change(emergencyPhone, { target: { value: "+491701112233" } });
     fireEvent.submit(document.querySelector("form") as HTMLFormElement);
@@ -246,17 +246,38 @@ describe("EmployeeContactsEdit", () => {
     renderWithProviders("emp-1");
     await waitForLoadedForm();
 
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      1
+    );
     fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      2
+    );
 
     fireEvent.click(
       screen.getAllByRole("button", { name: /remove contact/i })[0]!
     );
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      1
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /remove contact/i }));
-    expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
+    expect(screen.getAllByLabelText(/^Emergency Contact Name$/i)).toHaveLength(
+      1
+    );
+  });
+
+  it("should not submit the form when adding or removing emergency contacts", async () => {
+    renderWithProviders("emp-1");
+    await waitForLoadedForm();
+
+    fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /remove contact/i })[0]!
+    );
+
+    expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalledWith("/employees/emp-1#contacts");
   });
 
   it("should save normalized payload and navigate to contacts tab", async () => {
@@ -295,19 +316,22 @@ describe("EmployeeContactsEdit", () => {
     fireEvent.change(screen.getByLabelText("Country (ISO-2)"), {
       target: { value: " de " },
     });
-    fireEvent.change(screen.getByPlaceholderText("Name"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Name$/i), {
       target: { value: " Eva Muster " },
     });
-    fireEvent.change(screen.getByPlaceholderText("Beziehung"), {
-      target: { value: " Schwester " },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Telefon"), {
+    fireEvent.change(
+      screen.getByLabelText(/^Emergency Contact Relationship$/i),
+      {
+        target: { value: " Schwester " },
+      }
+    );
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Phone$/i), {
       target: { value: " +491701112233 " },
     });
-    fireEvent.change(screen.getByPlaceholderText("E-Mail"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Email$/i), {
       target: { value: " eva@example.com " },
     });
-    fireEvent.change(screen.getByPlaceholderText("Notizen"), {
+    fireEvent.change(screen.getByLabelText(/^Emergency Contact Notes$/i), {
       target: { value: " tagsüber " },
     });
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
