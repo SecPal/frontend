@@ -2939,3 +2939,7 @@ msgstr "Telefon"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
+
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Failed to update employee"
+msgstr "Fehler beim Aktualisieren des Mitarbeiters"

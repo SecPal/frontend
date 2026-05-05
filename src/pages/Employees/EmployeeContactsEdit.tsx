@@ -96,7 +96,7 @@ export function EmployeeContactsEdit() {
         }
 
         setEmployeeLoaded(false);
-        setError("Failed to load employee");
+        setError(i18n._(msg`Failed to load employee`));
       })
       .finally(() => {
         if (active) {
@@ -107,7 +107,7 @@ export function EmployeeContactsEdit() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, i18n]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -172,7 +172,7 @@ export function EmployeeContactsEdit() {
         setError(err.message);
         return;
       }
-      setError("Failed to update employee");
+      setError(i18n._(msg`Failed to update employee`));
     } finally {
       setLoading(false);
     }
