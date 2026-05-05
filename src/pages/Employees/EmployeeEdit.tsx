@@ -389,7 +389,8 @@ export function EmployeeEdit() {
                         e.target.value,
                         i18n.locale,
                         {
-                          defaultCurrentYearForMissingYear: i18n.locale === "de",
+                          defaultCurrentYearForMissingYear:
+                            i18n.locale === "de",
                         }
                       );
                       if (result.valid) {

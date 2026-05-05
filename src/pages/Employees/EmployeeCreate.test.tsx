@@ -904,7 +904,9 @@ describe("EmployeeCreate", () => {
       });
 
       const currentYear = new Date().getFullYear();
-      const contractStartDateInput = screen.getByLabelText(/datum des vertragsbeginns/i);
+      const contractStartDateInput = screen.getByLabelText(
+        /datum des vertragsbeginns/i
+      );
 
       fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
       fireEvent.blur(contractStartDateInput);

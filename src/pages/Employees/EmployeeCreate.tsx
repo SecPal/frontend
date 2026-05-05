@@ -599,7 +599,8 @@ export function EmployeeCreate() {
                         i18n.locale,
                         {
                           allowIsoInput: true,
-                          defaultCurrentYearForMissingYear: i18n.locale === "de",
+                          defaultCurrentYearForMissingYear:
+                            i18n.locale === "de",
                         }
                       );
                       if (result.valid) {
