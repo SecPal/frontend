@@ -26,7 +26,11 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
-import { parseEmployeeDateToISO } from "./employeeDateUtils";
+import {
+  GERMAN_CONTRACT_START_DATE_ERROR,
+  GERMAN_CONTRACT_START_DATE_HINT,
+  parseEmployeeDateToISO,
+} from "./employeeDateUtils";
 
 type EmployeeFormField = keyof EmployeeFormData;
 type EmployeeFormErrors = Partial<Record<EmployeeFormField, string>>;
@@ -46,11 +50,6 @@ const fieldOrder: EmployeeFormField[] = [
 ];
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const germanContractStartDateHint =
-  "Erwartetes Format: TT.MM.JJJJ. Optional ist TT.MM.; das aktuelle Jahr wird automatisch ergänzt.";
-const germanContractStartDateError =
-  "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr).";
-
 /**
  * Employee Create Form
  */
@@ -230,7 +229,7 @@ export function EmployeeCreate() {
       if (!contractDate.valid) {
         errors.contract_start_date =
           i18n.locale === "de"
-            ? germanContractStartDateError
+            ? GERMAN_CONTRACT_START_DATE_ERROR
             : "Invalid date. Please use format MM/DD/YYYY";
       } else {
         normalizedData.contract_start_date = contractDate.iso;
@@ -615,7 +614,7 @@ export function EmployeeCreate() {
                           ...prev,
                           contract_start_date:
                             i18n.locale === "de"
-                              ? germanContractStartDateError
+                              ? GERMAN_CONTRACT_START_DATE_ERROR
                               : "Invalid date. Please use format MM/DD/YYYY",
                         }));
                       }
@@ -623,7 +622,7 @@ export function EmployeeCreate() {
                   />
                   {i18n.locale === "de" && (
                     <Text className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
-                      {germanContractStartDateHint}
+                      {GERMAN_CONTRACT_START_DATE_HINT}
                     </Text>
                   )}
                   {fieldErrors.contract_start_date && (

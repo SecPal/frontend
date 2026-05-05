@@ -7,6 +7,13 @@ export interface ParsedEmployeeDate {
   valid: boolean;
 }
 
+export const GERMAN_CONTRACT_START_DATE_HINT =
+  "Erwartetes Format: TT.MM.JJJJ. Optional ist TT.MM.; das aktuelle Jahr wird automatisch ergänzt.";
+export const GERMAN_CONTRACT_START_DATE_FORMAT =
+  "TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr)";
+export const GERMAN_CONTRACT_START_DATE_ERROR =
+  "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr).";
+
 interface ParseEmployeeDateToIsoOptions {
   allowIsoInput?: boolean;
   defaultCurrentYearForMissingYear?: boolean;
