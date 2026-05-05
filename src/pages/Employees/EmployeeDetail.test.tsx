@@ -394,10 +394,10 @@ describe("EmployeeDetail", () => {
     fireEvent.click(screen.getByRole("button", { name: /add contact/i }));
     expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
 
-    const emergencyName = screen.getAllByPlaceholderText("Name")[0];
-    const emergencyPhone = screen.getAllByPlaceholderText("Telefon")[0];
-    const emergencyEmail = screen.getAllByPlaceholderText("E-Mail")[0];
-    const emergencyNotes = screen.getAllByPlaceholderText("Notizen")[0];
+    const emergencyName = screen.getAllByPlaceholderText("Name")[0]!;
+    const emergencyPhone = screen.getAllByPlaceholderText("Telefon")[0]!;
+    const emergencyEmail = screen.getAllByPlaceholderText("E-Mail")[0]!;
+    const emergencyNotes = screen.getAllByPlaceholderText("Notizen")[0]!;
 
     fireEvent.change(emergencyPhone, { target: { value: "+49111111111" } });
     fireEvent.submit(dialogForm);
@@ -435,7 +435,7 @@ describe("EmployeeDetail", () => {
       target: { value: "Reach after 18:00" },
     });
     fireEvent.click(
-      screen.getAllByRole("button", { name: /remove contact/i })[0]
+      screen.getAllByRole("button", { name: /remove contact/i })[0]!
     );
     expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
   });
@@ -503,7 +503,7 @@ describe("EmployeeDetail", () => {
       );
     });
 
-    fireEvent.click(screen.getAllByRole("button", { name: /^cancel$/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /^cancel$/i })[0]!);
 
     await waitFor(() => {
       expect(

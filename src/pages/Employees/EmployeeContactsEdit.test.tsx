@@ -251,7 +251,7 @@ describe("EmployeeContactsEdit", () => {
     expect(screen.getAllByPlaceholderText("Name")).toHaveLength(2);
 
     fireEvent.click(
-      screen.getAllByRole("button", { name: /remove contact/i })[0]
+      screen.getAllByRole("button", { name: /remove contact/i })[0]!
     );
     expect(screen.getAllByPlaceholderText("Name")).toHaveLength(1);
 
