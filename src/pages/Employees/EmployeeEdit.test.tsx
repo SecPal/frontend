@@ -630,6 +630,9 @@ describe("EmployeeEdit", () => {
     });
 
     it("should normalize short German contract start date without year to current year", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
       await act(async () => {
         i18n.activate("de");
       });
@@ -653,6 +656,63 @@ describe("EmployeeEdit", () => {
       await waitFor(() => {
         expect(contractStartDateInput).toHaveValue(`01.06.${currentYear}`);
         expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /save changes|änderungen speichern/i,
+        })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.objectContaining({
+            contract_start_date: `${currentYear}-06-01`,
+          })
+        );
+      });
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
+
+    it("should submit short German contract start date without blur", async () => {
+      const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+      mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/datum des vertragsbeginns/i)).toHaveValue(
+          "01.01.2025"
+        );
+      });
+
+      const currentYear = new Date().getFullYear();
+      const contractStartDateInput = screen.getByLabelText(
+        /datum des vertragsbeginns/i
+      );
+
+      fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: /save changes|änderungen speichern/i,
+        })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.objectContaining({
+            contract_start_date: `${currentYear}-06-01`,
+          })
+        );
       });
 
       await act(async () => {

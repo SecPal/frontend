@@ -29,6 +29,11 @@ import {
   parseEmployeeDateToISO,
 } from "./employeeDateUtils";
 
+const germanContractStartDateHint =
+  "Erwartetes Format: TT.MM.JJJJ. Optional ist TT.MM.; das aktuelle Jahr wird automatisch ergänzt.";
+const germanContractStartDateFormat =
+  "TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr)";
+
 /**
  * Employee Edit Form
  */
@@ -173,10 +178,45 @@ export function EmployeeEdit() {
       return;
     }
 
+    const birthDateResult = parseEmployeeDateToISO(
+      birthDateDisplay,
+      i18n.locale
+    );
+    if (!birthDateResult.valid) {
+      const format = i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
+      setBirthDateError(i18n._(msg`Invalid date. Please use format ${format}`));
+      return;
+    }
+
+    const contractDateResult = parseEmployeeDateToISO(
+      contractDateDisplay,
+      i18n.locale,
+      {
+        defaultCurrentYearForMissingYear: i18n.locale === "de",
+      }
+    );
+    if (!contractDateResult.valid) {
+      const format =
+        i18n.locale === "de" ? germanContractStartDateFormat : "MM/DD/YYYY";
+      setContractDateError(
+        i18n._(msg`Invalid date. Please use format ${format}`)
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const updatePayload: Partial<EmployeeFormData> = { ...formData };
+      setBirthDateDisplay(birthDateResult.formatted);
+      setContractDateDisplay(contractDateResult.formatted);
+      setBirthDateError(null);
+      setContractDateError(null);
+
+      const updatePayload: Partial<EmployeeFormData> = {
+        ...formData,
+        date_of_birth: birthDateResult.iso,
+        contract_start_date: contractDateResult.iso,
+      };
       delete updatePayload.status;
       await updateEmployee(id, updatePayload);
       navigate(`/employees/${id}`);
@@ -399,13 +439,20 @@ export function EmployeeEdit() {
                         setContractDateError(null);
                       } else if (e.target.value) {
                         const format =
-                          i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
+                          i18n.locale === "de"
+                            ? germanContractStartDateFormat
+                            : "MM/DD/YYYY";
                         setContractDateError(
                           i18n._(msg`Invalid date. Please use format ${format}`)
                         );
                       }
                     }}
                   />
+                  {i18n.locale === "de" && (
+                    <Text className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
+                      {germanContractStartDateHint}
+                    </Text>
+                  )}
                   {contractDateError && (
                     <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
                       {contractDateError}

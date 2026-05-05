@@ -46,6 +46,10 @@ const fieldOrder: EmployeeFormField[] = [
 ];
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const germanContractStartDateHint =
+  "Erwartetes Format: TT.MM.JJJJ. Optional ist TT.MM.; das aktuelle Jahr wird automatisch ergänzt.";
+const germanContractStartDateError =
+  "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ (optional TT.MM. für das aktuelle Jahr).";
 
 /**
  * Employee Create Form
@@ -226,7 +230,7 @@ export function EmployeeCreate() {
       if (!contractDate.valid) {
         errors.contract_start_date =
           i18n.locale === "de"
-            ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+            ? germanContractStartDateError
             : "Invalid date. Please use format MM/DD/YYYY";
       } else {
         normalizedData.contract_start_date = contractDate.iso;
@@ -611,12 +615,17 @@ export function EmployeeCreate() {
                           ...prev,
                           contract_start_date:
                             i18n.locale === "de"
-                              ? "Ungültiges Datum. Bitte verwenden Sie das Format TT.MM.JJJJ"
+                              ? germanContractStartDateError
                               : "Invalid date. Please use format MM/DD/YYYY",
                         }));
                       }
                     }}
                   />
+                  {i18n.locale === "de" && (
+                    <Text className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
+                      {germanContractStartDateHint}
+                    </Text>
+                  )}
                   {fieldErrors.contract_start_date && (
                     <ErrorMessage id={getFieldErrorId("contract_start_date")}>
                       {fieldErrors.contract_start_date}
