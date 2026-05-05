@@ -26,6 +26,8 @@ import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
 import {
   formatEmployeeDateForDisplay,
+  GERMAN_CONTRACT_START_DATE_FORMAT,
+  GERMAN_CONTRACT_START_DATE_HINT,
   parseEmployeeDateToISO,
 } from "./employeeDateUtils";
 
@@ -40,6 +42,8 @@ export function EmployeeEdit() {
   // Display values for date inputs
   const [birthDateDisplay, setBirthDateDisplay] = useState("");
   const [contractDateDisplay, setContractDateDisplay] = useState("");
+  const [birthDateDirty, setBirthDateDirty] = useState(false);
+  const [contractDateDirty, setContractDateDirty] = useState(false);
   // Date validation errors
   const [birthDateError, setBirthDateError] = useState<string | null>(null);
   const [contractDateError, setContractDateError] = useState<string | null>(
@@ -133,6 +137,8 @@ export function EmployeeEdit() {
             )
           );
         }
+        setBirthDateDirty(false);
+        setContractDateDirty(false);
       })
       .catch((err) => {
         if (!active) {
@@ -173,10 +179,65 @@ export function EmployeeEdit() {
       return;
     }
 
+    let normalizedBirthDateIso = formData.date_of_birth;
+    let normalizedBirthDateDisplay = birthDateDisplay;
+    if (birthDateDirty) {
+      const birthDateResult = parseEmployeeDateToISO(
+        birthDateDisplay,
+        i18n.locale
+      );
+      if (!birthDateResult.valid) {
+        const format = i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
+        setBirthDateError(
+          i18n._(msg`Invalid date. Please use format ${format}`)
+        );
+        return;
+      }
+
+      normalizedBirthDateIso = birthDateResult.iso;
+      normalizedBirthDateDisplay = birthDateResult.formatted;
+    }
+
+    let normalizedContractDateIso = formData.contract_start_date;
+    let normalizedContractDateDisplay = contractDateDisplay;
+    if (contractDateDirty) {
+      const contractDateResult = parseEmployeeDateToISO(
+        contractDateDisplay,
+        i18n.locale,
+        {
+          defaultCurrentYearForMissingYear: i18n.locale === "de",
+        }
+      );
+      if (!contractDateResult.valid) {
+        const format =
+          i18n.locale === "de"
+            ? GERMAN_CONTRACT_START_DATE_FORMAT
+            : "MM/DD/YYYY";
+        setContractDateError(
+          i18n._(msg`Invalid date. Please use format ${format}`)
+        );
+        return;
+      }
+
+      normalizedContractDateIso = contractDateResult.iso;
+      normalizedContractDateDisplay = contractDateResult.formatted;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const updatePayload: Partial<EmployeeFormData> = { ...formData };
+      setBirthDateDisplay(normalizedBirthDateDisplay);
+      setContractDateDisplay(normalizedContractDateDisplay);
+      setBirthDateError(null);
+      setContractDateError(null);
+      setBirthDateDirty(false);
+      setContractDateDirty(false);
+
+      const updatePayload: Partial<EmployeeFormData> = {
+        ...formData,
+        date_of_birth: normalizedBirthDateIso,
+        contract_start_date: normalizedContractDateIso,
+      };
       delete updatePayload.status;
       await updateEmployee(id, updatePayload);
       navigate(`/employees/${id}`);
@@ -293,6 +354,7 @@ export function EmployeeEdit() {
                     value={birthDateDisplay}
                     onChange={(e) => {
                       setBirthDateDisplay(e.target.value);
+                      setBirthDateDirty(true);
                       setBirthDateError(null); // Clear error on change
                     }}
                     onBlur={(e) => {
@@ -303,6 +365,7 @@ export function EmployeeEdit() {
                       if (result.valid) {
                         setBirthDateDisplay(result.formatted);
                         handleChange("date_of_birth", result.iso);
+                        setBirthDateDirty(false);
                         setBirthDateError(null);
                       } else if (e.target.value) {
                         const format =
@@ -382,26 +445,39 @@ export function EmployeeEdit() {
                     value={contractDateDisplay}
                     onChange={(e) => {
                       setContractDateDisplay(e.target.value);
+                      setContractDateDirty(true);
                       setContractDateError(null); // Clear error on change
                     }}
                     onBlur={(e) => {
                       const result = parseEmployeeDateToISO(
                         e.target.value,
-                        i18n.locale
+                        i18n.locale,
+                        {
+                          defaultCurrentYearForMissingYear:
+                            i18n.locale === "de",
+                        }
                       );
                       if (result.valid) {
                         setContractDateDisplay(result.formatted);
                         handleChange("contract_start_date", result.iso);
+                        setContractDateDirty(false);
                         setContractDateError(null);
                       } else if (e.target.value) {
                         const format =
-                          i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
+                          i18n.locale === "de"
+                            ? GERMAN_CONTRACT_START_DATE_FORMAT
+                            : "MM/DD/YYYY";
                         setContractDateError(
                           i18n._(msg`Invalid date. Please use format ${format}`)
                         );
                       }
                     }}
                   />
+                  {i18n.locale === "de" && (
+                    <Text className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
+                      {GERMAN_CONTRACT_START_DATE_HINT}
+                    </Text>
+                  )}
                   {contractDateError && (
                     <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
                       {contractDateError}

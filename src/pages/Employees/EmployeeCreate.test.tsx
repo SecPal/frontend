@@ -41,7 +41,9 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 function submitEmployeeCreateForm() {
-  fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
+  fireEvent.click(
+    screen.getByRole("button", { name: /create employee|mitarbeiter anlegen/i })
+  );
 }
 
 const mockOrganizationalUnits = [
@@ -890,6 +892,97 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(birthDateInput).toHaveValue("01.01.1990");
         expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      i18n.activate("en");
+    });
+
+    it("should normalize short German contract start date without year to current year", async () => {
+      i18n.activate("de");
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      const currentYear = new Date().getFullYear();
+      const contractStartDateInput = screen.getByLabelText(
+        /datum des vertragsbeginns/i
+      );
+
+      fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
+      fireEvent.blur(contractStartDateInput);
+
+      await waitFor(() => {
+        expect(contractStartDateInput).toHaveValue(`01.06.${currentYear}`);
+        expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
+      });
+
+      i18n.activate("en");
+    });
+
+    it("should submit short German contract start date without blur using current year", async () => {
+      i18n.activate("de");
+      const mockCreateEmployee = vi.mocked(employeeApi.createEmployee);
+      mockCreateEmployee.mockResolvedValue({
+        id: "emp-de-1",
+        employee_number: "EMP-DE-1",
+        first_name: "Max",
+        last_name: "Mustermann",
+        full_name: "Max Mustermann",
+        email: "max.mustermann@secpal.dev",
+        phone: "",
+        date_of_birth: "1990-01-01",
+        contract_start_date: `${new Date().getFullYear()}-06-01`,
+        position: "Sicherheitsmitarbeiter",
+        status: "pre_contract",
+        contract_type: "full_time",
+        management_level: 0,
+        organizational_unit: {
+          id: "unit-1",
+          name: "Main Office",
+        },
+        user: undefined,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      });
+
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Main Office")).toBeInTheDocument();
+      });
+
+      fireEvent.change(screen.getByLabelText(/vorname/i), {
+        target: { value: "Max" },
+      });
+      fireEvent.change(screen.getByLabelText(/nachname/i), {
+        target: { value: "Mustermann" },
+      });
+      fireEvent.change(screen.getByLabelText(/e-mail-adresse/i), {
+        target: { value: "max.mustermann@secpal.dev" },
+      });
+      fireEvent.change(screen.getByLabelText(/geburtsdatum/i), {
+        target: { value: "01.01.1990" },
+      });
+      fireEvent.change(screen.getByLabelText("Position *"), {
+        target: { value: "Sicherheitsmitarbeiter" },
+      });
+      fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
+        target: { value: "1.6." },
+      });
+      fireEvent.change(screen.getByLabelText(/organisatorische einheit/i), {
+        target: { value: "unit-1" },
+      });
+
+      submitEmployeeCreateForm();
+
+      await waitFor(() => {
+        expect(mockCreateEmployee).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contract_start_date: `${new Date().getFullYear()}-06-01`,
+          })
+        );
       });
 
       i18n.activate("en");
