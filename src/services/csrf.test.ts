@@ -37,6 +37,14 @@ describe("csrf", () => {
           credentials: "include",
         })
       );
+
+      const callArgs = mockFetch.mock.calls[0];
+      expect(callArgs).toBeDefined();
+      if (callArgs) {
+        const requestInit = callArgs[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept-Language")).toBe("en");
+      }
     });
 
     it("throws CsrfError when CSRF endpoint fails", async () => {
@@ -146,6 +154,7 @@ describe("csrf", () => {
       if (callArgs) {
         const requestInit = callArgs[1] as RequestInit;
         const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept-Language")).toBe("en");
         expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
       }
     });
@@ -179,6 +188,7 @@ describe("csrf", () => {
         const headers = requestInit.headers as Headers;
         expect(headers.get("Content-Type")).toBe("application/json");
         expect(headers.get("Accept")).toBe("application/json");
+        expect(headers.get("Accept-Language")).toBe("en");
         expect(headers.get("X-XSRF-TOKEN")).toBe("test-csrf-token");
       }
     });
@@ -201,7 +211,9 @@ describe("csrf", () => {
       expect(callArgs).toBeDefined();
       if (callArgs) {
         const requestInit = callArgs[1] as RequestInit;
-        expect(requestInit.headers).not.toHaveProperty("X-XSRF-TOKEN");
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept-Language")).toBe("en");
+        expect(headers.get("X-XSRF-TOKEN")).toBeNull();
       }
     });
 
@@ -244,6 +256,14 @@ describe("csrf", () => {
         })
       );
 
+      const csrfRefreshCall = mockFetch.mock.calls[1];
+      expect(csrfRefreshCall).toBeDefined();
+      if (csrfRefreshCall) {
+        const requestInit = csrfRefreshCall[1] as RequestInit;
+        const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept-Language")).toBe("en");
+      }
+
       // Verify retry with new token
       expect(mockFetch).toHaveBeenNthCalledWith(
         3,
@@ -259,6 +279,7 @@ describe("csrf", () => {
       if (retryCallArgs) {
         const requestInit = retryCallArgs[1] as RequestInit;
         const headers = requestInit.headers as Headers;
+        expect(headers.get("Accept-Language")).toBe("en");
         expect(headers.get("X-XSRF-TOKEN")).toBe("new-csrf-token");
       }
     });

@@ -12,6 +12,7 @@ import { OnboardingWizard } from "./OnboardingWizard";
 
 const onboardingApiMocks = vi.hoisted(() => ({
   createOnboardingSubmission: vi.fn(),
+  fetchOnboardingNationalityOptions: vi.fn(),
   fetchOnboardingSteps: vi.fn(),
   fetchOnboardingTemplate: vi.fn(),
   uploadOnboardingFile: vi.fn(),
@@ -38,6 +39,24 @@ function renderWithProviders() {
       </I18nProvider>
     </MemoryRouter>
   );
+}
+
+async function selectNationality(
+  user: ReturnType<typeof userEvent.setup>,
+  query = "de"
+) {
+  const nationalityControl = screen.getByLabelText(/^nationalities$/i);
+
+  if (nationalityControl instanceof HTMLSelectElement) {
+    await user.selectOptions(nationalityControl, "DE");
+    return;
+  }
+
+  const nationalityInput = nationalityControl as HTMLInputElement;
+  await user.click(nationalityInput);
+  await user.clear(nationalityInput);
+  await user.type(nationalityInput, query);
+  await user.keyboard("{ArrowDown}{Enter}");
 }
 
 describe("OnboardingWizard", () => {
@@ -125,6 +144,10 @@ describe("OnboardingWizard", () => {
       id: "file-1",
       filename: "contract.pdf",
     });
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([
+      { code: "DE", name: "Germany" },
+      { code: "PL", name: "Poland" },
+    ]);
   });
 
   it("renders schema fields, prefills the draft submission, and updates existing drafts without alerts", async () => {
@@ -198,6 +221,239 @@ describe("OnboardingWizard", () => {
     expect(
       await screen.findByRole("heading", { name: /you're all set/i })
     ).toBeInTheDocument();
+  });
+
+  it("requires residence title confirmation for non-exempt nationalities", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+
+    expect(
+      screen.getByLabelText(/residence title type/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/employment permitted/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/unlimited residence title/i)
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(await screen.findAllByText("This field is required.")).toHaveLength(2);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+    expect(await screen.findAllByText("This field is required.")).toHaveLength(2);
+    await user.type(expiryInput, "2000-01-01");
+    await user.selectOptions(
+      screen.getByLabelText(/employment permitted/i),
+      "no"
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+    expect(
+      await screen.findByText(
+        "A valid residence title without employment authorization cannot be accepted. Please contact HR."
+      )
+    ).toBeInTheDocument();
+
+    await user.selectOptions(
+      screen.getByLabelText(/employment permitted/i),
+      "yes"
+    );
+    await user.clear(expiryInput);
+    await user.type(expiryInput, "2030-12-31");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.updateOnboardingSubmission
+      ).toHaveBeenCalledWith(
+        "submission-1",
+        expect.objectContaining({
+          form_data: expect.objectContaining({
+            residence_permit_title: "Aufenthaltserlaubnis",
+            residence_permit_employment_allowed: "yes",
+            residence_permit_unlimited: false,
+            residence_permit_expiry: "2030-12-31",
+          }),
+        })
+      );
+    });
+  });
+
+  it("shows an explicit error when nationality options cannot be loaded", async () => {
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockRejectedValueOnce(
+      new Error("network")
+    );
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["nationalities"],
+        properties: {
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /nationality options could not be loaded right now/i
+      )
+    ).toBeInTheDocument();
+
+    const nationalitySelect = screen.getByLabelText(/^nationalities$/i);
+    expect(nationalitySelect).toBeDisabled();
+  });
+
+  it("normalizes nationality payloads to a single value before saving", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["nationalities"],
+        properties: {
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Tell us who you are.",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {
+            nationalities: ["DE", "TR"],
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.updateOnboardingSubmission
+      ).toHaveBeenCalledWith(
+        "submission-1",
+        expect.objectContaining({
+          status: "draft",
+          form_data: expect.objectContaining({
+            nationalities: ["DE"],
+          }),
+        })
+      );
+    });
   });
 
   it("shows the API validation message when a file upload is rejected", async () => {
@@ -370,6 +626,18 @@ describe("OnboardingWizard optional emergency contact schema", () => {
     expect(
       screen.getByLabelText(/contact 2: relationship/i)
     ).toBeInTheDocument();
+  });
+
+  it("keeps document type selection available on steps without nationality fields", async () => {
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    const documentTypeSelect = screen.getByLabelText(/document type/i);
+    expect(documentTypeSelect).toBeInTheDocument();
+    expect(documentTypeSelect).toHaveValue("contract");
   });
 
   it("requires a phone number for each emergency contact with a name", async () => {
@@ -572,7 +840,7 @@ describe("OnboardingWizard HR-managed intended activities (BWR)", () => {
     expect(screen.queryByText(/intended activities/i)).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
-    await user.click(screen.getByLabelText(/^DE$/));
+    await selectNationality(user);
 
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
@@ -722,7 +990,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
     ).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
-    await user.click(screen.getByLabelText(/^DE$/));
+    await selectNationality(user);
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
     );
@@ -844,7 +1112,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
     ).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
-    await user.click(screen.getByLabelText(/^DE$/));
+    await selectNationality(user);
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
     );

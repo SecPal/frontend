@@ -116,6 +116,10 @@ msgstr "Edit Phone"
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Notifications are enabled. You'll receive updates based on your preferences."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Employment permitted"
+msgstr "Employment permitted"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -173,6 +177,14 @@ msgstr "Failed to load form template"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name Change Detected"
 msgstr "Name Change Detected"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
+msgstr "A valid residence title without employment authorization cannot be accepted. Please contact HR."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No"
+msgstr "No"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
@@ -382,6 +394,10 @@ msgstr "Search customers..."
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Invalid combination: No employees will be visible with this range."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Search and select one nationality."
+msgstr "Search and select one nationality."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Qualifications"
 msgstr "Qualifications"
@@ -428,6 +444,10 @@ msgstr "Document Type"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
 msgstr "Failed"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity Document Upload"
+msgstr "Identity Document Upload"
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Company"
@@ -596,6 +616,10 @@ msgstr "Select a new parent for this organizational unit."
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract Type"
 msgstr "Contract Type"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Residence title type"
+msgstr "Residence title type"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Before you begin"
@@ -1067,6 +1091,10 @@ msgstr "Failed to submit"
 msgid "Bootstrap completed"
 msgstr "Bootstrap completed"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Enter the expiry date if the residence title is limited."
+msgstr "Enter the expiry date if the residence title is limited."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1123,6 +1151,10 @@ msgstr "Loading activity logs..."
 msgid "Page {0} of {1}"
 msgstr "Page {0} of {1}"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Select residence title"
+msgstr "Select residence title"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Activate"
 msgstr "Activate"
@@ -1160,6 +1192,10 @@ msgstr "Required information"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Nationality options are currently unavailable. Please try again in a moment."
+msgstr "Nationality options are currently unavailable. Please try again in a moment."
 
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
@@ -1593,6 +1629,7 @@ msgid "Loading passkeys..."
 msgstr "Loading passkeys..."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Yes"
 msgstr "Yes"
 
@@ -1624,6 +1661,10 @@ msgstr "Complete on your device…"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Management level must be between 1 and 255"
 msgstr "Management level must be between 1 and 255"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Based on the selected nationality, please specify which valid German residence title is available."
+msgstr "Based on the selected nationality, please specify which valid German residence title is available."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
@@ -2085,6 +2126,10 @@ msgstr "Authentication"
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Nationality options could not be loaded right now. Please reload this page and try again."
+msgstr "Nationality options could not be loaded right now. Please reload this page and try again."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
 msgstr "Regenerate recovery codes"
@@ -2329,6 +2374,10 @@ msgstr "Complete Account Setup"
 msgid "Preparing MFA setup..."
 msgstr "Preparing MFA setup..."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "The residence title expiry date cannot be in the past."
+msgstr "The residence title expiry date cannot be in the past."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "From Date"
 msgstr "From Date"
@@ -2394,6 +2443,10 @@ msgstr "Parent"
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" created successfully"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Remove"
@@ -2401,6 +2454,10 @@ msgstr "Remove"
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Viewing cached data. Some units may be outdated."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Residence title valid until"
+msgstr "Residence title valid until"
 
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
@@ -2489,6 +2546,10 @@ msgstr "Failed to move organizational unit"
 #: src/lib/organizationalUnitUtils.ts
 msgid "Region"
 msgstr "Region"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Is employment permitted for this residence title in Germany?"
+msgstr "Is employment permitted for this residence title in Germany?"
 
 #: src/pages/Login.tsx
 msgid "Check your browser…"

@@ -8,8 +8,10 @@ import { Trans } from "@lingui/react/macro";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   createOnboardingSubmission,
+  fetchOnboardingNationalityOptions,
   fetchOnboardingSteps,
   fetchOnboardingTemplate,
+  type OnboardingNationalityOption,
   type OnboardingFormTemplate,
   type OnboardingStep,
   type OnboardingSubmission,
@@ -20,10 +22,10 @@ import { ApiError } from "../../services/ApiError";
 import {
   Checkbox,
   CheckboxField,
-  CheckboxGroup,
 } from "../../components/checkbox";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
+import { Combobox, ComboboxOption } from "../../components/combobox";
 import {
   Description,
   ErrorMessage,
@@ -141,6 +143,57 @@ const EMPLOYEE_ONBOARDING_HR_MANAGED_FIELDS = new Set(["intended_activities"]);
 const FIRST_EMERGENCY_CONTACT_FIELD_PREFIX = "contact_1_";
 const SECOND_EMERGENCY_CONTACT_FIELD_PREFIX = "contact_2_";
 const EMERGENCY_CONTACT_NAME_FIELDS = ["contact_1_name", "contact_2_name"];
+const SINGLE_VALUE_ARRAY_FIELDS = new Set(["nationalities"]);
+const RESIDENCE_TITLE_TYPE_FIELD = "residence_permit_title";
+const RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD =
+  "residence_permit_employment_allowed";
+const RESIDENCE_TITLE_UNLIMITED_FIELD = "residence_permit_unlimited";
+const RESIDENCE_TITLE_EXPIRY_FIELD = "residence_permit_expiry";
+const RESIDENCE_TITLE_OPTIONS = [
+  { value: "Aufenthaltserlaubnis", isUnlimited: false },
+  { value: "Blaue Karte EU", isUnlimited: false },
+  { value: "ICT-Karte", isUnlimited: false },
+  { value: "Mobile-ICT-Karte", isUnlimited: false },
+  { value: "Niederlassungserlaubnis", isUnlimited: true },
+  { value: "Erlaubnis zum Daueraufenthalt-EU", isUnlimited: true },
+  { value: "Chancenkarte", isUnlimited: false },
+  { value: "Aufenthaltsgestattung", isUnlimited: false },
+  { value: "Duldung", isUnlimited: false },
+  { value: "Visum", isUnlimited: false },
+] as const;
+const RESIDENCE_TITLE_EXEMPT_COUNTRY_CODES = new Set([
+  "AT",
+  "BE",
+  "BG",
+  "CH",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "SE",
+  "SI",
+  "SK",
+]);
 
 function isEmployeeEditableOnboardingField(fieldName: string): boolean {
   return !EMPLOYEE_ONBOARDING_HR_MANAGED_FIELDS.has(fieldName);
@@ -200,6 +253,25 @@ function isOnboardingFieldVisible(
   fieldName: string,
   formData: Record<string, unknown>
 ): boolean {
+  if (
+    fieldName === RESIDENCE_TITLE_TYPE_FIELD ||
+    fieldName === RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD ||
+    fieldName === RESIDENCE_TITLE_UNLIMITED_FIELD
+  ) {
+    return requiresResidenceTitleQuestion(formData.nationalities);
+  }
+
+  if (fieldName === RESIDENCE_TITLE_EXPIRY_FIELD) {
+    const selectedResidenceTitle = getTextValue(
+      formData[RESIDENCE_TITLE_TYPE_FIELD]
+    ).trim();
+    return (
+      requiresResidenceTitleQuestion(formData.nationalities) &&
+      selectedResidenceTitle.length > 0 &&
+      !isResidenceTitleUnlimited(selectedResidenceTitle)
+    );
+  }
+
   if (!isEmployeeEditableOnboardingField(fieldName)) {
     return false;
   }
@@ -214,9 +286,13 @@ function sanitizeEmployeeOnboardingFormData(
   formData: Record<string, unknown>
 ): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(formData).filter(([fieldName]) =>
-      isOnboardingFieldVisible(fieldName, formData)
-    )
+    Object.entries(formData)
+      .filter(([fieldName]) => isOnboardingFieldVisible(fieldName, formData))
+      .map(([fieldName, value]) =>
+        SINGLE_VALUE_ARRAY_FIELDS.has(fieldName)
+          ? [fieldName, getSingleValueArray(value)]
+          : [fieldName, value]
+      )
   );
 }
 
@@ -263,6 +339,107 @@ function getArrayValue(value: unknown): string[] {
     : [];
 }
 
+function getSingleValueArray(value: unknown): string[] {
+  const arrayValue = getArrayValue(value);
+  return arrayValue.length > 0 ? [arrayValue[0] ?? ""] : [];
+}
+
+function getPrimaryNationalityCode(nationalitiesValue: unknown): string | null {
+  const primaryNationality = getSingleValueArray(nationalitiesValue)[0];
+  if (!primaryNationality) {
+    return null;
+  }
+
+  const normalizedCode = primaryNationality.trim().toUpperCase();
+  return normalizedCode.length > 0 ? normalizedCode : null;
+}
+
+function requiresResidenceTitleQuestion(nationalitiesValue: unknown): boolean {
+  const primaryNationalityCode = getPrimaryNationalityCode(nationalitiesValue);
+  if (!primaryNationalityCode) {
+    return false;
+  }
+
+  return !RESIDENCE_TITLE_EXEMPT_COUNTRY_CODES.has(
+    primaryNationalityCode
+  );
+}
+
+function getStepUploadDocumentType(
+  schema: OnboardingObjectSchema | null
+): OnboardingDocumentType | null {
+  if (!schema) {
+    return null;
+  }
+
+  const hasNationalityField =
+    "nationalities" in schema.properties ||
+    schema.required.includes("nationalities");
+
+  if (hasNationalityField) {
+    return "id_document";
+  }
+
+  return null;
+}
+
+function validateAdditionalRequiredFields(
+  schema: OnboardingObjectSchema | null,
+  formData: Record<string, unknown>,
+  requiredFieldMessage: string,
+  expiredResidenceTitleMessage: string,
+  employmentNotPermittedMessage: string
+): FieldErrors {
+  if (!schema || !("nationalities" in schema.properties)) {
+    return {};
+  }
+
+  if (
+    !requiresResidenceTitleQuestion(formData.nationalities)
+  ) {
+    return {};
+  }
+
+  const errors: FieldErrors = {};
+  const selectedResidenceTitle = getTextValue(
+    formData[RESIDENCE_TITLE_TYPE_FIELD]
+  ).trim();
+  const employmentAllowed = getTextValue(
+    formData[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+  )
+    .trim()
+    .toLowerCase();
+
+  if (selectedResidenceTitle.length === 0) {
+    errors[RESIDENCE_TITLE_TYPE_FIELD] = requiredFieldMessage;
+  }
+  if (employmentAllowed.length === 0) {
+    errors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] = requiredFieldMessage;
+  } else if (employmentAllowed === "no") {
+    errors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] =
+      employmentNotPermittedMessage;
+  }
+
+  if (
+    selectedResidenceTitle.length > 0 &&
+    !isResidenceTitleUnlimited(selectedResidenceTitle)
+  ) {
+    const residenceTitleExpiry = getTextValue(
+      formData[RESIDENCE_TITLE_EXPIRY_FIELD]
+    ).trim();
+    if (residenceTitleExpiry.length === 0) {
+      errors[RESIDENCE_TITLE_EXPIRY_FIELD] = requiredFieldMessage;
+    } else if (
+      /^\d{4}-\d{2}-\d{2}$/.test(residenceTitleExpiry) &&
+      residenceTitleExpiry < getLocalTodayIsoDate()
+    ) {
+      errors[RESIDENCE_TITLE_EXPIRY_FIELD] = expiredResidenceTitleMessage;
+    }
+  }
+
+  return errors;
+}
+
 function getTextValue(value: unknown): string {
   return typeof value === "string"
     ? value
@@ -296,6 +473,26 @@ function getSchemaOptions(
         ? String(value)
         : ""),
   }));
+}
+
+function getLocalTodayIsoDate(): string {
+  const today = new Date();
+  const year = String(today.getFullYear());
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isResidenceTitleUnlimited(titleValue: string): boolean {
+  const normalizedTitle = titleValue.trim();
+  if (normalizedTitle.length === 0) {
+    return false;
+  }
+
+  return (
+    RESIDENCE_TITLE_OPTIONS.find((option) => option.value === normalizedTitle)
+      ?.isUnlimited ?? false
+  );
 }
 
 function getArrayTextareaValue(value: unknown): string {
@@ -621,6 +818,7 @@ function SchemaFieldRenderer({
   required,
   readOnly,
   formData,
+  dynamicArrayOptions,
   error,
   onChange,
 }: {
@@ -629,6 +827,7 @@ function SchemaFieldRenderer({
   required: boolean;
   readOnly: boolean;
   formData: Record<string, unknown>;
+  dynamicArrayOptions?: Array<{ value: string; label: string }>;
   error?: string;
   onChange: (fieldName: string, value: unknown) => void;
 }) {
@@ -761,10 +960,81 @@ function SchemaFieldRenderer({
   }
 
   if (property.type === "array") {
-    const itemOptions = property.items ? getSchemaOptions(property.items) : [];
+    const schemaItemOptions = property.items ? getSchemaOptions(property.items) : [];
+    const itemOptions = dynamicArrayOptions ?? schemaItemOptions;
     const selectedValues = getArrayValue(formData[fieldName]);
 
+    if (fieldName === "nationalities" && itemOptions.length === 0) {
+      return (
+        <Field>
+          <Label>
+            {title}
+            {showRequiredMarker ? " *" : null}
+          </Label>
+          <Description>
+            <Trans>
+              Nationality options are currently unavailable. Please try again in
+              a moment.
+            </Trans>
+          </Description>
+          <Select
+            aria-label={title}
+            disabled
+            invalid={Boolean(error)}
+            name={fieldName}
+            required={fieldRequired}
+            value=""
+            onChange={() => {}}
+          >
+            <option value="">{_(msg`Select an option`)}</option>
+          </Select>
+          {error ? <ErrorMessage>{error}</ErrorMessage> : null}
+        </Field>
+      );
+    }
+
     if (itemOptions.length > 0) {
+      if (fieldName === "nationalities") {
+        const nationalityOptions = itemOptions.map((option) => ({
+          value: String(option.value),
+          label: option.label,
+        }));
+        const selectedValue = selectedValues[0] ?? "";
+        const selectedOption =
+          nationalityOptions.find((option) => option.value === selectedValue) ??
+          null;
+
+        return (
+          <Field>
+            <Label>
+              {title}
+              {showRequiredMarker ? " *" : null}
+            </Label>
+            <Description>
+              {_(msg`Search and select one nationality.`)}
+            </Description>
+            <Combobox
+              aria-label={title}
+              disabled={readOnly}
+              invalid={Boolean(error)}
+              name={fieldName}
+              options={nationalityOptions}
+              placeholder={_(msg`Select an option`)}
+              value={selectedOption}
+              displayValue={(option) => option?.label}
+              onChange={(option) =>
+                onChange(fieldName, option ? [option.value] : [])
+              }
+            >
+              {(option) => (
+                <ComboboxOption value={option}>{option.label}</ComboboxOption>
+              )}
+            </Combobox>
+            {error ? <ErrorMessage>{error}</ErrorMessage> : null}
+          </Field>
+        );
+      }
+
       return (
         <Field>
           <Label>
@@ -774,31 +1044,28 @@ function SchemaFieldRenderer({
           {property.description ? (
             <Description>{property.description}</Description>
           ) : null}
-          <CheckboxGroup aria-label={title}>
-            {itemOptions.map((option) => {
-              const optionValue = String(option.value);
-
-              return (
-                <CheckboxField key={optionValue}>
-                  <Checkbox
-                    aria-label={option.label}
-                    checked={selectedValues.includes(optionValue)}
-                    disabled={readOnly}
-                    onChange={(checked) => {
-                      const nextValues = checked
-                        ? [...selectedValues, optionValue]
-                        : selectedValues.filter(
-                            (entry) => entry !== optionValue
-                          );
-
-                      onChange(fieldName, nextValues);
-                    }}
-                  />
-                  <Label>{option.label}</Label>
-                </CheckboxField>
+          <Select
+            aria-label={title}
+            disabled={readOnly}
+            invalid={Boolean(error)}
+            multiple
+            name={fieldName}
+            required={fieldRequired}
+            value={selectedValues}
+            onChange={(event) => {
+              const nextValues = Array.from(
+                event.target.selectedOptions,
+                (option) => option.value
               );
-            })}
-          </CheckboxGroup>
+              onChange(fieldName, nextValues);
+            }}
+          >
+            {itemOptions.map((option) => (
+              <option key={String(option.value)} value={String(option.value)}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
           {error ? <ErrorMessage>{error}</ErrorMessage> : null}
         </Field>
       );
@@ -989,6 +1256,9 @@ export function OnboardingWizard() {
     [entryRouteState, _]
   );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [nationalityOptions, setNationalityOptions] = useState<
+    OnboardingNationalityOption[]
+  >([]);
   const [uploading, setUploading] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] =
     useState<OnboardingDocumentType>("contract");
@@ -1007,6 +1277,7 @@ export function OnboardingWizard() {
   );
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
+  const stepUploadDocumentType = getStepUploadDocumentType(schema);
   const isCurrentStepEditable = isEditableSubmission(submission);
 
   function resetUploadState() {
@@ -1097,6 +1368,36 @@ export function OnboardingWizard() {
       active = false;
     };
   }, [navigate]);
+
+  useEffect(() => {
+    let active = true;
+
+    void fetchOnboardingNationalityOptions()
+      .then((options) => {
+        if (!active) {
+          return;
+        }
+
+        setNationalityOptions(options);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+
+        setNationalityOptions([]);
+        setFeedback({
+          tone: "error",
+          message: _(
+            msg`Nationality options could not be loaded right now. Please reload this page and try again.`
+          ),
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [_]);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
@@ -1437,6 +1738,15 @@ export function OnboardingWizard() {
       formData,
       _(msg`This field is required.`)
     );
+    const additionalRequiredFieldErrors = validateAdditionalRequiredFields(
+      requiredSchema,
+      formData,
+      _(msg`This field is required.`),
+      _(msg`The residence title expiry date cannot be in the past.`),
+      _(
+        msg`A valid residence title without employment authorization cannot be accepted. Please contact HR.`
+      )
+    );
     const patternFieldErrors = validatePatternFields(
       requiredSchema,
       formData,
@@ -1445,6 +1755,7 @@ export function OnboardingWizard() {
     );
     const nextFieldErrors = {
       ...requiredFieldErrors,
+      ...additionalRequiredFieldErrors,
       ...patternFieldErrors,
     };
 
@@ -1563,11 +1874,29 @@ export function OnboardingWizard() {
   }
 
   function handleFieldChange(fieldName: string, value: unknown) {
+    const normalizedValue = SINGLE_VALUE_ARRAY_FIELDS.has(fieldName)
+      ? getSingleValueArray(value)
+      : value;
+
     setFormData((currentFormData) => {
-      const nextFormData = {
+      let nextFormData: Record<string, unknown> = {
         ...currentFormData,
-        [fieldName]: value,
+        [fieldName]: normalizedValue,
       };
+
+      if (fieldName === RESIDENCE_TITLE_TYPE_FIELD) {
+        const selectedResidenceTitle = getTextValue(normalizedValue);
+        const residenceTitleIsUnlimited =
+          isResidenceTitleUnlimited(selectedResidenceTitle);
+
+        nextFormData = {
+          ...nextFormData,
+          [RESIDENCE_TITLE_UNLIMITED_FIELD]: residenceTitleIsUnlimited,
+          [RESIDENCE_TITLE_EXPIRY_FIELD]: residenceTitleIsUnlimited
+            ? ""
+            : nextFormData[RESIDENCE_TITLE_EXPIRY_FIELD],
+        };
+      }
       const property = schema?.properties[fieldName];
       const requiredFieldMessage = _(msg`This field is required.`);
       const requiredSchema =
@@ -1579,6 +1908,17 @@ export function OnboardingWizard() {
             requiredSchema,
             nextFormData,
             requiredFieldMessage
+          )
+        : {};
+      const additionalRequiredFieldErrors = requiredSchema
+        ? validateAdditionalRequiredFields(
+            requiredSchema,
+            nextFormData,
+            requiredFieldMessage,
+            _(msg`The residence title expiry date cannot be in the past.`),
+            _(
+              msg`A valid residence title without employment authorization cannot be accepted. Please contact HR.`
+            )
           )
         : {};
       const patternFieldErrors = requiredSchema
@@ -1637,6 +1977,32 @@ export function OnboardingWizard() {
           }
         }
 
+        for (const additionalFieldName of [
+          RESIDENCE_TITLE_TYPE_FIELD,
+          RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+          RESIDENCE_TITLE_EXPIRY_FIELD,
+        ] as const) {
+          const additionalRequiredError =
+            additionalRequiredFieldErrors[additionalFieldName];
+          const hasExistingAdditionalError = Boolean(
+            currentFieldErrors[additionalFieldName]
+          );
+          const isEditedField = additionalFieldName === fieldName;
+
+          if (additionalRequiredError) {
+            if (
+              (hasExistingAdditionalError || isEditedField) &&
+              nextFieldErrors[additionalFieldName] !== additionalRequiredError
+            ) {
+              nextFieldErrors[additionalFieldName] = additionalRequiredError;
+              changed = true;
+            }
+          } else if (nextFieldErrors[additionalFieldName]) {
+            delete nextFieldErrors[additionalFieldName];
+            changed = true;
+          }
+        }
+
         return changed ? nextFieldErrors : currentFieldErrors;
       });
 
@@ -1678,10 +2044,13 @@ export function OnboardingWizard() {
         return;
       }
 
+      const targetUploadDocumentType =
+        stepUploadDocumentType ?? uploadDocumentType;
+
       const uploadedFileResponse = await uploadOnboardingFile(
         targetSubmission.id,
         uploadFile,
-        uploadDocumentType
+        targetUploadDocumentType
       );
 
       if (currentStepIndexRef.current !== startedStepIndex) {
@@ -1692,7 +2061,7 @@ export function OnboardingWizard() {
         ...currentFiles,
         {
           ...uploadedFileResponse,
-          documentType: uploadDocumentType,
+          documentType: targetUploadDocumentType,
         },
       ]);
       setUploadFeedback({
@@ -1852,6 +2221,15 @@ export function OnboardingWizard() {
                         key={fieldName}
                         fieldName={fieldName}
                         property={property}
+                        dynamicArrayOptions={
+                          fieldName === "nationalities" &&
+                          nationalityOptions.length > 0
+                            ? nationalityOptions.map((option) => ({
+                                value: option.code,
+                                label: `${option.name} (${option.code})`,
+                              }))
+                            : undefined
+                        }
                         error={fieldErrors[fieldName]}
                         readOnly={!isCurrentStepEditable}
                         required={
@@ -1865,6 +2243,128 @@ export function OnboardingWizard() {
                         onChange={handleFieldChange}
                       />
                     ))}
+                  {requiresResidenceTitleQuestion(formData.nationalities) ? (
+                    <Field>
+                      <Label>
+                        <Trans>Residence title type</Trans> *
+                      </Label>
+                      <Description>
+                        <Trans>
+                          Based on the selected nationality, please specify which
+                          valid German residence title is available.
+                        </Trans>
+                      </Description>
+                      <Select
+                        aria-label={_(msg`Residence title type`)}
+                        disabled={!isCurrentStepEditable}
+                        invalid={Boolean(
+                          fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]
+                        )}
+                        name={RESIDENCE_TITLE_TYPE_FIELD}
+                        required={isCurrentStepEditable}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_TYPE_FIELD]
+                        )}
+                        onChange={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_TYPE_FIELD,
+                            event.target.value
+                          )
+                        }
+                      >
+                        <option value="">{_(msg`Select residence title`)}</option>
+                        {RESIDENCE_TITLE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.value}
+                          </option>
+                        ))}
+                      </Select>
+                      {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD] ? (
+                        <ErrorMessage>
+                          {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]}
+                        </ErrorMessage>
+                      ) : null}
+                    </Field>
+                  ) : null}
+                  {requiresResidenceTitleQuestion(formData.nationalities) ? (
+                    <Field>
+                      <Label>
+                        <Trans>Employment permitted</Trans> *
+                      </Label>
+                      <Description>
+                        <Trans>
+                          Is employment permitted for this residence title in
+                          Germany?
+                        </Trans>
+                      </Description>
+                      <Select
+                        aria-label={_(msg`Employment permitted`)}
+                        disabled={!isCurrentStepEditable}
+                        invalid={Boolean(
+                          fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                        )}
+                        name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
+                        required={isCurrentStepEditable}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                        )}
+                        onChange={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+                            event.target.value
+                          )
+                        }
+                      >
+                        <option value="">{_(msg`Select an option`)}</option>
+                        <option value="yes">{_(msg`Yes`)}</option>
+                        <option value="no">{_(msg`No`)}</option>
+                      </Select>
+                      {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] ? (
+                        <ErrorMessage>
+                          {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]}
+                        </ErrorMessage>
+                      ) : null}
+                    </Field>
+                  ) : null}
+                  {isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_EXPIRY_FIELD,
+                    formData
+                  ) ? (
+                    <Field>
+                      <Label>
+                        <Trans>Residence title valid until</Trans> *
+                      </Label>
+                      <Description>
+                        <Trans>
+                          Enter the expiry date if the residence title is limited.
+                        </Trans>
+                      </Description>
+                      <Input
+                        aria-label={_(msg`Residence title valid until`)}
+                        disabled={!isCurrentStepEditable}
+                        invalid={Boolean(
+                          fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]
+                        )}
+                        type="date"
+                        name={RESIDENCE_TITLE_EXPIRY_FIELD}
+                        required={isCurrentStepEditable}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_EXPIRY_FIELD]
+                        )}
+                        onChange={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_EXPIRY_FIELD,
+                            event.target.value
+                          )
+                        }
+                      />
+                      {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD] ? (
+                        <ErrorMessage>
+                          {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]}
+                        </ErrorMessage>
+                      ) : null}
+                    </Field>
+                  ) : null}
                 </FieldGroup>
               </Fieldset>
             ) : (
@@ -1879,157 +2379,170 @@ export function OnboardingWizard() {
 
             <div className="mt-8 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
               <Heading level={3} className="mb-3">
-                <Trans>Supporting Documents</Trans>
+                {stepUploadDocumentType ? (
+                  <Trans>Identity Document Upload</Trans>
+                ) : (
+                  <Trans>Supporting Documents</Trans>
+                )}
               </Heading>
               <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                <Trans>
-                  On every onboarding step you can upload PDF, JPG, or PNG files
-                  up to 10 MB — choose contract, identity document, or banking
-                  verification as appropriate.
-                </Trans>
+                {stepUploadDocumentType ? (
+                  <Trans>
+                    Please upload your identity card or passport (PDF, JPG,
+                    JPEG, PNG; max. 10 MB).
+                  </Trans>
+                ) : (
+                  <Trans>
+                    On every onboarding step you can upload PDF, JPG, or PNG
+                    files up to 10 MB — choose contract, identity document, or
+                    banking verification as appropriate.
+                  </Trans>
+                )}
               </Text>
 
-              {!submission ? (
-                <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                  <Trans>
-                    Your current answers will be saved as a draft before the
-                    first file upload.
-                  </Trans>
-                </Text>
-              ) : null}
+                {!submission ? (
+                  <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    <Trans>
+                      Your current answers will be saved as a draft before the
+                      first file upload.
+                    </Trans>
+                  </Text>
+                ) : null}
 
-              {uploadFeedback ? (
-                <div
-                  role={uploadFeedback.tone === "error" ? "alert" : "status"}
-                  aria-live={
-                    uploadFeedback.tone === "error" ? "assertive" : "polite"
-                  }
-                  aria-atomic="true"
-                  className={
-                    uploadFeedback.tone === "error"
-                      ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-                      : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
-                  }
-                >
-                  <Text
+                {uploadFeedback ? (
+                  <div
+                    role={uploadFeedback.tone === "error" ? "alert" : "status"}
+                    aria-live={
+                      uploadFeedback.tone === "error" ? "assertive" : "polite"
+                    }
+                    aria-atomic="true"
                     className={
                       uploadFeedback.tone === "error"
-                        ? "text-red-800 dark:text-red-200"
-                        : "text-emerald-800 dark:text-emerald-200"
+                        ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+                        : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
                     }
                   >
-                    {uploadFeedback.message}
-                  </Text>
-                </div>
-              ) : null}
-
-              {isCurrentStepEditable ? (
-                <>
-                  <Fieldset>
-                    <FieldGroup>
-                      <Field>
-                        <Label>
-                          <Trans>Document Type</Trans>
-                        </Label>
-                        <Description>
-                          <Trans>
-                            Choose the attachment category that best matches the
-                            file.
-                          </Trans>
-                        </Description>
-                        <Select
-                          aria-label={_(msg`Document Type`)}
-                          value={uploadDocumentType}
-                          onChange={(event) =>
-                            setUploadDocumentType(
-                              event.target.value as OnboardingDocumentType
-                            )
-                          }
-                        >
-                          <option value="contract">{_(msg`Contract`)}</option>
-                          <option value="id_document">
-                            {_(msg`Identity Document`)}
-                          </option>
-                          <option value="banking_details">
-                            {_(msg`Banking Details`)}
-                          </option>
-                        </Select>
-                      </Field>
-
-                      <Field>
-                        <Label>
-                          <Trans>Attachment</Trans>
-                        </Label>
-                        <Description>
-                          <Trans>Accepted formats: PDF, JPG, JPEG, PNG.</Trans>
-                        </Description>
-                        <input
-                          ref={fileInputRef}
-                          aria-label={_(msg`Attachment`)}
-                          accept={ONBOARDING_UPLOAD_ACCEPT}
-                          className="block w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm text-zinc-950 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-white"
-                          type="file"
-                          onChange={(event) =>
-                            setUploadFile(event.target.files?.[0] ?? null)
-                          }
-                        />
-                      </Field>
-                    </FieldGroup>
-                  </Fieldset>
-
-                  <div className="mt-4 flex items-center gap-4">
-                    <Button
-                      disabled={!uploadFile || saving || uploading}
-                      onClick={handleUpload}
+                    <Text
+                      className={
+                        uploadFeedback.tone === "error"
+                          ? "text-red-800 dark:text-red-200"
+                          : "text-emerald-800 dark:text-emerald-200"
+                      }
                     >
-                      {uploading ? (
-                        <Trans>Uploading...</Trans>
-                      ) : (
-                        <Trans>Upload File</Trans>
-                      )}
-                    </Button>
-                    {uploadFile ? (
-                      <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {uploadFile.name}
-                      </Text>
-                    ) : null}
+                      {uploadFeedback.message}
+                    </Text>
                   </div>
+                ) : null}
 
-                  {uploadedFiles.length > 0 ? (
-                    <div className="mt-4">
-                      <Text className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        <Trans>Uploaded in this session</Trans>
-                      </Text>
-                      <ul className="space-y-2">
-                        {uploadedFiles.map((uploadedFile) => (
-                          <li
-                            key={uploadedFile.id}
-                            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                          >
-                            <span className="font-medium">
-                              {uploadedFile.filename}
-                            </span>
-                            <span className="ml-2 text-zinc-500 dark:text-zinc-400">
-                              {uploadedFile.documentType === "contract"
-                                ? _(msg`Contract`)
-                                : uploadedFile.documentType === "id_document"
-                                  ? _(msg`Identity Document`)
-                                  : _(msg`Banking Details`)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                {isCurrentStepEditable ? (
+                  <>
+                    <Fieldset>
+                      <FieldGroup>
+                        {!stepUploadDocumentType ? (
+                          <Field>
+                            <Label>
+                              <Trans>Document Type</Trans>
+                            </Label>
+                            <Description>
+                              <Trans>
+                                Choose the attachment category that best matches
+                                the file.
+                              </Trans>
+                            </Description>
+                            <Select
+                              aria-label={_(msg`Document Type`)}
+                              value={uploadDocumentType}
+                              onChange={(event) =>
+                                setUploadDocumentType(
+                                  event.target.value as OnboardingDocumentType
+                                )
+                              }
+                            >
+                              <option value="contract">{_(msg`Contract`)}</option>
+                              <option value="id_document">
+                                {_(msg`Identity Document`)}
+                              </option>
+                              <option value="banking_details">
+                                {_(msg`Banking Details`)}
+                              </option>
+                            </Select>
+                          </Field>
+                        ) : null}
+
+                        <Field>
+                          <Label>
+                            <Trans>Attachment</Trans>
+                          </Label>
+                          <Description>
+                            <Trans>Accepted formats: PDF, JPG, JPEG, PNG.</Trans>
+                          </Description>
+                          <input
+                            ref={fileInputRef}
+                            aria-label={_(msg`Attachment`)}
+                            accept={ONBOARDING_UPLOAD_ACCEPT}
+                            className="block w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm text-zinc-950 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-white"
+                            type="file"
+                            onChange={(event) =>
+                              setUploadFile(event.target.files?.[0] ?? null)
+                            }
+                          />
+                        </Field>
+                      </FieldGroup>
+                    </Fieldset>
+
+                    <div className="mt-4 flex items-center gap-4">
+                      <Button
+                        disabled={!uploadFile || saving || uploading}
+                        onClick={handleUpload}
+                      >
+                        {uploading ? (
+                          <Trans>Uploading...</Trans>
+                        ) : (
+                          <Trans>Upload File</Trans>
+                        )}
+                      </Button>
+                      {uploadFile ? (
+                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                          {uploadFile.name}
+                        </Text>
+                      ) : null}
                     </div>
-                  ) : null}
-                </>
-              ) : (
-                <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-                  <Trans>
-                    Files can only be uploaded while this onboarding step is
-                    still editable.
-                  </Trans>
-                </Text>
-              )}
+
+                    {uploadedFiles.length > 0 ? (
+                      <div className="mt-4">
+                        <Text className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          <Trans>Uploaded in this session</Trans>
+                        </Text>
+                        <ul className="space-y-2">
+                          {uploadedFiles.map((uploadedFile) => (
+                            <li
+                              key={uploadedFile.id}
+                              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                            >
+                              <span className="font-medium">
+                                {uploadedFile.filename}
+                              </span>
+                              <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                                {uploadedFile.documentType === "contract"
+                                  ? _(msg`Contract`)
+                                  : uploadedFile.documentType === "id_document"
+                                    ? _(msg`Identity Document`)
+                                    : _(msg`Banking Details`)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </>
+                ) : (
+                  <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                    <Trans>
+                      Files can only be uploaded while this onboarding step is
+                      still editable.
+                    </Trans>
+                  </Text>
+                )}
             </div>
 
             <StepNavigation
