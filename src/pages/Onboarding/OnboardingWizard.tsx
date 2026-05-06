@@ -366,15 +366,14 @@ function requiresResidenceTitleQuestion(nationalitiesValue: unknown): boolean {
 }
 
 function getStepUploadDocumentType(
-  schema: OnboardingObjectSchema | null
+  schema: OnboardingObjectSchema | null,
+  nationalitiesValue: unknown
 ): OnboardingDocumentType | null {
-  if (!schema) {
+  if (!schema || !("nationalities" in schema.properties)) {
     return null;
   }
 
-  const hasNationalityField = "nationalities" in schema.properties;
-
-  if (hasNationalityField) {
+  if (requiresResidenceTitleQuestion(nationalitiesValue)) {
     return "id_document";
   }
 
@@ -1275,7 +1274,10 @@ export function OnboardingWizard() {
   );
   const currentStepTemplateId = steps[currentStepIndex]?.template_id;
   const schema = template ? getObjectSchema(template.form_schema) : null;
-  const stepUploadDocumentType = getStepUploadDocumentType(schema);
+  const stepUploadDocumentType = getStepUploadDocumentType(
+    schema,
+    formData.nationalities
+  );
   const isCurrentStepEditable = isEditableSubmission(submission);
 
   function resetUploadState() {

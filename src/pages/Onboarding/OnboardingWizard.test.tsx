@@ -48,7 +48,7 @@ async function selectNationality(
   const nationalityControl = screen.getByLabelText(/^nationalities$/i);
 
   if (nationalityControl instanceof HTMLSelectElement) {
-    await user.selectOptions(nationalityControl, "DE");
+    await user.selectOptions(nationalityControl, query.toUpperCase());
     return;
   }
 
@@ -384,15 +384,53 @@ describe("OnboardingWizard", () => {
   });
 
   it("keeps document type selection available when nationalities is only required", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
     renderWithProviders();
 
     expect(
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    const documentTypeSelect = screen.getByLabelText(/document type/i);
-    expect(documentTypeSelect).toBeInTheDocument();
-    expect(documentTypeSelect).toHaveValue("contract");
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "de");
+
+    expect(
+      screen.getByRole("heading", { name: /supporting documents/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/document type/i)).toHaveValue("contract");
+    expect(screen.queryByText(/identity document upload/i)).not.toBeInTheDocument();
   });
 
   it("normalizes nationality payloads to a single value before saving", async () => {
