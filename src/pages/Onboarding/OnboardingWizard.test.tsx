@@ -383,6 +383,18 @@ describe("OnboardingWizard", () => {
     expect(nationalitySelect).toBeDisabled();
   });
 
+  it("keeps document type selection available when nationalities is only required", async () => {
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    const documentTypeSelect = screen.getByLabelText(/document type/i);
+    expect(documentTypeSelect).toBeInTheDocument();
+    expect(documentTypeSelect).toHaveValue("contract");
+  });
+
   it("normalizes nationality payloads to a single value before saving", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({

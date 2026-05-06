@@ -372,9 +372,7 @@ function getStepUploadDocumentType(
     return null;
   }
 
-  const hasNationalityField =
-    "nationalities" in schema.properties ||
-    schema.required.includes("nationalities");
+  const hasNationalityField = "nationalities" in schema.properties;
 
   if (hasNationalityField) {
     return "id_document";
