@@ -1193,10 +1193,6 @@ msgstr "Required information"
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Nationality options are currently unavailable. Please try again in a moment."
-msgstr "Nationality options are currently unavailable. Please try again in a moment."
-
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Encrypting files..."

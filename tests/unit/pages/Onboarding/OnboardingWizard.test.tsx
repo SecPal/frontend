@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -131,6 +132,9 @@ describe("OnboardingWizard", () => {
       id: "file-1",
       filename: "contract.pdf",
     });
+    vi.mocked(onboardingApi.fetchOnboardingNationalityOptions).mockResolvedValue(
+      []
+    );
   });
 
   it("loads the current runtime templates and advances after saving the active template draft", async () => {
@@ -1189,6 +1193,7 @@ describe("OnboardingWizard", () => {
   });
 
   it("blocks submit for missing required schema fields and clears field errors as the user fixes them", async () => {
+    const user = userEvent.setup();
     const personalInformationSchema = {
       type: "object",
       required: ["gender", "nationalities", "intended_activities"],
@@ -1262,7 +1267,12 @@ describe("OnboardingWizard", () => {
 
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByLabelText("German"));
+    const nationalityInput =
+      screen.getByLabelText<HTMLInputElement>(/^nationalities$/i);
+    await user.click(nationalityInput);
+    await user.clear(nationalityInput);
+    await user.type(nationalityInput, "ger");
+    await user.keyboard("{ArrowDown}{Enter}");
 
     await waitFor(() => {
       expect(

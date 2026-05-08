@@ -22,6 +22,7 @@ import { ApiError } from "../../services/ApiError";
 import {
   Checkbox,
   CheckboxField,
+  CheckboxGroup,
 } from "../../components/checkbox";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
@@ -970,8 +971,8 @@ function SchemaFieldRenderer({
           </Label>
           <Description>
             <Trans>
-              Nationality options are currently unavailable. Please try again in
-              a moment.
+              Nationality options could not be loaded right now. Please reload
+              this page and try again.
             </Trans>
           </Description>
           <Select
@@ -1041,28 +1042,29 @@ function SchemaFieldRenderer({
           {property.description ? (
             <Description>{property.description}</Description>
           ) : null}
-          <Select
-            aria-label={title}
-            disabled={readOnly}
-            invalid={Boolean(error)}
-            multiple
-            name={fieldName}
-            required={fieldRequired}
-            value={selectedValues}
-            onChange={(event) => {
-              const nextValues = Array.from(
-                event.target.selectedOptions,
-                (option) => option.value
+          <CheckboxGroup aria-label={title}>
+            {itemOptions.map((option) => {
+              const optionValue = String(option.value);
+
+              return (
+                <CheckboxField key={optionValue}>
+                  <Checkbox
+                    aria-label={option.label}
+                    checked={selectedValues.includes(optionValue)}
+                    disabled={readOnly}
+                    onChange={(checked) => {
+                      const nextValues = checked
+                        ? [...selectedValues, optionValue]
+                        : selectedValues.filter((entry) => entry !== optionValue);
+
+                      onChange(fieldName, nextValues);
+                    }}
+                  />
+                  <Label>{option.label}</Label>
+                </CheckboxField>
               );
-              onChange(fieldName, nextValues);
-            }}
-          >
-            {itemOptions.map((option) => (
-              <option key={String(option.value)} value={String(option.value)}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
+            })}
+          </CheckboxGroup>
           {error ? <ErrorMessage>{error}</ErrorMessage> : null}
         </Field>
       );
@@ -1386,12 +1388,6 @@ export function OnboardingWizard() {
         }
 
         setNationalityOptions([]);
-        setFeedback({
-          tone: "error",
-          message: _(
-            msg`Nationality options could not be loaded right now. Please reload this page and try again.`
-          ),
-        });
       });
 
     return () => {
