@@ -33,18 +33,36 @@ function getIndentedSection(text: string, sectionName: string): string {
 
 describe("Dependabot configuration", () => {
   const configPath = join(process.cwd(), ".github", "dependabot.yml");
-  const configText = readFileSync(configPath, "utf8");
   const packageJsonPath = join(process.cwd(), "package.json");
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
-    dependencies?: Record<string, string>;
-  };
-  const reactRuntimeGroup = getIndentedSection(configText, "react-runtime");
+
+  function readConfigText(): string {
+    expect(existsSync(configPath)).toBe(true);
+
+    return readFileSync(configPath, "utf8");
+  }
+
+  function readDependencies(): Record<string, string> {
+    expect(existsSync(packageJsonPath)).toBe(true);
+
+    return (
+      (
+        JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+          dependencies?: Record<string, string>;
+        }
+      ).dependencies ?? {}
+    );
+  }
 
   it("keeps the Dependabot config in the repository", () => {
     expect(existsSync(configPath)).toBe(true);
   });
 
   it("groups coupled React minor and patch updates into one pull request", () => {
+    const reactRuntimeGroup = getIndentedSection(
+      readConfigText(),
+      "react-runtime"
+    );
+
     expect(reactRuntimeGroup).toContain("react-runtime:");
     expect(reactRuntimeGroup).toContain('- "react"');
     expect(reactRuntimeGroup).toContain('- "react-dom"');
@@ -55,13 +73,17 @@ describe("Dependabot configuration", () => {
   });
 
   it("groups non-breaking GitHub Actions updates to reduce Dependabot PR noise", () => {
+    const configText = readConfigText();
+
     expect(configText).toContain('package-ecosystem: "github-actions"');
     expect(configText).toContain("minor-and-patch:");
   });
 
   it("keeps top-level react runtime versions aligned", () => {
-    expect(packageJson.dependencies?.react).toBe(
-      packageJson.dependencies?.["react-dom"]
-    );
+    const dependencies = readDependencies();
+
+    expect(dependencies.react).toBeDefined();
+    expect(dependencies["react-dom"]).toBeDefined();
+    expect(dependencies.react).toBe(dependencies["react-dom"]);
   });
 });
