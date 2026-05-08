@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { buildApiUrl } from "../config";
+import { detectLocale } from "../i18n";
 import { sessionEvents, isOnline } from "./sessionEvents";
 
 /**
@@ -28,8 +29,12 @@ export class CsrfError extends Error {
  */
 export async function fetchCsrfToken(): Promise<void> {
   try {
+    const headers = new Headers();
+    applyAcceptLanguageHeader(headers);
+
     const response = await fetch(buildApiUrl("/sanctum/csrf-cookie"), {
       credentials: "include",
+      headers,
     });
 
     if (!response.ok) {
@@ -81,6 +86,14 @@ export function getCsrfTokenFromCookie(): string | null {
  */
 const CSRF_REQUIRED_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
+function applyAcceptLanguageHeader(headers: Headers): void {
+  if (headers.has("Accept-Language")) {
+    return;
+  }
+
+  headers.set("Accept-Language", detectLocale());
+}
+
 /**
  * Central API fetch wrapper with automatic session handling.
  *
@@ -120,6 +133,7 @@ export async function apiFetch(
   const needsCsrf = CSRF_REQUIRED_METHODS.includes(method);
 
   const headers = new Headers(options.headers);
+  applyAcceptLanguageHeader(headers);
 
   // Only add CSRF token for state-changing methods
   if (needsCsrf) {
@@ -158,6 +172,7 @@ export async function apiFetch(
     // Retry with refreshed token
     const newCsrfToken = getCsrfTokenFromCookie();
     const newHeaders = new Headers(options.headers);
+    applyAcceptLanguageHeader(newHeaders);
     if (newCsrfToken) {
       newHeaders.set("X-XSRF-TOKEN", newCsrfToken);
     }

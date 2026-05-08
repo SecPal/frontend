@@ -3,6 +3,7 @@
 
 import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
+import { detectLocale } from "../i18n";
 import { ApiError } from "./ApiError";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
@@ -136,6 +137,11 @@ export interface OnboardingApiError {
   };
 }
 
+export interface OnboardingNationalityOption {
+  code: string;
+  name: string;
+}
+
 async function parseErrorData(
   response: Response
 ): Promise<OnboardingApiErrorData> {
@@ -211,10 +217,14 @@ export async function validateOnboardingToken(
   email: string
 ): Promise<OnboardingTokenValidationResponse> {
   const url = `${apiConfig.baseUrl}/v1/onboarding/validate-token?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const locale = detectLocale();
 
   const response = await fetch(url, {
     method: "GET",
     credentials: "include",
+    headers: {
+      "Accept-Language": locale,
+    },
   });
 
   if (!response.ok) {
@@ -237,9 +247,14 @@ export async function validateOnboardingToken(
 export async function completeOnboarding(
   data: OnboardingCompleteData
 ): Promise<OnboardingCompleteResponse> {
+  const locale = detectLocale();
+
   // Fetch CSRF cookie first (required by Laravel Sanctum SPA auth)
   const csrfResponse = await fetch(`${apiConfig.baseUrl}/sanctum/csrf-cookie`, {
     credentials: "include",
+    headers: {
+      "Accept-Language": locale,
+    },
   });
 
   if (!csrfResponse.ok) {
@@ -255,6 +270,7 @@ export async function completeOnboarding(
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      "Accept-Language": locale,
       ...(token ? { "X-XSRF-TOKEN": token } : {}),
     },
   });
@@ -340,6 +356,42 @@ export async function fetchOnboardingTemplate(
     throw new Error("Failed to parse onboarding template response");
   }
   return normalizeOnboardingTemplate(data.data);
+}
+
+/**
+ * List allowed nationality options for onboarding forms.
+ */
+export async function fetchOnboardingNationalityOptions(): Promise<
+  OnboardingNationalityOption[]
+> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/nationalities`;
+  const response = await apiFetch(url, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    await throwSubmissionHttpError(response);
+  }
+
+  const data: { data: unknown } = await response
+    .json()
+    .catch(() => ({ data: [] as unknown[] }));
+  if (!Array.isArray(data.data)) {
+    throw new Error("Failed to parse onboarding nationalities response");
+  }
+
+  return data.data
+    .filter(
+      (entry): entry is { code: string; name: string } =>
+        typeof entry?.code === "string" &&
+        typeof entry?.name === "string" &&
+        entry.code.length > 0 &&
+        entry.name.length > 0
+    )
+    .map((entry) => ({
+      code: entry.code.toUpperCase(),
+      name: entry.name,
+    }));
 }
 
 /**

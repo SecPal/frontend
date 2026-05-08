@@ -116,6 +116,10 @@ msgstr "Telefonnummer bearbeiten"
 msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
 msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Employment permitted"
+msgstr "Erwerbstätigkeit gestattet"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
@@ -173,6 +177,14 @@ msgstr "Formularvorlage konnte nicht geladen werden"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name Change Detected"
 msgstr "Namensänderung erkannt"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
+msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptiert werden. Bitte kontaktieren Sie HR."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No"
+msgstr "Nein"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
@@ -382,6 +394,10 @@ msgstr "Kunden suchen..."
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Search and select one nationality."
+msgstr "Suchen und eine Staatsangehörigkeit auswählen."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Qualifications"
 msgstr "Qualifikationen"
@@ -428,6 +444,10 @@ msgstr "Dokumenttyp"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
 msgstr "Fehlgeschlagen"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity Document Upload"
+msgstr "Upload Ausweisdokument"
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Company"
@@ -596,6 +616,10 @@ msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinh
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract Type"
 msgstr "Vertragsart"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Residence title type"
+msgstr "Art des Aufenthaltstitels"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Before you begin"
@@ -1067,6 +1091,10 @@ msgstr "Senden fehlgeschlagen"
 msgid "Bootstrap completed"
 msgstr "Bootstrap abgeschlossen"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Enter the expiry date if the residence title is limited."
+msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1122,6 +1150,10 @@ msgstr "Laden von Aktivitätsprotokollen..."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Page {0} of {1}"
 msgstr "Seite {0} von {1}"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Select residence title"
+msgstr "Aufenthaltstitel auswählen"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Activate"
@@ -1593,6 +1625,7 @@ msgid "Loading passkeys..."
 msgstr "Passkeys werden geladen..."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Yes"
 msgstr "Ja"
 
@@ -1624,6 +1657,10 @@ msgstr "Auf Ihrem Gerät abschließen…"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Management level must be between 1 and 255"
 msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Based on the selected nationality, please specify which valid German residence title is available."
+msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, welcher gültige deutsche Aufenthaltstitel vorliegt."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
@@ -2085,6 +2122,10 @@ msgstr "Authentifizierung"
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Nationality options could not be loaded right now. Please reload this page and try again."
+msgstr "Nationalitätsoptionen konnten derzeit nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
@@ -2329,6 +2370,10 @@ msgstr "Vollständige Kontoeinrichtung"
 msgid "Preparing MFA setup..."
 msgstr "MFA-Einrichtung vorbereiten..."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "The residence title expiry date cannot be in the past."
+msgstr "Das Ablaufdatum des Aufenthaltstitels darf nicht in der Vergangenheit liegen."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "From Date"
 msgstr "Von"
@@ -2394,6 +2439,10 @@ msgstr "Übergeordnete Einheit"
 msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" erfolgreich erstellt"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Entfernen"
@@ -2401,6 +2450,10 @@ msgstr "Entfernen"
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Residence title valid until"
+msgstr "Aufenthaltstitel gültig bis"
 
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
@@ -2489,6 +2542,10 @@ msgstr "Organisationseinheit konnte nicht verschoben werden"
 #: src/lib/organizationalUnitUtils.ts
 msgid "Region"
 msgstr "Region"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Is employment permitted for this residence title in Germany?"
+msgstr "Ist mit diesem Aufenthaltstitel die Erwerbstätigkeit in Deutschland gestattet?"
 
 #: src/pages/Login.tsx
 msgid "Check your browser…"
