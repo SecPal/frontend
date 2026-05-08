@@ -1393,7 +1393,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [_]);
+  }, []);
 
   // Re-fetch the template only when the user navigates to a different step or
   // when steps first arrive — not on every draft-save that updates steps content.
