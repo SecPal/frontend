@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Grouped coupled React, React DOM, and React type-package minor/patch Dependabot updates into one frontend pull request, aligned the shared React runtime bump on `react` plus `react-dom` `^19.2.6`, grouped non-breaking GitHub Actions updates, and relaxed the live Lighthouse workflow regression check to require commit pinning instead of one historical `setup-chrome` SHA so Dependabot workflow bumps no longer open red CI from stale version-skew or hard-coded action pins.
 - Repaired employee-detail tab switching so hash deep links like `#contacts` no longer lock users on one tab, localized all new employee contact editing placeholders/labels, added explicit non-submit button types for emergency-contact add/remove actions, and centralized shared emergency-contact draft normalization helpers to avoid duplicate logic drift.
 - Blocked the dedicated employee contacts edit page from submitting partial overwrite payloads after an initial employee-load failure, and aligned dialog emergency-contact email handling to trim whitespace before validation so optional values behave consistently.
 - Routed onboarding pattern-validation guidance strings through Lingui catalogs (including the country-code helper text) so German onboarding flows no longer show hardcoded English validation copy.
