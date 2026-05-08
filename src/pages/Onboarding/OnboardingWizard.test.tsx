@@ -269,12 +269,8 @@ describe("OnboardingWizard", () => {
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
     await selectNationality(user, "tr");
 
-    expect(
-      screen.getByLabelText(/residence title type/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByLabelText(/employment permitted/i)
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/residence title type/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/employment permitted/i)).toBeInTheDocument();
     expect(
       screen.queryByLabelText(/unlimited residence title/i)
     ).not.toBeInTheDocument();
@@ -283,7 +279,9 @@ describe("OnboardingWizard", () => {
       screen.getByRole("button", { name: /submit for review/i })
     );
 
-    expect(await screen.findAllByText("This field is required.")).toHaveLength(2);
+    expect(await screen.findAllByText("This field is required.")).toHaveLength(
+      2
+    );
 
     await user.selectOptions(
       screen.getByLabelText(/residence title type/i),
@@ -294,7 +292,9 @@ describe("OnboardingWizard", () => {
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
     );
-    expect(await screen.findAllByText("This field is required.")).toHaveLength(2);
+    expect(await screen.findAllByText("This field is required.")).toHaveLength(
+      2
+    );
     await user.type(expiryInput, "2000-01-01");
     await user.selectOptions(
       screen.getByLabelText(/employment permitted/i),
@@ -430,7 +430,9 @@ describe("OnboardingWizard", () => {
       screen.getByRole("heading", { name: /supporting documents/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/document type/i)).toHaveValue("contract");
-    expect(screen.queryByText(/identity document upload/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/identity document upload/i)
+    ).not.toBeInTheDocument();
   });
 
   it("normalizes nationality payloads to a single value before saving", async () => {

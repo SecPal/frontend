@@ -132,9 +132,9 @@ describe("OnboardingWizard", () => {
       id: "file-1",
       filename: "contract.pdf",
     });
-    vi.mocked(onboardingApi.fetchOnboardingNationalityOptions).mockResolvedValue(
-      []
-    );
+    vi.mocked(
+      onboardingApi.fetchOnboardingNationalityOptions
+    ).mockResolvedValue([]);
   });
 
   it("loads the current runtime templates and advances after saving the active template draft", async () => {

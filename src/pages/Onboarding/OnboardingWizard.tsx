@@ -361,9 +361,7 @@ function requiresResidenceTitleQuestion(nationalitiesValue: unknown): boolean {
     return false;
   }
 
-  return !RESIDENCE_TITLE_EXEMPT_COUNTRY_CODES.has(
-    primaryNationalityCode
-  );
+  return !RESIDENCE_TITLE_EXEMPT_COUNTRY_CODES.has(primaryNationalityCode);
 }
 
 function getStepUploadDocumentType(
@@ -392,9 +390,7 @@ function validateAdditionalRequiredFields(
     return {};
   }
 
-  if (
-    !requiresResidenceTitleQuestion(formData.nationalities)
-  ) {
+  if (!requiresResidenceTitleQuestion(formData.nationalities)) {
     return {};
   }
 
@@ -958,7 +954,9 @@ function SchemaFieldRenderer({
   }
 
   if (property.type === "array") {
-    const schemaItemOptions = property.items ? getSchemaOptions(property.items) : [];
+    const schemaItemOptions = property.items
+      ? getSchemaOptions(property.items)
+      : [];
     const itemOptions = dynamicArrayOptions ?? schemaItemOptions;
     const selectedValues = getArrayValue(formData[fieldName]);
 
@@ -1055,7 +1053,9 @@ function SchemaFieldRenderer({
                     onChange={(checked) => {
                       const nextValues = checked
                         ? [...selectedValues, optionValue]
-                        : selectedValues.filter((entry) => entry !== optionValue);
+                        : selectedValues.filter(
+                            (entry) => entry !== optionValue
+                          );
 
                       onChange(fieldName, nextValues);
                     }}
@@ -1882,8 +1882,9 @@ export function OnboardingWizard() {
 
       if (fieldName === RESIDENCE_TITLE_TYPE_FIELD) {
         const selectedResidenceTitle = getTextValue(normalizedValue);
-        const residenceTitleIsUnlimited =
-          isResidenceTitleUnlimited(selectedResidenceTitle);
+        const residenceTitleIsUnlimited = isResidenceTitleUnlimited(
+          selectedResidenceTitle
+        );
 
         nextFormData = {
           ...nextFormData,
@@ -2246,8 +2247,8 @@ export function OnboardingWizard() {
                       </Label>
                       <Description>
                         <Trans>
-                          Based on the selected nationality, please specify which
-                          valid German residence title is available.
+                          Based on the selected nationality, please specify
+                          which valid German residence title is available.
                         </Trans>
                       </Description>
                       <Select
@@ -2268,7 +2269,9 @@ export function OnboardingWizard() {
                           )
                         }
                       >
-                        <option value="">{_(msg`Select residence title`)}</option>
+                        <option value="">
+                          {_(msg`Select residence title`)}
+                        </option>
                         {RESIDENCE_TITLE_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.value}
@@ -2317,7 +2320,11 @@ export function OnboardingWizard() {
                       </Select>
                       {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] ? (
                         <ErrorMessage>
-                          {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]}
+                          {
+                            fieldErrors[
+                              RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD
+                            ]
+                          }
                         </ErrorMessage>
                       ) : null}
                     </Field>
@@ -2332,7 +2339,8 @@ export function OnboardingWizard() {
                       </Label>
                       <Description>
                         <Trans>
-                          Enter the expiry date if the residence title is limited.
+                          Enter the expiry date if the residence title is
+                          limited.
                         </Trans>
                       </Description>
                       <Input
@@ -2396,149 +2404,149 @@ export function OnboardingWizard() {
                 )}
               </Text>
 
-                {!submission ? (
-                  <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>
-                      Your current answers will be saved as a draft before the
-                      first file upload.
-                    </Trans>
-                  </Text>
-                ) : null}
+              {!submission ? (
+                <Text className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                  <Trans>
+                    Your current answers will be saved as a draft before the
+                    first file upload.
+                  </Trans>
+                </Text>
+              ) : null}
 
-                {uploadFeedback ? (
-                  <div
-                    role={uploadFeedback.tone === "error" ? "alert" : "status"}
-                    aria-live={
-                      uploadFeedback.tone === "error" ? "assertive" : "polite"
-                    }
-                    aria-atomic="true"
+              {uploadFeedback ? (
+                <div
+                  role={uploadFeedback.tone === "error" ? "alert" : "status"}
+                  aria-live={
+                    uploadFeedback.tone === "error" ? "assertive" : "polite"
+                  }
+                  aria-atomic="true"
+                  className={
+                    uploadFeedback.tone === "error"
+                      ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+                      : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                  }
+                >
+                  <Text
                     className={
                       uploadFeedback.tone === "error"
-                        ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-                        : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                        ? "text-red-800 dark:text-red-200"
+                        : "text-emerald-800 dark:text-emerald-200"
                     }
                   >
-                    <Text
-                      className={
-                        uploadFeedback.tone === "error"
-                          ? "text-red-800 dark:text-red-200"
-                          : "text-emerald-800 dark:text-emerald-200"
-                      }
-                    >
-                      {uploadFeedback.message}
-                    </Text>
-                  </div>
-                ) : null}
+                    {uploadFeedback.message}
+                  </Text>
+                </div>
+              ) : null}
 
-                {isCurrentStepEditable ? (
-                  <>
-                    <Fieldset>
-                      <FieldGroup>
-                        {!stepUploadDocumentType ? (
-                          <Field>
-                            <Label>
-                              <Trans>Document Type</Trans>
-                            </Label>
-                            <Description>
-                              <Trans>
-                                Choose the attachment category that best matches
-                                the file.
-                              </Trans>
-                            </Description>
-                            <Select
-                              aria-label={_(msg`Document Type`)}
-                              value={uploadDocumentType}
-                              onChange={(event) =>
-                                setUploadDocumentType(
-                                  event.target.value as OnboardingDocumentType
-                                )
-                              }
-                            >
-                              <option value="contract">{_(msg`Contract`)}</option>
-                              <option value="id_document">
-                                {_(msg`Identity Document`)}
-                              </option>
-                              <option value="banking_details">
-                                {_(msg`Banking Details`)}
-                              </option>
-                            </Select>
-                          </Field>
-                        ) : null}
-
+              {isCurrentStepEditable ? (
+                <>
+                  <Fieldset>
+                    <FieldGroup>
+                      {!stepUploadDocumentType ? (
                         <Field>
                           <Label>
-                            <Trans>Attachment</Trans>
+                            <Trans>Document Type</Trans>
                           </Label>
                           <Description>
-                            <Trans>Accepted formats: PDF, JPG, JPEG, PNG.</Trans>
+                            <Trans>
+                              Choose the attachment category that best matches
+                              the file.
+                            </Trans>
                           </Description>
-                          <input
-                            ref={fileInputRef}
-                            aria-label={_(msg`Attachment`)}
-                            accept={ONBOARDING_UPLOAD_ACCEPT}
-                            className="block w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm text-zinc-950 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-white"
-                            type="file"
+                          <Select
+                            aria-label={_(msg`Document Type`)}
+                            value={uploadDocumentType}
                             onChange={(event) =>
-                              setUploadFile(event.target.files?.[0] ?? null)
+                              setUploadDocumentType(
+                                event.target.value as OnboardingDocumentType
+                              )
                             }
-                          />
+                          >
+                            <option value="contract">{_(msg`Contract`)}</option>
+                            <option value="id_document">
+                              {_(msg`Identity Document`)}
+                            </option>
+                            <option value="banking_details">
+                              {_(msg`Banking Details`)}
+                            </option>
+                          </Select>
                         </Field>
-                      </FieldGroup>
-                    </Fieldset>
-
-                    <div className="mt-4 flex items-center gap-4">
-                      <Button
-                        disabled={!uploadFile || saving || uploading}
-                        onClick={handleUpload}
-                      >
-                        {uploading ? (
-                          <Trans>Uploading...</Trans>
-                        ) : (
-                          <Trans>Upload File</Trans>
-                        )}
-                      </Button>
-                      {uploadFile ? (
-                        <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-                          {uploadFile.name}
-                        </Text>
                       ) : null}
-                    </div>
 
-                    {uploadedFiles.length > 0 ? (
-                      <div className="mt-4">
-                        <Text className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                          <Trans>Uploaded in this session</Trans>
-                        </Text>
-                        <ul className="space-y-2">
-                          {uploadedFiles.map((uploadedFile) => (
-                            <li
-                              key={uploadedFile.id}
-                              className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                            >
-                              <span className="font-medium">
-                                {uploadedFile.filename}
-                              </span>
-                              <span className="ml-2 text-zinc-500 dark:text-zinc-400">
-                                {uploadedFile.documentType === "contract"
-                                  ? _(msg`Contract`)
-                                  : uploadedFile.documentType === "id_document"
-                                    ? _(msg`Identity Document`)
-                                    : _(msg`Banking Details`)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <Field>
+                        <Label>
+                          <Trans>Attachment</Trans>
+                        </Label>
+                        <Description>
+                          <Trans>Accepted formats: PDF, JPG, JPEG, PNG.</Trans>
+                        </Description>
+                        <input
+                          ref={fileInputRef}
+                          aria-label={_(msg`Attachment`)}
+                          accept={ONBOARDING_UPLOAD_ACCEPT}
+                          className="block w-full rounded-lg border border-zinc-950/10 bg-white px-3 py-2 text-sm text-zinc-950 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:border-white/10 dark:bg-white/5 dark:text-white dark:file:bg-white/10 dark:file:text-white"
+                          type="file"
+                          onChange={(event) =>
+                            setUploadFile(event.target.files?.[0] ?? null)
+                          }
+                        />
+                      </Field>
+                    </FieldGroup>
+                  </Fieldset>
+
+                  <div className="mt-4 flex items-center gap-4">
+                    <Button
+                      disabled={!uploadFile || saving || uploading}
+                      onClick={handleUpload}
+                    >
+                      {uploading ? (
+                        <Trans>Uploading...</Trans>
+                      ) : (
+                        <Trans>Upload File</Trans>
+                      )}
+                    </Button>
+                    {uploadFile ? (
+                      <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                        {uploadFile.name}
+                      </Text>
                     ) : null}
-                  </>
-                ) : (
-                  <Text className="text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>
-                      Files can only be uploaded while this onboarding step is
-                      still editable.
-                    </Trans>
-                  </Text>
-                )}
+                  </div>
+
+                  {uploadedFiles.length > 0 ? (
+                    <div className="mt-4">
+                      <Text className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <Trans>Uploaded in this session</Trans>
+                      </Text>
+                      <ul className="space-y-2">
+                        {uploadedFiles.map((uploadedFile) => (
+                          <li
+                            key={uploadedFile.id}
+                            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                          >
+                            <span className="font-medium">
+                              {uploadedFile.filename}
+                            </span>
+                            <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                              {uploadedFile.documentType === "contract"
+                                ? _(msg`Contract`)
+                                : uploadedFile.documentType === "id_document"
+                                  ? _(msg`Identity Document`)
+                                  : _(msg`Banking Details`)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <Trans>
+                    Files can only be uploaded while this onboarding step is
+                    still editable.
+                  </Trans>
+                </Text>
+              )}
             </div>
 
             <StepNavigation
