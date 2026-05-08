@@ -252,14 +252,19 @@ function isConditionallyRequiredOnboardingField(
 
 function isOnboardingFieldVisible(
   fieldName: string,
-  formData: Record<string, unknown>
+  formData: Record<string, unknown>,
+  schema: OnboardingObjectSchema | null
 ): boolean {
+  const showResidenceTitleFields =
+    Boolean(schema && "nationalities" in schema.properties) &&
+    requiresResidenceTitleQuestion(formData.nationalities);
+
   if (
     fieldName === RESIDENCE_TITLE_TYPE_FIELD ||
     fieldName === RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD ||
     fieldName === RESIDENCE_TITLE_UNLIMITED_FIELD
   ) {
-    return requiresResidenceTitleQuestion(formData.nationalities);
+    return showResidenceTitleFields;
   }
 
   if (fieldName === RESIDENCE_TITLE_EXPIRY_FIELD) {
@@ -267,7 +272,7 @@ function isOnboardingFieldVisible(
       formData[RESIDENCE_TITLE_TYPE_FIELD]
     ).trim();
     return (
-      requiresResidenceTitleQuestion(formData.nationalities) &&
+      showResidenceTitleFields &&
       selectedResidenceTitle.length > 0 &&
       !isResidenceTitleUnlimited(selectedResidenceTitle)
     );
@@ -284,11 +289,14 @@ function isOnboardingFieldVisible(
 }
 
 function sanitizeEmployeeOnboardingFormData(
-  formData: Record<string, unknown>
+  formData: Record<string, unknown>,
+  schema: OnboardingObjectSchema | null
 ): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(formData)
-      .filter(([fieldName]) => isOnboardingFieldVisible(fieldName, formData))
+      .filter(([fieldName]) =>
+        isOnboardingFieldVisible(fieldName, formData, schema)
+      )
       .map(([fieldName, value]) =>
         SINGLE_VALUE_ARRAY_FIELDS.has(fieldName)
           ? [fieldName, getSingleValueArray(value)]
@@ -539,7 +547,7 @@ function validateRequiredFields(
   return Array.from(requiredFields).reduce<FieldErrors>((errors, fieldName) => {
     const property = schema.properties[fieldName];
 
-    if (!isOnboardingFieldVisible(fieldName, formData)) {
+    if (!isOnboardingFieldVisible(fieldName, formData, schema)) {
       return errors;
     }
 
@@ -610,7 +618,7 @@ function validatePatternFields(
 ): FieldErrors {
   return Object.entries(schema.properties).reduce<FieldErrors>(
     (errors, [fieldName, property]) => {
-      if (!isOnboardingFieldVisible(fieldName, formData)) {
+      if (!isOnboardingFieldVisible(fieldName, formData, schema)) {
         return errors;
       }
 
@@ -1496,6 +1504,7 @@ export function OnboardingWizard() {
     const stepsToSubmit: Array<{
       index: number;
       submission: OnboardingSubmission;
+      schema: OnboardingObjectSchema | null;
     }> = [];
 
     for (const [index, step] of steps.entries()) {
@@ -1512,9 +1521,12 @@ export function OnboardingWizard() {
         continue;
       }
 
+      const stepSchema = await resolveStepValidationSchema(step);
+
       stepsToSubmit.push({
         index,
         submission: step.submission,
+        schema: stepSchema,
       });
     }
 
@@ -1528,13 +1540,19 @@ export function OnboardingWizard() {
       setSaving(true);
       setError(null);
 
-      for (const { index, submission: stepSubmission } of stepsToSubmit) {
+      for (const {
+        index,
+        submission: stepSubmission,
+        schema: stepSchema,
+      } of stepsToSubmit) {
         failingStepIndex = index;
         const savedSubmission = await updateOnboardingSubmission(
           stepSubmission.id,
           {
             form_data: sanitizeEmployeeOnboardingFormData(
-              (stepSubmission.form_data as Record<string, unknown> | null) ?? {}
+              (stepSubmission.form_data as Record<string, unknown> | null) ??
+                {},
+              stepSchema
             ),
             status: "submitted",
           }
@@ -1604,7 +1622,8 @@ export function OnboardingWizard() {
       const nextFormData = sanitizeEmployeeOnboardingFormData(
         Object.keys(formData).length > 0
           ? formData
-          : ((submission?.form_data as Record<string, unknown> | null) ?? {})
+          : ((submission?.form_data as Record<string, unknown> | null) ?? {}),
+        schema
       );
 
       const savedSubmission = submission
@@ -1648,7 +1667,7 @@ export function OnboardingWizard() {
 
           const isInlineFieldError =
             Boolean(schema?.properties[fieldKey]) &&
-            isOnboardingFieldVisible(fieldKey, formData);
+            isOnboardingFieldVisible(fieldKey, formData, schema);
 
           if (!isInlineFieldError) {
             hiddenFieldValidationMessage ??= formatServerValidationMessage(
@@ -2211,7 +2230,7 @@ export function OnboardingWizard() {
                 <FieldGroup>
                   {Object.entries(schema.properties)
                     .filter(([fieldName]) =>
-                      isOnboardingFieldVisible(fieldName, formData)
+                      isOnboardingFieldVisible(fieldName, formData, schema)
                     )
                     .map(([fieldName, property]) => (
                       <SchemaFieldRenderer
@@ -2240,7 +2259,11 @@ export function OnboardingWizard() {
                         onChange={handleFieldChange}
                       />
                     ))}
-                  {requiresResidenceTitleQuestion(formData.nationalities) ? (
+                  {isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_TYPE_FIELD,
+                    formData,
+                    schema
+                  ) ? (
                     <Field>
                       <Label>
                         <Trans>Residence title type</Trans> *
@@ -2285,7 +2308,11 @@ export function OnboardingWizard() {
                       ) : null}
                     </Field>
                   ) : null}
-                  {requiresResidenceTitleQuestion(formData.nationalities) ? (
+                  {isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+                    formData,
+                    schema
+                  ) ? (
                     <Field>
                       <Label>
                         <Trans>Employment permitted</Trans> *
@@ -2331,7 +2358,8 @@ export function OnboardingWizard() {
                   ) : null}
                   {isOnboardingFieldVisible(
                     RESIDENCE_TITLE_EXPIRY_FIELD,
-                    formData
+                    formData,
+                    schema
                   ) ? (
                     <Field>
                       <Label>

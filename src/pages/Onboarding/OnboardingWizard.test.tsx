@@ -692,6 +692,86 @@ describe("OnboardingWizard optional emergency contact schema", () => {
     expect(documentTypeSelect).toHaveValue("contract");
   });
 
+  it("hides stale residence title fields when the step schema has no nationalities field", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Emergency Contact",
+        description: "Optional emergency contacts.",
+        template_id: "template-emergency",
+        is_required: false,
+        is_completed: false,
+        submission: {
+          id: "submission-emergency",
+          employee_id: "employee-1",
+          form_template_id: "template-emergency",
+          form_data: {
+            contact_1_name: "Ada Lovelace",
+            nationalities: ["TR"],
+            residence_permit_title: "Aufenthaltserlaubnis",
+            residence_permit_employment_allowed: "yes",
+            residence_permit_expiry: "2030-12-31",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+    onboardingApiMocks.updateOnboardingSubmission.mockResolvedValueOnce({
+      id: "submission-emergency",
+      employee_id: "employee-1",
+      form_template_id: "template-emergency",
+      form_data: {
+        contact_1_name: "Ada Lovelace",
+      },
+      status: "draft",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /emergency contact/i })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByLabelText(/residence title type/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/employment permitted/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/residence title valid until/i)
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.updateOnboardingSubmission
+      ).toHaveBeenCalledTimes(1);
+
+      const payload =
+        onboardingApiMocks.updateOnboardingSubmission.mock.calls[0]?.[1];
+
+      expect(payload).toMatchObject({
+        status: "draft",
+        form_data: {
+          contact_1_name: "Ada Lovelace",
+          nationalities: ["TR"],
+        },
+      });
+      expect(payload?.form_data).not.toHaveProperty("residence_permit_title");
+      expect(payload?.form_data).not.toHaveProperty(
+        "residence_permit_employment_allowed"
+      );
+      expect(payload?.form_data).not.toHaveProperty("residence_permit_expiry");
+    });
+  });
+
   it("requires a phone number for each emergency contact with a name", async () => {
     const user = userEvent.setup();
     renderWithProviders();
