@@ -1396,6 +1396,226 @@ describe("OnboardingWizard", () => {
     );
   });
 
+  it("shows employment-permitted question for unlimited residence titles and asks about upload", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          contract_start_date: {
+            type: "string",
+            title: "Contract start date",
+            format: "date",
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["TR"] },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Niederlassungserlaubnis"
+    );
+
+    expect(screen.getByLabelText(/employment permitted/i)).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/residence title valid until/i)
+    ).not.toBeInTheDocument();
+
+    await setEmploymentPermitted(user, "yes");
+
+    expect(
+      await screen.findByRole("radiogroup", {
+        name: /would you like to upload your residence title now\?/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("shows a validation error when residence title upload choice is left blank", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["TR"] },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+    await setEmploymentPermitted(user, "yes");
+
+    expect(
+      await screen.findByRole("radiogroup", {
+        name: /would you like to upload your residence title now\?/i,
+      })
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        /please choose whether you want to upload your residence title now/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.updateOnboardingSubmission
+    ).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: "submitted" })
+    );
+  });
+
+  it("shows a validation error when residence title Yes is chosen but no file is uploaded", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["TR"] },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+    await setEmploymentPermitted(user, "yes");
+
+    const residenceTitleUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your residence title now\?/i,
+    });
+    await user.click(
+      within(residenceTitleUploadGroup).getByRole("radio", {
+        name: /^(yes|ja)$/i,
+      })
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        /please upload at least one residence title file before continuing/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.updateOnboardingSubmission
+    ).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: "submitted" })
+    );
+  });
+
   it("blocks submission when residence title expiry date is already in the past", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
