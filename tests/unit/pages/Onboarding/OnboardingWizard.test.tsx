@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -13,9 +13,32 @@ import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWiz
 import * as onboardingApi from "../../../../src/services/onboardingApi";
 import * as employeeApi from "../../../../src/services/employeeApi";
 import { ApiError } from "../../../../src/services/ApiError";
+import type { Employee } from "../../../../src/types/api/employees";
 
 vi.mock("../../../../src/services/onboardingApi");
 vi.mock("../../../../src/services/employeeApi");
+
+function makeEmployee(
+  overrides: Partial<Employee> = {}
+): Employee {
+  return {
+    id: "employee-1",
+    employee_number: "E-001",
+    first_name: "Jane",
+    last_name: "Doe",
+    full_name: "Jane Doe",
+    email: "jane@example.com",
+    date_of_birth: null,
+    contract_start_date: null,
+    status: "active",
+    contract_type: "full_time",
+    organizational_unit: null,
+    management_level: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
 
 function makeTemplate(
   id: string,
@@ -121,7 +144,18 @@ function enableUploadNowSelection(
   if (uploadNowControl instanceof HTMLSelectElement) {
     fireEvent.change(uploadNowControl, { target: { value: "yes" } });
   } else {
-    fireEvent.click(screen.getByRole("radio", { name: /^(yes|ja)$/i }));
+    const identityUploadGroup =
+      screen.queryByRole("radiogroup", {
+        name: /would you like to upload your identity document now\?/i,
+      }) ??
+      screen.getByRole("radiogroup", {
+        name: /möchten sie ihr ausweisdokument jetzt hochladen/i,
+      });
+    fireEvent.click(
+      within(identityUploadGroup).getByRole("radio", {
+        name: /^(yes|ja)$/i,
+      })
+    );
   }
 
   const documentKindControl = screen.queryByLabelText(
@@ -145,7 +179,18 @@ function disableUploadNowSelection() {
   if (uploadNowControl instanceof HTMLSelectElement) {
     fireEvent.change(uploadNowControl, { target: { value: "no" } });
   } else {
-    fireEvent.click(screen.getByRole("radio", { name: /^(no|nein)$/i }));
+    const identityUploadGroup =
+      screen.queryByRole("radiogroup", {
+        name: /would you like to upload your identity document now\?/i,
+      }) ??
+      screen.getByRole("radiogroup", {
+        name: /möchten sie ihr ausweisdokument jetzt hochladen/i,
+      });
+    fireEvent.click(
+      within(identityUploadGroup).getByRole("radio", {
+        name: /^(no|nein)$/i,
+      })
+    );
   }
 }
 
@@ -278,9 +323,9 @@ describe("OnboardingWizard", () => {
     vi.mocked(
       onboardingApi.fetchOnboardingNationalityOptions
     ).mockResolvedValue([]);
-    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
-      contract_start_date: null,
-    } as never);
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(
+      makeEmployee({ contract_start_date: null })
+    );
   });
 
   it("loads the current runtime templates and advances after saving the active template draft", async () => {

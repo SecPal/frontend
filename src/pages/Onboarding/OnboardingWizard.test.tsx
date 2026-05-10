@@ -136,7 +136,7 @@ async function selectNationality(
 
 async function enableIdentityUpload(
   user: ReturnType<typeof userEvent.setup>,
-  documentKind?: "identity card" | "passport"
+  documentKind?: "id_card" | "passport"
 ) {
   const uploadNowControl = screen.queryByLabelText(
     /would you like to upload your identity document now\?/i
@@ -144,7 +144,12 @@ async function enableIdentityUpload(
   if (uploadNowControl instanceof HTMLSelectElement) {
     await user.selectOptions(uploadNowControl, "yes");
   } else {
-    await user.click(screen.getByRole("radio", { name: /^(yes|ja)$/i }));
+    const identityUploadGroup = screen.getByRole("radiogroup", {
+      name: /would you like to upload your identity document now\?/i,
+    });
+    await user.click(
+      within(identityUploadGroup).getByRole("radio", { name: /^(yes|ja)$/i })
+    );
   }
 
   if (documentKind) {
@@ -166,7 +171,12 @@ async function deferIdentityUpload(user: ReturnType<typeof userEvent.setup>) {
     return;
   }
 
-  await user.click(screen.getByRole("radio", { name: /^(no|nein)$/i }));
+  const identityUploadGroup = screen.getByRole("radiogroup", {
+    name: /would you like to upload your identity document now\?/i,
+  });
+  await user.click(
+    within(identityUploadGroup).getByRole("radio", { name: /^(no|nein)$/i })
+  );
 }
 
 async function setEmploymentPermitted(
