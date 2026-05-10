@@ -50,6 +50,11 @@ import {
   fetchEmployeeQualifications,
   type EmployeeQualification,
 } from "../../services/qualificationApi";
+import {
+  buildAddressesPayloadForCurrentEdit,
+  getCurrentAddressFromList,
+  type PostalAddressDraft,
+} from "../../lib/employeeAddresses";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 import {
   emergencyContactsToDrafts,
@@ -255,16 +260,6 @@ type EmployeeDetailTab =
   | "documents"
   | "bwr";
 
-interface ContactAddressDraft {
-  street: string;
-  houseNumber: string;
-  postalCode: string;
-  city: string;
-  supplement: string;
-  country: string;
-  state: string;
-}
-
 const baseContactInputClass =
   "w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:text-white";
 const defaultContactInputClass = `${baseContactInputClass} border-zinc-300 dark:border-zinc-700`;
@@ -275,25 +270,31 @@ function contactInputClass(hasError: boolean): string {
 }
 
 function formatPostalAddress(employee: Employee): string | null {
-  const lineOne = [
-    employee.address_street?.trim() ?? "",
-    employee.address_house_number?.trim() ?? "",
-  ]
+  const structured = employee.structured_address?.trim();
+  if (structured) {
+    return structured;
+  }
+
+  const cur =
+    employee.current_address ??
+    getCurrentAddressFromList(employee.addresses ?? []);
+  if (!cur) {
+    return null;
+  }
+
+  const lineOne = [cur.street?.trim() ?? "", cur.house_number?.trim() ?? ""]
     .filter((part) => part.length > 0)
     .join(" ");
-  const lineTwo = [
-    employee.address_postal_code?.trim() ?? "",
-    employee.address_city?.trim() ?? "",
-  ]
+  const lineTwo = [cur.postal_code?.trim() ?? "", cur.city?.trim() ?? ""]
     .filter((part) => part.length > 0)
     .join(" ");
 
   const parts = [
     lineOne,
-    employee.address_supplement?.trim() ?? "",
+    cur.supplement?.trim() ?? "",
     lineTwo,
-    employee.address_state?.trim() ?? "",
-    employee.address_country?.trim() ?? "",
+    cur.state?.trim() ?? "",
+    cur.country?.trim() ?? "",
   ].filter((part) => part.length > 0);
 
   if (parts.length === 0) {
@@ -591,7 +592,7 @@ export function EmployeeDetail() {
     useState<EditableContactField | null>(null);
   const [contactDraftValue, setContactDraftValue] = useState("");
   const [contactAddressDraft, setContactAddressDraft] =
-    useState<ContactAddressDraft>({
+    useState<PostalAddressDraft>({
       street: "",
       houseNumber: "",
       postalCode: "",
@@ -750,15 +751,18 @@ export function EmployeeDetail() {
     }
   }
 
-  function employeeAddressDraft(source: Employee): ContactAddressDraft {
+  function employeeAddressDraft(source: Employee): PostalAddressDraft {
+    const cur =
+      source.current_address ??
+      getCurrentAddressFromList(source.addresses ?? []);
     return {
-      street: source.address_street ?? "",
-      houseNumber: source.address_house_number ?? "",
-      postalCode: source.address_postal_code ?? "",
-      city: source.address_city ?? "",
-      supplement: source.address_supplement ?? "",
-      country: source.address_country ?? "",
-      state: source.address_state ?? "",
+      street: cur?.street ?? "",
+      houseNumber: cur?.house_number ?? "",
+      postalCode: cur?.postal_code ?? "",
+      city: cur?.city ?? "",
+      supplement: cur?.supplement ?? "",
+      country: cur?.country ?? "",
+      state: cur?.state ?? "",
     };
   }
 
@@ -852,14 +856,10 @@ export function EmployeeDetail() {
         await updateEmployee(id, payload);
       } else if (editingContactField === "postal_address") {
         await updateEmployee(id, {
-          address_street: contactAddressDraft.street.trim() || null,
-          address_house_number: contactAddressDraft.houseNumber.trim() || null,
-          address_postal_code: contactAddressDraft.postalCode.trim() || null,
-          address_city: contactAddressDraft.city.trim() || null,
-          address_supplement: contactAddressDraft.supplement.trim() || null,
-          address_country:
-            contactAddressDraft.country.trim().toUpperCase() || null,
-          address_state: contactAddressDraft.state.trim() || null,
+          addresses: buildAddressesPayloadForCurrentEdit(
+            employee.addresses ?? [],
+            contactAddressDraft
+          ),
         });
       } else {
         const emergencyContactError = validateEmergencyContactDrafts(

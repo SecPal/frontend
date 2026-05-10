@@ -6,7 +6,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee } from "@/types/api";
+import type { Employee, EmployeeAddress } from "@/types/api";
+import {
+  buildAddressesPayloadForCurrentEdit,
+  getCurrentAddressFromList,
+} from "../../lib/employeeAddresses";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
@@ -51,6 +55,10 @@ export function EmployeeContactsEdit() {
   const [emergencyContacts, setEmergencyContacts] = useState<
     EmergencyContactDraft[]
   >([emptyEmergencyContactDraft()]);
+  /** Snapshot of address rows for PATCH (server replaces the full list). */
+  const [addressRowsSnapshot, setAddressRowsSnapshot] = useState<
+    EmployeeAddress[]
+  >([]);
   const [employeeLoaded, setEmployeeLoaded] = useState(false);
   const [emailInvalid, setEmailInvalid] = useState(false);
   const [emergencyFieldError, setEmergencyFieldError] =
@@ -72,13 +80,17 @@ export function EmployeeContactsEdit() {
         setEmployeeNumber(employee.employee_number);
         setEmail(employee.email);
         setPhone(employee.phone ?? "");
-        setAddressStreet(employee.address_street ?? "");
-        setAddressHouseNumber(employee.address_house_number ?? "");
-        setAddressPostalCode(employee.address_postal_code ?? "");
-        setAddressCity(employee.address_city ?? "");
-        setAddressSupplement(employee.address_supplement ?? "");
-        setAddressState(employee.address_state ?? "");
-        setAddressCountry(employee.address_country ?? "");
+        const rows = employee.addresses ?? [];
+        setAddressRowsSnapshot(rows);
+        const cur =
+          employee.current_address ?? getCurrentAddressFromList(rows);
+        setAddressStreet(cur?.street ?? "");
+        setAddressHouseNumber(cur?.house_number ?? "");
+        setAddressPostalCode(cur?.postal_code ?? "");
+        setAddressCity(cur?.city ?? "");
+        setAddressSupplement(cur?.supplement ?? "");
+        setAddressState(cur?.state ?? "");
+        setAddressCountry(cur?.country ?? "");
         setEmergencyContacts(
           emergencyContactsToDrafts(employee.emergency_contacts)
         );
@@ -156,13 +168,15 @@ export function EmployeeContactsEdit() {
       await updateEmployee(id, {
         email: trimmedEmail,
         phone: phone.trim(),
-        address_street: addressStreet.trim() || null,
-        address_house_number: addressHouseNumber.trim() || null,
-        address_postal_code: addressPostalCode.trim() || null,
-        address_city: addressCity.trim() || null,
-        address_supplement: addressSupplement.trim() || null,
-        address_state: addressState.trim() || null,
-        address_country: addressCountry.trim().toUpperCase() || null,
+        addresses: buildAddressesPayloadForCurrentEdit(addressRowsSnapshot, {
+          street: addressStreet,
+          houseNumber: addressHouseNumber,
+          postalCode: addressPostalCode,
+          city: addressCity,
+          supplement: addressSupplement,
+          state: addressState,
+          country: addressCountry,
+        }),
         emergency_contacts:
           normalizedContacts.length > 0 ? normalizedContacts : null,
       });
