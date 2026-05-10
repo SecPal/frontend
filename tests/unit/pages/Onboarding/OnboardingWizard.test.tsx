@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -18,9 +24,7 @@ import type { Employee } from "../../../../src/types/api/employees";
 vi.mock("../../../../src/services/onboardingApi");
 vi.mock("../../../../src/services/employeeApi");
 
-function makeEmployee(
-  overrides: Partial<Employee> = {}
-): Employee {
+function makeEmployee(overrides: Partial<Employee> = {}): Employee {
   return {
     id: "employee-1",
     employee_number: "E-001",
