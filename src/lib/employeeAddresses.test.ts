@@ -8,7 +8,9 @@ import {
   getCurrentAddressFromList,
 } from "./employeeAddresses";
 
-function addr(partial: Partial<EmployeeAddress> & { id: string }): EmployeeAddress {
+function addr(
+  partial: Partial<EmployeeAddress> & { id: string }
+): EmployeeAddress {
   return {
     street: null,
     house_number: null,
@@ -98,7 +100,10 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
       resided_until: null,
     });
 
-    const payload = buildAddressesPayloadForCurrentEdit([historical, current], draft);
+    const payload = buildAddressesPayloadForCurrentEdit(
+      [historical, current],
+      draft
+    );
 
     expect(payload).toHaveLength(2);
     expect(payload[0]).toMatchObject({

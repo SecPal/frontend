@@ -82,8 +82,7 @@ export function EmployeeContactsEdit() {
         setPhone(employee.phone ?? "");
         const rows = employee.addresses ?? [];
         setAddressRowsSnapshot(rows);
-        const cur =
-          employee.current_address ?? getCurrentAddressFromList(rows);
+        const cur = employee.current_address ?? getCurrentAddressFromList(rows);
         setAddressStreet(cur?.street ?? "");
         setAddressHouseNumber(cur?.house_number ?? "");
         setAddressPostalCode(cur?.postal_code ?? "");
