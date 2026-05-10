@@ -962,6 +962,163 @@ describe("OnboardingWizard", () => {
     });
   });
 
+  it("shows HTTP status fallback message when ApiError has a status code but no message", async () => {
+    mockUploadStepContext();
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new ApiError("", 503)
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/File upload failed with HTTP status 503/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("shows localized document label in German after uploading a passport", async () => {
+    mockUploadStepContext();
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+    const file = new File(["pass"], "reisepass.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-de-pass",
+      filename: "reisepass.png",
+    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(/ausweisdokument.*hochladen/i)
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection("passport");
+    fireEvent.change(screen.getByLabelText("Anhang"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /datei hochladen/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("reisepass.png")).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText("Reisepass").length).toBeGreaterThan(0);
+  });
+
+  it("shows localized document label in German after uploading an id_card", async () => {
+    mockUploadStepContext();
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+    const file = new File(["id"], "ausweis.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-de-id",
+      filename: "ausweis.png",
+    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(/ausweisdokument.*hochladen/i)
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection("id_card");
+    fireEvent.change(screen.getByLabelText("Anhang"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /datei hochladen/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("ausweis.png")).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText("Personalausweis").length).toBeGreaterThan(0);
+  });
+
+  it("sets the secondary file slot when a second file input is changed", async () => {
+    mockUploadStepContext();
+    const frontFile = new File(["front"], "id-front.png", {
+      type: "image/png",
+    });
+    const backFile = new File(["back"], "id-back.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile)
+      .mockResolvedValueOnce({ id: "file-front", filename: "id-front.png" })
+      .mockResolvedValueOnce({ id: "file-back", filename: "id-back.png" });
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection("id_card");
+
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [frontFile] },
+    });
+
+    const secondInput = screen.queryByLabelText(
+      /attachment.*optional second file/i
+    );
+    if (secondInput) {
+      fireEvent.change(secondInput, {
+        target: { files: [backFile] },
+      });
+    }
+
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        frontFile,
+        "id_document",
+        "identity_document_front"
+      );
+    });
+  });
+
   it("reverts identity upload selection when submit detects a required-field error on the current step", async () => {
     vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
       {
