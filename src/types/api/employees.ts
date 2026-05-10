@@ -44,6 +44,24 @@ export interface EmployeeEmergencyContact {
   notes?: string | null;
 }
 
+/** Writable address row (create/update); omit `id`. */
+export interface EmployeeAddressInput {
+  street?: string | null;
+  house_number?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  supplement?: string | null;
+  country?: string | null;
+  state?: string | null;
+  resided_from?: string | null;
+  resided_until?: string | null;
+}
+
+/** Address returned on employee resources (includes primary key). */
+export interface EmployeeAddress extends EmployeeAddressInput {
+  id: string;
+}
+
 export interface EmployeeUserSummary {
   id: string;
   name: string;
@@ -96,13 +114,9 @@ export interface Employee {
   full_name: string;
   email: string;
   phone?: string | null;
-  address_street?: string | null;
-  address_house_number?: string | null;
-  address_postal_code?: string | null;
-  address_city?: string | null;
-  address_supplement?: string | null;
-  address_country?: string | null;
-  address_state?: string | null;
+  addresses?: EmployeeAddress[] | null;
+  current_address?: EmployeeAddress | null;
+  structured_address?: string | null;
   emergency_contacts?: EmployeeEmergencyContact[] | null;
   date_of_birth: string | null;
   hire_date?: string | null;
@@ -148,13 +162,7 @@ export interface EmployeeFormData {
   last_name: string;
   email: string;
   phone?: string;
-  address_street?: string | null;
-  address_house_number?: string | null;
-  address_postal_code?: string | null;
-  address_city?: string | null;
-  address_supplement?: string | null;
-  address_country?: string | null;
-  address_state?: string | null;
+  addresses?: EmployeeAddressInput[] | null;
   emergency_contacts?: EmployeeEmergencyContact[] | null;
   date_of_birth: string;
   contract_start_date: string;

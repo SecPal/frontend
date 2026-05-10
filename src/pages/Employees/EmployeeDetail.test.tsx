@@ -91,6 +91,21 @@ const mockEmployee: Employee = {
     id: "unit-1",
     name: "Engineering",
   },
+  addresses: [
+    {
+      id: "addr-default",
+      street: null,
+      house_number: null,
+      postal_code: null,
+      city: null,
+      supplement: null,
+      country: null,
+      state: null,
+      resided_from: null,
+      resided_until: null,
+    },
+  ],
+  structured_address: null,
   created_at: "2025-01-01T00:00:00Z",
   updated_at: "2025-01-01T00:00:00Z",
 };
@@ -262,13 +277,19 @@ describe("EmployeeDetail", () => {
 
     await waitFor(() => {
       expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
-        address_street: "Musterstraße",
-        address_house_number: "12A",
-        address_postal_code: "10115",
-        address_city: "Berlin",
-        address_supplement: null,
-        address_country: "DE",
-        address_state: null,
+        addresses: [
+          {
+            street: "Musterstraße",
+            house_number: "12A",
+            postal_code: "10115",
+            city: "Berlin",
+            supplement: null,
+            country: "DE",
+            state: null,
+            resided_from: null,
+            resided_until: null,
+          },
+        ],
       });
     });
   });
