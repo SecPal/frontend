@@ -1396,6 +1396,236 @@ describe("OnboardingWizard", () => {
     );
   });
 
+  it("blocks submission when residence title expiry date is already in the past", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          contract_start_date: {
+            type: "string",
+            title: "Contract start date",
+            format: "date",
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await user.type(
+      screen.getByLabelText(/contract start date/i),
+      "2030-12-31"
+    );
+    await selectNationality(user, "tr");
+    await enableIdentityUpload(user);
+
+    const attachmentInput = await screen.findByLabelText(/^attachment$/i);
+    await user.upload(
+      attachmentInput,
+      new File(["passport"], "passport.png", { type: "image/png" })
+    );
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+    await screen.findByText(/file uploaded successfully\./i);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    await user.type(expiryInput, "2020-01-01");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(/cannot be in the past/i)
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.updateOnboardingSubmission
+    ).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: "submitted" })
+    );
+  });
+
+  it("shows success feedback and updates the file list after removing an uploaded file", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "DE", name: "Germany" },
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["nationalities"],
+        properties: {
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.uploadOnboardingFile.mockResolvedValueOnce({
+      id: "file-1",
+      filename: "passport.png",
+    });
+    onboardingApiMocks.deleteOnboardingFile.mockResolvedValueOnce(undefined);
+    onboardingApiMocks.updateOnboardingSubmission.mockResolvedValue({
+      id: "submission-1",
+      employee_id: "employee-1",
+      form_template_id: "template-1",
+      form_data: { nationalities: ["TR"] },
+      status: "draft",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await selectNationality(user, "tr");
+    await enableIdentityUpload(user);
+
+    const attachmentInput = await screen.findByLabelText(/^attachment$/i);
+    await user.upload(
+      attachmentInput,
+      new File(["passport"], "passport.png", { type: "image/png" })
+    );
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+    await screen.findByText(/file uploaded successfully\./i);
+    expect(screen.getByText("passport.png")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^remove$/i }));
+
+    await waitFor(() => {
+      expect(onboardingApiMocks.deleteOnboardingFile).toHaveBeenCalledWith(
+        "submission-1",
+        "file-1"
+      );
+    });
+
+    expect(
+      await screen.findByText(/file removed successfully/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText("passport.png")).not.toBeInTheDocument();
+  });
+
+  it("shows a validation error when identity upload choice is left blank and blocks submission", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        /please choose whether you want to upload your identity document now/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      onboardingApiMocks.updateOnboardingSubmission
+    ).not.toHaveBeenCalled();
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+  });
+
   it("uses field-level validation errors for upload failures and localizes Laravel's generic upload message", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
