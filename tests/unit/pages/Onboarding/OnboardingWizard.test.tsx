@@ -886,6 +886,138 @@ describe("OnboardingWizard", () => {
     expect(screen.queryByText("passport.png")).not.toBeInTheDocument();
   });
 
+  it("shows inline success feedback after removing an uploaded file", async () => {
+    mockUploadStepContext();
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-2",
+      filename: "passport.png",
+    });
+    vi.mocked(onboardingApi.deleteOnboardingFile).mockResolvedValueOnce();
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+        id_document_upload_now: "",
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("passport.png")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^remove$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("File removed successfully.")
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText("passport.png")).not.toBeInTheDocument();
+  });
+
+  it("shows a non-422 upload error with the HTTP status appended", async () => {
+    mockUploadStepContext();
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new ApiError("Internal Server Error", 500)
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Internal Server Error.*HTTP 500/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("reverts identity upload selection when submit detects a required-field error on the current step", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-1", {
+          legal_name: "",
+          nationalities: ["DE"],
+        }),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate("template-1", "Personal Information", undefined, {
+          type: "object",
+          required: ["legal_name", "nationalities"],
+          properties: {
+            legal_name: { type: "string", title: "Legal Name" },
+            nationalities: {
+              type: "array",
+              title: "Nationalities",
+              items: { type: "string", enum: ["DE", "TR"] },
+            },
+          },
+        })
+      );
+    vi.mocked(
+      onboardingApi.fetchOnboardingNationalityOptions
+    ).mockResolvedValue([{ code: "DE", name: "Germany" }]);
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Legal Name")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This field is required.")).toBeInTheDocument();
+    });
+
+    expect(
+      vi.mocked(onboardingApi.updateOnboardingSubmission)
+    ).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: "submitted" })
+    );
+  });
+
   it("localizes the generic upload fallback error and keeps the selected file for retry", async () => {
     mockUploadStepContext();
     const file = new File(["passport"], "passport.png", { type: "image/png" });
