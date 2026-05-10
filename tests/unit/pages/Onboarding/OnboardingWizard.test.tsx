@@ -11,9 +11,11 @@ import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
 import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWizard";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
+import * as employeeApi from "../../../../src/services/employeeApi";
 import { ApiError } from "../../../../src/services/ApiError";
 
 vi.mock("../../../../src/services/onboardingApi");
+vi.mock("../../../../src/services/employeeApi");
 
 function makeTemplate(
   id: string,
@@ -86,6 +88,147 @@ function renderWizard(routeState?: Record<string, unknown>) {
   );
 }
 
+async function selectNationality(
+  user: ReturnType<typeof userEvent.setup>,
+  query = "de"
+) {
+  const nationalityControl = screen.getByLabelText(/^nationalities$/i);
+
+  if (nationalityControl instanceof HTMLSelectElement) {
+    await user.selectOptions(nationalityControl, query.toUpperCase());
+    return;
+  }
+
+  const nationalityInput = nationalityControl as HTMLInputElement;
+  await user.click(nationalityInput);
+  await user.clear(nationalityInput);
+  await user.type(nationalityInput, query);
+  await user.keyboard("{ArrowDown}{Enter}");
+}
+
+function enableUploadNowSelection(
+  documentKind: "id_card" | "passport" = "passport"
+) {
+  const uploadNowControl =
+    screen.queryByLabelText(
+      /would you like to upload your identity document now\?/i
+    ) ?? screen.queryByLabelText(/ausweisdokument.*hochladen/i);
+
+  if (!uploadNowControl) {
+    throw new Error("Upload-now selector not found");
+  }
+
+  if (uploadNowControl instanceof HTMLSelectElement) {
+    fireEvent.change(uploadNowControl, { target: { value: "yes" } });
+  } else {
+    fireEvent.click(screen.getByRole("radio", { name: /^(yes|ja)$/i }));
+  }
+
+  const documentKindControl = screen.queryByLabelText(
+    /which document are you uploading\?|welches dokument laden sie hoch\?/i
+  );
+  if (documentKindControl) {
+    fireEvent.change(documentKindControl, { target: { value: documentKind } });
+  }
+}
+
+function disableUploadNowSelection() {
+  const uploadNowControl =
+    screen.queryByLabelText(
+      /would you like to upload your identity document now\?/i
+    ) ?? screen.queryByLabelText(/ausweisdokument.*hochladen/i);
+
+  if (!uploadNowControl) {
+    throw new Error("Upload-now selector not found");
+  }
+
+  if (uploadNowControl instanceof HTMLSelectElement) {
+    fireEvent.change(uploadNowControl, { target: { value: "no" } });
+  } else {
+    fireEvent.click(screen.getByRole("radio", { name: /^(no|nein)$/i }));
+  }
+}
+
+function mockUploadStepContext(options?: {
+  includeSecondStep?: boolean;
+  hasSubmission?: boolean;
+}) {
+  const includeSecondStep = options?.includeSecondStep ?? true;
+  const hasSubmission = options?.hasSubmission ?? true;
+
+  const stepOneSubmission = hasSubmission
+    ? makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    : undefined;
+
+  const steps = [
+    {
+      step_number: 1,
+      title: "Personal Information",
+      description: "Personal Information description",
+      template_id: "template-1",
+      is_required: true,
+      is_completed: false,
+      ...(stepOneSubmission ? { submission: stepOneSubmission } : {}),
+    },
+  ];
+
+  if (includeSecondStep) {
+    steps.push({
+      step_number: 2,
+      title: "Tax Details",
+      description: "Tax Details description",
+      template_id: "template-2",
+      is_required: false,
+      is_completed: false,
+      submission: makeSubmission("template-2", { nationalities: ["DE"] }),
+    });
+  }
+
+  vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue(
+    steps as Awaited<ReturnType<typeof onboardingApi.fetchOnboardingSteps>>
+  );
+  vi.mocked(onboardingApi.fetchOnboardingTemplate)
+    .mockReset()
+    .mockResolvedValueOnce(
+      makeTemplate("template-1", "Personal Information", undefined, {
+        type: "object",
+        properties: {
+          legal_name: { type: "string", title: "Legal Name" },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["DE", "TR"] },
+          },
+        },
+        required: [],
+      })
+    );
+
+  if (includeSecondStep) {
+    vi.mocked(onboardingApi.fetchOnboardingTemplate).mockResolvedValueOnce(
+      makeTemplate("template-2", "Tax Details", "Tax Details description", {
+        type: "object",
+        properties: {
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["DE", "TR"] },
+          },
+        },
+        required: [],
+      })
+    );
+  }
+
+  vi.mocked(onboardingApi.fetchOnboardingNationalityOptions).mockResolvedValue([
+    { code: "DE", name: "Germany" },
+    { code: "TR", name: "Turkey" },
+  ]);
+}
+
 describe("OnboardingWizard", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -135,6 +278,9 @@ describe("OnboardingWizard", () => {
     vi.mocked(
       onboardingApi.fetchOnboardingNationalityOptions
     ).mockResolvedValue([]);
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      contract_start_date: null,
+    } as never);
   });
 
   it("loads the current runtime templates and advances after saving the active template draft", async () => {
@@ -281,6 +427,7 @@ describe("OnboardingWizard", () => {
   });
 
   it("uploads onboarding attachments for the current editable step and shows inline upload feedback", async () => {
+    mockUploadStepContext();
     const file = new File(["passport"], "passport.png", { type: "image/png" });
     vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
       id: "file-2",
@@ -291,13 +438,13 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /upload file/i })
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
       ).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText("Document Type"), {
-      target: { value: "id_document" },
-    });
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Attachment"), {
       target: { files: [file] },
     });
@@ -307,16 +454,391 @@ describe("OnboardingWizard", () => {
       expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
         "submission-template-1",
         file,
-        "id_document"
+        "id_document",
+        "identity_document"
       );
     });
 
     expect(screen.getByText("File uploaded successfully.")).toBeInTheDocument();
     expect(screen.getByText("passport.png")).toBeInTheDocument();
-    expect(screen.getAllByText("Identity Document")).toHaveLength(2);
+    expect(screen.getAllByText("Passport").length).toBeGreaterThan(0);
+  });
+
+  it("does not show a separate document category for identity front/back combined", async () => {
+    mockUploadStepContext();
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+    enableUploadNowSelection();
+
+    expect(
+      screen.queryByText(/identity document \(front and back together\)/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/vorder- und rückseite zusammen/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("restores upload choice from saved form data after reload", async () => {
+    mockUploadStepContext({ includeSecondStep: false, hasSubmission: true });
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-1", {
+          legal_name: "Jane Doe",
+          nationalities: ["DE"],
+          id_document_upload_now: "yes",
+          id_document_kind: "passport",
+        }),
+      },
+    ]);
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /identity document upload/i })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("radio", { name: /^(yes|ja)$/i })).toBeChecked();
+  });
+
+  it("drops hidden identity upload metadata when no nationality is selected", async () => {
+    mockUploadStepContext({ includeSecondStep: false, hasSubmission: true });
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Personal Information description",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-1", {
+          legal_name: "Jane Doe",
+          nationalities: [],
+          id_document_upload_now: "yes",
+          id_document_kind: "passport",
+        }),
+      },
+    ]);
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValueOnce(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: [],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Legal Name")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByLabelText(
+        /would you like to upload your identity document now\?/i
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/which document are you uploading\?/i)
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /save draft/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-1",
+        {
+          form_data: {
+            legal_name: "Jane Doe",
+            nationalities: [],
+          },
+          status: "draft",
+        }
+      );
+    });
+  });
+
+  it("shows only one attachment field initially and reveals an optional second field after selecting the first file", async () => {
+    mockUploadStepContext();
+    const firstFile = new File(["front"], "id-front.png", {
+      type: "image/png",
+    });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-front",
+      filename: "id-front.png",
+    });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    expect(
+      screen.queryByLabelText("Attachment (optional second file)")
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [firstFile] },
+    });
+
+    expect(
+      screen.getByLabelText("Attachment (optional second file)")
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        firstFile,
+        "id_document",
+        "identity_document"
+      );
+    });
+  });
+
+  it("uploads both files when the optional second attachment is filled", async () => {
+    mockUploadStepContext();
+    const frontFile = new File(["front"], "id-front.png", {
+      type: "image/png",
+    });
+    const backFile = new File(["back"], "id-back.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile)
+      .mockResolvedValueOnce({
+        id: "file-front",
+        filename: "id-front.png",
+      })
+      .mockResolvedValueOnce({
+        id: "file-back",
+        filename: "id-back.png",
+      });
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [frontFile] },
+    });
+    fireEvent.change(
+      screen.getByLabelText("Attachment (optional second file)"),
+      {
+        target: { files: [backFile] },
+      }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenNthCalledWith(
+        1,
+        "submission-template-1",
+        frontFile,
+        "id_document",
+        "identity_document_front"
+      );
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenNthCalledWith(
+        2,
+        "submission-template-1",
+        backFile,
+        "id_document",
+        "identity_document_back"
+      );
+    });
+  });
+
+  it("keeps uploaded files visible when navigating to the next step and back", async () => {
+    mockUploadStepContext({ includeSecondStep: true, hasSubmission: true });
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-2",
+      filename: "passport.png",
+    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("passport.png")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /previous/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("passport.png")).toBeInTheDocument();
+  });
+
+  it("disables Next while selected files are pending upload", async () => {
+    mockUploadStepContext({ includeSecondStep: true, hasSubmission: true });
+    const file = new File(["passport"], "passport-auto.png", {
+      type: "image/png",
+    });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-auto",
+      filename: "passport-auto.png",
+    });
+    vi.mocked(onboardingApi.updateOnboardingSubmission).mockResolvedValue(
+      makeSubmission("template-1", {
+        legal_name: "Jane Doe",
+        nationalities: ["DE"],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+
+    expect(screen.getByRole("button", { name: /next/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    expect(screen.getByText("Personal Information")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        file,
+        "id_document",
+        "identity_document"
+      );
+    });
+    expect(screen.getByRole("button", { name: /next/i })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /previous/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("passport-auto.png")).toBeInTheDocument();
+  });
+
+  it("allows removing an uploaded file from the list", async () => {
+    mockUploadStepContext();
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockResolvedValueOnce({
+      id: "file-2",
+      filename: "passport.png",
+    });
+    vi.mocked(onboardingApi.deleteOnboardingFile).mockResolvedValueOnce();
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("passport.png")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^remove$/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.deleteOnboardingFile).toHaveBeenCalledWith(
+        "submission-template-1",
+        "file-2"
+      );
+    });
+
+    await waitFor(() => {
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-1",
+        expect.objectContaining({
+          status: "draft",
+          form_data: expect.objectContaining({
+            id_document_upload_now: "",
+          }),
+        })
+      );
+    });
+
+    const latestPayload = vi
+      .mocked(onboardingApi.updateOnboardingSubmission)
+      .mock.calls.at(-1)?.[1];
+    expect(latestPayload?.form_data).not.toHaveProperty("id_document_kind");
+
+    expect(screen.queryByText("passport.png")).not.toBeInTheDocument();
   });
 
   it("localizes the generic upload fallback error and keeps the selected file for retry", async () => {
+    mockUploadStepContext();
     const file = new File(["passport"], "passport.png", { type: "image/png" });
     i18n.load("de", deMessages);
     i18n.activate("de");
@@ -328,10 +850,13 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /datei hochladen/i })
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?|ausweisdokument.*hochladen/i
+        )
       ).toBeInTheDocument();
     });
 
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Anhang"), {
       target: { files: [file] },
     });
@@ -347,6 +872,7 @@ describe("OnboardingWizard", () => {
   });
 
   it("shows upload-specific validation message for 422 rejections instead of raw status text", async () => {
+    mockUploadStepContext();
     const file = new File(["passport"], "passport.png", { type: "image/png" });
     vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
       new ApiError("", 422)
@@ -356,10 +882,13 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /upload file/i })
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
       ).toBeInTheDocument();
     });
 
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Attachment"), {
       target: { files: [file] },
     });
@@ -372,44 +901,41 @@ describe("OnboardingWizard", () => {
     });
   });
 
+  it("prefers 422 field-level upload errors and localizes the generic Laravel upload failure", async () => {
+    mockUploadStepContext();
+    const file = new File(["passport"], "passport.png", { type: "image/png" });
+    vi.mocked(onboardingApi.uploadOnboardingFile).mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        file: ["The file failed to upload."],
+      })
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(
+          /would you like to upload your identity document now\?/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    enableUploadNowSelection();
+    fireEvent.change(screen.getByLabelText("Attachment"), {
+      target: { files: [file] },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /upload file/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Failed to upload file")).toBeInTheDocument();
+    });
+  });
+
   it("disables step navigation and draft actions while an upload is in flight", async () => {
+    mockUploadStepContext({ includeSecondStep: true, hasSubmission: true });
     let resolveUpload:
       | ((value: { id: string; filename: string }) => void)
       | null = null;
-
-    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
-      {
-        step_number: 1,
-        title: "Personal Information",
-        description: "Personal Information description",
-        template_id: "template-1",
-        is_required: true,
-        is_completed: false,
-        submission: makeSubmission("template-1"),
-      },
-      {
-        step_number: 2,
-        title: "Tax Details",
-        description: "Tax Details description",
-        template_id: "template-2",
-        is_required: false,
-        is_completed: false,
-        submission: makeSubmission("template-2"),
-      },
-    ]);
-
-    vi.mocked(onboardingApi.fetchOnboardingTemplate)
-      .mockReset()
-      .mockResolvedValueOnce(makeTemplate("template-1", "Personal Information"))
-      .mockResolvedValueOnce(
-        makeTemplate(
-          "template-2",
-          "Tax Details",
-          "Tax Details description",
-          {},
-          false
-        )
-      );
 
     vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
       () =>
@@ -424,12 +950,14 @@ describe("OnboardingWizard", () => {
       expect(screen.getByText("Personal Information")).toBeInTheDocument();
     });
 
+    disableUploadNowSelection();
     fireEvent.click(screen.getByRole("button", { name: /next/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Tax Details")).toBeInTheDocument();
     });
 
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Attachment"), {
       target: {
         files: [new File(["tax"], "tax.pdf", { type: "application/pdf" })],
@@ -457,34 +985,11 @@ describe("OnboardingWizard", () => {
   });
 
   it("creates a draft before the first upload when the current step has no submission yet", async () => {
+    const user = userEvent.setup();
+    mockUploadStepContext({ includeSecondStep: false, hasSubmission: false });
     const file = new File(["contract"], "contract.pdf", {
       type: "application/pdf",
     });
-
-    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
-      {
-        step_number: 1,
-        title: "Personal Information",
-        description: "Personal Information description",
-        template_id: "template-1",
-        is_required: true,
-        is_completed: false,
-      },
-    ]);
-    vi.mocked(onboardingApi.fetchOnboardingTemplate)
-      .mockReset()
-      .mockResolvedValue(
-        makeTemplate("template-1", "Personal Information", undefined, {
-          type: "object",
-          properties: {
-            legal_name: {
-              type: "string",
-              title: "Legal Name",
-            },
-          },
-          required: [],
-        })
-      );
     vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValue(
       makeSubmission("template-1", {
         legal_name: "Casey Example",
@@ -500,6 +1005,8 @@ describe("OnboardingWizard", () => {
     fireEvent.change(screen.getByLabelText("Legal Name"), {
       target: { value: "Casey Example" },
     });
+    await selectNationality(user, "de");
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Attachment"), {
       target: { files: [file] },
     });
@@ -508,7 +1015,12 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(onboardingApi.createOnboardingSubmission).toHaveBeenCalledWith({
         form_template_id: "template-1",
-        form_data: { legal_name: "Casey Example" },
+        form_data: {
+          legal_name: "Casey Example",
+          nationalities: ["DE"],
+          id_document_upload_now: "yes",
+          id_document_kind: "passport",
+        },
         status: "draft",
       });
     });
@@ -517,40 +1029,18 @@ describe("OnboardingWizard", () => {
       expect(onboardingApi.uploadOnboardingFile).toHaveBeenCalledWith(
         "submission-template-1",
         file,
-        "contract"
+        "id_document",
+        "identity_document"
       );
     });
   });
 
   it("shows only inline upload feedback when draft preparation fails before the first upload", async () => {
+    const user = userEvent.setup();
+    mockUploadStepContext({ includeSecondStep: false, hasSubmission: false });
     const file = new File(["contract"], "contract.pdf", {
       type: "application/pdf",
     });
-
-    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
-      {
-        step_number: 1,
-        title: "Personal Information",
-        description: "Personal Information description",
-        template_id: "template-1",
-        is_required: true,
-        is_completed: false,
-      },
-    ]);
-    vi.mocked(onboardingApi.fetchOnboardingTemplate)
-      .mockReset()
-      .mockResolvedValue(
-        makeTemplate("template-1", "Personal Information", undefined, {
-          type: "object",
-          properties: {
-            legal_name: {
-              type: "string",
-              title: "Legal Name",
-            },
-          },
-          required: [],
-        })
-      );
     vi.mocked(onboardingApi.createOnboardingSubmission).mockRejectedValueOnce(
       new Error("Failed to save draft")
     );
@@ -564,6 +1054,8 @@ describe("OnboardingWizard", () => {
     fireEvent.change(screen.getByLabelText("Legal Name"), {
       target: { value: "Casey Example" },
     });
+    await selectNationality(user, "de");
+    enableUploadNowSelection();
     fireEvent.change(screen.getByLabelText("Attachment"), {
       target: { files: [file] },
     });

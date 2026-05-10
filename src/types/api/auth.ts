@@ -10,6 +10,11 @@
 
 export type AuthenticatedUserId = number | string;
 
+export interface AuthenticatedUserEmployee {
+  id: string;
+  contract_start_date: string | null;
+}
+
 export interface AuthenticatedUser {
   id: AuthenticatedUserId;
   name: string;
@@ -20,6 +25,7 @@ export interface AuthenticatedUser {
   hasOrganizationalScopes: boolean;
   hasCustomerAccess: boolean;
   hasSiteAccess: boolean;
+  employee?: AuthenticatedUserEmployee | null;
 }
 
 export interface SessionLoginResponse {

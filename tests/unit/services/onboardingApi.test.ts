@@ -6,6 +6,7 @@ import {
   approveOnboardingSubmission,
   completeOnboarding,
   createOnboardingSubmission,
+  deleteOnboardingFile,
   fetchOnboardingSteps,
   fetchOnboardingTemplate,
   fetchOnboardingSubmissions,
@@ -683,7 +684,12 @@ describe("uploadOnboardingFile", () => {
     );
 
     await expect(
-      uploadOnboardingFile("submission-9", file, "contract")
+      uploadOnboardingFile(
+        "submission-9",
+        file,
+        "id_document",
+        "identity_document"
+      )
     ).resolves.toEqual({
       id: "file-9",
       filename: "contract.pdf",
@@ -695,6 +701,13 @@ describe("uploadOnboardingFile", () => {
         method: "POST",
         body: expect.any(FormData),
       })
+    );
+
+    const requestBody = vi.mocked(apiFetch).mock.calls[0]?.[1]?.body;
+    expect(requestBody).toBeInstanceOf(FormData);
+    expect((requestBody as FormData).get("document_type")).toBe("id_document");
+    expect((requestBody as FormData).get("document_subtype")).toBe(
+      "identity_document"
     );
   });
 
@@ -710,6 +723,37 @@ describe("uploadOnboardingFile", () => {
     await expect(
       uploadOnboardingFile("submission-9", file, "id_document")
     ).rejects.toThrow("The file must be a file of type: pdf, jpg, jpeg, png.");
+  });
+});
+
+describe("deleteOnboardingFile", () => {
+  it("calls the submission file delete endpoint", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      new Response(null, { status: 204 })
+    );
+
+    await expect(
+      deleteOnboardingFile("submission-9", "file-123")
+    ).resolves.toBeUndefined();
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "/v1/onboarding/submissions/submission-9/files/file-123"
+      ),
+      expect.objectContaining({
+        method: "DELETE",
+      })
+    );
+  });
+
+  it("throws backend message when deletion fails", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      makeFetchResponse(422, { message: "File cannot be deleted." })
+    );
+
+    await expect(
+      deleteOnboardingFile("submission-9", "file-123")
+    ).rejects.toThrow("File cannot be deleted.");
   });
 });
 
