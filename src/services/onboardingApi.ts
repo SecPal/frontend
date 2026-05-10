@@ -478,13 +478,17 @@ export async function updateOnboardingSubmission(
 export async function uploadOnboardingFile(
   submissionId: string,
   file: File,
-  documentType: string
+  documentType: string,
+  documentSubtype?: string
 ): Promise<{ id: string; filename: string }> {
   const url = `${apiConfig.baseUrl}/v1/onboarding/submissions/${submissionId}/files`;
 
   const formData = new FormData();
   formData.append("file", file);
   formData.append("document_type", documentType);
+  if (documentSubtype) {
+    formData.append("document_subtype", documentSubtype);
+  }
 
   const response = await apiFetch(url, {
     method: "POST",
@@ -500,6 +504,21 @@ export async function uploadOnboardingFile(
     throw new Error("Failed to parse file upload response");
   }
   return data.data;
+}
+
+export async function deleteOnboardingFile(
+  submissionId: string,
+  fileId: string
+): Promise<void> {
+  const url = `${apiConfig.baseUrl}/v1/onboarding/submissions/${submissionId}/files/${fileId}`;
+
+  const response = await apiFetch(url, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    await throwSubmissionHttpError(response);
+  }
 }
 
 /**

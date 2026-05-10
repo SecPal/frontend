@@ -49,6 +49,29 @@ describe("authState", () => {
     });
   });
 
+  it("keeps canonical contract start date from auth employee payload", () => {
+    const sanitizedUser = sanitizeAuthUser({
+      id: 1,
+      name: "Test User",
+      email: "test@secpal.dev",
+      employee: {
+        id: "employee-1",
+        contract_start_date: "2026-06-01",
+      },
+    });
+
+    expect(sanitizedUser).toEqual({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+      employee: {
+        id: "employee-1",
+        contract_start_date: "2026-06-01",
+      },
+    });
+  });
+
   it("persists minimal employee lifecycle state for offline route gating", () => {
     const sanitizedUser = sanitizePersistedAuthUser({
       id: 1,

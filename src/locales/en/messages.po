@@ -155,6 +155,10 @@ msgstr "Manage your internal organizational units including departments, branche
 msgid "Expand"
 msgstr "Expand"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "The residence title must remain valid after your contract start date."
+msgstr "The residence title must remain valid after your contract start date."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -165,6 +169,10 @@ msgstr "Expand"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Notes"
 msgstr "Notes"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Upload front and back as separate files if available."
+msgstr "Upload front and back as separate files if available."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Organizational structure"
@@ -209,6 +217,10 @@ msgstr "Name change too significant. Please contact HR before completing onboard
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Passport"
+msgstr "Passport"
+
 #: src/components/NotificationPreferences.tsx
 msgid "Messages from team members and supervisors"
 msgstr "Messages from team members and supervisors"
@@ -228,6 +240,10 @@ msgstr "More options"
 #: src/components/NotificationPreferences.tsx
 msgid "Choose which notifications you want to receive"
 msgstr "Choose which notifications you want to receive"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to delete file"
+msgstr "Failed to delete file"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -280,6 +296,10 @@ msgstr "Use at least 12 characters with uppercase and lowercase letters, a numbe
 msgid "BWR status updated."
 msgstr "BWR status updated."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "HR will still require these documents for the Bewacherregister registration."
+msgstr "HR will still require these documents for the Bewacherregister registration."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx
@@ -294,6 +314,10 @@ msgstr "Recovery codes remaining"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First name is required"
 msgstr "First name is required"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please choose whether you want to upload your residence title now."
+msgstr "Please choose whether you want to upload your residence title now."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
@@ -353,6 +377,10 @@ msgstr "Invalid onboarding link. Please check your email and try again."
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "You can continue now and upload your documents later."
+msgstr "You can continue now and upload your documents later."
 
 #: src/App.tsx
 msgid "SecPal – A guard’s best friend"
@@ -436,10 +464,6 @@ msgstr "Select new parent"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading qualifications..."
 msgstr "Loading qualifications..."
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Document Type"
-msgstr "Document Type"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
@@ -618,6 +642,10 @@ msgid "Contract Type"
 msgstr "Contract Type"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Would you like to upload your residence title now?"
+msgstr "Would you like to upload your residence title now?"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Residence title type"
 msgstr "Residence title type"
 
@@ -699,6 +727,10 @@ msgstr "System Updates"
 msgid "Valid From"
 msgstr "Valid From"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Document uploads are only shown where a specific document is required for the current onboarding step."
+msgstr "Document uploads are only shown where a specific document is required for the current onboarding step."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Minimum Assignable Rank"
 msgstr "Minimum Assignable Rank"
@@ -714,6 +746,10 @@ msgstr "View Sites"
 #: src/pages/Customers/CustomersPage.tsx
 msgid "No customers found"
 msgstr "No customers found"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload your residence title (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Please upload your residence title (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/RouteGuardState.tsx
 msgid "Page Not Found"
@@ -750,10 +786,6 @@ msgstr "My profile"
 msgid "BWR export generated. Download the file below."
 msgstr "BWR export generated. Download the file below."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
-msgstr "On every onboarding step you can upload PDF, JPG, or PNG files up to 10 MB — choose contract, identity document, or banking verification as appropriate."
-
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
@@ -761,6 +793,10 @@ msgstr "e.g., Berlin Branch"
 #: src/components/NotificationPreferences.tsx
 msgid "You'll now receive important updates from SecPal"
 msgstr "You'll now receive important updates from SecPal"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Would you like to upload your identity document now?"
+msgstr "Would you like to upload your identity document now?"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -776,6 +812,10 @@ msgstr "This session expired before setup completed. Create a new session to con
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate codes"
 msgstr "Regenerate codes"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload your passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Please upload your passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No documents uploaded"
@@ -837,6 +877,14 @@ msgstr "Minimum Viewable Rank"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Completing Setup..."
 msgstr "Completing Setup..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional: Upload a second file, for example the reverse side."
+msgstr "Optional: Upload a second file, for example the reverse side."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Required documents for this step"
+msgstr "Required documents for this step"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Organizational units are still loading. Please wait a moment and try again."
@@ -978,6 +1026,10 @@ msgstr "We could not complete the sign out request. Please try again."
 msgid "Done"
 msgstr "Done"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Optional: Upload the reverse side as a second file."
+msgstr "Optional: Upload the reverse side as a second file."
+
 #: src/pages/Login.tsx
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
@@ -1054,6 +1106,10 @@ msgstr "Shift Reminders"
 #: src/components/OfflineIndicator.tsx
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Some features may be limited. Your changes will sync when you're back online."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Proof of residence registration (Meldebestätigung), only if your ID does not show your current address"
+msgstr "Proof of residence registration (Meldebestätigung), only if your ID does not show your current address"
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Types"
@@ -1145,6 +1201,10 @@ msgstr "Employee"
 msgid "Loading activity logs..."
 msgstr "Loading activity logs..."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "You can upload now or continue and add this document later before final submission."
+msgstr "You can upload now or continue and add this document later before final submission."
+
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -1196,6 +1256,10 @@ msgstr "We couldn't prepare this step for file uploads. Please try saving your d
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Residence Title Upload"
+msgstr "Residence Title Upload"
 
 #: src/components/RouteGuardState.tsx
 msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
@@ -1441,6 +1505,10 @@ msgstr "Create Site"
 msgid "Step 2: Configure assignment permissions"
 msgstr "Step 2: Configure assignment permissions"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity card"
+msgstr "Identity card"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Download Latest Export"
 msgstr "Download Latest Export"
@@ -1508,10 +1576,6 @@ msgstr "Add Child Unit"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Country"
 msgstr "Country"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Choose the attachment category that best matches the file."
-msgstr "Choose the attachment category that best matches the file."
 
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -1590,6 +1654,10 @@ msgstr "Site Number"
 #: src/components/NotificationPreferences.tsx
 msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
 msgstr "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "You can upload now or continue and add documents later before final submission."
+msgstr "You can upload now or continue and add documents later before final submission."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Expires"
@@ -1871,6 +1939,10 @@ msgstr "Your session has expired or your sign-in could not be verified. Please s
 msgid "Remove Contact"
 msgstr "Remove Contact"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Identity card or passport"
+msgstr "Identity card or passport"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Add Contact"
@@ -1918,6 +1990,10 @@ msgstr "Password must include at least one number"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
 msgstr "No action available"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload at least one identity document file before continuing."
+msgstr "Please upload at least one identity document file before continuing."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please try again in about {retryAfterMinutes} minutes."
@@ -1977,10 +2053,6 @@ msgstr "Choose a new parent unit or make this a root unit."
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Description"
 msgstr "Description"
-
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Supporting Documents"
-msgstr "Supporting Documents"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "You can inspect BWR data, but write permission is required to manage it."
@@ -2218,6 +2290,10 @@ msgstr "Saving BWR Status..."
 msgid "New Site"
 msgstr "New Site"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Which document are you uploading?"
+msgstr "Which document are you uploading?"
+
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
@@ -2292,6 +2368,10 @@ msgstr "Welcome to SecPal!"
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You will be notified when your submission has been reviewed."
 msgstr "You will be notified when your submission has been reviewed."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Files uploaded successfully."
+msgstr "Files uploaded successfully."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
@@ -2409,6 +2489,10 @@ msgid "Please enter a valid emergency contact email."
 msgstr "Please enter a valid emergency contact email."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload at least one residence title file before continuing."
+msgstr "Please upload at least one residence title file before continuing."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Uploaded in this session"
 msgstr "Uploaded in this session"
 
@@ -2443,6 +2527,7 @@ msgstr "\"{0}\" created successfully"
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Remove"
@@ -2715,6 +2800,10 @@ msgstr "Access Denied"
 msgid "Relationship"
 msgstr "Relationship"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -2737,6 +2826,10 @@ msgstr "Add passkey"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Relationship"
 msgstr "Emergency Contact Relationship"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "File removed successfully."
+msgstr "File removed successfully."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -2763,6 +2856,14 @@ msgstr "Edit Postal Address"
 #: src/components/NotificationPreferences.tsx
 msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
 msgstr "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please select a file to upload."
+msgstr "Please select a file to upload."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "For German nationals, you can provide either identity card or passport."
+msgstr "For German nationals, you can provide either identity card or passport."
 
 #: src/pages/Login.tsx
 msgid "Verifying passkey…"
@@ -2819,6 +2920,10 @@ msgstr "Employee Management"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Verification Status"
 msgstr "Verification Status"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Attachment (optional second file)"
+msgstr "Attachment (optional second file)"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -2884,6 +2989,10 @@ msgstr "Showing {0} to {1} of {2} logs"
 msgid "HR Access"
 msgstr "HR Access"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "For identity cards, upload front and back as separate files"
+msgstr "For identity cards, upload front and back as separate files"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "To Date"
 msgstr "To Date"
@@ -2915,6 +3024,11 @@ msgstr "Activity Log Details"
 msgid "View Profile"
 msgstr "View Profile"
 
+#. placeholder {0}: err.statusCode
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "File upload failed with HTTP status {0}."
+msgstr "File upload failed with HTTP status {0}."
+
 #: src/components/NotificationPreferences.tsx
 msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
 msgstr "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
@@ -2923,6 +3037,10 @@ msgstr "Notifications have been blocked. Please enable them in your browser sett
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Close"
 msgstr "Close"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please choose whether you want to upload your identity document now."
+msgstr "Please choose whether you want to upload your identity document now."
 
 #: src/components/RouteGuardState.tsx
 #: src/pages/Customers/CustomerDetail.tsx

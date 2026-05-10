@@ -10,6 +10,7 @@ import type {
 
 export type AuthUserId = string;
 export type AuthBootstrapRecoveryReason = "timeout" | "network";
+export type AuthUserEmployee = Partial<Employee>;
 
 export interface User {
   id: AuthUserId;
@@ -23,7 +24,7 @@ export interface User {
   hasSiteAccess?: boolean;
   employeeStatus?: EmployeeStatus;
   onboardingWorkflowStatus?: EmployeeOnboardingWorkflowStatus;
-  employee?: Employee | null; // User's employee record (if they are an employee)
+  employee?: AuthUserEmployee | null; // Minimal employee context from auth bootstrap
 }
 
 export interface AuthContextType {
