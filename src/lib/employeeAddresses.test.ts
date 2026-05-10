@@ -161,7 +161,11 @@ describe("mergeAddressBaseList", () => {
   });
 
   it("does not duplicate currentAddress when already in addresses", () => {
-    const cur = addr({ id: "c1", resided_until: null, resided_from: "2020-01-02" });
+    const cur = addr({
+      id: "c1",
+      resided_until: null,
+      resided_from: "2020-01-02",
+    });
     const hist = addr({ id: "h1", resided_until: "2020-01-01" });
     const result = mergeAddressBaseList([hist, cur], cur);
     expect(result).toHaveLength(2);

@@ -858,10 +858,7 @@ export function EmployeeDetail() {
       } else if (editingContactField === "postal_address") {
         await updateEmployee(id, {
           addresses: buildAddressesPayloadForCurrentEdit(
-            mergeAddressBaseList(
-              employee.addresses,
-              employee.current_address
-            ),
+            mergeAddressBaseList(employee.addresses, employee.current_address),
             contactAddressDraft
           ),
         });
