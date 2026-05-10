@@ -44,6 +44,23 @@ function rowToInput(a: EmployeeAddress): EmployeeAddressInput {
 }
 
 /**
+ * Builds the canonical address base list from `addresses` supplemented by
+ * `currentAddress` when absent or not already included by id. This ensures
+ * `resided_from` is preserved when the API returns `current_address` without
+ * the full `addresses` relation.
+ */
+export function mergeAddressBaseList(
+  addresses: EmployeeAddress[] | null | undefined,
+  currentAddress: EmployeeAddress | null | undefined
+): EmployeeAddress[] {
+  const list = addresses ?? [];
+  if (currentAddress && !list.some((r) => r.id === currentAddress.id)) {
+    return [currentAddress, ...list];
+  }
+  return list;
+}
+
+/**
  * Builds the `addresses` payload for PATCH when only the current residence is edited.
  * Historical rows (non-null `resided_until`) are preserved; the current row is replaced.
  */

@@ -53,6 +53,7 @@ import {
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  mergeAddressBaseList,
   type PostalAddressDraft,
 } from "../../lib/employeeAddresses";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
@@ -857,7 +858,10 @@ export function EmployeeDetail() {
       } else if (editingContactField === "postal_address") {
         await updateEmployee(id, {
           addresses: buildAddressesPayloadForCurrentEdit(
-            employee.addresses ?? [],
+            mergeAddressBaseList(
+              employee.addresses,
+              employee.current_address
+            ),
             contactAddressDraft
           ),
         });

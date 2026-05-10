@@ -6,6 +6,7 @@ import type { EmployeeAddress } from "@/types/api/employees";
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  mergeAddressBaseList,
 } from "./employeeAddresses";
 
 function addr(
@@ -136,5 +137,47 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     });
     expect(out).toHaveLength(1);
     expect(out[0]?.resided_from).toBe("2021-03-15");
+  });
+});
+
+describe("mergeAddressBaseList", () => {
+  it("returns empty array when both addresses and currentAddress are absent", () => {
+    expect(mergeAddressBaseList(null, null)).toEqual([]);
+    expect(mergeAddressBaseList(undefined, undefined)).toEqual([]);
+  });
+
+  it("returns addresses when currentAddress is null", () => {
+    const hist = addr({ id: "h1", resided_until: "2020-01-01" });
+    expect(mergeAddressBaseList([hist], null)).toEqual([hist]);
+  });
+
+  it("returns [currentAddress] when addresses is null but currentAddress is present", () => {
+    const cur = addr({
+      id: "c1",
+      resided_until: null,
+      resided_from: "2020-01-02",
+    });
+    expect(mergeAddressBaseList(null, cur)).toEqual([cur]);
+  });
+
+  it("does not duplicate currentAddress when already in addresses", () => {
+    const cur = addr({ id: "c1", resided_until: null, resided_from: "2020-01-02" });
+    const hist = addr({ id: "h1", resided_until: "2020-01-01" });
+    const result = mergeAddressBaseList([hist, cur], cur);
+    expect(result).toHaveLength(2);
+    expect(result).toEqual([hist, cur]);
+  });
+
+  it("prepends currentAddress when not in addresses so resided_from is preserved", () => {
+    const cur = addr({
+      id: "c1",
+      resided_until: null,
+      resided_from: "2021-06-01",
+    });
+    const hist = addr({ id: "h1", resided_until: "2021-05-31" });
+    const result = mergeAddressBaseList([hist], cur);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ id: "c1", resided_from: "2021-06-01" });
+    expect(result[1]).toMatchObject({ id: "h1", resided_until: "2021-05-31" });
   });
 });

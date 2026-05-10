@@ -10,6 +10,7 @@ import type { Employee, EmployeeAddress } from "@/types/api";
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  mergeAddressBaseList,
 } from "../../lib/employeeAddresses";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { Heading } from "../../components/heading";
@@ -80,7 +81,10 @@ export function EmployeeContactsEdit() {
         setEmployeeNumber(employee.employee_number);
         setEmail(employee.email);
         setPhone(employee.phone ?? "");
-        const rows = employee.addresses ?? [];
+        const rows = mergeAddressBaseList(
+          employee.addresses,
+          employee.current_address
+        );
         setAddressRowsSnapshot(rows);
         const cur = employee.current_address ?? getCurrentAddressFromList(rows);
         setAddressStreet(cur?.street ?? "");
