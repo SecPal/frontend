@@ -30,6 +30,16 @@ describe("offlineLiveHelpers", () => {
     ]);
   });
 
+  it("derives the API preview domain from a generic workspace preview host", () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://grumpy-lynx.preview.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+
+    expect(getMockCookieDomains()).toEqual([
+      "grumpy-lynx.preview.secpal.dev",
+      "api-grumpy-lynx.preview.secpal.dev",
+    ]);
+  });
+
   it("returns both app and API domains for split-host remote targets", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");

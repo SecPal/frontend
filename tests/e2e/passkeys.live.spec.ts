@@ -5,8 +5,7 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { TEST_USER, loginViaUI } from "./auth.setup";
 import { resolvePlaywrightApiBaseUrl } from "./target-urls";
 
-const API_BASE_URL =
-  resolvePlaywrightApiBaseUrl() || "https://api.secpal.dev";
+const API_BASE_URL = resolvePlaywrightApiBaseUrl() || "https://api.secpal.dev";
 const LIVE_PASSKEY_ENABLED = process.env.PLAYWRIGHT_LIVE_PASSKEY === "1";
 const PASSKEY_LABEL_PREFIX = "Live E2E Passkey";
 const PASSKEY_RATE_LIMIT_MESSAGE = /too many passkey attempts/i;

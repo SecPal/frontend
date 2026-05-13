@@ -38,13 +38,27 @@ describe("playwright target resolution", () => {
     );
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
 
-    const { resolvePlaywrightApiBaseUrl } = await import(
-      "./e2e/target-urls.ts"
-    );
+    const { resolvePlaywrightApiBaseUrl } =
+      await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightApiBaseUrl()).toBe(
       "https://api-grumpy-lynx.preview.secpal.dev"
     );
+  });
+
+  it("derives the API preview origin from an explicit generic workspace preview URL", async () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://grumpy-lynx.preview.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+
+    const { isWorkspacePreviewTarget, resolvePlaywrightApiBaseUrl } =
+      await import("./e2e/target-urls.ts");
+
+    expect(resolvePlaywrightApiBaseUrl()).toBe(
+      "https://api-grumpy-lynx.preview.secpal.dev"
+    );
+    expect(
+      isWorkspacePreviewTarget("https://grumpy-lynx.preview.secpal.dev")
+    ).toBe(true);
   });
 
   it("keeps localhost development defaults outside Polyscope workspaces", async () => {

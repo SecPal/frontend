@@ -47,15 +47,13 @@ import {
  * 2. CI mode: http://localhost:4173 (preview server)
  * 3. Default: http://localhost:5173 (dev server with proxy)
  */
-const BASE_URL =
-  resolvePlaywrightBaseUrl();
+const BASE_URL = resolvePlaywrightBaseUrl();
 
 /**
  * Detect if we're running against a remote server
  * (staging/production - no local webServer needed)
  */
-const isRemoteTarget =
-  isRemotePlaywrightTarget(BASE_URL);
+const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();

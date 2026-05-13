@@ -20,7 +20,8 @@ import {
 
 test.describe("Application Smoke Tests", () => {
   test.beforeEach(async ({ context }) => {
-    const usesLocalPreviewTarget = Boolean(process.env.CI) && !isRemoteE2ETarget();
+    const usesLocalPreviewTarget =
+      Boolean(process.env.CI) && !isRemoteE2ETarget();
 
     if (!usesLocalPreviewTarget) {
       return;

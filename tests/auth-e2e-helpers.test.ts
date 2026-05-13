@@ -38,6 +38,15 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("keeps generic workspace preview hosts on the default preview credentials", () => {
+      expect(
+        buildTestUser({}, "https://grumpy-lynx.preview.secpal.dev")
+      ).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("requires explicit credentials for remote targets", () => {
       expect(buildTestUser({}, "https://app.secpal.dev")).toEqual({
         email: "",
@@ -138,6 +147,18 @@ describe("auth E2E helpers", () => {
       const result = getConfiguredTestUserOrThrow({
         POLYSCOPE_WORKSPACE: "grumpy-lynx",
       });
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("returns the default credentials for generic workspace preview hosts", () => {
+      const result = getConfiguredTestUserOrThrow(
+        { PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev" },
+        "https://grumpy-lynx.preview.secpal.dev"
+      );
 
       expect(result).toEqual({
         email: "test@example.com",

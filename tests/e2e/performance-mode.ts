@@ -1,10 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  isLiveRemoteTarget,
-  resolvePlaywrightBaseUrl,
-} from "./target-urls";
+import { isLiveRemoteTarget, resolvePlaywrightBaseUrl } from "./target-urls";
 
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
 export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";

@@ -1,13 +1,18 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const WORKSPACE_PREVIEW_FRONTEND_HOSTNAME_PATTERN =
-  /^frontend-([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
+const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
+  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
 const LIVE_FRONTEND_ORIGIN = "https://app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:5173";
+
+type PreviewHostname = {
+  repo: string | null;
+  workspace: string;
+};
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
 
@@ -27,6 +32,25 @@ function getUrlOrigin(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+function parsePreviewHostname(hostname: string): PreviewHostname | null {
+  const previewMatch = hostname.match(WORKSPACE_PREVIEW_HOSTNAME_PATTERN);
+
+  if (!previewMatch) {
+    return null;
+  }
+
+  const [, repo, workspace] = previewMatch;
+
+  if (!workspace) {
+    return null;
+  }
+
+  return {
+    repo: repo?.toLowerCase() ?? null,
+    workspace,
+  };
 }
 
 export function buildWorkspacePreviewBaseUrl(workspace: string): string {
@@ -61,11 +85,16 @@ export function getWorkspacePreviewNameFromBaseUrl(
     return undefined;
   }
 
-  const workspaceMatch = new URL(origin).hostname.match(
-    WORKSPACE_PREVIEW_FRONTEND_HOSTNAME_PATTERN
-  );
+  const previewHostname = parsePreviewHostname(new URL(origin).hostname);
 
-  return workspaceMatch?.[1];
+  if (
+    !previewHostname ||
+    (previewHostname.repo !== null && previewHostname.repo !== "frontend")
+  ) {
+    return undefined;
+  }
+
+  return previewHostname.workspace;
 }
 
 export function resolvePlaywrightBaseUrl(
@@ -106,7 +135,10 @@ export function resolvePlaywrightApiBaseUrl(
     return buildWorkspacePreviewApiBaseUrl(workspaceFromBaseUrl);
   }
 
-  if (configuredBaseUrl && getUrlOrigin(configuredBaseUrl) === LIVE_FRONTEND_ORIGIN) {
+  if (
+    configuredBaseUrl &&
+    getUrlOrigin(configuredBaseUrl) === LIVE_FRONTEND_ORIGIN
+  ) {
     return LIVE_API_ORIGIN;
   }
 
@@ -130,5 +162,7 @@ export function isWorkspacePreviewTarget(
 export function isLiveRemoteTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
-  return isRemotePlaywrightTarget(baseUrl) && !isWorkspacePreviewTarget(baseUrl);
+  return (
+    isRemotePlaywrightTarget(baseUrl) && !isWorkspacePreviewTarget(baseUrl)
+  );
 }
