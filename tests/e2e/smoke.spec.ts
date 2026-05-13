@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect } from "@playwright/test";
+import { isRemoteE2ETarget } from "./auth-helpers";
 import { installMockAuthRoutes } from "./offline-live-helpers";
 import {
   filterExpectedSmokeConsoleErrors,
@@ -19,9 +20,7 @@ import {
 
 test.describe("Application Smoke Tests", () => {
   test.beforeEach(async ({ context }) => {
-    const usesLocalPreviewTarget =
-      Boolean(process.env.CI) &&
-      !(process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false);
+    const usesLocalPreviewTarget = Boolean(process.env.CI) && !isRemoteE2ETarget();
 
     if (!usesLocalPreviewTarget) {
       return;

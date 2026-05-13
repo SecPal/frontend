@@ -31,6 +31,13 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("keeps workspace preview targets on the default preview credentials", () => {
+      expect(buildTestUser({ POLYSCOPE_WORKSPACE: "grumpy-lynx" })).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("requires explicit credentials for remote targets", () => {
       expect(buildTestUser({}, "https://app.secpal.dev")).toEqual({
         email: "",
@@ -127,6 +134,17 @@ describe("auth E2E helpers", () => {
   });
 
   describe("getConfiguredTestUserOrThrow", () => {
+    it("returns the default credentials for workspace preview targets", () => {
+      const result = getConfiguredTestUserOrThrow({
+        POLYSCOPE_WORKSPACE: "grumpy-lynx",
+      });
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("returns credentials when targeting a remote environment with credentials set", () => {
       const result = getConfiguredTestUserOrThrow(
         {

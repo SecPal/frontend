@@ -148,4 +148,40 @@ describe("config", () => {
       })
     ).toBe("https://api.secpal.dev/sanctum/csrf-cookie");
   });
+
+  it("falls back to the workspace preview API origin on frontend preview hosts when the bundle kept a loopback API base", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/sanctum/csrf-cookie");
+  });
+
+  it("falls back to the workspace preview API origin on frontend preview hosts when VITE_API_URL is empty", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    expect(
+      buildApiUrl("/v1/auth/login", {
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
+  });
 });

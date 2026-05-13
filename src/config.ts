@@ -20,6 +20,8 @@ export class ApiBaseUrlConfigurationError extends Error {
 
 const LIVE_APP_HOSTNAME = "app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
+const WORKSPACE_PREVIEW_FRONTEND_HOSTNAME_PATTERN =
+  /^frontend-([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
@@ -58,6 +60,22 @@ function getRuntimeHostname(): string | null {
   return window.location.hostname || null;
 }
 
+function getCanonicalPreviewApiOrigin(
+  runtimeHostname: string | null
+): string | null {
+  if (!runtimeHostname) {
+    return null;
+  }
+
+  const previewMatch = runtimeHostname.match(
+    WORKSPACE_PREVIEW_FRONTEND_HOSTNAME_PATTERN
+  );
+
+  return previewMatch
+    ? `https://api-${previewMatch[1]}.preview.secpal.dev`
+    : null;
+}
+
 function shouldUseCanonicalLiveApiOrigin(
   runtimeHostname: string | null,
   normalizedConfiguredBaseUrl: string
@@ -83,6 +101,35 @@ function shouldUseCanonicalLiveApiOrigin(
   );
 }
 
+function shouldUseCanonicalPreviewApiOrigin(
+  runtimeHostname: string | null,
+  normalizedConfiguredBaseUrl: string
+): boolean {
+  const canonicalPreviewApiOrigin = getCanonicalPreviewApiOrigin(
+    runtimeHostname
+  );
+
+  if (!canonicalPreviewApiOrigin) {
+    return false;
+  }
+
+  if (!normalizedConfiguredBaseUrl) {
+    return true;
+  }
+
+  if (!isAbsoluteHttpUrl(normalizedConfiguredBaseUrl)) {
+    return true;
+  }
+
+  const normalizedOrigin = new URL(normalizedConfiguredBaseUrl).origin;
+  const normalizedHostname = new URL(normalizedOrigin).hostname;
+
+  return (
+    normalizedHostname === runtimeHostname ||
+    isLoopbackApiHost(normalizedHostname)
+  );
+}
+
 export function resolveApiBaseUrl(options?: {
   configuredBaseUrl?: string;
   mode?: string;
@@ -102,6 +149,15 @@ export function resolveApiBaseUrl(options?: {
     )
   ) {
     return LIVE_API_ORIGIN;
+  }
+
+  if (
+    shouldUseCanonicalPreviewApiOrigin(
+      runtimeHostname,
+      normalizedConfiguredBaseUrl
+    )
+  ) {
+    return getCanonicalPreviewApiOrigin(runtimeHostname) as string;
   }
 
   if (!normalizedConfiguredBaseUrl) {

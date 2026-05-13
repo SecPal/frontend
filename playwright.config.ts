@@ -6,10 +6,14 @@ import {
   DESKTOP_CHROMIUM_PROJECT_NAME,
   getConfiguredLighthouseBrowserPath,
   LIGHTHOUSE_DEBUG_PORT,
-  PREVIEW_BASE_URL,
   shouldEnableLighthouseBrowser,
   shouldUseSingleWorker,
 } from "./tests/e2e/performance-mode";
+import {
+  PREVIEW_BASE_URL,
+  isRemotePlaywrightTarget,
+  resolvePlaywrightBaseUrl,
+} from "./tests/e2e/target-urls";
 
 /**
  * Playwright E2E Test Configuration
@@ -44,15 +48,14 @@ import {
  * 3. Default: http://localhost:5173 (dev server with proxy)
  */
 const BASE_URL =
-  process.env.PLAYWRIGHT_BASE_URL ||
-  (process.env.CI ? PREVIEW_BASE_URL : "http://localhost:5173");
+  resolvePlaywrightBaseUrl();
 
 /**
  * Detect if we're running against a remote server
  * (staging/production - no local webServer needed)
  */
 const isRemoteTarget =
-  process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
+  isRemotePlaywrightTarget(BASE_URL);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();

@@ -9,11 +9,25 @@ describe("offlineLiveHelpers", () => {
     vi.unstubAllEnvs();
   });
 
-  it("ignores a missing API base URL for remote targets", () => {
+  it("derives the live API domain when remote targets omit PLAYWRIGHT_API_BASE_URL", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     delete process.env.PLAYWRIGHT_API_BASE_URL;
 
-    expect(getMockCookieDomains()).toEqual(["app.secpal.dev"]);
+    expect(getMockCookieDomains()).toEqual([
+      "app.secpal.dev",
+      "api.secpal.dev",
+    ]);
+  });
+
+  it("derives split workspace preview domains from POLYSCOPE_WORKSPACE", () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+
+    expect(getMockCookieDomains()).toEqual([
+      "frontend-grumpy-lynx.preview.secpal.dev",
+      "api-grumpy-lynx.preview.secpal.dev",
+    ]);
   });
 
   it("returns both app and API domains for split-host remote targets", () => {
