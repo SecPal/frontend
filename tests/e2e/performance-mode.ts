@@ -1,7 +1,11 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { isLiveRemoteTarget, resolvePlaywrightBaseUrl } from "./target-urls";
+import {
+  detectPolyscopeWorkspaceName,
+  isLiveRemoteTarget,
+  resolvePlaywrightBaseUrl,
+} from "./target-urls";
 
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
 export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
@@ -25,6 +29,14 @@ type PerformanceAuditMode = {
 
 const hasExplicitLighthouseMode = () =>
   process.env.PLAYWRIGHT_LIGHTHOUSE === "1";
+
+const hasExplicitPlaywrightBaseUrl = () =>
+  Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim());
+
+const hasPerformanceAuditTarget = () =>
+  Boolean(process.env.CI) ||
+  hasExplicitPlaywrightBaseUrl() ||
+  detectPolyscopeWorkspaceName() !== undefined;
 
 const isPlaywrightBundledChromiumPath = (browserPath: string) =>
   /(^|[/\\])ms-playwright([/\\]|$)/.test(browserPath);
@@ -65,7 +77,7 @@ export const getPerformanceAuditProjectSkipReason = (
 export const getPerformanceAuditMode = (): PerformanceAuditMode => {
   const baseUrl = resolvePlaywrightBaseUrl();
 
-  if (!baseUrl) {
+  if (!hasPerformanceAuditTarget()) {
     return {
       baseUrl,
       skipReason:

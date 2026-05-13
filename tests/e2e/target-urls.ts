@@ -1,18 +1,16 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
-  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
+import {
+  parsePreviewHostname,
+  type PreviewHostname,
+} from "../../src/previewHostname";
+
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
 const LIVE_FRONTEND_ORIGIN = "https://app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:5173";
-
-type PreviewHostname = {
-  repo: string | null;
-  workspace: string;
-};
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
 
@@ -44,25 +42,6 @@ function getPreviewHostnameFromBaseUrl(
   }
 
   return parsePreviewHostname(new URL(origin).hostname) ?? undefined;
-}
-
-function parsePreviewHostname(hostname: string): PreviewHostname | null {
-  const previewMatch = hostname.match(WORKSPACE_PREVIEW_HOSTNAME_PATTERN);
-
-  if (!previewMatch) {
-    return null;
-  }
-
-  const [, repo, workspace] = previewMatch;
-
-  if (!workspace) {
-    return null;
-  }
-
-  return {
-    repo: repo?.toLowerCase() ?? null,
-    workspace,
-  };
 }
 
 export function buildWorkspacePreviewBaseUrl(workspace: string): string {

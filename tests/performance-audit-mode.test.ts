@@ -23,6 +23,22 @@ describe("performance audit mode", () => {
     });
   });
 
+  it("skips Lighthouse audits against the implicit local development target", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.resetModules();
+    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "http://localhost:5173",
+      skipReason:
+        "Performance audits require CI preview or an explicit PLAYWRIGHT_BASE_URL target.",
+    });
+  });
+
   it("skips live Lighthouse audits unless they are explicitly opted in", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");

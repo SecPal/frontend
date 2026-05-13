@@ -11,6 +11,8 @@
 /**
  * API Configuration
  */
+import { parsePreviewHostname } from "./previewHostname";
+
 export class ApiBaseUrlConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -20,13 +22,6 @@ export class ApiBaseUrlConfigurationError extends Error {
 
 const LIVE_APP_HOSTNAME = "app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
-const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
-  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
-
-type PreviewHostname = {
-  repo: string | null;
-  workspace: string;
-};
 
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
@@ -63,29 +58,6 @@ function getRuntimeHostname(): string | null {
   }
 
   return window.location.hostname || null;
-}
-
-function parsePreviewHostname(hostname: string | null): PreviewHostname | null {
-  if (!hostname) {
-    return null;
-  }
-
-  const previewMatch = hostname.match(WORKSPACE_PREVIEW_HOSTNAME_PATTERN);
-
-  if (!previewMatch) {
-    return null;
-  }
-
-  const [, repo, workspace] = previewMatch;
-
-  if (!workspace) {
-    return null;
-  }
-
-  return {
-    repo: repo?.toLowerCase() ?? null,
-    workspace,
-  };
 }
 
 function getCanonicalPreviewApiOrigin(
