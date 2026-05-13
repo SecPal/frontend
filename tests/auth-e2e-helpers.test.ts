@@ -31,6 +31,19 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("keeps the current Polyscope workspace preview credentials even when other remote targets are configured", () => {
+      expect(
+        buildTestUser({
+          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+          PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
+          POLYSCOPE_WORKSPACE: "grumpy-lynx",
+        })
+      ).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("keeps workspace preview targets on the default preview credentials", () => {
       expect(buildTestUser({ POLYSCOPE_WORKSPACE: "grumpy-lynx" })).toEqual({
         email: "test@example.com",
@@ -143,6 +156,19 @@ describe("auth E2E helpers", () => {
   });
 
   describe("getConfiguredTestUserOrThrow", () => {
+    it("returns the default credentials when the current Polyscope workspace overrides other remote targets", () => {
+      const result = getConfiguredTestUserOrThrow({
+        PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+        PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
+        POLYSCOPE_WORKSPACE: "grumpy-lynx",
+      });
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("returns the default credentials for workspace preview targets", () => {
       const result = getConfiguredTestUserOrThrow({
         POLYSCOPE_WORKSPACE: "grumpy-lynx",

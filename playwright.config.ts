@@ -43,9 +43,10 @@ import {
  * Base URL Configuration
  *
  * Priority:
- * 1. PLAYWRIGHT_BASE_URL env var (for staging: https://app.secpal.dev)
- * 2. CI mode: http://localhost:4173 (preview server)
- * 3. Default: http://localhost:5173 (dev server with proxy)
+ * 1. Current Polyscope workspace preview: https://frontend-<workspace>.preview.secpal.dev
+ * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
+ * 3. CI mode: http://localhost:4173 (preview server)
+ * 4. Default: http://localhost:5173 (dev server with proxy)
  */
 const BASE_URL = resolvePlaywrightBaseUrl();
 

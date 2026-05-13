@@ -2,167 +2,206 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
-  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
+    /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 const POLYSCOPE_CLONE_PATH_PATTERN =
-  /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
+    /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
 const LIVE_FRONTEND_ORIGIN = "https://app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:5173";
 
 type PreviewHostname = {
-  repo: string | null;
-  workspace: string;
+    repo: string | null;
+    workspace: string;
 };
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
 
 function readTrimmedEnvValue(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
+    const trimmed = value?.trim();
 
-  return trimmed ? trimmed : undefined;
+    return trimmed ? trimmed : undefined;
 }
 
 function normalizeCwd(cwd: string): string {
-  return cwd.replace(/\\/g, "/");
+    return cwd.replace(/\\/g, "/");
 }
 
 function getUrlOrigin(value: string): string | null {
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
+    try {
+        return new URL(value).origin;
+    } catch {
+        return null;
+    }
+}
+
+function getPreviewHostnameFromBaseUrl(
+    baseUrl: string
+): PreviewHostname | undefined {
+    const origin = getUrlOrigin(baseUrl);
+
+    if (!origin) {
+        return undefined;
+    }
+
+    return parsePreviewHostname(new URL(origin).hostname) ?? undefined;
 }
 
 function parsePreviewHostname(hostname: string): PreviewHostname | null {
-  const previewMatch = hostname.match(WORKSPACE_PREVIEW_HOSTNAME_PATTERN);
+    const previewMatch = hostname.match(WORKSPACE_PREVIEW_HOSTNAME_PATTERN);
 
-  if (!previewMatch) {
-    return null;
-  }
+    if (!previewMatch) {
+        return null;
+    }
 
-  const [, repo, workspace] = previewMatch;
+    const [, repo, workspace] = previewMatch;
 
-  if (!workspace) {
-    return null;
-  }
+    if (!workspace) {
+        return null;
+    }
 
-  return {
-    repo: repo?.toLowerCase() ?? null,
-    workspace,
-  };
+    return {
+        repo: repo?.toLowerCase() ?? null,
+        workspace,
+    };
 }
 
 export function buildWorkspacePreviewBaseUrl(workspace: string): string {
-  return `https://frontend-${workspace}.preview.secpal.dev`;
+    return `https://frontend-${workspace}.preview.secpal.dev`;
 }
 
 export function buildWorkspacePreviewApiBaseUrl(workspace: string): string {
-  return `https://api-${workspace}.preview.secpal.dev`;
+    return `https://api-${workspace}.preview.secpal.dev`;
 }
 
 export function detectPolyscopeWorkspaceName(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+    env: NodeJS.ProcessEnv = process.env,
+    cwd = process.cwd()
 ): string | undefined {
-  const configuredWorkspace = readTrimmedEnvValue(env.POLYSCOPE_WORKSPACE);
+    const configuredWorkspace = readTrimmedEnvValue(env.POLYSCOPE_WORKSPACE);
 
-  if (configuredWorkspace) {
-    return configuredWorkspace;
-  }
+    if (configuredWorkspace) {
+        return configuredWorkspace;
+    }
 
-  const workspaceMatch = normalizeCwd(cwd).match(POLYSCOPE_CLONE_PATH_PATTERN);
+    const workspaceMatch = normalizeCwd(cwd).match(POLYSCOPE_CLONE_PATH_PATTERN);
 
-  return workspaceMatch?.[1];
+    return workspaceMatch?.[1];
 }
 
 export function getWorkspacePreviewNameFromBaseUrl(
-  baseUrl: string
+    baseUrl: string
 ): string | undefined {
-  const origin = getUrlOrigin(baseUrl);
+    const previewHostname = getPreviewHostnameFromBaseUrl(baseUrl);
 
-  if (!origin) {
-    return undefined;
-  }
+    if (
+        !previewHostname ||
+        (previewHostname.repo !== null && previewHostname.repo !== "frontend")
+    ) {
+        return undefined;
+    }
 
-  const previewHostname = parsePreviewHostname(new URL(origin).hostname);
-
-  if (
-    !previewHostname ||
-    (previewHostname.repo !== null && previewHostname.repo !== "frontend")
-  ) {
-    return undefined;
-  }
-
-  return previewHostname.workspace;
+    return previewHostname.workspace;
 }
 
 export function resolvePlaywrightBaseUrl(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+    env: NodeJS.ProcessEnv = process.env,
+    cwd = process.cwd()
 ): string {
-  const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
+    const workspace = detectPolyscopeWorkspaceName(env, cwd);
 
-  if (configuredBaseUrl) {
-    return configuredBaseUrl;
-  }
+    if (workspace) {
+        return buildWorkspacePreviewBaseUrl(workspace);
+    }
 
-  const workspace = detectPolyscopeWorkspaceName(env, cwd);
+    const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
 
-  if (workspace) {
-    return buildWorkspacePreviewBaseUrl(workspace);
-  }
+    if (configuredBaseUrl) {
+        const configuredPreviewHostname =
+            getPreviewHostnameFromBaseUrl(configuredBaseUrl);
 
-  return env.CI ? PREVIEW_BASE_URL : DEFAULT_LOCAL_BASE_URL;
+        if (
+            configuredPreviewHostname &&
+            (configuredPreviewHostname.repo === null ||
+                configuredPreviewHostname.repo === "frontend")
+        ) {
+            return buildWorkspacePreviewBaseUrl(configuredPreviewHostname.workspace);
+        }
+
+        return configuredBaseUrl;
+    }
+
+    return env.CI ? PREVIEW_BASE_URL : DEFAULT_LOCAL_BASE_URL;
 }
 
 export function resolvePlaywrightApiBaseUrl(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+    env: NodeJS.ProcessEnv = process.env,
+    cwd = process.cwd()
 ): string | undefined {
-  const configuredApiBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
+    const workspace = detectPolyscopeWorkspaceName(env, cwd);
 
-  if (configuredApiBaseUrl) {
-    return configuredApiBaseUrl;
-  }
+    if (workspace) {
+        return buildWorkspacePreviewApiBaseUrl(workspace);
+    }
 
-  const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
-  const workspaceFromBaseUrl = configuredBaseUrl
-    ? getWorkspacePreviewNameFromBaseUrl(configuredBaseUrl)
-    : undefined;
+    const configuredApiBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
 
-  if (workspaceFromBaseUrl) {
-    return buildWorkspacePreviewApiBaseUrl(workspaceFromBaseUrl);
-  }
+    if (configuredApiBaseUrl) {
+        const configuredApiPreviewHostname =
+            getPreviewHostnameFromBaseUrl(configuredApiBaseUrl);
 
-  if (
-    configuredBaseUrl &&
-    getUrlOrigin(configuredBaseUrl) === LIVE_FRONTEND_ORIGIN
-  ) {
-    return LIVE_API_ORIGIN;
-  }
+        if (
+            configuredApiPreviewHostname &&
+            (configuredApiPreviewHostname.repo === null ||
+                configuredApiPreviewHostname.repo === "api")
+        ) {
+            return buildWorkspacePreviewApiBaseUrl(
+                configuredApiPreviewHostname.workspace
+            );
+        }
 
-  const workspace = detectPolyscopeWorkspaceName(env, cwd);
+        return configuredApiBaseUrl;
+    }
 
-  return workspace ? buildWorkspacePreviewApiBaseUrl(workspace) : undefined;
+    const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
+    const configuredBasePreviewHostname = configuredBaseUrl
+        ? getPreviewHostnameFromBaseUrl(configuredBaseUrl)
+        : undefined;
+
+    if (
+        configuredBasePreviewHostname &&
+        (configuredBasePreviewHostname.repo === null ||
+            configuredBasePreviewHostname.repo === "frontend")
+    ) {
+        return buildWorkspacePreviewApiBaseUrl(
+            configuredBasePreviewHostname.workspace
+        );
+    }
+
+    if (
+        configuredBaseUrl &&
+        getUrlOrigin(configuredBaseUrl) === LIVE_FRONTEND_ORIGIN
+    ) {
+        return LIVE_API_ORIGIN;
+    }
+    return undefined;
 }
 
 export function isRemotePlaywrightTarget(
-  baseUrl = resolvePlaywrightBaseUrl()
+    baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
-  return /^https:\/\//i.test(baseUrl);
+    return /^https:\/\//i.test(baseUrl);
 }
 
 export function isWorkspacePreviewTarget(
-  baseUrl = resolvePlaywrightBaseUrl()
+    baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
-  return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
+    return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
 }
 
 export function isLiveRemoteTarget(
-  baseUrl = resolvePlaywrightBaseUrl()
+    baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
-  return (
-    isRemotePlaywrightTarget(baseUrl) && !isWorkspacePreviewTarget(baseUrl)
-  );
+    return (
+        isRemotePlaywrightTarget(baseUrl) && !isWorkspacePreviewTarget(baseUrl)
+    );
 }

@@ -80,7 +80,7 @@ export function getConfiguredTestUserOrThrow(
   }
 
   throw new Error(
-    "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a remote environment such as app.secpal.dev."
+    "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote environment."
   );
 }
 
