@@ -175,6 +175,29 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
+    expect(screen.getByText("Redirected to /onboarding/submitted")).toBeInTheDocument();
+    expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
+  });
+
+  it("keeps changes-requested users in the editable onboarding wizard", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+        employeeStatus: "pre_contract",
+        onboardingWorkflowStatus: "changes_requested",
+      },
+    });
+
+    renderWithProviders(
+      <AppAccessRoute>
+        <div>Protected App Content</div>
+      </AppAccessRoute>
+    );
+
     expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
     expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });

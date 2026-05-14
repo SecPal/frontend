@@ -14,9 +14,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { ApiError } from "../../services/ApiError";
-import { AuthProvider } from "../../contexts/AuthContext";
+import { AuthContext } from "../../contexts/auth-context";
 import * as authApi from "../../services/authApi";
-import { authStorage } from "../../services/storage";
 import { clearOfflineVaultSession } from "../../lib/offlineVault";
 import { OnboardingWizard } from "./OnboardingWizard";
 
@@ -69,16 +68,21 @@ function setCsrfTokenCookie(value: string) {
 }
 
 async function renderWithAuthenticatedProviders(options?: {
-  contractStartDate?: string;
+  contractStartDate?: string | null;
+  employeeId?: string;
+  onboardingWorkflowStatus?:
+    | "account_initialized"
+    | "in_progress"
+    | "submitted_for_review"
+    | "changes_requested";
 }) {
-  const contractStartDate = options?.contractStartDate ?? "2026-06-01";
-  await authStorage.setUser({
-    id: "user-1",
-    name: "Test User",
-    email: "test@example.com",
-    emailVerified: true,
-    employeeStatus: "pre_contract",
-  });
+  const contractStartDate =
+    options?.contractStartDate === undefined
+      ? "2026-06-01"
+      : options.contractStartDate;
+  const employeeId = options?.employeeId ?? "employee-1";
+  const onboardingWorkflowStatus =
+    options?.onboardingWorkflowStatus ?? "account_initialized";
   vi.mocked(authApi.getCurrentUser).mockResolvedValue({
     id: "user-1",
     name: "Test User",
@@ -89,8 +93,9 @@ async function renderWithAuthenticatedProviders(options?: {
     hasOrganizationalScopes: false,
     hasCustomerAccess: false,
     hasSiteAccess: false,
+    onboardingWorkflowStatus,
     employee: {
-      id: "employee-1",
+      id: employeeId,
       contract_start_date: contractStartDate,
     },
   } as Awaited<ReturnType<typeof authApi.getCurrentUser>>);
@@ -98,7 +103,31 @@ async function renderWithAuthenticatedProviders(options?: {
   return render(
     <MemoryRouter initialEntries={["/onboarding"]}>
       <I18nProvider i18n={i18n}>
-        <AuthProvider>
+        <AuthContext.Provider
+          value={{
+            user: {
+              id: "user-1",
+              name: "Test User",
+              email: "test@example.com",
+              emailVerified: true,
+              employeeStatus: "pre_contract",
+              onboardingWorkflowStatus,
+              employee: {
+                id: employeeId,
+                contract_start_date: contractStartDate,
+              },
+            },
+            isAuthenticated: true,
+            isLoading: false,
+            isVaultLocked: false,
+            bootstrapRecoveryReason: null,
+            login: vi.fn().mockResolvedValue(undefined),
+            logout: vi.fn(),
+            retryBootstrap: vi.fn(),
+            hasPermission: vi.fn().mockReturnValue(false),
+            hasOrganizationalAccess: vi.fn().mockReturnValue(false),
+          }}
+        >
           <Routes>
             <Route path="/onboarding" element={<OnboardingWizard />} />
             <Route
@@ -110,7 +139,7 @@ async function renderWithAuthenticatedProviders(options?: {
               }
             />
           </Routes>
-        </AuthProvider>
+        </AuthContext.Provider>
       </I18nProvider>
     </MemoryRouter>
   );
@@ -338,6 +367,70 @@ describe("OnboardingWizard", () => {
     alertSpy.mockRestore();
   });
 
+  it("renders the custom residential address history onboarding step", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
+      {
+        step_number: 2,
+        title: "Residential Address History",
+        description: "Current and previous residences.",
+        template_id: "template-addresses",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-addresses",
+      template_key: "residential_address_history",
+      name: "Residential Address History",
+      title: "Residential Address History",
+      description: "Current and previous residences.",
+      form_schema: {
+        title: "Residential Address History",
+        type: "object",
+        properties: {
+          current_address: {
+            type: "object",
+            title: "Current Residential Address",
+            properties: {},
+          },
+          previous_addresses: {
+            type: "array",
+            title: "Previous Residences",
+            items: {
+              type: "object",
+              properties: {},
+            },
+          },
+        },
+        required: ["current_address"],
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /residential address history/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /current residential address/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /bewacher id/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /previous residences/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the completion page when onboarding was already submitted", async () => {
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
       {
@@ -363,6 +456,18 @@ describe("OnboardingWizard", () => {
     ]);
 
     renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+  });
+
+  it("redirects locked onboarding workflow users to the submitted page", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([]);
+
+    await renderWithAuthenticatedProviders({
+      onboardingWorkflowStatus: "submitted_for_review",
+    });
 
     expect(
       await screen.findByRole("heading", { name: /you're all set/i })
@@ -513,7 +618,7 @@ describe("OnboardingWizard", () => {
     });
   });
 
-  it("validates residence title expiry against contract start date from another onboarding step", async () => {
+  it("prefers the latest contract start date from another onboarding step over stale auth data", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
       {
@@ -591,7 +696,9 @@ describe("OnboardingWizard", () => {
       can_be_edited: false,
     });
 
-    renderWithProviders();
+    await renderWithAuthenticatedProviders({
+      contractStartDate: "2026-05-01",
+    });
 
     expect(
       await screen.findByRole("heading", { name: /personal information form/i })
@@ -691,6 +798,102 @@ describe("OnboardingWizard", () => {
 
     await waitFor(() => {
       expect(employeeApiMocks.fetchEmployee).toHaveBeenCalledWith("employee-1");
+    });
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2030-12-31" } });
+    fireEvent.blur(expiryInput);
+
+    expect(
+      await screen.findByLabelText(/employment permitted/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/must remain valid after your contract start date/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("loads contract start date from the authenticated employee when the step payload omits employee_id", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Tell us who you are.",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          form_template_id: "template-1",
+          form_data: {
+            gender: "female",
+            nationalities: ["TR"],
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    employeeApiMocks.fetchEmployee.mockResolvedValueOnce({
+      contract_start_date: "2026-06-01",
+    });
+
+    await renderWithAuthenticatedProviders({
+      employeeId: "employee-auth-1",
+      contractStartDate: null,
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(employeeApiMocks.fetchEmployee).toHaveBeenCalledWith(
+        "employee-auth-1"
+      );
     });
 
     await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
@@ -2452,6 +2655,115 @@ describe("OnboardingWizard server-side validation feedback", () => {
     ).toBeInTheDocument();
   });
 
+  it("maps API validation errors to fields when saving a draft via Next", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-bank",
+          employee_id: "employee-1",
+          form_template_id: "template-bank",
+          form_data: {
+            iban: "DE44500105175407324931",
+            account_holder: "Ada Lovelace",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Final Step",
+        description: "Other",
+        template_id: "template-final",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-final") {
+          return {
+            id: "template-final",
+            name: "Final Step",
+            title: "Final Step",
+            description: "Other info",
+            form_schema: {
+              type: "object",
+              required: [],
+              properties: {
+                note: { type: "string", title: "Note" },
+              },
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 2,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Bank info",
+          form_schema: {
+            type: "object",
+            required: ["iban", "account_holder"],
+            properties: {
+              iban: {
+                type: "string",
+                title: "IBAN",
+              },
+              account_holder: {
+                type: "string",
+                title: "Account Holder",
+              },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 1,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    onboardingApiMocks.updateOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        "form_data.iban": ["The string does not match the required pattern."],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByText(/IBAN: Please use the required format/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "We couldn't save your draft yet. Please review the highlighted fields."
+      )
+    ).toBeInTheDocument();
+  });
+
   it("names the affected array field when the API rejects a nested value", async () => {
     onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
       id: "template-bank",
@@ -2630,15 +2942,85 @@ describe("OnboardingWizard server-side validation feedback", () => {
     );
 
     expect(
-      await screen.findByText(
-        "form_data: Submission contains HR-managed fields."
-      )
+      await screen.findByText("Submission contains HR-managed fields.")
     ).toBeInTheDocument();
     expect(
       screen.queryByText(
         "We couldn't submit the form yet. Please review the highlighted fields."
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("replaces generic onboarding workflow API errors with clearer guidance", async () => {
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: [
+          "Cannot submit: onboarding workflow is not in an expected state for this employee.",
+        ],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(
+        /The save failed on the server because your onboarding workflow is not currently editable\. The wizard will refresh to the latest server state\./i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/form_data:/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("lists whole-form API messages next to inline field errors", async () => {
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: [
+          "Cannot submit: onboarding workflow is not in an expected state for this employee.",
+        ],
+        "form_data.iban": ["The string does not match the required pattern."],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "INVALID");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByText(/IBAN: Please use the required format/i)
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", {
+        name: /Additional validation messages from the server/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /The save failed on the server because your onboarding workflow is not currently editable/i
+      )
+    ).toBeInTheDocument();
   });
 });
 
