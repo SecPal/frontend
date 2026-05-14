@@ -350,6 +350,34 @@ describe("auth E2E helpers", () => {
         )
       );
     });
+
+    it("separates auth cache files for different localhost ports", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:5173"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:4173"
+        )
+      );
+    });
+
+    it("separates auth cache files for ddev and localhost targets", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "https://frontend.ddev.site"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:5173"
+        )
+      );
+    });
   });
 
   describe("describeAuthResolutionState", () => {

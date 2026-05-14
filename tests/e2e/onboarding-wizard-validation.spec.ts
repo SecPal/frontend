@@ -132,6 +132,10 @@ async function installWizardValidationRoutes(
   });
 
   await context.route("**/v1/employees/*", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.fallback();
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",

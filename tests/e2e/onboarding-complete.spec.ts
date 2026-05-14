@@ -199,6 +199,12 @@ async function installRemoteOnboardingFetchMocks(
         }
 
         if (/^\/v1\/employees\/.+/.test(pathname)) {
+          const method = (
+            init?.method ?? (input instanceof Request ? input.method : "GET")
+          ).toUpperCase();
+          if (method !== "GET") {
+            return originalFetch(input, init);
+          }
           return jsonResponse({
             data: employee,
           });
@@ -415,6 +421,10 @@ async function installMockOnboardingRoutes(
   });
 
   await context.route("**/v1/employees/*", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.fallback();
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",

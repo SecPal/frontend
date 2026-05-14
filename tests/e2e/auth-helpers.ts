@@ -139,14 +139,15 @@ export function getAuthStateCachePath(
   baseUrl?: string
 ): string {
   const resolved = baseUrl ?? resolvePlaywrightBaseUrl();
-  let targetScope = "local";
+  let targetScope: string;
 
-  if (isRemoteE2ETarget(resolved)) {
-    try {
-      targetScope = new URL(resolved).host;
-    } catch {
-      targetScope = "remote";
-    }
+  try {
+    // Derive the scope from the URL host so different origins (ports, hostnames)
+    // always produce distinct cache files, including local-HTTPS targets such as
+    // *.ddev.site that isRemoteE2ETarget intentionally classifies as non-remote.
+    targetScope = new URL(resolved).host;
+  } catch {
+    targetScope = isRemoteE2ETarget(resolved) ? "remote" : "local";
   }
 
   const scopePart = normalizeAuthCacheKeyPart(targetScope);
