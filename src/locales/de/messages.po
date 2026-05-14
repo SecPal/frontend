@@ -1437,7 +1437,7 @@ msgstr "Zurück zur Liste"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
-msgstr "Ihr Onboarding-Status hat sich auf dem Server geaendert, waehrend Sie bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand aktualisiert."
+msgstr "Ihr Onboarding-Status hat sich auf dem Server geändert, während Sie bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand aktualisiert."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
@@ -2697,7 +2697,7 @@ msgstr "Optionale Beschreibung..."
 
 #: src/lib/errorUtils.ts
 msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
-msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten inzwischen geaendert haben. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
+msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten inzwischen geändert haben. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Organizational unit is required"

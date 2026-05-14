@@ -154,6 +154,41 @@ describe("validateResidentialAddressHistoryValue five-year coverage", () => {
     );
   });
 
+  it("does NOT pass the coverage gate when resided_from is blank (null coverage)", () => {
+    // coverage === null (unparseable date) is not === true, so the user is
+    // NOT considered covered. Both a date-format error and a coverage error
+    // must appear — the user must fix the date AND/OR supply previous addresses.
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "no",
+        current_address: fullCurrent(""),
+        previous_addresses: [],
+      },
+      translate
+    );
+
+    expect(errors["current_address.resided_from"]).toBeDefined();
+    expect(errors["previous_addresses.coverage"]).toBeDefined();
+  });
+
+  it("does NOT pass the coverage gate when resided_from is an invalid date string (null coverage)", () => {
+    // Same invariant: an unparseable date must not silently satisfy the
+    // five-year coverage requirement.
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "no",
+        current_address: fullCurrent("not-a-date"),
+        previous_addresses: [],
+      },
+      translate
+    );
+
+    expect(errors["current_address.resided_from"]).toBeDefined();
+    expect(errors["previous_addresses.coverage"]).toBeDefined();
+  });
+
   it("ignores empty previous slots when coverage is satisfied", () => {
     const errors = validateResidentialAddressHistoryValue(
       {

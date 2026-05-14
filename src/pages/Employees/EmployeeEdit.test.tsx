@@ -1098,5 +1098,75 @@ describe("EmployeeEdit", () => {
         expect(screen.queryByText(/invalid date/i)).not.toBeInTheDocument();
       });
     });
+
+    it("should render empty string for date inputs when employee has no dates", async () => {
+      vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+        ...mockEmployee,
+        date_of_birth: null,
+        contract_start_date: null,
+      });
+
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/date of birth/i)).toHaveValue("");
+      });
+      expect(screen.getByLabelText(/contract start date/i)).toHaveValue("");
+    });
+
+    it("should reformat dates reactively when locale switches from en to de", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/date of birth/i)).toHaveValue(
+          "01/01/1990"
+        );
+      });
+
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue(
+          "01.01.1990"
+        );
+      });
+      expect(screen.getByLabelText(/datum des vertragsbeginns/i)).toHaveValue(
+        "01.01.2025"
+      );
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
+
+    it("should keep user-typed date unchanged when locale switches while field is dirty", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/date of birth/i)).toHaveValue(
+          "01/01/1990"
+        );
+      });
+
+      const birthDateInput = screen.getByLabelText(/date of birth/i);
+      fireEvent.change(birthDateInput, { target: { value: "06/15/1985" } });
+
+      await act(async () => {
+        i18n.activate("de");
+      });
+
+      // Dirty field must not be re-formatted by locale switch
+      await waitFor(() => {
+        expect(screen.getByLabelText(/geburtsdatum/i)).toHaveValue(
+          "06/15/1985"
+        );
+      });
+
+      await act(async () => {
+        i18n.activate("en");
+      });
+    });
   });
 });
