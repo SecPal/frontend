@@ -53,11 +53,15 @@ import {
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  hasAddressDraftValue,
   mergeAddressBaseList,
   type PostalAddressDraft,
 } from "../../lib/employeeAddresses";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
-import { employeeAddressToDraft } from "./employeeAddressDraft";
+import {
+  employeeAddressToDraft,
+  emptyPostalAddressDraft,
+} from "./employeeAddressDraft";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 import {
   emergencyContactsToDrafts,
@@ -781,8 +785,13 @@ export function EmployeeDetail() {
         employee.addresses,
         employee.current_address
       );
+      const resolved =
+        employee.current_address ?? getCurrentAddressFromList(rows);
+      const fromRow = employeeAddressToDraft(resolved);
       setContactAddressDraft(
-        employeeAddressToDraft(getCurrentAddressFromList(rows))
+        hasAddressDraftValue(fromRow, {})
+          ? fromRow
+          : emptyPostalAddressDraft
       );
       return;
     }
