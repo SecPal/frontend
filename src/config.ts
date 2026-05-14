@@ -101,41 +101,9 @@ function shouldUseCanonicalLiveApiOrigin(
 }
 
 function shouldUseCanonicalPreviewApiOrigin(
-  runtimeHostname: string | null,
-  normalizedConfiguredBaseUrl: string
+  runtimeHostname: string | null
 ): boolean {
-  const runtimePreviewHostname = parsePreviewHostname(runtimeHostname);
-  const canonicalPreviewApiOrigin =
-    getCanonicalPreviewApiOrigin(runtimeHostname);
-
-  if (
-    !canonicalPreviewApiOrigin ||
-    !runtimePreviewHostname ||
-    (runtimePreviewHostname.repo !== null &&
-      runtimePreviewHostname.repo !== "frontend")
-  ) {
-    return false;
-  }
-
-  if (!normalizedConfiguredBaseUrl) {
-    return true;
-  }
-
-  if (!isAbsoluteHttpUrl(normalizedConfiguredBaseUrl)) {
-    return true;
-  }
-
-  const normalizedOrigin = new URL(normalizedConfiguredBaseUrl).origin;
-  const normalizedHostname = new URL(normalizedOrigin).hostname;
-  const configuredPreviewHostname = parsePreviewHostname(normalizedHostname);
-
-  return (
-    (configuredPreviewHostname?.workspace ===
-      runtimePreviewHostname.workspace &&
-      (configuredPreviewHostname.repo === null ||
-        configuredPreviewHostname.repo === "frontend")) ||
-    isLoopbackApiHost(normalizedHostname)
-  );
+  return getCanonicalPreviewApiOrigin(runtimeHostname) !== null;
 }
 
 export function resolveApiBaseUrl(options?: {
@@ -159,12 +127,7 @@ export function resolveApiBaseUrl(options?: {
     return LIVE_API_ORIGIN;
   }
 
-  if (
-    shouldUseCanonicalPreviewApiOrigin(
-      runtimeHostname,
-      normalizedConfiguredBaseUrl
-    )
-  ) {
+  if (shouldUseCanonicalPreviewApiOrigin(runtimeHostname)) {
     return getCanonicalPreviewApiOrigin(runtimeHostname) as string;
   }
 

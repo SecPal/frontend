@@ -185,6 +185,24 @@ describe("config", () => {
     ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
   });
 
+  it("falls back to the current workspace preview API origin on frontend preview hosts when VITE_API_URL points at another absolute preview origin", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://api-otter.preview.secpal.dev");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    expect(
+      buildApiUrl("/v1/auth/login", {
+        runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
+  });
+
   it("falls back to the workspace preview API origin on generic workspace preview hosts when the bundle kept a loopback API base", async () => {
     vi.stubEnv("MODE", "preview");
     vi.stubEnv("VITE_API_URL", "http://localhost:4173");
@@ -219,5 +237,23 @@ describe("config", () => {
         runtimeHostname: "grumpy-lynx.preview.secpal.dev",
       })
     ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
+  });
+
+  it("falls back to the current workspace preview API origin on generic workspace preview hosts when VITE_API_URL points at an unrelated absolute API origin", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://api.secpal.dev");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "grumpy-lynx.preview.secpal.dev",
+      })
+    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/sanctum/csrf-cookie");
   });
 });
