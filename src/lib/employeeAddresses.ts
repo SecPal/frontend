@@ -17,6 +17,10 @@ export interface PostalAddressDraft {
   state?: string;
 }
 
+interface HasAddressDraftValueOptions {
+  emptyCountryCodes?: string[];
+}
+
 export function getCurrentAddressFromList(
   list: EmployeeAddress[] | null | undefined
 ): EmployeeAddress | null {
@@ -29,14 +33,23 @@ export function getCurrentAddressFromList(
   );
 }
 
-function hasAddressDraftValueForCurrentRow(draft: PostalAddressDraft): boolean {
+export function hasAddressDraftValue(
+  draft: PostalAddressDraft,
+  options: HasAddressDraftValueOptions = {}
+): boolean {
+  const trimmedCountry = draft.country.trim();
+  const emptyCountryCodes = options.emptyCountryCodes?.map((code) =>
+    code.trim().toUpperCase()
+  );
+
   return (
     draft.street.trim().length > 0 ||
     draft.houseNumber.trim().length > 0 ||
     draft.postalCode.trim().length > 0 ||
     draft.city.trim().length > 0 ||
     draft.supplement.trim().length > 0 ||
-    draft.country.trim().length > 0 ||
+    (trimmedCountry.length > 0 &&
+      !emptyCountryCodes?.includes(trimmedCountry.toUpperCase())) ||
     (draft.state?.trim().length ?? 0) > 0
   );
 }
@@ -84,7 +97,7 @@ export function buildAddressesPayloadForCurrentEdit(
     (a) => a.resided_until != null && a.resided_until !== ""
   );
   const current = getCurrentAddressFromList(addressRows);
-  const shouldIncludeCurrentRow = hasAddressDraftValueForCurrentRow(draft);
+  const shouldIncludeCurrentRow = hasAddressDraftValue(draft);
   const normalizedState =
     draft.state !== undefined
       ? draft.state.trim() || null

@@ -6,6 +6,7 @@ import type { EmployeeAddress } from "@/types/api/employees";
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  hasAddressDraftValue,
   mergeAddressBaseList,
 } from "./employeeAddresses";
 
@@ -275,6 +276,37 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
         resided_until: "2024-12-31",
       },
     ]);
+  });
+});
+
+describe("hasAddressDraftValue", () => {
+  it("treats a non-empty country as a current-row value", () => {
+    expect(
+      hasAddressDraftValue({
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        supplement: "",
+        country: "DE",
+      })
+    ).toBe(true);
+  });
+
+  it("can ignore configured default country codes", () => {
+    expect(
+      hasAddressDraftValue(
+        {
+          street: "",
+          houseNumber: "",
+          postalCode: "",
+          city: "",
+          supplement: "",
+          country: " DE ",
+        },
+        { emptyCountryCodes: ["de"] }
+      )
+    ).toBe(false);
   });
 });
 

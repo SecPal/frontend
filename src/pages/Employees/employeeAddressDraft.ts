@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { EmployeeAddress, EmployeeAddressInput } from "@/types/api";
-import type { PostalAddressDraft } from "../../lib/employeeAddresses";
+import {
+  hasAddressDraftValue,
+  type PostalAddressDraft,
+} from "../../lib/employeeAddresses";
 
 export const emptyPostalAddressDraft: PostalAddressDraft = {
   street: "",
@@ -27,15 +30,7 @@ export function employeeAddressToDraft(
 }
 
 export function hasPostalAddressDraftValue(draft: PostalAddressDraft): boolean {
-  return (
-    draft.street.trim().length > 0 ||
-    draft.houseNumber.trim().length > 0 ||
-    draft.postalCode.trim().length > 0 ||
-    draft.city.trim().length > 0 ||
-    draft.supplement.trim().length > 0 ||
-    (draft.country.trim().length > 0 &&
-      draft.country.trim().toUpperCase() !== "DE")
-  );
+  return hasAddressDraftValue(draft, { emptyCountryCodes: ["DE"] });
 }
 
 export function buildCreateAddressPayload(
