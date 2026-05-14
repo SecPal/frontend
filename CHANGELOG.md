@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added shared `addressApi` service with typed helpers (`fetchAddressStreetSuggestions`, `fetchAddressLocalitySuggestions`) for OpenPLZ-backed postal-code and street lookups against the `/v1/addresses/de/` API endpoints.
+- Added `getCountrySelectOptions` in `src/lib/iso3166CountryOptions.ts` to generate a locale-sorted ISO 3166-1 alpha-2 country dropdown with per-code `Intl.DisplayNames` fallback for unsupported region identifiers.
+
+### Fixed
+
+- Fixed `buildAddressesPayloadForCurrentEdit` so that `state` is preserved from the current address row when the draft does not supply it, cleared when the draft explicitly passes an empty string, and the current row is omitted entirely (instead of creating a blank placeholder row) when all draft fields are empty.
+
 ### Changed
 
 - Migrated employee contact and detail flows from flat `address_*` fields to the `addresses` relation: responses now use `addresses`, optional `current_address`, and `structured_address`; contact edit and inline postal edits send full replacement `addresses` payloads that keep historical rows and refresh the open-ended current row, with shared helpers in `src/lib/employeeAddresses.ts`.

@@ -86,7 +86,9 @@ async function diffDirectories(previousDirectory, currentDirectory) {
       readFile(join(currentDirectory, relativePath), "utf8"),
     ]);
 
-    if (normalizeContent(previousContent) !== normalizeContent(currentContent)) {
+    if (
+      normalizeContent(previousContent) !== normalizeContent(currentContent)
+    ) {
       changedFiles.push(relativePath);
     }
   }

@@ -67,7 +67,6 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     city: "Berlin",
     supplement: "",
     country: "de",
-    state: "BE",
   };
 
   it("builds a single open-ended row when there is no prior address list", () => {
@@ -79,7 +78,7 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
         city: "Berlin",
         supplement: null,
         country: "DE",
-        state: "BE",
+        state: null,
         resided_from: null,
         resided_until: null,
       },
@@ -97,6 +96,7 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
       id: "cur-1",
       street: "Jetztstraße",
       city: "Berlin",
+      state: "BE",
       resided_from: "2019-06-02",
       resided_until: null,
     });
@@ -125,6 +125,39 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     });
   });
 
+  it("preserves state from the current row when the draft omits the state field", () => {
+    const current = addr({
+      id: "cur-1",
+      street: "Jetztstraße",
+      city: "Berlin",
+      state: "BE",
+      resided_from: "2019-06-02",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], draft);
+
+    expect(payload[0]?.state).toBe("BE");
+  });
+
+  it("clears state when the draft explicitly provides an empty string", () => {
+    const current = addr({
+      id: "cur-1",
+      street: "Jetztstraße",
+      city: "Berlin",
+      state: "BE",
+      resided_from: "2019-06-02",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      ...draft,
+      state: "",
+    });
+
+    expect(payload[0]?.state).toBeNull();
+  });
+
   it("carries resided_from from the resolved current row when rebuilding", () => {
     const current = addr({
       id: "c",
@@ -137,6 +170,111 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     });
     expect(out).toHaveLength(1);
     expect(out[0]?.resided_from).toBe("2021-03-15");
+  });
+
+  it("removes the current row when an existing postal address is cleared", () => {
+    const historical = addr({
+      id: "old-1",
+      street: "Altstraße",
+      house_number: "8",
+      postal_code: "50667",
+      city: "Köln",
+      country: "DE",
+      resided_from: "2018-01-01",
+      resided_until: "2024-12-31",
+    });
+    const current = addr({
+      id: "cur-1",
+      street: "Jetztstraße",
+      house_number: "1",
+      postal_code: "10115",
+      city: "Berlin",
+      country: "DE",
+      state: "BE",
+      resided_from: "2025-01-01",
+      resided_until: null,
+    });
+
+    expect(
+      buildAddressesPayloadForCurrentEdit([historical, current], {
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        supplement: "",
+        country: "",
+      })
+    ).toEqual([
+      {
+        street: "Altstraße",
+        house_number: "8",
+        postal_code: "50667",
+        city: "Köln",
+        supplement: null,
+        country: "DE",
+        state: null,
+        resided_from: "2018-01-01",
+        resided_until: "2024-12-31",
+      },
+    ]);
+  });
+
+  it("preserves the current row when only the state field is filled in the draft", () => {
+    const current = addr({
+      id: "cur-1",
+      resided_from: "2023-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      supplement: "",
+      country: "",
+      state: "BY",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBe("BY");
+    expect(payload[0]?.resided_until).toBeNull();
+  });
+
+  it("does not invent a blank current row when only historical addresses exist", () => {
+    const historical = addr({
+      id: "old-1",
+      street: "Altstraße",
+      house_number: "8",
+      postal_code: "50667",
+      city: "Köln",
+      country: "DE",
+      resided_from: "2018-01-01",
+      resided_until: "2024-12-31",
+    });
+
+    expect(
+      buildAddressesPayloadForCurrentEdit([historical], {
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        supplement: "",
+        country: "",
+      })
+    ).toEqual([
+      {
+        street: "Altstraße",
+        house_number: "8",
+        postal_code: "50667",
+        city: "Köln",
+        supplement: null,
+        country: "DE",
+        state: null,
+        resided_from: "2018-01-01",
+        resided_until: "2024-12-31",
+      },
+    ]);
   });
 });
 
