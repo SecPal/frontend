@@ -36,6 +36,32 @@ describe("playwright target resolution", () => {
     );
   });
 
+  it("detects the workspace name from the Polyscope clone directory path when POLYSCOPE_WORKSPACE is not set", async () => {
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("CI", "");
+    vi
+      .spyOn(process, "cwd")
+      .mockReturnValue(
+        "/home/secpal/.polyscope/clones/9d1c7856/my-feature-branch"
+      );
+
+    const {
+      detectPolyscopeWorkspaceName,
+      resolvePlaywrightApiBaseUrl,
+      resolvePlaywrightBaseUrl,
+    } = await import("./e2e/target-urls.ts");
+
+    expect(detectPolyscopeWorkspaceName()).toBe("my-feature-branch");
+    expect(resolvePlaywrightBaseUrl()).toBe(
+      "https://frontend-my-feature-branch.preview.secpal.dev"
+    );
+    expect(resolvePlaywrightApiBaseUrl()).toBe(
+      "https://api-my-feature-branch.preview.secpal.dev"
+    );
+  });
+
   it("uses the current Polyscope workspace preview by default", async () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
