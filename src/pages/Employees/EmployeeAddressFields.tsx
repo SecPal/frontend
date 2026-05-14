@@ -223,6 +223,7 @@ export function EmployeeAddressFields({
 
     if (
       !autocompleteEnabled ||
+      (focusedField !== "postalCode" && focusedField !== "city") ||
       (postalCodeQuery.length < 1 && localityQuery.length < 2)
     ) {
       const timeoutId = window.setTimeout(() => {
@@ -284,6 +285,7 @@ export function EmployeeAddressFields({
     autocompleteEnabled,
     draft.city,
     draft.postalCode,
+    focusedField,
     getAutocompleteErrorMessage,
   ]);
 
