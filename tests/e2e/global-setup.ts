@@ -4,6 +4,7 @@
 import { chromium, expect, type FullConfig } from "@playwright/test";
 import {
   getConfiguredTestUserOrThrow,
+  getAuthStateCachePath,
   isRemoteE2ETarget,
   waitForLoginFormReady,
 } from "./auth-helpers";
@@ -13,12 +14,6 @@ import {
 } from "./offline-live-helpers";
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_FILE = path.join(__dirname, ".auth/user.json");
 
 /**
  * Global Setup - runs once before all tests
@@ -34,17 +29,21 @@ async function globalSetup(config: FullConfig) {
     return;
   }
 
+  const testUser = getConfiguredTestUserOrThrow();
   // Ensure auth directory exists
-  const authDir = path.dirname(AUTH_FILE);
+  const baseURL = config.projects[0]?.use?.baseURL || "http://localhost:5173";
+  const authFile = path.resolve(
+    process.cwd(),
+    getAuthStateCachePath(testUser, String(baseURL))
+  );
+  const authDir = path.dirname(authFile);
   if (!fs.existsSync(authDir)) {
     fs.mkdirSync(authDir, { recursive: true });
   }
 
-  const baseURL = config.projects[0]?.use?.baseURL || "http://localhost:5173";
-
   // Skip if auth file already exists and is recent (< 30 minutes old)
-  if (isRemoteE2ETarget(String(baseURL)) && fs.existsSync(AUTH_FILE)) {
-    const stats = fs.statSync(AUTH_FILE);
+  if (isRemoteE2ETarget(String(baseURL)) && fs.existsSync(authFile)) {
+    const stats = fs.statSync(authFile);
     const ageMinutes = (Date.now() - stats.mtimeMs) / 1000 / 60;
     if (ageMinutes < 30) {
       console.log("♻️  Reusing existing auth session");
@@ -53,8 +52,6 @@ async function globalSetup(config: FullConfig) {
   }
 
   console.log("🔐 Performing global login setup...");
-
-  const testUser = getConfiguredTestUserOrThrow();
 
   const browser = await chromium.launch();
   const context = await browser.newContext();
@@ -70,7 +67,7 @@ async function globalSetup(config: FullConfig) {
         page.getByRole("button", { name: /user menu/i })
       ).toBeVisible({ timeout: 15_000 });
 
-      await context.storageState({ path: AUTH_FILE });
+      await context.storageState({ path: authFile });
       console.log("✅ Local mocked auth session saved");
       return;
     }
@@ -96,7 +93,7 @@ async function globalSetup(config: FullConfig) {
     });
 
     // Save storage state
-    await context.storageState({ path: AUTH_FILE });
+    await context.storageState({ path: authFile });
     console.log("✅ Auth session saved");
   } catch (error) {
     console.error("❌ Login failed:", error);

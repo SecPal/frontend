@@ -51,8 +51,11 @@ import {
 const BASE_URL = resolvePlaywrightBaseUrl();
 
 /**
- * Detect if we're running against a remote server
- * (staging/production - no local webServer needed)
+ * Detect if we're running against a server that Playwright should NOT start
+ * locally. isRemotePlaywrightTarget is intentionally used here (not
+ * isRemoteE2ETarget) because both real remote targets (app.secpal.dev) and
+ * local-HTTPS targets (*.ddev.site) are served by an external process that
+ * Playwright must not duplicate with its own webServer.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 

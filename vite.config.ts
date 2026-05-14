@@ -188,6 +188,14 @@ export default defineConfig(({ mode }) => {
       // Set chunk size warning limit
       chunkSizeWarningLimit: 500, // Warn if any chunk exceeds 500KB
     },
+    // `vite preview` defaults to localhost-only; bind on all interfaces so the
+    // app is reachable from port forwarding, containers, and IDE-embedded browsers.
+    preview: {
+      host: true,
+      port: 4173,
+      strictPort: true,
+      allowedHosts: [".ddev.site"],
+    },
     server: {
       // Allow DDEV hostnames for local development
       allowedHosts: [".ddev.site"],

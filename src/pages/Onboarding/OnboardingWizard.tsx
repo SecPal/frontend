@@ -1715,17 +1715,17 @@ export function OnboardingWizard() {
   const employeeIdForContractStartLookup =
     employeeIdFromSteps ?? employeeIdFromAuth;
   const contractStartDateFromOtherSteps = getContractStartDateFromSteps(steps);
-  const resolvedEmployeeContractStartDate =
+  const hasValidAuthContractStart =
     typeof contractStartDateFromAuth === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth)
-      ? contractStartDateFromAuth
-      : employeeIdForContractStartLookup
-        ? employeeContractStartDate
-        : null;
-  const contractStartDateFallback =
-    resolvedEmployeeContractStartDate ??
-    contractStartDateFromOtherSteps ??
-    contractStartDateFromAuth;
+    /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth);
+  const hasValidFetchedEmployeeContractStart =
+    typeof employeeContractStartDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(employeeContractStartDate);
+  const contractStartDateFallback = hasValidAuthContractStart
+    ? contractStartDateFromAuth
+    : hasValidFetchedEmployeeContractStart
+      ? employeeContractStartDate
+      : (contractStartDateFromOtherSteps ?? contractStartDateFromAuth);
   const stepUploadDocumentType = getStepUploadDocumentType(
     schema,
     formData.nationalities

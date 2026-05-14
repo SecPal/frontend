@@ -9,6 +9,14 @@ const MOCK_XSRF_TOKEN = "test-xsrf-token";
 
 const validOnboardingEmail = "john.doe@secpal.dev";
 const validOnboardingToken = "test-token-12345";
+const onboardingEmployee = {
+  id: "employee-1",
+  first_name: "John",
+  last_name: "Doe",
+  contract_start_date: "2026-05-01",
+  status: "pre_contract",
+};
+const onboardingNationalities = [{ code: "DE", name: "German" }];
 
 const onboardingTemplate = {
   id: "template-1",
@@ -36,8 +44,17 @@ async function installRemoteOnboardingFetchMocks(
   responseDelayMs: number
 ): Promise<void> {
   await context.addInitScript(
-    ({ xsrfToken, validToken, validEmail, template, delayMs }) => {
+    ({
+      xsrfToken,
+      validToken,
+      validEmail,
+      template,
+      delayMs,
+      employee,
+      nationalities,
+    }) => {
       const originalFetch = window.fetch.bind(window);
+      let onboardingSessionEstablished = false;
 
       const jsonResponse = (body: unknown, status = 200) =>
         new Response(JSON.stringify(body), {
@@ -93,7 +110,21 @@ async function installRemoteOnboardingFetchMocks(
         }
 
         if (pathname === "/v1/me") {
-          return jsonResponse({ message: "Unauthenticated." }, 401);
+          if (!onboardingSessionEstablished) {
+            return jsonResponse({ message: "Unauthenticated." }, 401);
+          }
+
+          return jsonResponse({
+            id: "user-1",
+            name: "John Doe",
+            email: validEmail,
+            emailVerified: true,
+            roles: [],
+            permissions: [],
+            hasOrganizationalScopes: false,
+            hasCustomerAccess: false,
+            hasSiteAccess: false,
+          });
         }
 
         if (pathname === "/v1/onboarding/validate-token") {
@@ -140,6 +171,7 @@ async function installRemoteOnboardingFetchMocks(
           }
 
           await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+          onboardingSessionEstablished = true;
 
           return jsonResponse({
             message: "Onboarding completed successfully.",
@@ -163,6 +195,24 @@ async function installRemoteOnboardingFetchMocks(
         if (pathname === "/v1/onboarding/templates") {
           return jsonResponse({
             data: [template],
+          });
+        }
+
+        if (/^\/v1\/employees\/.+/.test(pathname)) {
+          const method = (
+            init?.method ?? (input instanceof Request ? input.method : "GET")
+          ).toUpperCase();
+          if (method !== "GET") {
+            return originalFetch(input, init);
+          }
+          return jsonResponse({
+            data: employee,
+          });
+        }
+
+        if (pathname === "/v1/onboarding/nationalities") {
+          return jsonResponse({
+            data: nationalities,
           });
         }
 
@@ -207,6 +257,8 @@ async function installRemoteOnboardingFetchMocks(
       validEmail: validOnboardingEmail,
       template: onboardingTemplate,
       delayMs: responseDelayMs,
+      employee: onboardingEmployee,
+      nationalities: onboardingNationalities,
     }
   );
 }
@@ -368,6 +420,30 @@ async function installMockOnboardingRoutes(
     });
   });
 
+  await context.route("**/v1/employees/*", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: onboardingEmployee,
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/nationalities", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: onboardingNationalities,
+      }),
+    });
+  });
+
   await context.route("**/v1/onboarding/templates/*", async (route) => {
     await route.fulfill({
       status: 200,
@@ -451,7 +527,9 @@ test.describe("Onboarding Complete Flow", () => {
       page.getByRole("heading", { name: /Invalid Link/i })
     ).toBeVisible();
     await expect(
-      page.getByText(/Invalid or expired onboarding link/i)
+      page.getByText(
+        /Invalid onboarding link\. Please check your email and try again\./i
+      )
     ).toBeVisible();
   });
 

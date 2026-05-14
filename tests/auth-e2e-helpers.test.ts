@@ -7,6 +7,7 @@ import {
   describeAuthResolutionState,
   describeLoginBlockingState,
   getConfiguredTestUserOrThrow,
+  getAuthStateCachePath,
   isRemoteE2ETarget,
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
@@ -29,10 +30,15 @@ describe("auth E2E helpers", () => {
   describe("isRemoteE2ETarget", () => {
     it("treats https targets as remote", () => {
       expect(isRemoteE2ETarget("https://app.secpal.dev")).toBe(true);
+      expect(isRemoteE2ETarget("https://velvet-zebra.preview.secpal.dev")).toBe(
+        true
+      );
     });
 
     it("treats an explicit localhost target as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
+      expect(isRemoteE2ETarget("https://localhost:5173")).toBe(false);
+      expect(isRemoteE2ETarget("https://frontend.ddev.site")).toBe(false);
     });
 
     it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
@@ -88,10 +94,34 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("uses the standard seeded onboarding user for workspace preview targets when live onboarding is enabled", () => {
+      expect(
+        buildTestUser(
+          { PLAYWRIGHT_LIVE_ONBOARDING: "1" },
+          "https://grumpy-lynx.preview.secpal.dev"
+        )
+      ).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+
     it("requires explicit credentials for remote targets", () => {
       expect(buildTestUser({}, "https://app.secpal.dev")).toEqual({
         email: "",
         password: "",
+      });
+    });
+
+    it("uses the standard seeded onboarding user for remote targets when live onboarding is enabled", () => {
+      expect(
+        buildTestUser(
+          { PLAYWRIGHT_LIVE_ONBOARDING: "1" },
+          "https://app.secpal.dev"
+        )
+      ).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
       });
     });
 
@@ -101,6 +131,22 @@ describe("auth E2E helpers", () => {
           {
             TEST_USER_EMAIL: "guard@secpal.dev",
             TEST_USER_PASSWORD: "correct horse battery staple",
+          },
+          "https://app.secpal.dev"
+        )
+      ).toEqual({
+        email: "guard@secpal.dev",
+        password: "correct horse battery staple",
+      });
+    });
+
+    it("prefers explicitly configured credentials with live onboarding flag", () => {
+      expect(
+        buildTestUser(
+          {
+            TEST_USER_EMAIL: "guard@secpal.dev",
+            TEST_USER_PASSWORD: "correct horse battery staple",
+            PLAYWRIGHT_LIVE_ONBOARDING: "1",
           },
           "https://app.secpal.dev"
         )
@@ -244,6 +290,94 @@ describe("auth E2E helpers", () => {
         )
       ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
+
+    it("returns the standard onboarding user for remote live onboarding without TEST_USER_*", () => {
+      const result = getConfiguredTestUserOrThrow(
+        {
+          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+          PLAYWRIGHT_LIVE_ONBOARDING: "1",
+        },
+        "https://app.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+
+    it("returns the standard onboarding user for workspace preview live onboarding without TEST_USER_*", () => {
+      const result = getConfiguredTestUserOrThrow(
+        {
+          PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev",
+          PLAYWRIGHT_LIVE_ONBOARDING: "1",
+        },
+        "https://grumpy-lynx.preview.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+  });
+
+  describe("getAuthStateCachePath", () => {
+    it("separates auth cache files by remote target host", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://app.secpal.dev"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://velvet-zebra.preview.secpal.dev"
+        )
+      );
+    });
+
+    it("separates auth cache files by configured user", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://app.secpal.dev"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "onboarding@example.com", password: "password" },
+          "https://app.secpal.dev"
+        )
+      );
+    });
+
+    it("separates auth cache files for different localhost ports", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:5173"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:4173"
+        )
+      );
+    });
+
+    it("separates auth cache files for ddev and localhost targets", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "https://frontend.ddev.site"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "test@example.com", password: "password" },
+          "http://localhost:5173"
+        )
+      );
+    });
   });
 
   describe("describeAuthResolutionState", () => {
@@ -252,6 +386,18 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: true,
+          hasOnboardingShell: false,
+          hasBootstrapRecoveryScreen: false,
+        })
+      ).toBe("authenticated");
+    });
+
+    it("returns authenticated when the pre-contract onboarding shell is visible", () => {
+      expect(
+        describeAuthResolutionState({
+          pathname: "/onboarding",
+          hasUserMenu: false,
+          hasOnboardingShell: true,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("authenticated");
@@ -262,6 +408,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/login",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("login");
@@ -272,6 +419,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/customers",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: true,
         })
       ).toBe("recovery");
@@ -282,6 +430,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("unresolved");

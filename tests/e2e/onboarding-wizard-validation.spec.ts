@@ -73,6 +73,15 @@ const finalSubmission = {
   updated_at: "2026-05-01T00:00:00Z",
 };
 
+const onboardingEmployee = {
+  id: "employee-1",
+  first_name: "Jane",
+  last_name: "Doe",
+  contract_start_date: "2026-05-01",
+  status: "pre_contract",
+};
+const onboardingNationalities = [{ code: "DE", name: "German" }];
+
 async function installWizardValidationRoutes(
   context: import("@playwright/test").BrowserContext
 ) {
@@ -118,6 +127,30 @@ async function installWizardValidationRoutes(
       contentType: "application/json",
       body: JSON.stringify({
         data: [countrySubmission, finalSubmission],
+      }),
+    });
+  });
+
+  await context.route("**/v1/employees/*", async (route) => {
+    if (route.request().method() !== "GET") {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: onboardingEmployee,
+      }),
+    });
+  });
+
+  await context.route("**/v1/onboarding/nationalities", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: onboardingNationalities,
       }),
     });
   });
