@@ -30,9 +30,9 @@ describe("auth E2E helpers", () => {
   describe("isRemoteE2ETarget", () => {
     it("treats https targets as remote", () => {
       expect(isRemoteE2ETarget("https://app.secpal.dev")).toBe(true);
-      expect(
-        isRemoteE2ETarget("https://velvet-zebra.preview.secpal.dev")
-      ).toBe(true);
+      expect(isRemoteE2ETarget("https://velvet-zebra.preview.secpal.dev")).toBe(
+        true
+      );
     });
 
     it("treats an explicit localhost target as non-remote", () => {

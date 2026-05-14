@@ -13,22 +13,22 @@ Wichtig für Playwright-Live-Tests: `onboarding_workflow_status` muss **`account
 
 `OnboardingE2eUserSeeder.php` ist eine **vereinfachte Roh-SQL-Variante** für Forks ohne `OnboardingDemoUserSeeder`. Spalte für den Workflow:
 
-| Spalte | Wert |
-|--------|------|
+| Spalte                       | Wert                  |
+| ---------------------------- | --------------------- |
 | `onboarding_workflow_status` | `account_initialized` |
 
 ## Soll-Daten (Kurz)
 
-| Feld | Wert |
-|------|------|
-| E-Mail / Login | `onboarding@example.com` |
-| Passwort | `password` |
-| Name | John Doe |
-| Geburtstag | 1990-01-01 |
-| Position | Sicherheitsmitarbeiter |
-| Führung | nein (`management_level` 0) |
-| Vertragsbeginn | 2028-05-01 |
-| Status | `pre_contract` |
+| Feld                | Wert                                                                   |
+| ------------------- | ---------------------------------------------------------------------- |
+| E-Mail / Login      | `onboarding@example.com`                                               |
+| Passwort            | `password`                                                             |
+| Name                | John Doe                                                               |
+| Geburtstag          | 1990-01-01                                                             |
+| Position            | Sicherheitsmitarbeiter                                                 |
+| Führung             | nein (`management_level` 0)                                            |
+| Vertragsbeginn      | 2028-05-01                                                             |
+| Status              | `pre_contract`                                                         |
 | Onboarding-Workflow | `onboarding_workflow_status` = `account_initialized` (nicht `invited`) |
 
 Playwright nutzt dieses Konto automatisch, wenn `PLAYWRIGHT_BASE_URL` mit `https://` gesetzt ist und `PLAYWRIGHT_LIVE_ONBOARDING=1` — ohne `TEST_USER_*` Override.

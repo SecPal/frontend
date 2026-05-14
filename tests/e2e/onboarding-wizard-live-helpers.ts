@@ -104,10 +104,7 @@ async function pickFirstVisibleOptionAfterTyping(
   const controlsId = (await input.getAttribute("aria-controls"))?.trim() ?? "";
   const opt =
     controlsId.length > 0
-      ? page
-          .locator(`#${controlsId}`)
-          .getByRole("option")
-          .first()
+      ? page.locator(`#${controlsId}`).getByRole("option").first()
       : page.getByRole("option").first();
   try {
     await opt.waitFor({ state: "visible", timeout: 25_000 });
@@ -293,10 +290,7 @@ async function fillTextLikeInputs(page: Page): Promise<void> {
         /\bhouse_number\b/.test(lower)
       ) {
         await inp.fill("1");
-      } else if (
-        lower.includes("_city") ||
-        /(^|[._])city$/.test(lower)
-      ) {
+      } else if (lower.includes("_city") || /(^|[._])city$/.test(lower)) {
         await inp.fill("Berlin");
       } else if (
         lower.includes("street") ||
@@ -354,10 +348,7 @@ async function fillTextLikeInputs(page: Page): Promise<void> {
       /\bhouse_number\b/.test(lower)
     ) {
       await inp.fill("1");
-    } else if (
-      lower.includes("_city") ||
-      /(^|[._])city$/.test(lower)
-    ) {
+    } else if (lower.includes("_city") || /(^|[._])city$/.test(lower)) {
       await inp.fill("Berlin");
     } else if (
       lower.includes("_street") ||
@@ -495,7 +486,12 @@ async function ensureNationalityComboboxFilled(page: Page): Promise<void> {
   const combo = page.getByRole("combobox", {
     name: /Nationalities|Nationality|Staatsangehörigkeit/i,
   });
-  if (!(await combo.first().isVisible().catch(() => false))) {
+  if (
+    !(await combo
+      .first()
+      .isVisible()
+      .catch(() => false))
+  ) {
     return;
   }
   const target = combo.first();
@@ -523,7 +519,9 @@ async function ensureNationalityComboboxFilled(page: Page): Promise<void> {
     } catch {
       await page.keyboard.press("ArrowDown").catch(() => undefined);
       await page.keyboard.press("Enter").catch(() => undefined);
-      if (((await target.inputValue().catch(() => "")) ?? "").trim().length > 0) {
+      if (
+        ((await target.inputValue().catch(() => "")) ?? "").trim().length > 0
+      ) {
         return;
       }
     }
@@ -553,10 +551,7 @@ async function fillLiveOnboardingStepOnce(
   const nextBtn = page.getByRole("button", { name: NEXT_BTN });
   const nextVisible = await nextBtn.isVisible().catch(() => false);
   // Last wizard step has no Next button (only Submit). Treat missing Next as "not blocked by Next".
-  if (
-    nextVisible &&
-    !(await nextBtn.isEnabled().catch(() => false))
-  ) {
+  if (nextVisible && !(await nextBtn.isEnabled().catch(() => false))) {
     await tryUploadFirstVisibleAttachment(page, fixturePath);
   }
 }
@@ -573,7 +568,9 @@ export async function waitForOnboardingShellReady(page: Page): Promise<void> {
     .catch(() => undefined);
 }
 
-export async function assertNoUnsupportedSchemaBanner(page: Page): Promise<void> {
+export async function assertNoUnsupportedSchemaBanner(
+  page: Page
+): Promise<void> {
   const banner = page.getByText(SCHEMA_BLOCK_RE);
   if (await banner.isVisible().catch(() => false)) {
     throw new Error(

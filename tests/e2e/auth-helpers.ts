@@ -237,10 +237,10 @@ export async function waitForLoginFormReady(
 
       return Boolean(
         (submitButton && !submitButton.hasAttribute("disabled")) ||
-          document.querySelector("#health-warning") ||
-          document.querySelector("#offline-warning") ||
-          document.querySelector("#lockout-warning") ||
-          document.querySelector("#login-error")
+        document.querySelector("#health-warning") ||
+        document.querySelector("#offline-warning") ||
+        document.querySelector("#lockout-warning") ||
+        document.querySelector("#login-error")
       );
     },
     { timeout }
@@ -257,26 +257,23 @@ export async function waitForLoginFormReady(
 export async function readAuthResolutionState(
   page: Page
 ): Promise<AuthResolutionState> {
-  return page.evaluate(
-    (bootstrapRecoverySelector) => {
-      const pathname = window.location.pathname;
-      const hasOnboardingShell =
-        /^\/onboarding(\/|$)/.test(pathname) &&
-        Array.from(document.querySelectorAll("button")).some((btn) =>
-          /sign out|abmelden|ausloggen/i.test((btn.textContent ?? "").trim())
-        );
+  return page.evaluate((bootstrapRecoverySelector) => {
+    const pathname = window.location.pathname;
+    const hasOnboardingShell =
+      /^\/onboarding(\/|$)/.test(pathname) &&
+      Array.from(document.querySelectorAll("button")).some((btn) =>
+        /sign out|abmelden|ausloggen/i.test((btn.textContent ?? "").trim())
+      );
 
-      return {
-        pathname,
-        hasUserMenu:
-          document.querySelector('button[aria-label="User menu"]') !== null,
-        hasOnboardingShell,
-        hasBootstrapRecoveryScreen:
-          document.querySelector(bootstrapRecoverySelector) !== null,
-      };
-    },
-    BOOTSTRAP_RECOVERY_SELECTOR
-  );
+    return {
+      pathname,
+      hasUserMenu:
+        document.querySelector('button[aria-label="User menu"]') !== null,
+      hasOnboardingShell,
+      hasBootstrapRecoveryScreen:
+        document.querySelector(bootstrapRecoverySelector) !== null,
+    };
+  }, BOOTSTRAP_RECOVERY_SELECTOR);
 }
 
 export async function waitForAuthResolution(

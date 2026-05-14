@@ -1715,17 +1715,17 @@ export function OnboardingWizard() {
   const employeeIdForContractStartLookup =
     employeeIdFromSteps ?? employeeIdFromAuth;
   const contractStartDateFromOtherSteps = getContractStartDateFromSteps(steps);
-  const resolvedEmployeeContractStartDate =
+  const hasValidAuthContractStart =
     typeof contractStartDateFromAuth === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth)
-      ? contractStartDateFromAuth
-      : employeeIdForContractStartLookup
-        ? employeeContractStartDate
-        : null;
-  const contractStartDateFallback =
-    contractStartDateFromOtherSteps ??
-    resolvedEmployeeContractStartDate ??
-    contractStartDateFromAuth;
+    /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth);
+  const hasValidFetchedEmployeeContractStart =
+    typeof employeeContractStartDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(employeeContractStartDate);
+  const contractStartDateFallback = hasValidAuthContractStart
+    ? contractStartDateFromAuth
+    : hasValidFetchedEmployeeContractStart
+      ? employeeContractStartDate
+      : (contractStartDateFromOtherSteps ?? contractStartDateFromAuth);
   const stepUploadDocumentType = getStepUploadDocumentType(
     schema,
     formData.nationalities
@@ -2928,35 +2928,7 @@ export function OnboardingWizard() {
       });
 
       return nextFormData;
-      });
-  }
-
-  function handleResidentialAddressHistoryChange(
-    nextValueOrUpdater: ResidentialAddressHistoryChange
-  ) {
-    setFormData((currentFormData) => {
-      const prevResidential = getResidentialAddressHistoryValue(currentFormData);
-      const nextResidential =
-        typeof nextValueOrUpdater === "function"
-          ? nextValueOrUpdater(prevResidential)
-          : nextValueOrUpdater;
-      return {
-        ...currentFormData,
-        current_address: nextResidential.current_address,
-        previous_addresses: nextResidential.previous_addresses,
-        has_current_bewacher_id: nextResidential.has_current_bewacher_id,
-        bewacher_id: nextResidential.bewacher_id,
-        bewacher_id_unknown: nextResidential.bewacher_id_unknown,
-      };
     });
-
-    setFieldErrors((currentFieldErrors) =>
-      Object.fromEntries(
-        Object.entries(currentFieldErrors).filter(
-          ([fieldKey]) => !isResidentialAddressHistoryFieldKey(fieldKey)
-        )
-      )
-    );
   }
 
   const handleResidentialAddressHistoryChange = useCallback(
