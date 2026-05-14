@@ -3,9 +3,18 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Avoid Polyscope clone path detection so `resolvePlaywrightBaseUrl()` follows
+ * the PLAYWRIGHT_BASE_URL / CI defaults these tests assert against.
+ */
+function mockNonPolyscopeCwd() {
+  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
+}
+
 describe("playwright config", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     vi.resetModules();
   });
 
@@ -14,6 +23,7 @@ describe("playwright config", () => {
     // takes the dev-server branch and not the CI preview-server branch.
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
@@ -32,6 +42,7 @@ describe("playwright config", () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 

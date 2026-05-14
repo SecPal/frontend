@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed `buildAddressesPayloadForCurrentEdit` so that `state` is preserved from the current address row when the draft does not supply it, cleared when the draft explicitly passes an empty string, and the current row is omitted entirely (instead of creating a blank placeholder row) when all draft fields are empty.
+- Fixed `contractStartDateFallback` priority in `OnboardingWizard`: the authoritative date from the employee API record now takes precedence over a user-submitted contract-start-date value in step form data, preventing incorrect residence-title timing validation when both sources are present.
+- Fixed `hasAddressDraftValue` call when initialising the postal-address dialog in `EmployeeDetail`: now passes `{ emptyCountryCodes: ["DE"] }` to consistently treat a default-country-only draft as empty, matching the behaviour of `buildAddressesPayloadForCurrentEdit` and `hasPostalAddressDraftValue`.
+- Fixed `getAuthOnboardingWorkflowStatus` in `src/lib/onboardingWorkflow.ts`: removed the redundant nested `employee.onboarding_workflow.status` fallback and its unsafe `as EmployeeOnboardingWorkflowStatus` cast. `sanitizeAuthUser` in `authState.ts` already promotes this field to `User.onboardingWorkflowStatus`, so the helper now reads only the typed top-level field.
+- Fixed `isWorkflowConflictError` in `OnboardingWizard`: the generic Laravel 422 top-level message (`"The given data was invalid."`) no longer suppresses structured validation errors. The message-only fallback now applies exclusively to 409 Conflict responses; 422 responses are identified solely via their structured `errors.onboarding_workflow_status` / `errors.form_data` fields.
+- Fixed template re-fetch after `handleWorkflowConflict` resolving to the same step: `applyLoadedSteps` now increments a `templateResetKey` counter so the template-loading effect re-runs even when `currentStepIndex` and `currentStepTemplateId` remain unchanged.
+- Fixed `isResidentialAddressHistoryFieldKey` to exclude bare aggregate keys (`current_address`, `previous_addresses`) from the inline-error set; only dot-notation nested keys and the three Bewacher leaf fields are rendered inline by `OnboardingResidentialAddressHistoryFields`, so whole-object API errors are no longer silently swallowed.
+- Removed dead `export` keywords from `fiveYearHistoryBoundaryIso` and `previousResidencesCoverFiveYearWindow` in `onboardingResidentialAddressHistory.ts`; both functions are internal helpers consumed only within the same module.
 
 ### Changed
 

@@ -3,6 +3,10 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import {
+  getAuthOnboardingWorkflowStatus,
+  isSubmittedOnboardingWorkflowStatus,
+} from "../lib/onboardingWorkflow";
 
 interface OnboardingAccessRouteProps {
   children: React.ReactNode;
@@ -31,10 +35,19 @@ function hasKnownEmployeeStatus(
 
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
+  const onboardingWorkflowStatus = getAuthOnboardingWorkflowStatus(user);
 
   if (isPreContractUser(user)) {
     return (
-      <Navigate to="/onboarding" replace state={{ onboardingRequired: true }} />
+      <Navigate
+        to={
+          isSubmittedOnboardingWorkflowStatus(onboardingWorkflowStatus)
+            ? "/onboarding/submitted"
+            : "/onboarding"
+        }
+        replace
+        state={{ onboardingRequired: true }}
+      />
     );
   }
 
