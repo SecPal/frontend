@@ -145,7 +145,7 @@ msgstr "Grund für das Scheitern der Einladung"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Search or select country"
-msgstr ""
+msgstr "Land suchen oder auswählen"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
@@ -239,7 +239,7 @@ msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestel
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
-msgstr ""
+msgstr "Keine Adressvorschläge gefunden."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
@@ -768,7 +768,7 @@ msgstr "Bestätigen und fortfahren"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address autocomplete request failed."
-msgstr ""
+msgstr "Anfrage zur Adressvervollständigung fehlgeschlagen."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2477,7 +2477,7 @@ msgstr "Bestätigen und Aktivieren von MFA"
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Current Address"
-msgstr ""
+msgstr "Aktuelle Adresse"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
