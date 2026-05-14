@@ -600,7 +600,6 @@ export function EmployeeDetail() {
       city: "",
       supplement: "",
       country: "",
-      state: "",
     });
   const [contactEmergencyDrafts, setContactEmergencyDrafts] = useState<
     EmergencyContactDraft[]
@@ -763,7 +762,6 @@ export function EmployeeDetail() {
       city: cur?.city ?? "",
       supplement: cur?.supplement ?? "",
       country: cur?.country ?? "",
-      state: cur?.state ?? "",
     };
   }
 
@@ -1187,50 +1185,6 @@ export function EmployeeDetail() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <label
-                      htmlFor="detail-contact-address-street"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>Street</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-street"
-                      type="text"
-                      value={contactAddressDraft.street}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          street: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`Street`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-house-number"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>House Number</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-house-number"
-                      type="text"
-                      value={contactAddressDraft.houseNumber}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          houseNumber: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`House Number`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <label
                       htmlFor="detail-contact-address-postal-code"
                       className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                     >
@@ -1275,46 +1229,67 @@ export function EmployeeDetail() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <label
-                      htmlFor="detail-contact-address-supplement"
+                      htmlFor="detail-contact-address-street"
                       className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                     >
-                      <Trans>Address Supplement</Trans>
+                      <Trans>Street</Trans>
                     </label>
                     <input
-                      id="detail-contact-address-supplement"
+                      id="detail-contact-address-street"
                       type="text"
-                      value={contactAddressDraft.supplement}
+                      value={contactAddressDraft.street}
                       onChange={(event) =>
                         setContactAddressDraft((prev) => ({
                           ...prev,
-                          supplement: event.target.value,
+                          street: event.target.value,
                         }))
                       }
-                      placeholder={i18n._(msg`Address Supplement`)}
+                      placeholder={i18n._(msg`Street`)}
                       className={defaultContactInputClass}
                     />
                   </div>
                   <div className="space-y-1">
                     <label
-                      htmlFor="detail-contact-address-state"
+                      htmlFor="detail-contact-address-house-number"
                       className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
                     >
-                      <Trans>State</Trans>
+                      <Trans>House Number</Trans>
                     </label>
                     <input
-                      id="detail-contact-address-state"
+                      id="detail-contact-address-house-number"
                       type="text"
-                      value={contactAddressDraft.state}
+                      value={contactAddressDraft.houseNumber}
                       onChange={(event) =>
                         setContactAddressDraft((prev) => ({
                           ...prev,
-                          state: event.target.value,
+                          houseNumber: event.target.value,
                         }))
                       }
-                      placeholder={i18n._(msg`State`)}
+                      placeholder={i18n._(msg`House Number`)}
                       className={defaultContactInputClass}
                     />
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    htmlFor="detail-contact-address-supplement"
+                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  >
+                    <Trans>Address Supplement</Trans>
+                  </label>
+                  <input
+                    id="detail-contact-address-supplement"
+                    type="text"
+                    value={contactAddressDraft.supplement}
+                    onChange={(event) =>
+                      setContactAddressDraft((prev) => ({
+                        ...prev,
+                        supplement: event.target.value,
+                      }))
+                    }
+                    placeholder={i18n._(msg`Address Supplement`)}
+                    className={defaultContactInputClass}
+                  />
                 </div>
                 <div className="space-y-1">
                   <label

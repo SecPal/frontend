@@ -51,7 +51,6 @@ export function EmployeeContactsEdit() {
   const [addressPostalCode, setAddressPostalCode] = useState("");
   const [addressCity, setAddressCity] = useState("");
   const [addressSupplement, setAddressSupplement] = useState("");
-  const [addressState, setAddressState] = useState("");
   const [addressCountry, setAddressCountry] = useState("");
   const [emergencyContacts, setEmergencyContacts] = useState<
     EmergencyContactDraft[]
@@ -92,7 +91,6 @@ export function EmployeeContactsEdit() {
         setAddressPostalCode(cur?.postal_code ?? "");
         setAddressCity(cur?.city ?? "");
         setAddressSupplement(cur?.supplement ?? "");
-        setAddressState(cur?.state ?? "");
         setAddressCountry(cur?.country ?? "");
         setEmergencyContacts(
           emergencyContactsToDrafts(employee.emergency_contacts)
@@ -177,7 +175,6 @@ export function EmployeeContactsEdit() {
           postalCode: addressPostalCode,
           city: addressCity,
           supplement: addressSupplement,
-          state: addressState,
           country: addressCountry,
         }),
         emergency_contacts:
@@ -325,28 +322,6 @@ export function EmployeeContactsEdit() {
               <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
                 <Field>
                   <Label>
-                    <Trans>Street</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressStreet}
-                    onChange={(event) => setAddressStreet(event.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>House Number</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressHouseNumber}
-                    onChange={(event) =>
-                      setAddressHouseNumber(event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label>
                     <Trans>Postal Code</Trans>
                   </Label>
                   <Input
@@ -369,6 +344,28 @@ export function EmployeeContactsEdit() {
                 </Field>
                 <Field>
                   <Label>
+                    <Trans>Street</Trans>
+                  </Label>
+                  <Input
+                    type="text"
+                    value={addressStreet}
+                    onChange={(event) => setAddressStreet(event.target.value)}
+                  />
+                </Field>
+                <Field>
+                  <Label>
+                    <Trans>House Number</Trans>
+                  </Label>
+                  <Input
+                    type="text"
+                    value={addressHouseNumber}
+                    onChange={(event) =>
+                      setAddressHouseNumber(event.target.value)
+                    }
+                  />
+                </Field>
+                <Field>
+                  <Label>
                     <Trans>Address Supplement</Trans>
                   </Label>
                   <Input
@@ -377,16 +374,6 @@ export function EmployeeContactsEdit() {
                     onChange={(event) =>
                       setAddressSupplement(event.target.value)
                     }
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>State</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressState}
-                    onChange={(event) => setAddressState(event.target.value)}
                   />
                 </Field>
                 <Field>

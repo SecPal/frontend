@@ -123,6 +123,192 @@ describe("EmployeeEdit", () => {
     );
   });
 
+  it("should prefill and update the current address", async () => {
+    const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      addresses: [
+        {
+          id: "addr-old",
+          street: "Altstraße",
+          house_number: "1",
+          postal_code: "10000",
+          city: "Berlin",
+          supplement: null,
+          country: "DE",
+          state: null,
+          resided_from: "2020-01-01",
+          resided_until: "2024-12-31",
+        },
+        {
+          id: "addr-current",
+          street: "Musterstraße",
+          house_number: "7A",
+          postal_code: "10115",
+          city: "Berlin",
+          supplement: null,
+          country: "DE",
+          state: null,
+          resided_from: "2025-01-01",
+          resided_until: null,
+        },
+      ],
+    });
+    mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/street/i)).toHaveValue("Musterstraße");
+    });
+
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Neue Straße" },
+    });
+    fireEvent.change(screen.getByLabelText(/house number/i), {
+      target: { value: "9" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateEmployee).toHaveBeenCalledWith(
+        "emp-1",
+        expect.objectContaining({
+          addresses: [
+            expect.objectContaining({
+              street: "Altstraße",
+              house_number: "1",
+              resided_until: "2024-12-31",
+            }),
+            expect.objectContaining({
+              street: "Neue Straße",
+              house_number: "9",
+              postal_code: "10115",
+              city: "Berlin",
+              resided_from: "2025-01-01",
+              resided_until: null,
+            }),
+          ],
+        })
+      );
+    });
+  });
+
+  it("should preserve historical-only address lists when saving unrelated fields", async () => {
+    const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      addresses: [
+        {
+          id: "addr-old",
+          street: "Altstraße",
+          house_number: "1",
+          postal_code: "10000",
+          city: "Berlin",
+          supplement: null,
+          country: "DE",
+          state: null,
+          resided_from: "2020-01-01",
+          resided_until: "2024-12-31",
+        },
+      ],
+      current_address: null,
+    });
+    mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+    });
+
+    fireEvent.change(screen.getByLabelText(/phone/i), {
+      target: { value: "+49123456789" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateEmployee).toHaveBeenCalledWith(
+        "emp-1",
+        expect.objectContaining({
+          addresses: [
+            expect.objectContaining({
+              street: "Altstraße",
+              house_number: "1",
+              postal_code: "10000",
+              city: "Berlin",
+              country: "DE",
+              resided_from: "2020-01-01",
+              resided_until: "2024-12-31",
+            }),
+          ],
+        })
+      );
+    });
+    expect(vi.mocked(employeeApi.updateEmployee).mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        addresses: [
+          expect.objectContaining({
+            resided_until: "2024-12-31",
+          }),
+        ],
+      })
+    );
+  });
+
+  it("should preserve a null address country when saving unrelated fields", async () => {
+    const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
+    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
+      ...mockEmployee,
+      addresses: [
+        {
+          id: "addr-current",
+          street: "Musterstraße",
+          house_number: "7A",
+          postal_code: "10115",
+          city: "Berlin",
+          supplement: null,
+          country: null,
+          state: null,
+          resided_from: "2025-01-01",
+          resided_until: null,
+        },
+      ],
+    });
+    mockUpdateEmployee.mockResolvedValue(mockEmployee);
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/street/i)).toHaveValue("Musterstraße");
+    });
+
+    fireEvent.change(screen.getByLabelText(/phone/i), {
+      target: { value: "+49123456789" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateEmployee).toHaveBeenCalledWith(
+        "emp-1",
+        expect.objectContaining({
+          addresses: [
+            expect.objectContaining({
+              street: "Musterstraße",
+              house_number: "7A",
+              postal_code: "10115",
+              city: "Berlin",
+              country: null,
+              resided_from: "2025-01-01",
+              resided_until: null,
+            }),
+          ],
+        })
+      );
+    });
+  });
+
   it("should format pre-populated dates for German locale", async () => {
     await act(async () => {
       i18n.activate("de");

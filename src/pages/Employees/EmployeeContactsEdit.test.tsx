@@ -326,9 +326,6 @@ describe("EmployeeContactsEdit", () => {
     fireEvent.change(screen.getByLabelText("Address Supplement"), {
       target: { value: " Etage 2 " },
     });
-    fireEvent.change(screen.getByLabelText("State"), {
-      target: { value: " NRW " },
-    });
     fireEvent.change(screen.getByLabelText("Country (ISO-2)"), {
       target: { value: " de " },
     });
@@ -363,7 +360,7 @@ describe("EmployeeContactsEdit", () => {
             postal_code: "50667",
             city: "Köln",
             supplement: "Etage 2",
-            state: "NRW",
+            state: null,
             country: "DE",
             resided_from: null,
             resided_until: null,

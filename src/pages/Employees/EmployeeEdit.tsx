@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import type { Employee, EmployeeFormData } from "@/types/api";
+import type { Employee, EmployeeAddress, EmployeeFormData } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -24,6 +24,18 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
+import { EmployeeAddressFields } from "./EmployeeAddressFields";
+import {
+  employeeAddressToDraft,
+  emptyPostalAddressDraft,
+  hasPostalAddressDraftValue,
+} from "./employeeAddressDraft";
+import {
+  buildAddressesPayloadForCurrentEdit,
+  getCurrentAddressFromList,
+  mergeAddressBaseList,
+  type PostalAddressDraft,
+} from "../../lib/employeeAddresses";
 import {
   formatEmployeeDateForDisplay,
   GERMAN_CONTRACT_START_DATE_FORMAT,
@@ -58,6 +70,12 @@ export function EmployeeEdit() {
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
   const [isLeadership, setIsLeadership] = useState(false);
+  const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
+    emptyPostalAddressDraft
+  );
+  const [addressRowsSnapshot, setAddressRowsSnapshot] = useState<
+    EmployeeAddress[]
+  >([]);
   const [formData, setFormData] = useState<EmployeeFormData>({
     first_name: "",
     last_name: "",
@@ -114,6 +132,16 @@ export function EmployeeEdit() {
           status: employee.status,
           contract_type: employee.contract_type || "full_time",
         });
+        const addressRows = mergeAddressBaseList(
+          employee.addresses,
+          employee.current_address
+        );
+        setAddressRowsSnapshot(addressRows);
+        setAddressDraft(
+          employeeAddressToDraft(
+            employee.current_address ?? getCurrentAddressFromList(addressRows)
+          )
+        );
         setIsLeadership(employee.management_level > 0);
 
         if (i18n.locale === "de") {
@@ -238,6 +266,15 @@ export function EmployeeEdit() {
         date_of_birth: normalizedBirthDateIso,
         contract_start_date: normalizedContractDateIso,
       };
+      if (
+        addressRowsSnapshot.length > 0 ||
+        hasPostalAddressDraftValue(addressDraft)
+      ) {
+        updatePayload.addresses = buildAddressesPayloadForCurrentEdit(
+          addressRowsSnapshot,
+          addressDraft
+        );
+      }
       delete updatePayload.status;
       await updateEmployee(id, updatePayload);
       navigate(`/employees/${id}`);
@@ -262,6 +299,10 @@ export function EmployeeEdit() {
     value: string | number | null
   ) {
     setFormData((prev: EmployeeFormData) => ({ ...prev, [field]: value }));
+  }
+
+  function handleAddressChange(field: keyof PostalAddressDraft, value: string) {
+    setAddressDraft((prev) => ({ ...prev, [field]: value }));
   }
 
   if (fetchLoading) {
@@ -407,6 +448,17 @@ export function EmployeeEdit() {
                     onChange={(e) => handleChange("phone", e.target.value)}
                   />
                 </Field>
+
+                <div className="sm:col-span-2">
+                  <Text className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <Trans>Current Address</Trans>
+                  </Text>
+                </div>
+
+                <EmployeeAddressFields
+                  draft={addressDraft}
+                  onChange={handleAddressChange}
+                />
               </div>
             </FieldGroup>
           </Fieldset>
