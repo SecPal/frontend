@@ -344,6 +344,19 @@ describe("config", () => {
     ).toBe("https://api-velvet-zebra.preview.secpal.dev");
   });
 
+  it("normalizes preview workspace casing before matching the configured API host", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://velvet-zebra.preview.secpal.dev");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "Velvet-Zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
   it("uses the Polyscope workspace sibling API when the bundle leaked a loopback base on a prefixed frontend preview host", async () => {
     vi.stubEnv("MODE", "preview");
     vi.stubEnv("VITE_API_URL", "http://localhost:4173");
