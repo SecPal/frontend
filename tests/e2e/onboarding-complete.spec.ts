@@ -44,7 +44,15 @@ async function installRemoteOnboardingFetchMocks(
   responseDelayMs: number
 ): Promise<void> {
   await context.addInitScript(
-    ({ xsrfToken, validToken, validEmail, template, delayMs }) => {
+    ({
+      xsrfToken,
+      validToken,
+      validEmail,
+      template,
+      delayMs,
+      employee,
+      nationalities,
+    }) => {
       const originalFetch = window.fetch.bind(window);
       let onboardingSessionEstablished = false;
 
@@ -192,13 +200,13 @@ async function installRemoteOnboardingFetchMocks(
 
         if (/^\/v1\/employees\/.+/.test(pathname)) {
           return jsonResponse({
-            data: onboardingEmployee,
+            data: employee,
           });
         }
 
         if (pathname === "/v1/onboarding/nationalities") {
           return jsonResponse({
-            data: onboardingNationalities,
+            data: nationalities,
           });
         }
 
@@ -243,6 +251,8 @@ async function installRemoteOnboardingFetchMocks(
       validEmail: validOnboardingEmail,
       template: onboardingTemplate,
       delayMs: responseDelayMs,
+      employee: onboardingEmployee,
+      nationalities: onboardingNationalities,
     }
   );
 }
