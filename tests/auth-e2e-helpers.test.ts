@@ -38,7 +38,7 @@ describe("auth E2E helpers", () => {
     it("treats an explicit localhost target as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
       expect(isRemoteE2ETarget("https://localhost:5173")).toBe(false);
-      expect(isRemoteE2ETarget("https://secpal.ddev.site")).toBe(false);
+      expect(isRemoteE2ETarget("https://frontend.ddev.site")).toBe(false);
     });
 
     it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
