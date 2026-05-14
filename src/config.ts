@@ -124,8 +124,8 @@ function shouldReplaceConfiguredApiBaseWithPreviewWorkspaceOrigin(
 
   return Boolean(
     configuredPreviewHostname?.workspace === runtimePreviewHostname.workspace &&
-      (configuredPreviewHostname.repo === null ||
-        configuredPreviewHostname.repo === "frontend")
+    (configuredPreviewHostname.repo === null ||
+      configuredPreviewHostname.repo === "frontend")
   );
 }
 
