@@ -175,7 +175,9 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
-    expect(screen.getByText("Redirected to /onboarding/submitted")).toBeInTheDocument();
+    expect(
+      screen.getByText("Redirected to /onboarding/submitted")
+    ).toBeInTheDocument();
     expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });
 

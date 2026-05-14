@@ -74,7 +74,9 @@ describe("currentAddressCoversFiveYearWindow", () => {
   it("returns null when the date is missing or not ISO", () => {
     expect(currentAddressCoversFiveYearWindow("", reference)).toBeNull();
     expect(currentAddressCoversFiveYearWindow("  ", reference)).toBeNull();
-    expect(currentAddressCoversFiveYearWindow("2021-5-1", reference)).toBeNull();
+    expect(
+      currentAddressCoversFiveYearWindow("2021-5-1", reference)
+    ).toBeNull();
   });
 
   it("returns true when residence started on or before the five-year boundary", () => {

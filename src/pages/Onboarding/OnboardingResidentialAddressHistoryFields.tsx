@@ -82,9 +82,7 @@ function getEntryErrors(
 
 export type ResidentialAddressHistoryChange =
   | ResidentialAddressHistoryValue
-  | ((
-      prev: ResidentialAddressHistoryValue
-    ) => ResidentialAddressHistoryValue);
+  | ((prev: ResidentialAddressHistoryValue) => ResidentialAddressHistoryValue);
 
 export function OnboardingResidentialAddressHistoryFields({
   value,
@@ -227,7 +225,8 @@ export function OnboardingResidentialAddressHistoryFields({
             </Label>
             <Description className="mb-3">
               <Trans>
-                A Bewacher ID is issued for registration in the Bewacherregister.
+                A Bewacher ID is issued for registration in the
+                Bewacherregister.
               </Trans>
             </Description>
             <RadioGroup
@@ -288,7 +287,9 @@ export function OnboardingResidentialAddressHistoryFields({
                 }
               />
               {bewacherIdFieldError ? (
-                <ErrorMessage className="mt-2">{bewacherIdFieldError}</ErrorMessage>
+                <ErrorMessage className="mt-2">
+                  {bewacherIdFieldError}
+                </ErrorMessage>
               ) : null}
             </Field>
           ) : null}
@@ -323,7 +324,9 @@ export function OnboardingResidentialAddressHistoryFields({
             </div>
 
             {previousCoverageError ? (
-              <ErrorMessage className="mb-4">{previousCoverageError}</ErrorMessage>
+              <ErrorMessage className="mb-4">
+                {previousCoverageError}
+              </ErrorMessage>
             ) : null}
 
             <div className="space-y-6">

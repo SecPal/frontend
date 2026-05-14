@@ -218,7 +218,8 @@ function validateEntry(
       continue;
     }
 
-    errors[`${keyPrefix}.${fieldKey}`] = `${labelPrefix}: ${fieldLabel}: ${translate(msg`This field is required.`)}`;
+    errors[`${keyPrefix}.${fieldKey}`] =
+      `${labelPrefix}: ${fieldLabel}: ${translate(msg`This field is required.`)}`;
   }
 
   if (
@@ -378,7 +379,10 @@ export function syncPreviousResidenceRows(
     }
     if (from <= boundary) {
       const tail = rows.slice(i + 1);
-      if (tail.length > 0 && tail.every((row) => !isPreviousEntryMaterial(row))) {
+      if (
+        tail.length > 0 &&
+        tail.every((row) => !isPreviousEntryMaterial(row))
+      ) {
         rows.splice(i + 1);
         changed = true;
       }
@@ -450,8 +454,7 @@ export function validateResidentialAddressHistoryValue(
     }
   }
 
-  const showPreviousResidences =
-    shouldShowPreviousResidencesForBewacher(value);
+  const showPreviousResidences = shouldShowPreviousResidencesForBewacher(value);
 
   if (!showPreviousResidences) {
     return errors;

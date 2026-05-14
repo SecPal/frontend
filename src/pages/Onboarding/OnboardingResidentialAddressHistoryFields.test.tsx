@@ -88,8 +88,12 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
       translate
     );
 
-    expect(errors["current_address.street"]).toMatch(/current residential address/i);
-    expect(errors["current_address.country"]).toMatch(/two-letter country code/i);
+    expect(errors["current_address.street"]).toMatch(
+      /current residential address/i
+    );
+    expect(errors["current_address.country"]).toMatch(
+      /two-letter country code/i
+    );
     expect(errors["previous_addresses.0.resided_until"]).toMatch(
       /end date must be on or after the start date/i
     );
@@ -163,8 +167,7 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
 
     expect(onChange).toHaveBeenCalled();
     const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
-    const applied =
-      typeof lastArg === "function" ? lastArg(value) : lastArg;
+    const applied = typeof lastArg === "function" ? lastArg(value) : lastArg;
     expect(applied.previous_addresses).toHaveLength(1);
     expect(applied.previous_addresses[0]!.resided_until).toBe(
       addCalendarDaysToIsoDate(recent, -1)

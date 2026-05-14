@@ -1,7 +1,14 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -1924,7 +1931,14 @@ export function OnboardingWizard() {
       );
       setLoading(false);
     }
-  }, [_, authContext?.user, applyLoadedSteps, navigate, resetUploadState, syncAuthenticatedUser]);
+  }, [
+    _,
+    authContext?.user,
+    applyLoadedSteps,
+    navigate,
+    resetUploadState,
+    syncAuthenticatedUser,
+  ]);
 
   function persistUploadedFilesForCurrentStep(files: UploadedOnboardingFile[]) {
     if (!currentStepTemplateId) {
@@ -2417,11 +2431,12 @@ export function OnboardingWizard() {
             continue;
           }
 
-          const isInlineFieldError =
-            isResidentialAddressHistoryTemplate(template)
-              ? isResidentialAddressHistoryFieldKey(fieldKey)
-              : Boolean(schema?.properties[fieldKey]) &&
-                isOnboardingFieldVisible(fieldKey, formData, schema);
+          const isInlineFieldError = isResidentialAddressHistoryTemplate(
+            template
+          )
+            ? isResidentialAddressHistoryFieldKey(fieldKey)
+            : Boolean(schema?.properties[fieldKey]) &&
+              isOnboardingFieldVisible(fieldKey, formData, schema);
 
           if (!isInlineFieldError) {
             const formattedHidden = formatServerValidationMessage(
@@ -2903,14 +2918,15 @@ export function OnboardingWizard() {
       });
 
       return nextFormData;
-      });
+    });
   }
 
   function handleResidentialAddressHistoryChange(
     nextValueOrUpdater: ResidentialAddressHistoryChange
   ) {
     setFormData((currentFormData) => {
-      const prevResidential = getResidentialAddressHistoryValue(currentFormData);
+      const prevResidential =
+        getResidentialAddressHistoryValue(currentFormData);
       const nextResidential =
         typeof nextValueOrUpdater === "function"
           ? nextValueOrUpdater(prevResidential)
@@ -3356,9 +3372,7 @@ export function OnboardingWizard() {
         {apiValidationDetailMessages.length > 0 ? (
           <div
             role="region"
-            aria-label={_(
-              msg`Additional validation messages from the server`
-            )}
+            aria-label={_(msg`Additional validation messages from the server`)}
             className="mb-6 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-900/40"
           >
             <div className="mb-2 font-medium text-zinc-900 dark:text-zinc-100">

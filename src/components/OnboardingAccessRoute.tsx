@@ -3,7 +3,10 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { getAuthOnboardingWorkflowStatus, isSubmittedOnboardingWorkflowStatus } from "../lib/onboardingWorkflow";
+import {
+  getAuthOnboardingWorkflowStatus,
+  isSubmittedOnboardingWorkflowStatus,
+} from "../lib/onboardingWorkflow";
 
 interface OnboardingAccessRouteProps {
   children: React.ReactNode;
