@@ -85,15 +85,16 @@ export function buildTestUser(
   const email = env.TEST_USER_EMAIL?.trim() ?? "";
   const password = env.TEST_USER_PASSWORD?.trim() ?? "";
   const resolvedBase = baseUrl ?? resolvePlaywrightBaseUrl(env);
+  const liveOnboarding = env.PLAYWRIGHT_LIVE_ONBOARDING === "1";
+
+  if (liveOnboarding && isRemoteE2ETarget(resolvedBase)) {
+    return {
+      email: email || DEFAULT_LIVE_ONBOARDING_USER.email,
+      password: password || DEFAULT_LIVE_ONBOARDING_USER.password,
+    };
+  }
 
   if (isLiveRemoteTarget(resolvedBase)) {
-    const liveOnboarding = env.PLAYWRIGHT_LIVE_ONBOARDING === "1";
-    if (liveOnboarding) {
-      return {
-        email: email || DEFAULT_LIVE_ONBOARDING_USER.email,
-        password: password || DEFAULT_LIVE_ONBOARDING_USER.password,
-      };
-    }
     return {
       email,
       password,

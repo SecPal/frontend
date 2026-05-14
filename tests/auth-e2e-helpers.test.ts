@@ -94,6 +94,18 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("uses the standard seeded onboarding user for workspace preview targets when live onboarding is enabled", () => {
+      expect(
+        buildTestUser(
+          { PLAYWRIGHT_LIVE_ONBOARDING: "1" },
+          "https://grumpy-lynx.preview.secpal.dev"
+        )
+      ).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+
     it("requires explicit credentials for remote targets", () => {
       expect(buildTestUser({}, "https://app.secpal.dev")).toEqual({
         email: "",
@@ -287,6 +299,21 @@ describe("auth E2E helpers", () => {
           PLAYWRIGHT_LIVE_ONBOARDING: "1",
         },
         "https://app.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+
+    it("returns the standard onboarding user for workspace preview live onboarding without TEST_USER_*", () => {
+      const result = getConfiguredTestUserOrThrow(
+        {
+          PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev",
+          PLAYWRIGHT_LIVE_ONBOARDING: "1",
+        },
+        "https://grumpy-lynx.preview.secpal.dev"
       );
 
       expect(result).toEqual({
