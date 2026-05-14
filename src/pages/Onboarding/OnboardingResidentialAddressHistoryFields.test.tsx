@@ -448,6 +448,244 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     expect(onChange).toHaveBeenCalled();
   });
 
+  it("calls onChange with updated house number when house number input changes", () => {
+    const onChange = vi.fn();
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue()}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/house number/i), {
+      target: { value: "42A" },
+    });
+
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    const applied =
+      typeof lastArg === "function" ? lastArg(buildValue()) : lastArg;
+    expect(applied.current_address.house_number).toBe("42A");
+  });
+
+  it("calls onChange with updated postal code when postal code input changes", () => {
+    const onChange = vi.fn();
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue()}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "10785" },
+    });
+
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    const applied =
+      typeof lastArg === "function" ? lastArg(buildValue()) : lastArg;
+    expect(applied.current_address.postal_code).toBe("10785");
+  });
+
+  it("calls onChange with updated city when city input changes", () => {
+    const onChange = vi.fn();
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue()}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^city$/i), {
+      target: { value: "Hamburg" },
+    });
+
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    const applied =
+      typeof lastArg === "function" ? lastArg(buildValue()) : lastArg;
+    expect(applied.current_address.city).toBe("Hamburg");
+  });
+
+  it("clears previous addresses via useLayoutEffect when current address now covers five years", () => {
+    const onChange = vi.fn();
+    const oldDate = localIsoDateWithDayOffset(-365 * 6);
+    const valueWithOldDate = buildValue({
+      has_current_bewacher_id: "no",
+      current_address: {
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        supplement: "",
+        country: "DE",
+        resided_from: oldDate,
+        resided_until: "",
+      },
+      previous_addresses: [
+        {
+          street: "Old",
+          house_number: "2",
+          postal_code: "20095",
+          city: "Hamburg",
+          supplement: "",
+          country: "DE",
+          resided_from: "2015-01-01",
+          resided_until: addCalendarDaysToIsoDate(oldDate, -1),
+        },
+      ],
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={valueWithOldDate}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    // useLayoutEffect fires: coverage === true and there are previous addresses,
+    // so onChange must be called to clear them.
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    const applied =
+      typeof lastArg === "function" ? lastArg(valueWithOldDate) : lastArg;
+    expect(applied.previous_addresses).toHaveLength(0);
+  });
+
+  it("does not call onChange from useLayoutEffect when coverage is true and no previous rows exist", () => {
+    const onChange = vi.fn();
+    const oldDate = localIsoDateWithDayOffset(-365 * 6);
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue({
+            has_current_bewacher_id: "no",
+            current_address: {
+              street: "A",
+              house_number: "1",
+              postal_code: "10115",
+              city: "Berlin",
+              supplement: "",
+              country: "DE",
+              resided_from: oldDate,
+              resided_until: "",
+            },
+            previous_addresses: [],
+          })}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("calls onChange when a previous address street changes", () => {
+    const recent = localIsoDateWithDayOffset(-100);
+    const onChange = vi.fn();
+    const prevEntry = {
+      street: "Old St",
+      house_number: "5",
+      postal_code: "20095",
+      city: "Hamburg",
+      supplement: "",
+      country: "DE",
+      resided_from: "",
+      resided_until: addCalendarDaysToIsoDate(recent, -1),
+    };
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue({
+            has_current_bewacher_id: "no",
+            current_address: {
+              street: "A",
+              house_number: "1",
+              postal_code: "10115",
+              city: "Berlin",
+              supplement: "",
+              country: "DE",
+              resided_from: recent,
+              resided_until: "",
+            },
+            previous_addresses: [prevEntry],
+          })}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    // The previous address section is visible; find its street input.
+    const streetInputs = screen.getAllByLabelText(/^street$/i);
+    // index 0 = current address, index 1 = first previous address
+    fireEvent.change(streetInputs[1]!, { target: { value: "New St" } });
+
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    expect(typeof lastArg).toBe("function");
+  });
+
+  it("calls onChange when the bewacher-unknown checkbox is toggled", async () => {
+    const user = userEvent.setup();
+    let stored = buildValue({
+      has_current_bewacher_id: "yes",
+      bewacher_id: "",
+    });
+    const onChange = vi.fn((change: ResidentialAddressHistoryChange) => {
+      stored = typeof change === "function" ? change(stored) : change;
+    });
+
+    const { rerender } = render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={stored}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: /do not know my bewacher id/i,
+    });
+    await user.click(checkbox);
+
+    rerender(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={stored}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    expect(stored.bewacher_id_unknown).toBe(true);
+  });
+
   it("aria-disables the Bewacher radio buttons when read-only", () => {
     render(
       <I18nProvider i18n={i18n}>

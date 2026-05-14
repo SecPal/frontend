@@ -144,27 +144,6 @@ export function EmployeeEdit() {
         );
         setIsLeadership(employee.management_level > 0);
 
-        if (i18n.locale === "de") {
-          setBirthDateDisplay(
-            formatEmployeeDateForDisplay(employee.date_of_birth || "", "de")
-          );
-          setContractDateDisplay(
-            formatEmployeeDateForDisplay(
-              employee.contract_start_date || "",
-              "de"
-            )
-          );
-        } else {
-          setBirthDateDisplay(
-            formatEmployeeDateForDisplay(employee.date_of_birth || "", "en")
-          );
-          setContractDateDisplay(
-            formatEmployeeDateForDisplay(
-              employee.contract_start_date || "",
-              "en"
-            )
-          );
-        }
         setBirthDateDirty(false);
         setContractDateDirty(false);
       })
@@ -197,7 +176,18 @@ export function EmployeeEdit() {
     return () => {
       active = false;
     };
-  }, [id, i18n.locale]);
+  }, [id]);
+
+  const dateDisplayLocale = i18n.locale === "de" ? "de" : "en";
+  const birthDateInputValue = birthDateDirty
+    ? birthDateDisplay
+    : formatEmployeeDateForDisplay(formData.date_of_birth, dateDisplayLocale);
+  const contractDateInputValue = contractDateDirty
+    ? contractDateDisplay
+    : formatEmployeeDateForDisplay(
+        formData.contract_start_date,
+        dateDisplayLocale
+      );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -208,7 +198,7 @@ export function EmployeeEdit() {
     }
 
     let normalizedBirthDateIso = formData.date_of_birth;
-    let normalizedBirthDateDisplay = birthDateDisplay;
+    let normalizedBirthDateDisplay: string;
     if (birthDateDirty) {
       const birthDateResult = parseEmployeeDateToISO(
         birthDateDisplay,
@@ -224,10 +214,15 @@ export function EmployeeEdit() {
 
       normalizedBirthDateIso = birthDateResult.iso;
       normalizedBirthDateDisplay = birthDateResult.formatted;
+    } else {
+      normalizedBirthDateDisplay = formatEmployeeDateForDisplay(
+        formData.date_of_birth,
+        dateDisplayLocale
+      );
     }
 
     let normalizedContractDateIso = formData.contract_start_date;
-    let normalizedContractDateDisplay = contractDateDisplay;
+    let normalizedContractDateDisplay: string;
     if (contractDateDirty) {
       const contractDateResult = parseEmployeeDateToISO(
         contractDateDisplay,
@@ -249,6 +244,11 @@ export function EmployeeEdit() {
 
       normalizedContractDateIso = contractDateResult.iso;
       normalizedContractDateDisplay = contractDateResult.formatted;
+    } else {
+      normalizedContractDateDisplay = formatEmployeeDateForDisplay(
+        formData.contract_start_date,
+        dateDisplayLocale
+      );
     }
 
     try {
@@ -393,7 +393,7 @@ export function EmployeeEdit() {
                     placeholder={
                       i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
                     }
-                    value={birthDateDisplay}
+                    value={birthDateInputValue}
                     onChange={(e) => {
                       setBirthDateDisplay(e.target.value);
                       setBirthDateDirty(true);
@@ -495,7 +495,7 @@ export function EmployeeEdit() {
                     placeholder={
                       i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
                     }
-                    value={contractDateDisplay}
+                    value={contractDateInputValue}
                     onChange={(e) => {
                       setContractDateDisplay(e.target.value);
                       setContractDateDirty(true);

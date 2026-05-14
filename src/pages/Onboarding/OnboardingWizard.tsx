@@ -2931,34 +2931,35 @@ export function OnboardingWizard() {
     });
   }
 
-  function handleResidentialAddressHistoryChange(
-    nextValueOrUpdater: ResidentialAddressHistoryChange
-  ) {
-    setFormData((currentFormData) => {
-      const prevResidential =
-        getResidentialAddressHistoryValue(currentFormData);
-      const nextResidential =
-        typeof nextValueOrUpdater === "function"
-          ? nextValueOrUpdater(prevResidential)
-          : nextValueOrUpdater;
-      return {
-        ...currentFormData,
-        current_address: nextResidential.current_address,
-        previous_addresses: nextResidential.previous_addresses,
-        has_current_bewacher_id: nextResidential.has_current_bewacher_id,
-        bewacher_id: nextResidential.bewacher_id,
-        bewacher_id_unknown: nextResidential.bewacher_id_unknown,
-      };
-    });
+  const handleResidentialAddressHistoryChange = useCallback(
+    (nextValueOrUpdater: ResidentialAddressHistoryChange) => {
+      setFormData((currentFormData) => {
+        const prevResidential =
+          getResidentialAddressHistoryValue(currentFormData);
+        const nextResidential =
+          typeof nextValueOrUpdater === "function"
+            ? nextValueOrUpdater(prevResidential)
+            : nextValueOrUpdater;
+        return {
+          ...currentFormData,
+          current_address: nextResidential.current_address,
+          previous_addresses: nextResidential.previous_addresses,
+          has_current_bewacher_id: nextResidential.has_current_bewacher_id,
+          bewacher_id: nextResidential.bewacher_id,
+          bewacher_id_unknown: nextResidential.bewacher_id_unknown,
+        };
+      });
 
-    setFieldErrors((currentFieldErrors) =>
-      Object.fromEntries(
-        Object.entries(currentFieldErrors).filter(
-          ([fieldKey]) => !isResidentialAddressHistoryFieldKey(fieldKey)
+      setFieldErrors((currentFieldErrors) =>
+        Object.fromEntries(
+          Object.entries(currentFieldErrors).filter(
+            ([fieldKey]) => !isResidentialAddressHistoryFieldKey(fieldKey)
+          )
         )
-      )
-    );
-  }
+      );
+    },
+    []
+  );
 
   async function persistUploadSelections(
     targetSubmission: OnboardingSubmission,
