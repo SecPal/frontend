@@ -7,6 +7,7 @@ import { test as base, expect, type Page } from "@playwright/test";
 import {
   buildTestUser,
   getConfiguredTestUserOrThrow,
+  getAuthStateCachePath,
   isRemoteE2ETarget,
   waitForAuthResolution,
   waitForLoginFormReady,
@@ -61,11 +62,6 @@ export async function loginViaUI(
 }
 
 /**
- * Path to saved auth state (created by global-setup.ts)
- */
-const AUTH_FILE = "./tests/e2e/.auth/user.json";
-
-/**
  * Extended test fixture with authentication support
  *
  * Uses saved session state from global-setup.ts to avoid rate-limiting.
@@ -74,13 +70,14 @@ const AUTH_FILE = "./tests/e2e/.auth/user.json";
 export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ browser }, runTest) => {
     const configuredTestUser = getConfiguredTestUserOrThrow();
+    const authFile = getAuthStateCachePath(configuredTestUser);
     const usesRemoteTarget = isRemoteE2ETarget();
     let shouldRefreshAuthState = false;
 
     // Try to use saved auth state
     let context;
     try {
-      context = await browser.newContext({ storageState: AUTH_FILE });
+      context = await browser.newContext({ storageState: authFile });
     } catch {
       // Fall back to fresh context if auth file doesn't exist
       context = await browser.newContext();
@@ -114,15 +111,19 @@ export const test = base.extend<{ authenticatedPage: Page }>({
       }
     }
 
-    // Verify we're logged in with the actual authenticated application shell.
-    await expect(page.getByRole("button", { name: /user menu/i })).toBeVisible({
+    // Full app shell (user menu) or pre-contract onboarding shell (Sign out only).
+    await expect(
+      page
+        .getByRole("button", { name: /user menu/i })
+        .or(page.getByRole("button", { name: /sign out|abmelden|ausloggen/i }))
+    ).toBeVisible({
       timeout: 15_000,
     });
     expect(page.url()).not.toContain("/login");
 
     if (shouldRefreshAuthState) {
-      await mkdir(dirname(AUTH_FILE), { recursive: true });
-      await context.storageState({ path: AUTH_FILE });
+      await mkdir(dirname(authFile), { recursive: true });
+      await context.storageState({ path: authFile });
     }
 
     // Run the test with authenticated page
