@@ -14,7 +14,7 @@ export interface PostalAddressDraft {
   city: string;
   supplement: string;
   country: string;
-  state: string;
+  state?: string;
 }
 
 export function getCurrentAddressFromList(
@@ -26,6 +26,17 @@ export function getCurrentAddressFromList(
 
   return (
     list.find((a) => a.resided_until == null || a.resided_until === "") ?? null
+  );
+}
+
+function hasAddressDraftValueForCurrentRow(draft: PostalAddressDraft): boolean {
+  return (
+    draft.street.trim().length > 0 ||
+    draft.houseNumber.trim().length > 0 ||
+    draft.postalCode.trim().length > 0 ||
+    draft.city.trim().length > 0 ||
+    draft.supplement.trim().length > 0 ||
+    draft.country.trim().length > 0
   );
 }
 
@@ -72,6 +83,12 @@ export function buildAddressesPayloadForCurrentEdit(
     (a) => a.resided_until != null && a.resided_until !== ""
   );
   const current = getCurrentAddressFromList(addressRows);
+  const shouldIncludeCurrentRow = hasAddressDraftValueForCurrentRow(draft);
+  const normalizedState = draft.state?.trim() || current?.state || null;
+
+  if (!shouldIncludeCurrentRow) {
+    return historical.map((a) => rowToInput(a));
+  }
 
   return [
     ...historical.map((a) => rowToInput(a)),
@@ -82,7 +99,7 @@ export function buildAddressesPayloadForCurrentEdit(
       city: draft.city.trim() || null,
       supplement: draft.supplement.trim() || null,
       country: draft.country.trim().toUpperCase() || null,
-      state: draft.state.trim() || null,
+      state: normalizedState,
       resided_from: current?.resided_from ?? null,
       resided_until: null,
     },
