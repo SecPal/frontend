@@ -242,6 +242,54 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     expect(payload[0]?.resided_until).toBeNull();
   });
 
+  it("clears state when the country changes", () => {
+    const current = addr({
+      id: "cur-1",
+      country: "DE",
+      state: "BY",
+      city: "Munich",
+      resided_from: "2020-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "Rue de Rivoli",
+      houseNumber: "1",
+      postalCode: "75001",
+      city: "Paris",
+      supplement: "",
+      country: "FR",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBeNull();
+    expect(payload[0]?.country).toBe("FR");
+  });
+
+  it("preserves state when the country is unchanged", () => {
+    const current = addr({
+      id: "cur-1",
+      country: "DE",
+      state: "BY",
+      city: "Munich",
+      resided_from: "2020-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "Maximilianstraße",
+      houseNumber: "2",
+      postalCode: "80539",
+      city: "München",
+      supplement: "",
+      country: "DE",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBe("BY");
+    expect(payload[0]?.country).toBe("DE");
+  });
+
   it("does not invent a blank current row when only historical addresses exist", () => {
     const historical = addr({
       id: "old-1",

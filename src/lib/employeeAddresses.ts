@@ -104,10 +104,22 @@ export function buildAddressesPayloadForCurrentEdit(
   const shouldIncludeCurrentRow = hasAddressDraftValue(draft, {
     emptyCountryCodes: options.emptyCountryCodes,
   });
+
+  // If the draft supplies state explicitly, use it; otherwise fall back to the
+  // current row's state — but clear it when the draft switches to a different
+  // non-empty country, since state subdivisions don't transfer across countries.
+  const draftCountry = draft.country.trim().toUpperCase() || null;
+  const currentCountry = current?.country?.trim().toUpperCase() || null;
+  const countryChanged =
+    draftCountry !== null &&
+    currentCountry !== null &&
+    draftCountry !== currentCountry;
   const normalizedState =
     draft.state !== undefined
       ? draft.state.trim() || null
-      : current?.state || null;
+      : countryChanged
+        ? null
+        : current?.state || null;
 
   if (!shouldIncludeCurrentRow) {
     return historical.map((a) => rowToInput(a));
