@@ -41,11 +41,9 @@ describe("playwright target resolution", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("CI", "");
-    vi
-      .spyOn(process, "cwd")
-      .mockReturnValue(
-        "/home/secpal/.polyscope/clones/9d1c7856/my-feature-branch"
-      );
+    vi.spyOn(process, "cwd").mockReturnValue(
+      "/home/secpal/.polyscope/clones/9d1c7856/my-feature-branch"
+    );
 
     const {
       detectPolyscopeWorkspaceName,
