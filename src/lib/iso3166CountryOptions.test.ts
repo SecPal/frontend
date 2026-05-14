@@ -33,6 +33,29 @@ describe("getCountrySelectOptions", () => {
     expect(options.some((o) => o.code === "XA")).toBe(false);
   });
 
+  it("returns code-sorted fallback list when Intl.DisplayNames constructor throws", () => {
+    const originalIntl = globalThis.Intl;
+
+    vi.stubGlobal("Intl", {
+      ...originalIntl,
+      DisplayNames: class ThrowingDisplayNames {
+        constructor() {
+          throw new RangeError("Invalid language tag");
+        }
+      } as unknown as typeof Intl.DisplayNames,
+    });
+
+    try {
+      const options = getCountrySelectOptions("invalid-locale-xyz");
+      expect(options.length).toBeGreaterThan(0);
+      options.forEach((o) => expect(o.label).toBe(o.code));
+      const codes = options.map((o) => o.code);
+      expect(codes).toEqual([...codes].sort((a, b) => a.localeCompare(b)));
+    } finally {
+      vi.stubGlobal("Intl", originalIntl);
+    }
+  });
+
   it("falls back only for unsupported region codes instead of the whole list", () => {
     const originalIntl = globalThis.Intl;
 

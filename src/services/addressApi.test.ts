@@ -59,6 +59,65 @@ describe("addressApi", () => {
     ]);
   });
 
+  it("throws ApiError with the server message when street fetch fails", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      statusText: "Service Unavailable",
+      json: async () => ({ message: "OpenPLZ API unavailable" }),
+    } as unknown as Response);
+
+    await expect(
+      fetchAddressStreetSuggestions({ name: "Test" })
+    ).rejects.toMatchObject({
+      message: "OpenPLZ API unavailable",
+      status: 503,
+    });
+  });
+
+  it("throws ApiError with statusText when street fetch fails and json parsing fails", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      statusText: "Bad Gateway",
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+    } as unknown as Response);
+
+    await expect(
+      fetchAddressStreetSuggestions({ name: "Test" })
+    ).rejects.toMatchObject({ message: "Bad Gateway", status: 502 });
+  });
+
+  it("throws ApiError with the server message when locality fetch fails", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      json: async () => ({ message: "Locality not found" }),
+    } as unknown as Response);
+
+    await expect(
+      fetchAddressLocalitySuggestions({ postalCode: "99999" })
+    ).rejects.toMatchObject({ message: "Locality not found", status: 404 });
+  });
+
+  it("throws ApiError with statusText when locality fetch fails and json parsing fails", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+    } as unknown as Response);
+
+    await expect(
+      fetchAddressLocalitySuggestions({ locality: "Berlin" })
+    ).rejects.toMatchObject({ message: "Internal Server Error", status: 500 });
+  });
+
   it("fetches locality suggestions with the expected query parameters", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
