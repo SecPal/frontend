@@ -60,6 +60,12 @@ function getRuntimeHostname(): string | null {
   return window.location.hostname || null;
 }
 
+/**
+ * Polyscope preview apps are served at `{workspace}.preview.secpal.dev` with a
+ * sibling API host `api-{workspace}.preview.secpal.dev`. CI or mis-built bundles
+ * sometimes bake in `http://localhost:4173` as `VITE_API_URL`; in the browser we
+ * must still talk to the workspace API, not the developer machine.
+ */
 function getCanonicalPreviewApiOrigin(
   runtimeHostname: string | null
 ): string | null {
@@ -73,6 +79,54 @@ function getCanonicalPreviewApiOrigin(
   }
 
   return `https://api-${previewHostname.workspace}.preview.secpal.dev`;
+}
+
+/**
+ * Returns true only when the configured API base should be replaced by the
+ * workspace-sibling preview API: empty, relative, loopback, or pointing at the
+ * SPA preview host itself. Explicitly configured hosts for a different workspace
+ * or a production API are preserved as-is.
+ */
+function shouldReplaceConfiguredApiBaseWithPreviewWorkspaceOrigin(
+  normalizedConfiguredBaseUrl: string,
+  runtimeHostname: string | null
+): boolean {
+  const runtimePreviewHostname = parsePreviewHostname(runtimeHostname);
+
+  if (
+    !runtimePreviewHostname ||
+    (runtimePreviewHostname.repo !== null &&
+      runtimePreviewHostname.repo !== "frontend")
+  ) {
+    return false;
+  }
+
+  if (!normalizedConfiguredBaseUrl) {
+    return true;
+  }
+
+  if (!isAbsoluteHttpUrl(normalizedConfiguredBaseUrl)) {
+    return true;
+  }
+
+  let configuredHostname: string;
+  try {
+    configuredHostname = new URL(normalizedConfiguredBaseUrl).hostname;
+  } catch {
+    return true;
+  }
+
+  if (isLoopbackApiHost(configuredHostname)) {
+    return true;
+  }
+
+  const configuredPreviewHostname = parsePreviewHostname(configuredHostname);
+
+  return Boolean(
+    configuredPreviewHostname?.workspace === runtimePreviewHostname.workspace &&
+    (configuredPreviewHostname.repo === null ||
+      configuredPreviewHostname.repo === "frontend")
+  );
 }
 
 function shouldUseCanonicalLiveApiOrigin(
@@ -124,7 +178,13 @@ export function resolveApiBaseUrl(options?: {
   const canonicalPreviewApiOrigin =
     getCanonicalPreviewApiOrigin(runtimeHostname);
 
-  if (canonicalPreviewApiOrigin !== null) {
+  if (
+    canonicalPreviewApiOrigin &&
+    shouldReplaceConfiguredApiBaseWithPreviewWorkspaceOrigin(
+      normalizedConfiguredBaseUrl,
+      runtimeHostname
+    )
+  ) {
     return canonicalPreviewApiOrigin;
   }
 
@@ -174,6 +234,10 @@ export const apiConfig = {
    * - Demo/Testing: https://api.secpal.dev
    * - Production: deployment-specific absolute API origin provided during deployment
    * - Customer On-Premise: customer-specific absolute API origin provided during deployment
+   * - Polyscope preview: `{workspace}.preview.secpal.dev` resolves to
+   *   `https://api-{workspace}.preview.secpal.dev` when the bundle’s base URL is
+   *   empty, relative, loopback, or the SPA host (so leaked CI `localhost:4173`
+   *   never overrides the workspace API).
    *
    * Note: The backend uses apiPrefix: '' in Laravel's bootstrap/app.php,
    * so routes are accessible at /v1/* NOT /api/v1/*

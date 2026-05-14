@@ -185,7 +185,7 @@ describe("config", () => {
     ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
   });
 
-  it("falls back to the current workspace preview API origin on frontend preview hosts when VITE_API_URL points at another absolute preview origin", async () => {
+  it("preserves an explicitly configured different preview API host on frontend preview hosts", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "https://api-otter.preview.secpal.dev");
 
@@ -195,12 +195,12 @@ describe("config", () => {
       resolveApiBaseUrl({
         runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
       })
-    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    ).toBe("https://api-otter.preview.secpal.dev");
     expect(
       buildApiUrl("/v1/auth/login", {
         runtimeHostname: "frontend-grumpy-lynx.preview.secpal.dev",
       })
-    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
+    ).toBe("https://api-otter.preview.secpal.dev/v1/auth/login");
   });
 
   it("falls back to the workspace preview API origin on generic workspace preview hosts when the bundle kept a loopback API base", async () => {
@@ -239,7 +239,7 @@ describe("config", () => {
     ).toBe("https://api-grumpy-lynx.preview.secpal.dev/v1/auth/login");
   });
 
-  it("falls back to the current workspace preview API origin on generic workspace preview hosts when VITE_API_URL points at an unrelated absolute API origin", async () => {
+  it("preserves an explicitly configured unrelated API origin on generic workspace preview hosts", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "https://api.secpal.dev");
 
@@ -249,11 +249,143 @@ describe("config", () => {
       resolveApiBaseUrl({
         runtimeHostname: "grumpy-lynx.preview.secpal.dev",
       })
-    ).toBe("https://api-grumpy-lynx.preview.secpal.dev");
+    ).toBe("https://api.secpal.dev");
     expect(
       buildApiUrl("/sanctum/csrf-cookie", {
         runtimeHostname: "grumpy-lynx.preview.secpal.dev",
       })
-    ).toBe("https://api-grumpy-lynx.preview.secpal.dev/sanctum/csrf-cookie");
+    ).toBe("https://api.secpal.dev/sanctum/csrf-cookie");
+  });
+
+  it("uses the Polyscope workspace sibling API when the bundle leaked a loopback base on a preview workspace host", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { resolveApiBaseUrl, buildApiUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev/sanctum/csrf-cookie");
+  });
+
+  it("uses the Polyscope workspace API in production mode when the runtime host is a preview workspace and VITE_API_URL is loopback", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("uses the Polyscope workspace API when production VITE_API_URL is empty on a preview workspace host", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("keeps an explicit non-loopback API base on Polyscope preview workspaces", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv(
+      "VITE_API_URL",
+      "https://api-velvet-zebra.preview.secpal.dev/custom/path"
+    );
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("does not override a different explicit preview API host on a Polyscope workspace app", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://api-other.preview.secpal.dev");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-other.preview.secpal.dev");
+  });
+
+  it("replaces an API base that mistakenly points at the SPA preview host with the workspace API", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://velvet-zebra.preview.secpal.dev");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("normalizes preview workspace casing before matching the configured API host", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://velvet-zebra.preview.secpal.dev");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "Velvet-Zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("uses the Polyscope workspace sibling API when the bundle leaked a loopback base on a prefixed frontend preview host", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { resolveApiBaseUrl, buildApiUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "frontend-velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+
+    expect(
+      buildApiUrl("/sanctum/csrf-cookie", {
+        runtimeHostname: "frontend-velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev/sanctum/csrf-cookie");
+  });
+
+  it("uses the Polyscope workspace API when production VITE_API_URL is empty on a prefixed frontend preview host", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "frontend-velvet-zebra.preview.secpal.dev",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
   });
 });
