@@ -789,7 +789,7 @@ export function EmployeeDetail() {
         employee.current_address ?? getCurrentAddressFromList(rows);
       const fromRow = employeeAddressToDraft(resolved);
       setContactAddressDraft(
-        hasAddressDraftValue(fromRow, {}) ? fromRow : emptyPostalAddressDraft
+        hasAddressDraftValue(fromRow, { emptyCountryCodes: ["DE"] }) ? fromRow : emptyPostalAddressDraft
       );
       return;
     }

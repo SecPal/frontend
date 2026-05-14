@@ -618,8 +618,13 @@ describe("OnboardingWizard", () => {
     });
   });
 
-  it("prefers the latest contract start date from another onboarding step over stale auth data", async () => {
+  it("uses the auth-derived contract start date even when a later date appears in step form data", async () => {
     const user = userEvent.setup();
+    // Auth has 2026-05-01 (resolved from the auth token / employee record
+    // path), step form data has the later 2026-06-01. The authoritative date
+    // is the one resolved from the employee record / auth — the user-submitted
+    // step value must NOT override it. A title expiring 2026-05-25 is AFTER
+    // the auth date so it should pass validation here.
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
       {
         step_number: 1,
@@ -714,17 +719,16 @@ describe("OnboardingWizard", () => {
     );
 
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    // 2026-05-25 is after auth date (2026-05-01) so validation must pass,
+    // meaning employment-permitted question appears.
     fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
     fireEvent.blur(expiryInput);
-    await user.click(screen.getByRole("button", { name: /next/i }));
 
     expect(
-      await screen.findByText(
-        /must remain valid after your contract start date/i
-      )
+      await screen.findByLabelText(/employment permitted/i)
     ).toBeInTheDocument();
     expect(
-      screen.queryByLabelText(/employment permitted/i)
+      screen.queryByText(/must remain valid after your contract start date/i)
     ).not.toBeInTheDocument();
   });
 
@@ -913,6 +917,128 @@ describe("OnboardingWizard", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/must remain valid after your contract start date/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("prefers the employee API record contract start date over a user-entered step date for residence-title validation", async () => {
+    const user = userEvent.setup();
+    // Step 2 form data contains an earlier date (user-submitted); the employee
+    // record carries the authoritative HR-set date. The validator must use the
+    // employee record so a title expiring between the two dates is still blocked.
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Tell us who you are.",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {
+            gender: "female",
+            nationalities: ["TR"],
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Employment Details",
+        description: "Contract details",
+        template_id: "template-employment",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-employment",
+          employee_id: "employee-1",
+          form_template_id: "template-employment",
+          form_data: {
+            // Earlier user-entered date — must NOT override the employee record.
+            contract_start_date: "2026-05-01",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    // Authoritative date from the employee record: title expiring 2026-05-25
+    // clears the earlier step date (2026-05-01) but must still fail against this.
+    employeeApiMocks.fetchEmployee.mockResolvedValueOnce({
+      contract_start_date: "2026-06-15",
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(employeeApiMocks.fetchEmployee).toHaveBeenCalledWith("employee-1");
+    });
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    // Expiry is after the step date (2026-05-01) but before the employee record (2026-06-15).
+    fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
+    fireEvent.blur(expiryInput);
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByText(
+        /must remain valid after your contract start date/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/employment permitted/i)
     ).not.toBeInTheDocument();
   });
 

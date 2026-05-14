@@ -1714,8 +1714,8 @@ export function OnboardingWizard() {
         ? employeeContractStartDate
         : null;
   const contractStartDateFallback =
-    contractStartDateFromOtherSteps ??
     resolvedEmployeeContractStartDate ??
+    contractStartDateFromOtherSteps ??
     contractStartDateFromAuth;
   const stepUploadDocumentType = getStepUploadDocumentType(
     schema,

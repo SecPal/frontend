@@ -15,15 +15,7 @@ export const SUBMITTED_ONBOARDING_WORKFLOW_STATUSES =
 export function getAuthOnboardingWorkflowStatus(
   user: User | null | undefined
 ): EmployeeOnboardingWorkflowStatus | undefined {
-  const direct = user?.onboardingWorkflowStatus;
-  if (direct) {
-    return direct;
-  }
-
-  const nested = user?.employee?.onboarding_workflow?.status;
-  return typeof nested === "string"
-    ? (nested as EmployeeOnboardingWorkflowStatus)
-    : undefined;
+  return user?.onboardingWorkflowStatus;
 }
 
 export function isSubmittedOnboardingWorkflowStatus(

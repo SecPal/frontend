@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed `buildAddressesPayloadForCurrentEdit` so that `state` is preserved from the current address row when the draft does not supply it, cleared when the draft explicitly passes an empty string, and the current row is omitted entirely (instead of creating a blank placeholder row) when all draft fields are empty.
+- Fixed `contractStartDateFallback` priority in `OnboardingWizard`: the authoritative date from the employee API record now takes precedence over a user-submitted contract-start-date value in step form data, preventing incorrect residence-title timing validation when both sources are present.
+- Fixed `hasAddressDraftValue` call when initialising the postal-address dialog in `EmployeeDetail`: now passes `{ emptyCountryCodes: ["DE"] }` to consistently treat a default-country-only draft as empty, matching the behaviour of `buildAddressesPayloadForCurrentEdit` and `hasPostalAddressDraftValue`.
+- Fixed `getAuthOnboardingWorkflowStatus` in `src/lib/onboardingWorkflow.ts`: removed the redundant nested `employee.onboarding_workflow.status` fallback and its unsafe `as EmployeeOnboardingWorkflowStatus` cast. `sanitizeAuthUser` in `authState.ts` already promotes this field to `User.onboardingWorkflowStatus`, so the helper now reads only the typed top-level field.
 
 ### Changed
 
