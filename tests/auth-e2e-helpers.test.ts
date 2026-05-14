@@ -131,7 +131,6 @@ describe("auth E2E helpers", () => {
           {
             TEST_USER_EMAIL: "guard@secpal.dev",
             TEST_USER_PASSWORD: "correct horse battery staple",
-            PLAYWRIGHT_LIVE_ONBOARDING: "1",
           },
           "https://app.secpal.dev"
         )
