@@ -148,4 +148,22 @@ describe("playwright target resolution", () => {
     );
     expect(config.webServer).toBeUndefined();
   });
+
+  it("derives the API preview URL from the frontend preview when PLAYWRIGHT_API_BASE_URL is a non-preview value", async () => {
+    vi.stubEnv(
+      "PLAYWRIGHT_BASE_URL",
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
+    );
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    vi.stubEnv("CI", "");
+    vi.spyOn(process, "cwd").mockReturnValue("/home/user/my-app");
+
+    const { resolvePlaywrightApiBaseUrl } =
+      await import("./e2e/target-urls.ts");
+
+    expect(resolvePlaywrightApiBaseUrl()).toBe(
+      "https://api-grumpy-lynx.preview.secpal.dev"
+    );
+  });
 });

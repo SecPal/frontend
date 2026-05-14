@@ -138,6 +138,21 @@ export function resolvePlaywrightApiBaseUrl(
       );
     }
 
+    const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
+    const configuredBasePreviewHostname = configuredBaseUrl
+      ? getPreviewHostnameFromBaseUrl(configuredBaseUrl)
+      : undefined;
+
+    if (
+      configuredBasePreviewHostname &&
+      (configuredBasePreviewHostname.repo === null ||
+        configuredBasePreviewHostname.repo === "frontend")
+    ) {
+      return buildWorkspacePreviewApiBaseUrl(
+        configuredBasePreviewHostname.workspace
+      );
+    }
+
     return configuredApiBaseUrl;
   }
 
