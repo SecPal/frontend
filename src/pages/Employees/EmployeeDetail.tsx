@@ -777,7 +777,13 @@ export function EmployeeDetail() {
     }
 
     if (field === "postal_address") {
-      setContactAddressDraft(employeeAddressToDraft(employee.current_address));
+      const rows = mergeAddressBaseList(
+        employee.addresses,
+        employee.current_address
+      );
+      setContactAddressDraft(
+        employeeAddressToDraft(getCurrentAddressFromList(rows))
+      );
       return;
     }
 
