@@ -6,10 +6,14 @@ import {
   DESKTOP_CHROMIUM_PROJECT_NAME,
   getConfiguredLighthouseBrowserPath,
   LIGHTHOUSE_DEBUG_PORT,
-  PREVIEW_BASE_URL,
   shouldEnableLighthouseBrowser,
   shouldUseSingleWorker,
 } from "./tests/e2e/performance-mode";
+import {
+  PREVIEW_BASE_URL,
+  isRemotePlaywrightTarget,
+  resolvePlaywrightBaseUrl,
+} from "./tests/e2e/target-urls";
 
 /**
  * Playwright E2E Test Configuration
@@ -39,20 +43,18 @@ import {
  * Base URL Configuration
  *
  * Priority:
- * 1. PLAYWRIGHT_BASE_URL env var (for staging: https://app.secpal.dev)
- * 2. CI mode: http://localhost:4173 (preview server)
- * 3. Default: http://localhost:5173 (dev server with proxy)
+ * 1. Current Polyscope workspace preview: https://frontend-<workspace>.preview.secpal.dev
+ * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
+ * 3. CI mode: http://localhost:4173 (preview server)
+ * 4. Default: http://localhost:5173 (dev server with proxy)
  */
-const BASE_URL =
-  process.env.PLAYWRIGHT_BASE_URL ||
-  (process.env.CI ? PREVIEW_BASE_URL : "http://localhost:5173");
+const BASE_URL = resolvePlaywrightBaseUrl();
 
 /**
  * Detect if we're running against a remote server
  * (staging/production - no local webServer needed)
  */
-const isRemoteTarget =
-  process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false;
+const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();

@@ -5,6 +5,7 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
+import { resolvePlaywrightApiBaseUrl } from "./target-urls";
 import { getCachedOrgUnitsCount } from "../utils/offline-helpers";
 
 const playwrightEnv = globalThis as typeof globalThis & {
@@ -14,7 +15,7 @@ const playwrightEnv = globalThis as typeof globalThis & {
 };
 
 const API_BASE_URL =
-  playwrightEnv.process?.env?.PLAYWRIGHT_API_BASE_URL ||
+  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ||
   "https://api.secpal.dev";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";

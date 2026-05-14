@@ -3,6 +3,10 @@
 
 import { expect, type BrowserContext, type Page } from "@playwright/test";
 import { installStoredAuthUser } from "../utils/passkeyAuthStorage";
+import {
+  resolvePlaywrightApiBaseUrl,
+  resolvePlaywrightBaseUrl,
+} from "./target-urls";
 import { isRemoteE2ETarget, waitForLoginFormReady } from "./auth-helpers";
 
 const MOCK_XSRF_TOKEN = "test-xsrf-token";
@@ -17,8 +21,8 @@ function getMockCookieHostname(url: string | undefined): string | null {
 }
 
 export function getMockCookieDomains(
-  baseUrl = process.env.PLAYWRIGHT_BASE_URL,
-  apiBaseUrl = process.env.PLAYWRIGHT_API_BASE_URL
+  baseUrl = resolvePlaywrightBaseUrl(),
+  apiBaseUrl = resolvePlaywrightApiBaseUrl()
 ): string[] {
   const domains = new Set<string>();
   const baseHostname = getMockCookieHostname(baseUrl);
@@ -148,7 +152,7 @@ export async function installMockAuthRoutes(
   await context.route("**/sanctum/csrf-cookie", async (route) => {
     await ensureMockXsrfCookie(context);
 
-    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
+    const isHttps = isRemoteE2ETarget();
     await route.fulfill({
       status: 204,
       headers: {
@@ -178,7 +182,7 @@ export async function installMockAuthRoutes(
       return;
     }
 
-    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
+    const isHttps = isRemoteE2ETarget();
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -210,7 +214,7 @@ export async function installMockAuthRoutes(
   });
 
   await context.route("**/v1/auth/logout", async (route) => {
-    const isHttps = isRemoteE2ETarget(process.env.PLAYWRIGHT_BASE_URL);
+    const isHttps = isRemoteE2ETarget();
     await route.fulfill({
       status: 204,
       headers: {

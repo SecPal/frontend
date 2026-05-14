@@ -1,7 +1,13 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const PREVIEW_BASE_URL = "http://localhost:4173";
+import {
+  detectPolyscopeWorkspaceName,
+  isLiveRemoteTarget,
+  isRemotePlaywrightTarget,
+  resolvePlaywrightBaseUrl,
+} from "./target-urls";
+
 export const LIGHTHOUSE_DEBUG_PORT = 9222;
 export const LIGHTHOUSE_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
 export const DESKTOP_CHROMIUM_PROJECT_NAME = "chromium";
@@ -25,7 +31,13 @@ type PerformanceAuditMode = {
 const hasExplicitLighthouseMode = () =>
   process.env.PLAYWRIGHT_LIGHTHOUSE === "1";
 
-const isLiveHttpsTarget = (baseUrl: string) => baseUrl.startsWith("https://");
+const hasExplicitPlaywrightBaseUrl = () =>
+  Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim());
+
+const hasPerformanceAuditTarget = () =>
+  Boolean(process.env.CI) ||
+  hasExplicitPlaywrightBaseUrl() ||
+  detectPolyscopeWorkspaceName() !== undefined;
 
 const isPlaywrightBundledChromiumPath = (browserPath: string) =>
   /(^|[/\\])ms-playwright([/\\]|$)/.test(browserPath);
@@ -37,10 +49,9 @@ export const getConfiguredLighthouseBrowserPath = () => {
 };
 
 export const getPerformanceAuditThresholds = (
-  baseUrl = process.env.PLAYWRIGHT_BASE_URL ||
-    (process.env.CI ? PREVIEW_BASE_URL : "")
+  baseUrl = resolvePlaywrightBaseUrl()
 ) =>
-  isLiveHttpsTarget(baseUrl)
+  isLiveRemoteTarget(baseUrl)
     ? LIVE_LIGHTHOUSE_THRESHOLDS
     : DEFAULT_LIGHTHOUSE_THRESHOLDS;
 
@@ -65,10 +76,9 @@ export const getPerformanceAuditProjectSkipReason = (
 };
 
 export const getPerformanceAuditMode = (): PerformanceAuditMode => {
-  const baseUrl =
-    process.env.PLAYWRIGHT_BASE_URL || (process.env.CI ? PREVIEW_BASE_URL : "");
+  const baseUrl = resolvePlaywrightBaseUrl();
 
-  if (!baseUrl) {
+  if (!hasPerformanceAuditTarget()) {
     return {
       baseUrl,
       skipReason:
@@ -85,7 +95,7 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
   }
 
   if (
-    isLiveHttpsTarget(baseUrl) &&
+    isRemotePlaywrightTarget(baseUrl) &&
     process.env.PLAYWRIGHT_LIVE_LIGHTHOUSE !== "1"
   ) {
     return {
@@ -95,7 +105,7 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
     };
   }
 
-  if (isLiveHttpsTarget(baseUrl)) {
+  if (isRemotePlaywrightTarget(baseUrl)) {
     const browserPath = getConfiguredLighthouseBrowserPath();
 
     if (!browserPath) {
