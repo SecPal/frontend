@@ -1,8 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2026 SecPal
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # SecPal API — Onboarding E2E / Demo-Nutzer
 
 ## Canonical (SecPal/api Monorepo)
 
-Im **API**-Repository existiert bereits `database/seeders/OnboardingDemoUserSeeder.php`  
+Im **API**-Repository existiert bereits `database/seeders/OnboardingDemoUserSeeder.php`
 (`onboarding@example.com` / `password`, pre-contract, SecPal Holding).
 
 Wichtig für Playwright-Live-Tests: `onboarding_workflow_status` muss **`account_initialized`** (oder `in_progress`) sein — im Zustand **`invited`** lehnt die API Entwürfe mit 422 ab, weil der erste Schritt den Workflow auf `in_progress` setzen will, was von `invited` aus nicht erlaubt ist (`Employee::ALLOWED_WORKFLOW_TRANSITIONS`).
