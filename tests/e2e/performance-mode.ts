@@ -4,6 +4,7 @@
 import {
   detectPolyscopeWorkspaceName,
   isLiveRemoteTarget,
+  isRemotePlaywrightTarget,
   resolvePlaywrightBaseUrl,
 } from "./target-urls";
 
@@ -94,7 +95,7 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
   }
 
   if (
-    isLiveRemoteTarget(baseUrl) &&
+    isRemotePlaywrightTarget(baseUrl) &&
     process.env.PLAYWRIGHT_LIVE_LIGHTHOUSE !== "1"
   ) {
     return {
@@ -104,7 +105,7 @@ export const getPerformanceAuditMode = (): PerformanceAuditMode => {
     };
   }
 
-  if (isLiveRemoteTarget(baseUrl)) {
+  if (isRemotePlaywrightTarget(baseUrl)) {
     const browserPath = getConfiguredLighthouseBrowserPath();
 
     if (!browserPath) {

@@ -30,6 +30,6 @@ export function parsePreviewHostname(
 
   return {
     repo: repo?.toLowerCase() ?? null,
-    workspace,
+    workspace: workspace.toLowerCase(),
   };
 }

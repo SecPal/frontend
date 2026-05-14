@@ -54,6 +54,24 @@ describe("performance audit mode", () => {
     });
   });
 
+  it("skips workspace preview Lighthouse audits unless they are explicitly opted in", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv(
+      "PLAYWRIGHT_BASE_URL",
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
+    );
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.resetModules();
+    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
+      skipReason:
+        "Live Lighthouse audits require PLAYWRIGHT_LIVE_LIGHTHOUSE=1 until issue #957 is resolved.",
+    });
+  });
+
   it("allows live Lighthouse audits when the explicit opt-in is set", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
@@ -103,6 +121,28 @@ describe("performance audit mode", () => {
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
+      skipReason:
+        "Live Lighthouse audits require CHROME_PATH to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.",
+    });
+  });
+
+  it("rejects the bundled Playwright Chromium snapshot for workspace preview Lighthouse audits", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv(
+      "PLAYWRIGHT_BASE_URL",
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
+    );
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
+    vi.stubEnv(
+      "CHROME_PATH",
+      "/home/secpal/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
+    );
+    vi.resetModules();
+    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live Lighthouse audits require CHROME_PATH to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.",
     });
