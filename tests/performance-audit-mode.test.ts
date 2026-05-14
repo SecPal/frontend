@@ -3,22 +3,50 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Mocks process.cwd() to a path that does not match the Polyscope clone
+ * pattern, so tests that verify non-Polyscope behaviour are not affected by
+ * the directory this test suite is executed from.
+ */
+function mockNonPolyscopeCwd() {
+  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
+}
+
 describe("performance audit mode", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     vi.resetModules();
   });
 
-  it("runs Lighthouse audits against the preview build when explicitly enabled in CI", async () => {
+  it("runs Lighthouse audits against the local preview build when explicitly enabled in CI outside a Polyscope workspace", async () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditMode()).toEqual({
       baseUrl: "http://localhost:4173",
+      skipReason: undefined,
+    });
+  });
+
+  it("runs Lighthouse audits against the workspace preview when a Polyscope workspace is active", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
+    vi.stubEnv("CHROME_PATH", "/usr/bin/google-chrome-stable");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "my-feature");
+    vi.resetModules();
+    const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditMode()).toEqual({
+      baseUrl: "https://frontend-my-feature.preview.secpal.dev",
       skipReason: undefined,
     });
   });
@@ -29,6 +57,7 @@ describe("performance audit mode", () => {
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -44,6 +73,8 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -62,6 +93,8 @@ describe("performance audit mode", () => {
     );
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -78,6 +111,8 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
     vi.stubEnv("CHROME_PATH", "/usr/bin/google-chrome-stable");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getConfiguredLighthouseBrowserPath, getPerformanceAuditMode } =
       await import("./e2e/performance-mode");
@@ -97,6 +132,8 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "1");
     vi.stubEnv("CHROME_PATH", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -116,6 +153,8 @@ describe("performance audit mode", () => {
       "CHROME_PATH",
       "/home/secpal/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
     );
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -138,6 +177,8 @@ describe("performance audit mode", () => {
       "CHROME_PATH",
       "/home/secpal/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
     );
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
@@ -151,6 +192,8 @@ describe("performance audit mode", () => {
   it("keeps stricter default Lighthouse thresholds for preview audits", async () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditThresholds } =
       await import("./e2e/performance-mode");
@@ -165,6 +208,8 @@ describe("performance audit mode", () => {
   it("uses a relaxed performance threshold for live Lighthouse targets", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditThresholds } =
       await import("./e2e/performance-mode");
@@ -181,6 +226,8 @@ describe("performance audit mode", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 

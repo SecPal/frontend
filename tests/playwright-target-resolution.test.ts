@@ -3,6 +3,15 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Mocks process.cwd() to a path that does not match the Polyscope clone
+ * pattern, so tests that verify non-Polyscope behaviour are not affected by
+ * the directory this test suite is executed from.
+ */
+function mockNonPolyscopeCwd() {
+  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
+}
+
 describe("playwright target resolution", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -54,6 +63,8 @@ describe("playwright target resolution", () => {
       "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
 
     const { resolvePlaywrightApiBaseUrl } =
       await import("./e2e/target-urls.ts");
@@ -66,6 +77,8 @@ describe("playwright target resolution", () => {
   it("derives the API preview origin from an explicit generic workspace preview URL", async () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://grumpy-lynx.preview.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    mockNonPolyscopeCwd();
 
     const {
       isWorkspacePreviewTarget,
@@ -89,6 +102,7 @@ describe("playwright target resolution", () => {
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     vi.stubEnv("CI", "");
+    mockNonPolyscopeCwd();
 
     const { resolvePlaywrightApiBaseUrl, resolvePlaywrightBaseUrl } =
       await import("./e2e/target-urls.ts");

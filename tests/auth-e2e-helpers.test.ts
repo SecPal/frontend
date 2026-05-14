@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildTestUser,
   describeAuthResolutionState,
@@ -11,15 +11,43 @@ import {
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
 
+/**
+ * Mocks process.cwd() to a path that does not match the Polyscope clone
+ * pattern, so tests that verify non-Polyscope behaviour are not affected by
+ * the directory this test suite is executed from.
+ */
+function mockNonPolyscopeCwd() {
+  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
+}
+
 describe("auth E2E helpers", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
   describe("isRemoteE2ETarget", () => {
     it("treats https targets as remote", () => {
       expect(isRemoteE2ETarget("https://app.secpal.dev")).toBe(true);
     });
 
-    it("treats local and missing targets as non-remote", () => {
+    it("treats an explicit localhost target as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
+    });
+
+    it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
+      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+      vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+      mockNonPolyscopeCwd();
+
       expect(isRemoteE2ETarget(undefined)).toBe(false);
+    });
+
+    it("treats the implicit default as remote when a Polyscope workspace is active", () => {
+      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+      vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+
+      expect(isRemoteE2ETarget(undefined)).toBe(true);
     });
   });
 
