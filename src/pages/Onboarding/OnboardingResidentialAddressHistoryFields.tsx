@@ -119,7 +119,7 @@ export function OnboardingResidentialAddressHistoryFields({
     const coverage = currentAddressCoversFiveYearWindow(
       value.current_address.resided_from
     );
-    if (coverage !== false) {
+    if (coverage === true) {
       if (value.previous_addresses.length > 0) {
         onChange((prev) => ({ ...prev, previous_addresses: [] }));
       }

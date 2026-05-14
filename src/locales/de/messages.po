@@ -47,7 +47,7 @@ msgstr "Informationen zur Tätigkeit"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't save your draft yet. Please review the highlighted fields."
-msgstr ""
+msgstr "Wir konnten Ihren Entwurf noch nicht speichern. Bitte überprüfen Sie die markierten Felder."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -217,7 +217,7 @@ msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellung
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
-msgstr ""
+msgstr "Frühere Wohnorte"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name change too significant. Please contact HR before completing onboarding."
@@ -311,7 +311,7 @@ msgstr "Verwenden Sie mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, eine
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your residence history does not cover the required period yet. Add previous addresses or move your “Living there since” date further back."
-msgstr ""
+msgstr "Ihre Wohnadress-Historie deckt den erforderlichen Zeitraum noch nicht ab. Ergänzen Sie frühere Wohnorte oder legen Sie das Datum „Wohnhaft seit“ weiter in der Vergangenheit fest."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
@@ -381,7 +381,7 @@ msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen o
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Additional validation messages from the server"
-msgstr ""
+msgstr "Zusätzliche Prüfmeldungen vom Server"
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Department"
@@ -409,7 +409,7 @@ msgstr "Sie können jetzt fortfahren und Ihre Dokumente später hochladen."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Please select whether you currently have a Bewacher ID."
-msgstr ""
+msgstr "Bitte wählen Sie aus, ob Sie derzeit eine Bewacher-ID besitzen."
 
 #: src/App.tsx
 msgid "SecPal – A guard’s best friend"
@@ -563,7 +563,7 @@ msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Current Residential Address"
-msgstr ""
+msgstr "Aktuelle Wohnanschrift"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please try again in about 1 minute."
@@ -617,7 +617,7 @@ msgstr "Original:"
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Do you currently have a Bewacher ID?"
-msgstr ""
+msgstr "Besitzen Sie derzeit eine Bewacher-ID?"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Set up MFA"
@@ -663,7 +663,7 @@ msgstr "BWR-Export erstellen"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Resided Until"
-msgstr ""
+msgstr "Wohnhaft bis"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -686,7 +686,7 @@ msgstr "Vertragsart"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to reload onboarding after a workflow state change"
-msgstr ""
+msgstr "Onboarding konnte nach einer Änderung des Workflow-Status nicht neu geladen werden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your residence title now?"
@@ -722,7 +722,7 @@ msgstr "Akzeptierte Formate: PDF, JPG, JPEG, PNG."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "I do not know my Bewacher ID."
-msgstr ""
+msgstr "Ich kenne meine Bewacher-ID nicht."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Device label"
@@ -742,7 +742,7 @@ msgstr "Kundennummer"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
-msgstr ""
+msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht kennen."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Team Messages"
@@ -816,7 +816,7 @@ msgstr "Bestätigen und fortfahren"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address autocomplete request failed."
-msgstr "Anfrage zur Adressvervollständigung fehlgeschlagen."
+msgstr "Die Adress-Autovervollständigung ist fehlgeschlagen."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -855,7 +855,7 @@ msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
-msgstr ""
+msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -945,7 +945,7 @@ msgstr "Einrichtung abschließen..."
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Resided From"
-msgstr ""
+msgstr "Wohnhaft von"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload a second file, for example the reverse side."
@@ -1363,7 +1363,7 @@ msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wen
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous residence {0}"
-msgstr ""
+msgstr "Früherer Wohnort {0}"
 
 #: src/components/application-layout.tsx
 msgid "Employees"
@@ -1379,7 +1379,7 @@ msgstr "Ungültiges Datum. Bitte verwenden Sie das Format {format}"
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Bewacher ID"
-msgstr ""
+msgstr "Bewacher-ID"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Requested"
@@ -1437,7 +1437,7 @@ msgstr "Zurück zur Liste"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
-msgstr ""
+msgstr "Ihr Onboarding-Status hat sich auf dem Server geaendert, waehrend Sie bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand aktualisiert."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
@@ -1577,7 +1577,7 @@ msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
-msgstr ""
+msgstr "Bitte beantworten Sie unterhalb Ihrer Adresse, ob Sie derzeit eine Bewacher-ID haben (Ja / Nein)."
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Are you sure you want to delete this site? This action cannot be undone."
@@ -1982,7 +1982,7 @@ msgstr "Passwörter stimmen nicht überein"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."
-msgstr ""
+msgstr "Das Enddatum muss am Startdatum liegen oder danach."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "These codes are shown only once. Store them securely before closing this dialog."
@@ -2106,7 +2106,7 @@ msgstr "Alle"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please enter your Bewacher ID or indicate that you do not know it."
-msgstr ""
+msgstr "Bitte geben Sie Ihre Bewacher-ID ein oder geben Sie an, dass Sie sie nicht kennen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Mail Sent"
@@ -2492,7 +2492,7 @@ msgstr "Bitte korrigieren Sie die hervorgehobenen Felder vor dem Absenden."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "A Bewacher ID is issued for registration in the Bewacherregister."
-msgstr ""
+msgstr "Eine Bewacher-ID wird für die Meldung im Bewacherregister ausgestellt."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
@@ -2569,7 +2569,7 @@ msgstr "Bestätigen und Aktivieren von MFA"
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Current Address"
-msgstr "Aktuelle Adresse"
+msgstr "Aktuelle Anschrift"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
@@ -2983,7 +2983,7 @@ msgstr "Entwurf speichern"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Living There Since"
-msgstr ""
+msgstr "Wohnhaft seit"
 
 #: src/pages/Login.tsx
 msgid "Check your device…"
@@ -3025,7 +3025,7 @@ msgstr "Status der Verifizierung"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Please use the required format (YYYY-MM-DD)."
-msgstr ""
+msgstr "Bitte verwenden Sie das erforderliche Format (YYYY-MM-DD)."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment (optional second file)"
@@ -3033,7 +3033,7 @@ msgstr "Anhang (optionale zweite Datei)"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
-msgstr ""
+msgstr "Das Speichern auf dem Server ist fehlgeschlagen, weil Ihr Onboarding-Workflow derzeit nicht bearbeitbar ist. Der Assistent wird auf den neuesten Serverstand aktualisiert."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx

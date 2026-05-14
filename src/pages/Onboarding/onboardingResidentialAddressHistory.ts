@@ -275,7 +275,7 @@ function previousResidencesCoverFiveYearWindow(
     currentAddressCoversFiveYearWindow(
       value.current_address.resided_from,
       referenceDate
-    ) !== false
+    ) === true
   ) {
     return true;
   }
@@ -458,7 +458,7 @@ export function validateResidentialAddressHistoryValue(
     return errors;
   }
 
-  if (coverage !== false) {
+  if (coverage === true) {
     return errors;
   }
 
