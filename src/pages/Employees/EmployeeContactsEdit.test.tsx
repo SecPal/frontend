@@ -13,6 +13,10 @@ import { EmployeeContactsEdit } from "./EmployeeContactsEdit";
 import * as employeeApi from "../../services/employeeApi";
 
 vi.mock("../../services/employeeApi");
+vi.mock("../../services/addressApi", () => ({
+  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue([]),
+  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
+}));
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -181,7 +185,9 @@ describe("EmployeeContactsEdit", () => {
     expect(screen.getByDisplayValue("10115")).toBeInTheDocument();
     expect(screen.getAllByDisplayValue("Berlin").length).toBeGreaterThan(0);
     expect(screen.getByDisplayValue("Hinterhaus")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("DE")).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /country/i })
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("Eva Mustermann")).toBeInTheDocument();
     expect(screen.getByDisplayValue("+491701112233")).toBeInTheDocument();
     expect(screen.getByDisplayValue("eva@example.com")).toBeInTheDocument();
@@ -326,12 +332,6 @@ describe("EmployeeContactsEdit", () => {
     fireEvent.change(screen.getByLabelText("Address Supplement"), {
       target: { value: " Etage 2 " },
     });
-    fireEvent.change(screen.getByLabelText("State"), {
-      target: { value: " NRW " },
-    });
-    fireEvent.change(screen.getByLabelText("Country (ISO-2)"), {
-      target: { value: " de " },
-    });
     fireEvent.change(screen.getByLabelText(/^Emergency Contact Name$/i), {
       target: { value: " Eva Muster " },
     });
@@ -363,8 +363,8 @@ describe("EmployeeContactsEdit", () => {
             postal_code: "50667",
             city: "Köln",
             supplement: "Etage 2",
-            state: "NRW",
-            country: "DE",
+            state: null,
+            country: null,
             resided_from: null,
             resided_until: null,
           },

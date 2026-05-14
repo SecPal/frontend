@@ -6,6 +6,7 @@ import type { EmployeeAddress } from "@/types/api/employees";
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
+  hasAddressDraftValue,
   mergeAddressBaseList,
 } from "./employeeAddresses";
 
@@ -241,6 +242,54 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     expect(payload[0]?.resided_until).toBeNull();
   });
 
+  it("clears state when the country changes", () => {
+    const current = addr({
+      id: "cur-1",
+      country: "DE",
+      state: "BY",
+      city: "Munich",
+      resided_from: "2020-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "Rue de Rivoli",
+      houseNumber: "1",
+      postalCode: "75001",
+      city: "Paris",
+      supplement: "",
+      country: "FR",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBeNull();
+    expect(payload[0]?.country).toBe("FR");
+  });
+
+  it("preserves state when the country is unchanged", () => {
+    const current = addr({
+      id: "cur-1",
+      country: "DE",
+      state: "BY",
+      city: "Munich",
+      resided_from: "2020-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "Maximilianstraße",
+      houseNumber: "2",
+      postalCode: "80539",
+      city: "München",
+      supplement: "",
+      country: "DE",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBe("BY");
+    expect(payload[0]?.country).toBe("DE");
+  });
+
   it("does not invent a blank current row when only historical addresses exist", () => {
     const historical = addr({
       id: "old-1",
@@ -275,6 +324,77 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
         resided_until: "2024-12-31",
       },
     ]);
+  });
+
+  it("does not create a current row when only the default country code is set", () => {
+    const historical = addr({
+      id: "old-1",
+      street: "Altstraße",
+      house_number: "8",
+      postal_code: "50667",
+      city: "Köln",
+      country: "DE",
+      resided_from: "2018-01-01",
+      resided_until: "2024-12-31",
+    });
+
+    expect(
+      buildAddressesPayloadForCurrentEdit(
+        [historical],
+        {
+          street: "",
+          houseNumber: "",
+          postalCode: "",
+          city: "",
+          supplement: "",
+          country: "DE",
+        },
+        { emptyCountryCodes: ["DE"] }
+      )
+    ).toEqual([
+      {
+        street: "Altstraße",
+        house_number: "8",
+        postal_code: "50667",
+        city: "Köln",
+        supplement: null,
+        country: "DE",
+        state: null,
+        resided_from: "2018-01-01",
+        resided_until: "2024-12-31",
+      },
+    ]);
+  });
+});
+
+describe("hasAddressDraftValue", () => {
+  it("treats a non-empty country as a current-row value", () => {
+    expect(
+      hasAddressDraftValue({
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        supplement: "",
+        country: "DE",
+      })
+    ).toBe(true);
+  });
+
+  it("can ignore configured default country codes", () => {
+    expect(
+      hasAddressDraftValue(
+        {
+          street: "",
+          houseNumber: "",
+          postalCode: "",
+          city: "",
+          supplement: "",
+          country: " DE ",
+        },
+        { emptyCountryCodes: ["de"] }
+      )
+    ).toBe(false);
   });
 });
 

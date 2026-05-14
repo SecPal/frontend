@@ -56,6 +56,8 @@ import {
   mergeAddressBaseList,
   type PostalAddressDraft,
 } from "../../lib/employeeAddresses";
+import { EmployeeAddressFields } from "./EmployeeAddressFields";
+import { employeeAddressToDraft } from "./employeeAddressDraft";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 import {
   emergencyContactsToDrafts,
@@ -600,7 +602,6 @@ export function EmployeeDetail() {
       city: "",
       supplement: "",
       country: "",
-      state: "",
     });
   const [contactEmergencyDrafts, setContactEmergencyDrafts] = useState<
     EmergencyContactDraft[]
@@ -752,21 +753,6 @@ export function EmployeeDetail() {
     }
   }
 
-  function employeeAddressDraft(source: Employee): PostalAddressDraft {
-    const cur =
-      source.current_address ??
-      getCurrentAddressFromList(source.addresses ?? []);
-    return {
-      street: cur?.street ?? "",
-      houseNumber: cur?.house_number ?? "",
-      postalCode: cur?.postal_code ?? "",
-      city: cur?.city ?? "",
-      supplement: cur?.supplement ?? "",
-      country: cur?.country ?? "",
-      state: cur?.state ?? "",
-    };
-  }
-
   function employeeEmergencyDraft(source: Employee): EmergencyContactDraft[] {
     return emergencyContactsToDrafts(source.emergency_contacts);
   }
@@ -791,7 +777,7 @@ export function EmployeeDetail() {
     }
 
     if (field === "postal_address") {
-      setContactAddressDraft(employeeAddressDraft(employee));
+      setContactAddressDraft(employeeAddressToDraft(employee.current_address));
       return;
     }
 
@@ -859,7 +845,8 @@ export function EmployeeDetail() {
         await updateEmployee(id, {
           addresses: buildAddressesPayloadForCurrentEdit(
             mergeAddressBaseList(employee.addresses, employee.current_address),
-            contactAddressDraft
+            contactAddressDraft,
+            { emptyCountryCodes: ["DE"] }
           ),
         });
       } else {
@@ -1183,161 +1170,16 @@ export function EmployeeDetail() {
               </>
             )}
             {editingContactField === "postal_address" && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-street"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>Street</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-street"
-                      type="text"
-                      value={contactAddressDraft.street}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          street: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`Street`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-house-number"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>House Number</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-house-number"
-                      type="text"
-                      value={contactAddressDraft.houseNumber}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          houseNumber: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`House Number`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-postal-code"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>Postal Code</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-postal-code"
-                      type="text"
-                      value={contactAddressDraft.postalCode}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          postalCode: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`Postal Code`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-city"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>City</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-city"
-                      type="text"
-                      value={contactAddressDraft.city}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          city: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`City`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-supplement"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>Address Supplement</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-supplement"
-                      type="text"
-                      value={contactAddressDraft.supplement}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          supplement: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`Address Supplement`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="detail-contact-address-state"
-                      className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                    >
-                      <Trans>State</Trans>
-                    </label>
-                    <input
-                      id="detail-contact-address-state"
-                      type="text"
-                      value={contactAddressDraft.state}
-                      onChange={(event) =>
-                        setContactAddressDraft((prev) => ({
-                          ...prev,
-                          state: event.target.value,
-                        }))
-                      }
-                      placeholder={i18n._(msg`State`)}
-                      className={defaultContactInputClass}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label
-                    htmlFor="detail-contact-address-country"
-                    className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                  >
-                    <Trans>Country (ISO-2)</Trans>
-                  </label>
-                  <input
-                    id="detail-contact-address-country"
-                    type="text"
-                    value={contactAddressDraft.country}
-                    onChange={(event) =>
-                      setContactAddressDraft((prev) => ({
-                        ...prev,
-                        country: event.target.value,
-                      }))
-                    }
-                    placeholder={i18n._(msg`Country (ISO-2)`)}
-                    className={defaultContactInputClass}
-                  />
-                </div>
-              </div>
+              <EmployeeAddressFields
+                draft={contactAddressDraft}
+                onChange={(field, value) =>
+                  setContactAddressDraft((prev) => ({
+                    ...prev,
+                    [field]: value,
+                  }))
+                }
+                fieldIdPrefix="detail-contact-address"
+              />
             )}
             {editingContactField === "emergency_contacts" && (
               <div className="space-y-4">

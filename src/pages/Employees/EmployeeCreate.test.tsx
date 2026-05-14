@@ -181,6 +181,18 @@ describe("EmployeeCreate", () => {
       fireEvent.change(screen.getByLabelText(/phone/i), {
         target: { value: "+1234567890" },
       });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Musterstraße" },
+      });
+      fireEvent.change(screen.getByLabelText(/house number/i), {
+        target: { value: "7A" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "10115" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "Berlin" },
+      });
       fireEvent.change(screen.getByLabelText(/date of birth/i), {
         target: { value: "01/01/1990" },
       });
@@ -220,6 +232,19 @@ describe("EmployeeCreate", () => {
             status: "pre_contract",
             contract_type: "full_time",
             send_invitation: true,
+            addresses: [
+              {
+                street: "Musterstraße",
+                house_number: "7A",
+                postal_code: "10115",
+                city: "Berlin",
+                supplement: null,
+                country: "DE",
+                state: null,
+                resided_from: null,
+                resided_until: null,
+              },
+            ],
           });
         },
         { timeout: QUERY_TIMEOUT }

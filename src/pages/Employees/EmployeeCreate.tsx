@@ -26,6 +26,12 @@ import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Switch } from "../../components/switch";
 import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
+import { EmployeeAddressFields } from "./EmployeeAddressFields";
+import {
+  buildCreateAddressPayload,
+  emptyPostalAddressDraft,
+} from "./employeeAddressDraft";
+import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import {
   GERMAN_CONTRACT_START_DATE_ERROR,
   GERMAN_CONTRACT_START_DATE_HINT,
@@ -68,6 +74,9 @@ export function EmployeeCreate() {
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
   const [isLeadership, setIsLeadership] = useState(false);
+  const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
+    emptyPostalAddressDraft
+  );
   const fieldRefs = useRef<
     Partial<Record<EmployeeFormField, HTMLElement | null>>
   >({});
@@ -167,6 +176,12 @@ export function EmployeeCreate() {
           ? Boolean(formData.send_invitation)
           : false,
     };
+    const addressPayload = buildCreateAddressPayload(addressDraft);
+    if (addressPayload) {
+      normalizedData.addresses = addressPayload;
+    } else {
+      delete normalizedData.addresses;
+    }
     let normalizedBirthDateDisplay = birthDateDisplay.trim();
     let normalizedContractDateDisplay = contractDateDisplay.trim();
 
@@ -371,6 +386,11 @@ export function EmployeeCreate() {
     clearSubmitMessages();
   }
 
+  function handleAddressChange(field: keyof PostalAddressDraft, value: string) {
+    setAddressDraft((prev) => ({ ...prev, [field]: value }));
+    clearSubmitMessages();
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -534,6 +554,17 @@ export function EmployeeCreate() {
                     onChange={(e) => handleChange("phone", e.target.value)}
                   />
                 </Field>
+
+                <div className="sm:col-span-2">
+                  <Text className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <Trans>Current Address</Trans>
+                  </Text>
+                </div>
+
+                <EmployeeAddressFields
+                  draft={addressDraft}
+                  onChange={handleAddressChange}
+                />
               </div>
             </FieldGroup>
           </Fieldset>

@@ -17,6 +17,10 @@ export interface PostalAddressDraft {
   state?: string;
 }
 
+interface HasAddressDraftValueOptions {
+  emptyCountryCodes?: string[];
+}
+
 export function getCurrentAddressFromList(
   list: EmployeeAddress[] | null | undefined
 ): EmployeeAddress | null {
@@ -29,14 +33,23 @@ export function getCurrentAddressFromList(
   );
 }
 
-function hasAddressDraftValueForCurrentRow(draft: PostalAddressDraft): boolean {
+export function hasAddressDraftValue(
+  draft: PostalAddressDraft,
+  options: HasAddressDraftValueOptions = {}
+): boolean {
+  const trimmedCountry = draft.country.trim();
+  const emptyCountryCodes = options.emptyCountryCodes?.map((code) =>
+    code.trim().toUpperCase()
+  );
+
   return (
     draft.street.trim().length > 0 ||
     draft.houseNumber.trim().length > 0 ||
     draft.postalCode.trim().length > 0 ||
     draft.city.trim().length > 0 ||
     draft.supplement.trim().length > 0 ||
-    draft.country.trim().length > 0 ||
+    (trimmedCountry.length > 0 &&
+      !emptyCountryCodes?.includes(trimmedCountry.toUpperCase())) ||
     (draft.state?.trim().length ?? 0) > 0
   );
 }
@@ -75,20 +88,38 @@ export function mergeAddressBaseList(
 /**
  * Builds the `addresses` payload for PATCH when only the current residence is edited.
  * Historical rows (non-null `resided_until`) are preserved; the current row is replaced.
+ *
+ * Pass `emptyCountryCodes` to treat specific country codes (e.g. `["DE"]`) as a
+ * non-value so that a form defaulted to Germany is not treated as a filled address.
  */
 export function buildAddressesPayloadForCurrentEdit(
   addressRows: EmployeeAddress[],
-  draft: PostalAddressDraft
+  draft: PostalAddressDraft,
+  options: { emptyCountryCodes?: string[] } = {}
 ): EmployeeAddressInput[] {
   const historical = addressRows.filter(
     (a) => a.resided_until != null && a.resided_until !== ""
   );
   const current = getCurrentAddressFromList(addressRows);
-  const shouldIncludeCurrentRow = hasAddressDraftValueForCurrentRow(draft);
+  const shouldIncludeCurrentRow = hasAddressDraftValue(draft, {
+    emptyCountryCodes: options.emptyCountryCodes,
+  });
+
+  // If the draft supplies state explicitly, use it; otherwise fall back to the
+  // current row's state — but clear it when the draft switches to a different
+  // non-empty country, since state subdivisions don't transfer across countries.
+  const draftCountry = draft.country.trim().toUpperCase() || null;
+  const currentCountry = current?.country?.trim().toUpperCase() || null;
+  const countryChanged =
+    draftCountry !== null &&
+    currentCountry !== null &&
+    draftCountry !== currentCountry;
   const normalizedState =
     draft.state !== undefined
       ? draft.state.trim() || null
-      : current?.state || null;
+      : countryChanged
+        ? null
+        : current?.state || null;
 
   if (!shouldIncludeCurrentRow) {
     return historical.map((a) => rowToInput(a));
