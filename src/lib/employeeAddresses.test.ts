@@ -277,6 +277,46 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
       },
     ]);
   });
+
+  it("does not create a current row when only the default country code is set", () => {
+    const historical = addr({
+      id: "old-1",
+      street: "Altstraße",
+      house_number: "8",
+      postal_code: "50667",
+      city: "Köln",
+      country: "DE",
+      resided_from: "2018-01-01",
+      resided_until: "2024-12-31",
+    });
+
+    expect(
+      buildAddressesPayloadForCurrentEdit(
+        [historical],
+        {
+          street: "",
+          houseNumber: "",
+          postalCode: "",
+          city: "",
+          supplement: "",
+          country: "DE",
+        },
+        { emptyCountryCodes: ["DE"] }
+      )
+    ).toEqual([
+      {
+        street: "Altstraße",
+        house_number: "8",
+        postal_code: "50667",
+        city: "Köln",
+        supplement: null,
+        country: "DE",
+        state: null,
+        resided_from: "2018-01-01",
+        resided_until: "2024-12-31",
+      },
+    ]);
+  });
 });
 
 describe("hasAddressDraftValue", () => {

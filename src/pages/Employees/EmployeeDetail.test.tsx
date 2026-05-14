@@ -28,6 +28,10 @@ const { mockUseUserCapabilities } = vi.hoisted(() => ({
 // Mock the API modules
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/qualificationApi");
+vi.mock("../../services/addressApi", () => ({
+  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue([]),
+  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("../../services/employeeDocumentApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
@@ -270,9 +274,7 @@ describe("EmployeeDetail", () => {
     fireEvent.change(screen.getByLabelText(/^City$/i), {
       target: { value: "Berlin" },
     });
-    fireEvent.change(screen.getByLabelText(/^Country \(ISO-2\)$/i), {
-      target: { value: "de" },
-    });
+    // Country is now a searchable combobox; the default draft country (DE) is kept
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
 
     await waitFor(() => {

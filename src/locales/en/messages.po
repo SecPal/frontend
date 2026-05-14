@@ -143,6 +143,10 @@ msgstr "Emergency Contacts"
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Search or select country"
+msgstr "Search or select country"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
 msgstr "Create Employee"
@@ -233,6 +237,10 @@ msgstr "No Organizational Units"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "This onboarding step uses a schema we cannot render yet."
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "No address suggestions found."
+msgstr "No address suggestions found."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -248,8 +256,7 @@ msgstr "Failed to delete file"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -759,13 +766,16 @@ msgstr "Page Not Found"
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Address autocomplete request failed."
+msgstr "Address autocomplete request failed."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Name"
 msgstr "Emergency Contact Name"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "House Number"
 msgstr "House Number"
 
@@ -981,8 +991,7 @@ msgstr "Please use the required format."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
@@ -1364,8 +1373,7 @@ msgstr "New parent"
 msgid "Please use the required format ({actualPattern})."
 msgstr "Please use the required format ({actualPattern})."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address Supplement"
 msgstr "Address Supplement"
 
@@ -1571,6 +1579,7 @@ msgstr "Add Child Unit"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2095,11 +2104,6 @@ msgstr "Emergency contact phone is required."
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "Country (ISO-2)"
-msgstr "Country (ISO-2)"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
@@ -2398,11 +2402,6 @@ msgstr "Loading employees..."
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "State"
-msgstr "State"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Submit for Review"
@@ -2474,6 +2473,11 @@ msgstr "Site Name"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Confirm and enable MFA"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Current Address"
+msgstr "Current Address"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
@@ -2679,8 +2683,7 @@ msgstr "Update application now"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -3046,6 +3049,7 @@ msgstr "Please choose whether you want to upload your identity document now."
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx

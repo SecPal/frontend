@@ -143,6 +143,10 @@ msgstr "Notfallkontakte"
 msgid "Invitation Failure Reason"
 msgstr "Grund für das Scheitern der Einladung"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Search or select country"
+msgstr ""
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
 msgstr "Mitarbeiter anlegen"
@@ -233,6 +237,10 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "No address suggestions found."
+msgstr ""
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "weitere Optionen"
@@ -248,8 +256,7 @@ msgstr "Datei konnte nicht gelöscht werden"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -759,13 +766,16 @@ msgstr "Seite nicht gefunden"
 msgid "Confirm and Continue"
 msgstr "Bestätigen und fortfahren"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Address autocomplete request failed."
+msgstr ""
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Name"
 msgstr "Name des Notfallkontakts"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "House Number"
 msgstr "Hausnummer"
 
@@ -981,8 +991,7 @@ msgstr "Bitte verwenden Sie das erforderliche Format."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
@@ -1364,8 +1373,7 @@ msgstr "neue übergeordnete Einheit"
 msgid "Please use the required format ({actualPattern})."
 msgstr "Bitte verwenden Sie das erforderliche Format ({actualPattern})."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address Supplement"
 msgstr "Adresszusatz"
 
@@ -1571,6 +1579,7 @@ msgstr "Untergeordnete Einheit hinzufügen"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -2095,11 +2104,6 @@ msgstr "Telefonnummer des Notfallkontakts ist erforderlich."
 msgid "Add Root Unit"
 msgstr "Stammeinheit hinzufügen"
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "Country (ISO-2)"
-msgstr "Land (ISO-2)"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
@@ -2398,11 +2402,6 @@ msgstr "Mitarbeiter laden..."
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Bitte korrigieren Sie die hervorgehobenen Felder vor dem Absenden."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "State"
-msgstr "Bundesland"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
 msgstr "Zur Überprüfung einreichen"
@@ -2474,6 +2473,11 @@ msgstr "Name des Standorts"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Bestätigen und Aktivieren von MFA"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Current Address"
+msgstr ""
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
@@ -2679,8 +2683,7 @@ msgstr "Anwendung jetzt aktualisieren"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -3046,6 +3049,7 @@ msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möcht
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx

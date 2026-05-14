@@ -19,13 +19,17 @@ export const emptyPostalAddressDraft: PostalAddressDraft = {
 export function employeeAddressToDraft(
   address: EmployeeAddress | null | undefined
 ): PostalAddressDraft {
+  if (!address) {
+    return emptyPostalAddressDraft;
+  }
+
   return {
-    street: address?.street ?? "",
-    houseNumber: address?.house_number ?? "",
-    postalCode: address?.postal_code ?? "",
-    city: address?.city ?? "",
-    supplement: address?.supplement ?? "",
-    country: address?.country ?? "",
+    street: address.street ?? "",
+    houseNumber: address.house_number ?? "",
+    postalCode: address.postal_code ?? "",
+    city: address.city ?? "",
+    supplement: address.supplement ?? "",
+    country: address.country ?? "",
   };
 }
 

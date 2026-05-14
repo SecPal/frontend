@@ -11,19 +11,25 @@ import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
   mergeAddressBaseList,
+  type PostalAddressDraft,
 } from "../../lib/employeeAddresses";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { Heading } from "../../components/heading";
 import { Button } from "../../components/button";
 import { Text } from "../../components/text";
 import {
-  Fieldset,
-  Legend,
-  FieldGroup,
   Field,
+  Fieldset,
+  FieldGroup,
   Label,
+  Legend,
 } from "../../components/fieldset";
 import { Input } from "../../components/input";
+import { EmployeeAddressFields } from "./EmployeeAddressFields";
+import {
+  employeeAddressToDraft,
+  emptyPostalAddressDraft,
+} from "./employeeAddressDraft";
 import {
   emergencyContactsToDrafts,
   emptyEmergencyContactDraft,
@@ -46,12 +52,9 @@ export function EmployeeContactsEdit() {
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [addressStreet, setAddressStreet] = useState("");
-  const [addressHouseNumber, setAddressHouseNumber] = useState("");
-  const [addressPostalCode, setAddressPostalCode] = useState("");
-  const [addressCity, setAddressCity] = useState("");
-  const [addressSupplement, setAddressSupplement] = useState("");
-  const [addressCountry, setAddressCountry] = useState("");
+  const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
+    emptyPostalAddressDraft
+  );
   const [emergencyContacts, setEmergencyContacts] = useState<
     EmergencyContactDraft[]
   >([emptyEmergencyContactDraft()]);
@@ -85,13 +88,11 @@ export function EmployeeContactsEdit() {
           employee.current_address
         );
         setAddressRowsSnapshot(rows);
-        const cur = employee.current_address ?? getCurrentAddressFromList(rows);
-        setAddressStreet(cur?.street ?? "");
-        setAddressHouseNumber(cur?.house_number ?? "");
-        setAddressPostalCode(cur?.postal_code ?? "");
-        setAddressCity(cur?.city ?? "");
-        setAddressSupplement(cur?.supplement ?? "");
-        setAddressCountry(cur?.country ?? "");
+        setAddressDraft(
+          employeeAddressToDraft(
+            employee.current_address ?? getCurrentAddressFromList(rows)
+          )
+        );
         setEmergencyContacts(
           emergencyContactsToDrafts(employee.emergency_contacts)
         );
@@ -169,14 +170,11 @@ export function EmployeeContactsEdit() {
       await updateEmployee(id, {
         email: trimmedEmail,
         phone: phone.trim(),
-        addresses: buildAddressesPayloadForCurrentEdit(addressRowsSnapshot, {
-          street: addressStreet,
-          houseNumber: addressHouseNumber,
-          postalCode: addressPostalCode,
-          city: addressCity,
-          supplement: addressSupplement,
-          country: addressCountry,
-        }),
+        addresses: buildAddressesPayloadForCurrentEdit(
+          addressRowsSnapshot,
+          addressDraft,
+          { emptyCountryCodes: ["DE"] }
+        ),
         emergency_contacts:
           normalizedContacts.length > 0 ? normalizedContacts : null,
       });
@@ -319,74 +317,13 @@ export function EmployeeContactsEdit() {
               <Trans>Postal Address</Trans>
             </Legend>
             <FieldGroup>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                <Field>
-                  <Label>
-                    <Trans>Postal Code</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressPostalCode}
-                    onChange={(event) =>
-                      setAddressPostalCode(event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>City</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressCity}
-                    onChange={(event) => setAddressCity(event.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>Street</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressStreet}
-                    onChange={(event) => setAddressStreet(event.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>House Number</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressHouseNumber}
-                    onChange={(event) =>
-                      setAddressHouseNumber(event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>Address Supplement</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressSupplement}
-                    onChange={(event) =>
-                      setAddressSupplement(event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <Label>
-                    <Trans>Country (ISO-2)</Trans>
-                  </Label>
-                  <Input
-                    type="text"
-                    value={addressCountry}
-                    onChange={(event) => setAddressCountry(event.target.value)}
-                  />
-                </Field>
-              </div>
+              <EmployeeAddressFields
+                draft={addressDraft}
+                onChange={(field, value) =>
+                  setAddressDraft((prev) => ({ ...prev, [field]: value }))
+                }
+                fieldIdPrefix="contacts-edit-address"
+              />
             </FieldGroup>
           </Fieldset>
 

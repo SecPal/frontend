@@ -147,7 +147,11 @@ export function EmployeeAddressFields({
   );
 
   useEffect(() => {
-    if (!autocompleteEnabled || draft.street.trim().length < 2) {
+    if (
+      !autocompleteEnabled ||
+      focusedField !== "street" ||
+      draft.street.trim().length < 2
+    ) {
       const timeoutId = window.setTimeout(() => {
         setStreetSuggestions([]);
         setStreetHighlightIndex(-1);
@@ -206,6 +210,7 @@ export function EmployeeAddressFields({
     };
   }, [
     autocompleteEnabled,
+    focusedField,
     draft.city,
     draft.postalCode,
     draft.street,
@@ -490,6 +495,7 @@ export function EmployeeAddressFields({
     if (event.key === "Escape") {
       event.preventDefault();
       setStreetHighlightIndex(-1);
+      setFocusedField(null);
     }
   }
 
@@ -546,6 +552,7 @@ export function EmployeeAddressFields({
     if (event.key === "Escape") {
       event.preventDefault();
       setLocalityHighlightIndex(-1);
+      setFocusedField(null);
     }
   }
 

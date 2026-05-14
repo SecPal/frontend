@@ -88,16 +88,22 @@ export function mergeAddressBaseList(
 /**
  * Builds the `addresses` payload for PATCH when only the current residence is edited.
  * Historical rows (non-null `resided_until`) are preserved; the current row is replaced.
+ *
+ * Pass `emptyCountryCodes` to treat specific country codes (e.g. `["DE"]`) as a
+ * non-value so that a form defaulted to Germany is not treated as a filled address.
  */
 export function buildAddressesPayloadForCurrentEdit(
   addressRows: EmployeeAddress[],
-  draft: PostalAddressDraft
+  draft: PostalAddressDraft,
+  options: { emptyCountryCodes?: string[] } = {}
 ): EmployeeAddressInput[] {
   const historical = addressRows.filter(
     (a) => a.resided_until != null && a.resided_until !== ""
   );
   const current = getCurrentAddressFromList(addressRows);
-  const shouldIncludeCurrentRow = hasAddressDraftValue(draft);
+  const shouldIncludeCurrentRow = hasAddressDraftValue(draft, {
+    emptyCountryCodes: options.emptyCountryCodes,
+  });
   const normalizedState =
     draft.state !== undefined
       ? draft.state.trim() || null

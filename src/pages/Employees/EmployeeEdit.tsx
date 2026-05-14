@@ -272,7 +272,8 @@ export function EmployeeEdit() {
       ) {
         updatePayload.addresses = buildAddressesPayloadForCurrentEdit(
           addressRowsSnapshot,
-          addressDraft
+          addressDraft,
+          { emptyCountryCodes: ["DE"] }
         );
       }
       delete updatePayload.status;
