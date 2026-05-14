@@ -301,10 +301,11 @@ function isResidentialAddressHistoryTemplate(
 }
 
 function isResidentialAddressHistoryFieldKey(fieldKey: string): boolean {
+  // Bare aggregate keys like "current_address" or "previous_addresses" are not
+  // rendered as inline errors by the component; only nested keys with a dot
+  // separator or the specific Bewacher fields are handled inline.
   return (
-    fieldKey === "current_address" ||
     fieldKey.startsWith("current_address.") ||
-    fieldKey === "previous_addresses" ||
     fieldKey.startsWith("previous_addresses.") ||
     fieldKey === "has_current_bewacher_id" ||
     fieldKey === "bewacher_id" ||
@@ -1172,6 +1173,13 @@ function isWorkflowConflictError(error: unknown): error is ApiError {
     );
   }
 
+  // For 422s Laravel returns a generic "The given data was invalid." message
+  // that never matches the workflow pattern; only use the message fallback for
+  // 409 Conflict responses which carry a specific conflict description.
+  if (error.statusCode !== 409) {
+    return false;
+  }
+
   return /onboarding workflow/i.test(error.message);
 }
 
@@ -1643,6 +1651,7 @@ export function OnboardingWizard() {
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [template, setTemplate] = useState<OnboardingFormTemplate | null>(null);
+  const [templateResetKey, setTemplateResetKey] = useState(0);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [submission, setSubmission] = useState<OnboardingSubmission | null>(
     null
@@ -1857,6 +1866,7 @@ export function OnboardingWizard() {
       setSubmission(stepState.submission);
       setFormData(stepState.formData);
       setTemplate(null);
+      setTemplateResetKey((k) => k + 1);
     },
     [navigate]
   );
@@ -2131,7 +2141,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [currentStepIndex, currentStepTemplateId]);
+  }, [currentStepIndex, currentStepTemplateId, templateResetKey]);
 
   function updateStepAtIndex(
     stepIndex: number,

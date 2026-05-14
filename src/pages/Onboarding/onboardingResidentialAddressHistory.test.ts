@@ -7,6 +7,7 @@ import {
   addCalendarDaysToIsoDate,
   currentAddressCoversFiveYearWindow,
   emptyResidentialAddressEntry,
+  getResidentialAddressHistoryValue,
   residentialHistoryBewacherDefaults,
   shouldShowPreviousResidencesForBewacher,
   syncPreviousResidenceRows,
@@ -309,5 +310,276 @@ describe("syncPreviousResidenceRows", () => {
     expect(synced!.previous_addresses[1]!.resided_until).toBe(
       addCalendarDaysToIsoDate("2023-06-01", -1)
     );
+  });
+
+  it("returns null when no change is needed (stable state)", () => {
+    const value: ResidentialAddressHistoryValue = {
+      ...residentialHistoryBewacherDefaults,
+      has_current_bewacher_id: "no",
+      current_address: {
+        ...emptyResidentialAddressEntry,
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+        resided_from: "2024-01-10",
+      },
+      previous_addresses: [
+        {
+          ...emptyResidentialAddressEntry,
+          street: "Old",
+          house_number: "2",
+          postal_code: "20095",
+          city: "Hamburg",
+          country: "DE",
+          resided_from: "2019-01-01",
+          resided_until: "2024-01-09",
+        },
+      ],
+    };
+    expect(syncPreviousResidenceRows(value, ref)).toBeNull();
+  });
+
+  it("clears the previous addresses list when current address covers five years", () => {
+    const value: ResidentialAddressHistoryValue = {
+      ...residentialHistoryBewacherDefaults,
+      has_current_bewacher_id: "no",
+      current_address: {
+        ...emptyResidentialAddressEntry,
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+        resided_from: "2018-01-01",
+      },
+      previous_addresses: [
+        { ...emptyResidentialAddressEntry, resided_until: "2017-12-31" },
+      ],
+    };
+    // All previous rows are empty/non-material — should clear them
+    const synced = syncPreviousResidenceRows(value, ref);
+    expect(synced).not.toBeNull();
+    expect(synced!.previous_addresses).toHaveLength(0);
+  });
+
+  it("returns null when current address covers five years and no previous rows exist", () => {
+    const value: ResidentialAddressHistoryValue = {
+      ...residentialHistoryBewacherDefaults,
+      has_current_bewacher_id: "no",
+      current_address: {
+        ...emptyResidentialAddressEntry,
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+        resided_from: "2018-01-01",
+      },
+      previous_addresses: [],
+    };
+    expect(syncPreviousResidenceRows(value, ref)).toBeNull();
+  });
+
+  it("returns null when resided_from is not a valid ISO date", () => {
+    const value: ResidentialAddressHistoryValue = {
+      ...residentialHistoryBewacherDefaults,
+      has_current_bewacher_id: "no",
+      current_address: { ...emptyResidentialAddressEntry },
+      previous_addresses: [],
+    };
+    expect(syncPreviousResidenceRows(value, ref)).toBeNull();
+  });
+
+  it("updates resided_until of the first row when current move-in changes", () => {
+    const value: ResidentialAddressHistoryValue = {
+      ...residentialHistoryBewacherDefaults,
+      has_current_bewacher_id: "no",
+      current_address: {
+        ...emptyResidentialAddressEntry,
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+        resided_from: "2024-06-01",
+      },
+      previous_addresses: [
+        {
+          ...emptyResidentialAddressEntry,
+          resided_until: "2023-12-31",
+        },
+      ],
+    };
+    const synced = syncPreviousResidenceRows(value, ref);
+    expect(synced).not.toBeNull();
+    expect(synced!.previous_addresses[0]!.resided_until).toBe("2024-05-31");
+  });
+});
+
+describe("getResidentialAddressHistoryValue normalization", () => {
+  it("normalizes boolean true/false for has_current_bewacher_id", () => {
+    expect(
+      getResidentialAddressHistoryValue({ has_current_bewacher_id: true })
+        .has_current_bewacher_id
+    ).toBe("yes");
+    expect(
+      getResidentialAddressHistoryValue({ has_current_bewacher_id: false })
+        .has_current_bewacher_id
+    ).toBe("no");
+  });
+
+  it("normalizes string yes/no/ja/nein for has_current_bewacher_id", () => {
+    expect(
+      getResidentialAddressHistoryValue({ has_current_bewacher_id: "ja" })
+        .has_current_bewacher_id
+    ).toBe("yes");
+    expect(
+      getResidentialAddressHistoryValue({ has_current_bewacher_id: "nein" })
+        .has_current_bewacher_id
+    ).toBe("no");
+  });
+
+  it("normalizes boolean strings for bewacher_id_unknown", () => {
+    expect(
+      getResidentialAddressHistoryValue({ bewacher_id_unknown: "true" })
+        .bewacher_id_unknown
+    ).toBe(true);
+    expect(
+      getResidentialAddressHistoryValue({ bewacher_id_unknown: 1 })
+        .bewacher_id_unknown
+    ).toBe(true);
+  });
+
+  it("normalizes a previous_addresses array with object entries", () => {
+    const value = getResidentialAddressHistoryValue({
+      previous_addresses: [
+        { street: "Musterstr.", house_number: "5", country: "DE" },
+        null,
+        "invalid",
+      ],
+    });
+    expect(value.previous_addresses).toHaveLength(3);
+    expect(value.previous_addresses[0]!.street).toBe("Musterstr.");
+    expect(value.previous_addresses[1]!.street).toBe("");
+    expect(value.previous_addresses[2]!.street).toBe("");
+  });
+});
+
+describe("validateResidentialAddressHistoryValue — date format errors", () => {
+  beforeEach(() => {
+    i18n.load("en", {});
+    i18n.activate("en");
+  });
+
+  const translate = i18n._.bind(i18n) as typeof i18n._;
+
+  it("reports invalid resided_from format for current address", () => {
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "no",
+        current_address: {
+          ...emptyResidentialAddressEntry,
+          street: "A",
+          house_number: "1",
+          postal_code: "10115",
+          city: "Berlin",
+          country: "DE",
+          resided_from: "not-a-date",
+        },
+        previous_addresses: [],
+      },
+      translate
+    );
+
+    expect(errors["current_address.resided_from"]).toMatch(/required format/i);
+  });
+
+  it("validates a material previous entry requiring both dates", () => {
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "no",
+        current_address: {
+          ...emptyResidentialAddressEntry,
+          street: "A",
+          house_number: "1",
+          postal_code: "10115",
+          city: "Berlin",
+          country: "DE",
+          resided_from: localIsoDateWithDayOffset(-100),
+        },
+        previous_addresses: [
+          {
+            street: "Old",
+            house_number: "2",
+            postal_code: "20095",
+            city: "Hamburg",
+            supplement: "",
+            country: "DE",
+            resided_from: "",
+            resided_until: "",
+          },
+        ],
+      },
+      translate
+    );
+
+    expect(errors["previous_addresses.0.resided_from"]).toMatch(
+      /resided from.*required/i
+    );
+    expect(errors["previous_addresses.0.resided_until"]).toMatch(
+      /resided until.*required/i
+    );
+  });
+
+  it("does not require previous residences when yes + known Bewacher ID", () => {
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "yes",
+        bewacher_id: "BW-999",
+        current_address: {
+          ...emptyResidentialAddressEntry,
+          street: "A",
+          house_number: "1",
+          postal_code: "10115",
+          city: "Berlin",
+          country: "DE",
+          resided_from: localIsoDateWithDayOffset(-100),
+        },
+        previous_addresses: [],
+      },
+      translate
+    );
+
+    expect(errors["previous_addresses.coverage"]).toBeUndefined();
+    expect(errors["bewacher_id"]).toBeUndefined();
+  });
+
+  it("accepts bewacher_id_unknown=true as a valid answer when yes is selected", () => {
+    const errors = validateResidentialAddressHistoryValue(
+      {
+        ...residentialHistoryBewacherDefaults,
+        has_current_bewacher_id: "yes",
+        bewacher_id: "",
+        bewacher_id_unknown: true,
+        current_address: {
+          ...emptyResidentialAddressEntry,
+          street: "A",
+          house_number: "1",
+          postal_code: "10115",
+          city: "Berlin",
+          country: "DE",
+          resided_from: localIsoDateWithDayOffset(-100),
+        },
+        previous_addresses: [],
+      },
+      translate
+    );
+
+    expect(errors["bewacher_id"]).toBeUndefined();
   });
 });

@@ -137,9 +137,7 @@ export function addCalendarDaysToIsoDate(
   return formatLocalIsoCalendarDay(dt);
 }
 
-export function fiveYearHistoryBoundaryIso(
-  referenceDate: Date = new Date()
-): string {
+function fiveYearHistoryBoundaryIso(referenceDate: Date = new Date()): string {
   const ref = new Date(
     referenceDate.getFullYear(),
     referenceDate.getMonth(),
@@ -269,7 +267,7 @@ function validateEntry(
 /**
  * Oldest previous residence has a start date on or before the five-year lookback boundary.
  */
-export function previousResidencesCoverFiveYearWindow(
+function previousResidencesCoverFiveYearWindow(
   value: ResidentialAddressHistoryValue,
   referenceDate: Date = new Date()
 ): boolean {
