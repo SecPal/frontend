@@ -121,7 +121,8 @@ export function resolveApiBaseUrl(options?: {
     return LIVE_API_ORIGIN;
   }
 
-  const canonicalPreviewApiOrigin = getCanonicalPreviewApiOrigin(runtimeHostname);
+  const canonicalPreviewApiOrigin =
+    getCanonicalPreviewApiOrigin(runtimeHostname);
 
   if (canonicalPreviewApiOrigin !== null) {
     return canonicalPreviewApiOrigin;
