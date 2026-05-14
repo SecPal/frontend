@@ -100,12 +100,6 @@ function shouldUseCanonicalLiveApiOrigin(
   );
 }
 
-function shouldUseCanonicalPreviewApiOrigin(
-  runtimeHostname: string | null
-): boolean {
-  return getCanonicalPreviewApiOrigin(runtimeHostname) !== null;
-}
-
 export function resolveApiBaseUrl(options?: {
   configuredBaseUrl?: string;
   mode?: string;
@@ -127,8 +121,10 @@ export function resolveApiBaseUrl(options?: {
     return LIVE_API_ORIGIN;
   }
 
-  if (shouldUseCanonicalPreviewApiOrigin(runtimeHostname)) {
-    return getCanonicalPreviewApiOrigin(runtimeHostname) as string;
+  const canonicalPreviewApiOrigin = getCanonicalPreviewApiOrigin(runtimeHostname);
+
+  if (canonicalPreviewApiOrigin !== null) {
+    return canonicalPreviewApiOrigin;
   }
 
   if (!normalizedConfiguredBaseUrl) {
