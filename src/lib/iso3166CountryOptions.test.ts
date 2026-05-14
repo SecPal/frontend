@@ -28,6 +28,11 @@ describe("getCountrySelectOptions", () => {
     expect(labels).toEqual(sorted);
   });
 
+  it("does not include XA (stateless nationality code) in the address country list", () => {
+    const options = getCountrySelectOptions("en");
+    expect(options.some((o) => o.code === "XA")).toBe(false);
+  });
+
   it("falls back only for unsupported region codes instead of the whole list", () => {
     const originalIntl = globalThis.Intl;
 
@@ -39,7 +44,7 @@ describe("getCountrySelectOptions", () => {
         }
 
         of(code: string) {
-          if (code === "XA" || code === "XK") {
+          if (code === "XK") {
             throw new RangeError(`Unsupported region: ${code}`);
           }
 
@@ -51,7 +56,6 @@ describe("getCountrySelectOptions", () => {
     try {
       const options = getCountrySelectOptions("en");
       expect(options.find((o) => o.code === "DE")?.label).toBe("Germany");
-      expect(options.find((o) => o.code === "XA")?.label).toBe("XA");
       expect(options.find((o) => o.code === "XK")?.label).toBe("XK");
     } finally {
       vi.stubGlobal("Intl", originalIntl);

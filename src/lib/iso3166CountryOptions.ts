@@ -204,7 +204,6 @@ const SHARED_ALPHA2_CODES: readonly string[] = [
   "VN",
   "VU",
   "WS",
-  "XA",
   "XK",
   "YE",
   "ZA",

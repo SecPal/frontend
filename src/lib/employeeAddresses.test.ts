@@ -125,6 +125,21 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     });
   });
 
+  it("preserves state from the current row when the draft omits the state field", () => {
+    const current = addr({
+      id: "cur-1",
+      street: "Jetztstraße",
+      city: "Berlin",
+      state: "BE",
+      resided_from: "2019-06-02",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], draft);
+
+    expect(payload[0]?.state).toBe("BE");
+  });
+
   it("clears state when the draft explicitly provides an empty string", () => {
     const current = addr({
       id: "cur-1",
