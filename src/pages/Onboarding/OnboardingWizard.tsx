@@ -1154,17 +1154,18 @@ function isWorkflowConflictError(error: unknown): error is ApiError {
     return false;
   }
 
-  const rawMessages = [
-    error.message,
+  const validationMessages = [
     ...(error.errors?.onboarding_workflow_status ?? []),
     ...(error.errors?.form_data ?? []),
   ].filter((entry) => entry.trim().length > 0);
 
-  if (rawMessages.length === 0) {
-    return false;
+  if (validationMessages.length > 0) {
+    return validationMessages.every((entry) =>
+      /onboarding workflow/i.test(entry)
+    );
   }
 
-  return rawMessages.every((entry) => /onboarding workflow/i.test(entry));
+  return /onboarding workflow/i.test(error.message);
 }
 
 function ProgressIndicator({

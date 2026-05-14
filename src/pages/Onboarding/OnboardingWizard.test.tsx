@@ -2951,7 +2951,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("replaces generic onboarding workflow API errors with clearer guidance", async () => {
+  it("refreshes the wizard after generic onboarding workflow API errors", async () => {
     onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
       new ApiError("The given data was invalid.", 422, {
         form_data: [
@@ -2976,20 +2976,73 @@ describe("OnboardingWizard server-side validation feedback", () => {
 
     expect(
       await screen.findByText(
-        /The save failed on the server because your onboarding workflow is not currently editable\. The wizard will refresh to the latest server state\./i
+        /Your onboarding state changed on the server while you were editing\. The wizard was refreshed to the current server state\./i
       )
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/form_data:/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/form_data:/i)).not.toBeInTheDocument();
   });
 
-  it("lists whole-form API messages next to inline field errors", async () => {
+  it("refreshes auth state and reloads steps for workflow-conflict 422 responses", async () => {
+    onboardingApiMocks.fetchOnboardingSteps
+      .mockResolvedValueOnce([
+        {
+          step_number: 1,
+          title: "Bank Account Details",
+          description: "Salary payment.",
+          template_id: "template-bank",
+          is_required: false,
+          is_completed: false,
+          submission: null,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          step_number: 1,
+          title: "Bank Account Details",
+          description: "Salary payment.",
+          template_id: "template-bank",
+          is_required: false,
+          is_completed: false,
+          submission: null,
+        },
+      ]);
     onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
       new ApiError("The given data was invalid.", 422, {
         form_data: [
           "Cannot submit: onboarding workflow is not in an expected state for this employee.",
         ],
+      })
+    );
+
+    const user = userEvent.setup();
+    await renderWithAuthenticatedProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    await waitFor(() => {
+      expect(onboardingApiMocks.fetchOnboardingSteps).toHaveBeenCalledTimes(2);
+    });
+    expect(authApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByText(
+        /Your onboarding state changed on the server while you were editing\. The wizard was refreshed to the current server state\./i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("lists whole-form API messages next to inline field errors", async () => {
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: ["Submission contains HR-managed fields."],
         "form_data.iban": ["The string does not match the required pattern."],
       })
     );
@@ -3017,9 +3070,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
       })
     ).toBeInTheDocument();
     expect(
-      await screen.findByText(
-        /The save failed on the server because your onboarding workflow is not currently editable/i
-      )
+      await screen.findByText(/Submission contains HR-managed fields\./i)
     ).toBeInTheDocument();
   });
 });

@@ -4,10 +4,6 @@
 import type { EmployeeOnboardingWorkflowStatus } from "@/types/api";
 import type { User } from "../contexts/auth-context";
 
-export const EDITABLE_ONBOARDING_WORKFLOW_STATUSES = new Set<
-  EmployeeOnboardingWorkflowStatus
->(["invited", "account_initialized", "in_progress", "changes_requested"]);
-
 export const SUBMITTED_ONBOARDING_WORKFLOW_STATUSES = new Set<
   EmployeeOnboardingWorkflowStatus
 >([
@@ -29,12 +25,6 @@ export function getAuthOnboardingWorkflowStatus(
   return typeof nested === "string"
     ? (nested as EmployeeOnboardingWorkflowStatus)
     : undefined;
-}
-
-export function isEditableOnboardingWorkflowStatus(
-  status: EmployeeOnboardingWorkflowStatus | undefined
-): boolean {
-  return status !== undefined && EDITABLE_ONBOARDING_WORKFLOW_STATUSES.has(status);
 }
 
 export function isSubmittedOnboardingWorkflowStatus(
