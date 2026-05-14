@@ -45,6 +45,10 @@ msgstr "Edit Employee"
 msgid "Activity Information"
 msgstr "Activity Information"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "We couldn't save your draft yet. Please review the highlighted fields."
+msgstr "We couldn't save your draft yet. Please review the highlighted fields."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Email"
@@ -143,6 +147,10 @@ msgstr "Emergency Contacts"
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Search or select country"
+msgstr "Search or select country"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
 msgstr "Create Employee"
@@ -190,6 +198,7 @@ msgstr "Name Change Detected"
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
 msgstr "No"
@@ -205,6 +214,10 @@ msgstr "Global"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Confirm with your authenticator app or one recovery code to disable MFA for this account."
+
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Previous Residences"
+msgstr "Previous Residences"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Name change too significant. Please contact HR before completing onboarding."
@@ -233,6 +246,10 @@ msgstr "No Organizational Units"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "This onboarding step uses a schema we cannot render yet."
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "No address suggestions found."
+msgstr "No address suggestions found."
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -248,8 +265,10 @@ msgstr "Failed to delete file"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -291,6 +310,10 @@ msgstr "Failed to upload file"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
 msgstr "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Your residence history does not cover the required period yet. Add previous addresses or move your “Living there since” date further back."
+msgstr "Your residence history does not cover the required period yet. Add previous addresses or move your “Living there since” date further back."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
@@ -358,6 +381,10 @@ msgstr "Site not found"
 msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 msgstr "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Additional validation messages from the server"
+msgstr "Additional validation messages from the server"
+
 #: src/lib/organizationalUnitUtils.ts
 msgid "Department"
 msgstr "Department"
@@ -381,6 +408,10 @@ msgstr "The new unit will be created under this parent."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "You can continue now and upload your documents later."
 msgstr "You can continue now and upload your documents later."
+
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+msgid "Please select whether you currently have a Bewacher ID."
+msgstr "Please select whether you currently have a Bewacher ID."
 
 #: src/App.tsx
 msgid "SecPal – A guard’s best friend"
@@ -531,6 +562,11 @@ msgstr "Welcome to SecPal! Let's complete your profile."
 msgid "Update the organizational unit details."
 msgstr "Update the organizational unit details."
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Current Residential Address"
+msgstr "Current Residential Address"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please try again in about 1 minute."
 msgstr "Please try again in about 1 minute."
@@ -581,6 +617,10 @@ msgstr "Permissions"
 msgid "Original:"
 msgstr "Original:"
 
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Do you currently have a Bewacher ID?"
+msgstr "Do you currently have a Bewacher ID?"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Set up MFA"
 msgstr "Set up MFA"
@@ -622,6 +662,11 @@ msgstr "SecPal could not confirm your session because the session check failed. 
 msgid "Generate BWR Export"
 msgstr "Generate BWR Export"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Resided Until"
+msgstr "Resided Until"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -640,6 +685,10 @@ msgstr "Select a new parent for this organizational unit."
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract Type"
 msgstr "Contract Type"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Failed to reload onboarding after a workflow state change"
+msgstr "Failed to reload onboarding after a workflow state change"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your residence title now?"
@@ -673,6 +722,10 @@ msgstr "The given password has appeared in a data leak. Please choose a differen
 msgid "Accepted formats: PDF, JPG, JPEG, PNG."
 msgstr "Accepted formats: PDF, JPG, JPEG, PNG."
 
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "I do not know my Bewacher ID."
+msgstr "I do not know my Bewacher ID."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Device label"
 msgstr "Device label"
@@ -688,6 +741,10 @@ msgstr "Unit"
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Customer Number"
 msgstr "Customer Number"
+
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+msgid "Enter your Bewacher ID or indicate that you do not know it."
+msgstr "Enter your Bewacher ID or indicate that you do not know it."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Team Messages"
@@ -759,13 +816,19 @@ msgstr "Page Not Found"
 msgid "Confirm and Continue"
 msgstr "Confirm and Continue"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
+msgid "Address autocomplete request failed."
+msgstr "Address autocomplete request failed."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Name"
 msgstr "Emergency Contact Name"
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
 msgstr "House Number"
 
@@ -793,6 +856,10 @@ msgstr "e.g., Berlin Branch"
 #: src/components/NotificationPreferences.tsx
 msgid "You'll now receive important updates from SecPal"
 msgstr "You'll now receive important updates from SecPal"
+
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
+msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -845,6 +912,7 @@ msgstr "Too many onboarding attempts. Please try again later."
 msgid "Password is required"
 msgstr "Password is required"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Use a two-letter country code in uppercase, for example DE."
 msgstr "Use a two-letter country code in uppercase, for example DE."
@@ -877,6 +945,11 @@ msgstr "Minimum Viewable Rank"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Completing Setup..."
 msgstr "Completing Setup..."
+
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Resided From"
+msgstr "Resided From"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload a second file, for example the reverse side."
@@ -981,8 +1054,10 @@ msgstr "Please use the required format."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
@@ -1290,6 +1365,12 @@ msgstr "Select an organizational unit to view details"
 msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 msgstr "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 
+#. placeholder {0}: index + 1
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Previous residence {0}"
+msgstr "Previous residence {0}"
+
 #: src/components/application-layout.tsx
 msgid "Employees"
 msgstr "Employees"
@@ -1301,6 +1382,10 @@ msgstr "Passkey sign-in timed out. Please try again."
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
+
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Bewacher ID"
+msgstr "Bewacher ID"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Requested"
@@ -1356,6 +1441,10 @@ msgstr "Collapse"
 msgid "Back to List"
 msgstr "Back to List"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
+msgstr "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
 msgstr "New parent"
@@ -1364,6 +1453,7 @@ msgstr "New parent"
 msgid "Please use the required format ({actualPattern})."
 msgstr "Please use the required format ({actualPattern})."
 
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Address Supplement"
@@ -1493,6 +1583,10 @@ msgstr "The type determines the unit's role in the hierarchy."
 msgid "Manage your application preferences."
 msgstr "Manage your application preferences."
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
+msgstr "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Are you sure you want to delete this site? This action cannot be undone."
 msgstr "Are you sure you want to delete this site? This action cannot be undone."
@@ -1571,6 +1665,8 @@ msgstr "Add Child Unit"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1693,6 +1789,7 @@ msgid "Loading passkeys..."
 msgstr "Loading passkeys..."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Yes"
 msgstr "Yes"
@@ -1891,6 +1988,10 @@ msgstr "Minijob"
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+msgid "The end date must be on or after the start date."
+msgstr "The end date must be on or after the start date."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "These codes are shown only once. Store them securely before closing this dialog."
@@ -2010,6 +2111,10 @@ msgstr "BWR Registered At"
 #: src/pages/Employees/EmployeeList.tsx
 msgid "All"
 msgstr "All"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Please enter your Bewacher ID or indicate that you do not know it."
+msgstr "Please enter your Bewacher ID or indicate that you do not know it."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Mail Sent"
@@ -2398,10 +2503,9 @@ msgstr "Loading employees..."
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "State"
-msgstr "State"
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "A Bewacher ID is issued for registration in the Bewacherregister."
+msgstr "A Bewacher ID is issued for registration in the Bewacherregister."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Submit for Review"
@@ -2474,6 +2578,11 @@ msgstr "Site Name"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
 msgstr "Confirm and enable MFA"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Current Address"
+msgstr "Current Address"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
@@ -2679,14 +2788,17 @@ msgstr "Update application now"
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Street"
 msgstr "Street"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field is required."
 msgstr "This field is required."
@@ -2883,6 +2995,11 @@ msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty fo
 msgid "Save Draft"
 msgstr "Save Draft"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+#: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
+msgid "Living There Since"
+msgstr "Living There Since"
+
 #: src/pages/Login.tsx
 msgid "Check your device…"
 msgstr "Check your device…"
@@ -2921,9 +3038,17 @@ msgstr "Employee Management"
 msgid "Verification Status"
 msgstr "Verification Status"
 
+#: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
+msgid "Please use the required format (YYYY-MM-DD)."
+msgstr "Please use the required format (YYYY-MM-DD)."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment (optional second file)"
 msgstr "Attachment (optional second file)"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
+msgstr "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -3046,6 +3171,7 @@ msgstr "Please choose whether you want to upload your identity document now."
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
