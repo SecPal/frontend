@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -43,11 +43,24 @@ import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { Textarea } from "../../components/textarea";
 import { getLocalizedErrorMessage } from "../../lib/errorUtils";
+import {
+  getAuthOnboardingWorkflowStatus,
+  isSubmittedOnboardingWorkflowStatus,
+} from "../../lib/onboardingWorkflow";
 import { AuthContext } from "../../contexts/auth-context";
+import { getAuthTransport } from "../../services/authTransport";
 import {
   getOnboardingStepState,
   isOnboardingAwaitingHrReview,
 } from "./onboardingWizardState";
+import {
+  OnboardingResidentialAddressHistoryFields,
+  type ResidentialAddressHistoryChange,
+} from "./OnboardingResidentialAddressHistoryFields";
+import {
+  getResidentialAddressHistoryValue,
+  validateResidentialAddressHistoryValue,
+} from "./onboardingResidentialAddressHistory";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
@@ -173,6 +186,7 @@ const RESIDENCE_TITLE_CUSTOM_FIELDS = new Set([
 const ID_DOCUMENT_UPLOAD_NOW_FIELD = "id_document_upload_now";
 const ID_DOCUMENT_KIND_FIELD = "id_document_kind";
 const RESIDENCE_TITLE_UPLOAD_NOW_FIELD = "residence_permit_upload_now";
+const RESIDENTIAL_ADDRESS_HISTORY_TEMPLATE_KEY = "residential_address_history";
 const RESIDENCE_TITLE_OPTIONS = [
   {
     value: "Aufenthaltserlaubnis",
@@ -271,6 +285,24 @@ const RESIDENCE_TITLE_EXEMPT_COUNTRY_CODES = new Set([
 
 function isEmployeeEditableOnboardingField(fieldName: string): boolean {
   return !EMPLOYEE_ONBOARDING_HR_MANAGED_FIELDS.has(fieldName);
+}
+
+function isResidentialAddressHistoryTemplate(
+  template: OnboardingFormTemplate | null
+): boolean {
+  return template?.template_key === RESIDENTIAL_ADDRESS_HISTORY_TEMPLATE_KEY;
+}
+
+function isResidentialAddressHistoryFieldKey(fieldKey: string): boolean {
+  return (
+    fieldKey === "current_address" ||
+    fieldKey.startsWith("current_address.") ||
+    fieldKey === "previous_addresses" ||
+    fieldKey.startsWith("previous_addresses.") ||
+    fieldKey === "has_current_bewacher_id" ||
+    fieldKey === "bewacher_id" ||
+    fieldKey === "bewacher_id_unknown"
+  );
 }
 
 function getResidenceTitleOptionLabel(
@@ -1003,6 +1035,28 @@ function getPatternValidationMessage(
     : `${label}: ${translate(msg`Please use the required format.`)}`;
 }
 
+/**
+ * Laravel often returns whole-form messages under `errors.form_data`; those are
+ * not tied to a schema field named "form_data", so we avoid the misleading
+ * "form_data: …" prefix and map known API phrases to clearer copy.
+ */
+function mapKnownWholeFormOnboardingApiError(
+  message: string,
+  translate: ReturnType<typeof useLingui>["_"]
+): string | null {
+  const normalized = message.trim();
+  if (
+    /onboarding workflow is not in an expected state/i.test(normalized) ||
+    (/cannot submit/i.test(normalized) &&
+      /onboarding workflow/i.test(normalized))
+  ) {
+    return translate(
+      msg`The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state.`
+    );
+  }
+  return null;
+}
+
 function formatServerValidationMessage(
   fieldKey: string,
   message: string,
@@ -1020,6 +1074,10 @@ function formatServerValidationMessage(
   }
 
   const label = getSchemaFieldLabel(fieldKey, schema);
+  if (fieldKey === "form_data" && label === "form_data") {
+    return message;
+  }
+
   return message.startsWith(`${label}:`) ? message : `${label}: ${message}`;
 }
 
@@ -1028,6 +1086,10 @@ function formatSupplementalValidationMessage(
   schema: OnboardingObjectSchema | null,
   translate: ReturnType<typeof useLingui>["_"]
 ): string {
+  const mapped = mapKnownWholeFormOnboardingApiError(message, translate);
+  if (mapped) {
+    return mapped;
+  }
   return formatServerValidationMessage("form_data", message, schema, translate);
 }
 
@@ -1070,6 +1132,39 @@ function isEditableSubmission(
     submission.status === "draft" ||
     submission.status === "rejected"
   );
+}
+
+function getFirstActionableStepIndex(steps: OnboardingStep[]): number {
+  const index = steps.findIndex(
+    (step) =>
+      step.submission == null ||
+      step.submission.status === "draft" ||
+      step.submission.status === "rejected"
+  );
+
+  return index >= 0 ? index : 0;
+}
+
+function isWorkflowConflictError(error: unknown): error is ApiError {
+  if (!(error instanceof ApiError)) {
+    return false;
+  }
+
+  if (error.statusCode !== 409 && error.statusCode !== 422) {
+    return false;
+  }
+
+  const rawMessages = [
+    error.message,
+    ...(error.errors?.onboarding_workflow_status ?? []),
+    ...(error.errors?.form_data ?? []),
+  ].filter((entry) => entry.trim().length > 0);
+
+  if (rawMessages.length === 0) {
+    return false;
+  }
+
+  return rawMessages.every((entry) => /onboarding workflow/i.test(entry));
 }
 
 function ProgressIndicator({
@@ -1528,6 +1623,7 @@ function StepNavigation({
 export function OnboardingWizard() {
   const { _, i18n } = useLingui();
   const authContext = useContext(AuthContext);
+  const authTransport = useMemo(() => getAuthTransport(), []);
   const translateRef = useRef(_);
   const navigate = useNavigate();
   const location = useLocation();
@@ -1552,6 +1648,8 @@ export function OnboardingWizard() {
     [entryRouteState, _]
   );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [apiValidationDetailMessages, setApiValidationDetailMessages] =
+    useState<string[]>([]);
   const [nationalityOptions, setNationalityOptions] = useState<
     OnboardingNationalityOption[]
   >([]);
@@ -1589,21 +1687,27 @@ export function OnboardingWizard() {
   const schema = template ? getObjectSchema(template.form_schema) : null;
   const contractStartDateFromAuth =
     authContext?.user?.employee?.contract_start_date ?? null;
+  const employeeIdFromAuth = authContext?.user?.employee?.id ?? null;
+  const currentOnboardingWorkflowStatus = getAuthOnboardingWorkflowStatus(
+    authContext?.user
+  );
   const employeeIdFromSteps = useMemo(
     () => getEmployeeIdFromSteps(steps),
     [steps]
   );
+  const employeeIdForContractStartLookup =
+    employeeIdFromSteps ?? employeeIdFromAuth;
   const contractStartDateFromOtherSteps = getContractStartDateFromSteps(steps);
   const resolvedEmployeeContractStartDate =
     typeof contractStartDateFromAuth === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth)
       ? contractStartDateFromAuth
-      : employeeIdFromSteps
+      : employeeIdForContractStartLookup
         ? employeeContractStartDate
         : null;
   const contractStartDateFallback =
-    resolvedEmployeeContractStartDate ??
     contractStartDateFromOtherSteps ??
+    resolvedEmployeeContractStartDate ??
     contractStartDateFromAuth;
   const stepUploadDocumentType = getStepUploadDocumentType(
     schema,
@@ -1704,9 +1808,52 @@ export function OnboardingWizard() {
     employmentPermissionValue === "yes";
   const isEmploymentHardBlocked =
     shouldAskEmploymentQuestion && employmentPermissionValue === "no";
-  const isCurrentStepEditable = isEditableSubmission(submission);
+  const isCurrentStepEditable =
+    isEditableSubmission(submission) &&
+    !isSubmittedOnboardingWorkflowStatus(currentOnboardingWorkflowStatus);
 
-  function resetUploadState() {
+  const syncAuthenticatedUser = useCallback(async () => {
+    if (!authContext) {
+      return null;
+    }
+
+    try {
+      const refreshedUser = await authTransport.getCurrentUser();
+      await authContext.login(refreshedUser);
+      return refreshedUser;
+    } catch {
+      authContext.retryBootstrap();
+      return null;
+    }
+  }, [authContext, authTransport]);
+
+  const applyLoadedSteps = useCallback(
+    (data: OnboardingStep[], preferredStepIndex = 0) => {
+      setError(null);
+      setSteps(data);
+
+      if (isOnboardingAwaitingHrReview(data)) {
+        setLoading(false);
+        navigate("/onboarding/submitted", { replace: true });
+        return;
+      }
+
+      setLoading(data.length > 0);
+      const boundedStepIndex =
+        preferredStepIndex >= 0 && preferredStepIndex < data.length
+          ? preferredStepIndex
+          : 0;
+      const nextIndex = data.length > 0 ? boundedStepIndex : 0;
+      const stepState = getOnboardingStepState(data[nextIndex]);
+      setCurrentStepIndex(nextIndex);
+      setSubmission(stepState.submission);
+      setFormData(stepState.formData);
+      setTemplate(null);
+    },
+    [navigate]
+  );
+
+  const resetUploadState = useCallback(() => {
     setUploading(false);
     setUploadNowSelection(undefined);
     setResidenceTitleUploadNowSelection(undefined);
@@ -1718,7 +1865,7 @@ export function OnboardingWizard() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }
+  }, []);
 
   function clearUploadRequirementErrors() {
     setFieldErrors((currentErrors) => {
@@ -1743,6 +1890,41 @@ export function OnboardingWizard() {
     );
   }
 
+  const handleWorkflowConflict = useCallback(async () => {
+    setLoading(true);
+    const refreshedUser = await syncAuthenticatedUser();
+    const refreshedStatus = getAuthOnboardingWorkflowStatus(
+      refreshedUser ?? authContext?.user
+    );
+
+    if (isSubmittedOnboardingWorkflowStatus(refreshedStatus)) {
+      setLoading(false);
+      navigate("/onboarding/submitted", { replace: true });
+      return;
+    }
+
+    try {
+      const data = await fetchOnboardingSteps();
+      resetUploadState();
+      setFieldErrors({});
+      setApiValidationDetailMessages([]);
+      setFeedback({
+        tone: "error",
+        message: _(
+          msg`Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state.`
+        ),
+      });
+      applyLoadedSteps(data, getFirstActionableStepIndex(data));
+    } catch (err) {
+      setError(
+        getLocalizedErrorMessage(err, _, {
+          fallback: msg`Failed to reload onboarding after a workflow state change`,
+        })
+      );
+      setLoading(false);
+    }
+  }, [_, authContext?.user, applyLoadedSteps, navigate, resetUploadState, syncAuthenticatedUser]);
+
   function persistUploadedFilesForCurrentStep(files: UploadedOnboardingFile[]) {
     if (!currentStepTemplateId) {
       return;
@@ -1763,13 +1945,13 @@ export function OnboardingWizard() {
       typeof contractStartDateFromAuth === "string" &&
       /^\d{4}-\d{2}-\d{2}$/.test(contractStartDateFromAuth);
 
-    if (hasAuthContractStartDate || !employeeIdFromSteps) {
+    if (hasAuthContractStartDate || !employeeIdForContractStartLookup) {
       return;
     }
 
     let active = true;
 
-    void fetchEmployee(employeeIdFromSteps)
+    void fetchEmployee(employeeIdForContractStartLookup)
       .then((employee) => {
         if (!active) {
           return;
@@ -1791,7 +1973,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [employeeIdFromSteps, contractStartDateFromAuth]);
+  }, [employeeIdForContractStartLookup, contractStartDateFromAuth]);
 
   useEffect(() => {
     translateRef.current = _;
@@ -1823,7 +2005,20 @@ export function OnboardingWizard() {
   }, [feedback, error, currentStepIndex]);
 
   useEffect(() => {
+    if (!isSubmittedOnboardingWorkflowStatus(currentOnboardingWorkflowStatus)) {
+      return;
+    }
+
+    navigate("/onboarding/submitted", { replace: true });
+  }, [currentOnboardingWorkflowStatus, navigate]);
+
+  useEffect(() => {
     let active = true;
+
+    // Do not depend on `currentOnboardingWorkflowStatus` for this fetch: `persistCurrentStep`
+    // calls `syncAuthenticatedUser()`, which updates workflow in auth state. Re-running this
+    // effect would reset the wizard to step 0 after each draft save. Submitted users are
+    // redirected by the separate workflow-status effect above.
 
     void fetchOnboardingSteps()
       .then((data) => {
@@ -1831,22 +2026,8 @@ export function OnboardingWizard() {
           return;
         }
 
-        setError(null);
         setFeedback(null);
-
-        if (isOnboardingAwaitingHrReview(data)) {
-          setSteps(data);
-          setLoading(false);
-          navigate("/onboarding/submitted", { replace: true });
-          return;
-        }
-
-        setLoading(data.length > 0);
-        setSteps(data);
-
-        const stepState = getOnboardingStepState(data[0]);
-        setSubmission(stepState.submission);
-        setFormData(stepState.formData);
+        applyLoadedSteps(data, 0);
       })
       .catch((err) => {
         if (!active) {
@@ -1864,7 +2045,7 @@ export function OnboardingWizard() {
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [applyLoadedSteps]);
 
   useEffect(() => {
     let active = true;
@@ -2088,6 +2269,7 @@ export function OnboardingWizard() {
             ),
           });
           setFieldErrors(stepFieldErrors);
+          setApiValidationDetailMessages([]);
           resetUploadState();
           setTemplate(null);
           setSubmission(failedStepState.submission);
@@ -2109,6 +2291,7 @@ export function OnboardingWizard() {
         failingStepIndex = null;
       }
 
+      await syncAuthenticatedUser();
       return true;
     } catch (err) {
       let validationSchemaForMessage: OnboardingObjectSchema | null = schema;
@@ -2124,11 +2307,17 @@ export function OnboardingWizard() {
         setLoading(true);
         setFeedback(null);
         setFieldErrors({});
+        setApiValidationDetailMessages([]);
         resetUploadState();
         setTemplate(null);
         setSubmission(failedStepState.submission);
         setFormData(failedStepState.formData);
         setCurrentStepIndex(failingStepIndex);
+      }
+
+      if (isWorkflowConflictError(err)) {
+        await handleWorkflowConflict();
+        return false;
       }
 
       if (err instanceof ApiError && err.statusCode === 422) {
@@ -2165,6 +2354,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      setApiValidationDetailMessages([]);
 
       const nextFormData = sanitizeEmployeeOnboardingFormData(
         Object.keys(formData).length > 0
@@ -2186,16 +2376,26 @@ export function OnboardingWizard() {
 
       setSubmission(savedSubmission);
       updateCurrentStep(savedSubmission, status);
+      await syncAuthenticatedUser();
       return savedSubmission;
     } catch (err) {
-      if (
-        err instanceof ApiError &&
-        err.statusCode === 422 &&
-        err.errors &&
-        status === "submitted"
-      ) {
+      if (isWorkflowConflictError(err)) {
+        await handleWorkflowConflict();
+        return null;
+      }
+
+      if (err instanceof ApiError && err.statusCode === 422 && err.errors) {
         const nextFieldErrors: FieldErrors = {};
         let hiddenFieldValidationMessage: string | null = null;
+        const extraServerMessages: string[] = [];
+
+        function pushExtraServerMessage(text: string) {
+          const t = text.trim();
+          if (t.length > 0 && !extraServerMessages.includes(t)) {
+            extraServerMessages.push(t);
+          }
+        }
+
         for (const [key, messages] of Object.entries(err.errors)) {
           if (
             key === "form_data" ||
@@ -2206,32 +2406,39 @@ export function OnboardingWizard() {
           }
           // API validation keys may be nested, e.g. "form_data.nationalities.0".
           // Map them back to the rendered schema field before showing the error.
-          const fieldKey = getServerValidationFieldKey(key, schema);
+          const fieldKey = isResidentialAddressHistoryTemplate(template)
+            ? key.startsWith("form_data.")
+              ? key.slice("form_data.".length)
+              : key
+            : getServerValidationFieldKey(key, schema);
           const first = messages[0];
           if (!first) {
             continue;
           }
 
           const isInlineFieldError =
-            Boolean(schema?.properties[fieldKey]) &&
-            isOnboardingFieldVisible(fieldKey, formData, schema);
+            isResidentialAddressHistoryTemplate(template)
+              ? isResidentialAddressHistoryFieldKey(fieldKey)
+              : Boolean(schema?.properties[fieldKey]) &&
+                isOnboardingFieldVisible(fieldKey, formData, schema);
 
           if (!isInlineFieldError) {
-            hiddenFieldValidationMessage ??= formatServerValidationMessage(
+            const formattedHidden = formatServerValidationMessage(
               fieldKey,
               first,
               schema,
               _
             );
+            hiddenFieldValidationMessage ??= formattedHidden;
+            pushExtraServerMessage(formattedHidden);
             continue;
           }
 
-          nextFieldErrors[fieldKey] = formatServerValidationMessage(
-            fieldKey,
-            first,
-            schema,
-            _
-          );
+          nextFieldErrors[fieldKey] = isResidentialAddressHistoryTemplate(
+            template
+          )
+            ? first
+            : formatServerValidationMessage(fieldKey, first, schema, _);
         }
         setError(null);
         setFieldErrors(nextFieldErrors);
@@ -2242,21 +2449,38 @@ export function OnboardingWizard() {
           ? formatSupplementalValidationMessage(supplementalRaw, schema, _)
           : hiddenFieldValidationMessage;
         const hasInline = Object.keys(nextFieldErrors).length > 0;
-        const validationReviewMessage = _(
-          msg`We couldn't submit the form yet. Please review the highlighted fields.`
-        );
+        if (hasInline && supplemental) {
+          const inlineMessages = new Set(Object.values(nextFieldErrors));
+          if (!inlineMessages.has(supplemental)) {
+            pushExtraServerMessage(supplemental);
+          }
+        }
+        const validationReviewMessage =
+          status === "draft"
+            ? _(
+                msg`We couldn't save your draft yet. Please review the highlighted fields.`
+              )
+            : _(
+                msg`We couldn't submit the form yet. Please review the highlighted fields.`
+              );
         const fallbackValidationMessage =
           err.message.length > 0
             ? formatValidationFallbackMessage(err.message, schema, _)
             : null;
+        const primaryBannerMessage = hasInline
+          ? validationReviewMessage
+          : supplemental
+            ? supplemental
+            : (fallbackValidationMessage ?? validationReviewMessage);
         setFeedback({
           tone: "error",
-          message: hasInline
-            ? validationReviewMessage
-            : supplemental
-              ? supplemental
-              : (fallbackValidationMessage ?? validationReviewMessage),
+          message: primaryBannerMessage,
         });
+        setApiValidationDetailMessages(
+          extraServerMessages.filter(
+            (m) => !(m === primaryBannerMessage && !hasInline)
+          )
+        );
         return null;
       }
 
@@ -2289,7 +2513,56 @@ export function OnboardingWizard() {
   }
 
   function validateCurrentStepRequiredFields(): boolean {
-    if (!schema || !template) {
+    if (!isEditableSubmission(submission)) {
+      return true;
+    }
+
+    if (!template) {
+      return true;
+    }
+
+    if (isResidentialAddressHistoryTemplate(template)) {
+      const nextFieldErrors = validateResidentialAddressHistoryValue(
+        getResidentialAddressHistoryValue(formData),
+        _
+      );
+
+      if (Object.keys(nextFieldErrors).length === 0) {
+        return true;
+      }
+
+      setError(null);
+      setFieldErrors(nextFieldErrors);
+      setApiValidationDetailMessages([]);
+      const errKeys = Object.keys(nextFieldErrors);
+      const onlyBewacherChoiceMissing =
+        errKeys.length === 1 && errKeys[0] === "has_current_bewacher_id";
+      const onlyBewacherIdMissing =
+        errKeys.length === 1 && errKeys[0] === "bewacher_id";
+      const onlyCoverageMissing =
+        errKeys.length === 1 && errKeys[0] === "previous_addresses.coverage";
+      setFeedback({
+        tone: "error",
+        message: onlyBewacherChoiceMissing
+          ? _(
+              msg`Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address.`
+            )
+          : onlyBewacherIdMissing
+            ? _(
+                msg`Please enter your Bewacher ID or indicate that you do not know it.`
+              )
+            : onlyCoverageMissing
+              ? _(
+                  msg`Your residence history does not cover the required period yet. Add previous addresses or move your “Living there since” date further back.`
+                )
+              : _(
+                  msg`We couldn't submit the form yet. Please review the highlighted fields.`
+                ),
+      });
+      return false;
+    }
+
+    if (!schema) {
       return true;
     }
 
@@ -2362,6 +2635,7 @@ export function OnboardingWizard() {
 
     setError(null);
     setFieldErrors(nextFieldErrors);
+    setApiValidationDetailMessages([]);
     setFeedback({
       tone: "error",
       message: _(
@@ -2378,7 +2652,7 @@ export function OnboardingWizard() {
 
     const shouldPersistDraft = isEditableSubmission(submission);
 
-    if (shouldPersistDraft && !validateCurrentStepRequiredFields()) {
+    if (!validateCurrentStepRequiredFields()) {
       return;
     }
 
@@ -2394,6 +2668,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      setApiValidationDetailMessages([]);
       resetUploadState();
       setTemplate(null);
       setSubmission(nextStepState.submission);
@@ -2414,6 +2689,7 @@ export function OnboardingWizard() {
     setError(null);
     setFeedback(null);
     setFieldErrors({});
+    setApiValidationDetailMessages([]);
     resetUploadState();
     setTemplate(null);
     setSubmission(nextStepState.submission);
@@ -2434,6 +2710,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      setApiValidationDetailMessages([]);
       resetUploadState();
       setTemplate(null);
       setSubmission(previousStepState.submission);
@@ -2625,7 +2902,35 @@ export function OnboardingWizard() {
       });
 
       return nextFormData;
+      });
+  }
+
+  function handleResidentialAddressHistoryChange(
+    nextValueOrUpdater: ResidentialAddressHistoryChange
+  ) {
+    setFormData((currentFormData) => {
+      const prevResidential = getResidentialAddressHistoryValue(currentFormData);
+      const nextResidential =
+        typeof nextValueOrUpdater === "function"
+          ? nextValueOrUpdater(prevResidential)
+          : nextValueOrUpdater;
+      return {
+        ...currentFormData,
+        current_address: nextResidential.current_address,
+        previous_addresses: nextResidential.previous_addresses,
+        has_current_bewacher_id: nextResidential.has_current_bewacher_id,
+        bewacher_id: nextResidential.bewacher_id,
+        bewacher_id_unknown: nextResidential.bewacher_id_unknown,
+      };
     });
+
+    setFieldErrors((currentFieldErrors) =>
+      Object.fromEntries(
+        Object.entries(currentFieldErrors).filter(
+          ([fieldKey]) => !isResidentialAddressHistoryFieldKey(fieldKey)
+        )
+      )
+    );
   }
 
   async function persistUploadSelections(
@@ -2672,6 +2977,7 @@ export function OnboardingWizard() {
 
     setSubmission(savedSubmission);
     updateCurrentStep(savedSubmission, "draft");
+    await syncAuthenticatedUser();
   }
 
   async function handleUpload(
@@ -2822,6 +3128,11 @@ export function OnboardingWizard() {
 
       return true;
     } catch (err) {
+      if (isWorkflowConflictError(err)) {
+        await handleWorkflowConflict();
+        return false;
+      }
+
       const appendHttpStatus = (
         message: string,
         statusCode: number | undefined
@@ -2934,6 +3245,11 @@ export function OnboardingWizard() {
         message: _(msg`File removed successfully.`),
       });
     } catch (err) {
+      if (isWorkflowConflictError(err)) {
+        await handleWorkflowConflict();
+        return;
+      }
+
       setUploadFeedback({
         tone: "error",
         message: getLocalizedErrorMessage(err, _, {
@@ -3036,6 +3352,24 @@ export function OnboardingWizard() {
             <Text className="text-red-800 dark:text-red-200">{error}</Text>
           </div>
         ) : null}
+        {apiValidationDetailMessages.length > 0 ? (
+          <div
+            role="region"
+            aria-label={_(
+              msg`Additional validation messages from the server`
+            )}
+            className="mb-6 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-900/40"
+          >
+            <div className="mb-2 font-medium text-zinc-900 dark:text-zinc-100">
+              <Trans>Additional validation messages from the server</Trans>
+            </div>
+            <ul className="list-disc space-y-2 pl-5 text-sm text-zinc-800 dark:text-zinc-200">
+              {apiValidationDetailMessages.map((message, index) => (
+                <li key={`${index}-${message.slice(0, 48)}`}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {template && (
           <div>
@@ -3060,7 +3394,14 @@ export function OnboardingWizard() {
               </Text>
             ) : null}
 
-            {schema ? (
+            {isResidentialAddressHistoryTemplate(template) ? (
+              <OnboardingResidentialAddressHistoryFields
+                value={getResidentialAddressHistoryValue(formData)}
+                errors={fieldErrors}
+                readOnly={!isCurrentStepEditable}
+                onChange={handleResidentialAddressHistoryChange}
+              />
+            ) : schema ? (
               <Fieldset>
                 <FieldGroup>
                   {Object.entries(schema.properties)

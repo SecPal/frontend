@@ -27,6 +27,7 @@ export interface OnboardingStep {
 export interface OnboardingFormTemplate {
   id: string;
   tenant_id?: number | null;
+  template_key?: string | null;
   name: string;
   title?: string;
   description?: string | null;
