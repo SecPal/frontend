@@ -7,6 +7,7 @@ import {
   describeAuthResolutionState,
   describeLoginBlockingState,
   getConfiguredTestUserOrThrow,
+  getAuthStateCachePath,
   isRemoteE2ETarget,
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
@@ -15,10 +16,15 @@ describe("auth E2E helpers", () => {
   describe("isRemoteE2ETarget", () => {
     it("treats https targets as remote", () => {
       expect(isRemoteE2ETarget("https://app.secpal.dev")).toBe(true);
+      expect(
+        isRemoteE2ETarget("https://velvet-zebra.preview.secpal.dev")
+      ).toBe(true);
     });
 
     it("treats local and missing targets as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
+      expect(isRemoteE2ETarget("https://localhost:5173")).toBe(false);
+      expect(isRemoteE2ETarget("https://secpal.ddev.site")).toBe(false);
       expect(isRemoteE2ETarget(undefined)).toBe(false);
     });
   });
@@ -38,12 +44,25 @@ describe("auth E2E helpers", () => {
       });
     });
 
+    it("uses the standard seeded onboarding user for remote targets when live onboarding is enabled", () => {
+      expect(
+        buildTestUser(
+          { PLAYWRIGHT_LIVE_ONBOARDING: "1" },
+          "https://app.secpal.dev"
+        )
+      ).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+
     it("prefers explicitly configured credentials for remote targets", () => {
       expect(
         buildTestUser(
           {
             TEST_USER_EMAIL: "guard@secpal.dev",
             TEST_USER_PASSWORD: "correct horse battery staple",
+            PLAYWRIGHT_LIVE_ONBOARDING: "1",
           },
           "https://app.secpal.dev"
         )
@@ -151,6 +170,51 @@ describe("auth E2E helpers", () => {
         )
       ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
+
+    it("returns the standard onboarding user for remote live onboarding without TEST_USER_*", () => {
+      const result = getConfiguredTestUserOrThrow(
+        {
+          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+          PLAYWRIGHT_LIVE_ONBOARDING: "1",
+        },
+        "https://app.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "onboarding@example.com",
+        password: "password",
+      });
+    });
+  });
+
+  describe("getAuthStateCachePath", () => {
+    it("separates auth cache files by remote target host", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://app.secpal.dev"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://velvet-zebra.preview.secpal.dev"
+        )
+      );
+    });
+
+    it("separates auth cache files by configured user", () => {
+      expect(
+        getAuthStateCachePath(
+          { email: "guard@secpal.dev", password: "secret" },
+          "https://app.secpal.dev"
+        )
+      ).not.toBe(
+        getAuthStateCachePath(
+          { email: "onboarding@example.com", password: "password" },
+          "https://app.secpal.dev"
+        )
+      );
+    });
   });
 
   describe("describeAuthResolutionState", () => {
@@ -159,6 +223,18 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: true,
+          hasOnboardingShell: false,
+          hasBootstrapRecoveryScreen: false,
+        })
+      ).toBe("authenticated");
+    });
+
+    it("returns authenticated when the pre-contract onboarding shell is visible", () => {
+      expect(
+        describeAuthResolutionState({
+          pathname: "/onboarding",
+          hasUserMenu: false,
+          hasOnboardingShell: true,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("authenticated");
@@ -169,6 +245,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/login",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("login");
@@ -179,6 +256,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/customers",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: true,
         })
       ).toBe("recovery");
@@ -189,6 +267,7 @@ describe("auth E2E helpers", () => {
         describeAuthResolutionState({
           pathname: "/",
           hasUserMenu: false,
+          hasOnboardingShell: false,
           hasBootstrapRecoveryScreen: false,
         })
       ).toBe("unresolved");
