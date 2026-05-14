@@ -63,6 +63,7 @@ describe("playwright config", () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
@@ -82,6 +83,7 @@ describe("playwright config", () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "");
+    mockNonPolyscopeCwd();
     vi.resetModules();
     const { default: config } = await import("../playwright.config");
 
