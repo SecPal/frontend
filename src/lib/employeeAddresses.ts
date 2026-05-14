@@ -36,7 +36,8 @@ function hasAddressDraftValueForCurrentRow(draft: PostalAddressDraft): boolean {
     draft.postalCode.trim().length > 0 ||
     draft.city.trim().length > 0 ||
     draft.supplement.trim().length > 0 ||
-    draft.country.trim().length > 0
+    draft.country.trim().length > 0 ||
+    (draft.state?.trim().length ?? 0) > 0
   );
 }
 

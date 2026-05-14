@@ -219,6 +219,28 @@ describe("buildAddressesPayloadForCurrentEdit", () => {
     ]);
   });
 
+  it("preserves the current row when only the state field is filled in the draft", () => {
+    const current = addr({
+      id: "cur-1",
+      resided_from: "2023-01-01",
+      resided_until: null,
+    });
+
+    const payload = buildAddressesPayloadForCurrentEdit([current], {
+      street: "",
+      houseNumber: "",
+      postalCode: "",
+      city: "",
+      supplement: "",
+      country: "",
+      state: "BY",
+    });
+
+    expect(payload).toHaveLength(1);
+    expect(payload[0]?.state).toBe("BY");
+    expect(payload[0]?.resided_until).toBeNull();
+  });
+
   it("does not invent a blank current row when only historical addresses exist", () => {
     const historical = addr({
       id: "old-1",

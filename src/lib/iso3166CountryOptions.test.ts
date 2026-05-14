@@ -40,7 +40,11 @@ describe("getCountrySelectOptions", () => {
       ...originalIntl,
       DisplayNames: class MockDisplayNames {
         static supportedLocalesOf(locales?: Intl.LocalesArgument) {
-          return Array.isArray(locales) ? [...locales] : locales ? [locales] : [];
+          return Array.isArray(locales)
+            ? [...locales]
+            : locales
+              ? [locales]
+              : [];
         }
 
         of(code: string) {
