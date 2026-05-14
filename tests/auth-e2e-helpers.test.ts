@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildTestUser,
   describeAuthResolutionState,
@@ -11,21 +11,78 @@ import {
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
 
+/**
+ * Mocks process.cwd() to a path that does not match the Polyscope clone
+ * pattern, so tests that verify non-Polyscope behaviour are not affected by
+ * the directory this test suite is executed from.
+ */
+function mockNonPolyscopeCwd() {
+  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
+}
+
 describe("auth E2E helpers", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
   describe("isRemoteE2ETarget", () => {
     it("treats https targets as remote", () => {
       expect(isRemoteE2ETarget("https://app.secpal.dev")).toBe(true);
     });
 
-    it("treats local and missing targets as non-remote", () => {
+    it("treats an explicit localhost target as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
+    });
+
+    it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
+      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+      vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+      mockNonPolyscopeCwd();
+
       expect(isRemoteE2ETarget(undefined)).toBe(false);
+    });
+
+    it("treats the implicit default as remote when a Polyscope workspace is active", () => {
+      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+      vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+
+      expect(isRemoteE2ETarget(undefined)).toBe(true);
     });
   });
 
   describe("buildTestUser", () => {
     it("uses local development defaults for non-remote targets", () => {
       expect(buildTestUser({}, undefined)).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("keeps the current Polyscope workspace preview credentials even when other remote targets are configured", () => {
+      expect(
+        buildTestUser({
+          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+          PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
+          POLYSCOPE_WORKSPACE: "grumpy-lynx",
+        })
+      ).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("keeps workspace preview targets on the default preview credentials", () => {
+      expect(buildTestUser({ POLYSCOPE_WORKSPACE: "grumpy-lynx" })).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("keeps generic workspace preview hosts on the default preview credentials", () => {
+      expect(
+        buildTestUser({}, "https://grumpy-lynx.preview.secpal.dev")
+      ).toEqual({
         email: "test@example.com",
         password: "password",
       });
@@ -127,6 +184,42 @@ describe("auth E2E helpers", () => {
   });
 
   describe("getConfiguredTestUserOrThrow", () => {
+    it("returns the default credentials when the current Polyscope workspace overrides other remote targets", () => {
+      const result = getConfiguredTestUserOrThrow({
+        PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+        PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
+        POLYSCOPE_WORKSPACE: "grumpy-lynx",
+      });
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("returns the default credentials for workspace preview targets", () => {
+      const result = getConfiguredTestUserOrThrow({
+        POLYSCOPE_WORKSPACE: "grumpy-lynx",
+      });
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
+    it("returns the default credentials for generic workspace preview hosts", () => {
+      const result = getConfiguredTestUserOrThrow(
+        { PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev" },
+        "https://grumpy-lynx.preview.secpal.dev"
+      );
+
+      expect(result).toEqual({
+        email: "test@example.com",
+        password: "password",
+      });
+    });
+
     it("returns credentials when targeting a remote environment with credentials set", () => {
       const result = getConfiguredTestUserOrThrow(
         {

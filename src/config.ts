@@ -11,6 +11,8 @@
 /**
  * API Configuration
  */
+import { parsePreviewHostname } from "./previewHostname";
+
 export class ApiBaseUrlConfigurationError extends Error {
   constructor(message: string) {
     super(message);
@@ -58,6 +60,21 @@ function getRuntimeHostname(): string | null {
   return window.location.hostname || null;
 }
 
+function getCanonicalPreviewApiOrigin(
+  runtimeHostname: string | null
+): string | null {
+  const previewHostname = parsePreviewHostname(runtimeHostname);
+
+  if (
+    !previewHostname ||
+    (previewHostname.repo !== null && previewHostname.repo !== "frontend")
+  ) {
+    return null;
+  }
+
+  return `https://api-${previewHostname.workspace}.preview.secpal.dev`;
+}
+
 function shouldUseCanonicalLiveApiOrigin(
   runtimeHostname: string | null,
   normalizedConfiguredBaseUrl: string
@@ -102,6 +119,13 @@ export function resolveApiBaseUrl(options?: {
     )
   ) {
     return LIVE_API_ORIGIN;
+  }
+
+  const canonicalPreviewApiOrigin =
+    getCanonicalPreviewApiOrigin(runtimeHostname);
+
+  if (canonicalPreviewApiOrigin !== null) {
+    return canonicalPreviewApiOrigin;
   }
 
   if (!normalizedConfiguredBaseUrl) {

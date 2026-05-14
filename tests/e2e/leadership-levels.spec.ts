@@ -9,6 +9,7 @@ import {
   installMockAuthRoutes,
   installStoredMockBrowserSession,
 } from "./offline-live-helpers";
+import { resolvePlaywrightApiBaseUrl } from "./target-urls";
 
 const playwrightEnv = globalThis as typeof globalThis & {
   process?: {
@@ -17,7 +18,7 @@ const playwrightEnv = globalThis as typeof globalThis & {
 };
 
 const API_BASE_URL =
-  playwrightEnv.process?.env?.PLAYWRIGHT_API_BASE_URL ||
+  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ||
   "https://api.secpal.dev";
 const LIVE_EMPLOYEE_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_EMPLOYEE_CRUD === "1";

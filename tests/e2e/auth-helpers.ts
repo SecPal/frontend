@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, type Page } from "@playwright/test";
+import {
+  isLiveRemoteTarget,
+  isRemotePlaywrightTarget,
+  resolvePlaywrightBaseUrl,
+} from "./target-urls";
 
 export interface TestUserCredentials {
   email: string;
@@ -40,18 +45,18 @@ const AUTH_RESOLUTION_TIMEOUT_MS = 15_000;
 const BOOTSTRAP_RECOVERY_SELECTOR =
   '[data-route-guard-state="bootstrap-recovery"]';
 
-export function isRemoteE2ETarget(baseUrl = process.env.PLAYWRIGHT_BASE_URL) {
-  return typeof baseUrl === "string" && /^https:\/\//i.test(baseUrl);
+export function isRemoteE2ETarget(baseUrl = resolvePlaywrightBaseUrl()) {
+  return isRemotePlaywrightTarget(baseUrl);
 }
 
 export function buildTestUser(
   env: NodeJS.ProcessEnv = process.env,
-  baseUrl = env.PLAYWRIGHT_BASE_URL
+  baseUrl = resolvePlaywrightBaseUrl(env)
 ): TestUserCredentials {
   const email = env.TEST_USER_EMAIL?.trim() ?? "";
   const password = env.TEST_USER_PASSWORD?.trim() ?? "";
 
-  if (isRemoteE2ETarget(baseUrl)) {
+  if (isLiveRemoteTarget(baseUrl)) {
     return {
       email,
       password,
@@ -66,7 +71,7 @@ export function buildTestUser(
 
 export function getConfiguredTestUserOrThrow(
   env: NodeJS.ProcessEnv = process.env,
-  baseUrl = env.PLAYWRIGHT_BASE_URL
+  baseUrl = resolvePlaywrightBaseUrl(env)
 ): TestUserCredentials {
   const testUser = buildTestUser(env, baseUrl);
 
@@ -75,7 +80,7 @@ export function getConfiguredTestUserOrThrow(
   }
 
   throw new Error(
-    "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a remote environment such as app.secpal.dev."
+    "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote environment."
   );
 }
 

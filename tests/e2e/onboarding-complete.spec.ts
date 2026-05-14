@@ -3,6 +3,7 @@
 
 import { expect, test, type BrowserContext } from "@playwright/test";
 import { isRemoteE2ETarget } from "./auth-helpers";
+import { resolvePlaywrightBaseUrl } from "./target-urls";
 
 const MOCK_XSRF_TOKEN = "test-xsrf-token";
 
@@ -214,7 +215,7 @@ async function installMockOnboardingRoutes(
   context: BrowserContext,
   responseDelayMs = 350
 ): Promise<void> {
-  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  const baseUrl = resolvePlaywrightBaseUrl();
   const isHttps = isRemoteE2ETarget(baseUrl);
   const mockDomain = isHttps ? new URL(baseUrl).hostname : "localhost";
 

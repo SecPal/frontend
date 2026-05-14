@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { test, expect } from "./auth.setup";
+import { isRemoteE2ETarget } from "./auth-helpers";
 import {
   installMockAuthRoutes,
   installMockOrganizationRoutes,
@@ -11,8 +12,7 @@ import {
 } from "./offline-live-helpers";
 
 const supportsServiceWorkerOfflineFlows =
-  Boolean(process.env.CI) ||
-  (process.env.PLAYWRIGHT_BASE_URL?.startsWith("https://") ?? false);
+  Boolean(process.env.CI) || isRemoteE2ETarget();
 
 /**
  * Offline Functionality E2E Tests
