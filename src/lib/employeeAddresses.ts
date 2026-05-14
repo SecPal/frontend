@@ -84,7 +84,10 @@ export function buildAddressesPayloadForCurrentEdit(
   );
   const current = getCurrentAddressFromList(addressRows);
   const shouldIncludeCurrentRow = hasAddressDraftValueForCurrentRow(draft);
-  const normalizedState = draft.state?.trim() || current?.state || null;
+  const normalizedState =
+    draft.state !== undefined
+      ? draft.state.trim() || null
+      : current?.state || null;
 
   if (!shouldIncludeCurrentRow) {
     return historical.map((a) => rowToInput(a));
