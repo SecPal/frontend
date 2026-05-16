@@ -179,8 +179,15 @@ export function EmployeeBwrPanel({
       setExportLoading(true);
       const response = await exportEmployeeBwr(employee.id, exportFormat);
       const safeDownloadUrl = response.download_url.trim();
-      const hasSafeDownloadUrl = isSafeHttpUrl(safeDownloadUrl);
-      setLatestExportUrl(hasSafeDownloadUrl ? safeDownloadUrl : null);
+      if (!isSafeHttpUrl(safeDownloadUrl)) {
+        setPanelError(
+          _(
+            msg`The export download link returned by the server is not safe to open.`
+          )
+        );
+        return;
+      }
+      setLatestExportUrl(safeDownloadUrl);
       const refreshedEmployee = await onRefresh();
       if (refreshedEmployee) {
         const refreshedStatus =
@@ -190,14 +197,6 @@ export function EmployeeBwrPanel({
         );
         setBwrId(refreshedEmployee.bwr_id ?? "");
         setNotes(refreshedEmployee.bwr_notes ?? "");
-      }
-      if (!hasSafeDownloadUrl) {
-        setPanelError(
-          _(
-            msg`The export download link returned by the server is not safe to open.`
-          )
-        );
-        return;
       }
       setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
     } catch (error) {
