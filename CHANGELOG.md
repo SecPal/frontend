@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Blocked unsafe server-provided customer and site contact email/phone values from becoming `mailto:` or `tel:` links unless they match the expected address/dial-string shape, preventing mail client query/header injection and dialer parameter abuse.
 - Blocked unsafe server-provided BWR export download URLs in the employee panel by allowing only HTTPS URLs, plus HTTP loopback URLs only for local development or loopback app origins, before rendering a download link.
 - Added the Phase-2 offline-vault baseline for persisted frontend PII: the authenticated profile now moves out of `auth_user` localStorage into wrapped vault-backed IndexedDB storage, legacy encrypted `auth_user` records are migrated one-way into the vault, and long-term offline analytics plus organizational-unit cache records now persist encrypted at rest with focused regression coverage for frontend issue #1005.
 - Added an optional native device-bound wrapper boundary for the offline vault so native-capable runtimes can prefer bridge-backed root-key wrapping while browser and unsupported runtimes keep the browser-session wrapper fallback; the missing Android bridge implementation is now tracked separately in `SecPal/android#191`, resolving the frontend-side scope of issue #1006.

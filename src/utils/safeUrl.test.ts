@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import { isSafeHttpUrl } from "./safeUrl";
+import { isSafeHttpUrl, isSafeMailtoTarget, isSafeTelTarget } from "./safeUrl";
 
 describe("isSafeHttpUrl", () => {
   it.each([
@@ -65,5 +65,69 @@ describe("isSafeHttpUrl", () => {
     "http://127.0.0.1.evil.com/export.csv",
   ])("rejects unsafe or non-absolute URLs: %s", (value) => {
     expect(isSafeHttpUrl(value)).toBe(false);
+  });
+});
+
+describe("isSafeMailtoTarget", () => {
+  it.each([
+    "user@example.com",
+    "first.last@example.co.uk",
+    "service+alerts@sub.example.com",
+  ])("allows email addresses without mailto parameters: %s", (value) => {
+    expect(isSafeMailtoTarget(value)).toBe(true);
+  });
+
+  it.each([
+    "",
+    "   ",
+    "foo@bar.com?bcc=attacker@example.com",
+    "foo@bar.com&subject=Injected",
+    "foo@bar.com#fragment",
+    "foo@bar.com\nBcc: attacker@example.com",
+    "foo@bar.com\r\nBcc: attacker@example.com",
+    "foo@bar.com%0ABcc:attacker@example.com",
+    // local-part injection: ? & # in local part produce header-injection mailto URIs
+    "foo?bcc=attacker@bar.com",
+    "foo&subject=Injected@bar.com",
+    "foo#fragment@bar.com",
+    // percent-encoding bypass: %40 decodes to @ producing double-@ addresses
+    "foo%40bar@example.com",
+    // % in local part
+    "foo%2Fbar@example.com",
+    "javascript:alert(1)",
+    "mailto:foo@bar.com",
+    "foo bar@example.com",
+    "foo@bar",
+  ])("rejects unsafe mailto targets: %s", (value) => {
+    expect(isSafeMailtoTarget(value)).toBe(false);
+  });
+});
+
+describe("isSafeTelTarget", () => {
+  it.each([
+    "+49 30 1234567",
+    "+1-202-555-0100",
+    "030.1234567",
+    "+49 30 1234567;ext=42",
+  ])("allows dial strings with visual separators: %s", (value) => {
+    expect(isSafeTelTarget(value)).toBe(true);
+  });
+
+  it.each([
+    "",
+    "   ",
+    "+49?suffix=evil",
+    "+49&suffix=evil",
+    "+49#evil",
+    "+49\n1234567",
+    "+49\r1234567",
+    "+49%0A1234567",
+    "javascript:alert(1)",
+    "tel:+49301234567",
+    "+49,301234567",
+    "+49;phone-context=example.com",
+    "+49;ext=abc",
+  ])("rejects unsafe tel targets: %s", (value) => {
+    expect(isSafeTelTarget(value)).toBe(false);
   });
 });

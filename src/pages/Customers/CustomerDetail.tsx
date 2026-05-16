@@ -28,6 +28,7 @@ import {
   DialogActions,
 } from "../../components/dialog";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 
 export default function CustomerDetail() {
   const capabilities = useUserCapabilities();
@@ -174,12 +175,16 @@ export default function CustomerDetail() {
                     <Trans>Email</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    <a
-                      href={`mailto:${customer.contact.email}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {customer.contact.email}
-                    </a>
+                    {isSafeMailtoTarget(customer.contact.email) ? (
+                      <a
+                        href={`mailto:${customer.contact.email}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {customer.contact.email}
+                      </a>
+                    ) : (
+                      customer.contact.email
+                    )}
                   </DescriptionDetails>
                 </>
               )}
@@ -190,12 +195,16 @@ export default function CustomerDetail() {
                     <Trans>Phone</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    <a
-                      href={`tel:${customer.contact.phone}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {customer.contact.phone}
-                    </a>
+                    {isSafeTelTarget(customer.contact.phone) ? (
+                      <a
+                        href={`tel:${customer.contact.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {customer.contact.phone}
+                      </a>
+                    ) : (
+                      customer.contact.phone
+                    )}
                   </DescriptionDetails>
                 </>
               )}
