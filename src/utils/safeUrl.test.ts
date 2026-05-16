@@ -30,6 +30,8 @@ describe("isSafeHttpUrl", () => {
     "ftp://api.secpal.dev/export.csv",
     "http://api.secpal.dev/export.csv",
     "http://192.168.0.1/export.csv",
+    "http://127.evil.com/export.csv",
+    "http://127.0.0.1.evil.com/export.csv",
   ])("rejects unsafe or non-absolute URLs: %s", (value) => {
     expect(isSafeHttpUrl(value)).toBe(false);
   });

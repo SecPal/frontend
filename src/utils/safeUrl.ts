@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const LOOPBACK_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+const LOOPBACK_IPV4_PATTERN = /^127(?:\.\d{1,3}){3}$/;
 
 function isLoopbackHostname(hostname: string): boolean {
   const normalizedHostname = hostname.toLowerCase();
 
   return (
     LOOPBACK_HOSTNAMES.has(normalizedHostname) ||
-    normalizedHostname.startsWith("127.")
+    LOOPBACK_IPV4_PATTERN.test(normalizedHostname)
   );
 }
 
