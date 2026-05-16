@@ -1807,6 +1807,10 @@ msgstr "Automatisches Aktualisieren (30s)"
 msgid "Refresh"
 msgstr "Aktualisieren"
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "The export download link returned by the server is not safe to open."
+msgstr "Der vom Server zurückgegebene Export-Downloadlink ist nicht sicher zu öffnen."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Complete on your device…"
 msgstr "Auf Ihrem Gerät abschließen…"

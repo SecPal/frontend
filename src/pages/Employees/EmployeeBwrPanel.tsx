@@ -30,6 +30,7 @@ import {
   exportEmployeeBwr,
   updateEmployeeBwrStatus,
 } from "../../services/employeeApi";
+import { isSafeHttpUrl } from "../../utils/safeUrl";
 
 type BwrPanelFieldErrors = Partial<
   Record<"general" | "status" | "bwr_id" | "notes", string[]>
@@ -177,7 +178,9 @@ export function EmployeeBwrPanel({
     try {
       setExportLoading(true);
       const response = await exportEmployeeBwr(employee.id, exportFormat);
-      setLatestExportUrl(response.download_url);
+      const safeDownloadUrl = response.download_url.trim();
+      const hasSafeDownloadUrl = isSafeHttpUrl(safeDownloadUrl);
+      setLatestExportUrl(hasSafeDownloadUrl ? safeDownloadUrl : null);
       const refreshedEmployee = await onRefresh();
       if (refreshedEmployee) {
         const refreshedStatus =
@@ -187,6 +190,14 @@ export function EmployeeBwrPanel({
         );
         setBwrId(refreshedEmployee.bwr_id ?? "");
         setNotes(refreshedEmployee.bwr_notes ?? "");
+      }
+      if (!hasSafeDownloadUrl) {
+        setPanelError(
+          _(
+            msg`The export download link returned by the server is not safe to open.`
+          )
+        );
+        return;
       }
       setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
     } catch (error) {
