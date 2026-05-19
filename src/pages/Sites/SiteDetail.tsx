@@ -24,6 +24,7 @@ import {
   DescriptionDetails,
 } from "../../components/description-list";
 import { formatDate } from "../../lib/dateUtils";
+import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import {
   Dialog,
   DialogTitle,
@@ -196,12 +197,16 @@ export default function SiteDetail() {
                     <Trans>Email</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    <a
-                      href={`mailto:${site.contact.email}`}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      {site.contact.email}
-                    </a>
+                    {isSafeMailtoTarget(site.contact.email) ? (
+                      <a
+                        href={`mailto:${site.contact.email}`}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        {site.contact.email}
+                      </a>
+                    ) : (
+                      site.contact.email
+                    )}
                   </DescriptionDetails>
                 </>
               )}
@@ -212,12 +217,16 @@ export default function SiteDetail() {
                     <Trans>Phone</Trans>
                   </DescriptionTerm>
                   <DescriptionDetails>
-                    <a
-                      href={`tel:${site.contact.phone}`}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      {site.contact.phone}
-                    </a>
+                    {isSafeTelTarget(site.contact.phone) ? (
+                      <a
+                        href={`tel:${site.contact.phone}`}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        {site.contact.phone}
+                      </a>
+                    ) : (
+                      site.contact.phone
+                    )}
                   </DescriptionDetails>
                 </>
               )}

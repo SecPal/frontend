@@ -41,6 +41,20 @@ function renderWithRouter() {
   );
 }
 
+function expectNoUnsafeContactHrefs(container: HTMLElement) {
+  const contactHrefs = Array.from(
+    container.querySelectorAll<HTMLAnchorElement>(
+      'a[href^="mailto:"], a[href^="tel:"]'
+    )
+  ).map((anchor) => anchor.getAttribute("href") ?? "");
+
+  expect(contactHrefs).not.toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(/^(?:mailto|tel):.*[?&#\n\r]/),
+    ])
+  );
+}
+
 describe("CustomerDetail", () => {
   const mockCustomer = {
     id: "customer-123",
@@ -102,6 +116,41 @@ describe("CustomerDetail", () => {
 
     expect(screen.getByText("max@test-customer.de")).toBeInTheDocument();
     expect(screen.getByText("+49 89 12345678")).toBeInTheDocument();
+    expect(
+      screen.getByText("max@test-customer.de").closest("a")
+    ).toHaveAttribute("href", "mailto:max@test-customer.de");
+    expect(screen.getByText("+49 89 12345678").closest("a")).toHaveAttribute(
+      "href",
+      "tel:+49 89 12345678"
+    );
+  });
+
+  it("renders unsafe contact email and phone as plain text", async () => {
+    const unsafeCustomer = {
+      ...mockCustomer,
+      contact: {
+        ...mockCustomer.contact,
+        email: "target@example.com?bcc=attacker@evil.com&subject=PWN",
+        phone: "+49?suffix=evil",
+      },
+    };
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(unsafeCustomer);
+
+    const { container } = renderWithRouter();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(unsafeCustomer.contact.email)
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByText(unsafeCustomer.contact.email).closest("a")
+    ).toBeNull();
+    expect(
+      screen.getByText(unsafeCustomer.contact.phone).closest("a")
+    ).toBeNull();
+    expectNoUnsafeContactHrefs(container);
   });
 
   it("displays notes", async () => {

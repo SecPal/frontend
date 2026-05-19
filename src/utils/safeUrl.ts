@@ -2,6 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const LOOPBACK_HOSTNAMES = new Set(["localhost", "::1", "[::1]"]);
+const PERCENT_ENCODED_RE = /%[0-9a-f]{2}/i;
+// Local-part uses RFC 5321 atext: excludes specials and characters that carry
+// meaning in mailto URIs (?  & # %) to prevent header injection or
+// percent-encoding bypass.
+const MAILTO_TARGET_RE =
+  /^[A-Za-z0-9!$'*+/=^_`{|}~-]+(?:\.[A-Za-z0-9!$'*+/=^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$/;
+const TEL_TARGET_RE = /^[+0-9(][+0-9(). -]*(?<! )(?:;ext=[0-9]+| x[0-9]+)?$/i;
+const MIN_TEL_DIGITS = 3;
 
 interface SafeHttpUrlOptions {
   currentHostname?: string;
@@ -69,4 +77,32 @@ export function isSafeHttpUrl(
     isLoopbackHostname(parsedUrl.hostname) &&
     isLoopbackHttpAllowed(options)
   );
+}
+
+export function isSafeMailtoTarget(value: string): boolean {
+  if (
+    value === "" ||
+    value !== value.trim() ||
+    PERCENT_ENCODED_RE.test(value)
+  ) {
+    return false;
+  }
+
+  return MAILTO_TARGET_RE.test(value);
+}
+
+export function isSafeTelTarget(value: string): boolean {
+  if (
+    value === "" ||
+    value !== value.trim() ||
+    PERCENT_ENCODED_RE.test(value)
+  ) {
+    return false;
+  }
+
+  if (!TEL_TARGET_RE.test(value)) {
+    return false;
+  }
+
+  return (value.match(/\d/g) ?? []).length >= MIN_TEL_DIGITS;
 }

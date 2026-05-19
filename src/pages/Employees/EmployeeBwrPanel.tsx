@@ -178,8 +178,7 @@ export function EmployeeBwrPanel({
     try {
       setExportLoading(true);
       const response = await exportEmployeeBwr(employee.id, exportFormat);
-      const safeDownloadUrl = response.download_url.trim();
-      if (!isSafeHttpUrl(safeDownloadUrl)) {
+      if (!isSafeHttpUrl(response.download_url)) {
         setPanelError(
           _(
             msg`The export download link returned by the server is not safe to open.`
@@ -187,7 +186,7 @@ export function EmployeeBwrPanel({
         );
         return;
       }
-      setLatestExportUrl(safeDownloadUrl);
+      setLatestExportUrl(response.download_url);
       const refreshedEmployee = await onRefresh();
       if (refreshedEmployee) {
         const refreshedStatus =
