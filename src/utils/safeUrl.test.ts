@@ -73,6 +73,10 @@ describe("isSafeMailtoTarget", () => {
     "user@example.com",
     "first.last@example.co.uk",
     "service+alerts@sub.example.com",
+    "user@intranet",
+    "me@example",
+    "user@example.xn--p1ai",
+    "user@xn--bcher-kva.de",
   ])("allows email addresses without mailto parameters: %s", (value) => {
     expect(isSafeMailtoTarget(value)).toBe(true);
   });
@@ -97,7 +101,6 @@ describe("isSafeMailtoTarget", () => {
     "javascript:alert(1)",
     "mailto:foo@bar.com",
     "foo bar@example.com",
-    "foo@bar",
   ])("rejects unsafe mailto targets: %s", (value) => {
     expect(isSafeMailtoTarget(value)).toBe(false);
   });
@@ -109,6 +112,8 @@ describe("isSafeTelTarget", () => {
     "+1-202-555-0100",
     "030.1234567",
     "+49 30 1234567;ext=42",
+    "(202) 555-0100",
+    "+1 202 555 0100 x42",
   ])("allows dial strings with visual separators: %s", (value) => {
     expect(isSafeTelTarget(value)).toBe(true);
   });
@@ -127,6 +132,8 @@ describe("isSafeTelTarget", () => {
     "+49,301234567",
     "+49;phone-context=example.com",
     "+49;ext=abc",
+    // space immediately before ;ext= produces a malformed RFC 3966 dial string
+    "+49 30 1234567 ;ext=42",
   ])("rejects unsafe tel targets: %s", (value) => {
     expect(isSafeTelTarget(value)).toBe(false);
   });

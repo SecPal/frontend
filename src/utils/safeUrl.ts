@@ -7,8 +7,9 @@ const PERCENT_ENCODED_RE = /%[0-9a-f]{2}/i;
 // meaning in mailto URIs (?  & # %) to prevent header injection or
 // percent-encoding bypass.
 const MAILTO_TARGET_RE =
-  /^[A-Za-z0-9!$'*+/=^_`{|}~-]+(?:\.[A-Za-z0-9!$'*+/=^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
-const TEL_TARGET_RE = /^\+?[0-9][0-9 .-]*(?:;ext=[0-9]+)?$/;
+  /^[A-Za-z0-9!$'*+/=^_`{|}~-]+(?:\.[A-Za-z0-9!$'*+/=^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$/;
+const TEL_TARGET_RE = /^[+0-9(][+0-9(). -]*(?<! )(?:;ext=[0-9]+| x[0-9]+)?$/i;
+const MIN_TEL_DIGITS = 3;
 
 interface SafeHttpUrlOptions {
   currentHostname?: string;
@@ -99,5 +100,9 @@ export function isSafeTelTarget(value: string): boolean {
     return false;
   }
 
-  return TEL_TARGET_RE.test(value);
+  if (!TEL_TARGET_RE.test(value)) {
+    return false;
+  }
+
+  return (value.match(/\d/g) ?? []).length >= MIN_TEL_DIGITS;
 }
