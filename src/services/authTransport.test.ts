@@ -599,7 +599,8 @@ describe("authTransport", () => {
     const transport = resolveAuthTransport({ nativeBridge });
     const result = await transport.loginWithPasskey();
 
-    expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith();
+    expect(nativeBridge.loginWithPasskey).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(nativeBridge.loginWithPasskey!).mock.calls[0]).toEqual([]);
     expect(result).toEqual({
       status: "authenticated",
       user: {
