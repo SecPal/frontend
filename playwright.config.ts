@@ -16,6 +16,30 @@ import {
 } from "./tests/e2e/target-urls";
 
 /**
+ * Suppress the Node.js stderr warning:
+ *   "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set."
+ *
+ * Playwright unconditionally injects `FORCE_COLOR=1` (and `DEBUG_COLORS=1`)
+ * into every worker and web-server child it spawns so its terminal output
+ * stays colorized; see `WorkerHost` and `DEFAULT_ENVIRONMENT_VARIABLES`
+ * in `node_modules/playwright/lib/runner/index.js`. When the parent shell
+ * also exports `NO_COLOR` (common on Polyscope/CI sandboxes that disable
+ * color globally), every spawned process inherits both variables and
+ * Node's `tty.warnOnDeactivatedColors()` emits the warning on each one.
+ *
+ * `NO_COLOR` has no effect on Playwright runs in the first place because
+ * Playwright always overrides it. Removing it (and the legacy
+ * `NODE_DISABLE_COLORS`) from `process.env` before workers fork keeps the
+ * runtime behaviour identical and silences the noise. See issue #1121.
+ */
+for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
+  const value = process.env[name];
+  if (value !== undefined) {
+    delete process.env[name];
+  }
+}
+
+/**
  * Playwright E2E Test Configuration
  *
  * Three modes of operation:
