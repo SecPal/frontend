@@ -296,7 +296,7 @@ describe("Login", () => {
         expect(nativeBridge.loginWithPasskey).toHaveBeenCalledTimes(1);
       });
 
-      expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith(undefined);
+      expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith();
       expect(
         authApi.startPasskeyAuthenticationChallenge
       ).not.toHaveBeenCalled();

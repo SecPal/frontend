@@ -571,7 +571,7 @@ describe("authTransport", () => {
     expect(transport.supportsPasskeyLogin()).toBe(true);
   });
 
-  it("delegates native passkey login to the native bridge and sanitizes the canonical user", async () => {
+  it("delegates native passkey login to the native bridge without forwarding any email and sanitizes the canonical user", async () => {
     const nativeBridge: NativeAuthBridge = {
       login: vi.fn().mockResolvedValue(undefined),
       loginWithPasskey: vi.fn().mockResolvedValue({
@@ -597,13 +597,9 @@ describe("authTransport", () => {
     };
 
     const transport = resolveAuthTransport({ nativeBridge });
-    const result = await transport.loginWithPasskey({
-      email: "passkey@secpal.dev",
-    });
+    const result = await transport.loginWithPasskey();
 
-    expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith({
-      email: "passkey@secpal.dev",
-    });
+    expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith();
     expect(result).toEqual({
       status: "authenticated",
       user: {
