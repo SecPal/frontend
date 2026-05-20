@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, assert } from "vitest";
 import {
   startPasskeyAuthenticationChallenge,
   verifyPasskeyAuthenticationChallenge,
@@ -679,7 +679,7 @@ describe("authApi", () => {
   });
 
   describe("passkey authentication", () => {
-    it("starts a browser passkey authentication challenge", async () => {
+    it("starts a discoverable browser passkey authentication challenge without sending email", async () => {
       const mockResponse = {
         data: {
           challenge_id: "550e8400-e29b-41d4-a716-446655440099",
@@ -714,49 +714,16 @@ describe("authApi", () => {
           cache: "no-store",
         })
       );
-    });
 
-    it("starts an email-scoped browser passkey authentication challenge", async () => {
-      const mockResponse = {
-        data: {
-          challenge_id: "550e8400-e29b-41d4-a716-446655440099",
-          public_key: {
-            challenge: "Zm9vYmFy",
-            rp_id: "app.secpal.dev",
-            timeout: 60000,
-            user_verification: "preferred",
-            allow_credentials: [
-              {
-                id: "credential-id",
-                type: "public-key",
-              },
-            ],
-          },
-          mediation: "optional",
-          expires_at: "2026-04-06T12:00:00Z",
-        },
-      };
-
-      mockFetch.mockResolvedValueOnce({ ok: true } as Response);
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => mockResponse,
-      } as Response);
-
-      await expect(
-        startPasskeyAuthenticationChallenge({ email: "test@secpal.dev" })
-      ).resolves.toEqual(mockResponse);
-
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        2,
-        expect.stringContaining("/v1/auth/passkeys/challenges"),
-        expect.objectContaining({
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify({ email: "test@secpal.dev" }),
-        })
+      const challengeCall = mockFetch.mock.calls[1];
+      assert(
+        challengeCall !== undefined,
+        "expected challenge fetch call to exist"
       );
+      const requestInit = challengeCall[1] as RequestInit;
+      const headers = requestInit.headers as Headers;
+      expect(headers.get("Content-Type")).toBeNull();
+      expect(requestInit.body).toBeUndefined();
     });
 
     it("verifies a browser passkey authentication challenge", async () => {

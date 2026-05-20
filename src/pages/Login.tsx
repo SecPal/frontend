@@ -56,14 +56,6 @@ const NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN =
 
 type Translate = ReturnType<typeof useLingui>["_"];
 
-function isResidentCredentialError(error: unknown): error is Error {
-  return (
-    error instanceof Error &&
-    (error.message.includes("resident credentials") ||
-      error.message.includes("allowCredentials"))
-  );
-}
-
 function getPasskeySignInErrorMessage(
   error: unknown,
   translate: Translate
@@ -335,17 +327,11 @@ export function Login() {
     setIsSubmittingPasskey(true);
     setPasskeyStep("challenge");
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const initialChallengeEmail =
-      normalizedEmail !== "" ? normalizedEmail : undefined;
-
     if (authTransport.kind === "native-bridge") {
       try {
         setPasskeyStep("native");
 
-        const response = await authTransport.loginWithPasskey(
-          initialChallengeEmail ? { email: initialChallengeEmail } : undefined
-        );
+        const response = await authTransport.loginWithPasskey();
 
         resetAttempts();
         await login(response.user);
@@ -361,10 +347,8 @@ export function Login() {
       return;
     }
 
-    const completePasskeySignIn = async (challengeEmail?: string) => {
-      const challengeResponse = await startPasskeyAuthenticationChallenge(
-        challengeEmail ? { email: challengeEmail } : undefined
-      );
+    try {
+      const challengeResponse = await startPasskeyAuthenticationChallenge();
       console.info(
         "[SecPal] Passkey login: challenge created id=%s credentials=%d",
         challengeResponse.data.challenge_id,
@@ -382,33 +366,12 @@ export function Login() {
       console.info("[SecPal] Passkey login: browser assertion complete");
 
       setPasskeyStep("verifying");
-      return verifyPasskeyAuthenticationChallenge(
+      const response = await verifyPasskeyAuthenticationChallenge(
         challengeResponse.data.challenge_id,
         {
           credential,
         }
       );
-    };
-
-    try {
-      let response;
-
-      try {
-        response = await completePasskeySignIn(initialChallengeEmail);
-      } catch (firstError) {
-        if (!isResidentCredentialError(firstError) || initialChallengeEmail) {
-          throw firstError;
-        }
-
-        if (normalizedEmail === "") {
-          throw new Error(
-            "This browser requires your email address for passkey sign-in. Enter your email address and try again.",
-            { cause: firstError }
-          );
-        }
-
-        response = await completePasskeySignIn(normalizedEmail);
-      }
 
       console.info(
         "[SecPal] Passkey login: verify succeeded mode=%s",

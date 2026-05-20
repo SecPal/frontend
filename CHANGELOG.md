@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Passkey sign-in now always starts a discoverable (resident-credential) challenge without sending an email hint to the server. The previous two-attempt fallback — try discoverable, then retry with an email-scoped `allow_credentials` list — has been removed. Browsers that do not support empty `allowCredentials` lists will now receive an error instead of a silent retry. The native-bridge `loginWithPasskey` call no longer forwards the typed email either.
 - Migrated employee contact and detail flows from flat `address_*` fields to the `addresses` relation: responses now use `addresses`, optional `current_address`, and `structured_address`; contact edit and inline postal edits send full replacement `addresses` payloads that keep historical rows and refresh the open-ended current row, with shared helpers in `src/lib/employeeAddresses.ts`.
 - Added an inline onboarding-wizard attachment upload section for editable steps, automatically creating a draft submission before the first upload when needed, surfacing upload success/failure inline, and wiring the flow to the current `/v1/onboarding/submissions/{submission}/files` API contract (closes #1029)
 - Renamed the onboarding review and Android provisioning frontend API clients to the neutral `/v1/onboarding-review/...` and `/v1/android-enrollment-sessions...` endpoints, and aligned supporting fixtures/examples with the removed Admin model.
