@@ -95,4 +95,60 @@ describe("playwright config", () => {
     expect(chromiumProject?.use).toBeDefined();
     expect(chromiumProject?.use?.launchOptions).toBeUndefined();
   });
+
+  /**
+   * Regression guard for issue #1121: Playwright forks every worker and the
+   * webServer with a hardcoded `FORCE_COLOR=1`. If the parent shell also
+   * exports `NO_COLOR` (or the legacy `NODE_DISABLE_COLORS`), Node's
+   * `tty.warnOnDeactivatedColors()` spams the warning
+   *   "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set."
+   * on each child. `playwright.config.ts` strips those vars from
+   * `process.env` at import time so the fork inherits a clean env.
+   */
+  describe("color env conflict scrub (issue #1121)", () => {
+    it.each([["NO_COLOR"], ["NODE_DISABLE_COLORS"]] as const)(
+      "removes %s from process.env when set to a non-empty value",
+      async (name) => {
+        vi.stubEnv("CI", "");
+        vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+        vi.stubEnv(name, "1");
+        mockNonPolyscopeCwd();
+        vi.resetModules();
+
+        expect(process.env[name]).toBe("1");
+        await import("../playwright.config");
+
+        expect(process.env[name]).toBeUndefined();
+      }
+    );
+
+    it.each([["NO_COLOR"], ["NODE_DISABLE_COLORS"]] as const)(
+      "also removes an empty %s value to keep child env strictly clean",
+      async (name) => {
+        vi.stubEnv("CI", "");
+        vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+        vi.stubEnv(name, "");
+        mockNonPolyscopeCwd();
+        vi.resetModules();
+
+        await import("../playwright.config");
+
+        expect(process.env[name]).toBeUndefined();
+      }
+    );
+
+    it("leaves process.env untouched when neither color-disabling var is set", async () => {
+      vi.stubEnv("CI", "");
+      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+      delete process.env.NO_COLOR;
+      delete process.env.NODE_DISABLE_COLORS;
+      mockNonPolyscopeCwd();
+      vi.resetModules();
+
+      await import("../playwright.config");
+
+      expect(process.env.NO_COLOR).toBeUndefined();
+      expect(process.env.NODE_DISABLE_COLORS).toBeUndefined();
+    });
+  });
 });
