@@ -210,10 +210,6 @@ export interface PasskeyAuthenticationChallengeResponse {
   };
 }
 
-export interface PasskeyAuthenticationChallengeRequest {
-  email?: string;
-}
-
 export interface PasskeyAssertionResponsePayload {
   client_data_json: string;
   authenticator_data: string;

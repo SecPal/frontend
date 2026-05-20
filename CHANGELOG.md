@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `getCountrySelectOptions` in `src/lib/iso3166CountryOptions.ts` to generate a locale-sorted ISO 3166-1 alpha-2 country dropdown with per-code `Intl.DisplayNames` fallback for unsupported region identifiers.
 - Added shared `EmployeeAddressFields` component with OpenPLZ street/locality autocomplete, keyboard navigation, and a country combobox; adopted in the employee create, edit, contacts-edit, and inline postal-address dialog flows.
 
+### Changed
+
+- Passkey sign-in now always starts a discoverable (resident-credential) challenge without sending an email hint to the server. The previous two-attempt fallback — try discoverable, then retry with an email-scoped `allow_credentials` list — has been removed. Browsers that do not support empty `allowCredentials` lists will now receive an error instead of a silent retry. The native-bridge `loginWithPasskey` call no longer forwards the typed email either.
+
 ### Fixed
 
 - Fixed `resolvePlaywrightApiBaseUrl` in `tests/e2e/target-urls.ts`: when `PLAYWRIGHT_BASE_URL` points to a workspace preview and `PLAYWRIGHT_API_BASE_URL` is set to a non-preview live value, the API origin is now derived from the preview frontend URL so E2E runs stay bound to the same workspace preview instead of drifting to the live API.

@@ -71,21 +71,6 @@ const authenticationChallenge = {
   },
 };
 
-const fallbackAuthenticationChallenge = {
-  data: {
-    challenge_id: "550e8400-e29b-41d4-a716-446655440002",
-    public_key: {
-      challenge: "YmFyZm9v",
-      rp_id: "app.secpal.dev",
-      timeout: 60000,
-      user_verification: "preferred",
-      allow_credentials: [{ id: "Y3JlZGVudGlhbC1pZA", type: "public-key" }],
-    },
-    mediation: "optional",
-    expires_at: "2026-04-09T17:00:00Z",
-  },
-};
-
 async function fulfillJson(route: Route, body: unknown, status = 200) {
   await route.fulfill({
     status,
@@ -94,81 +79,57 @@ async function fulfillJson(route: Route, body: unknown, status = 200) {
   });
 }
 
-async function installPasskeyBrowserMocks(
-  page: Page,
-  options?: { failDiscoverableOnce?: boolean }
-) {
-  await page.addInitScript(
-    ({ failDiscoverableOnce }) => {
-      let assertionCalls = 0;
+async function installPasskeyBrowserMocks(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "isSecureContext", {
+      configurable: true,
+      value: true,
+    });
 
-      Object.defineProperty(window, "isSecureContext", {
-        configurable: true,
-        value: true,
-      });
+    class PublicKeyCredentialMock {}
 
-      class PublicKeyCredentialMock {}
+    Object.defineProperty(window, "PublicKeyCredential", {
+      configurable: true,
+      value: PublicKeyCredentialMock,
+    });
 
-      Object.defineProperty(window, "PublicKeyCredential", {
-        configurable: true,
-        value: PublicKeyCredentialMock,
-      });
-
-      Object.defineProperty(navigator, "credentials", {
-        configurable: true,
-        value: {
-          create: async () => ({
-            id: "new-credential-id",
-            rawId: Uint8Array.from([114, 97, 119, 45, 105, 100]).buffer,
-            type: "public-key",
-            response: {
-              clientDataJSON: Uint8Array.from([99, 108, 105, 101, 110, 116])
-                .buffer,
-              attestationObject: Uint8Array.from([
-                97, 116, 116, 101, 115, 116, 97, 116, 105, 111, 110,
-              ]).buffer,
-              getTransports: () => ["internal"],
-            },
-            getClientExtensionResults: () => ({}),
-          }),
-          get: async (options?: CredentialRequestOptions) => {
-            const allowCredentials = options?.publicKey?.allowCredentials ?? [];
-
-            assertionCalls += 1;
-
-            if (
-              failDiscoverableOnce &&
-              assertionCalls === 1 &&
-              allowCredentials.length === 0
-            ) {
-              throw new Error(
-                "Resident credentials or empty allowCredentials lists are not supported"
-              );
-            }
-
-            return {
-              id: "credential-id",
-              rawId: Uint8Array.from([114, 97, 119, 45, 105, 100]).buffer,
-              type: "public-key",
-              response: {
-                clientDataJSON: Uint8Array.from([99, 108, 105, 101, 110, 116])
-                  .buffer,
-                authenticatorData: Uint8Array.from([
-                  97, 117, 116, 104, 101, 110, 116, 105, 99, 97, 116, 111, 114,
-                ]).buffer,
-                signature: Uint8Array.from([
-                  115, 105, 103, 110, 97, 116, 117, 114, 101,
-                ]).buffer,
-                userHandle: null,
-              },
-              getClientExtensionResults: () => ({}),
-            };
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: {
+        create: async () => ({
+          id: "new-credential-id",
+          rawId: Uint8Array.from([114, 97, 119, 45, 105, 100]).buffer,
+          type: "public-key",
+          response: {
+            clientDataJSON: Uint8Array.from([99, 108, 105, 101, 110, 116])
+              .buffer,
+            attestationObject: Uint8Array.from([
+              97, 116, 116, 101, 115, 116, 97, 116, 105, 111, 110,
+            ]).buffer,
+            getTransports: () => ["internal"],
           },
-        },
-      });
-    },
-    { failDiscoverableOnce: options?.failDiscoverableOnce ?? false }
-  );
+          getClientExtensionResults: () => ({}),
+        }),
+        get: async () => ({
+          id: "credential-id",
+          rawId: Uint8Array.from([114, 97, 119, 45, 105, 100]).buffer,
+          type: "public-key",
+          response: {
+            clientDataJSON: Uint8Array.from([99, 108, 105, 101, 110, 116])
+              .buffer,
+            authenticatorData: Uint8Array.from([
+              97, 117, 116, 104, 101, 110, 116, 105, 99, 97, 116, 111, 114,
+            ]).buffer,
+            signature: Uint8Array.from([
+              115, 105, 103, 110, 97, 116, 117, 114, 101,
+            ]).buffer,
+            userHandle: null,
+          },
+          getClientExtensionResults: () => ({}),
+        }),
+      },
+    });
+  });
 }
 
 test.describe("Passkeys", () => {
@@ -288,10 +249,12 @@ test.describe("Passkeys", () => {
     await expect(page).not.toHaveURL(/\/login$/);
   });
 
-  test("retries passkey sign-in with an email-scoped challenge when discoverable mode is unsupported", async ({
+  test("ignores a typed email and always starts the public passkey challenge without a body", async ({
     page,
   }) => {
-    await installPasskeyBrowserMocks(page, { failDiscoverableOnce: true });
+    await installPasskeyBrowserMocks(page);
+
+    const publicChallengeBodies: Array<string | null> = [];
 
     await page.route("**/health/ready", async (route) => {
       await fulfillJson(route, {
@@ -308,18 +271,11 @@ test.describe("Passkeys", () => {
       await route.fulfill({ status: 204, body: "" });
     });
     await page.route("**/v1/auth/passkeys/challenges", async (route) => {
-      const rawBody = route.request().postData();
-      const body = rawBody ? (JSON.parse(rawBody) as { email?: string }) : null;
-
-      if (body?.email === "test@example.com") {
-        await fulfillJson(route, fallbackAuthenticationChallenge, 201);
-        return;
-      }
-
+      publicChallengeBodies.push(route.request().postData());
       await fulfillJson(route, authenticationChallenge, 201);
     });
     await page.route(
-      "**/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440002/verify",
+      "**/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440001/verify",
       async (route) => {
         await fulfillJson(route, {
           user: authUser,
@@ -338,9 +294,10 @@ test.describe("Passkeys", () => {
     await page.getByRole("button", { name: /sign in with passkey/i }).click();
 
     await expect(page).not.toHaveURL(/\/login$/);
+    expect(publicChallengeBodies).toEqual([null]);
   });
 
-  test("keeps registration persistence and email-first login lookup in sync", async ({
+  test("keeps registration persistence and discoverable login lookup in sync", async ({
     page,
   }) => {
     await installPasskeyBrowserMocks(page);
@@ -395,48 +352,28 @@ test.describe("Passkeys", () => {
     );
     await page.route("**/v1/auth/passkeys/challenges", async (route) => {
       const rawBody = route.request().postData();
-      const body = rawBody ? (JSON.parse(rawBody) as { email?: string }) : null;
 
-      if (body?.email === "test@example.com" && storedPasskeys.length > 0) {
+      if (rawBody !== null) {
         await fulfillJson(
           route,
           {
-            data: {
-              challenge_id: fallbackAuthenticationChallenge.data.challenge_id,
-              public_key: {
-                ...fallbackAuthenticationChallenge.data.public_key,
-                allow_credentials: [
-                  {
-                    id: storedPasskeys[0]!.id,
-                    type: "public-key",
-                  },
-                ],
-              },
-              mediation: fallbackAuthenticationChallenge.data.mediation,
-              expires_at: fallbackAuthenticationChallenge.data.expires_at,
+            message:
+              "Email-scoped public passkey challenges are no longer supported.",
+            errors: {
+              email: [
+                "Email-scoped public passkey challenges are no longer supported.",
+              ],
             },
           },
-          201
+          422
         );
         return;
       }
 
-      await fulfillJson(
-        route,
-        {
-          message:
-            "Passkey sign-in is not available for the provided email address.",
-          errors: {
-            email: [
-              "Passkey sign-in is not available for the provided email address.",
-            ],
-          },
-        },
-        422
-      );
+      await fulfillJson(route, authenticationChallenge, 201);
     });
     await page.route(
-      "**/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440002/verify",
+      "**/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440001/verify",
       async (route) => {
         await fulfillJson(route, {
           user: authUser,

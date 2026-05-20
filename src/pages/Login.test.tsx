@@ -258,7 +258,7 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
-  it("routes passkey sign-in through the native auth bridge when available", async () => {
+  it("routes passkey sign-in through the native auth bridge without forwarding the typed email", async () => {
     const authGlobal = globalThis as {
       SecPalNativeAuthBridge?: {
         login: ReturnType<typeof vi.fn>;
@@ -293,11 +293,10 @@ describe("Login", () => {
       );
 
       await waitFor(() => {
-        expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith({
-          email: "test@secpal.dev",
-        });
+        expect(nativeBridge.loginWithPasskey).toHaveBeenCalledTimes(1);
       });
 
+      expect(nativeBridge.loginWithPasskey).toHaveBeenCalledWith(undefined);
       expect(
         authApi.startPasskeyAuthenticationChallenge
       ).not.toHaveBeenCalled();
@@ -792,7 +791,7 @@ describe("Login", () => {
     });
   });
 
-  it("starts passkey sign-in with an email-scoped challenge when the email is already entered", async () => {
+  it("starts passkey sign-in with a discoverable challenge even when the email field is filled", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
@@ -804,12 +803,6 @@ describe("Login", () => {
           rp_id: "app.secpal.dev",
           timeout: 60000,
           user_verification: "preferred",
-          allow_credentials: [
-            {
-              id: "credential-id",
-              type: "public-key",
-            },
-          ],
         },
         mediation: "optional",
         expires_at: "2026-04-06T12:00:00Z",
@@ -847,14 +840,16 @@ describe("Login", () => {
     );
 
     await waitFor(() => {
-      expect(
-        authApi.startPasskeyAuthenticationChallenge
-      ).toHaveBeenNthCalledWith(1, { email: "test@secpal.dev" });
-      expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledWith(
-        "550e8400-e29b-41d4-a716-446655440100",
-        expect.anything()
+      expect(authApi.startPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
+        1
       );
     });
+
+    expect(authApi.startPasskeyAuthenticationChallenge).toHaveBeenCalledWith();
+    expect(authApi.verifyPasskeyAuthenticationChallenge).toHaveBeenCalledWith(
+      "550e8400-e29b-41d4-a716-446655440100",
+      expect.anything()
+    );
   });
 
   it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
@@ -984,7 +979,7 @@ describe("Login", () => {
     ).toBeInTheDocument();
   });
 
-  it("asks for an email address when passkey sign-in needs a credential allow-list", async () => {
+  it("surfaces resident-credential errors instead of retrying with an email-scoped challenge", async () => {
     vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
@@ -1009,15 +1004,21 @@ describe("Login", () => {
 
     renderLogin();
 
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
     fireEvent.click(
       await screen.findByRole("button", { name: /sign in with passkey/i })
     );
 
     expect(
-      await screen.findByText(
-        /this browser requires your email address for passkey sign-in/i
-      )
+      await screen.findByText(/resident credentials/i)
     ).toBeInTheDocument();
+
+    expect(authApi.startPasskeyAuthenticationChallenge).toHaveBeenCalledTimes(
+      1
+    );
+    expect(authApi.startPasskeyAuthenticationChallenge).toHaveBeenCalledWith();
   });
 
   it("shows a browser-check prompt while waiting for the WebAuthn credential", async () => {
