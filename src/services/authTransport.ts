@@ -20,10 +20,6 @@ export interface AuthCredentials {
   password: string;
 }
 
-export interface PasskeyLoginOptions {
-  email?: string;
-}
-
 export interface AuthenticatedLoginResult {
   status: "authenticated";
   user: User;
@@ -40,7 +36,7 @@ export type AuthTransportKind = "browser-session" | "native-bridge";
 
 export interface NativeAuthBridge {
   login(credentials: AuthCredentials): Promise<unknown>;
-  loginWithPasskey?(options?: PasskeyLoginOptions): Promise<unknown>;
+  loginWithPasskey?(): Promise<unknown>;
   logout(): Promise<void>;
   logoutAll?(): Promise<void>;
   getCurrentUser(): Promise<unknown>;
@@ -51,9 +47,7 @@ export interface AuthTransport {
   readonly kind: AuthTransportKind;
   login(credentials: AuthCredentials): Promise<AuthLoginResult>;
   supportsPasskeyLogin(): boolean;
-  loginWithPasskey(
-    options?: PasskeyLoginOptions
-  ): Promise<AuthenticatedLoginResult>;
+  loginWithPasskey(): Promise<AuthenticatedLoginResult>;
   logout(): Promise<void>;
   logoutAll(): Promise<void>;
   getCurrentUser(): Promise<User>;
@@ -177,16 +171,14 @@ function createNativeBridgeAuthTransport(
     supportsPasskeyLogin(): boolean {
       return typeof nativeAuthBridge.loginWithPasskey === "function";
     },
-    async loginWithPasskey(
-      options?: PasskeyLoginOptions
-    ): Promise<AuthenticatedLoginResult> {
+    async loginWithPasskey(): Promise<AuthenticatedLoginResult> {
       if (typeof nativeAuthBridge.loginWithPasskey !== "function") {
         throw new AuthApiError(
           "Native auth transport does not support passkey sign-in"
         );
       }
 
-      const result = await nativeAuthBridge.loginWithPasskey(options);
+      const result = await nativeAuthBridge.loginWithPasskey();
 
       return finalizeAuthenticatedLogin(
         result,
