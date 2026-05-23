@@ -349,9 +349,7 @@ describe("OnboardingComplete", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/invalid onboarding link/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
     });
 
     expect(
