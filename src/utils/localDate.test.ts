@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect } from "vitest";
-import { formatLocalYmd } from "./localDate";
+import { formatLocalYmd, isValidIsoCalendarDate } from "./localDate";
 
 describe("formatLocalYmd", () => {
   // Building a Date with `new Date(year, monthIndex, day)` always pins the
@@ -19,5 +19,34 @@ describe("formatLocalYmd", () => {
 
   it("zero-pads single-digit months and days", () => {
     expect(formatLocalYmd(new Date(2026, 1, 3))).toBe("2026-02-03");
+  });
+});
+
+describe("isValidIsoCalendarDate", () => {
+  it("accepts well-formed real calendar dates", () => {
+    expect(isValidIsoCalendarDate("1990-04-15")).toBe(true);
+    expect(isValidIsoCalendarDate("2000-02-29")).toBe(true); // leap year
+    expect(isValidIsoCalendarDate("2026-12-31")).toBe(true);
+  });
+
+  it("rejects impossible calendar days that the shape regex would accept", () => {
+    // The shape `\d{4}-\d{2}-\d{2}` happily matches these, but they don't
+    // exist as real days. Catching them client-side is critical under the
+    // single-shot onboarding policy, where the backend would otherwise burn
+    // the magic link over a simple typo.
+    expect(isValidIsoCalendarDate("1990-02-31")).toBe(false);
+    expect(isValidIsoCalendarDate("2023-02-29")).toBe(false); // non-leap year
+    expect(isValidIsoCalendarDate("2026-04-31")).toBe(false);
+    expect(isValidIsoCalendarDate("2026-13-01")).toBe(false);
+    expect(isValidIsoCalendarDate("2026-00-15")).toBe(false);
+    expect(isValidIsoCalendarDate("2026-06-00")).toBe(false);
+  });
+
+  it("rejects values that are not in YYYY-MM-DD shape", () => {
+    expect(isValidIsoCalendarDate("")).toBe(false);
+    expect(isValidIsoCalendarDate("13/05/1990")).toBe(false);
+    expect(isValidIsoCalendarDate("1990-4-15")).toBe(false);
+    expect(isValidIsoCalendarDate("1990-04-15T00:00:00Z")).toBe(false);
+    expect(isValidIsoCalendarDate("not-a-date")).toBe(false);
   });
 });

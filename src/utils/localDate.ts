@@ -17,3 +17,31 @@ export function formatLocalYmd(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Return `true` iff `value` is a real calendar date in strict `YYYY-MM-DD`
+ * shape — both the format and the actual day on the Gregorian calendar must
+ * be valid. A bare regex check would let typos like `1990-02-31` through;
+ * for flows that punish a server-side rejection (e.g. the onboarding
+ * single-shot policy that burns the magic link on identity-proof failures),
+ * client-side calendar validation prevents avoidable hard failures.
+ */
+export function isValidIsoCalendarDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    return false;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  // Round-trip through UTC to avoid local-DST shifting a valid day off-by-one;
+  // here we only care about the calendar identity of the date, not its instant.
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  return (
+    utc.getUTCFullYear() === year &&
+    utc.getUTCMonth() === month - 1 &&
+    utc.getUTCDate() === day
+  );
+}

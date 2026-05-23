@@ -283,6 +283,82 @@ describe("OnboardingComplete", () => {
     expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
   });
 
+  it("rejects an impossible calendar day (e.g. 1990-02-31) before submitting", async () => {
+    // The shape regex alone would happily forward a typo like 1990-02-31 to
+    // the backend, where the single-shot identity policy would then burn the
+    // magic link over a simple mistake. Client-side calendar validation is the
+    // last line of defense for the invitee.
+    //
+    // jsdom sanitizes invalid values out of <input type="date">, so we bypass
+    // its sanitizer by writing directly to the value property — the same
+    // pattern used for the "invalid format" test below.
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    const dobInput = screen.getByLabelText(
+      /date of birth/i
+    ) as HTMLInputElement;
+    Object.defineProperty(dobInput, "value", {
+      writable: true,
+      value: "1990-02-31",
+    });
+    fireEvent.change(dobInput, { target: {} });
+
+    const firstNameInput = screen.getByLabelText(/first name|vorname/i);
+    const lastNameInput = screen.getByLabelText(/last name|nachname/i);
+    const passwordInput = screen.getByLabelText(/^password$|^passwort$/i);
+    const confirmPasswordInput = document.querySelector(
+      'input[name="password_confirmation"]'
+    ) as HTMLInputElement;
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "SecurePass123!" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "SecurePass123!" },
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /complete account setup/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please enter a valid date of birth/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("treats a 200 token-validation response that lacks `valid: true` as invalid", async () => {
+    // Defense-in-depth: the API contract pins `data.valid` to `const: true` on
+    // a 200, but we must not let a contract regression (or a mocked backend)
+    // silently send the user into the form with an unusable link.
+    vi.mocked(onboardingApi.validateOnboardingToken).mockResolvedValueOnce({
+      data: { valid: false as unknown as true },
+    });
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/invalid onboarding link/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /complete account setup/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("rejects a date of birth that is today or in the future", async () => {
     // Must match the local-day definition used by the production code.
     // Using toISOString() here would test against the UTC day instead and

@@ -27,7 +27,7 @@ import {
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
 import { getOnboardingPasswordIssue } from "../../utils/onboardingPasswordValidation";
-import { formatLocalYmd } from "../../utils/localDate";
+import { formatLocalYmd, isValidIsoCalendarDate } from "../../utils/localDate";
 
 interface FormData {
   first_name: string;
@@ -240,7 +240,21 @@ export function OnboardingComplete() {
       setTokenValidationState({ kind: "validating" });
 
       try {
-        await validateOnboardingToken(token, email);
+        const validation = await validateOnboardingToken(token, email);
+        // Defensive: the contract pins `data.valid` to `const: true` on a 200
+        // response, but trusting the status code alone would let any future
+        // contract drift (or a mocked/stubbed backend) silently send the user
+        // into the completion form with an unusable link. Treat anything other
+        // than `valid === true` as if the token were invalid.
+        if (validation?.data?.valid !== true) {
+          setTokenValidationState({
+            kind: "invalid",
+            message: _(
+              msg`Invalid onboarding link. Please check your email and try again.`
+            ),
+          });
+          return;
+        }
         setTokenValidationState({ kind: "ready" });
       } catch (error) {
         if (isOnboardingApiError(error) && error.response.status === 429) {
@@ -287,7 +301,11 @@ export function OnboardingComplete() {
 
     if (!formData.date_of_birth) {
       newErrors.date_of_birth = _(msg`Date of birth is required`);
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.date_of_birth)) {
+    } else if (!isValidIsoCalendarDate(formData.date_of_birth)) {
+      // Rejects both malformed inputs ("13/05/1990") and impossible calendar
+      // days the shape regex would otherwise let through ("1990-02-31").
+      // Catching the latter client-side is important because the backend's
+      // single-shot policy would burn the magic link over the typo.
       newErrors.date_of_birth = _(msg`Please enter a valid date of birth`);
     } else if (formData.date_of_birth >= formatLocalYmd(new Date())) {
       // Compare against the local calendar day. Using UTC ("today" via
