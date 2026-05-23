@@ -16,13 +16,6 @@ import {
   getErrorValidationErrors,
   getLocalizedErrorMessage,
 } from "../../lib/errorUtils";
-import {
-  Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogActions,
-} from "../../components/dialog";
 import { AuthLayout } from "../../components/auth-layout";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
@@ -33,15 +26,12 @@ import {
   type OnboardingApiError,
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
-import {
-  validateNameChange,
-  type ValidationSeverity,
-} from "../../utils/nameValidation";
 import { getOnboardingPasswordIssue } from "../../utils/onboardingPasswordValidation";
 
 interface FormData {
   first_name: string;
   last_name: string;
+  date_of_birth: string;
   password: string;
   password_confirmation: string;
 }
@@ -49,6 +39,7 @@ interface FormData {
 interface ValidationErrors {
   first_name?: string;
   last_name?: string;
+  date_of_birth?: string;
   password?: string;
   password_confirmation?: string;
   general?: string;
@@ -96,6 +87,9 @@ function mapOnboardingFieldErrors(
       case "last_name":
         errors.last_name = localizedFieldMessage;
         break;
+      case "date_of_birth":
+        errors.date_of_birth = localizedFieldMessage;
+        break;
       case "password":
         errors.password = localizedFieldMessage;
         break;
@@ -119,14 +113,28 @@ function mapOnboardingFieldErrors(
  * Flow:
  * 1. User receives email with magic link
  * 2. Clicks link → Lands on this page with token & email in URL
- * 3. Fills form (first name, last name, password)
- * 4. Submits → Backend validates token & creates account
+ * 3. Fills form (first name, last name, date of birth, password)
+ * 4. Submits → Backend validates token + email + DOB + name similarity
  * 5. Success → Browser session is established → Redirect to /onboarding wizard
  *
- * Security:
- * - Token is single-use and expires after 7 days (backend enforced)
- * - Client-side validation mirrors backend password defaults (min 12, mixed
- *   case, numbers, symbols; breach checks are server-side only)
+ * Security model:
+ * - Token is single-use and expires after 7 days (backend enforced).
+ * - The validate-token endpoint deliberately does NOT echo first/last name or email,
+ *   so anyone in possession of the link cannot harvest profile data. The form
+ *   therefore always starts empty and we never show "Original: …" hints.
+ * - The actual identity proof (DOB + name match) happens server-side at
+ *   POST /onboarding/complete. Any mismatch returns a generic 422 message without a
+ *   per-field `errors` payload — this both prevents the response from being used as
+ *   a field-level oracle and ensures each failed attempt counts toward the rate-limit
+ *   bucket. The frontend renders that generic message verbatim and does not try to
+ *   localize it field-by-field.
+ * - A failed identity proof permanently revokes the magic link (single-shot policy
+ *   enforced by the backend). The frontend therefore does NOT offer a "try again"
+ *   button for the generic 422 case; the backend message already directs the user
+ *   to HR for a new invitation.
+ * - Client-side validation only checks shape (presence, password complexity, DOB
+ *   format) and mirrors backend password defaults (min 12 chars, mixed case, number,
+ *   symbol). Breach checks remain server-side only.
  */
 export function OnboardingComplete() {
   const [searchParams] = useSearchParams();
@@ -143,15 +151,10 @@ export function OnboardingComplete() {
   const [formData, setFormData] = useState<FormData>({
     first_name: "",
     last_name: "",
+    date_of_birth: "",
     password: "",
     password_confirmation: "",
   });
-
-  // Track original names from backend for change detection
-  const [originalNames, setOriginalNames] = useState<{
-    first_name: string;
-    last_name: string;
-  }>({ first_name: "", last_name: "" });
 
   const [loading, setLoading] = useState(false);
   const [tokenValidationState, setTokenValidationState] =
@@ -160,20 +163,6 @@ export function OnboardingComplete() {
     );
   const [validationAttempt, setValidationAttempt] = useState(0);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
-  const [nameChangeConfirmed, setNameChangeConfirmed] = useState(false);
-  const [nameValidation, setNameValidation] = useState<{
-    firstName: {
-      severity: ValidationSeverity;
-      messageKey: string;
-      similarity: number;
-    } | null;
-    lastName: {
-      severity: ValidationSeverity;
-      messageKey: string;
-      similarity: number;
-    } | null;
-  }>({ firstName: null, lastName: null });
 
   const isOnboardingApiError = (err: unknown): err is OnboardingApiError => {
     return (
@@ -208,79 +197,18 @@ export function OnboardingComplete() {
     return retryHint ? `${baseMessage} ${retryHint}` : baseMessage;
   };
 
-  // Validate names whenever form data changes
-  useEffect(() => {
-    if (!originalNames.first_name && !originalNames.last_name) {
-      // No original names loaded yet
-      return;
-    }
-
-    const firstNameResult =
-      formData.first_name.trim() &&
-      formData.first_name.trim() !== originalNames.first_name.trim()
-        ? validateNameChange(originalNames.first_name, formData.first_name)
-        : null;
-
-    const lastNameResult =
-      formData.last_name.trim() &&
-      formData.last_name.trim() !== originalNames.last_name.trim()
-        ? validateNameChange(originalNames.last_name, formData.last_name)
-        : null;
-
-    setNameValidation({
-      firstName: firstNameResult
-        ? {
-            severity: firstNameResult.severity,
-            messageKey: firstNameResult.messageKey,
-            similarity: firstNameResult.similarity,
-          }
-        : null,
-      lastName: lastNameResult
-        ? {
-            severity: lastNameResult.severity,
-            messageKey: lastNameResult.messageKey,
-            similarity: lastNameResult.similarity,
-          }
-        : null,
-    });
-  }, [formData.first_name, formData.last_name, originalNames]);
-
-  // Helper function to get severity-based CSS classes
-  const getSeverityClassName = (severity: ValidationSeverity): string => {
-    if (severity === "major") {
-      return "text-red-600 dark:text-red-400 font-medium";
-    }
-    if (severity === "medium") {
-      return "text-amber-600 dark:text-amber-400";
-    }
-    return "text-blue-600 dark:text-blue-400";
+  const updateIdentityField = (
+    fieldName: "first_name" | "last_name" | "date_of_birth",
+    value: string
+  ) => {
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
-  // Helper function to get translated validation message
-  const getValidationMessage = (
-    fieldName: string,
-    messageKey: string,
-    similarity: number
-  ): string => {
-    if (messageKey === "minor") {
-      return _(
-        msg`${fieldName} appears to be a minor correction (${similarity}% similar).`
-      );
-    } else if (messageKey === "medium") {
-      return _(
-        msg`${fieldName} has changed significantly (${similarity}% similar). HR will be notified for verification.`
-      );
-    } else {
-      // major
-      return _(
-        msg`This ${fieldName.toLowerCase()} change is too significant (${similarity}% similar). Please contact HR to update your name before completing onboarding.`
-      );
-    }
-  };
-
-  // Validate token and prefill form on mount
+  // Validate token (existence + email match) on mount. We deliberately do NOT
+  // prefill the form: the backend no longer returns first_name/last_name/email here
+  // to avoid leaking profile data to anyone who only holds the magic link.
   useEffect(() => {
-    const validateAndPrefill = async () => {
+    const validateLink = async () => {
       if (!token || !email) {
         let errorMessage = _(
           msg`Invalid onboarding link. Please check your email and try again.`
@@ -310,23 +238,8 @@ export function OnboardingComplete() {
 
       setTokenValidationState({ kind: "validating" });
 
-      // Validate token and get employee data for prefilling
       try {
-        const response = await validateOnboardingToken(token, email);
-
-        // Store original names for change detection
-        setOriginalNames({
-          first_name: response.data.first_name || "",
-          last_name: response.data.last_name || "",
-        });
-
-        // Prefill form with existing employee data
-        setFormData((prev) => ({
-          ...prev,
-          first_name: response.data.first_name || "",
-          last_name: response.data.last_name || "",
-        }));
-
+        await validateOnboardingToken(token, email);
         setTokenValidationState({ kind: "ready" });
       } catch (error) {
         if (isOnboardingApiError(error) && error.response.status === 429) {
@@ -354,7 +267,7 @@ export function OnboardingComplete() {
       }
     };
 
-    validateAndPrefill();
+    validateLink();
   }, [token, email, _, validationAttempt]);
 
   /**
@@ -369,6 +282,14 @@ export function OnboardingComplete() {
 
     if (!formData.last_name.trim()) {
       newErrors.last_name = _(msg`Last name is required`);
+    }
+
+    if (!formData.date_of_birth) {
+      newErrors.date_of_birth = _(msg`Date of birth is required`);
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.date_of_birth)) {
+      newErrors.date_of_birth = _(msg`Please enter a valid date of birth`);
+    } else if (formData.date_of_birth >= new Date().toISOString().slice(0, 10)) {
+      newErrors.date_of_birth = _(msg`Date of birth must be in the past`);
     }
 
     if (!formData.password) {
@@ -397,11 +318,19 @@ export function OnboardingComplete() {
   };
 
   /**
-   * Perform actual API submission
+   * Submit identity proof + password to the backend.
+   *
+   * Identity verification (DOB + name) is server-side. A 422 without `errors`
+   * payload is the generic "we couldn't verify your identity" response — we render
+   * the backend message verbatim instead of guessing which field is wrong.
    */
-  const performSubmission = async () => {
-    // Close dialog if open
-    setShowNameChangeWarning(false);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setErrors({});
 
@@ -411,6 +340,7 @@ export function OnboardingComplete() {
         email: email!,
         first_name: formData.first_name,
         last_name: formData.last_name,
+        date_of_birth: formData.date_of_birth,
         password: formData.password,
       };
 
@@ -436,9 +366,6 @@ export function OnboardingComplete() {
     } catch (error: unknown) {
       console.error("Onboarding completion failed:", error);
 
-      // Reset name change confirmation on error
-      setNameChangeConfirmed(false);
-
       if (isOnboardingApiError(error)) {
         if (error.response.status === 422) {
           const backendErrors = getErrorValidationErrors(error);
@@ -451,14 +378,33 @@ export function OnboardingComplete() {
           );
 
           setErrors(formattedErrors);
+
+          // 422 responses without a per-field `errors` payload are deliberately
+          // generic on the backend: they could mean "invalid/expired token",
+          // "email does not match", or "identity verification failed" (wrong DOB
+          // or name too different). The backend always returns its OWN localized
+          // `message` for these cases (Accept-Language honoured) so we surface
+          // that verbatim — never trying to guess which field is wrong, which
+          // would turn the UI into a field-level oracle.
+          //
+          // A failed identity proof also permanently revokes the magic link
+          // (single-shot policy). The backend's verbatim message already steers
+          // the user toward HR for a new invitation; we deliberately do NOT add
+          // a "try again" affordance for this case.
+          const backendMessage =
+            typeof error.response.data?.message === "string" &&
+            error.response.data.message.trim().length > 0
+              ? error.response.data.message.trim()
+              : null;
+
           setErrors((prev) => ({
             ...prev,
-            general: getLocalizedErrorMessage(error, _, {
-              fallback: msg`Failed to complete onboarding. Please try again or contact support.`,
-              validation: hasFieldErrors
-                ? msg`Please review the highlighted fields and try again.`
-                : msg`Invalid onboarding link. Please check your email and try again.`,
-            }),
+            general: hasFieldErrors
+              ? _(msg`Please review the highlighted fields and try again.`)
+              : (backendMessage ??
+                _(
+                  msg`We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation.`
+                )),
           }));
         } else if (error.response.status === 429) {
           // Rate limit exceeded
@@ -484,60 +430,6 @@ export function OnboardingComplete() {
     } finally {
       setLoading(false);
     }
-  };
-
-  /**
-   * Handle form submission
-   */
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    // Check if names were changed (only check if original names were loaded from backend)
-    const hasLoadedOriginalNames =
-      originalNames.first_name.trim() !== "" ||
-      originalNames.last_name.trim() !== "";
-    const firstNameChanged =
-      hasLoadedOriginalNames &&
-      formData.first_name.trim() !== "" &&
-      formData.first_name.trim() !== originalNames.first_name.trim();
-    const lastNameChanged =
-      hasLoadedOriginalNames &&
-      formData.last_name.trim() !== "" &&
-      formData.last_name.trim() !== originalNames.last_name.trim();
-
-    // Check validation results - block major changes
-    const hasMajorChange =
-      nameValidation.firstName?.severity === "major" ||
-      nameValidation.lastName?.severity === "major";
-
-    if (hasMajorChange) {
-      // Don't submit - major changes are blocked
-      return;
-    }
-
-    // Only show warning dialog for medium changes (50-80% similarity)
-    const hasMediumChange =
-      nameValidation.firstName?.severity === "medium" ||
-      nameValidation.lastName?.severity === "medium";
-
-    // Show warning dialog if medium change and user hasn't confirmed yet
-    if (
-      (firstNameChanged || lastNameChanged) &&
-      hasMediumChange &&
-      !nameChangeConfirmed &&
-      !loading &&
-      Object.keys(errors).length === 0
-    ) {
-      setShowNameChangeWarning(true);
-      return; // Stop submission, wait for user confirmation
-    }
-
-    // If we reach here, either no name change, minor change, or user confirmed - proceed with submission
-    await performSubmission();
   };
 
   if (
@@ -663,81 +555,6 @@ export function OnboardingComplete() {
           </div>
         )}
 
-        {/* Name Change Warning Dialog - Catalyst */}
-        <Dialog
-          open={showNameChangeWarning && !loading}
-          onClose={() => setShowNameChangeWarning(false)}
-        >
-          <DialogTitle>
-            <span className="text-amber-600 dark:text-amber-400 mr-2">⚠️</span>
-            <Trans>Name Change Detected</Trans>
-          </DialogTitle>
-          <DialogDescription>
-            <Trans>
-              You have changed your name from what was initially entered. HR
-              will be notified of this change for verification.
-            </Trans>
-          </DialogDescription>
-          <DialogBody>
-            {formData.first_name.trim() !== originalNames.first_name.trim() && (
-              <Text className="text-sm text-zinc-700 dark:text-zinc-300">
-                <strong>
-                  <Trans>First Name:</Trans>
-                </strong>{" "}
-                <span className="text-zinc-500 dark:text-zinc-400">
-                  {originalNames.first_name}
-                </span>{" "}
-                →{" "}
-                <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                  {formData.first_name}
-                </span>
-              </Text>
-            )}
-            {formData.last_name.trim() !== originalNames.last_name.trim() && (
-              <Text className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-                <strong>
-                  <Trans>Last Name:</Trans>
-                </strong>{" "}
-                <span className="text-zinc-500 dark:text-zinc-400">
-                  {originalNames.last_name}
-                </span>{" "}
-                →{" "}
-                <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-                  {formData.last_name}
-                </span>
-              </Text>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <Button
-              plain
-              onClick={() => {
-                // Reset to original names
-                setFormData((prev) => ({
-                  ...prev,
-                  first_name: originalNames.first_name,
-                  last_name: originalNames.last_name,
-                }));
-                setShowNameChangeWarning(false);
-                setNameChangeConfirmed(false);
-              }}
-            >
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button
-              color="amber"
-              onClick={async () => {
-                // User confirmed - set flag, close dialog and submit
-                setNameChangeConfirmed(true);
-                setShowNameChangeWarning(false);
-                await performSubmission();
-              }}
-            >
-              <Trans>Confirm and Continue</Trans>
-            </Button>
-          </DialogActions>
-        </Dialog>
-
         <FieldGroup>
           {/* First Name - BewachV §16 requires all first names */}
           <Field>
@@ -749,7 +566,7 @@ export function OnboardingComplete() {
               name="first_name"
               value={formData.first_name}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, first_name: e.target.value }))
+                updateIdentityField("first_name", e.target.value)
               }
               disabled={loading}
               autoFocus
@@ -761,24 +578,6 @@ export function OnboardingComplete() {
                 "Hans-Peter Friedrich")
               </Trans>
             </Text>
-            {originalNames.first_name &&
-              formData.first_name !== originalNames.first_name && (
-                <Text className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-                  ℹ️ <Trans>Original:</Trans> {originalNames.first_name}
-                </Text>
-              )}
-            {nameValidation.firstName && (
-              <Text
-                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.firstName.severity)}`}
-              >
-                {nameValidation.firstName.severity === "major" && "⚠️ "}
-                {getValidationMessage(
-                  "first name",
-                  nameValidation.firstName.messageKey,
-                  nameValidation.firstName.similarity
-                )}
-              </Text>
-            )}
             {errors.first_name && (
               <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.first_name}
@@ -795,33 +594,41 @@ export function OnboardingComplete() {
               type="text"
               name="last_name"
               value={formData.last_name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, last_name: e.target.value }))
-              }
+              onChange={(e) => updateIdentityField("last_name", e.target.value)}
               disabled={loading}
               invalid={!!errors.last_name}
             />
-            {originalNames.last_name &&
-              formData.last_name !== originalNames.last_name && (
-                <Text className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-                  ℹ️ <Trans>Original:</Trans> {originalNames.last_name}
-                </Text>
-              )}
-            {nameValidation.lastName && (
-              <Text
-                className={`text-sm mt-1 ${getSeverityClassName(nameValidation.lastName.severity)}`}
-              >
-                {nameValidation.lastName.severity === "major" && "⚠️ "}
-                {getValidationMessage(
-                  "last name",
-                  nameValidation.lastName.messageKey,
-                  nameValidation.lastName.similarity
-                )}
-              </Text>
-            )}
             {errors.last_name && (
               <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
                 {errors.last_name}
+              </Text>
+            )}
+          </Field>
+
+          {/* Date of Birth — proves identity together with the name */}
+          <Field>
+            <Label>
+              <Trans>Date of Birth</Trans> *
+            </Label>
+            <Input
+              type="date"
+              name="date_of_birth"
+              value={formData.date_of_birth}
+              onChange={(e) =>
+                updateIdentityField("date_of_birth", e.target.value)
+              }
+              disabled={loading}
+              invalid={!!errors.date_of_birth}
+            />
+            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              <Trans>
+                We compare this with the date of birth on file to verify your
+                identity before activating your account.
+              </Trans>
+            </Text>
+            {errors.date_of_birth && (
+              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+                {errors.date_of_birth}
               </Text>
             )}
           </Field>
@@ -887,11 +694,7 @@ export function OnboardingComplete() {
               type="submit"
               color="indigo"
               className="w-full"
-              disabled={
-                loading ||
-                nameValidation.firstName?.severity === "major" ||
-                nameValidation.lastName?.severity === "major"
-              }
+              disabled={loading}
             >
               {loading ? (
                 <Trans>Completing Setup...</Trans>
@@ -899,19 +702,7 @@ export function OnboardingComplete() {
                 <Trans>Complete Account Setup</Trans>
               )}
             </Button>
-            {(nameValidation.firstName?.severity === "major" ||
-              nameValidation.lastName?.severity === "major") && (
-              <Text className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
-                ⚠️{" "}
-                <Trans>
-                  Name change too significant. Please contact HR before
-                  completing onboarding.
-                </Trans>
-              </Text>
-            )}
           </div>
-
-          {/* Help Text */}
         </FieldGroup>
       </form>
     </AuthLayout>

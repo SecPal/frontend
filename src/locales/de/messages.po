@@ -30,12 +30,9 @@ msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of birth is required"
 msgstr "Geburtsdatum ist erforderlich"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
-msgstr "Sie haben Ihren Namen gegenüber der ursprünglichen Eingabe geändert. Die Personalabteilung wird zur Überprüfung über diese Änderung informiert."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Edit Employee"
@@ -190,10 +187,6 @@ msgstr "Organisatorische Struktur"
 msgid "Failed to load form template"
 msgstr "Formularvorlage konnte nicht geladen werden"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Name Change Detected"
-msgstr "Namensänderung erkannt"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptiert werden. Bitte kontaktieren Sie HR."
@@ -218,10 +211,6 @@ msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellung
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
 msgstr "Frühere Wohnorte"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Name change too significant. Please contact HR before completing onboarding."
-msgstr "Die Namensänderung ist zu bedeutend. Bitte kontaktieren Sie die Personalabteilung, bevor Sie das Onboarding abschließen."
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -482,10 +471,6 @@ msgstr "Name"
 msgid "Notifications Enabled"
 msgstr "Benachrichtigungen aktiviert"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Last Name:"
-msgstr "Nachname:"
-
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select new parent"
 msgstr "neue übergeordnete Einheit auswählen"
@@ -527,6 +512,7 @@ msgstr "Eine neue Version von SecPal ist verfügbar."
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of Birth"
 msgstr "Geburtsdatum"
 
@@ -610,10 +596,6 @@ msgstr "Läuft ab:"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Permissions"
 msgstr "Berechtigungen"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Original:"
-msgstr "Original:"
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Do you currently have a Bewacher ID?"
@@ -809,10 +791,6 @@ msgstr "Bitte laden Sie Ihren Aufenthaltstitel hoch (PDF, JPG, JPEG, PNG; max. 1
 #: src/components/RouteGuardState.tsx
 msgid "Page Not Found"
 msgstr "Seite nicht gefunden"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Confirm and Continue"
-msgstr "Bestätigen und fortfahren"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address autocomplete request failed."
@@ -1024,7 +1002,6 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Onboarding/OnboardingComplete.tsx
 #: src/pages/Settings/SettingsPage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1343,6 +1320,7 @@ msgid "Contract start date is required"
 msgstr "Das Datum des Vertragsbeginns ist erforderlich"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of birth must be in the past"
 msgstr "Das Geburtsdatum muss in der Vergangenheit liegen"
 
@@ -1353,11 +1331,6 @@ msgstr "SecPal – Einsatzsoftware für deutsche private Sicherheitsdienste."
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Select an organizational unit to view details"
 msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
-
-#. placeholder {0}: fieldName.toLowerCase()
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
-msgstr "Diese {0} Änderung ist zu bedeutend ({similarity}% ähnlich). Bitte wenden Sie sich an die Personalabteilung, um Ihren Namen zu aktualisieren, bevor Sie das Onboarding abschließen."
 
 #. placeholder {0}: index + 1
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
@@ -1547,10 +1520,6 @@ msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "All units"
 msgstr "Alle Einheiten"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "First Name:"
-msgstr "Vorname:"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
@@ -1767,6 +1736,10 @@ msgstr "App sperren"
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
 msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Please enter a valid date of birth"
+msgstr "Bitte gib ein gültiges Geburtsdatum ein"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unknown status"
@@ -2084,6 +2057,10 @@ msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht m�
 msgid "Password must include at least one number"
 msgstr "Das Passwort muss mindestens eine Zahl enthalten"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "We compare this with the date of birth on file to verify your identity before activating your account."
+msgstr "Wir gleichen dieses Datum mit dem hinterlegten Geburtsdatum ab, um Ihre Identität vor der Aktivierung Ihres Kontos zu prüfen."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
 msgstr "Keine Aktion verfügbar"
@@ -2207,10 +2184,6 @@ msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, das
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
 msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
-msgstr "{fieldName} scheint eine geringfügige Korrektur zu sein ({similarity}% ähnlich)."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
@@ -2469,10 +2442,6 @@ msgstr "Sie werden benachrichtigt, sobald Ihre Angaben geprüft wurden."
 msgid "Files uploaded successfully."
 msgstr "Dateien erfolgreich hochgeladen."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
-msgstr "{fieldName} hat sich erheblich verändert ({similarity}% ähnlich). Die Personalabteilung wird zur Überprüfung benachrichtigt."
-
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
 msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
@@ -2626,6 +2595,10 @@ msgstr "\"{0}\" erfolgreich erstellt"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
+msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden. Aus Sicherheitsgründen wurde dieser Onboarding-Link deaktiviert. Bitte wenden Sie sich an die Personalabteilung, um eine neue Einladung zu erhalten."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 #: src/pages/Settings/SettingsPage.tsx
