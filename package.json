@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "start": "npm run dev",
+    "start": "vite",
     "build": "tsc && vite build",
     "build:analyze": "tsc && vite build --mode analyze",
     "preview": "vite preview",
