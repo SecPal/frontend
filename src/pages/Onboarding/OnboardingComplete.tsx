@@ -399,8 +399,6 @@ export function OnboardingComplete() {
             (fieldName) => fieldName !== "general"
           );
 
-          setErrors(formattedErrors);
-
           // 422 responses without a per-field `errors` payload are deliberately
           // generic on the backend: they could mean "invalid/expired token",
           // "email does not match", or "identity verification failed" (wrong DOB
@@ -419,15 +417,15 @@ export function OnboardingComplete() {
               ? error.response.data.message.trim()
               : null;
 
-          setErrors((prev) => ({
-            ...prev,
+          setErrors({
+            ...formattedErrors,
             general: hasFieldErrors
               ? _(msg`Please review the highlighted fields and try again.`)
               : (backendMessage ??
                 _(
                   msg`We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation.`
                 )),
-          }));
+          });
         } else if (error.response.status === 429) {
           // Rate limit exceeded
           setErrors({

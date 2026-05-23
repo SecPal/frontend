@@ -104,7 +104,8 @@ export interface OnboardingCompleteData {
  */
 export interface OnboardingTokenValidationResponse {
   data: {
-    valid: boolean;
+    /** The backend pins this to `true` on every 200 response. */
+    valid: true;
   };
 }
 
