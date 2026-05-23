@@ -1739,7 +1739,7 @@ msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
-msgstr "Bitte gib ein gültiges Geburtsdatum ein"
+msgstr "Bitte geben Sie ein gültiges Geburtsdatum ein"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unknown status"

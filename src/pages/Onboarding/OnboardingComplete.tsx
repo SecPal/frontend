@@ -27,6 +27,7 @@ import {
   type OnboardingCompleteData,
 } from "../../services/onboardingApi";
 import { getOnboardingPasswordIssue } from "../../utils/onboardingPasswordValidation";
+import { formatLocalYmd } from "../../utils/localDate";
 
 interface FormData {
   first_name: string;
@@ -288,9 +289,10 @@ export function OnboardingComplete() {
       newErrors.date_of_birth = _(msg`Date of birth is required`);
     } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.date_of_birth)) {
       newErrors.date_of_birth = _(msg`Please enter a valid date of birth`);
-    } else if (
-      formData.date_of_birth >= new Date().toISOString().slice(0, 10)
-    ) {
+    } else if (formData.date_of_birth >= formatLocalYmd(new Date())) {
+      // Compare against the local calendar day. Using UTC ("today" via
+      // toISOString) would reject valid past dates near midnight in
+      // timezones ahead of UTC.
       newErrors.date_of_birth = _(msg`Date of birth must be in the past`);
     }
 

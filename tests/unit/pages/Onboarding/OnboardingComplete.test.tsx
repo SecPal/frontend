@@ -11,6 +11,7 @@ import { messages as deMessages } from "../../../../src/locales/de/messages.mjs"
 import { messages as enMessages } from "../../../../src/locales/en/messages.mjs";
 import { OnboardingComplete } from "../../../../src/pages/Onboarding/OnboardingComplete";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
+import { formatLocalYmd } from "../../../../src/utils/localDate";
 import { AuthProvider } from "../../../../src/contexts/AuthContext";
 
 // Mock the API
@@ -283,7 +284,10 @@ describe("OnboardingComplete", () => {
   });
 
   it("rejects a date of birth that is today or in the future", async () => {
-    const today = new Date().toISOString().slice(0, 10);
+    // Must match the local-day definition used by the production code.
+    // Using toISOString() here would test against the UTC day instead and
+    // hide the off-by-one bug that the production code is meant to avoid.
+    const today = formatLocalYmd(new Date());
 
     renderWithProviders(
       <OnboardingComplete />,
