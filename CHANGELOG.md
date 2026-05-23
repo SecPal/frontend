@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the missing `npm run start` script in the frontend workspace by aliasing it directly to `vite`, so Polyscope and other generic start-script callers can boot the dev server without failing on a missing `start` script.
 - Updated audit overrides for `brace-expansion` and `ws` so the frontend dependency tree resolves to patched dev-only versions and `npm audit --audit-level=moderate` reports zero vulnerabilities.
 - Silenced the spurious Node.js stderr warning "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set." that appeared on every Playwright worker when the parent shell exported `NO_COLOR` (e.g. on Polyscope/CI sandboxes): `playwright.config.ts` now removes `NO_COLOR` and `NODE_DISABLE_COLORS` from `process.env` before workers fork, including when those variables are set to an empty string. See issue #1121.
 - Fixed `resolvePlaywrightApiBaseUrl` in `tests/e2e/target-urls.ts`: when `PLAYWRIGHT_BASE_URL` points to a workspace preview and `PLAYWRIGHT_API_BASE_URL` is set to a non-preview live value, the API origin is now derived from the preview frontend URL so E2E runs stay bound to the same workspace preview instead of drifting to the live API.
