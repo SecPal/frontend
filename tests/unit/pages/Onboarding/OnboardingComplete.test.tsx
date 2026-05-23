@@ -159,9 +159,7 @@ describe("OnboardingComplete", () => {
 
     expect(screen.queryByText(/too significant/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/hr will be notified/i)).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(/name change detected/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/name change detected/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /complete account setup/i })
     ).toBeEnabled();
@@ -244,7 +242,9 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    const dobInput = screen.getByLabelText(/date of birth/i) as HTMLInputElement;
+    const dobInput = screen.getByLabelText(
+      /date of birth/i
+    ) as HTMLInputElement;
 
     // Override value to a non-empty, non-YYYY-MM-DD string bypassing jsdom's sanitizer.
     Object.defineProperty(dobInput, "value", {
