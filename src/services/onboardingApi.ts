@@ -89,17 +89,23 @@ export interface OnboardingCompleteData {
   email: string;
   first_name: string;
   last_name: string;
+  date_of_birth: string;
   password: string;
 }
 
 /**
- * Onboarding token validation response (for prefilling form)
+ * Onboarding token validation response.
+ *
+ * Intentionally minimal: the backend deliberately does NOT echo any personal data
+ * (first name, last name, email) about the invitee on this public endpoint, so that
+ * anyone who only possesses the magic link cannot harvest profile information.
+ * The actual identity proof (name + date of birth) happens inside
+ * {@link completeOnboarding}.
  */
 export interface OnboardingTokenValidationResponse {
   data: {
-    first_name: string;
-    last_name: string;
-    email: string;
+    /** The backend pins this to `true` on every 200 response. */
+    valid: true;
   };
 }
 
@@ -202,16 +208,20 @@ function normalizeOnboardingTemplate(
 }
 
 /**
- * Validate onboarding token and get employee data for prefilling
+ * Validate onboarding token before showing the completion form.
  *
  * GET /v1/onboarding/validate-token?token=xxx&email=xxx (public endpoint, no auth)
  *
- * Security: Both token AND email must match to prevent token hijacking.
+ * Security:
+ * - Both token AND email must match (case-sensitive) to prevent link hijacking.
+ * - The response is intentionally information-poor: it only signals "you may continue"
+ *   and never echoes the invitee's name or email. The full identity proof (name + date
+ *   of birth) is enforced by {@link completeOnboarding}.
  *
  * @param token - Onboarding token from magic link
  * @param email - Email address from magic link
- * @returns Employee data for prefilling form (first_name, last_name, email)
- * @throws {OnboardingApiError} with response.status (e.g. 401, 429) and optional retryAfterSeconds
+ * @returns A minimal payload indicating that the link is usable.
+ * @throws {OnboardingApiError} with response.status (e.g. 422, 429) and optional retryAfterSeconds
  */
 export async function validateOnboardingToken(
   token: string,

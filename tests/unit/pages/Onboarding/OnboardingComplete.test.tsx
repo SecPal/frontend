@@ -11,6 +11,7 @@ import { messages as deMessages } from "../../../../src/locales/de/messages.mjs"
 import { messages as enMessages } from "../../../../src/locales/en/messages.mjs";
 import { OnboardingComplete } from "../../../../src/pages/Onboarding/OnboardingComplete";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
+import { formatLocalYmd } from "../../../../src/utils/localDate";
 import { AuthProvider } from "../../../../src/contexts/AuthContext";
 
 // Mock the API
@@ -53,16 +54,19 @@ async function waitForFormReady() {
 function fillValidFormAndSubmit({
   firstName = "John",
   lastName = "Doe",
+  dateOfBirth = "1990-01-01",
   password = "SecurePass123!",
   confirmPassword = password,
 }: {
   firstName?: string;
   lastName?: string;
+  dateOfBirth?: string;
   password?: string;
   confirmPassword?: string;
 } = {}) {
   const firstNameInput = screen.getByLabelText(/first name|vorname/i);
   const lastNameInput = screen.getByLabelText(/last name|nachname/i);
+  const dateOfBirthInput = screen.getByLabelText(/date of birth|geburtsdatum/i);
   const passwordInput = screen.getByLabelText(/^password$|^passwort$/i);
   const confirmPasswordInput = document.querySelector(
     'input[name="password_confirmation"]'
@@ -76,6 +80,7 @@ function fillValidFormAndSubmit({
 
   fireEvent.change(firstNameInput, { target: { value: firstName } });
   fireEvent.change(lastNameInput, { target: { value: lastName } });
+  fireEvent.change(dateOfBirthInput, { target: { value: dateOfBirth } });
   fireEvent.change(passwordInput, { target: { value: password } });
   fireEvent.change(confirmPasswordInput, {
     target: { value: confirmPassword },
@@ -90,13 +95,12 @@ describe("OnboardingComplete", () => {
     i18n.load("de", deMessages);
     i18n.activate("en");
 
-    // Mock validateOnboardingToken to return employee data
-    // Using John/Doe to match test data and avoid triggering name change dialog
+    // Mock validateOnboardingToken. The endpoint deliberately returns a minimal
+    // payload only (no first_name, last_name, or email) so that a stolen magic
+    // link cannot be used to harvest profile data.
     vi.mocked(onboardingApi.validateOnboardingToken).mockResolvedValue({
       data: {
-        first_name: "John",
-        last_name: "Doe",
-        email: "test@secpal.dev",
+        valid: true,
       },
     });
   });
@@ -113,12 +117,268 @@ describe("OnboardingComplete", () => {
     });
 
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
     expect(document.querySelector('input[name="password"]')).toBeTruthy();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/profile photo/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /complete account setup/i })
     ).toBeInTheDocument();
+  });
+
+  it("does not prefill identity fields from token validation", async () => {
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    expect(screen.getByLabelText(/first name/i)).toHaveValue("");
+    expect(screen.getByLabelText(/last name/i)).toHaveValue("");
+    expect(screen.getByLabelText(/date of birth/i)).toHaveValue("");
+    expect(screen.queryByText(/original:/i)).not.toBeInTheDocument();
+  });
+
+  it("does not show any client-side name-similarity hints (server is source of truth)", async () => {
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    // Typing a totally different name must NOT reveal anything about the stored
+    // record: the validate-token endpoint no longer leaks the original name, so
+    // the page cannot (and must not) compute similarity in the browser.
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Smith" },
+    });
+
+    expect(screen.queryByText(/too significant/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/hr will be notified/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/name change detected/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /complete account setup/i })
+    ).toBeEnabled();
+  });
+
+  it("renders the generic identity-verification error from the backend (no field oracle)", async () => {
+    // Backend signals an identity mismatch with a 422 that contains ONLY a
+    // `message` and no `errors` payload. The frontend must surface that message
+    // as-is and must NOT highlight any specific field, otherwise an attacker
+    // could probe DOB/name one at a time.
+    //
+    // We intentionally use a message string that differs from the frontend's own
+    // fallback (which also mentions "could not verify your identity") so that the
+    // assertion below proves the BACKEND-supplied text was rendered verbatim.
+    // If the frontend fell back to its own hardcoded message instead, the unique
+    // sentinel phrase "ref: ident-7" would be absent and the test would fail.
+    const backendMessage =
+      "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation. [ref: ident-7]";
+
+    const mockError = {
+      response: {
+        status: 422,
+        data: {
+          message: backendMessage,
+        },
+      },
+    };
+
+    vi.mocked(onboardingApi.completeOnboarding).mockRejectedValue(mockError);
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    fillValidFormAndSubmit({
+      firstName: "John",
+      lastName: "Doe",
+      dateOfBirth: "1991-04-15", // wrong DOB
+    });
+
+    await waitFor(() => {
+      // The sentinel phrase proves the backend-supplied string reached the DOM,
+      // not the frontend's own fallback message.
+      expect(screen.getByText(/ref: ident-7/i)).toBeInTheDocument();
+    });
+
+    // The deactivation + "contact HR" guidance is the user-facing contract of
+    // the single-shot policy and must reach the page verbatim.
+    expect(
+      screen.getByText(/onboarding link has been deactivated/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/contact hr for a new invitation/i)
+    ).toBeInTheDocument();
+
+    // No per-field error highlight — the response carried no `errors` payload.
+    expect(
+      screen.queryByText(/first name is required/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/date of birth is required/i)
+    ).not.toBeInTheDocument();
+
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it("rejects a date of birth with an invalid format", async () => {
+    // jsdom enforces the HTML spec on <input type="date"> and resets invalid
+    // values to "", which would trigger the "required" error instead of the
+    // "invalid format" error. We bypass jsdom's sanitization by overwriting the
+    // value property directly on the input element so the format branch is
+    // exercised independently.
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    const dobInput = screen.getByLabelText(
+      /date of birth/i
+    ) as HTMLInputElement;
+
+    // Override value to a non-empty, non-YYYY-MM-DD string bypassing jsdom's sanitizer.
+    Object.defineProperty(dobInput, "value", {
+      writable: true,
+      value: "13/05/1990",
+    });
+    fireEvent.change(dobInput, { target: {} });
+
+    // Fill remaining valid fields without overriding the DOB input.
+    const firstNameInput = screen.getByLabelText(/first name|vorname/i);
+    const lastNameInput = screen.getByLabelText(/last name|nachname/i);
+    const passwordInput = screen.getByLabelText(/^password$|^passwort$/i);
+    const confirmPasswordInput = document.querySelector(
+      'input[name="password_confirmation"]'
+    ) as HTMLInputElement;
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "SecurePass123!" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "SecurePass123!" },
+    });
+
+    const submitButton = screen.getByRole("button", {
+      name: /complete account setup/i,
+    });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please enter a valid date of birth/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("rejects an impossible calendar day (e.g. 1990-02-31) before submitting", async () => {
+    // The shape regex alone would happily forward a typo like 1990-02-31 to
+    // the backend, where the single-shot identity policy would then burn the
+    // magic link over a simple mistake. Client-side calendar validation is the
+    // last line of defense for the invitee.
+    //
+    // jsdom sanitizes invalid values out of <input type="date">, so we bypass
+    // its sanitizer by writing directly to the value property — the same
+    // pattern used for the "invalid format" test below.
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    const dobInput = screen.getByLabelText(
+      /date of birth/i
+    ) as HTMLInputElement;
+    Object.defineProperty(dobInput, "value", {
+      writable: true,
+      value: "1990-02-31",
+    });
+    fireEvent.change(dobInput, { target: {} });
+
+    const firstNameInput = screen.getByLabelText(/first name|vorname/i);
+    const lastNameInput = screen.getByLabelText(/last name|nachname/i);
+    const passwordInput = screen.getByLabelText(/^password$|^passwort$/i);
+    const confirmPasswordInput = document.querySelector(
+      'input[name="password_confirmation"]'
+    ) as HTMLInputElement;
+
+    fireEvent.change(firstNameInput, { target: { value: "John" } });
+    fireEvent.change(lastNameInput, { target: { value: "Doe" } });
+    fireEvent.change(passwordInput, { target: { value: "SecurePass123!" } });
+    fireEvent.change(confirmPasswordInput, {
+      target: { value: "SecurePass123!" },
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /complete account setup/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/please enter a valid date of birth/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("treats a 200 token-validation response that lacks `valid: true` as invalid", async () => {
+    // Defense-in-depth: the API contract pins `data.valid` to `const: true` on
+    // a 200, but we must not let a contract regression (or a mocked backend)
+    // silently send the user into the form with an unusable link.
+    vi.mocked(onboardingApi.validateOnboardingToken).mockResolvedValueOnce({
+      data: { valid: false as unknown as true },
+    });
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole("button", { name: /complete account setup/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("rejects a date of birth that is today or in the future", async () => {
+    // Must match the local-day definition used by the production code.
+    // Using toISOString() here would test against the UTC day instead and
+    // hide the off-by-one bug that the production code is meant to avoid.
+    const today = formatLocalYmd(new Date());
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    fillValidFormAndSubmit({ dateOfBirth: today });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/date of birth must be in the past/i)
+      ).toBeInTheDocument();
+    });
+
+    expect(onboardingApi.completeOnboarding).not.toHaveBeenCalled();
   });
 
   it("shows error if token or email missing", async () => {
@@ -193,12 +453,6 @@ describe("OnboardingComplete", () => {
 
     await waitForFormReady();
 
-    // Clear the prefilled fields to test validation
-    const firstNameInput = screen.getByLabelText(/first name/i);
-    const lastNameInput = screen.getByLabelText(/last name/i);
-    fireEvent.change(firstNameInput, { target: { value: "" } });
-    fireEvent.change(lastNameInput, { target: { value: "" } });
-
     const form = screen
       .getByRole("button", {
         name: /complete account setup/i,
@@ -209,6 +463,9 @@ describe("OnboardingComplete", () => {
     await waitFor(() => {
       expect(screen.getByText(/first name is required/i)).toBeInTheDocument();
       expect(screen.getByText(/last name is required/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/date of birth is required/i)
+      ).toBeInTheDocument();
       expect(screen.getByText(/password is required/i)).toBeInTheDocument();
     });
 
@@ -290,6 +547,7 @@ describe("OnboardingComplete", () => {
         email: "test@secpal.dev",
         first_name: "John",
         last_name: "Doe",
+        date_of_birth: "1990-01-01",
         password: "SecurePass123!",
       });
     });
@@ -376,12 +634,17 @@ describe("OnboardingComplete", () => {
     });
   });
 
-  it("handles API error (invalid token)", async () => {
+  it("surfaces the backend's generic 422 message verbatim (invalid token)", async () => {
+    // The backend returns its OWN localized message for generic 422 cases that
+    // don't carry a per-field `errors` payload (invalid token, email mismatch,
+    // identity verification failure, …). We must display it as-is and not
+    // overlay a frontend guess, so the user sees the correct reason.
     const mockError = {
       response: {
         status: 422,
         data: {
-          message: "Invalid or expired onboarding link",
+          message:
+            "Invalid or expired onboarding link. Please request a new invitation.",
         },
       },
     };
@@ -398,11 +661,10 @@ describe("OnboardingComplete", () => {
     fillValidFormAndSubmit();
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid onboarding link/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/invalid or expired onboarding link/i)
+      ).toBeInTheDocument();
     });
-    expect(
-      screen.queryByText(/invalid or expired onboarding link/i)
-    ).not.toBeInTheDocument();
 
     expect(mockLogin).not.toHaveBeenCalled();
   });

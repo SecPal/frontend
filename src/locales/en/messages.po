@@ -30,12 +30,9 @@ msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "You have changed your name from what was initially entered. HR will be notified of this change for verification."
-msgstr "You have changed your name from what was initially entered. HR will be notified of this change for verification."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Edit Employee"
@@ -190,10 +187,6 @@ msgstr "Organizational structure"
 msgid "Failed to load form template"
 msgstr "Failed to load form template"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Name Change Detected"
-msgstr "Name Change Detected"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "A valid residence title without employment authorization cannot be accepted. Please contact HR."
@@ -218,10 +211,6 @@ msgstr "Confirm with your authenticator app or one recovery code to disable MFA 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
 msgstr "Previous Residences"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Name change too significant. Please contact HR before completing onboarding."
-msgstr "Name change too significant. Please contact HR before completing onboarding."
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -482,10 +471,6 @@ msgstr "Name"
 msgid "Notifications Enabled"
 msgstr "Notifications Enabled"
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Last Name:"
-msgstr "Last Name:"
-
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select new parent"
 msgstr "Select new parent"
@@ -527,6 +512,7 @@ msgstr "A new version of SecPal is available."
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of Birth"
 msgstr "Date of Birth"
 
@@ -610,10 +596,6 @@ msgstr "Expires:"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Permissions"
 msgstr "Permissions"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Original:"
-msgstr "Original:"
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Do you currently have a Bewacher ID?"
@@ -809,10 +791,6 @@ msgstr "Please upload your residence title (PDF, JPG, JPEG, PNG; max. 10 MB)."
 #: src/components/RouteGuardState.tsx
 msgid "Page Not Found"
 msgstr "Page Not Found"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Confirm and Continue"
-msgstr "Confirm and Continue"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address autocomplete request failed."
@@ -1024,7 +1002,6 @@ msgstr "Thank you for submitting your onboarding information. Our HR team will r
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Onboarding/OnboardingComplete.tsx
 #: src/pages/Settings/SettingsPage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1343,6 +1320,7 @@ msgid "Contract start date is required"
 msgstr "Contract start date is required"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Date of birth must be in the past"
 msgstr "Date of birth must be in the past"
 
@@ -1353,11 +1331,6 @@ msgstr "SecPal – operations software for German private security services."
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Select an organizational unit to view details"
 msgstr "Select an organizational unit to view details"
-
-#. placeholder {0}: fieldName.toLowerCase()
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
-msgstr "This {0} change is too significant ({similarity}% similar). Please contact HR to update your name before completing onboarding."
 
 #. placeholder {0}: index + 1
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
@@ -1547,10 +1520,6 @@ msgstr "Choose your preferred language for the application."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "All units"
 msgstr "All units"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "First Name:"
-msgstr "First Name:"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
@@ -1767,6 +1736,10 @@ msgstr "Lock app"
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
 msgstr "Verify your email address"
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Please enter a valid date of birth"
+msgstr "Please enter a valid date of birth"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unknown status"
@@ -2084,6 +2057,10 @@ msgstr "Moving organizational units is not possible while offline. Please reconn
 msgid "Password must include at least one number"
 msgstr "Password must include at least one number"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "We compare this with the date of birth on file to verify your identity before activating your account."
+msgstr "We compare this with the date of birth on file to verify your identity before activating your account."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
 msgstr "No action available"
@@ -2207,10 +2184,6 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
 msgstr "Store your recovery codes now"
-
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "{fieldName} appears to be a minor correction ({similarity}% similar)."
-msgstr "{fieldName} appears to be a minor correction ({similarity}% similar)."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
@@ -2469,10 +2442,6 @@ msgstr "You will be notified when your submission has been reviewed."
 msgid "Files uploaded successfully."
 msgstr "Files uploaded successfully."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
-msgstr "{fieldName} has changed significantly ({similarity}% similar). HR will be notified for verification."
-
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
 msgstr "The page you requested does not exist or is no longer available."
@@ -2626,6 +2595,10 @@ msgstr "\"{0}\" created successfully"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
+msgstr "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 #: src/pages/Settings/SettingsPage.tsx

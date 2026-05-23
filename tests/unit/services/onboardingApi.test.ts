@@ -56,6 +56,19 @@ beforeEach(() => {
 });
 
 describe("validateOnboardingToken", () => {
+  it("resolves to the minimal { valid: true } payload on success (no personal data leaked)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(makeFetchResponse(200, { data: { valid: true } }))
+    );
+
+    await expect(
+      validateOnboardingToken("tok", "user@secpal.dev")
+    ).resolves.toEqual({ data: { valid: true } });
+  });
+
   it("throws OnboardingApiError with retryAfterSeconds when 429 includes Retry-After", async () => {
     vi.stubGlobal(
       "fetch",
@@ -175,6 +188,7 @@ describe("completeOnboarding", () => {
         email: "user@secpal.dev",
         first_name: "User",
         last_name: "Example",
+        date_of_birth: "1990-01-01",
         password: "secret123",
       })
     ).resolves.toMatchObject({
@@ -200,6 +214,7 @@ describe("completeOnboarding", () => {
           email: "user@secpal.dev",
           first_name: "User",
           last_name: "Example",
+          date_of_birth: "1990-01-01",
           password: "secret123",
         }),
       })
@@ -228,6 +243,7 @@ describe("completeOnboarding", () => {
         email: "user@secpal.dev",
         first_name: "John",
         last_name: "Doe",
+        date_of_birth: "1990-01-01",
         password: "secret123",
       })
     ).rejects.toMatchObject({
@@ -260,6 +276,7 @@ describe("completeOnboarding", () => {
         email: "user@secpal.dev",
         first_name: "",
         last_name: "Doe",
+        date_of_birth: "1990-01-01",
         password: "secret123",
       })
     ).rejects.toMatchObject({
