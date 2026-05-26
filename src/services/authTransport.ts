@@ -115,23 +115,23 @@ function sanitizeAuthPayload(payload: unknown, operation: string): User {
   return sanitizedUser;
 }
 
-async function revokeBrowserPushInstallationForLogout(): Promise<void> {
+function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
   const installationId = peekBrowserPushInstallationId();
 
   if (!installationId) {
-    return;
+    return null;
   }
 
-  try {
-    await revokeBrowserNotificationInstallation(installationId);
-  } catch (error) {
-    console.warn(
-      "Failed to revoke browser push installation during logout:",
-      error
-    );
-  } finally {
-    clearBrowserPushInstallationId();
-  }
+  return revokeBrowserNotificationInstallation(installationId)
+    .catch((error: unknown) => {
+      console.warn(
+        "Failed to revoke browser push installation during logout:",
+        error
+      );
+    })
+    .finally(() => {
+      clearBrowserPushInstallationId();
+    });
 }
 
 const browserSessionAuthTransport: AuthTransport = {
@@ -162,15 +162,23 @@ const browserSessionAuthTransport: AuthTransport = {
     );
   },
   async logout(): Promise<void> {
+    const pushRevocation = revokeBrowserPushInstallationForLogout();
+
     try {
-      await revokeBrowserPushInstallationForLogout();
+      if (pushRevocation) {
+        await pushRevocation;
+      }
     } finally {
       await logoutBrowserSession();
     }
   },
   async logoutAll(): Promise<void> {
+    const pushRevocation = revokeBrowserPushInstallationForLogout();
+
     try {
-      await revokeBrowserPushInstallationForLogout();
+      if (pushRevocation) {
+        await pushRevocation;
+      }
     } finally {
       await logoutAllBrowserSessions();
     }
