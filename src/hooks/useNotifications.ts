@@ -278,13 +278,18 @@ export function useNotifications(
       return;
     }
 
-    if (installationId && isAuthenticated) {
-      await revokeBrowserNotificationInstallation(installationId);
-      clearBrowserPushInstallationId();
-    }
+    try {
+      if (installationId && isAuthenticated) {
+        await revokeBrowserNotificationInstallation(installationId);
+      }
+    } finally {
+      if (installationId) {
+        clearBrowserPushInstallationId();
+      }
 
-    if (currentSubscription) {
-      await unsubscribe();
+      if (currentSubscription) {
+        await unsubscribe();
+      }
     }
   }, [isAuthenticated, refreshSubscription, unsubscribe]);
 
@@ -323,54 +328,6 @@ export function useNotifications(
     isPushReady,
     permission,
     revokeBrowserPushState,
-    runBackgroundNotificationTask,
-  ]);
-
-  useEffect(() => {
-    if (
-      !autoSync ||
-      !isAuthenticated ||
-      !isSupported ||
-      permission !== "granted" ||
-      typeof navigator === "undefined" ||
-      navigator.serviceWorker === undefined ||
-      typeof navigator.serviceWorker.addEventListener !== "function"
-    ) {
-      return;
-    }
-
-    let cancelSync: (() => void) | null = null;
-
-    const handleControllerChange = () => {
-      cancelSync?.();
-      cancelSync = runBackgroundNotificationTask(async () => {
-        await refreshSubscription();
-        await registerBrowserPushInstallation();
-      });
-    };
-
-    navigator.serviceWorker.addEventListener(
-      "controllerchange",
-      handleControllerChange
-    );
-
-    return () => {
-      cancelSync?.();
-
-      if (typeof navigator.serviceWorker.removeEventListener === "function") {
-        navigator.serviceWorker.removeEventListener(
-          "controllerchange",
-          handleControllerChange
-        );
-      }
-    };
-  }, [
-    autoSync,
-    isAuthenticated,
-    isSupported,
-    permission,
-    refreshSubscription,
-    registerBrowserPushInstallation,
     runBackgroundNotificationTask,
   ]);
 

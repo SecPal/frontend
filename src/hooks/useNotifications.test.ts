@@ -785,6 +785,46 @@ describe("useNotifications", () => {
       expect(peekBrowserPushInstallationId()).toBeNull();
     });
 
+    it("clears local push state even when remote revocation fails", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "denied",
+      });
+
+      const installationId = getOrCreateBrowserPushInstallationId();
+      const networkError = new Error("network down");
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const mockFetch = vi.fn().mockRejectedValueOnce(networkError);
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `/v1/me/notification-installations/${installationId}`
+        ),
+        expect.objectContaining({
+          credentials: "include",
+          method: "DELETE",
+        })
+      );
+      expect(peekBrowserPushInstallationId()).toBeNull();
+      expect(result.current.error).toBe(networkError);
+    });
+
     it("reconciles the authenticated browser subscription again after service worker replacement", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
@@ -792,14 +832,14 @@ describe("useNotifications", () => {
         value: "granted",
       });
 
-      let controllerChangeHandler: (() => void) | null = null;
+      const controllerChangeHandlers: Array<() => void> = [];
 
       Object.defineProperty(navigator, "serviceWorker", {
         value: {
           ready: Promise.resolve(mockServiceWorkerRegistration),
           addEventListener: vi.fn((event: string, callback: () => void) => {
             if (event === "controllerchange") {
-              controllerChangeHandler = callback;
+              controllerChangeHandlers.push(callback);
             }
           }),
           removeEventListener: vi.fn(),
@@ -925,10 +965,12 @@ describe("useNotifications", () => {
         expect(mockFetch).toHaveBeenCalledTimes(2);
       });
 
-      expect(controllerChangeHandler).not.toBeNull();
+      expect(controllerChangeHandlers).toHaveLength(1);
 
       await act(async () => {
-        controllerChangeHandler?.();
+        controllerChangeHandlers.forEach((handler) => {
+          handler();
+        });
         await Promise.resolve();
       });
 
