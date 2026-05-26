@@ -623,7 +623,7 @@ describe("OnboardingWizard", () => {
     // Auth has 2026-05-01 (resolved from the auth token / employee record
     // path), step form data has the later 2026-06-01. The authoritative date
     // is the one resolved from the employee record / auth — the user-submitted
-    // step value must NOT override it. A title expiring 2026-05-25 is AFTER
+    // step value must NOT override it. A title expiring 2026-06-01 is AFTER
     // the auth date so it should pass validation here.
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
       {
@@ -719,9 +719,9 @@ describe("OnboardingWizard", () => {
     );
 
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
-    // 2026-05-25 is after auth date (2026-05-01) so validation must pass,
+    // 2026-06-01 is after auth date (2026-05-01) so validation must pass,
     // meaning employment-permitted question appears.
-    fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
+    fireEvent.change(expiryInput, { target: { value: "2026-06-01" } });
     fireEvent.blur(expiryInput);
 
     expect(
@@ -1001,7 +1001,7 @@ describe("OnboardingWizard", () => {
       can_be_deleted: false,
       can_be_edited: false,
     });
-    // Authoritative date from the employee record: title expiring 2026-05-25
+    // Authoritative date from the employee record: title expiring 2026-06-01
     // clears the earlier step date (2026-05-01) but must still fail against this.
     employeeApiMocks.fetchEmployee.mockResolvedValueOnce({
       contract_start_date: "2026-06-15",
@@ -1028,7 +1028,7 @@ describe("OnboardingWizard", () => {
 
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
     // Expiry is after the step date (2026-05-01) but before the employee record (2026-06-15).
-    fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
+    fireEvent.change(expiryInput, { target: { value: "2026-06-01" } });
     fireEvent.blur(expiryInput);
     await user.click(screen.getByRole("button", { name: /next/i }));
 
@@ -1210,7 +1210,7 @@ describe("OnboardingWizard", () => {
     );
 
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
-    fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
+    fireEvent.change(expiryInput, { target: { value: "2026-06-01" } });
     fireEvent.blur(expiryInput);
 
     expect(
@@ -1409,7 +1409,7 @@ describe("OnboardingWizard", () => {
     );
 
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
-    fireEvent.change(expiryInput, { target: { value: "2026-05-25" } });
+    fireEvent.change(expiryInput, { target: { value: "2026-06-01" } });
     fireEvent.blur(expiryInput);
 
     expect(
