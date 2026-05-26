@@ -478,6 +478,102 @@ describe("useNotifications", () => {
   });
 
   describe("autoSync", () => {
+    it("does not re-register immediately after requestPermission grants access", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+
+      const mockFetch = vi.fn((input, init) => {
+        const url = String(input);
+
+        if (url.includes("/v1/bootstrap?client_platform=browser")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  client_platform: "browser",
+                  compatibility: {
+                    bootstrap_version: "v1",
+                    schema_version: 3,
+                  },
+                  features: {
+                    notification_channels: {
+                      android_fcm: false,
+                      web_push: true,
+                    },
+                  },
+                  notification_channels: {
+                    web_push: {
+                      channel: "web_push",
+                      metadata_revision: 5,
+                      public_runtime_metadata: {
+                        vapid_public_key:
+                          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                      },
+                    },
+                  },
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        if (
+          /\/v1\/me\/notification-installations\//.test(url) &&
+          init?.method === "PUT"
+        ) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  installation_id: "installation-id",
+                  channel: "web_push",
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        throw new Error(`Unexpected fetch request: ${url}`);
+      });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(() => useNotifications({ autoSync: true }), {
+        wrapper: AuthenticatedWrapper,
+      });
+
+      await act(async () => {
+        await result.current.requestPermission();
+      });
+
+      await waitFor(() => {
+        const bootstrapCalls = mockFetch.mock.calls.filter(([input]) =>
+          String(input).includes("/v1/bootstrap?client_platform=browser")
+        );
+        const upsertCalls = mockFetch.mock.calls.filter(
+          ([input, init]) =>
+            /\/v1\/me\/notification-installations\//.test(String(input)) &&
+            init?.method === "PUT"
+        );
+
+        expect(bootstrapCalls).toHaveLength(1);
+        expect(upsertCalls).toHaveLength(1);
+      });
+
+      expect(result.current.permission).toBe("granted");
+    });
+
     it("reconciles an existing authenticated browser subscription on app load", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {

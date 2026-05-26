@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback, useContext, useEffect } from "react";
+import { useState, useCallback, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../contexts/auth-context";
 import { usePushSubscription } from "./usePushSubscription";
 import {
@@ -95,6 +95,7 @@ export function useNotifications(
 
   const isAuthenticated = authContext?.isAuthenticated === true;
   const autoSync = options.autoSync === true;
+  const skipNextAutoSyncRegistrationRef = useRef(false);
 
   const toNotificationError = useCallback((err: unknown): Error => {
     return err instanceof NotificationInstallationsApiError ||
@@ -304,6 +305,11 @@ export function useNotifications(
       return;
     }
 
+    if (skipNextAutoSyncRegistrationRef.current) {
+      skipNextAutoSyncRegistrationRef.current = false;
+      return;
+    }
+
     return runBackgroundNotificationTask(() =>
       registerBrowserPushInstallation()
     );
@@ -352,6 +358,7 @@ export function useNotifications(
         setPermission(result);
 
         if (result === "granted") {
+          skipNextAutoSyncRegistrationRef.current = autoSync;
           await registerBrowserPushInstallation();
         }
 
@@ -363,7 +370,7 @@ export function useNotifications(
       } finally {
         setIsLoading(false);
       }
-    }, [isSupported, registerBrowserPushInstallation, toNotificationError]);
+    }, [autoSync, isSupported, registerBrowserPushInstallation, toNotificationError]);
 
   /**
    * Show a notification to the user
