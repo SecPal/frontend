@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wired authenticated browser Web Push lifecycle management to deployment bootstrap metadata and the notification-installations API: the PWA now reads runtime VAPID metadata from browser bootstrap instead of `VITE_VAPID_PUBLIC_KEY`, upserts existing subscriptions on app load, refreshes stale runtime metadata by rotating the local subscription, re-runs reconciliation after service-worker replacement, revokes the remote installation before browser-session logout, and clears local browser push state during logout/reset and denied-permission cleanup. Closes #1139.
 - Fixed the missing `npm run start` script in the frontend workspace by aliasing it directly to `vite`, so Polyscope and other generic start-script callers can boot the dev server without failing on a missing `start` script.
 - Updated audit overrides for `brace-expansion` and `ws` so the frontend dependency tree resolves to patched dev-only versions and `npm audit --audit-level=moderate` reports zero vulnerabilities.
 - Silenced the spurious Node.js stderr warning "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set." that appeared on every Playwright worker when the parent shell exported `NO_COLOR` (e.g. on Polyscope/CI sandboxes): `playwright.config.ts` now removes `NO_COLOR` and `NODE_DISABLE_COLORS` from `process.env` before workers fork, including when those variables are set to an empty string. See issue #1121.

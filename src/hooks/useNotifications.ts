@@ -1,7 +1,26 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
+import { AuthContext } from "../contexts/auth-context";
+import { usePushSubscription } from "./usePushSubscription";
+import {
+  getBrowserPushBootstrapData,
+  NotificationInstallationsApiError,
+  revokeBrowserNotificationInstallation,
+  upsertBrowserNotificationInstallation,
+} from "../services/notificationInstallationsApi";
+import {
+  clearBrowserPushInstallationId,
+  getBrowserPushClientMetadata,
+  getOrCreateBrowserPushInstallationId,
+  peekBrowserPushInstallationId,
+  getServiceWorkerScopePath,
+} from "../lib/browserPushState";
+import type {
+  BrowserPushBootstrapData,
+  NotificationInstallationLifecycleEvent,
+} from "@/types/api";
 
 export type NotificationPermissionState = "default" | "granted" | "denied";
 
@@ -24,6 +43,10 @@ interface UseNotificationsReturn {
   error: Error | null;
 }
 
+interface UseNotificationsOptions {
+  autoSync?: boolean;
+}
+
 /**
  * Hook for managing push notifications in the app
  * Handles permission requests, subscription management, and notification display
@@ -43,7 +66,10 @@ interface UseNotificationsReturn {
  * };
  * ```
  */
-export function useNotifications(): UseNotificationsReturn {
+export function useNotifications(
+  options: UseNotificationsOptions = {}
+): UseNotificationsReturn {
+  const authContext = useContext(AuthContext);
   const [permission, setPermission] = useState<NotificationPermissionState>(
     () =>
       typeof window !== "undefined" && "Notification" in window
@@ -52,12 +78,289 @@ export function useNotifications(): UseNotificationsReturn {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const {
+    subscribe,
+    unsubscribe,
+    getSubscriptionData,
+    isReady: isPushReady,
+    isSupported: isPushSupported,
+    refreshSubscription,
+  } = usePushSubscription();
 
   // Check if notifications are supported
   const isSupported =
     typeof window !== "undefined" &&
     "Notification" in window &&
-    "serviceWorker" in navigator;
+    isPushSupported;
+
+  const isAuthenticated = authContext?.isAuthenticated === true;
+  const autoSync = options.autoSync === true;
+
+  const toNotificationError = useCallback((err: unknown): Error => {
+    return err instanceof NotificationInstallationsApiError || err instanceof Error
+      ? err
+      : new Error(String(err));
+  }, []);
+
+  const runBackgroundNotificationTask = useCallback(
+    (task: () => Promise<void>) => {
+      let isActive = true;
+
+      const execute = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+          await task();
+        } catch (err) {
+          if (isActive) {
+            setError(toNotificationError(err));
+          }
+        } finally {
+          if (isActive) {
+            setIsLoading(false);
+          }
+        }
+      };
+
+      void execute();
+
+      return () => {
+        isActive = false;
+      };
+    },
+    [toNotificationError]
+  );
+
+  const registerBrowserPushInstallation = useCallback(async (runtimeOptions?: {
+    bootstrapData?: BrowserPushBootstrapData | null;
+    forceRotation?: boolean;
+    allowRetry?: boolean;
+  }) => {
+    async function syncInstallation(nextRuntimeOptions?: {
+      bootstrapData?: BrowserPushBootstrapData | null;
+      forceRotation?: boolean;
+      allowRetry?: boolean;
+    }): Promise<void> {
+      if (!isAuthenticated) {
+        return;
+      }
+
+      const bootstrapData =
+        nextRuntimeOptions?.bootstrapData ?? (await getBrowserPushBootstrapData());
+      const webPushRuntimeMetadata = bootstrapData?.notification_channels?.web_push;
+
+      if (!webPushRuntimeMetadata) {
+        throw new Error(
+          "Web push notifications are not available for this deployment"
+        );
+      }
+
+      let currentSubscription = await refreshSubscription();
+      const hadExistingSubscription = currentSubscription !== null;
+
+      if (nextRuntimeOptions?.forceRotation && currentSubscription) {
+        await unsubscribe();
+        currentSubscription = null;
+      }
+
+      currentSubscription =
+        currentSubscription ??
+        (await subscribe(
+          webPushRuntimeMetadata.public_runtime_metadata.vapid_public_key
+        ));
+      const subscriptionData = getSubscriptionData() ?? {
+        endpoint: currentSubscription.endpoint,
+        expirationTime: currentSubscription.expirationTime ?? null,
+        keys: (() => {
+          const json = currentSubscription.toJSON();
+
+          if (!json.keys?.p256dh || !json.keys?.auth) {
+            throw new Error(
+              "Push subscription is missing required browser credentials"
+            );
+          }
+
+          return {
+            p256dh: json.keys.p256dh,
+            auth: json.keys.auth,
+          };
+        })(),
+      };
+
+      if (
+        typeof navigator === "undefined" ||
+        navigator.serviceWorker === undefined ||
+        !subscriptionData.endpoint
+      ) {
+        throw new Error("Browser push registration is unavailable");
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const { browserName, browserVersion, installationName } =
+        getBrowserPushClientMetadata();
+
+      let lifecycleEvent: NotificationInstallationLifecycleEvent = "registered";
+
+      if (nextRuntimeOptions?.forceRotation) {
+        lifecycleEvent = "credential_rotated";
+      } else if (hadExistingSubscription) {
+        lifecycleEvent = "client_updated";
+      }
+
+      try {
+        await upsertBrowserNotificationInstallation(
+          getOrCreateBrowserPushInstallationId(),
+          {
+            channel: "web_push",
+            installation_name: installationName,
+            lifecycle_event: lifecycleEvent,
+            runtime: {
+              bootstrap_version: bootstrapData.compatibility.bootstrap_version,
+              schema_version: bootstrapData.compatibility.schema_version,
+              metadata_revision: webPushRuntimeMetadata.metadata_revision,
+            },
+            registration: {
+              browser: {
+                browser_name: browserName,
+                browser_version: browserVersion,
+                service_worker_scope: getServiceWorkerScopePath(registration.scope),
+              },
+              subscription: {
+                endpoint: subscriptionData.endpoint,
+                expiration_time: subscriptionData.expirationTime ?? null,
+                keys: subscriptionData.keys,
+              },
+            },
+          }
+        );
+      } catch (err) {
+        if (
+          err instanceof NotificationInstallationsApiError &&
+          err.code === "NOTIFICATION_RUNTIME_STATE_INVALID" &&
+          nextRuntimeOptions?.allowRetry !== false
+        ) {
+          await syncInstallation({
+            allowRetry: false,
+            forceRotation: true,
+          });
+          return;
+        }
+
+        throw err;
+      }
+    }
+
+    await syncInstallation(runtimeOptions);
+  }, [
+    getSubscriptionData,
+    isAuthenticated,
+    refreshSubscription,
+    subscribe,
+    unsubscribe,
+  ]);
+
+  const revokeBrowserPushState = useCallback(async () => {
+    const installationId = peekBrowserPushInstallationId();
+    const currentSubscription = await refreshSubscription();
+
+    if (!installationId && !currentSubscription) {
+      return;
+    }
+
+    if (installationId && isAuthenticated) {
+      await revokeBrowserNotificationInstallation(installationId);
+      clearBrowserPushInstallationId();
+    }
+
+    if (currentSubscription) {
+      await unsubscribe();
+    }
+  }, [isAuthenticated, refreshSubscription, unsubscribe]);
+
+  useEffect(() => {
+    if (
+      !autoSync ||
+      !isAuthenticated ||
+      !isSupported ||
+      permission !== "granted" ||
+      !isPushReady
+    ) {
+      return;
+    }
+
+    return runBackgroundNotificationTask(() => registerBrowserPushInstallation());
+  }, [
+    autoSync,
+    isAuthenticated,
+    isPushReady,
+    isSupported,
+    permission,
+    registerBrowserPushInstallation,
+    runBackgroundNotificationTask,
+  ]);
+
+  useEffect(() => {
+    if (!autoSync || !isPushReady || permission !== "denied") {
+      return;
+    }
+
+    return runBackgroundNotificationTask(() => revokeBrowserPushState());
+  }, [
+    autoSync,
+    isPushReady,
+    permission,
+    revokeBrowserPushState,
+    runBackgroundNotificationTask,
+  ]);
+
+  useEffect(() => {
+    if (
+      !autoSync ||
+      !isAuthenticated ||
+      !isSupported ||
+      permission !== "granted" ||
+      typeof navigator === "undefined" ||
+      navigator.serviceWorker === undefined ||
+      typeof navigator.serviceWorker.addEventListener !== "function"
+    ) {
+      return;
+    }
+
+    let cancelSync: (() => void) | null = null;
+
+    const handleControllerChange = () => {
+      cancelSync?.();
+      cancelSync = runBackgroundNotificationTask(async () => {
+        await refreshSubscription();
+        await registerBrowserPushInstallation();
+      });
+    };
+
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      handleControllerChange
+    );
+
+    return () => {
+      cancelSync?.();
+
+      if (typeof navigator.serviceWorker.removeEventListener === "function") {
+        navigator.serviceWorker.removeEventListener(
+          "controllerchange",
+          handleControllerChange
+        );
+      }
+    };
+  }, [
+    autoSync,
+    isAuthenticated,
+    isSupported,
+    permission,
+    refreshSubscription,
+    registerBrowserPushInstallation,
+    runBackgroundNotificationTask,
+  ]);
 
   /**
    * Request notification permission from the user
@@ -78,15 +381,20 @@ export function useNotifications(): UseNotificationsReturn {
       try {
         const result = await Notification.requestPermission();
         setPermission(result);
+
+        if (result === "granted") {
+          await registerBrowserPushInstallation();
+        }
+
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
+        const error = toNotificationError(err);
         setError(error);
         throw error;
       } finally {
         setIsLoading(false);
       }
-    }, [isSupported]);
+    }, [isSupported, registerBrowserPushInstallation, toNotificationError]);
 
   /**
    * Show a notification to the user

@@ -14,11 +14,17 @@ const {
   mockBrowserLogout,
   mockBrowserLogoutAll,
   mockBrowserGetCurrentUser,
+  mockRevokeBrowserNotificationInstallation,
+  mockPeekBrowserPushInstallationId,
+  mockClearBrowserPushInstallationId,
 } = vi.hoisted(() => ({
   mockBrowserLogin: vi.fn(),
   mockBrowserLogout: vi.fn(),
   mockBrowserLogoutAll: vi.fn(),
   mockBrowserGetCurrentUser: vi.fn(),
+  mockRevokeBrowserNotificationInstallation: vi.fn(),
+  mockPeekBrowserPushInstallationId: vi.fn(),
+  mockClearBrowserPushInstallationId: vi.fn(),
 }));
 
 vi.mock("./authApi", async () => {
@@ -30,6 +36,21 @@ vi.mock("./authApi", async () => {
     logout: mockBrowserLogout,
     logoutAll: mockBrowserLogoutAll,
     getCurrentUser: mockBrowserGetCurrentUser,
+  };
+});
+
+vi.mock("./notificationInstallationsApi", () => ({
+  revokeBrowserNotificationInstallation:
+    mockRevokeBrowserNotificationInstallation,
+}));
+
+vi.mock("../lib/browserPushState", async () => {
+  const actual = await vi.importActual("../lib/browserPushState");
+
+  return {
+    ...actual,
+    peekBrowserPushInstallationId: mockPeekBrowserPushInstallationId,
+    clearBrowserPushInstallationId: mockClearBrowserPushInstallationId,
   };
 });
 
@@ -431,6 +452,32 @@ describe("authTransport", () => {
     await transport.logout();
 
     expect(mockBrowserLogout).toHaveBeenCalledOnce();
+  });
+
+  it("revokes the browser push installation before browser-session logout", async () => {
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
+      installation_id: "installation-1",
+      channel: "web_push",
+    });
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    const transport = getAuthTransport();
+    await transport.logout();
+
+    expect(mockRevokeBrowserNotificationInstallation).toHaveBeenCalledWith(
+      "installation-1"
+    );
+    expect(mockClearBrowserPushInstallationId).toHaveBeenCalledOnce();
+    expect(mockBrowserLogout).toHaveBeenCalledOnce();
+
+    const revokeCallOrder =
+      mockRevokeBrowserNotificationInstallation.mock.invocationCallOrder[0];
+    const logoutCallOrder = mockBrowserLogout.mock.invocationCallOrder[0];
+
+    expect(revokeCallOrder).toBeDefined();
+    expect(logoutCallOrder).toBeDefined();
+    expect(revokeCallOrder ?? 0).toBeLessThan(logoutCallOrder ?? 0);
   });
 
   it("delegates browser-session logoutAll to the authApi", async () => {

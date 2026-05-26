@@ -4,12 +4,17 @@
 import type { LoginMfaChallengeResponse, MfaChallenge } from "@/types/api";
 import type { User } from "../contexts/auth-context";
 import {
+  clearBrowserPushInstallationId,
+  peekBrowserPushInstallationId,
+} from "../lib/browserPushState";
+import {
   AuthApiError,
   getCurrentUser as getBrowserSessionCurrentUser,
   login as loginWithBrowserSession,
   logout as logoutBrowserSession,
   logoutAll as logoutAllBrowserSessions,
 } from "./authApi";
+import { revokeBrowserNotificationInstallation } from "./notificationInstallationsApi";
 import { sanitizeAuthUser } from "./authState";
 import { isOnline } from "./sessionEvents";
 
@@ -110,6 +115,17 @@ function sanitizeAuthPayload(payload: unknown, operation: string): User {
   return sanitizedUser;
 }
 
+async function revokeBrowserPushInstallationForLogout(): Promise<void> {
+  const installationId = peekBrowserPushInstallationId();
+
+  if (!installationId) {
+    return;
+  }
+
+  await revokeBrowserNotificationInstallation(installationId);
+  clearBrowserPushInstallationId();
+}
+
 const browserSessionAuthTransport: AuthTransport = {
   kind: "browser-session",
   async login(credentials): Promise<AuthLoginResult> {
@@ -138,7 +154,11 @@ const browserSessionAuthTransport: AuthTransport = {
     );
   },
   async logout(): Promise<void> {
-    await logoutBrowserSession();
+    try {
+      await revokeBrowserPushInstallationForLogout();
+    } finally {
+      await logoutBrowserSession();
+    }
   },
   async logoutAll(): Promise<void> {
     await logoutAllBrowserSessions();
