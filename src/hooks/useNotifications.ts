@@ -24,6 +24,12 @@ import type {
 
 export type NotificationPermissionState = "default" | "granted" | "denied";
 
+function getNotificationPermissionState(): NotificationPermissionState {
+  return typeof window !== "undefined" && "Notification" in window
+    ? Notification.permission
+    : "default";
+}
+
 export interface NotificationOptions {
   title: string;
   body: string;
@@ -71,10 +77,7 @@ export function useNotifications(
 ): UseNotificationsReturn {
   const authContext = useContext(AuthContext);
   const [permission, setPermission] = useState<NotificationPermissionState>(
-    () =>
-      typeof window !== "undefined" && "Notification" in window
-        ? Notification.permission
-        : "default"
+    () => getNotificationPermissionState()
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -96,6 +99,7 @@ export function useNotifications(
   const isAuthenticated = authContext?.isAuthenticated === true;
   const autoSync = options.autoSync === true;
   const skipNextAutoSyncRegistrationRef = useRef(false);
+  const currentPermission = getNotificationPermissionState();
 
   const toNotificationError = useCallback((err: unknown): Error => {
     return err instanceof NotificationInstallationsApiError ||
@@ -299,7 +303,7 @@ export function useNotifications(
       !autoSync ||
       !isAuthenticated ||
       !isSupported ||
-      permission !== "granted" ||
+      currentPermission !== "granted" ||
       !isPushReady
     ) {
       return;
@@ -315,24 +319,24 @@ export function useNotifications(
     );
   }, [
     autoSync,
+    currentPermission,
     isAuthenticated,
     isPushReady,
     isSupported,
-    permission,
     registerBrowserPushInstallation,
     runBackgroundNotificationTask,
   ]);
 
   useEffect(() => {
-    if (!autoSync || !isPushReady || permission !== "denied") {
+    if (!autoSync || !isPushReady || currentPermission !== "denied") {
       return;
     }
 
     return runBackgroundNotificationTask(() => revokeBrowserPushState());
   }, [
     autoSync,
+    currentPermission,
     isPushReady,
-    permission,
     revokeBrowserPushState,
     runBackgroundNotificationTask,
   ]);

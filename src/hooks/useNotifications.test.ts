@@ -921,6 +921,143 @@ describe("useNotifications", () => {
       expect(result.current.error).toBe(networkError);
     });
 
+    it("re-registers after service worker replacement when another hook instance grants permission", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+
+      const controllerChangeHandlers: Array<() => void> = [];
+      let currentSubscription: typeof mockPushSubscription | null = null;
+
+      Object.defineProperty(navigator, "serviceWorker", {
+        value: {
+          ready: Promise.resolve(mockServiceWorkerRegistration),
+          addEventListener: vi.fn((event: string, callback: () => void) => {
+            if (event === "controllerchange") {
+              controllerChangeHandlers.push(callback);
+            }
+          }),
+          removeEventListener: vi.fn(),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      mockPushManager.getSubscription.mockImplementation(async () => currentSubscription);
+      mockPushManager.subscribe.mockImplementation(async () => {
+        currentSubscription = mockPushSubscription;
+        return mockPushSubscription;
+      });
+
+      globalThis.Notification.requestPermission = vi.fn().mockImplementation(async () => {
+        Object.defineProperty(globalThis.Notification, "permission", {
+          writable: true,
+          value: "granted",
+        });
+        return "granted";
+      });
+
+      const mockFetch = vi.fn((input, init) => {
+        const url = String(input);
+
+        if (url.includes("/v1/bootstrap?client_platform=browser")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  client_platform: "browser",
+                  compatibility: {
+                    bootstrap_version: "v1",
+                    schema_version: 3,
+                  },
+                  features: {
+                    notification_channels: {
+                      android_fcm: false,
+                      web_push: true,
+                    },
+                  },
+                  notification_channels: {
+                    web_push: {
+                      channel: "web_push",
+                      metadata_revision: 5,
+                      public_runtime_metadata: {
+                        vapid_public_key:
+                          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                      },
+                    },
+                  },
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        if (
+          /\/v1\/me\/notification-installations\//.test(url) &&
+          init?.method === "PUT"
+        ) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  installation_id: "installation-id",
+                  channel: "web_push",
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        throw new Error(`Unexpected fetch request: ${url}`);
+      });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      renderHook(() => useNotifications({ autoSync: true }), {
+        wrapper: AuthenticatedWrapper,
+      });
+      const { result } = renderHook(() => useNotifications(), {
+        wrapper: AuthenticatedWrapper,
+      });
+
+      await waitFor(() => {
+        expect(mockPushManager.getSubscription).toHaveBeenCalledTimes(2);
+      });
+
+      await act(async () => {
+        await result.current.requestPermission();
+      });
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+      });
+
+      expect(controllerChangeHandlers).toHaveLength(2);
+
+      await act(async () => {
+        controllerChangeHandlers.forEach((handler) => {
+          handler();
+        });
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(4);
+      });
+
+      expect(mockPushManager.subscribe).toHaveBeenCalledTimes(1);
+    });
+
     it("reconciles the authenticated browser subscription again after service worker replacement", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
