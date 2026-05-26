@@ -64,20 +64,20 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 export function usePushSubscription(
   options: UsePushSubscriptionOptions = {}
 ): UsePushSubscriptionReturn {
-  const [subscription, setSubscription] = useState<PushSubscription | null>(
-    null
-  );
-  const subscriptionRef = useRef<PushSubscription | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
   // Check if push notifications are supported
   const isSupported =
     typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
     navigator.serviceWorker !== undefined &&
     "PushManager" in window;
+
+  const [subscription, setSubscription] = useState<PushSubscription | null>(
+    null
+  );
+  const subscriptionRef = useRef<PushSubscription | null>(null);
+  const [isReady, setIsReady] = useState(!isSupported);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const setTrackedSubscription = useCallback(
     (nextSubscription: PushSubscription | null) => {
@@ -99,9 +99,11 @@ export function usePushSubscription(
         const registration = await navigator.serviceWorker.ready;
         const existingSubscription =
           await registration.pushManager.getSubscription();
+        const resolvedSubscription =
+          existingSubscription ?? subscriptionRef.current;
 
-        setTrackedSubscription(existingSubscription);
-        return existingSubscription;
+        setTrackedSubscription(resolvedSubscription);
+        return resolvedSubscription;
       } catch (err) {
         console.error("Failed to load push subscription:", err);
         setTrackedSubscription(null);
@@ -111,14 +113,19 @@ export function usePushSubscription(
       }
     }, [isSupported, setTrackedSubscription]);
 
+  const scheduleSubscriptionRefresh = useCallback(() => {
+    queueMicrotask(() => {
+      void refreshSubscription();
+    });
+  }, [refreshSubscription]);
+
   // Load existing subscription on mount
   useEffect(() => {
     if (!isSupported) {
-      setIsReady(true);
       return;
     }
 
-    void refreshSubscription();
+    scheduleSubscriptionRefresh();
 
     if (typeof navigator.serviceWorker.addEventListener !== "function") {
       return;
@@ -126,7 +133,7 @@ export function usePushSubscription(
 
     const handleControllerChange = () => {
       setIsReady(false);
-      void refreshSubscription();
+      scheduleSubscriptionRefresh();
     };
 
     navigator.serviceWorker.addEventListener(
@@ -142,7 +149,7 @@ export function usePushSubscription(
         );
       }
     };
-  }, [isSupported, refreshSubscription]);
+  }, [isSupported, scheduleSubscriptionRefresh]);
 
   /**
    * Subscribe to push notifications

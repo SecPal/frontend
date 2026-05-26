@@ -288,6 +288,7 @@ describe("usePushSubscription", () => {
 
       expect(data).toEqual({
         endpoint: "https://push.service.com/endpoint",
+        expirationTime: null,
         keys: {
           p256dh: "mock-p256dh-key",
           auth: "mock-auth-key",
