@@ -161,7 +161,11 @@ const browserSessionAuthTransport: AuthTransport = {
     }
   },
   async logoutAll(): Promise<void> {
-    await logoutAllBrowserSessions();
+    try {
+      await revokeBrowserPushInstallationForLogout();
+    } finally {
+      await logoutAllBrowserSessions();
+    }
   },
   async getCurrentUser(): Promise<User> {
     const user = await getBrowserSessionCurrentUser();

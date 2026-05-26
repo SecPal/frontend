@@ -123,6 +123,8 @@ describe("usePushSubscription", () => {
         usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
       );
 
+      mockPushManager.getSubscription.mockResolvedValue(mockSubscription);
+
       let subscription = null;
       await act(async () => {
         subscription = await result.current.subscribe();
@@ -267,6 +269,32 @@ describe("usePushSubscription", () => {
       });
 
       expect(result.current.error).toBe(testError);
+    });
+  });
+
+  describe("refreshSubscription", () => {
+    it("clears the subscription when the push manager returns null, even if the hook already held a subscription", async () => {
+      mockPushManager.getSubscription.mockResolvedValue(mockSubscription);
+
+      const { result } = renderHook(() =>
+        usePushSubscription({ vapidPublicKey: TEST_VAPID_KEY })
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSubscribed).toBe(true);
+      });
+
+      // Browser externally invalidated the subscription
+      mockPushManager.getSubscription.mockResolvedValue(null);
+
+      await act(async () => {
+        const refreshed = await result.current.refreshSubscription();
+        expect(refreshed).toBeNull();
+      });
+
+      expect(result.current.isSubscribed).toBe(false);
+      expect(result.current.subscription).toBeNull();
+      expect(result.current.getSubscriptionData()).toBeNull();
     });
   });
 

@@ -99,11 +99,9 @@ export function usePushSubscription(
         const registration = await navigator.serviceWorker.ready;
         const existingSubscription =
           await registration.pushManager.getSubscription();
-        const resolvedSubscription =
-          existingSubscription ?? subscriptionRef.current;
 
-        setTrackedSubscription(resolvedSubscription);
-        return resolvedSubscription;
+        setTrackedSubscription(existingSubscription);
+        return existingSubscription;
       } catch (err) {
         console.error("Failed to load push subscription:", err);
         setTrackedSubscription(null);

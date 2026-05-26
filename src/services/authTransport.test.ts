@@ -489,6 +489,32 @@ describe("authTransport", () => {
     expect(mockBrowserLogoutAll).toHaveBeenCalledOnce();
   });
 
+  it("revokes the browser push installation before browser-session logoutAll", async () => {
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-2");
+    mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
+      installation_id: "installation-2",
+      channel: "web_push",
+    });
+    mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
+
+    const transport = getAuthTransport();
+    await transport.logoutAll();
+
+    expect(mockRevokeBrowserNotificationInstallation).toHaveBeenCalledWith(
+      "installation-2"
+    );
+    expect(mockClearBrowserPushInstallationId).toHaveBeenCalledOnce();
+    expect(mockBrowserLogoutAll).toHaveBeenCalledOnce();
+
+    const revokeCallOrder =
+      mockRevokeBrowserNotificationInstallation.mock.invocationCallOrder[0];
+    const logoutAllCallOrder = mockBrowserLogoutAll.mock.invocationCallOrder[0];
+
+    expect(revokeCallOrder).toBeDefined();
+    expect(logoutAllCallOrder).toBeDefined();
+    expect(revokeCallOrder ?? 0).toBeLessThan(logoutAllCallOrder ?? 0);
+  });
+
   it("delegates browser-session getCurrentUser to the authApi and sanitizes the payload", async () => {
     mockBrowserGetCurrentUser.mockResolvedValueOnce({
       id: 2,
