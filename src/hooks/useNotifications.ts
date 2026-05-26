@@ -98,6 +98,8 @@ export function useNotifications(
 
   const isAuthenticated = authContext?.isAuthenticated === true;
   const autoSync = options.autoSync === true;
+  const [autoSyncRegistrationGeneration, setAutoSyncRegistrationGeneration] =
+    useState(0);
   const skipNextAutoSyncRegistrationRef = useRef(false);
   const currentPermission = getNotificationPermissionState();
 
@@ -260,6 +262,14 @@ export function useNotifications(
             return;
           }
 
+          if (
+            autoSync &&
+            nextRuntimeOptions?.forceRotation &&
+            nextRuntimeOptions?.allowRetry === false
+          ) {
+            setAutoSyncRegistrationGeneration((generation) => generation + 1);
+          }
+
           throw err;
         }
       }
@@ -267,6 +277,7 @@ export function useNotifications(
       await syncInstallation(runtimeOptions);
     },
     [
+      autoSync,
       getSubscriptionData,
       isAuthenticated,
       refreshSubscription,
@@ -319,6 +330,7 @@ export function useNotifications(
     );
   }, [
     autoSync,
+    autoSyncRegistrationGeneration,
     currentPermission,
     isAuthenticated,
     isPushReady,
