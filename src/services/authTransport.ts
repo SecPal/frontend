@@ -122,8 +122,16 @@ async function revokeBrowserPushInstallationForLogout(): Promise<void> {
     return;
   }
 
-  await revokeBrowserNotificationInstallation(installationId);
-  clearBrowserPushInstallationId();
+  try {
+    await revokeBrowserNotificationInstallation(installationId);
+  } catch (error) {
+    console.warn(
+      "Failed to revoke browser push installation during logout:",
+      error
+    );
+  } finally {
+    clearBrowserPushInstallationId();
+  }
 }
 
 const browserSessionAuthTransport: AuthTransport = {

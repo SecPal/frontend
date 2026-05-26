@@ -480,6 +480,35 @@ describe("authTransport", () => {
     expect(revokeCallOrder ?? 0).toBeLessThan(logoutCallOrder ?? 0);
   });
 
+  it("continues browser-session logout when push revocation fails", async () => {
+    const revokeError = new Error("Push revoke failed");
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockRevokeBrowserNotificationInstallation.mockRejectedValueOnce(
+      revokeError
+    );
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    try {
+      const transport = getAuthTransport();
+
+      await expect(transport.logout()).resolves.toBeUndefined();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        "Failed to revoke browser push installation during logout:",
+        revokeError
+      );
+    } finally {
+      consoleWarn.mockRestore();
+    }
+
+    expect(mockRevokeBrowserNotificationInstallation).toHaveBeenCalledWith(
+      "installation-1"
+    );
+    expect(mockClearBrowserPushInstallationId).toHaveBeenCalledOnce();
+    expect(mockBrowserLogout).toHaveBeenCalledOnce();
+  });
+
   it("delegates browser-session logoutAll to the authApi", async () => {
     mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
 
@@ -513,6 +542,35 @@ describe("authTransport", () => {
     expect(revokeCallOrder).toBeDefined();
     expect(logoutAllCallOrder).toBeDefined();
     expect(revokeCallOrder ?? 0).toBeLessThan(logoutAllCallOrder ?? 0);
+  });
+
+  it("continues browser-session logoutAll when push revocation fails", async () => {
+    const revokeError = new Error("Push revoke failed");
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-2");
+    mockRevokeBrowserNotificationInstallation.mockRejectedValueOnce(
+      revokeError
+    );
+    mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
+
+    try {
+      const transport = getAuthTransport();
+
+      await expect(transport.logoutAll()).resolves.toBeUndefined();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        "Failed to revoke browser push installation during logout:",
+        revokeError
+      );
+    } finally {
+      consoleWarn.mockRestore();
+    }
+
+    expect(mockRevokeBrowserNotificationInstallation).toHaveBeenCalledWith(
+      "installation-2"
+    );
+    expect(mockClearBrowserPushInstallationId).toHaveBeenCalledOnce();
+    expect(mockBrowserLogoutAll).toHaveBeenCalledOnce();
   });
 
   it("delegates browser-session getCurrentUser to the authApi and sanitizes the payload", async () => {
