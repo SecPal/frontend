@@ -10,10 +10,7 @@ import {
   getOrCreateBrowserPushInstallationId,
   peekBrowserPushInstallationId,
 } from "../lib/browserPushState";
-import {
-  AuthContext,
-  type AuthContextType,
-} from "../contexts/auth-context";
+import { AuthContext, type AuthContextType } from "../contexts/auth-context";
 
 // Mock Notification API
 const mockNotification = vi.fn();
@@ -707,9 +704,12 @@ describe("useNotifications", () => {
 
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useNotifications({ autoSync: true }), {
-        wrapper: AuthenticatedWrapper,
-      });
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
 
       await waitFor(() => {
         expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);

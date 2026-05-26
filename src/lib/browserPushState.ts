@@ -7,7 +7,10 @@ const BROWSER_PUSH_INSTALLATION_ID_STORAGE_KEY =
 let volatileInstallationId: string | null = null;
 
 function createInstallationId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
@@ -117,7 +120,9 @@ export function getBrowserPushClientMetadata(
   };
 }
 
-export function getServiceWorkerScopePath(scope: string | undefined): string | null {
+export function getServiceWorkerScopePath(
+  scope: string | undefined
+): string | null {
   if (!scope) {
     return null;
   }

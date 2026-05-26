@@ -97,7 +97,8 @@ export function useNotifications(
   const autoSync = options.autoSync === true;
 
   const toNotificationError = useCallback((err: unknown): Error => {
-    return err instanceof NotificationInstallationsApiError || err instanceof Error
+    return err instanceof NotificationInstallationsApiError ||
+      err instanceof Error
       ? err
       : new Error(String(err));
   }, []);
@@ -132,133 +133,142 @@ export function useNotifications(
     [toNotificationError]
   );
 
-  const registerBrowserPushInstallation = useCallback(async (runtimeOptions?: {
-    bootstrapData?: BrowserPushBootstrapData | null;
-    forceRotation?: boolean;
-    allowRetry?: boolean;
-  }) => {
-    async function syncInstallation(nextRuntimeOptions?: {
+  const registerBrowserPushInstallation = useCallback(
+    async (runtimeOptions?: {
       bootstrapData?: BrowserPushBootstrapData | null;
       forceRotation?: boolean;
       allowRetry?: boolean;
-    }): Promise<void> {
-      if (!isAuthenticated) {
-        return;
-      }
-
-      const bootstrapData =
-        nextRuntimeOptions?.bootstrapData ?? (await getBrowserPushBootstrapData());
-      const webPushRuntimeMetadata = bootstrapData?.notification_channels?.web_push;
-
-      if (!webPushRuntimeMetadata) {
-        throw new Error(
-          "Web push notifications are not available for this deployment"
-        );
-      }
-
-      let currentSubscription = await refreshSubscription();
-      const hadExistingSubscription = currentSubscription !== null;
-
-      if (nextRuntimeOptions?.forceRotation && currentSubscription) {
-        await unsubscribe();
-        currentSubscription = null;
-      }
-
-      currentSubscription =
-        currentSubscription ??
-        (await subscribe(
-          webPushRuntimeMetadata.public_runtime_metadata.vapid_public_key
-        ));
-      const subscriptionData = getSubscriptionData() ?? {
-        endpoint: currentSubscription.endpoint,
-        expirationTime: currentSubscription.expirationTime ?? null,
-        keys: (() => {
-          const json = currentSubscription.toJSON();
-
-          if (!json.keys?.p256dh || !json.keys?.auth) {
-            throw new Error(
-              "Push subscription is missing required browser credentials"
-            );
-          }
-
-          return {
-            p256dh: json.keys.p256dh,
-            auth: json.keys.auth,
-          };
-        })(),
-      };
-
-      if (
-        typeof navigator === "undefined" ||
-        navigator.serviceWorker === undefined ||
-        !subscriptionData.endpoint
-      ) {
-        throw new Error("Browser push registration is unavailable");
-      }
-
-      const registration = await navigator.serviceWorker.ready;
-      const { browserName, browserVersion, installationName } =
-        getBrowserPushClientMetadata();
-
-      let lifecycleEvent: NotificationInstallationLifecycleEvent = "registered";
-
-      if (nextRuntimeOptions?.forceRotation) {
-        lifecycleEvent = "credential_rotated";
-      } else if (hadExistingSubscription) {
-        lifecycleEvent = "client_updated";
-      }
-
-      try {
-        await upsertBrowserNotificationInstallation(
-          getOrCreateBrowserPushInstallationId(),
-          {
-            channel: "web_push",
-            installation_name: installationName,
-            lifecycle_event: lifecycleEvent,
-            runtime: {
-              bootstrap_version: bootstrapData.compatibility.bootstrap_version,
-              schema_version: bootstrapData.compatibility.schema_version,
-              metadata_revision: webPushRuntimeMetadata.metadata_revision,
-            },
-            registration: {
-              browser: {
-                browser_name: browserName,
-                browser_version: browserVersion,
-                service_worker_scope: getServiceWorkerScopePath(registration.scope),
-              },
-              subscription: {
-                endpoint: subscriptionData.endpoint,
-                expiration_time: subscriptionData.expirationTime ?? null,
-                keys: subscriptionData.keys,
-              },
-            },
-          }
-        );
-      } catch (err) {
-        if (
-          err instanceof NotificationInstallationsApiError &&
-          err.code === "NOTIFICATION_RUNTIME_STATE_INVALID" &&
-          nextRuntimeOptions?.allowRetry !== false
-        ) {
-          await syncInstallation({
-            allowRetry: false,
-            forceRotation: true,
-          });
+    }) => {
+      async function syncInstallation(nextRuntimeOptions?: {
+        bootstrapData?: BrowserPushBootstrapData | null;
+        forceRotation?: boolean;
+        allowRetry?: boolean;
+      }): Promise<void> {
+        if (!isAuthenticated) {
           return;
         }
 
-        throw err;
-      }
-    }
+        const bootstrapData =
+          nextRuntimeOptions?.bootstrapData ??
+          (await getBrowserPushBootstrapData());
+        const webPushRuntimeMetadata =
+          bootstrapData?.notification_channels?.web_push;
 
-    await syncInstallation(runtimeOptions);
-  }, [
-    getSubscriptionData,
-    isAuthenticated,
-    refreshSubscription,
-    subscribe,
-    unsubscribe,
-  ]);
+        if (!webPushRuntimeMetadata) {
+          throw new Error(
+            "Web push notifications are not available for this deployment"
+          );
+        }
+
+        let currentSubscription = await refreshSubscription();
+        const hadExistingSubscription = currentSubscription !== null;
+
+        if (nextRuntimeOptions?.forceRotation && currentSubscription) {
+          await unsubscribe();
+          currentSubscription = null;
+        }
+
+        currentSubscription =
+          currentSubscription ??
+          (await subscribe(
+            webPushRuntimeMetadata.public_runtime_metadata.vapid_public_key
+          ));
+        const subscriptionData = getSubscriptionData() ?? {
+          endpoint: currentSubscription.endpoint,
+          expirationTime: currentSubscription.expirationTime ?? null,
+          keys: (() => {
+            const json = currentSubscription.toJSON();
+
+            if (!json.keys?.p256dh || !json.keys?.auth) {
+              throw new Error(
+                "Push subscription is missing required browser credentials"
+              );
+            }
+
+            return {
+              p256dh: json.keys.p256dh,
+              auth: json.keys.auth,
+            };
+          })(),
+        };
+
+        if (
+          typeof navigator === "undefined" ||
+          navigator.serviceWorker === undefined ||
+          !subscriptionData.endpoint
+        ) {
+          throw new Error("Browser push registration is unavailable");
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        const { browserName, browserVersion, installationName } =
+          getBrowserPushClientMetadata();
+
+        let lifecycleEvent: NotificationInstallationLifecycleEvent =
+          "registered";
+
+        if (nextRuntimeOptions?.forceRotation) {
+          lifecycleEvent = "credential_rotated";
+        } else if (hadExistingSubscription) {
+          lifecycleEvent = "client_updated";
+        }
+
+        try {
+          await upsertBrowserNotificationInstallation(
+            getOrCreateBrowserPushInstallationId(),
+            {
+              channel: "web_push",
+              installation_name: installationName,
+              lifecycle_event: lifecycleEvent,
+              runtime: {
+                bootstrap_version:
+                  bootstrapData.compatibility.bootstrap_version,
+                schema_version: bootstrapData.compatibility.schema_version,
+                metadata_revision: webPushRuntimeMetadata.metadata_revision,
+              },
+              registration: {
+                browser: {
+                  browser_name: browserName,
+                  browser_version: browserVersion,
+                  service_worker_scope: getServiceWorkerScopePath(
+                    registration.scope
+                  ),
+                },
+                subscription: {
+                  endpoint: subscriptionData.endpoint,
+                  expiration_time: subscriptionData.expirationTime ?? null,
+                  keys: subscriptionData.keys,
+                },
+              },
+            }
+          );
+        } catch (err) {
+          if (
+            err instanceof NotificationInstallationsApiError &&
+            err.code === "NOTIFICATION_RUNTIME_STATE_INVALID" &&
+            nextRuntimeOptions?.allowRetry !== false
+          ) {
+            await syncInstallation({
+              allowRetry: false,
+              forceRotation: true,
+            });
+            return;
+          }
+
+          throw err;
+        }
+      }
+
+      await syncInstallation(runtimeOptions);
+    },
+    [
+      getSubscriptionData,
+      isAuthenticated,
+      refreshSubscription,
+      subscribe,
+      unsubscribe,
+    ]
+  );
 
   const revokeBrowserPushState = useCallback(async () => {
     const installationId = peekBrowserPushInstallationId();
@@ -289,7 +299,9 @@ export function useNotifications(
       return;
     }
 
-    return runBackgroundNotificationTask(() => registerBrowserPushInstallation());
+    return runBackgroundNotificationTask(() =>
+      registerBrowserPushInstallation()
+    );
   }, [
     autoSync,
     isAuthenticated,

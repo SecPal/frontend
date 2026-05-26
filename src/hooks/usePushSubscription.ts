@@ -87,27 +87,29 @@ export function usePushSubscription(
     []
   );
 
-  const refreshSubscription = useCallback(async (): Promise<PushSubscription | null> => {
-    if (!isSupported) {
-      setTrackedSubscription(null);
-      setIsReady(true);
-      return null;
-    }
+  const refreshSubscription =
+    useCallback(async (): Promise<PushSubscription | null> => {
+      if (!isSupported) {
+        setTrackedSubscription(null);
+        setIsReady(true);
+        return null;
+      }
 
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const existingSubscription = await registration.pushManager.getSubscription();
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const existingSubscription =
+          await registration.pushManager.getSubscription();
 
-      setTrackedSubscription(existingSubscription);
-      return existingSubscription;
-    } catch (err) {
-      console.error("Failed to load push subscription:", err);
-      setTrackedSubscription(null);
-      return null;
-    } finally {
-      setIsReady(true);
-    }
-  }, [isSupported, setTrackedSubscription]);
+        setTrackedSubscription(existingSubscription);
+        return existingSubscription;
+      } catch (err) {
+        console.error("Failed to load push subscription:", err);
+        setTrackedSubscription(null);
+        return null;
+      } finally {
+        setIsReady(true);
+      }
+    }, [isSupported, setTrackedSubscription]);
 
   // Load existing subscription on mount
   useEffect(() => {
@@ -145,51 +147,54 @@ export function usePushSubscription(
   /**
    * Subscribe to push notifications
    */
-  const subscribe = useCallback(async (overrideVapidPublicKey?: string): Promise<PushSubscription> => {
-    if (!isSupported) {
-      const err = new Error("Push notifications are not supported");
-      setError(err);
-      throw err;
-    }
+  const subscribe = useCallback(
+    async (overrideVapidPublicKey?: string): Promise<PushSubscription> => {
+      if (!isSupported) {
+        const err = new Error("Push notifications are not supported");
+        setError(err);
+        throw err;
+      }
 
-    if (subscriptionRef.current) {
-      const err = new Error("Already subscribed");
-      setError(err);
-      throw err;
-    }
+      if (subscriptionRef.current) {
+        const err = new Error("Already subscribed");
+        setError(err);
+        throw err;
+      }
 
-    const vapidPublicKey = overrideVapidPublicKey ?? options.vapidPublicKey;
+      const vapidPublicKey = overrideVapidPublicKey ?? options.vapidPublicKey;
 
-    if (!vapidPublicKey) {
-      const err = new Error("VAPID public key is required");
-      setError(err);
-      throw err;
-    }
+      if (!vapidPublicKey) {
+        const err = new Error("VAPID public key is required");
+        setError(err);
+        throw err;
+      }
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const applicationServerKey = urlBase64ToUint8Array(
-        vapidPublicKey
-      ) as BufferSource;
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const applicationServerKey = urlBase64ToUint8Array(
+          vapidPublicKey
+        ) as BufferSource;
 
-      const newSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey,
-      });
+        const newSubscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
 
-      setTrackedSubscription(newSubscription);
-      return newSubscription;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isSupported, options.vapidPublicKey, setTrackedSubscription]);
+        setTrackedSubscription(newSubscription);
+        return newSubscription;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isSupported, options.vapidPublicKey, setTrackedSubscription]
+  );
 
   /**
    * Unsubscribe from push notifications

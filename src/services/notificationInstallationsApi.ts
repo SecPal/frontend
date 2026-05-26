@@ -90,13 +90,16 @@ async function createNotificationInstallationsApiError(
 }
 
 export async function getBrowserPushBootstrapData(): Promise<BrowserPushBootstrapData | null> {
-  const response = await apiFetch(buildApiUrl("/v1/bootstrap?client_platform=browser"), {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  const response = await apiFetch(
+    buildApiUrl("/v1/bootstrap?client_platform=browser"),
+    {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     throw await createNotificationInstallationsApiError(
@@ -139,10 +142,11 @@ export async function upsertBrowserNotificationInstallation(
     );
   }
 
-  const result = await parseJsonResponse<BrowserNotificationInstallationResponse>(
-    response,
-    "Browser notification installation update failed"
-  );
+  const result =
+    await parseJsonResponse<BrowserNotificationInstallationResponse>(
+      response,
+      "Browser notification installation update failed"
+    );
 
   return result.data;
 }
