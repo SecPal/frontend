@@ -327,34 +327,30 @@ export function useNotifications(
         try {
           const installationId = getOrCreateBrowserPushInstallationId();
 
-          await upsertBrowserNotificationInstallation(
-            installationId,
-            {
-              channel: "web_push",
-              installation_name: installationName,
-              lifecycle_event: lifecycleEvent,
-              runtime: {
-                bootstrap_version:
-                  bootstrapData.compatibility.bootstrap_version,
-                schema_version: bootstrapData.compatibility.schema_version,
-                metadata_revision: webPushRuntimeMetadata.metadata_revision,
+          await upsertBrowserNotificationInstallation(installationId, {
+            channel: "web_push",
+            installation_name: installationName,
+            lifecycle_event: lifecycleEvent,
+            runtime: {
+              bootstrap_version: bootstrapData.compatibility.bootstrap_version,
+              schema_version: bootstrapData.compatibility.schema_version,
+              metadata_revision: webPushRuntimeMetadata.metadata_revision,
+            },
+            registration: {
+              browser: {
+                browser_name: browserName,
+                browser_version: browserVersion,
+                service_worker_scope: getServiceWorkerScopePath(
+                  registration.scope
+                ),
               },
-              registration: {
-                browser: {
-                  browser_name: browserName,
-                  browser_version: browserVersion,
-                  service_worker_scope: getServiceWorkerScopePath(
-                    registration.scope
-                  ),
-                },
-                subscription: {
-                  endpoint: subscriptionData.endpoint,
-                  expiration_time: subscriptionData.expirationTime ?? null,
-                  keys: subscriptionData.keys,
-                },
+              subscription: {
+                endpoint: subscriptionData.endpoint,
+                expiration_time: subscriptionData.expirationTime ?? null,
+                keys: subscriptionData.keys,
               },
-            }
-          );
+            },
+          });
           autoSyncRotationRecoveryAttemptsRef.current = 0;
         } catch (err) {
           if (
@@ -387,13 +383,7 @@ export function useNotifications(
 
       await syncInstallation(runtimeOptions);
     },
-    [
-      autoSync,
-      getSubscriptionData,
-      refreshSubscription,
-      subscribe,
-      unsubscribe,
-    ]
+    [autoSync, getSubscriptionData, refreshSubscription, subscribe, unsubscribe]
   );
 
   const revokeBrowserPushState = useCallback(async () => {
