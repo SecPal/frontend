@@ -567,7 +567,9 @@ describe("authTransport", () => {
 
   it("does not clear a newer browser push installation after stale logout revocation settles", async () => {
     let currentInstallationId: string | null = "installation-1";
-    let resolveRevocation: (() => void) | null = null;
+    const revocationControls: { resolve: (() => void) | null } = {
+      resolve: null,
+    };
 
     mockPeekBrowserPushInstallationId.mockImplementation(
       () => currentInstallationId
@@ -575,7 +577,7 @@ describe("authTransport", () => {
     mockRevokeBrowserNotificationInstallation.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
-          resolveRevocation = resolve;
+          revocationControls.resolve = resolve;
         })
     );
     mockBrowserLogout.mockResolvedValueOnce(undefined);
@@ -590,7 +592,7 @@ describe("authTransport", () => {
       await expect(logoutPromise).resolves.toBeUndefined();
 
       currentInstallationId = "installation-2";
-      resolveRevocation?.();
+      revocationControls.resolve?.();
       await Promise.resolve();
 
       expect(mockClearBrowserPushInstallationId).not.toHaveBeenCalled();

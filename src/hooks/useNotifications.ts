@@ -388,6 +388,7 @@ export function useNotifications(
     const currentSubscription = await refreshSubscription();
     let revokeError: unknown = null;
     let unsubscribeError: unknown = null;
+    let revokeSucceeded = false;
 
     if (!installationId && !currentSubscription) {
       return;
@@ -396,11 +397,12 @@ export function useNotifications(
     try {
       if (installationId && isAuthenticatedRef.current) {
         await revokeBrowserNotificationInstallation(installationId);
+        revokeSucceeded = true;
       }
     } catch (error) {
       revokeError = error;
     } finally {
-      if (installationId) {
+      if (installationId && revokeSucceeded) {
         clearBrowserPushInstallationId();
       }
 

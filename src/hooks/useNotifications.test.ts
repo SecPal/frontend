@@ -1715,6 +1715,90 @@ describe("useNotifications", () => {
       expect(peekBrowserPushInstallationId()).toBe(installationId);
     });
 
+    it("waits for auth bootstrap before denied auto-sync cleanup", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "denied",
+      });
+
+      const installationId = getOrCreateBrowserPushInstallationId();
+      let authContextValue: AuthContextType = {
+        ...authenticatedAuthContextValue,
+        isAuthenticated: false,
+        isLoading: true,
+        user: null,
+      };
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const mockFetch = vi.fn().mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              installation_id: installationId,
+              channel: "web_push",
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+      );
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const AuthBootstrapWrapper = ({ children }: { children: ReactNode }) =>
+        createElement(
+          AuthContext.Provider,
+          { value: authContextValue },
+          children
+        );
+
+      const { rerender } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthBootstrapWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(mockPushManager.getSubscription).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockPushSubscription.unsubscribe).not.toHaveBeenCalled();
+      expect(peekBrowserPushInstallationId()).toBe(installationId);
+
+      authContextValue = authenticatedAuthContextValue;
+
+      await act(async () => {
+        rerender();
+      });
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `/v1/me/notification-installations/${installationId}`
+          ),
+          expect.objectContaining({
+            credentials: "include",
+            method: "DELETE",
+          })
+        );
+      });
+
+      expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      expect(peekBrowserPushInstallationId()).toBeNull();
+    });
+
     it("does not re-run denied auto-sync cleanup when auth state changes", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
@@ -1793,7 +1877,7 @@ describe("useNotifications", () => {
       );
     });
 
-    it("clears local push state even when remote revocation fails", async () => {
+    it("preserves the local push installation ID when remote revocation fails", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
         writable: true,
@@ -1829,7 +1913,7 @@ describe("useNotifications", () => {
           method: "DELETE",
         })
       );
-      expect(peekBrowserPushInstallationId()).toBeNull();
+      expect(peekBrowserPushInstallationId()).toBe(installationId);
       expect(result.current.error).toBe(networkError);
     });
 
@@ -1872,7 +1956,7 @@ describe("useNotifications", () => {
         })
       );
       expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
-      expect(peekBrowserPushInstallationId()).toBeNull();
+      expect(peekBrowserPushInstallationId()).toBe(installationId);
       expect(result.current.error).toMatchObject({
         errors: [networkError, unsubscribeError],
         message: "Failed to fully revoke browser push state",
