@@ -296,7 +296,8 @@ export function useNotifications(
   const revokeBrowserPushState = useCallback(async () => {
     const installationId = peekBrowserPushInstallationId();
     const currentSubscription = await refreshSubscription();
-    let revokeFailed = false;
+    let revokeError: unknown = null;
+    let unsubscribeError: unknown = null;
 
     if (!installationId && !currentSubscription) {
       return;
@@ -307,8 +308,7 @@ export function useNotifications(
         await revokeBrowserNotificationInstallation(installationId);
       }
     } catch (error) {
-      revokeFailed = true;
-      throw error;
+      revokeError = error;
     } finally {
       if (installationId) {
         clearBrowserPushInstallationId();
@@ -318,11 +318,17 @@ export function useNotifications(
         try {
           await unsubscribe();
         } catch (error) {
-          if (!revokeFailed) {
-            throw error;
-          }
+          unsubscribeError = error;
         }
       }
+    }
+
+    if (revokeError) {
+      throw revokeError;
+    }
+
+    if (unsubscribeError) {
+      throw unsubscribeError;
     }
   }, [isAuthenticated, refreshSubscription, unsubscribe]);
 
