@@ -509,7 +509,20 @@ export function useNotifications(
           if (autoSync) {
             skipAutoSyncGenerationRef.current = autoSyncRegistrationGeneration;
           }
-          await registerBrowserPushInstallation();
+
+          try {
+            await registerBrowserPushInstallation();
+          } catch (err) {
+            if (
+              autoSync &&
+              skipAutoSyncGenerationRef.current ===
+                autoSyncRegistrationGeneration
+            ) {
+              skipAutoSyncGenerationRef.current = null;
+            }
+
+            throw err;
+          }
         }
 
         return result;

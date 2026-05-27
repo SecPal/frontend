@@ -74,6 +74,15 @@ export function peekBrowserPushInstallationId(): string | null {
   }
 }
 
+// Multi-tab note: localStorage reads and writes are synchronous within a single
+// tab, but the read-check-write here is not atomic across tabs sharing the same
+// origin. Two tabs opening simultaneously for the first time can each generate a
+// distinct ID, with the second write winning in localStorage. The first tab's
+// registered installation ID becomes orphaned on the server until that tab
+// revokes it (which it will, using its locally-returned ID). This is an
+// acceptable trade-off: installations are low-cost, the server accepts multiple
+// registrations per user, and logout revocation uses the ID returned at creation
+// time (stored in the closure of the registration call), not a re-read.
 export function getOrCreateBrowserPushInstallationId(): string {
   const existingInstallationId = peekBrowserPushInstallationId();
 

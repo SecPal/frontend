@@ -152,8 +152,8 @@ function NotificationLifecycleCoordinator() {
 function App() {
   return (
     <AuthProvider>
-      <NotificationLifecycleCoordinator />
       <BrowserRouter>
+        <NotificationLifecycleCoordinator />
         <NativeRuntimePwaGuard />
         <UpdatePrompt />
         <Suspense fallback={<RouteLoader />}>
