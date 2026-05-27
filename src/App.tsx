@@ -9,6 +9,7 @@ import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useNotifications } from "./hooks/useNotifications";
 import {
   AppAccessRoute,
   OnboardingOnlyRoute,
@@ -142,10 +143,17 @@ function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
   );
 }
 
+function NotificationLifecycleCoordinator() {
+  useNotifications({ autoSync: true });
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <NotificationLifecycleCoordinator />
         <NativeRuntimePwaGuard />
         <UpdatePrompt />
         <Suspense fallback={<RouteLoader />}>

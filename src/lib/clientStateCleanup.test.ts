@@ -4,6 +4,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "./db";
 import {
+  getOrCreateBrowserPushInstallationId,
+  peekBrowserPushInstallationId,
+} from "./browserPushState";
+import {
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
@@ -12,6 +16,14 @@ import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
 const mockCaches = {
   keys: vi.fn(),
   delete: vi.fn(),
+};
+
+const mockPushSubscription = {
+  unsubscribe: vi.fn().mockResolvedValue(true),
+};
+
+const mockPushManager = {
+  getSubscription: vi.fn(),
 };
 
 describe("clearSensitiveClientState", () => {
@@ -26,6 +38,20 @@ describe("clearSensitiveClientState", () => {
 
     // @ts-expect-error Test cache API mock
     globalThis.caches = mockCaches;
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        ready: Promise.resolve({
+          pushManager: mockPushManager,
+        }),
+      },
+      configurable: true,
+      writable: true,
+    });
+
+    mockCaches.keys.mockResolvedValue([]);
+    mockCaches.delete.mockResolvedValue(true);
+    mockPushManager.getSubscription.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -151,5 +177,17 @@ describe("clearSensitiveClientState", () => {
     delete globalThis.caches;
 
     await expect(clearSensitiveClientState()).resolves.not.toThrow();
+  });
+
+  it("unsubscribes the existing browser push subscription and clears the local installation id", async () => {
+    const installationId = getOrCreateBrowserPushInstallationId();
+
+    mockPushManager.getSubscription.mockResolvedValueOnce(mockPushSubscription);
+
+    await clearSensitiveClientState();
+
+    expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(installationId).not.toBeNull();
+    expect(peekBrowserPushInstallationId()).toBeNull();
   });
 });

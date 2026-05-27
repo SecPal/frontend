@@ -4,12 +4,18 @@
 import type { LoginMfaChallengeResponse, MfaChallenge } from "@/types/api";
 import type { User } from "../contexts/auth-context";
 import {
+  clearBrowserPushInstallationId,
+  peekBrowserPushInstallationId,
+  setBrowserPushLogoutInProgress,
+} from "../lib/browserPushState";
+import {
   AuthApiError,
   getCurrentUser as getBrowserSessionCurrentUser,
   login as loginWithBrowserSession,
   logout as logoutBrowserSession,
   logoutAll as logoutAllBrowserSessions,
 } from "./authApi";
+import { revokeBrowserNotificationInstallation } from "./notificationInstallationsApi";
 import { sanitizeAuthUser } from "./authState";
 import { isOnline } from "./sessionEvents";
 
@@ -53,6 +59,8 @@ export interface AuthTransport {
   getCurrentUser(): Promise<User>;
   isNetworkAvailable(): Promise<boolean>;
 }
+
+const BROWSER_PUSH_LOGOUT_REVOCATION_TIMEOUT_MS = 1000;
 
 async function finalizeAuthenticatedLogin(
   payload: unknown,
@@ -110,6 +118,52 @@ function sanitizeAuthPayload(payload: unknown, operation: string): User {
   return sanitizedUser;
 }
 
+async function waitForPushRevocationToSettle(
+  pushRevocation: Promise<void>
+): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    await Promise.race([
+      pushRevocation,
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(
+          resolve,
+          BROWSER_PUSH_LOGOUT_REVOCATION_TIMEOUT_MS
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
+  const installationId = peekBrowserPushInstallationId();
+
+  if (!installationId) {
+    return null;
+  }
+
+  return revokeBrowserNotificationInstallation(installationId)
+    .then(
+      () => undefined,
+      (error: unknown) => {
+        console.warn(
+          "Failed to revoke browser push installation during logout:",
+          error
+        );
+      }
+    )
+    .finally(() => {
+      if (peekBrowserPushInstallationId() === installationId) {
+        clearBrowserPushInstallationId();
+      }
+    });
+}
+
 const browserSessionAuthTransport: AuthTransport = {
   kind: "browser-session",
   async login(credentials): Promise<AuthLoginResult> {
@@ -138,10 +192,36 @@ const browserSessionAuthTransport: AuthTransport = {
     );
   },
   async logout(): Promise<void> {
-    await logoutBrowserSession();
+    setBrowserPushLogoutInProgress(true);
+    const pushRevocation = revokeBrowserPushInstallationForLogout();
+
+    try {
+      if (pushRevocation) {
+        await waitForPushRevocationToSettle(pushRevocation);
+      }
+    } finally {
+      try {
+        await logoutBrowserSession();
+      } finally {
+        setBrowserPushLogoutInProgress(false);
+      }
+    }
   },
   async logoutAll(): Promise<void> {
-    await logoutAllBrowserSessions();
+    setBrowserPushLogoutInProgress(true);
+    const pushRevocation = revokeBrowserPushInstallationForLogout();
+
+    try {
+      if (pushRevocation) {
+        await waitForPushRevocationToSettle(pushRevocation);
+      }
+    } finally {
+      try {
+        await logoutAllBrowserSessions();
+      } finally {
+        setBrowserPushLogoutInProgress(false);
+      }
+    }
   },
   async getCurrentUser(): Promise<User> {
     const user = await getBrowserSessionCurrentUser();

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { db } from "./db";
+import { clearBrowserPushInstallationId } from "./browserPushState";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
@@ -59,6 +60,40 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
   }
 }
 
+async function clearBrowserPushClientState(): Promise<void> {
+  clearBrowserPushInstallationId();
+
+  if (
+    typeof navigator === "undefined" ||
+    navigator.serviceWorker === undefined
+  ) {
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+
+    if (
+      registration === undefined ||
+      registration.pushManager === undefined ||
+      typeof registration.pushManager.getSubscription !== "function"
+    ) {
+      return;
+    }
+
+    const subscription = await registration.pushManager.getSubscription();
+
+    if (subscription) {
+      await subscription.unsubscribe();
+    }
+  } catch (error) {
+    console.warn(
+      "Failed to clear browser push subscription during logout:",
+      error
+    );
+  }
+}
+
 export async function clearSensitiveClientState(): Promise<void> {
   clearOfflineVaultSession();
 
@@ -68,5 +103,9 @@ export async function clearSensitiveClientState(): Promise<void> {
 
   sessionStorage.clear();
 
-  await Promise.all([clearSensitiveCaches(), clearSensitiveIndexedDbState()]);
+  await Promise.all([
+    clearBrowserPushClientState(),
+    clearSensitiveCaches(),
+    clearSensitiveIndexedDbState(),
+  ]);
 }

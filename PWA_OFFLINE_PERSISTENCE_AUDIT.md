@@ -29,7 +29,7 @@ See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Pha
 - FINDING-04: `static-assets` cache in the service worker without expiration
 - FINDING-06: `pwaRuntimeCaching.ts` expiration config is ineffective with `injectManifest` (more specific than #493)
 - FINDING-09: `XSRF-TOKEN` cookie remains after logout (backend-side)
-- FINDING-10: Push subscription potentially remains active after logout
+- FINDING-10: Push subscription persistence after logout required a cross-repo fix (resolved in #1139)
 
 **Confirmation of existing issues with additional detail:**
 
@@ -42,14 +42,15 @@ See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Pha
 
 ### 1.1 localStorage
 
-| Key                               | Content                                                                                                                                                 | Sensitive?                 | Cleanup on logout?                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ---------------------------------------- |
-| `auth_user`                       | User object (id, name, email, roles, permissions, hasOrganizationalScopes, hasCustomerAccess, hasSiteAccess) — **no** employee field in persisted state | Medium (PII: name, e-mail) | **Yes** – `clearSensitiveClientState()`  |
-| `auth_token`                      | Legacy field, actively removed in the `LocalStorageAuthStorage` constructor                                                                             | High (if present)          | **Yes** – both cleanup and legacy wipe   |
-| `auth_logout_barrier`             | Flag ("1") for BFCache protection                                                                                                                       | No                         | No (intentional – deleted on next login) |
-| `secpal-notification-preferences` | JSON with notification categories (alerts, updates, maintenance)                                                                                        | Low                        | **Yes**                                  |
-| `secpal-locale`                   | Language preference (e.g. "de")                                                                                                                         | No                         | **No** (intentional – user-neutral)      |
-| `login_rate_limit`                | Failsafe counter (attempts, lockoutEndTime, lastAttemptTime)                                                                                            | Low                        | **No**                                   |
+| Key                                   | Content                                                                                                                                                 | Sensitive?                 | Cleanup on logout?                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ---------------------------------------- |
+| `auth_user`                           | User object (id, name, email, roles, permissions, hasOrganizationalScopes, hasCustomerAccess, hasSiteAccess) — **no** employee field in persisted state | Medium (PII: name, e-mail) | **Yes** – `clearSensitiveClientState()`  |
+| `auth_token`                          | Legacy field, actively removed in the `LocalStorageAuthStorage` constructor                                                                             | High (if present)          | **Yes** – both cleanup and legacy wipe   |
+| `auth_logout_barrier`                 | Flag ("1") for BFCache protection                                                                                                                       | No                         | No (intentional – deleted on next login) |
+| `secpal-notification-preferences`     | JSON with notification categories (alerts, updates, maintenance)                                                                                        | Low                        | **Yes**                                  |
+| `secpal-browser-push-installation-id` | Stable browser push installation ID used for authenticated `/v1/me/notification-installations/{installationId}` upserts and revokes                     | Low                        | **Yes**                                  |
+| `secpal-locale`                       | Language preference (e.g. "de")                                                                                                                         | No                         | **No** (intentional – user-neutral)      |
+| `login_rate_limit`                    | Failsafe counter (attempts, lockoutEndTime, lastAttemptTime)                                                                                            | Low                        | **No**                                   |
 
 ### 1.2 sessionStorage
 
@@ -200,11 +201,11 @@ See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Pha
 
 ### FINDING-10: Push notification subscription may persist after logout
 
-- **Severity:** Low to medium
-- **Type:** Plausible risk
-- **Affected:** [src/hooks/usePushSubscription.ts](src/hooks/usePushSubscription.ts)
-- **Description:** Push subscriptions are registered with the browser via the Web Push API. On logout, `secpal-notification-preferences` are deleted from localStorage and the backend is notified (`POST /v1/auth/logout`). Whether the backend removes the push subscription (VAPID endpoint) on logout could not be verified from the frontend code. If the subscription persists server-side, push messages could be delivered to the device after logout.
-- **Fix:** In the logout flow, before calling `POST /v1/auth/logout`, explicitly call `PushManager.getSubscription()`, call `.unsubscribe()`, and deregister the endpoint server-side. Alternatively: confirm whether the backend automatically removes all push subscriptions for the session on logout.
+- **Severity:** Fixed
+- **Type:** Resolved in issue #1139
+- **Affected:** [src/hooks/useNotifications.ts](src/hooks/useNotifications.ts), [src/services/authTransport.ts](src/services/authTransport.ts), [src/lib/clientStateCleanup.ts](src/lib/clientStateCleanup.ts), [src/App.tsx](src/App.tsx)
+- **Description:** Browser web push is now wired through the selected deployment bootstrap and the authenticated notification-installations API. The frontend reads the runtime VAPID metadata from `GET /v1/bootstrap?client_platform=browser`, upserts existing subscriptions on app load, retries stale-runtime conflicts by refreshing bootstrap and rotating the local subscription, re-runs the authenticated reconciliation after `controllerchange`, revokes the stored installation before browser-session logout, and clears both the local installation ID and any existing browser subscription during logout/reset cleanup or denied-permission reconciliation.
+- **Fix:** Implemented. The browser-side `VITE_VAPID_PUBLIC_KEY` production fallback was removed so deployment bootstrap stays authoritative, and logout/reset now clear both remote and local browser push state.
 
 ---
 
@@ -251,7 +252,7 @@ See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Pha
 | 07  | Multi-tab logout race (IndexedDB)          | Low        | Edge case           | No (fallback sufficient) |
 | 08  | PII (name, e-mail) in localStorage         | Medium     | Privacy             | Consider trade-off       |
 | 09  | XSRF-TOKEN after logout                    | Low        | Completeness        | Optional (backend)       |
-| 10  | Push subscription after logout             | Low–medium | Privacy             | **Verify** (backend)     |
+| 10  | Push subscription after logout             | Fixed      | Resolved            | Implemented              |
 
 ---
 
@@ -265,9 +266,7 @@ See issue #495 and `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` for the accepted Pha
 
 ### Medium
 
-1. **Verify push subscription on logout** (FINDING-10): Confirm that the backend removes push subscriptions on logout/session invalidation. → Separate issue recommended (cross-repo: frontend + API).
-
-2. **Delete `login_rate_limit` on logout** (FINDING-01): Add to `USER_SCOPED_LOCAL_STORAGE_KEYS`. → Separate issue recommended.
+1. **Delete `login_rate_limit` on logout** (FINDING-01): Add to `USER_SCOPED_LOCAL_STORAGE_KEYS`. → Separate issue recommended.
 
 ### Low
 
