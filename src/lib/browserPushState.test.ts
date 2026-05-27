@@ -16,6 +16,7 @@ describe("browserPushState", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     clearBrowserPushInstallationId();
     localStorage.clear();
   });
@@ -33,5 +34,27 @@ describe("browserPushState", () => {
 
     expect(peekBrowserPushInstallationId()).toBe(installationId);
     expect(getOrCreateBrowserPushInstallationId()).toBe(installationId);
+  });
+
+  it("uses crypto.getRandomValues when randomUUID is unavailable", () => {
+    const getRandomValues = vi.fn((buffer: Uint8Array) => {
+      buffer.set([
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+        0x0c, 0x0d, 0x0e, 0x0f,
+      ]);
+
+      return buffer;
+    });
+
+    vi.stubGlobal("crypto", {
+      getRandomValues,
+    });
+
+    const installationId = getOrCreateBrowserPushInstallationId();
+
+    expect(getRandomValues).toHaveBeenCalledTimes(1);
+    expect(installationId).toBe(
+      "browser-push-000102030405060708090a0b0c0d0e0f"
+    );
   });
 });

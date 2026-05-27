@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -45,7 +45,12 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
  *
  * @example
  * ```tsx
- * const { subscribe, unsubscribe, isSubscribed } = usePushSubscription();
+ * const runtimeVapidPublicKey =
+ *   deploymentBootstrap.notification_channels.web_push.public_runtime_metadata.vapid_public_key;
+ *
+ * const { subscribe, unsubscribe, isSubscribed } = usePushSubscription({
+ *   vapidPublicKey: runtimeVapidPublicKey,
+ * });
  *
  * const handleSubscribe = async () => {
  *   try {

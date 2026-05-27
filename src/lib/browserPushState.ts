@@ -7,11 +7,18 @@ const BROWSER_PUSH_INSTALLATION_ID_STORAGE_KEY =
 let volatileInstallationId: string | null = null;
 
 function createInstallationId(): string {
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
+  if (typeof crypto !== "undefined") {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+
+    if (typeof crypto.getRandomValues === "function") {
+      const randomBytes = new Uint8Array(16);
+
+      crypto.getRandomValues(randomBytes);
+
+      return `browser-push-${Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+    }
   }
 
   return `browser-push-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;

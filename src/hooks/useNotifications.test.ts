@@ -3,14 +3,41 @@
 
 import { createElement, type ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { cleanup, renderHook, act } from "@testing-library/react";
 import { waitFor } from "@testing-library/dom";
 import { useNotifications } from "./useNotifications";
 import {
+  clearBrowserPushInstallationId,
   getOrCreateBrowserPushInstallationId,
   peekBrowserPushInstallationId,
 } from "../lib/browserPushState";
 import { AuthContext, type AuthContextType } from "../contexts/auth-context";
+
+const originalNotificationDescriptor = Object.getOwnPropertyDescriptor(
+  globalThis,
+  "Notification"
+);
+const originalPushManagerDescriptor = Object.getOwnPropertyDescriptor(
+  window,
+  "PushManager"
+);
+const originalServiceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+  navigator,
+  "serviceWorker"
+);
+
+function restoreProperty(
+  target: object,
+  property: PropertyKey,
+  descriptor: PropertyDescriptor | undefined
+): void {
+  if (descriptor) {
+    Object.defineProperty(target, property, descriptor);
+    return;
+  }
+
+  Reflect.deleteProperty(target, property);
+}
 
 // Mock Notification API
 const mockNotification = vi.fn();
@@ -97,6 +124,17 @@ describe("useNotifications", () => {
   });
 
   afterEach(() => {
+    cleanup();
+    clearBrowserPushInstallationId();
+    localStorage.clear();
+    document.cookie = "XSRF-TOKEN=; Max-Age=0; path=/";
+    restoreProperty(globalThis, "Notification", originalNotificationDescriptor);
+    restoreProperty(window, "PushManager", originalPushManagerDescriptor);
+    restoreProperty(
+      navigator,
+      "serviceWorker",
+      originalServiceWorkerDescriptor
+    );
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
