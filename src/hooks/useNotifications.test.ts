@@ -1559,6 +1559,52 @@ describe("useNotifications", () => {
       expect(result.current.error).toBe(networkError);
     });
 
+    it("surfaces both revoke and unsubscribe failures", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "denied",
+      });
+
+      const installationId = getOrCreateBrowserPushInstallationId();
+      const networkError = new Error("network down");
+      const unsubscribeError = new Error("unsubscribe blocked");
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+      mockPushSubscription.unsubscribe.mockRejectedValueOnce(unsubscribeError);
+
+      const mockFetch = vi.fn().mockRejectedValueOnce(networkError);
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(result.current.error).toBeInstanceOf(AggregateError);
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `/v1/me/notification-installations/${installationId}`
+        ),
+        expect.objectContaining({
+          credentials: "include",
+          method: "DELETE",
+        })
+      );
+      expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      expect(peekBrowserPushInstallationId()).toBeNull();
+      expect(result.current.error).toMatchObject({
+        errors: [networkError, unsubscribeError],
+        message: "Failed to fully revoke browser push state",
+      });
+    });
+
     it("re-registers after service worker replacement when another hook instance grants permission", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
 

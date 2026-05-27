@@ -324,6 +324,13 @@ export function useNotifications(
     }
 
     if (revokeError) {
+      if (unsubscribeError) {
+        throw new AggregateError(
+          [revokeError, unsubscribeError],
+          "Failed to fully revoke browser push state"
+        );
+      }
+
       throw revokeError;
     }
 
