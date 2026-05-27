@@ -1066,6 +1066,243 @@ describe("useNotifications", () => {
       );
     });
 
+    it("retries auto sync after requestPermission hits a rotation retry and the rotated upsert fails once", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+
+      let currentSubscription: typeof mockPushSubscription | null = null;
+      const rotatedPushSubscription = {
+        endpoint:
+          "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoUmVxdWVzdFBlcm1pc3Npb25SZXRyeTEyMzQ1Njc4OTA",
+        expirationTime: 1782568800000,
+        toJSON: vi.fn().mockReturnValue({
+          endpoint:
+            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoUmVxdWVzdFBlcm1pc3Npb25SZXRyeTEyMzQ1Njc4OTA",
+          expirationTime: 1782568800000,
+          keys: {
+            p256dh: "BMozillaRequestRetryP256dh0123456789abcdefghijklmnopq",
+            auth: "Qm9PqRs7WxY",
+          },
+        }),
+        unsubscribe: vi.fn().mockImplementation(async () => {
+          currentSubscription = null;
+          return true;
+        }),
+      };
+
+      mockPushManager.getSubscription.mockImplementation(
+        async () => currentSubscription
+      );
+      mockPushManager.subscribe.mockImplementation(async () => {
+        currentSubscription = rotatedPushSubscription;
+        return rotatedPushSubscription;
+      });
+
+      globalThis.Notification.requestPermission = vi
+        .fn()
+        .mockImplementation(async () => {
+          Object.defineProperty(globalThis.Notification, "permission", {
+            writable: true,
+            value: "granted",
+          });
+          return "granted";
+        });
+
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 4,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQA",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              message:
+                "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
+              code: "NOTIFICATION_RUNTIME_STATE_INVALID",
+              details: {
+                bootstrap_version: "v1",
+                schema_version: 3,
+                channel: "web_push",
+                provided_metadata_revision: 4,
+                expected_metadata_revision: 5,
+              },
+            }),
+            {
+              status: 409,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 5,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              message: "Temporary installation sync failure",
+            }),
+            {
+              status: 503,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 5,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                installation_id: "installation-id",
+                channel: "web_push",
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
+
+      await act(async () => {
+        await expect(result.current.requestPermission()).rejects.toThrow(
+          "Temporary installation sync failure"
+        );
+      });
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(6);
+      });
+
+      const recoveredUpsertCall = mockFetch.mock.calls[5];
+      const recoveredUpsertPayload = JSON.parse(
+        String(recoveredUpsertCall?.[1]?.body ?? "{}")
+      ) as {
+        lifecycle_event: string;
+        runtime: { metadata_revision: number };
+        registration: { subscription: { endpoint: string } };
+      };
+
+      expect(rotatedPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      expect(mockPushManager.subscribe).toHaveBeenCalledTimes(2);
+      expect(recoveredUpsertPayload.lifecycle_event).toBe("client_updated");
+      expect(recoveredUpsertPayload.runtime.metadata_revision).toBe(5);
+      expect(recoveredUpsertPayload.registration.subscription.endpoint).toBe(
+        rotatedPushSubscription.endpoint
+      );
+    });
+
     it("revokes the authenticated browser installation and clears local push state when permission is denied", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {

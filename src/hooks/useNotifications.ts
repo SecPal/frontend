@@ -100,7 +100,7 @@ export function useNotifications(
   const autoSync = options.autoSync === true;
   const [autoSyncRegistrationGeneration, setAutoSyncRegistrationGeneration] =
     useState(0);
-  const skipNextAutoSyncRegistrationRef = useRef(false);
+  const skipAutoSyncGenerationRef = useRef<number | null>(null);
   const currentPermission = getNotificationPermissionState();
 
   const toNotificationError = useCallback((err: unknown): Error => {
@@ -320,9 +320,15 @@ export function useNotifications(
       return;
     }
 
-    if (skipNextAutoSyncRegistrationRef.current) {
-      skipNextAutoSyncRegistrationRef.current = false;
-      return;
+    if (skipAutoSyncGenerationRef.current !== null) {
+      if (
+        skipAutoSyncGenerationRef.current === autoSyncRegistrationGeneration
+      ) {
+        skipAutoSyncGenerationRef.current = null;
+        return;
+      }
+
+      skipAutoSyncGenerationRef.current = null;
     }
 
     return runBackgroundNotificationTask(() =>
@@ -374,7 +380,9 @@ export function useNotifications(
         setPermission(result);
 
         if (result === "granted") {
-          skipNextAutoSyncRegistrationRef.current = autoSync;
+          if (autoSync) {
+            skipAutoSyncGenerationRef.current = autoSyncRegistrationGeneration;
+          }
           await registerBrowserPushInstallation();
         }
 
@@ -388,6 +396,7 @@ export function useNotifications(
       }
     }, [
       autoSync,
+      autoSyncRegistrationGeneration,
       isSupported,
       registerBrowserPushInstallation,
       toNotificationError,
