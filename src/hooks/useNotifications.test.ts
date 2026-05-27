@@ -1303,6 +1303,172 @@ describe("useNotifications", () => {
       );
     });
 
+    it("caps auto sync recovery attempts after repeated rotated upsert failures", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "granted",
+      });
+
+      let currentSubscription: typeof mockPushSubscription | null =
+        mockPushSubscription;
+      const rotatedPushSubscription = {
+        endpoint:
+          "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoQ2FwcGVkLXJvdGF0aW9uLXN1YnNjcmlwdGlvbi0xMjM0NTY",
+        expirationTime: 1782568800000,
+        toJSON: vi.fn().mockReturnValue({
+          endpoint:
+            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoQ2FwcGVkLXJvdGF0aW9uLXN1YnNjcmlwdGlvbi0xMjM0NTY",
+          expirationTime: 1782568800000,
+          keys: {
+            p256dh: "BMozillaCappedP256dh0123456789abcdefghijklmnopqrstu",
+            auth: "Qm9RqSt8VwX",
+          },
+        }),
+        unsubscribe: vi.fn().mockImplementation(async () => {
+          currentSubscription = null;
+          return true;
+        }),
+      };
+
+      mockPushSubscription.unsubscribe.mockImplementationOnce(async () => {
+        currentSubscription = null;
+        return true;
+      });
+      mockPushManager.getSubscription.mockImplementation(
+        async () => currentSubscription
+      );
+      mockPushManager.subscribe.mockImplementation(async () => {
+        currentSubscription = rotatedPushSubscription;
+        return rotatedPushSubscription;
+      });
+
+      const createBootstrapResponse = (
+        metadataRevision: number,
+        vapidPublicKey: string
+      ) =>
+        new Response(
+          JSON.stringify({
+            data: {
+              client_platform: "browser",
+              compatibility: {
+                bootstrap_version: "v1",
+                schema_version: 3,
+              },
+              features: {
+                notification_channels: {
+                  android_fcm: false,
+                  web_push: true,
+                },
+              },
+              notification_channels: {
+                web_push: {
+                  channel: "web_push",
+                  metadata_revision: metadataRevision,
+                  public_runtime_metadata: {
+                    vapid_public_key: vapidPublicKey,
+                  },
+                },
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      const createRuntimeStateInvalidResponse = () =>
+        new Response(
+          JSON.stringify({
+            message:
+              "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
+            code: "NOTIFICATION_RUNTIME_STATE_INVALID",
+            details: {
+              bootstrap_version: "v1",
+              schema_version: 3,
+              channel: "web_push",
+              provided_metadata_revision: 4,
+              expected_metadata_revision: 5,
+            },
+          }),
+          {
+            status: 409,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      const createTemporaryFailureResponse = () =>
+        new Response(
+          JSON.stringify({
+            message: "Temporary installation sync failure",
+          }),
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      const responses = [
+        createBootstrapResponse(
+          4,
+          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQA"
+        ),
+        createRuntimeStateInvalidResponse(),
+        createBootstrapResponse(
+          5,
+          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY"
+        ),
+        createTemporaryFailureResponse(),
+        createBootstrapResponse(
+          4,
+          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQA"
+        ),
+        createRuntimeStateInvalidResponse(),
+        createBootstrapResponse(
+          5,
+          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY"
+        ),
+        createTemporaryFailureResponse(),
+      ];
+      let responseIndex = 0;
+      const mockFetch = vi.fn(() => {
+        const response = responses[responseIndex];
+        responseIndex += 1;
+
+        if (!response) {
+          throw new Error("Unexpected extra auto-sync retry");
+        }
+
+        return Promise.resolve(response);
+      });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(8);
+        expect(result.current.error?.message).toBe(
+          "Temporary installation sync failure"
+        );
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(8);
+    });
+
     it("revokes the authenticated browser installation and clears local push state when permission is denied", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {

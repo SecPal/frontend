@@ -53,6 +53,8 @@ interface UseNotificationsOptions {
   autoSync?: boolean;
 }
 
+const MAX_AUTO_SYNC_ROTATION_RECOVERY_ATTEMPTS = 1;
+
 /**
  * Hook for managing push notifications in the app
  * Handles permission requests, subscription management, and notification display
@@ -101,6 +103,7 @@ export function useNotifications(
   const [autoSyncRegistrationGeneration, setAutoSyncRegistrationGeneration] =
     useState(0);
   const skipAutoSyncGenerationRef = useRef<number | null>(null);
+  const autoSyncRotationRecoveryAttemptsRef = useRef(0);
   const currentPermission = getNotificationPermissionState();
 
   const toNotificationError = useCallback((err: unknown): Error => {
@@ -249,6 +252,7 @@ export function useNotifications(
               },
             }
           );
+          autoSyncRotationRecoveryAttemptsRef.current = 0;
         } catch (err) {
           if (
             err instanceof NotificationInstallationsApiError &&
@@ -265,8 +269,11 @@ export function useNotifications(
           if (
             autoSync &&
             nextRuntimeOptions?.forceRotation &&
-            nextRuntimeOptions?.allowRetry === false
+            nextRuntimeOptions?.allowRetry === false &&
+            autoSyncRotationRecoveryAttemptsRef.current <
+              MAX_AUTO_SYNC_ROTATION_RECOVERY_ATTEMPTS
           ) {
+            autoSyncRotationRecoveryAttemptsRef.current += 1;
             setAutoSyncRegistrationGeneration((generation) => generation + 1);
           }
 
