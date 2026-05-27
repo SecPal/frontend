@@ -549,9 +549,12 @@ describe("useNotifications", () => {
 
       vi.stubGlobal("fetch", mockFetch);
 
-      const { result } = renderHook(() => useNotifications({ autoSync: true }), {
-        wrapper: AuthenticatedWrapper,
-      });
+      const { result } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthenticatedWrapper,
+        }
+      );
 
       await act(async () => {
         await result.current.requestPermission();
@@ -1173,19 +1176,23 @@ describe("useNotifications", () => {
         configurable: true,
       });
 
-      mockPushManager.getSubscription.mockImplementation(async () => currentSubscription);
+      mockPushManager.getSubscription.mockImplementation(
+        async () => currentSubscription
+      );
       mockPushManager.subscribe.mockImplementation(async () => {
         currentSubscription = mockPushSubscription;
         return mockPushSubscription;
       });
 
-      globalThis.Notification.requestPermission = vi.fn().mockImplementation(async () => {
-        Object.defineProperty(globalThis.Notification, "permission", {
-          writable: true,
-          value: "granted",
+      globalThis.Notification.requestPermission = vi
+        .fn()
+        .mockImplementation(async () => {
+          Object.defineProperty(globalThis.Notification, "permission", {
+            writable: true,
+            value: "granted",
+          });
+          return "granted";
         });
-        return "granted";
-      });
 
       const mockFetch = vi.fn((input, init) => {
         const url = String(input);

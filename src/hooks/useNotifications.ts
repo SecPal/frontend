@@ -386,7 +386,12 @@ export function useNotifications(
       } finally {
         setIsLoading(false);
       }
-    }, [autoSync, isSupported, registerBrowserPushInstallation, toNotificationError]);
+    }, [
+      autoSync,
+      isSupported,
+      registerBrowserPushInstallation,
+      toNotificationError,
+    ]);
 
   /**
    * Show a notification to the user

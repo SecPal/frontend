@@ -123,12 +123,15 @@ function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
   }
 
   return revokeBrowserNotificationInstallation(installationId)
-    .catch((error: unknown) => {
-      console.warn(
-        "Failed to revoke browser push installation during logout:",
-        error
-      );
-    })
+    .then(
+      () => undefined,
+      (error: unknown) => {
+        console.warn(
+          "Failed to revoke browser push installation during logout:",
+          error
+        );
+      }
+    )
     .finally(() => {
       clearBrowserPushInstallationId();
     });
