@@ -6,10 +6,10 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { useNotifications } from "@/hooks/useNotifications";
-import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
 import { Button } from "./button";
 import { Heading } from "./heading";
 import { Text } from "./text";
+import { getNotificationInstallationsErrorMessage } from "./notificationInstallationsErrorMessage";
 
 type NotificationStatusTone = "blue" | "green" | "yellow" | "red";
 
@@ -70,24 +70,16 @@ function getNotificationStatusCopy(
     };
   }
 
-  if (error instanceof NotificationInstallationsApiError) {
-    if (error.code === "NOTIFICATION_RUNTIME_STATE_INVALID") {
-      return {
-        tone: "yellow",
-        message: translate(
-          msg`This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you.`
-        ),
-      };
-    }
+  const installationErrorMessage = getNotificationInstallationsErrorMessage(
+    error,
+    translate
+  );
 
-    if (error.status === 401 || error.status === 403) {
-      return {
-        tone: "yellow",
-        message: translate(
-          msg`Sign in again before SecPal can sync this browser with the server.`
-        ),
-      };
-    }
+  if (installationErrorMessage) {
+    return {
+      tone: "yellow",
+      message: installationErrorMessage,
+    };
   }
 
   if (

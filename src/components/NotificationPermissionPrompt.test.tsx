@@ -115,13 +115,26 @@ describe("NotificationPermissionPrompt", () => {
 
   it("maps stale runtime errors to a safe deployment-reset message", async () => {
     const user = userEvent.setup();
-    mockRequestPermission.mockRejectedValue(
-      new NotificationInstallationsApiError(
+    let permission: NotificationPermission = "default";
+
+    vi.mocked(useNotificationsModule.useNotifications).mockImplementation(
+      () => ({
+        permission,
+        isSupported: true,
+        requestPermission: mockRequestPermission,
+        showNotification: mockShowNotification,
+        isLoading: false,
+        error: null,
+      })
+    );
+    mockRequestPermission.mockImplementation(async () => {
+      permission = "granted";
+      throw new NotificationInstallationsApiError(
         "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
         409,
         "NOTIFICATION_RUNTIME_STATE_INVALID"
-      )
-    );
+      );
+    });
 
     renderWithI18n(<NotificationPermissionPrompt />);
 
@@ -138,9 +151,22 @@ describe("NotificationPermissionPrompt", () => {
 
   it("maps re-authentication failures to a sign-in-again message", async () => {
     const user = userEvent.setup();
-    mockRequestPermission.mockRejectedValue(
-      new NotificationInstallationsApiError("Unauthenticated.", 401)
+    let permission: NotificationPermission = "default";
+
+    vi.mocked(useNotificationsModule.useNotifications).mockImplementation(
+      () => ({
+        permission,
+        isSupported: true,
+        requestPermission: mockRequestPermission,
+        showNotification: mockShowNotification,
+        isLoading: false,
+        error: null,
+      })
     );
+    mockRequestPermission.mockImplementation(async () => {
+      permission = "granted";
+      throw new NotificationInstallationsApiError("Unauthenticated.", 401);
+    });
 
     renderWithI18n(<NotificationPermissionPrompt />);
 

@@ -5,31 +5,22 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/button";
+import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
 import { XMarkIcon, BellIcon } from "@heroicons/react/24/outline";
 
 function getPromptErrorMessage(
   error: unknown,
   translate: (message: ReturnType<typeof msg>) => string
 ): string {
-  if (
-    error instanceof NotificationInstallationsApiError &&
-    error.code === "NOTIFICATION_RUNTIME_STATE_INVALID"
-  ) {
-    return translate(
-      msg`This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you.`
-    );
-  }
+  const installationErrorMessage = getNotificationInstallationsErrorMessage(
+    error,
+    translate
+  );
 
-  if (
-    error instanceof NotificationInstallationsApiError &&
-    (error.status === 401 || error.status === 403)
-  ) {
-    return translate(
-      msg`Sign in again before SecPal can sync this browser with the server.`
-    );
+  if (installationErrorMessage) {
+    return installationErrorMessage;
   }
 
   if (error instanceof Error) {
@@ -55,7 +46,11 @@ export function NotificationPermissionPrompt() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isSupported || permission !== "default" || isDismissed) {
+  if (
+    !isSupported ||
+    isDismissed ||
+    (permission !== "default" && error === null)
+  ) {
     return null;
   }
 
