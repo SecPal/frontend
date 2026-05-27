@@ -17,6 +17,7 @@ const {
   mockRevokeBrowserNotificationInstallation,
   mockPeekBrowserPushInstallationId,
   mockClearBrowserPushInstallationId,
+  mockSetBrowserPushLogoutInProgress,
 } = vi.hoisted(() => ({
   mockBrowserLogin: vi.fn(),
   mockBrowserLogout: vi.fn(),
@@ -25,6 +26,7 @@ const {
   mockRevokeBrowserNotificationInstallation: vi.fn(),
   mockPeekBrowserPushInstallationId: vi.fn(),
   mockClearBrowserPushInstallationId: vi.fn(),
+  mockSetBrowserPushLogoutInProgress: vi.fn(),
 }));
 
 vi.mock("./authApi", async () => {
@@ -51,6 +53,7 @@ vi.mock("../lib/browserPushState", async () => {
     ...actual,
     peekBrowserPushInstallationId: mockPeekBrowserPushInstallationId,
     clearBrowserPushInstallationId: mockClearBrowserPushInstallationId,
+    setBrowserPushLogoutInProgress: mockSetBrowserPushLogoutInProgress,
   };
 });
 
@@ -478,6 +481,24 @@ describe("authTransport", () => {
     expect(revokeCallOrder).toBeDefined();
     expect(logoutCallOrder).toBeDefined();
     expect(revokeCallOrder ?? 0).toBeLessThan(logoutCallOrder ?? 0);
+  });
+
+  it("marks browser push logout in progress for browser-session logout", async () => {
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
+      installation_id: "installation-1",
+      channel: "web_push",
+    });
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    const transport = getAuthTransport();
+    await transport.logout();
+
+    expect(mockSetBrowserPushLogoutInProgress).toHaveBeenNthCalledWith(1, true);
+    expect(mockSetBrowserPushLogoutInProgress).toHaveBeenNthCalledWith(
+      2,
+      false
+    );
   });
 
   it("continues browser-session logout when push revocation fails", async () => {

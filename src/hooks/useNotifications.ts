@@ -17,6 +17,7 @@ import {
   clearBrowserPushInstallationId,
   getBrowserPushClientMetadata,
   getOrCreateBrowserPushInstallationId,
+  isBrowserPushLogoutInProgress,
   peekBrowserPushInstallationId,
   getServiceWorkerScopePath,
 } from "../lib/browserPushState";
@@ -164,7 +165,6 @@ export function useNotifications(
   const skipAutoSyncGenerationRef = useRef<number | null>(null);
   const autoSyncRotationRecoveryAttemptsRef = useRef(0);
   const currentPermission = getNotificationPermissionState();
-  const isAuthenticatedRef = useRef(isAuthenticated);
 
   useEffect(() => {
     isAuthenticatedRef.current = isAuthenticated;
@@ -176,10 +176,6 @@ export function useNotifications(
       ? err
       : new Error(String(err));
   }, []);
-
-  useEffect(() => {
-    isAuthenticatedRef.current = isAuthenticated;
-  }, [isAuthenticated]);
 
   const runBackgroundNotificationTask = useCallback(
     (task: (isTaskActive: () => boolean) => Promise<void>) => {
@@ -219,6 +215,7 @@ export function useNotifications(
       ): Promise<void> {
         const canContinue = () =>
           isAuthenticatedRef.current &&
+          !isBrowserPushLogoutInProgress() &&
           (nextRuntimeOptions?.isTaskActive?.() ?? true);
 
         if (!canContinue()) {

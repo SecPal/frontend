@@ -6,6 +6,7 @@ import type { User } from "../contexts/auth-context";
 import {
   clearBrowserPushInstallationId,
   peekBrowserPushInstallationId,
+  setBrowserPushLogoutInProgress,
 } from "../lib/browserPushState";
 import {
   AuthApiError,
@@ -189,6 +190,7 @@ const browserSessionAuthTransport: AuthTransport = {
     );
   },
   async logout(): Promise<void> {
+    setBrowserPushLogoutInProgress(true);
     const pushRevocation = revokeBrowserPushInstallationForLogout();
 
     try {
@@ -196,10 +198,15 @@ const browserSessionAuthTransport: AuthTransport = {
         await waitForPushRevocationToSettle(pushRevocation);
       }
     } finally {
-      await logoutBrowserSession();
+      try {
+        await logoutBrowserSession();
+      } finally {
+        setBrowserPushLogoutInProgress(false);
+      }
     }
   },
   async logoutAll(): Promise<void> {
+    setBrowserPushLogoutInProgress(true);
     const pushRevocation = revokeBrowserPushInstallationForLogout();
 
     try {
@@ -207,7 +214,11 @@ const browserSessionAuthTransport: AuthTransport = {
         await waitForPushRevocationToSettle(pushRevocation);
       }
     } finally {
-      await logoutAllBrowserSessions();
+      try {
+        await logoutAllBrowserSessions();
+      } finally {
+        setBrowserPushLogoutInProgress(false);
+      }
     }
   },
   async getCurrentUser(): Promise<User> {

@@ -10,6 +10,7 @@ import {
   clearBrowserPushInstallationId,
   getOrCreateBrowserPushInstallationId,
   peekBrowserPushInstallationId,
+  setBrowserPushLogoutInProgress,
 } from "../lib/browserPushState";
 import { AuthContext, type AuthContextType } from "../contexts/auth-context";
 
@@ -125,6 +126,7 @@ describe("useNotifications", () => {
 
   afterEach(() => {
     cleanup();
+    setBrowserPushLogoutInProgress(false);
     clearBrowserPushInstallationId();
     localStorage.clear();
     document.cookie = "XSRF-TOKEN=; Max-Age=0; path=/";
@@ -1913,6 +1915,107 @@ describe("useNotifications", () => {
         isAuthenticated: false,
       };
       rerender();
+
+      await act(async () => {
+        resolveBootstrapResponse?.(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 5,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(peekBrowserPushInstallationId()).toBeNull();
+    });
+
+    it("does not create or upsert a browser push installation while logout revocation is in progress", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "granted",
+      });
+
+      let resolveBootstrapResponse: ((response: Response) => void) | null =
+        null;
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const mockFetch = vi.fn((input, init) => {
+        const url = String(input);
+
+        if (url.includes("/v1/bootstrap?client_platform=browser")) {
+          return new Promise<Response>((resolve) => {
+            resolveBootstrapResponse = resolve;
+          });
+        }
+
+        if (
+          /\/v1\/me\/notification-installations\//.test(url) &&
+          init?.method === "PUT"
+        ) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  installation_id: "installation-id",
+                  channel: "web_push",
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        throw new Error(`Unexpected fetch request: ${url}`);
+      });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      renderHook(() => useNotifications({ autoSync: true }), {
+        wrapper: AuthenticatedWrapper,
+      });
+
+      await waitFor(() => {
+        expect(resolveBootstrapResponse).not.toBeNull();
+      });
+
+      setBrowserPushLogoutInProgress(true);
 
       await act(async () => {
         resolveBootstrapResponse?.(

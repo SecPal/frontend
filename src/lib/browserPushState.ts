@@ -5,6 +5,7 @@ const BROWSER_PUSH_INSTALLATION_ID_STORAGE_KEY =
   "secpal-browser-push-installation-id";
 
 let volatileInstallationId: string | null = null;
+let browserPushLogoutInProgress = false;
 
 function createInstallationId(): string {
   if (typeof crypto !== "undefined") {
@@ -111,6 +112,14 @@ export function clearBrowserPushInstallationId(): void {
   } catch {
     // Ignore storage cleanup failures and rely on the in-memory fallback.
   }
+}
+
+export function isBrowserPushLogoutInProgress(): boolean {
+  return browserPushLogoutInProgress;
+}
+
+export function setBrowserPushLogoutInProgress(inProgress: boolean): void {
+  browserPushLogoutInProgress = inProgress;
 }
 
 export function getBrowserPushClientMetadata(
