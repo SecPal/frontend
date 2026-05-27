@@ -18,6 +18,14 @@ interface NotificationApiErrorPayload {
 }
 
 function hasJsonContentType(response: Response): boolean {
+  if (
+    !("headers" in response) ||
+    !response.headers ||
+    typeof response.headers.get !== "function"
+  ) {
+    return typeof response.json === "function";
+  }
+
   const contentType = response.headers.get("Content-Type");
 
   return contentType?.toLowerCase().includes("application/json") ?? false;
