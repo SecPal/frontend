@@ -58,7 +58,9 @@ export function peekBrowserPushInstallationId(): string | null {
       BROWSER_PUSH_INSTALLATION_ID_STORAGE_KEY
     );
 
-    return storedValue && storedValue.trim().length > 0 ? storedValue : null;
+    return storedValue && storedValue.trim().length > 0
+      ? storedValue
+      : volatileInstallationId;
   } catch {
     return volatileInstallationId;
   }
