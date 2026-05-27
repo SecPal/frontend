@@ -509,6 +509,35 @@ describe("authTransport", () => {
     expect(mockBrowserLogout).toHaveBeenCalledOnce();
   });
 
+  it("does not block browser-session logout when push revocation stalls", async () => {
+    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockRevokeBrowserNotificationInstallation.mockImplementationOnce(
+      () => new Promise(() => {})
+    );
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    vi.useFakeTimers();
+
+    try {
+      let logoutResolved = false;
+
+      const transport = getAuthTransport();
+      const logoutPromise = transport.logout().then(() => {
+        logoutResolved = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(1000);
+      await Promise.resolve();
+
+      expect(mockBrowserLogout).toHaveBeenCalledOnce();
+      expect(logoutResolved).toBe(true);
+
+      await logoutPromise;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("delegates browser-session logoutAll to the authApi", async () => {
     mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
 

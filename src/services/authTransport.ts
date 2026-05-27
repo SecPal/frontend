@@ -59,6 +59,8 @@ export interface AuthTransport {
   isNetworkAvailable(): Promise<boolean>;
 }
 
+const BROWSER_PUSH_LOGOUT_REVOCATION_TIMEOUT_MS = 1000;
+
 async function finalizeAuthenticatedLogin(
   payload: unknown,
   loginOperation: string,
@@ -115,6 +117,28 @@ function sanitizeAuthPayload(payload: unknown, operation: string): User {
   return sanitizedUser;
 }
 
+async function waitForPushRevocationToSettle(
+  pushRevocation: Promise<void>
+): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    await Promise.race([
+      pushRevocation,
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(
+          resolve,
+          BROWSER_PUSH_LOGOUT_REVOCATION_TIMEOUT_MS
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
   const installationId = peekBrowserPushInstallationId();
 
@@ -169,7 +193,7 @@ const browserSessionAuthTransport: AuthTransport = {
 
     try {
       if (pushRevocation) {
-        await pushRevocation;
+        await waitForPushRevocationToSettle(pushRevocation);
       }
     } finally {
       await logoutBrowserSession();
@@ -180,7 +204,7 @@ const browserSessionAuthTransport: AuthTransport = {
 
     try {
       if (pushRevocation) {
-        await pushRevocation;
+        await waitForPushRevocationToSettle(pushRevocation);
       }
     } finally {
       await logoutAllBrowserSessions();

@@ -30,6 +30,62 @@ function getNotificationPermissionState(): NotificationPermissionState {
     : "default";
 }
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+
+  return Uint8Array.from(rawData, (char) => char.charCodeAt(0));
+}
+
+function toUint8Array(
+  bufferSource: BufferSource | null | undefined
+): Uint8Array | null {
+  if (!bufferSource) {
+    return null;
+  }
+
+  if (bufferSource instanceof ArrayBuffer) {
+    return new Uint8Array(bufferSource);
+  }
+
+  return new Uint8Array(
+    bufferSource.buffer,
+    bufferSource.byteOffset,
+    bufferSource.byteLength
+  );
+}
+
+function hasDifferentApplicationServerKey(
+  subscription: PushSubscription | null,
+  vapidPublicKey: string
+): boolean {
+  if (!subscription) {
+    return false;
+  }
+
+  const currentApplicationServerKey = toUint8Array(
+    subscription.options?.applicationServerKey ?? null
+  );
+
+  if (!currentApplicationServerKey) {
+    return false;
+  }
+
+  const expectedApplicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
+  if (
+    currentApplicationServerKey.byteLength !==
+    expectedApplicationServerKey.byteLength
+  ) {
+    return true;
+  }
+
+  return currentApplicationServerKey.some(
+    (byte, index) => byte !== expectedApplicationServerKey[index]
+  );
+}
+
 export interface NotificationOptions {
   title: string;
   body: string;
@@ -51,6 +107,13 @@ interface UseNotificationsReturn {
 
 interface UseNotificationsOptions {
   autoSync?: boolean;
+}
+
+interface BrowserPushRegistrationOptions {
+  bootstrapData?: BrowserPushBootstrapData | null;
+  forceRotation?: boolean;
+  allowRetry?: boolean;
+  isTaskActive?: () => boolean;
 }
 
 const MAX_AUTO_SYNC_ROTATION_RECOVERY_ATTEMPTS = 1;
@@ -105,6 +168,11 @@ export function useNotifications(
   const skipAutoSyncGenerationRef = useRef<number | null>(null);
   const autoSyncRotationRecoveryAttemptsRef = useRef(0);
   const currentPermission = getNotificationPermissionState();
+  const isAuthenticatedRef = useRef(isAuthenticated);
+
+  useEffect(() => {
+    isAuthenticatedRef.current = isAuthenticated;
+  }, [isAuthenticated]);
 
   const toNotificationError = useCallback((err: unknown): Error => {
     return err instanceof NotificationInstallationsApiError ||
@@ -114,15 +182,16 @@ export function useNotifications(
   }, []);
 
   const runBackgroundNotificationTask = useCallback(
-    (task: () => Promise<void>) => {
+    (task: (isTaskActive: () => boolean) => Promise<void>) => {
       let isActive = true;
+      const isTaskActive = () => isActive;
 
       const execute = async () => {
         setIsLoading(true);
         setError(null);
 
         try {
-          await task();
+          await task(isTaskActive);
         } catch (err) {
           if (isActive) {
             setError(toNotificationError(err));
@@ -144,17 +213,15 @@ export function useNotifications(
   );
 
   const registerBrowserPushInstallation = useCallback(
-    async (runtimeOptions?: {
-      bootstrapData?: BrowserPushBootstrapData | null;
-      forceRotation?: boolean;
-      allowRetry?: boolean;
-    }) => {
-      async function syncInstallation(nextRuntimeOptions?: {
-        bootstrapData?: BrowserPushBootstrapData | null;
-        forceRotation?: boolean;
-        allowRetry?: boolean;
-      }): Promise<void> {
-        if (!isAuthenticated) {
+    async (runtimeOptions?: BrowserPushRegistrationOptions) => {
+      async function syncInstallation(
+        nextRuntimeOptions?: BrowserPushRegistrationOptions
+      ): Promise<void> {
+        const canContinue = () =>
+          isAuthenticatedRef.current &&
+          (nextRuntimeOptions?.isTaskActive?.() ?? true);
+
+        if (!canContinue()) {
           return;
         }
 
@@ -170,19 +237,53 @@ export function useNotifications(
           );
         }
 
+        if (!canContinue()) {
+          return;
+        }
+
         let currentSubscription = await refreshSubscription();
         const hadExistingSubscription = currentSubscription !== null;
+        const forceRotation =
+          nextRuntimeOptions?.forceRotation === true ||
+          hasDifferentApplicationServerKey(
+            currentSubscription,
+            webPushRuntimeMetadata.public_runtime_metadata.vapid_public_key
+          );
 
-        if (nextRuntimeOptions?.forceRotation && currentSubscription) {
+        if (!canContinue()) {
+          return;
+        }
+
+        if (forceRotation && currentSubscription) {
           await unsubscribe();
           currentSubscription = null;
         }
 
-        currentSubscription =
-          currentSubscription ??
-          (await subscribe(
+        if (!canContinue()) {
+          return;
+        }
+
+        let createdSubscription = false;
+
+        if (!currentSubscription) {
+          currentSubscription = await subscribe(
             webPushRuntimeMetadata.public_runtime_metadata.vapid_public_key
-          ));
+          );
+          createdSubscription = true;
+        }
+
+        if (!canContinue()) {
+          if (createdSubscription) {
+            try {
+              await unsubscribe();
+            } catch {
+              // Best-effort rollback for subscriptions created after logout.
+            }
+          }
+
+          return;
+        }
+
         const subscriptionData = getSubscriptionData() ?? {
           endpoint: currentSubscription.endpoint,
           expirationTime: currentSubscription.expirationTime ?? null,
@@ -217,15 +318,17 @@ export function useNotifications(
         let lifecycleEvent: NotificationInstallationLifecycleEvent =
           "registered";
 
-        if (nextRuntimeOptions?.forceRotation) {
+        if (forceRotation) {
           lifecycleEvent = "credential_rotated";
         } else if (hadExistingSubscription) {
           lifecycleEvent = "client_updated";
         }
 
         try {
+          const installationId = getOrCreateBrowserPushInstallationId();
+
           await upsertBrowserNotificationInstallation(
-            getOrCreateBrowserPushInstallationId(),
+            installationId,
             {
               channel: "web_push",
               installation_name: installationName,
@@ -262,13 +365,14 @@ export function useNotifications(
             await syncInstallation({
               allowRetry: false,
               forceRotation: true,
+              isTaskActive: nextRuntimeOptions?.isTaskActive,
             });
             return;
           }
 
           if (
             autoSync &&
-            nextRuntimeOptions?.forceRotation &&
+            forceRotation &&
             nextRuntimeOptions?.allowRetry === false &&
             autoSyncRotationRecoveryAttemptsRef.current <
               MAX_AUTO_SYNC_ROTATION_RECOVERY_ATTEMPTS
@@ -286,7 +390,6 @@ export function useNotifications(
     [
       autoSync,
       getSubscriptionData,
-      isAuthenticated,
       refreshSubscription,
       subscribe,
       unsubscribe,
@@ -361,8 +464,8 @@ export function useNotifications(
       skipAutoSyncGenerationRef.current = null;
     }
 
-    return runBackgroundNotificationTask(() =>
-      registerBrowserPushInstallation()
+    return runBackgroundNotificationTask((isTaskActive) =>
+      registerBrowserPushInstallation({ isTaskActive })
     );
   }, [
     autoSync,

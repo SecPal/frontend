@@ -702,6 +702,122 @@ describe("useNotifications", () => {
       );
     });
 
+    it("rotates an existing authenticated browser subscription when the bootstrap VAPID key changes", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "granted",
+      });
+
+      const existingSubscription = {
+        ...mockPushSubscription,
+        options: {
+          applicationServerKey: new Uint8Array([0x00, 0x01, 0x02]).buffer,
+        },
+        unsubscribe: vi.fn().mockResolvedValue(true),
+      };
+      const rotatedPushSubscription = {
+        endpoint:
+          "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoVmFwaWRSb3RhdGlvbi1rZXktY2hhbmdlLTEyMzQ1Njc4OTA",
+        expirationTime: 1782561600000,
+        options: {
+          applicationServerKey: new Uint8Array([0x03, 0x04, 0x05]).buffer,
+        },
+        toJSON: vi.fn().mockReturnValue({
+          endpoint:
+            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAABoVmFwaWRSb3RhdGlvbi1rZXktY2hhbmdlLTEyMzQ1Njc4OTA",
+          expirationTime: 1782561600000,
+          keys: {
+            p256dh: "BMozillaRotatedP256dhKeyChange0123456789abcdefghijkl",
+            auth: "Lm9PqRs8UvW",
+          },
+        }),
+        unsubscribe: vi.fn().mockResolvedValue(true),
+      };
+
+      mockPushManager.getSubscription.mockResolvedValue(existingSubscription);
+      mockPushManager.subscribe.mockResolvedValue(rotatedPushSubscription);
+
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 5,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                installation_id: "installation-id",
+                channel: "web_push",
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      renderHook(() => useNotifications({ autoSync: true }), {
+        wrapper: AuthenticatedWrapper,
+      });
+
+      await waitFor(() => {
+        expect(existingSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      });
+
+      expect(mockPushManager.subscribe).toHaveBeenCalledTimes(1);
+
+      const finalUpsertCall = mockFetch.mock.calls[1];
+      const finalUpsertPayload = JSON.parse(
+        String(finalUpsertCall?.[1]?.body ?? "{}")
+      ) as {
+        lifecycle_event: string;
+        registration: { subscription: { endpoint: string } };
+      };
+
+      expect(finalUpsertPayload.lifecycle_event).toBe("credential_rotated");
+      expect(finalUpsertPayload.registration.subscription.endpoint).toBe(
+        rotatedPushSubscription.endpoint
+      );
+    });
+
     it("reloads bootstrap and rotates the local subscription when the backend rejects stale runtime metadata", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
@@ -1641,6 +1757,126 @@ describe("useNotifications", () => {
         errors: [networkError, unsubscribeError],
         message: "Failed to fully revoke browser push state",
       });
+    });
+
+    it("does not recreate an installation when logout cancels an in-flight auto sync", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "granted",
+      });
+
+      let authContextValue: AuthContextType = authenticatedAuthContextValue;
+      let resolveBootstrapResponse: ((response: Response) => void) | null =
+        null;
+
+      function DynamicAuthWrapper({ children }: { children: ReactNode }) {
+        return createElement(
+          AuthContext.Provider,
+          {
+            value: authContextValue,
+          },
+          children
+        );
+      }
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const mockFetch = vi.fn((input, init) => {
+        const url = String(input);
+
+        if (url.includes("/v1/bootstrap?client_platform=browser")) {
+          return new Promise<Response>((resolve) => {
+            resolveBootstrapResponse = resolve;
+          });
+        }
+
+        if (
+          /\/v1\/me\/notification-installations\//.test(url) &&
+          init?.method === "PUT"
+        ) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                data: {
+                  installation_id: "installation-id",
+                  channel: "web_push",
+                },
+              }),
+              {
+                status: 200,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+          );
+        }
+
+        throw new Error(`Unexpected fetch request: ${url}`);
+      });
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const { rerender } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: DynamicAuthWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(resolveBootstrapResponse).not.toBeNull();
+      });
+
+      authContextValue = {
+        ...authenticatedAuthContextValue,
+        user: null,
+        isAuthenticated: false,
+      };
+      rerender();
+
+      await act(async () => {
+        resolveBootstrapResponse?.(
+          new Response(
+            JSON.stringify({
+              data: {
+                client_platform: "browser",
+                compatibility: {
+                  bootstrap_version: "v1",
+                  schema_version: 3,
+                },
+                features: {
+                  notification_channels: {
+                    android_fcm: false,
+                    web_push: true,
+                  },
+                },
+                notification_channels: {
+                  web_push: {
+                    channel: "web_push",
+                    metadata_revision: 5,
+                    public_runtime_metadata: {
+                      vapid_public_key:
+                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                    },
+                  },
+                },
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+        );
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(peekBrowserPushInstallationId()).toBeNull();
     });
 
     it("re-registers after service worker replacement when another hook instance grants permission", async () => {
