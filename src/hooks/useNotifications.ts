@@ -466,7 +466,12 @@ export function useNotifications(
   ]);
 
   useEffect(() => {
-    if (!autoSync || !isPushReady || currentPermission !== "denied") {
+    if (
+      !autoSync ||
+      !isAuthenticated ||
+      !isPushReady ||
+      currentPermission !== "denied"
+    ) {
       return;
     }
 
@@ -474,6 +479,7 @@ export function useNotifications(
   }, [
     autoSync,
     currentPermission,
+    isAuthenticated,
     isPushReady,
     revokeBrowserPushState,
     runBackgroundNotificationTask,

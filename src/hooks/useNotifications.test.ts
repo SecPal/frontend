@@ -1675,6 +1675,46 @@ describe("useNotifications", () => {
       expect(peekBrowserPushInstallationId()).toBeNull();
     });
 
+    it("skips denied auto-sync cleanup while unauthenticated", async () => {
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "denied",
+      });
+
+      const installationId = getOrCreateBrowserPushInstallationId();
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const UnauthenticatedWrapper = ({ children }: { children: ReactNode }) =>
+        createElement(
+          AuthContext.Provider,
+          {
+            value: {
+              ...authenticatedAuthContextValue,
+              isAuthenticated: false,
+              user: null,
+            },
+          },
+          children
+        );
+
+      renderHook(() => useNotifications({ autoSync: true }), {
+        wrapper: UnauthenticatedWrapper,
+      });
+
+      await waitFor(() => {
+        expect(mockPushManager.getSubscription).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(mockPushManager.getSubscription).toHaveBeenCalledTimes(1);
+      expect(mockPushSubscription.unsubscribe).not.toHaveBeenCalled();
+      expect(peekBrowserPushInstallationId()).toBe(installationId);
+    });
+
     it("does not re-run denied auto-sync cleanup when auth state changes", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {
