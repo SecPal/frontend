@@ -158,7 +158,9 @@ function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
       }
     )
     .finally(() => {
-      clearBrowserPushInstallationId();
+      if (peekBrowserPushInstallationId() === installationId) {
+        clearBrowserPushInstallationId();
+      }
     });
 }
 

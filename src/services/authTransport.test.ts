@@ -458,7 +458,9 @@ describe("authTransport", () => {
   });
 
   it("revokes the browser push installation before browser-session logout", async () => {
-    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockPeekBrowserPushInstallationId
+      .mockReturnValueOnce("installation-1")
+      .mockReturnValueOnce("installation-1");
     mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
       installation_id: "installation-1",
       channel: "web_push",
@@ -484,7 +486,9 @@ describe("authTransport", () => {
   });
 
   it("marks browser push logout in progress for browser-session logout", async () => {
-    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockPeekBrowserPushInstallationId
+      .mockReturnValueOnce("installation-1")
+      .mockReturnValueOnce("installation-1");
     mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
       installation_id: "installation-1",
       channel: "web_push",
@@ -505,7 +509,9 @@ describe("authTransport", () => {
     const revokeError = new Error("Push revoke failed");
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-1");
+    mockPeekBrowserPushInstallationId
+      .mockReturnValueOnce("installation-1")
+      .mockReturnValueOnce("installation-1");
     mockRevokeBrowserNotificationInstallation.mockRejectedValueOnce(
       revokeError
     );
@@ -559,6 +565,42 @@ describe("authTransport", () => {
     }
   });
 
+  it("does not clear a newer browser push installation after stale logout revocation settles", async () => {
+    let currentInstallationId: string | null = "installation-1";
+    let resolveRevocation: (() => void) | null = null;
+
+    mockPeekBrowserPushInstallationId.mockImplementation(
+      () => currentInstallationId
+    );
+    mockRevokeBrowserNotificationInstallation.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveRevocation = resolve;
+        })
+    );
+    mockBrowserLogout.mockResolvedValueOnce(undefined);
+
+    vi.useFakeTimers();
+
+    try {
+      const transport = getAuthTransport();
+      const logoutPromise = transport.logout();
+
+      await vi.advanceTimersByTimeAsync(1000);
+      await expect(logoutPromise).resolves.toBeUndefined();
+
+      currentInstallationId = "installation-2";
+      resolveRevocation?.();
+      await Promise.resolve();
+
+      expect(mockClearBrowserPushInstallationId).not.toHaveBeenCalled();
+      expect(mockBrowserLogout).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+      mockPeekBrowserPushInstallationId.mockReturnValue(undefined);
+    }
+  });
+
   it("delegates browser-session logoutAll to the authApi", async () => {
     mockBrowserLogoutAll.mockResolvedValueOnce(undefined);
 
@@ -569,7 +611,9 @@ describe("authTransport", () => {
   });
 
   it("revokes the browser push installation before browser-session logoutAll", async () => {
-    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-2");
+    mockPeekBrowserPushInstallationId
+      .mockReturnValueOnce("installation-2")
+      .mockReturnValueOnce("installation-2");
     mockRevokeBrowserNotificationInstallation.mockResolvedValueOnce({
       installation_id: "installation-2",
       channel: "web_push",
@@ -598,7 +642,9 @@ describe("authTransport", () => {
     const revokeError = new Error("Push revoke failed");
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    mockPeekBrowserPushInstallationId.mockReturnValueOnce("installation-2");
+    mockPeekBrowserPushInstallationId
+      .mockReturnValueOnce("installation-2")
+      .mockReturnValueOnce("installation-2");
     mockRevokeBrowserNotificationInstallation.mockRejectedValueOnce(
       revokeError
     );
