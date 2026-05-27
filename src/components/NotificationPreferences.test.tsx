@@ -10,6 +10,7 @@ import { i18n } from "@lingui/core";
 import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
+import { NotificationDeploymentUnavailableError } from "@/hooks/useNotifications";
 import { NotificationPreferences } from "./NotificationPreferences";
 import * as useNotificationsModule from "@/hooks/useNotifications";
 
@@ -215,9 +216,7 @@ describe("NotificationPreferences", () => {
       requestPermission: mockRequestPermission,
       showNotification: mockShowNotification,
       isLoading: false,
-      error: new Error(
-        "Web push notifications are not available for this deployment"
-      ),
+      error: new NotificationDeploymentUnavailableError(),
     });
 
     await renderWithI18n(<NotificationPreferences />);

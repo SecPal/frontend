@@ -5,7 +5,10 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { useNotifications } from "@/hooks/useNotifications";
+import {
+  NotificationDeploymentUnavailableError,
+  useNotifications,
+} from "@/hooks/useNotifications";
 import { Button } from "./button";
 import { Heading } from "./heading";
 import { Text } from "./text";
@@ -82,11 +85,7 @@ function getNotificationStatusCopy(
     };
   }
 
-  if (
-    error?.message.includes(
-      "Web push notifications are not available for this deployment"
-    )
-  ) {
+  if (error instanceof NotificationDeploymentUnavailableError) {
     return {
       tone: "yellow",
       message: translate(
