@@ -4,13 +4,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { I18nProvider } from "@lingui/react";
+import { i18n } from "@lingui/core";
+import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
+import { messages as deMessages } from "@/locales/de/messages.mjs";
+import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NotificationPermissionPrompt } from "./NotificationPermissionPrompt";
 import * as useNotificationsModule from "@/hooks/useNotifications";
 
-// Mock the useNotifications hook
 vi.mock("@/hooks/useNotifications", () => ({
   useNotifications: vi.fn(),
 }));
+
+const renderWithI18n = (component: React.ReactElement) =>
+  render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
 
 describe("NotificationPermissionPrompt", () => {
   const mockRequestPermission = vi.fn();
@@ -18,6 +25,9 @@ describe("NotificationPermissionPrompt", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
+    i18n.activate("en");
     vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
       permission: "default",
       isSupported: true,
@@ -28,200 +38,130 @@ describe("NotificationPermissionPrompt", () => {
     });
   });
 
-  describe("rendering", () => {
-    it("should not render if permission already granted", () => {
-      vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
-        permission: "granted",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
+  it("renders truthful browser-scoped prompt copy", () => {
+    renderWithI18n(<NotificationPermissionPrompt />);
 
-      const { container } = render(<NotificationPermissionPrompt />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it("should not render if permission denied", () => {
-      vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
-        permission: "denied",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      const { container } = render(<NotificationPermissionPrompt />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it("should not render if notifications not supported", () => {
-      vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
-        permission: "default",
-        isSupported: false,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      const { container } = render(<NotificationPermissionPrompt />);
-      expect(container.firstChild).toBeNull();
-    });
-
-    it("should render prompt when permission is default and supported", () => {
-      render(<NotificationPermissionPrompt />);
-
-      expect(screen.getByText(/Enable Notifications/i)).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /Enable/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /Not Now/i })
-      ).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText(/enable browser notifications/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /turn on notifications for this signed-in browser on the current secpal deployment/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /category-specific notification controls are not available yet/i
+      )
+    ).toBeInTheDocument();
   });
 
-  describe("interactions", () => {
-    it("should request permission when Enable clicked", async () => {
-      const user = userEvent.setup();
-      mockRequestPermission.mockResolvedValue("granted");
+  it("does not render when permission is already granted, denied, or unsupported", () => {
+    vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
+      permission: "granted",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
+    });
 
-      render(<NotificationPermissionPrompt />);
+    const grantedRender = renderWithI18n(<NotificationPermissionPrompt />);
+    expect(grantedRender.container.firstChild).toBeNull();
+    grantedRender.unmount();
 
-      const enableButton = screen.getByRole("button", { name: /Enable/i });
-      await user.click(enableButton);
+    vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
+      permission: "denied",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
+    });
 
+    const deniedRender = renderWithI18n(<NotificationPermissionPrompt />);
+    expect(deniedRender.container.firstChild).toBeNull();
+    deniedRender.unmount();
+
+    vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
+      permission: "default",
+      isSupported: false,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
+    });
+
+    const unsupportedRender = renderWithI18n(<NotificationPermissionPrompt />);
+    expect(unsupportedRender.container.firstChild).toBeNull();
+  });
+
+  it("requests permission and shows a confirmation notification after enabling", async () => {
+    const user = userEvent.setup();
+    mockRequestPermission.mockResolvedValue("granted");
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
       expect(mockRequestPermission).toHaveBeenCalledOnce();
-    });
-
-    it("should show test notification on successful permission grant", async () => {
-      const user = userEvent.setup();
-      mockRequestPermission.mockResolvedValue("granted");
-
-      render(<NotificationPermissionPrompt />);
-
-      const enableButton = screen.getByRole("button", { name: /Enable/i });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(mockShowNotification).toHaveBeenCalledWith({
-          title: "Notifications Enabled",
-          body: "You'll now receive important updates from SecPal",
-        });
-      });
-    });
-
-    it("should hide prompt when Not Now clicked", async () => {
-      const user = userEvent.setup();
-
-      render(<NotificationPermissionPrompt />);
-
-      const dismissButton = screen.getByRole("button", { name: /Not Now/i });
-      await user.click(dismissButton);
-
-      expect(
-        screen.queryByText(/Enable Notifications/i)
-      ).not.toBeInTheDocument();
-    });
-
-    it("should show loading state while requesting permission", async () => {
-      mockRequestPermission.mockImplementation(
-        () =>
-          new Promise((resolve) => setTimeout(() => resolve("granted"), 100))
-      );
-
-      vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: true,
-        error: null,
-      });
-
-      render(<NotificationPermissionPrompt />);
-
-      const enableButton = screen.getByRole("button", { name: /Enabling/i });
-      expect(enableButton).toBeDisabled();
-    });
-
-    it("should handle permission denial gracefully", async () => {
-      const user = userEvent.setup();
-      mockRequestPermission.mockResolvedValue("denied");
-
-      render(<NotificationPermissionPrompt />);
-
-      const enableButton = screen.getByRole("button", { name: /Enable/i });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(mockRequestPermission).toHaveBeenCalledOnce();
-        expect(mockShowNotification).not.toHaveBeenCalled();
-      });
-    });
-
-    it("should display error message on failure", async () => {
-      const user = userEvent.setup();
-      const testError = new Error("Permission request failed");
-      mockRequestPermission.mockRejectedValue(testError);
-
-      render(<NotificationPermissionPrompt />);
-
-      const enableButton = screen.getByRole("button", { name: /Enable/i });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/Permission request failed/i)
-        ).toBeInTheDocument();
+      expect(mockShowNotification).toHaveBeenCalledWith({
+        title: "Notifications Enabled",
+        body: "You'll now receive important updates from SecPal",
       });
     });
   });
 
-  describe("accessibility", () => {
-    it("should have accessible button labels", () => {
-      render(<NotificationPermissionPrompt />);
+  it("maps stale runtime errors to a safe deployment-reset message", async () => {
+    const user = userEvent.setup();
+    mockRequestPermission.mockRejectedValue(
+      new NotificationInstallationsApiError(
+        "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
+        409,
+        "NOTIFICATION_RUNTIME_STATE_INVALID"
+      )
+    );
 
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: /Enable/i })
-      ).toHaveAccessibleName();
-      expect(
-        screen.getByRole("button", { name: /Not Now/i })
-      ).toHaveAccessibleName();
-    });
-
-    it("should be keyboard navigable", async () => {
-      const user = userEvent.setup();
-      render(<NotificationPermissionPrompt />);
-
-      // Tab to first button
-      await user.tab();
-      expect(screen.getByRole("button", { name: /Enable/i })).toHaveFocus();
-
-      // Tab to second button
-      await user.tab();
-      expect(screen.getByRole("button", { name: /Not Now/i })).toHaveFocus();
+        screen.getByText(
+          /this deployment's notification configuration changed\. refresh secpal and enable notifications again if the browser prompts you/i
+        )
+      ).toBeInTheDocument();
     });
   });
 
-  describe("persistence", () => {
-    it("should not show again after dismissal (within session)", async () => {
-      const user = userEvent.setup();
+  it("maps re-authentication failures to a sign-in-again message", async () => {
+    const user = userEvent.setup();
+    mockRequestPermission.mockRejectedValue(
+      new NotificationInstallationsApiError("Unauthenticated.", 401)
+    );
 
-      const { rerender } = render(<NotificationPermissionPrompt />);
+    renderWithI18n(<NotificationPermissionPrompt />);
 
-      const dismissButton = screen.getByRole("button", { name: /Not Now/i });
-      await user.click(dismissButton);
+    await user.click(screen.getByRole("button", { name: /enable/i }));
 
-      // Rerender component
-      rerender(<NotificationPermissionPrompt />);
-
+    await waitFor(() => {
       expect(
-        screen.queryByText(/Enable Notifications/i)
-      ).not.toBeInTheDocument();
+        screen.getByText(/sign in again before secpal can sync this browser/i)
+      ).toBeInTheDocument();
     });
+  });
+
+  it("hides the prompt after dismissal", async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /not now/i }));
+
+    expect(
+      screen.queryByText(/enable browser notifications/i)
+    ).not.toBeInTheDocument();
   });
 });

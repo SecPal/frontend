@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import { act, render, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
+import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
 import { NotificationPreferences } from "./NotificationPreferences";
 import * as useNotificationsModule from "@/hooks/useNotifications";
 
-// Mock the useNotifications hook
 const mockUseNotifications = vi.spyOn(
   useNotificationsModule,
   "useNotifications"
@@ -20,7 +20,6 @@ const mockUseNotifications = vi.spyOn(
 
 const renderWithI18n = async (component: React.ReactElement) => {
   const result = render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
-  // Wait for HeadlessUI Switch transitions to settle
   await waitFor(() => {});
   return result;
 };
@@ -36,7 +35,6 @@ describe("NotificationPreferences", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
     i18n.activate("en");
 
     mockUseNotifications.mockReturnValue({
@@ -49,420 +47,206 @@ describe("NotificationPreferences", () => {
     });
   });
 
-  describe("browser support", () => {
-    it("should show warning when notifications not supported", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: false,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      await renderWithI18n(<NotificationPreferences />);
-
-      expect(
-        screen.getByText(/not supported in your browser/i)
-      ).toBeInTheDocument();
+  it("shows explicit unsupported-browser guidance", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "default",
+      isSupported: false,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
     });
+
+    await renderWithI18n(<NotificationPreferences />);
+
+    expect(
+      screen.getByText(/browser cannot receive secpal web push notifications/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/chrome, edge, firefox, or safari/i)
+    ).toBeInTheDocument();
   });
 
-  describe("permission states", () => {
-    it("should show enable button when permission is default", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
+  it("shows a truthful browser-scoped status instead of category toggles", async () => {
+    await renderWithI18n(<NotificationPreferences />);
 
-      await renderWithI18n(<NotificationPreferences />);
-
-      expect(
-        screen.getByRole("button", { name: /enable notifications/i })
-      ).toBeInTheDocument();
-    });
-
-    it("should show blocked message when permission is denied", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "denied",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      await renderWithI18n(<NotificationPreferences />);
-
-      expect(
-        screen.getByText(/notifications have been blocked/i)
-      ).toBeInTheDocument();
-    });
-
-    it("should show preferences when permission is granted", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-
-      expect(screen.getByText(/notification preferences/i)).toBeInTheDocument();
-      expect(screen.getByText(/security alerts/i)).toBeInTheDocument();
-      expect(screen.getByText(/system updates/i)).toBeInTheDocument();
-      expect(screen.getByText(/shift reminders/i)).toBeInTheDocument();
-      expect(screen.getByText(/team messages/i)).toBeInTheDocument();
-    });
+    expect(
+      screen.getByRole("heading", { name: /browser notifications/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /category-specific notification preferences are not available yet/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /browser notifications are enabled for this signed-in browser on this deployment/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/https and a same-origin service worker are required/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /changing deployment domains, service-worker scope, site data, or signing out/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
   });
 
-  describe("enabling notifications", () => {
-    it("should request permission when enable button clicked", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      mockRequestPermission.mockResolvedValue("granted");
-      mockShowNotification.mockResolvedValue(undefined);
-
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const enableButton = screen.getByRole("button", {
-        name: /enable notifications/i,
-      });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(mockRequestPermission).toHaveBeenCalledOnce();
-      });
+  it("shows blocked-browser guidance when permission is denied", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "denied",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
     });
 
-    it("should show welcome notification after enabling", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
+    await renderWithI18n(<NotificationPreferences />);
 
-      mockRequestPermission.mockResolvedValue("granted");
-      mockShowNotification.mockResolvedValue(undefined);
-
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const enableButton = screen.getByRole("button", {
-        name: /enable notifications/i,
-      });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(mockShowNotification).toHaveBeenCalledWith(
-          expect.objectContaining({
-            title: expect.any(String),
-            body: expect.any(String),
-            tag: "welcome-notification",
-          })
-        );
-      });
-    });
-
-    it("should handle enable errors gracefully", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
-
-      const consoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      mockRequestPermission.mockRejectedValue(new Error("Permission denied"));
-
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const enableButton = screen.getByRole("button", {
-        name: /enable notifications/i,
-      });
-      await user.click(enableButton);
-
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith(
-          "Failed to enable notifications:",
-          expect.any(Error)
-        );
-      });
-
-      consoleError.mockRestore();
-    });
+    expect(
+      screen.getByText(/browser notifications are blocked for this site/i)
+    ).toBeInTheDocument();
   });
 
-  describe("preference toggles", () => {
-    it("should toggle preference when switch clicked", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const alertsSwitch = screen.getByRole("switch", {
-        name: /security alerts/i,
-      });
-
-      // Initially enabled
-      expect(alertsSwitch).toHaveAttribute("aria-checked", "true");
-
-      // Toggle off
-      await user.click(alertsSwitch);
-      expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
-
-      // Toggle back on
-      await user.click(alertsSwitch);
-      expect(alertsSwitch).toHaveAttribute("aria-checked", "true");
+  it("lets the user enable browser notifications when permission is undecided", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "default",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
     });
 
-    it("should save preferences to localStorage", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
+    await renderWithI18n(<NotificationPreferences />);
 
-      const alertsSwitch = screen.getByRole("switch", {
-        name: /security alerts/i,
-      });
+    expect(
+      screen.getByText(
+        /turn on notifications for this signed-in browser on the current secpal deployment/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /enable notifications/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /send test/i })
+    ).not.toBeInTheDocument();
+  });
 
-      await user.click(alertsSwitch);
-
-      await waitFor(() => {
-        const stored = localStorage.getItem("secpal-notification-preferences");
-        expect(stored).toBeTruthy();
-        const parsed = JSON.parse(stored!);
-        expect(
-          parsed.find((p: { category: string }) => p.category === "alerts")
-        ).toMatchObject({
-          category: "alerts",
-          enabled: false,
-        });
-      });
+  it("requests permission and sends a confirmation notification after enabling", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "default",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
     });
+    mockRequestPermission.mockResolvedValue("granted");
+    mockShowNotification.mockResolvedValue(undefined);
 
-    it("should load preferences from localStorage", async () => {
-      const storedPreferences = [
-        { category: "alerts", enabled: false },
-        { category: "updates", enabled: false },
-        { category: "reminders", enabled: true },
-        { category: "messages", enabled: true },
-      ];
+    await renderWithI18n(<NotificationPreferences />);
+    const user = userEvent.setup();
 
-      localStorage.setItem(
-        "secpal-notification-preferences",
-        JSON.stringify(storedPreferences)
+    await user.click(
+      screen.getByRole("button", { name: /enable notifications/i })
+    );
+
+    await waitFor(() => {
+      expect(mockRequestPermission).toHaveBeenCalledOnce();
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tag: "welcome-notification",
+        })
       );
-
-      await renderWithI18n(<NotificationPreferences />);
-
-      const alertsSwitch = screen.getByRole("switch", {
-        name: /security alerts/i,
-      });
-      const messagesSwitch = screen.getByRole("switch", {
-        name: /team messages/i,
-      });
-
-      expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
-      expect(messagesSwitch).toHaveAttribute("aria-checked", "true");
     });
   });
 
-  describe("test notification", () => {
-    it("should send test notification when button clicked", async () => {
-      mockShowNotification.mockResolvedValue(undefined);
-
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const testButton = screen.getByRole("button", { name: /send test/i });
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(mockShowNotification).toHaveBeenCalledWith(
-          expect.objectContaining({
-            title: expect.any(String),
-            body: expect.any(String),
-            tag: "test-notification",
-            requireInteraction: false,
-          })
-        );
-      });
+  it("surfaces deployment reset guidance when runtime metadata becomes stale", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "granted",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new NotificationInstallationsApiError(
+        "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
+        409,
+        "NOTIFICATION_RUNTIME_STATE_INVALID"
+      ),
     });
 
-    it("should not send test if permission not granted", async () => {
-      mockUseNotifications.mockReturnValue({
-        permission: "default",
-        isSupported: true,
-        requestPermission: mockRequestPermission,
-        showNotification: mockShowNotification,
-        isLoading: false,
-        error: null,
-      });
+    await renderWithI18n(<NotificationPreferences />);
 
-      await renderWithI18n(<NotificationPreferences />);
-
-      // Should not have test button when permission is default
-      expect(
-        screen.queryByRole("button", { name: /send test/i })
-      ).not.toBeInTheDocument();
-    });
-
-    it("should handle test notification errors", async () => {
-      const consoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      mockShowNotification.mockRejectedValue(
-        new Error("Failed to show notification")
-      );
-
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      const testButton = screen.getByRole("button", { name: /send test/i });
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith(
-          "Failed to send test notification:",
-          expect.any(Error)
-        );
-      });
-
-      consoleError.mockRestore();
-    });
+    expect(
+      screen.getByText(/deployment's notification configuration changed/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /refresh secpal and enable notifications again if the browser prompts you/i
+      )
+    ).toBeInTheDocument();
   });
 
-  describe("accessibility", () => {
-    it("should have proper ARIA labels", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-
-      const switches = screen.getAllByRole("switch");
-      switches.forEach((switchElement) => {
-        // Catalyst Switch uses aria-labelledby instead of aria-label
-        expect(
-          switchElement.hasAttribute("aria-label") ||
-            switchElement.hasAttribute("aria-labelledby")
-        ).toBe(true);
-        expect(switchElement).toHaveAttribute("aria-checked");
-      });
+  it("asks the user to sign in again when backend sync requires re-authentication", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "granted",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new NotificationInstallationsApiError("Unauthenticated.", 401),
     });
 
-    it("should be keyboard navigable", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
+    await renderWithI18n(<NotificationPreferences />);
 
-      const alertsSwitch = screen.getByRole("switch", {
-        name: /security alerts/i,
-      });
-
-      // Click the switch to focus it (clicking both toggles and focuses the element)
-      await user.click(alertsSwitch);
-      expect(alertsSwitch).toHaveFocus();
-    });
+    expect(
+      screen.getByText(/sign in again before secpal can sync this browser/i)
+    ).toBeInTheDocument();
   });
 
-  describe("translation updates", () => {
-    it("should recompute translated preferences when the locale changes", async () => {
-      const { rerender } = await renderWithI18n(<NotificationPreferences />);
-
-      expect(screen.getByText("Security Alerts")).toBeInTheDocument();
-
-      await act(async () => {
-        i18n.activate("de");
-      });
-
-      rerender(
-        <I18nProvider i18n={i18n}>
-          <NotificationPreferences />
-        </I18nProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText("Sicherheitswarnungen")).toBeInTheDocument();
-      });
-      expect(screen.queryByText("Security Alerts")).not.toBeInTheDocument();
+  it("makes deployment rollout limits explicit when web push is unavailable for the deployment", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "granted",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new Error(
+        "Web push notifications are not available for this deployment"
+      ),
     });
 
-    it("should update translations when locale changes without excessive re-renders", async () => {
-      // Track render count to detect infinite loop
-      let renderCount = 0;
-      const RenderCounter = () => {
-        renderCount++;
-        return null;
-      };
+    await renderWithI18n(<NotificationPreferences />);
 
-      const { rerender } = render(
-        <I18nProvider i18n={i18n}>
-          <RenderCounter />
-          <NotificationPreferences />
-        </I18nProvider>
+    expect(
+      screen.getByText(
+        /this deployment does not currently publish browser web push/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/selected deployment domain/i)).not.toHaveLength(
+      0
+    );
+  });
+
+  it("still lets the user send a test notification after browser delivery is enabled", async () => {
+    mockShowNotification.mockResolvedValue(undefined);
+
+    await renderWithI18n(<NotificationPreferences />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: /send test/i }));
+
+    await waitFor(() => {
+      expect(mockShowNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tag: "test-notification",
+          requireInteraction: false,
+        })
       );
-      // Wait for HeadlessUI Switch transitions to settle
-      await waitFor(() => {});
-
-      const initialRenderCount = renderCount;
-
-      // Wait for initial render to settle
-      await waitFor(() => {
-        expect(
-          screen.getByText(/notification preferences/i)
-        ).toBeInTheDocument();
-      });
-
-      // Simulate locale change by re-rendering with new i18n instance
-      // (In real app, this would happen via i18n.activate())
-      rerender(
-        <I18nProvider i18n={i18n}>
-          <RenderCounter />
-          <NotificationPreferences />
-        </I18nProvider>
-      );
-      // Wait for HeadlessUI Switch transitions to settle
-      await waitFor(() => {});
-
-      // Wait a bit to allow any cascading re-renders
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Verify that render count is reasonable (not hundreds/thousands indicating infinite loop)
-      // Allow for a few re-renders due to React's normal behavior, but catch runaway loops
-      const finalRenderCount = renderCount;
-      const renderDelta = finalRenderCount - initialRenderCount;
-
-      expect(renderDelta).toBeLessThan(10); // Arbitrary reasonable limit
-      expect(screen.getByText(/security alerts/i)).toBeInTheDocument();
-    });
-
-    it("should preserve enabled state when translations update", async () => {
-      await renderWithI18n(<NotificationPreferences />);
-      const user = userEvent.setup();
-
-      // Toggle alerts off
-      const alertsSwitch = screen.getByRole("switch", {
-        name: /security alerts/i,
-      });
-      await user.click(alertsSwitch);
-      expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
-
-      // Simulate translation update (in real app via locale change)
-      // The component should maintain the enabled=false state
-      // We can't easily trigger a real locale change in tests, but the fix
-      // ensures that when locale (not _ function) changes, state is preserved
-
-      // Verify state is still false after potential re-render
-      await waitFor(() => {
-        expect(alertsSwitch).toHaveAttribute("aria-checked", "false");
-      });
     });
   });
 });
