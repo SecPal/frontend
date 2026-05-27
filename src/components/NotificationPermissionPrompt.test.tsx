@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -211,6 +211,55 @@ describe("NotificationPermissionPrompt", () => {
         /web push notifications are not available for this deployment/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("stays visible and shows the error when showNotification fails after permission is granted", async () => {
+    const user = userEvent.setup();
+    let permission: NotificationPermission = "default";
+
+    vi.mocked(useNotificationsModule.useNotifications).mockImplementation(
+      () => ({
+        permission,
+        isSupported: true,
+        requestPermission: mockRequestPermission,
+        showNotification: mockShowNotification,
+        isLoading: false,
+        error: null,
+      })
+    );
+    mockRequestPermission.mockImplementation(async () => {
+      permission = "granted";
+      return "granted";
+    });
+    mockShowNotification.mockRejectedValue(new Error("Service worker unavailable"));
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/service worker unavailable/i)
+      ).toBeInTheDocument();
+    });
+    // Prompt must remain visible so the user can see the error
+    expect(
+      screen.getByText(/enable browser notifications/i)
+    ).toBeInTheDocument();
+  });
+
+  it("does not render when permission is denied even if an error is also present", () => {
+    vi.mocked(useNotificationsModule.useNotifications).mockReturnValue({
+      permission: "denied",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new Error("some error"),
+    });
+
+    const { container } = renderWithI18n(<NotificationPermissionPrompt />);
+    expect(container.firstChild).toBeNull();
   });
 
   it("hides the prompt after dismissal", async () => {

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
@@ -55,9 +55,16 @@ export function NotificationPermissionPrompt() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Hide when unsupported, dismissed, or permission already settled in a terminal state.
+  // "denied" is always terminal for this prompt — errors arising after denial belong in
+  // NotificationPreferences, not this transient banner. "granted" with no error means
+  // registration succeeded and the prompt auto-dismissed; only keep it visible when
+  // permission is still "default" or when permission moved to "granted" but a subsequent
+  // showNotification call failed (error !== null) so the user sees what went wrong.
   if (
     !isSupported ||
     isDismissed ||
+    permission === "denied" ||
     (permission !== "default" && error === null)
   ) {
     return null;

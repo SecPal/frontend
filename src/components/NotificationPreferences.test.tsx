@@ -112,6 +112,26 @@ describe("NotificationPreferences", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the auth error message instead of blocked-browser guidance when permission is denied but a 401 error is present", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "denied",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new NotificationInstallationsApiError("Unauthenticated.", 401),
+    });
+
+    await renderWithI18n(<NotificationPreferences />);
+
+    expect(
+      screen.getByText(/sign in again before secpal can sync this browser/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/browser notifications are blocked for this site/i)
+    ).not.toBeInTheDocument();
+  });
+
   it("lets the user enable browser notifications when permission is undecided", async () => {
     mockUseNotifications.mockReturnValue({
       permission: "default",
@@ -229,6 +249,35 @@ describe("NotificationPreferences", () => {
     expect(screen.getAllByText(/selected deployment domain/i)).not.toHaveLength(
       0
     );
+  });
+
+  it("does not crash when showNotification rejects after requestPermission succeeds", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "default",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: null,
+    });
+    mockRequestPermission.mockResolvedValue("granted");
+    mockShowNotification.mockRejectedValue(new Error("Service worker unavailable"));
+
+    await renderWithI18n(<NotificationPreferences />);
+    const user = userEvent.setup();
+
+    await user.click(
+      screen.getByRole("button", { name: /enable notifications/i })
+    );
+
+    await waitFor(() => {
+      expect(mockRequestPermission).toHaveBeenCalledOnce();
+      expect(mockShowNotification).toHaveBeenCalledOnce();
+    });
+    // Component must remain rendered and not throw
+    expect(
+      screen.getByRole("heading", { name: /browser notifications/i })
+    ).toBeInTheDocument();
   });
 
   it("still lets the user send a test notification after browser delivery is enabled", async () => {

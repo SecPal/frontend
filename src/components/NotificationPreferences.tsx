@@ -64,15 +64,9 @@ function getNotificationStatusCopy(
     };
   }
 
-  if (permission === "denied") {
-    return {
-      tone: "red",
-      message: translate(
-        msg`Browser notifications are blocked for this site. Re-enable them in your browser settings to receive SecPal updates on this device.`
-      ),
-    };
-  }
-
+  // Check actionable auth/runtime errors before the generic "denied" copy so that a
+  // 401/403 (session expired) or stale-runtime error is not masked by advice to go
+  // into browser settings — which would be actively misleading remediation.
   const installationErrorMessage = getNotificationInstallationsErrorMessage(
     error,
     translate
@@ -82,6 +76,15 @@ function getNotificationStatusCopy(
     return {
       tone: "yellow",
       message: installationErrorMessage,
+    };
+  }
+
+  if (permission === "denied") {
+    return {
+      tone: "red",
+      message: translate(
+        msg`Browser notifications are blocked for this site. Re-enable them in your browser settings to receive SecPal updates on this device.`
+      ),
     };
   }
 
@@ -236,8 +239,8 @@ export function NotificationPreferences() {
           <Trans>Rollout Expectations</Trans>
         </Heading>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
-          {rolloutExpectations.map((item) => (
-            <li key={item}>{item}</li>
+          {rolloutExpectations.map((item, index) => (
+            <li key={index}>{item}</li>
           ))}
         </ul>
       </div>
