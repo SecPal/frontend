@@ -1673,6 +1673,84 @@ describe("useNotifications", () => {
       expect(peekBrowserPushInstallationId()).toBeNull();
     });
 
+    it("does not re-run denied auto-sync cleanup when auth state changes", async () => {
+      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+      Object.defineProperty(globalThis.Notification, "permission", {
+        writable: true,
+        value: "denied",
+      });
+
+      const installationId = getOrCreateBrowserPushInstallationId();
+      let isAuthenticated = true;
+
+      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+      const mockFetch = vi.fn().mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              installation_id: installationId,
+              channel: "web_push",
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+      );
+
+      vi.stubGlobal("fetch", mockFetch);
+
+      const AuthStateWrapper = ({ children }: { children: ReactNode }) =>
+        createElement(
+          AuthContext.Provider,
+          {
+            value: {
+              ...authenticatedAuthContextValue,
+              isAuthenticated,
+              user: isAuthenticated ? authenticatedAuthContextValue.user : null,
+            },
+          },
+          children
+        );
+
+      const { rerender } = renderHook(
+        () => useNotifications({ autoSync: true }),
+        {
+          wrapper: AuthStateWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
+      });
+
+      const getSubscriptionCallCount =
+        mockPushManager.getSubscription.mock.calls.length;
+      const fetchCallCount = mockFetch.mock.calls.length;
+      const unsubscribeCallCount =
+        mockPushSubscription.unsubscribe.mock.calls.length;
+
+      isAuthenticated = false;
+
+      await act(async () => {
+        rerender();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      });
+
+      expect(mockPushManager.getSubscription).toHaveBeenCalledTimes(
+        getSubscriptionCallCount
+      );
+      expect(mockFetch).toHaveBeenCalledTimes(fetchCallCount);
+      expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(
+        unsubscribeCallCount
+      );
+    });
+
     it("clears local push state even when remote revocation fails", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
       Object.defineProperty(globalThis.Notification, "permission", {

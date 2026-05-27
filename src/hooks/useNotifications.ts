@@ -162,6 +162,7 @@ export function useNotifications(
     isPushSupported;
 
   const isAuthenticated = authContext?.isAuthenticated === true;
+  const isAuthenticatedRef = useRef(isAuthenticated);
   const autoSync = options.autoSync === true;
   const [autoSyncRegistrationGeneration, setAutoSyncRegistrationGeneration] =
     useState(0);
@@ -180,6 +181,10 @@ export function useNotifications(
       ? err
       : new Error(String(err));
   }, []);
+
+  useEffect(() => {
+    isAuthenticatedRef.current = isAuthenticated;
+  }, [isAuthenticated]);
 
   const runBackgroundNotificationTask = useCallback(
     (task: (isTaskActive: () => boolean) => Promise<void>) => {
@@ -231,7 +236,7 @@ export function useNotifications(
         const webPushRuntimeMetadata =
           bootstrapData?.notification_channels?.web_push;
 
-        if (!webPushRuntimeMetadata) {
+        if (!bootstrapData || !webPushRuntimeMetadata) {
           throw new Error(
             "Web push notifications are not available for this deployment"
           );
@@ -397,7 +402,7 @@ export function useNotifications(
     }
 
     try {
-      if (installationId && isAuthenticated) {
+      if (installationId && isAuthenticatedRef.current) {
         await revokeBrowserNotificationInstallation(installationId);
       }
     } catch (error) {
@@ -430,7 +435,7 @@ export function useNotifications(
     if (unsubscribeError) {
       throw unsubscribeError;
     }
-  }, [isAuthenticated, refreshSubscription, unsubscribe]);
+  }, [refreshSubscription, unsubscribe]);
 
   useEffect(() => {
     if (
