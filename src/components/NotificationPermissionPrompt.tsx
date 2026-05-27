@@ -5,7 +5,10 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useNotifications } from "@/hooks/useNotifications";
+import {
+  NotificationDeploymentUnavailableError,
+  useNotifications,
+} from "@/hooks/useNotifications";
 import { Button } from "@/components/button";
 import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
 import { XMarkIcon, BellIcon } from "@heroicons/react/24/outline";
@@ -21,6 +24,12 @@ function getPromptErrorMessage(
 
   if (installationErrorMessage) {
     return installationErrorMessage;
+  }
+
+  if (error instanceof NotificationDeploymentUnavailableError) {
+    return translate(
+      msg`This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout.`
+    );
   }
 
   if (error instanceof Error) {

@@ -7,14 +7,22 @@ import { userEvent } from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { NotificationInstallationsApiError } from "@/services/notificationInstallationsApi";
+import { NotificationDeploymentUnavailableError } from "@/hooks/useNotifications";
 import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NotificationPermissionPrompt } from "./NotificationPermissionPrompt";
 import * as useNotificationsModule from "@/hooks/useNotifications";
 
-vi.mock("@/hooks/useNotifications", () => ({
-  useNotifications: vi.fn(),
-}));
+vi.mock("@/hooks/useNotifications", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/hooks/useNotifications")
+  >("@/hooks/useNotifications");
+
+  return {
+    ...actual,
+    useNotifications: vi.fn(),
+  };
+});
 
 const renderWithI18n = (component: React.ReactElement) =>
   render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
@@ -177,6 +185,32 @@ describe("NotificationPermissionPrompt", () => {
         screen.getByText(/sign in again before secpal can sync this browser/i)
       ).toBeInTheDocument();
     });
+  });
+
+  it("translates deployment-unavailable errors instead of showing the raw fallback message", async () => {
+    const user = userEvent.setup();
+
+    i18n.activate("de");
+    mockRequestPermission.mockRejectedValue(
+      new NotificationDeploymentUnavailableError()
+    );
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /aktivieren/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /dieses deployment veröffentlicht derzeit kein browser-web-push/i
+        )
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText(
+        /web push notifications are not available for this deployment/i
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("hides the prompt after dismissal", async () => {
