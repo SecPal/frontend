@@ -157,6 +157,70 @@ describe("NotificationPermissionPrompt", () => {
     });
   });
 
+  it("keeps the prompt visible while retrying after a granted-state error", async () => {
+    const user = userEvent.setup();
+    let permission: NotificationPermission = "default";
+    let requestCount = 0;
+    let rejectRetryRequest: ((reason?: unknown) => void) | undefined;
+    const staleRuntimeError = new NotificationInstallationsApiError(
+      "Notification runtime metadata changed; refresh bootstrap before retrying this installation update.",
+      409,
+      "NOTIFICATION_RUNTIME_STATE_INVALID"
+    );
+
+    vi.mocked(useNotificationsModule.useNotifications).mockImplementation(
+      () => ({
+        permission,
+        isSupported: true,
+        requestPermission: mockRequestPermission,
+        showNotification: mockShowNotification,
+        isLoading: false,
+        error: null,
+      })
+    );
+    mockRequestPermission.mockImplementation(() => {
+      requestCount += 1;
+      permission = "granted";
+
+      if (requestCount === 1) {
+        return Promise.reject(staleRuntimeError);
+      }
+
+      return new Promise<NotificationPermission>((_, reject) => {
+        rejectRetryRequest = reject;
+      });
+    });
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /this deployment's notification configuration changed\. refresh secpal and enable notifications again if the browser prompts you/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    expect(
+      screen.getByText(/enable browser notifications/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /this deployment's notification configuration changed\. refresh secpal and enable notifications again if the browser prompts you/i
+      )
+    ).toBeInTheDocument();
+
+    rejectRetryRequest?.(staleRuntimeError);
+
+    await waitFor(() => {
+      expect(mockRequestPermission).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it("maps re-authentication failures to a sign-in-again message", async () => {
     const user = userEvent.setup();
     let permission: NotificationPermission = "default";

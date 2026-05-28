@@ -71,8 +71,6 @@ export function NotificationPermissionPrompt() {
   }
 
   const handleEnable = async () => {
-    setError(null);
-
     try {
       const result = await requestPermission();
 
