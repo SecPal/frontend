@@ -221,6 +221,34 @@ describe("NotificationPermissionPrompt", () => {
     });
   });
 
+  it("clears a stale error after a retry resolves without changing permission", async () => {
+    const user = userEvent.setup();
+    const requestError = new Error("Temporary browser error");
+
+    mockRequestPermission
+      .mockRejectedValueOnce(requestError)
+      .mockResolvedValueOnce("default");
+
+    renderWithI18n(<NotificationPermissionPrompt />);
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/temporary browser error/i)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /enable/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/temporary browser error/i)
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByText(/enable browser notifications/i)
+    ).toBeInTheDocument();
+  });
+
   it("maps re-authentication failures to a sign-in-again message", async () => {
     const user = userEvent.setup();
     let permission: NotificationPermission = "default";

@@ -88,6 +88,8 @@ export function NotificationPermissionPrompt() {
         }
       } else if (result === "denied") {
         setIsDismissed(true);
+      } else {
+        setError(null);
       }
     } catch (requestError) {
       setError(getPromptErrorMessage(requestError, _));
