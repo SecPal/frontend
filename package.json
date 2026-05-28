@@ -74,7 +74,7 @@
     "@lingui/core": "^6.0.0",
     "@lingui/react": "^6.1.0",
     "clsx": "^2.1.1",
-    "dexie": "^4.4.2",
+    "dexie": "^4.4.3",
     "dexie-react-hooks": "^4.4.0",
     "motion": "^12.40.0",
     "qrcode": "^1.5.4",
