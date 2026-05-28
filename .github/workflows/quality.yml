@@ -65,14 +65,24 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        # Retry + --foreground-scripts mitigates transient esbuild
-        # postinstall ETXTBSY races on hosted Linux runners.
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_on: error
-          command: npm ci --foreground-scripts
+        # --foreground-scripts serializes lifecycle scripts to dodge the
+        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
+        # short retry loop covers any residual transient failures without
+        # imposing a per-attempt timeout that could starve later steps.
+        run: |
+          set -uo pipefail
+          attempts=3
+          for i in $(seq 1 "$attempts"); do
+            if npm ci --foreground-scripts; then
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "::warning::npm ci failed (attempt ${i}/${attempts}); retrying in 5s"
+              sleep 5
+            fi
+          done
+          echo "::error::npm ci failed after ${attempts} attempts"
+          exit 1
 
       - name: Run tests with coverage
         run: npm run test:coverage
@@ -109,14 +119,24 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        # Retry + --foreground-scripts mitigates transient esbuild
-        # postinstall ETXTBSY races on hosted Linux runners.
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
-        with:
-          timeout_minutes: 5
-          max_attempts: 3
-          retry_on: error
-          command: npm ci --foreground-scripts
+        # --foreground-scripts serializes lifecycle scripts to dodge the
+        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
+        # short retry loop covers any residual transient failures without
+        # imposing a per-attempt timeout that could starve later steps.
+        run: |
+          set -uo pipefail
+          attempts=3
+          for i in $(seq 1 "$attempts"); do
+            if npm ci --foreground-scripts; then
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "::warning::npm ci failed (attempt ${i}/${attempts}); retrying in 5s"
+              sleep 5
+            fi
+          done
+          echo "::error::npm ci failed after ${attempts} attempts"
+          exit 1
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
