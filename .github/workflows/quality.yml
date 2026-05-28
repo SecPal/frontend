@@ -66,14 +66,15 @@ jobs:
 
       - name: Install dependencies
         # --foreground-scripts serializes lifecycle scripts to dodge the
-        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
-        # short retry loop covers any residual transient failures without
-        # imposing a per-attempt timeout that could starve later steps.
+        # esbuild postinstall ETXTBSY race on hosted Linux runners.
+        # Each attempt is capped at 4 minutes so a hung install cannot
+        # silently consume the 15-minute job budget; 3 attempts × 4 min
+        # leaves ~3 min for tests and coverage upload.
         run: |
           set -uo pipefail
           attempts=3
           for i in $(seq 1 "$attempts"); do
-            if npm ci --foreground-scripts; then
+            if timeout 4m npm ci --foreground-scripts; then
               exit 0
             fi
             if [ "$i" -lt "$attempts" ]; then
@@ -120,14 +121,15 @@ jobs:
 
       - name: Install dependencies
         # --foreground-scripts serializes lifecycle scripts to dodge the
-        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
-        # short retry loop covers any residual transient failures without
-        # imposing a per-attempt timeout that could starve later steps.
+        # esbuild postinstall ETXTBSY race on hosted Linux runners.
+        # Each attempt is capped at 4 minutes so a hung install cannot
+        # silently consume the 15-minute job budget; 3 attempts × 4 min
+        # leaves ~3 min for Playwright install and the smoke test.
         run: |
           set -uo pipefail
           attempts=3
           for i in $(seq 1 "$attempts"); do
-            if npm ci --foreground-scripts; then
+            if timeout 4m npm ci --foreground-scripts; then
               exit 0
             fi
             if [ "$i" -lt "$attempts" ]; then
