@@ -261,7 +261,9 @@ describe("NotificationPreferences", () => {
       error: null,
     });
     mockRequestPermission.mockResolvedValue("granted");
-    mockShowNotification.mockRejectedValue(new Error("Service worker unavailable"));
+    mockShowNotification.mockRejectedValue(
+      new Error("Service worker unavailable")
+    );
 
     await renderWithI18n(<NotificationPreferences />);
     const user = userEvent.setup();

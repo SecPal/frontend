@@ -485,6 +485,7 @@ msgstr "Loading qualifications..."
 msgid "Failed"
 msgstr "Failed"
 
+#: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
 msgstr "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
@@ -3006,8 +3007,7 @@ msgstr "Edit Site"
 msgid "Identity Document"
 msgstr "Identity Document"
 
-#: src/components/NotificationPermissionPrompt.tsx
-#: src/components/NotificationPreferences.tsx
+#: src/components/notificationInstallationsErrorMessage.ts
 msgid "Sign in again before SecPal can sync this browser with the server."
 msgstr "Sign in again before SecPal can sync this browser with the server."
 
@@ -3145,8 +3145,7 @@ msgstr "View Profile"
 msgid "File upload failed with HTTP status {0}."
 msgstr "File upload failed with HTTP status {0}."
 
-#: src/components/NotificationPermissionPrompt.tsx
-#: src/components/NotificationPreferences.tsx
+#: src/components/notificationInstallationsErrorMessage.ts
 msgid "This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you."
 msgstr "This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you."
 

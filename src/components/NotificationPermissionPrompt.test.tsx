@@ -231,7 +231,9 @@ describe("NotificationPermissionPrompt", () => {
       permission = "granted";
       return "granted";
     });
-    mockShowNotification.mockRejectedValue(new Error("Service worker unavailable"));
+    mockShowNotification.mockRejectedValue(
+      new Error("Service worker unavailable")
+    );
 
     renderWithI18n(<NotificationPermissionPrompt />);
 
