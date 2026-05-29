@@ -229,6 +229,28 @@ describe("NotificationPreferences", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows a generic sync message for unexpected registration errors", async () => {
+    mockUseNotifications.mockReturnValue({
+      permission: "granted",
+      isSupported: true,
+      requestPermission: mockRequestPermission,
+      showNotification: mockShowNotification,
+      isLoading: false,
+      error: new Error("Unexpected push sync failure"),
+    });
+
+    await renderWithI18n(<NotificationPreferences />);
+
+    expect(
+      screen.getByText(
+        /secpal could not sync this browser's notification registration with the server/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/unexpected push sync failure/i)
+    ).not.toBeInTheDocument();
+  });
+
   it("makes deployment rollout limits explicit when web push is unavailable for the deployment", async () => {
     mockUseNotifications.mockReturnValue({
       permission: "granted",
