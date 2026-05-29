@@ -181,14 +181,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isClearingSessionRef.current = true;
       hasLogoutBarrierRef.current = true;
       setBootstrapRecoveryReason(null);
-      authStorage.clear();
-      resetAnalyticsState();
+      const clearAuthStoragePromise = authStorage.clear();
+      const resetAnalyticsStatePromise = resetAnalyticsState();
       setUser(null);
       setIsVaultLocked(false);
       setIsLoading(false);
       syncOfflineAuthState(false);
 
-      void Promise.allSettled([authStorage.clear(), resetAnalyticsState()])
+      void Promise.allSettled([
+        clearAuthStoragePromise,
+        resetAnalyticsStatePromise,
+      ])
         .then(async () => {
           if (!clearSensitiveState) {
             return;
