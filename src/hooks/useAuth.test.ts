@@ -596,7 +596,9 @@ describe("useAuth", () => {
     const clearSpy = vi
       .spyOn(authStorage, "clear")
       .mockImplementation(() => storageClear.promise);
-    mockAnalyticsResetForLogout.mockImplementation(() => analyticsReset.promise);
+    mockAnalyticsResetForLogout.mockImplementation(
+      () => analyticsReset.promise
+    );
 
     try {
       const { result } = renderHook(() => useAuth(), {
