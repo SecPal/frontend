@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useState<AuthBootstrapRecoveryReason | null>(null);
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
+  const shouldClearSensitiveStateRef = useRef(false);
   const bootstrapRequestVersionRef = useRef(0);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
@@ -159,46 +160,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const resetAnalyticsState = useCallback(() => {
+  const resetAnalyticsState = useCallback(async () => {
     if (!analytics) {
       return;
     }
 
-    void analytics.resetForLogout().catch((error: unknown) => {
+    try {
+      await analytics.resetForLogout();
+    } catch (error: unknown) {
       console.warn("Failed to reset analytics state during logout:", error);
-    });
+    }
   }, []);
 
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
+        shouldClearSensitiveStateRef.current =
+          shouldClearSensitiveStateRef.current || clearSensitiveState;
         return;
       }
 
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
+      shouldClearSensitiveStateRef.current = clearSensitiveState;
       hasLogoutBarrierRef.current = true;
       setBootstrapRecoveryReason(null);
-      authStorage.clear();
-      resetAnalyticsState();
+      const clearAuthStoragePromise = authStorage.clear({
+        clearOfflineVaultTables: !shouldClearSensitiveStateRef.current,
+      });
+      const resetAnalyticsStatePromise = resetAnalyticsState();
       setUser(null);
       setIsVaultLocked(false);
       setIsLoading(false);
       syncOfflineAuthState(false);
 
-      if (!clearSensitiveState) {
-        isClearingSessionRef.current = false;
-        return;
-      }
+      void Promise.allSettled([
+        clearAuthStoragePromise,
+        resetAnalyticsStatePromise,
+      ])
+        .then(async () => {
+          if (!shouldClearSensitiveStateRef.current) {
+            return;
+          }
 
-      void clearSensitiveClientState()
-        .catch((error: unknown) => {
-          console.error(
-            "Failed to clear sensitive client state during logout:",
-            error
-          );
+          try {
+            await clearSensitiveClientState();
+          } catch (error: unknown) {
+            console.error(
+              "Failed to clear sensitive client state during logout:",
+              error
+            );
+          }
         })
         .finally(() => {
+          shouldClearSensitiveStateRef.current = false;
           isClearingSessionRef.current = false;
         });
     },
@@ -363,7 +378,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await authStorage.setUser(currentUser);
 
           if (hasLogoutBarrierRef.current) {
-            authStorage.removeUser();
+            void authStorage.removeUser();
+            return;
           }
 
           if (
@@ -583,7 +599,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // localStorage barrier (via clearLogoutBarrier()) before we got
           // here.
           if (hasLogoutBarrierRef.current) {
-            authStorage.removeUser();
+            void authStorage.removeUser();
             return;
           }
 
@@ -637,7 +653,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Re-check the in-memory barrier after the async decrypt.
         if (hasLogoutBarrierRef.current) {
-          authStorage.removeUser();
+          void authStorage.removeUser();
           return;
         }
 

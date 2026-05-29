@@ -43,6 +43,7 @@ async function createEncryptedEnvelope(
   options: {
     version: number;
     iterations: number;
+    plaintext?: string;
   }
 ): Promise<string> {
   const keyMaterial = `secpal-auth-storage:${csrfToken}`;
@@ -90,7 +91,7 @@ async function createEncryptedEnvelope(
     await crypto.subtle.encrypt(
       { name: "AES-CBC", iv: toArrayBuffer(iv) },
       encryptionKey,
-      textEncoder.encode(JSON.stringify(user))
+      textEncoder.encode(options.plaintext ?? JSON.stringify(user))
     )
   );
   const envelopeWithoutMac = {
@@ -286,6 +287,29 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("clears legacy encrypted auth state when the decrypted payload is not valid JSON", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    localStorage.setItem(
+      "auth_user",
+      await createEncryptedEnvelope({}, "test-csrf-token", {
+        version: CURRENT_AUTH_STORAGE_VERSION,
+        iterations: CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS,
+        plaintext: "not-json",
+      })
+    );
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to parse stored user data:",
+      expect.any(SyntaxError)
+    );
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
   it("clears persisted auth state when WebCrypto rejects during setUser", async () => {
     const user = {
       id: "1",
@@ -313,6 +337,16 @@ describe("authStorage", () => {
       "Failed to persist stored user data:",
       cryptoFailure
     );
+    expect(localStorage.getItem("auth_user")).toBeNull();
+  });
+
+  it("clears persisted auth state when setUser receives an invalid user", async () => {
+    localStorage.setItem("auth_user", "stale-auth-storage-record");
+
+    await expect(
+      authStorage.setUser({ email: "missing-id@secpal.dev" } as never)
+    ).resolves.toBeUndefined();
+
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
@@ -356,7 +390,7 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("clears vault IndexedDB tables when removeUser is called due to invalid persisted state", async () => {
+  it("waits for vault IndexedDB cleanup before removeUser resolves", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -368,11 +402,56 @@ describe("authStorage", () => {
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     expect(await db.vaultProfile.count()).toBe(1);
 
-    authStorage.removeUser();
+    await authStorage.removeUser();
 
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-    // clearOfflineVaultTables is fire-and-forget; give it a microtask cycle
-    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(await db.vaultProfile.count()).toBe(0);
+  });
+
+  it("can clear auth markers without clearing vault tables", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    try {
+      await authStorage.clear({ clearOfflineVaultTables: false });
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(await db.vaultProfile.count()).toBe(1);
+    } finally {
+      await db.vaultProfile.clear();
+    }
+  });
+
+  it("logs and resolves when vault table cleanup fails during removeUser", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cleanupError = new Error("clear failed");
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    await authStorage.setUser(user);
+    vi.spyOn(db.vaultProfile, "clear").mockRejectedValue(cleanupError);
+
+    await expect(authStorage.removeUser()).resolves.toBeUndefined();
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Failed to clear offline vault tables on logout:",
+      cleanupError
+    );
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
   });
 });
