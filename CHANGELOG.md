@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hardened the browser notification UX to match the real backend-backed Web Push lifecycle: removed misleading local-only category preference state from `NotificationPreferences`, reframed `NotificationPermissionPrompt` around browser-scoped delivery, surfaced explicit denied/unsupported/re-auth/deployment-reset states, and documented customer-owned rollout constraints for HTTPS, same-origin service-worker scope, browser support, and selected deployment domains. Closes #1140.
 - Wired authenticated browser Web Push lifecycle management to deployment bootstrap metadata and the notification-installations API: the PWA now reads runtime VAPID metadata from browser bootstrap instead of `VITE_VAPID_PUBLIC_KEY`, upserts existing subscriptions on app load, refreshes stale runtime metadata by rotating the local subscription, re-runs reconciliation after service-worker replacement, revokes the remote installation before browser-session logout, and clears local browser push state during logout/reset and denied-permission cleanup. Closes #1139.
 - Fixed the missing `npm run start` script in the frontend workspace by aliasing it directly to `vite`, so Polyscope and other generic start-script callers can boot the dev server without failing on a missing `start` script.
 - Updated audit overrides for `brace-expansion` and `ws` so the frontend dependency tree resolves to patched dev-only versions and `npm audit --audit-level=moderate` reports zero vulnerabilities.

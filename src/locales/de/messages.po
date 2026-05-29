@@ -21,6 +21,7 @@ msgstr "Die Passkey-Anmeldung wurde unterbrochen. Bitte versuchen Sie es erneut.
 msgid "Full Name"
 msgstr "Vollständiger Name"
 
+#: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "Enabling..."
 msgstr "Aktiviere ..."
@@ -73,6 +74,10 @@ msgstr "Diesen Schritt überspringen"
 msgid "Merkle Tree"
 msgstr "Merkelbaum"
 
+#: src/components/NotificationPreferences.tsx
+msgid "SecPal only exposes backend-backed browser delivery state here. It does not offer category-by-category notification controls yet."
+msgstr "SecPal zeigt hier nur den backendgestützten Browser-Zustellstatus an. Kategorienbezogene Benachrichtigungssteuerungen sind derzeit nicht verfügbar."
+
 #: src/components/RouteGuardState.tsx
 msgid "Unlock your secure offline data"
 msgstr "Entsperren Sie Ihre sicheren Offline-Daten"
@@ -112,10 +117,6 @@ msgstr "Empfangstablet"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Edit Phone"
 msgstr "Telefonnummer bearbeiten"
-
-#: src/components/NotificationPreferences.tsx
-msgid "✓ Notifications are enabled. You'll receive updates based on your preferences."
-msgstr "✓ Benachrichtigungen sind aktiviert. Sie erhalten Updates basierend auf Ihren Einstellungen."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Employment permitted"
@@ -163,6 +164,10 @@ msgstr "Ausklappen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The residence title must remain valid after your contract start date."
 msgstr "Der Aufenthaltstitel muss über den Vertragsbeginn hinaus gültig sein."
+
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Enable browser notifications"
+msgstr "Browser-Benachrichtigungen aktivieren"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -219,13 +224,13 @@ msgstr "Frühere Wohnorte"
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> employees"
 msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
 
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Not Now"
+msgstr "Jetzt nicht"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Passport"
 msgstr "Reisepass"
-
-#: src/components/NotificationPreferences.tsx
-msgid "Messages from team members and supervisors"
-msgstr "Mitteilungen von Teammitgliedern und Vorgesetzten"
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "No Organizational Units"
@@ -242,10 +247,6 @@ msgstr "Keine Adressvorschläge gefunden."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "weitere Optionen"
-
-#: src/components/NotificationPreferences.tsx
-msgid "Choose which notifications you want to receive"
-msgstr "Wählen Sie, welche Benachrichtigungen Sie erhalten möchten"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to delete file"
@@ -467,6 +468,7 @@ msgstr "Notfallkontakte bearbeiten"
 msgid "Name"
 msgstr "Name"
 
+#: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "Notifications Enabled"
 msgstr "Benachrichtigungen aktiviert"
@@ -482,6 +484,11 @@ msgstr "Qualifikationen laden..."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
 msgstr "Fehlgeschlagen"
+
+#: src/components/NotificationPermissionPrompt.tsx
+#: src/components/NotificationPreferences.tsx
+msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
+msgstr "Dieses Deployment veröffentlicht derzeit kein Browser-Web-Push. Halten Sie vor dem Rollout HTTPS, die ausgewählte Deployment-Domain und das Hosting des Service Workers mit demselben Ursprung aufeinander abgestimmt."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity Document Upload"
@@ -581,10 +588,6 @@ msgstr "Benutzerdefiniert"
 msgid "Filter by organizational unit"
 msgstr "nach Organisationseinheit filtern"
 
-#: src/components/NotificationPreferences.tsx
-msgid "Security Alerts"
-msgstr "Sicherheitswarnungen"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password"
 msgstr "Passwort"
@@ -626,9 +629,9 @@ msgstr "Bereit zur Einrichtung"
 msgid "First Names (all)"
 msgstr "Vornamen (alle)"
 
-#: src/components/NotificationPreferences.tsx
-msgid "App updates and maintenance notifications"
-msgstr "App-Updates und Wartungsbenachrichtigungen"
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Failed to enable notifications"
+msgstr "Benachrichtigungen konnten nicht aktiviert werden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
@@ -726,10 +729,6 @@ msgstr "Kundennummer"
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht kennen."
 
-#: src/components/NotificationPreferences.tsx
-msgid "Team Messages"
-msgstr "Team-Nachrichten"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
 msgstr "Neuen Mitarbeiter anlegen"
@@ -753,10 +752,6 @@ msgstr "Dieses Feld"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
-
-#: src/components/NotificationPreferences.tsx
-msgid "System Updates"
-msgstr "System-Updates"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -827,6 +822,7 @@ msgstr "BWR-Export erstellt. Laden Sie die Datei unten herunter."
 msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
+#: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "You'll now receive important updates from SecPal"
 msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
@@ -885,6 +881,10 @@ msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password is required"
 msgstr "Passwort ist erforderlich"
+
+#: src/components/NotificationPreferences.tsx
+msgid "HTTPS and a same-origin service worker are required before browser Web Push can register."
+msgstr "HTTPS und ein Service Worker mit demselben Ursprung sind erforderlich, bevor Browser-Web-Push registriert werden kann."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -1145,10 +1145,6 @@ msgstr "Direktes APK-Sideloading"
 msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
 msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
 
-#: src/components/NotificationPreferences.tsx
-msgid "Shift Reminders"
-msgstr "Schicht-Erinnerungen"
-
 #: src/components/OfflineIndicator.tsx
 msgid "Some features may be limited. Your changes will sync when you're back online."
 msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
@@ -1278,10 +1274,6 @@ msgstr "Meine Organisation"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Suspended"
 msgstr "Ausgesetzt"
-
-#: src/components/NotificationPreferences.tsx
-msgid "Critical security notifications and warnings"
-msgstr "Kritische Sicherheitsbenachrichtigungen und -warnungen"
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Holding"
@@ -1540,6 +1532,10 @@ msgstr "Änderungen speichern"
 msgid "The type determines the unit's role in the hierarchy."
 msgstr "Der Typ bestimmt die Rolle der Einheit in der Hierarchie."
 
+#: src/components/NotificationPreferences.tsx
+msgid "Browser Notifications"
+msgstr "Browser-Benachrichtigungen"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
@@ -1563,6 +1559,11 @@ msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity card"
 msgstr "Personalausweis"
+
+#: src/components/NotificationPermissionPrompt.tsx
+#: src/components/NotificationPreferences.tsx
+msgid "Turn on notifications for this signed-in browser on the current SecPal deployment."
+msgstr "Aktivieren Sie Benachrichtigungen für diesen angemeldeten Browser auf dem aktuellen SecPal-Deployment."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Download Latest Export"
@@ -1674,6 +1675,10 @@ msgstr "Zuletzt aktualisiert"
 msgid "Moving..."
 msgstr "Verschiebe..."
 
+#: src/components/NotificationPreferences.tsx
+msgid "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
+msgstr "Kategoriespezifische Benachrichtigungseinstellungen sind noch nicht verfügbar. SecPal verwaltet Browser-Benachrichtigungen derzeit auf Browser- und Deployment-Ebene."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Try again"
 msgstr "Erneut versuchen"
@@ -1692,6 +1697,10 @@ msgstr "Vorvertrag"
 msgid "Terminate"
 msgstr "Beenden"
 
+#: src/components/NotificationPreferences.tsx
+msgid "Browser notifications are enabled for this signed-in browser on this deployment. SecPal will deliver backend-backed notifications when this deployment publishes them."
+msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf diesem Deployment aktiviert. SecPal stellt backendgestützte Benachrichtigungen zu, wenn dieses Deployment sie veröffentlicht."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
 msgstr "Kontaktfeld konnte nicht aktualisiert werden."
@@ -1707,10 +1716,6 @@ msgstr "Auf diesem Gerät ist kein Anmeldeinformationsanbieter verfügbar. Prüf
 #: src/pages/Sites/SitesPage.tsx
 msgid "Site Number"
 msgstr "Standort Nummer"
-
-#: src/components/NotificationPreferences.tsx
-msgid "Enable notifications to receive important updates about security alerts, shift reminders, and system notifications."
-msgstr "Aktivieren Sie Benachrichtigungen, um wichtige Updates zu Sicherheitswarnungen, Schichterinnerungen und Systembenachrichtigungen zu erhalten."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "You can upload now or continue and add documents later before final submission."
@@ -1744,6 +1749,10 @@ msgstr "Bitte geben Sie ein gültiges Geburtsdatum ein"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unknown status"
 msgstr "Unbekannter Status"
+
+#: src/components/NotificationPreferences.tsx
+msgid "Changing deployment domains, service-worker scope, site data, or signing out can require you to enable notifications again."
+msgstr "Das Wechseln von Deployment-Domains, Service-Worker-Bereich, Website-Daten oder das Abmelden kann erfordern, Benachrichtigungen erneut zu aktivieren."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too Many Attempts"
@@ -1784,6 +1793,10 @@ msgstr "Aktualisieren"
 msgid "The export download link returned by the server is not safe to open."
 msgstr "Der vom Server zurückgegebene Export-Downloadlink ist nicht sicher zu öffnen."
 
+#: src/components/NotificationPreferences.tsx
+msgid "Rollout Expectations"
+msgstr "Rollout-Erwartungen"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Complete on your device…"
 msgstr "Auf Ihrem Gerät abschließen…"
@@ -1795,6 +1808,10 @@ msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Based on the selected nationality, please specify which valid German residence title is available."
 msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, welcher gültige deutsche Aufenthaltstitel vorliegt."
+
+#: src/components/NotificationPreferences.tsx
+msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
+msgstr "Benachrichtigungen sind an dieses angemeldete Browserprofil und die ausgewählte Deployment-Domain gebunden."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
@@ -2243,6 +2260,10 @@ msgstr "Position"
 msgid "Confirm Password"
 msgstr "Bestätigen Sie Ihr Passwort"
 
+#: src/components/NotificationPreferences.tsx
+msgid "Browser notifications are blocked for this site. Re-enable them in your browser settings to receive SecPal updates on this device."
+msgstr "Browser-Benachrichtigungen sind für diese Website blockiert. Aktivieren Sie sie in Ihren Browsereinstellungen erneut, um SecPal-Aktualisierungen auf diesem Gerät zu erhalten."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Minimum rank cannot be greater than maximum rank."
 msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
@@ -2262,6 +2283,10 @@ msgstr "Authentifizierung"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
+
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Enable"
+msgstr "Aktivieren"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Nationality options could not be loaded right now. Please reload this page and try again."
@@ -2392,6 +2417,10 @@ msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde h
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
 msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
 
+#: src/components/NotificationPreferences.tsx
+msgid "This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support."
+msgstr "Dieser Browser kann keine SecPal-Web-Push-Benachrichtigungen empfangen. Verwenden Sie eine aktuelle Chrome-, Edge-, Firefox- oder Safari-Version mit Web-Push-Unterstützung."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Self-Access Control Required"
 msgstr "Selbstzugriffskontrolle erforderlich"
@@ -2441,6 +2470,10 @@ msgstr "Sie werden benachrichtigt, sobald Ihre Angaben geprüft wurden."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Files uploaded successfully."
 msgstr "Dateien erfolgreich hochgeladen."
+
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Category-specific notification controls are not available yet."
+msgstr "Kategoriespezifische Benachrichtigungssteuerungen sind noch nicht verfügbar."
 
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
@@ -2825,10 +2858,6 @@ msgstr "Profil"
 msgid "Orphaned Genesis"
 msgstr "Verwaiste Genesis"
 
-#: src/components/NotificationPreferences.tsx
-msgid "Notification Preferences"
-msgstr "Präferenzen für Benachrichtigungen"
-
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR ID"
 msgstr "BWR-ID"
@@ -2850,8 +2879,8 @@ msgid "Reason"
 msgstr "Grund"
 
 #: src/components/NotificationPreferences.tsx
-msgid "Reminders about upcoming shifts and duties"
-msgstr "Erinnerungen an anstehende Schichten und Aufgaben"
+msgid "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
+msgstr "SecPal konnte die Benachrichtigungsregistrierung dieses Browsers nicht mit dem Server synchronisieren. Laden Sie die App neu und versuchen Sie es erneut."
 
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
@@ -2927,10 +2956,6 @@ msgstr "Log Name"
 msgid "Edit Postal Address"
 msgstr "Postanschrift bearbeiten"
 
-#: src/components/NotificationPreferences.tsx
-msgid "Notifications are not supported in your browser. Please use a modern browser like Chrome, Firefox, or Safari."
-msgstr "Benachrichtigungen werden von Ihrem Browser nicht unterstützt. Bitte verwenden Sie einen modernen Browser wie Chrome, Firefox oder Safari."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
@@ -2981,6 +3006,10 @@ msgstr "Standort bearbeiten"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity Document"
 msgstr "Ausweisdokument"
+
+#: src/components/notificationInstallationsErrorMessage.ts
+msgid "Sign in again before SecPal can sync this browser with the server."
+msgstr "Melden Sie sich erneut an, bevor SecPal diesen Browser mit dem Server synchronisieren kann."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
@@ -3116,9 +3145,9 @@ msgstr "Profil ansehen"
 msgid "File upload failed with HTTP status {0}."
 msgstr "Datei-Upload fehlgeschlagen (HTTP-Status {0})."
 
-#: src/components/NotificationPreferences.tsx
-msgid "Notifications have been blocked. Please enable them in your browser settings to receive important updates."
-msgstr "Benachrichtigungen wurden blockiert. Bitte aktivieren Sie sie in den Einstellungen Ihres Browsers, um wichtige Updates zu erhalten."
+#: src/components/notificationInstallationsErrorMessage.ts
+msgid "This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you."
+msgstr "Die Benachrichtigungskonfiguration dieses Deployments hat sich geändert. Laden Sie SecPal neu und aktivieren Sie Benachrichtigungen erneut, falls der Browser Sie dazu auffordert."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx

@@ -5,245 +5,222 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { useNotifications } from "@/hooks/useNotifications";
+import {
+  NotificationDeploymentUnavailableError,
+  useNotifications,
+} from "@/hooks/useNotifications";
 import { Button } from "./button";
-import { Fieldset, Field, Label, Description } from "./fieldset";
-import { Switch } from "./switch";
 import { Heading } from "./heading";
 import { Text } from "./text";
-import type { I18n } from "@lingui/core";
+import { getNotificationInstallationsErrorMessage } from "./notificationInstallationsErrorMessage";
 
-export type NotificationCategory =
-  | "alerts"
-  | "updates"
-  | "reminders"
-  | "messages";
+type NotificationStatusTone = "blue" | "green" | "yellow" | "red";
 
-interface NotificationPreference {
-  category: NotificationCategory;
-  enabled: boolean;
-  label: string;
-  description: string;
+interface NotificationStatusCopy {
+  tone: NotificationStatusTone;
+  message: string;
 }
 
-interface StoredNotificationPreference {
-  category: NotificationCategory;
-  enabled: boolean;
-}
-
-const STORAGE_KEY = "secpal-notification-preferences";
-
-const DEFAULT_NOTIFICATION_PREFERENCES: StoredNotificationPreference[] = [
-  { category: "alerts", enabled: true },
-  { category: "updates", enabled: true },
-  { category: "reminders", enabled: true },
-  { category: "messages", enabled: false },
-];
-
-function loadStoredPreferences(): StoredNotificationPreference[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return DEFAULT_NOTIFICATION_PREFERENCES;
-    }
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) {
-      console.warn("Invalid notification preferences format, using defaults");
-      return DEFAULT_NOTIFICATION_PREFERENCES;
-    }
-
-    return DEFAULT_NOTIFICATION_PREFERENCES.map((pref) => {
-      const storedPref = parsed.find(
-        (entry: StoredNotificationPreference) =>
-          entry &&
-          typeof entry === "object" &&
-          entry.category === pref.category &&
-          typeof entry.enabled === "boolean"
-      );
-
-      return storedPref ? { ...pref, enabled: storedPref.enabled } : pref;
-    });
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      console.error(
-        "Failed to parse notification preferences, using defaults:",
-        error
-      );
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {
-        // Ignore removal errors (e.g., SecurityError in private mode)
-      }
-    } else {
-      console.error(
-        "Failed to load notification preferences (storage access denied):",
-        error
-      );
-    }
-
-    return DEFAULT_NOTIFICATION_PREFERENCES;
+function getStatusClasses(tone: NotificationStatusTone): string {
+  switch (tone) {
+    case "green":
+      return "rounded-lg bg-green-50 p-4 dark:bg-green-950/10";
+    case "yellow":
+      return "rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950/10";
+    case "red":
+      return "rounded-lg bg-red-50 p-4 dark:bg-red-950/10";
+    case "blue":
+    default:
+      return "rounded-lg bg-blue-50 p-4 dark:bg-blue-950/10";
   }
 }
 
-/**
- * Helper function to get translations for a given category
- * Centralizes translation strings to follow DRY principle
- */
-function getTranslationsForCategory(
-  category: NotificationCategory,
-  i18n: I18n
-): { label: string; description: string } {
-  switch (category) {
-    case "alerts":
-      return {
-        label: i18n._(msg`Security Alerts`),
-        description: i18n._(msg`Critical security notifications and warnings`),
-      };
-    case "updates":
-      return {
-        label: i18n._(msg`System Updates`),
-        description: i18n._(msg`App updates and maintenance notifications`),
-      };
-    case "reminders":
-      return {
-        label: i18n._(msg`Shift Reminders`),
-        description: i18n._(msg`Reminders about upcoming shifts and duties`),
-      };
-    case "messages":
-      return {
-        label: i18n._(msg`Team Messages`),
-        description: i18n._(msg`Messages from team members and supervisors`),
-      };
+function getStatusTextClasses(tone: NotificationStatusTone): string {
+  switch (tone) {
+    case "green":
+      return "text-green-800 dark:text-green-200";
+    case "yellow":
+      return "text-yellow-800 dark:text-yellow-200";
+    case "red":
+      return "text-red-800 dark:text-red-200";
+    case "blue":
+    default:
+      return "text-blue-800 dark:text-blue-200";
   }
 }
 
-/**
- * Component for managing notification preferences
- * Allows users to control which types of notifications they receive
- */
-export function NotificationPreferences() {
-  const { _, i18n } = useLingui();
-  const { permission, isSupported, requestPermission, showNotification } =
-    useNotifications();
+function getNotificationStatusCopy(
+  permission: "default" | "granted" | "denied",
+  isSupported: boolean,
+  error: Error | null,
+  translate: (message: ReturnType<typeof msg>) => string
+): NotificationStatusCopy {
+  if (!isSupported) {
+    return {
+      tone: "yellow",
+      message: translate(
+        msg`This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support.`
+      ),
+    };
+  }
 
-  const [preferences, setPreferences] = useState<
-    StoredNotificationPreference[]
-  >(loadStoredPreferences);
-
-  const translatedPreferences: NotificationPreference[] = preferences.map(
-    (pref) => ({
-      ...pref,
-      ...getTranslationsForCategory(pref.category, i18n),
-    })
+  // Check actionable auth/runtime errors before the generic "denied" copy so that a
+  // 401/403 (session expired) or stale-runtime error is not masked by advice to go
+  // into browser settings — which would be actively misleading remediation.
+  const installationErrorMessage = getNotificationInstallationsErrorMessage(
+    error,
+    translate
   );
 
+  if (installationErrorMessage) {
+    return {
+      tone: "yellow",
+      message: installationErrorMessage,
+    };
+  }
+
+  if (permission === "denied") {
+    return {
+      tone: "red",
+      message: translate(
+        msg`Browser notifications are blocked for this site. Re-enable them in your browser settings to receive SecPal updates on this device.`
+      ),
+    };
+  }
+
+  if (error instanceof NotificationDeploymentUnavailableError) {
+    return {
+      tone: "yellow",
+      message: translate(
+        msg`This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout.`
+      ),
+    };
+  }
+
+  if (error) {
+    return {
+      tone: "yellow",
+      message: translate(
+        msg`SecPal could not sync this browser's notification registration with the server. Refresh the app and try again.`
+      ),
+    };
+  }
+
+  if (permission === "granted") {
+    return {
+      tone: "green",
+      message: translate(
+        msg`Browser notifications are enabled for this signed-in browser on this deployment. SecPal will deliver backend-backed notifications when this deployment publishes them.`
+      ),
+    };
+  }
+
+  return {
+    tone: "blue",
+    message: translate(
+      msg`Turn on notifications for this signed-in browser on the current SecPal deployment.`
+    ),
+  };
+}
+
+/**
+ * Truthful notification UX surface for browser Web Push.
+ * SecPal currently supports browser-level delivery state, not category-level preferences.
+ */
+export function NotificationPreferences() {
+  const { _ } = useLingui();
+  const {
+    permission,
+    isSupported,
+    requestPermission,
+    showNotification,
+    error,
+  } = useNotifications();
   const [isEnabling, setIsEnabling] = useState(false);
 
-  // Save preferences to localStorage synchronously for immediate error feedback
-  const savePreferences = (newPreferences: StoredNotificationPreference[]) => {
-    setPreferences(newPreferences);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newPreferences));
-    } catch (error) {
-      // Handle QuotaExceededError or SecurityError
-      if (error instanceof Error) {
-        if (error.name === "QuotaExceededError") {
-          console.error(
-            "Failed to save notification preferences: Storage quota exceeded"
-          );
-          // Optionally notify user about storage issues
-        } else if (error.name === "SecurityError") {
-          console.error(
-            "Failed to save notification preferences: Storage access denied (private mode?)"
-          );
-        } else {
-          console.error("Failed to save notification preferences:", error);
-        }
-      }
-    }
-  };
+  const status = getNotificationStatusCopy(permission, isSupported, error, _);
+  const rolloutExpectations = [
+    _(
+      msg`Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level.`
+    ),
+    _(
+      msg`Notifications are tied to this signed-in browser profile and the selected deployment domain.`
+    ),
+    _(
+      msg`HTTPS and a same-origin service worker are required before browser Web Push can register.`
+    ),
+    _(
+      msg`Changing deployment domains, service-worker scope, site data, or signing out can require you to enable notifications again.`
+    ),
+  ];
 
-  // Handle enabling notifications
   const handleEnableNotifications = async () => {
     setIsEnabling(true);
+
     try {
       const result = await requestPermission();
+
       if (result === "granted") {
         await showNotification({
-          title: _(msg`Notifications Enabled`),
-          body: _(msg`You'll now receive important updates from SecPal`),
+          title: _(/*i18n*/ msg`Notifications Enabled`),
+          body: _(
+            /*i18n*/ msg`You'll now receive important updates from SecPal`
+          ),
           tag: "welcome-notification",
         });
       }
-    } catch (error) {
-      console.error("Failed to enable notifications:", error);
+    } catch (requestError) {
+      console.error("Failed to enable notifications:", requestError);
     } finally {
       setIsEnabling(false);
     }
   };
 
-  // Handle toggling a preference
-  const handleTogglePreference = (category: NotificationCategory) => {
-    const newPreferences = preferences.map((pref) =>
-      pref.category === category ? { ...pref, enabled: !pref.enabled } : pref
-    );
-    savePreferences(newPreferences);
-  };
-
-  // Handle sending a test notification
   const handleTestNotification = async () => {
-    if (permission !== "granted") return;
+    if (permission !== "granted" || error) {
+      return;
+    }
 
     try {
       await showNotification({
-        title: _(msg`Test Notification`),
-        body: _(msg`This is a test notification from SecPal`),
+        title: _(/*i18n*/ msg`Test Notification`),
+        body: _(/*i18n*/ msg`This is a test notification from SecPal`),
         tag: "test-notification",
         requireInteraction: false,
       });
-    } catch (error) {
-      console.error("Failed to send test notification:", error);
+    } catch (notificationError) {
+      console.error("Failed to send test notification:", notificationError);
     }
   };
 
-  if (!isSupported) {
-    return (
-      <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950/10">
-        <Text className="text-yellow-800 dark:text-yellow-200">
-          <Trans>
-            Notifications are not supported in your browser. Please use a modern
-            browser like Chrome, Firefox, or Safari.
-          </Trans>
-        </Text>
-      </div>
-    );
-  }
-
-  if (permission === "denied") {
-    return (
-      <div className="rounded-lg bg-red-50 p-4 dark:bg-red-950/10">
-        <Text className="text-red-800 dark:text-red-200">
-          <Trans>
-            Notifications have been blocked. Please enable them in your browser
-            settings to receive important updates.
-          </Trans>
-        </Text>
-      </div>
-    );
-  }
-
-  if (permission === "default") {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950/10">
-          <Text className="text-blue-800 dark:text-blue-200">
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <Heading level={3}>
+            <Trans>Browser Notifications</Trans>
+          </Heading>
+          <Text>
             <Trans>
-              Enable notifications to receive important updates about security
-              alerts, shift reminders, and system notifications.
+              SecPal only exposes backend-backed browser delivery state here. It
+              does not offer category-by-category notification controls yet.
             </Trans>
           </Text>
         </div>
+        {permission === "granted" && error === null ? (
+          <Button onClick={handleTestNotification} outline>
+            <Trans>Send Test</Trans>
+          </Button>
+        ) : null}
+      </div>
+
+      <div className={getStatusClasses(status.tone)}>
+        <Text className={getStatusTextClasses(status.tone)}>
+          {status.message}
+        </Text>
+      </div>
+
+      {permission === "default" && isSupported ? (
         <Button
           onClick={handleEnableNotifications}
           disabled={isEnabling}
@@ -255,51 +232,17 @@ export function NotificationPreferences() {
             <Trans>Enable Notifications</Trans>
           )}
         </Button>
-      </div>
-    );
-  }
+      ) : null}
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Heading level={3}>
-            <Trans>Notification Preferences</Trans>
-          </Heading>
-          <Text>
-            <Trans>Choose which notifications you want to receive</Trans>
-          </Text>
-        </div>
-        <Button onClick={handleTestNotification} outline>
-          <Trans>Send Test</Trans>
-        </Button>
-      </div>
-
-      <Fieldset>
-        {translatedPreferences.map((pref) => (
-          <Field key={pref.category}>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <Label>{pref.label}</Label>
-                <Description>{pref.description}</Description>
-              </div>
-              <Switch
-                checked={pref.enabled}
-                onChange={() => handleTogglePreference(pref.category)}
-                color="blue"
-              />
-            </div>
-          </Field>
-        ))}
-      </Fieldset>
-
-      <div className="rounded-lg bg-green-50 p-4 dark:bg-green-950/10">
-        <Text className="text-green-800 dark:text-green-200">
-          <Trans>
-            ✓ Notifications are enabled. You'll receive updates based on your
-            preferences.
-          </Trans>
-        </Text>
+      <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <Heading level={4}>
+          <Trans>Rollout Expectations</Trans>
+        </Heading>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
+          {rolloutExpectations.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );

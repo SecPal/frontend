@@ -1,21 +1,50 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
+import {
+  NotificationDeploymentUnavailableError,
+  useNotifications,
+} from "@/hooks/useNotifications";
 import { Button } from "@/components/button";
+import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
 import { XMarkIcon, BellIcon } from "@heroicons/react/24/outline";
 
+function getPromptErrorMessage(
+  error: unknown,
+  translate: (message: ReturnType<typeof msg>) => string
+): string {
+  const installationErrorMessage = getNotificationInstallationsErrorMessage(
+    error,
+    translate
+  );
+
+  if (installationErrorMessage) {
+    return installationErrorMessage;
+  }
+
+  if (error instanceof NotificationDeploymentUnavailableError) {
+    return translate(
+      msg`This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout.`
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return translate(msg`Failed to enable notifications`);
+}
+
 /**
- * Non-intrusive notification permission prompt
- * Appears as a banner when notification permission is in "default" state
- *
- * @example
- * ```tsx
- * <NotificationPermissionPrompt />
- * ```
+ * Non-intrusive browser notification permission prompt.
+ * This surface scopes messaging to browser-level delivery, not server-side categories.
  */
 export function NotificationPermissionPrompt() {
+  const { _ } = useLingui();
   const {
     permission,
     isSupported,
@@ -26,43 +55,44 @@ export function NotificationPermissionPrompt() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Don't show if:
-  // - Already granted or denied
-  // - Not supported
-  // - User dismissed it
-  if (!isSupported || permission !== "default" || isDismissed) {
+  // Hide when unsupported, dismissed, or permission already settled in a terminal state.
+  // "denied" is always terminal for this prompt — errors arising after denial belong in
+  // NotificationPreferences, not this transient banner. "granted" with no error means
+  // registration succeeded and the prompt auto-dismissed; only keep it visible when
+  // permission is still "default" or when permission moved to "granted" but a subsequent
+  // showNotification call failed (error !== null) so the user sees what went wrong.
+  if (
+    !isSupported ||
+    isDismissed ||
+    permission === "denied" ||
+    (permission !== "default" && error === null)
+  ) {
     return null;
   }
 
   const handleEnable = async () => {
-    setError(null);
     try {
       const result = await requestPermission();
 
       if (result === "granted") {
-        // Show test notification
         try {
           await showNotification({
-            title: "Notifications Enabled",
-            body: "You'll now receive important updates from SecPal",
+            title: _(/*i18n*/ msg`Notifications Enabled`),
+            body: _(
+              /*i18n*/ msg`You'll now receive important updates from SecPal`
+            ),
           });
           setIsDismissed(true);
-        } catch (notifErr) {
-          // Keep prompt visible to show error
-          setError(
-            notifErr instanceof Error
-              ? notifErr.message
-              : "Failed to show test notification"
-          );
+        } catch (notificationError) {
+          setError(getPromptErrorMessage(notificationError, _));
         }
       } else if (result === "denied") {
-        // User denied, just hide the prompt
         setIsDismissed(true);
+      } else {
+        setError(null);
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to enable notifications"
-      );
+    } catch (requestError) {
+      setError(getPromptErrorMessage(requestError, _));
     }
   };
 
@@ -72,7 +102,7 @@ export function NotificationPermissionPrompt() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 border border-gray-200 dark:border-gray-700 z-50"
+      className="fixed bottom-4 left-4 right-4 z-50 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 md:left-auto md:right-4 md:w-96"
       role="alert"
       aria-live="polite"
     >
@@ -80,25 +110,33 @@ export function NotificationPermissionPrompt() {
         <div className="flex-shrink-0">
           <BellIcon className="h-6 w-6 text-blue-500" aria-hidden="true" />
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Enable Notifications
+            <Trans>Enable browser notifications</Trans>
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Stay updated with important alerts and security notifications.
+            <Trans>
+              Turn on notifications for this signed-in browser on the current
+              SecPal deployment.
+            </Trans>
           </p>
-          {error && (
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <Trans>
+              Category-specific notification controls are not available yet.
+            </Trans>
+          </p>
+          {error ? (
             <p className="mt-2 text-sm text-red-600 dark:text-red-400">
               {error}
             </p>
-          )}
+          ) : null}
           <div className="mt-3 flex gap-2">
             <Button
               onClick={handleEnable}
               disabled={isLoading}
               className="text-sm"
             >
-              {isLoading ? "Enabling..." : "Enable"}
+              {isLoading ? <Trans>Enabling...</Trans> : <Trans>Enable</Trans>}
             </Button>
             <Button
               onClick={handleDismiss}
@@ -106,7 +144,7 @@ export function NotificationPermissionPrompt() {
               className="text-sm"
               color="zinc"
             >
-              Not Now
+              <Trans>Not Now</Trans>
             </Button>
           </div>
         </div>

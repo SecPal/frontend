@@ -41,6 +41,14 @@ Current operational references:
 - [CONTRIBUTING.md](CONTRIBUTING.md) - local workflow, preflight usage, and PR rules
 - [SECURITY.md](SECURITY.md) - vulnerability reporting and security process
 
+### Customer-Owned Browser Web Push Rollout
+
+- Browser Web Push only works over HTTPS from the selected frontend deployment domain.
+- The service worker must be served and registered from the same origin and scope as the deployed app.
+- Supported browser rollout currently assumes a current Chrome, Edge, Firefox, or Safari release with Web Push and service-worker support.
+- Registrations are tied to the signed-in browser profile plus the selected deployment domain, so changing domains, service-worker scope, site data, or signing out can require re-enabling notifications.
+- The current frontend surface is intentionally limited to truthful backend-backed browser delivery state; category-by-category notification preferences are not part of the server contract yet.
+
 ## 🌍 Internationalization (i18n)
 
 SecPal supports multiple languages using [Lingui](https://lingui.dev/) with checked-in `.po` catalogs.

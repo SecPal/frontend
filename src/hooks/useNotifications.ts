@@ -28,6 +28,13 @@ import type {
 
 export type NotificationPermissionState = "default" | "granted" | "denied";
 
+export class NotificationDeploymentUnavailableError extends Error {
+  constructor() {
+    super("Web push notifications are not available for this deployment");
+    this.name = "NotificationDeploymentUnavailableError";
+  }
+}
+
 function getNotificationPermissionState(): NotificationPermissionState {
   return typeof window !== "undefined" && "Notification" in window
     ? Notification.permission
@@ -229,9 +236,7 @@ export function useNotifications(
           bootstrapData?.notification_channels?.web_push;
 
         if (!bootstrapData || !webPushRuntimeMetadata) {
-          throw new Error(
-            "Web push notifications are not available for this deployment"
-          );
+          throw new NotificationDeploymentUnavailableError();
         }
 
         if (!canContinue()) {
