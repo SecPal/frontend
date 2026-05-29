@@ -23,8 +23,14 @@ import {
 } from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
-const { mockGetCurrentUser } = vi.hoisted(() => ({
+const {
+  mockGetCurrentUser,
+  mockAnalyticsResetForLogout,
+  mockAnalyticsResumeAuthenticatedSession,
+} = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
+  mockAnalyticsResetForLogout: vi.fn(),
+  mockAnalyticsResumeAuthenticatedSession: vi.fn(),
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
@@ -39,6 +45,13 @@ vi.mock("../services/authApi", async () => {
 
 vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../lib/analytics", () => ({
+  analytics: {
+    resetForLogout: mockAnalyticsResetForLogout,
+    resumeAuthenticatedSession: mockAnalyticsResumeAuthenticatedSession,
+  },
 }));
 
 vi.mock("../lib/serviceWorkerSession", () => ({
@@ -94,6 +107,12 @@ async function waitForAuthState(
 
 const waitFor = waitForAuthState;
 
+async function waitForSensitiveClientCleanup(callCount: number = 1) {
+  await waitFor(() => {
+    expect(clearSensitiveClientState).toHaveBeenCalledTimes(callCount);
+  });
+}
+
 async function expectEncryptedStoredUser(
   expectedUser: Record<string, unknown>
 ): Promise<void> {
@@ -127,6 +146,9 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
+    mockAnalyticsResetForLogout.mockReset();
+    mockAnalyticsResetForLogout.mockResolvedValue(undefined);
+    mockAnalyticsResumeAuthenticatedSession.mockReset();
     vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
@@ -275,7 +297,7 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
   });
 
   it("clears stale stored auth data when revalidation fails", async () => {
@@ -305,7 +327,7 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
   });
 
   it("keeps cached auth state when bootstrap revalidation fails for a transient error", async () => {
@@ -560,7 +582,53 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
+  });
+
+  it("waits for storage and analytics logout cleanup before clearing broader client state", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+
+    await persistAuthUser(mockUser);
+
+    const storageClear = createDeferredPromise<void>();
+    const analyticsReset = createDeferredPromise<void>();
+
+    const clearSpy = vi
+      .spyOn(authStorage, "clear")
+      .mockImplementation(() => storageClear.promise);
+    mockAnalyticsResetForLogout.mockImplementation(() => analyticsReset.promise);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      expect(clearSpy).toHaveBeenCalled();
+      expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      storageClear.resolve();
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      analyticsReset.resolve();
+
+      await waitForSensitiveClientCleanup();
+    } finally {
+      clearSpy.mockRestore();
+    }
   });
 
   it("logout stores only the minimal logout barrier flag", async () => {
@@ -581,7 +649,9 @@ describe("useAuth", () => {
     });
 
     expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    });
   });
 
   it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {
@@ -739,7 +809,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
     expectNoStoredAuthState();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
   });
 
   it("does not logout when session:expired is emitted but not logged in", () => {
@@ -787,7 +857,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
   });
 
   it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
@@ -1005,7 +1075,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+    await waitForSensitiveClientCleanup();
   });
 
   it("reconciles stored user state when pageshow fires and user is still in storage", async () => {

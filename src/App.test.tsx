@@ -573,6 +573,8 @@ describe("App", () => {
   });
 
   it("redirects unauthenticated users from the protected onboarding route to login", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
     window.history.replaceState({}, "", "/onboarding");
 
     await renderWithI18n(<App />);
@@ -581,8 +583,21 @@ describe("App", () => {
       expect(window.location.pathname).toBe("/login");
     });
 
+    await act(async () => {
+      await Promise.resolve();
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
+    });
+
     expect(
       screen.getByRole("heading", { name: /log in/i })
     ).toBeInTheDocument();
+    expect(consoleWarn).not.toHaveBeenCalledWith(
+      "Failed to clear offline vault tables on logout:",
+      expect.anything()
+    );
+    expect(consoleWarn).not.toHaveBeenCalledWith(
+      "Failed to reset analytics state during logout:",
+      expect.anything()
+    );
   });
 });

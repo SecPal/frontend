@@ -258,8 +258,8 @@ export interface AuthStorage {
   setUser(user: User): Promise<void>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
-  removeUser(): void;
-  clear(): void;
+  removeUser(): Promise<void>;
+  clear(): Promise<void>;
   hasLogoutBarrier(): boolean;
 }
 
@@ -322,7 +322,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
-      this.removeUser();
+      void this.removeUser();
       return null;
     }
 
@@ -358,7 +358,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async getUser(): Promise<User | null> {
     if (this.hasLogoutBarrier()) {
-      this.removeUser();
+      void this.removeUser();
       return null;
     }
 
@@ -401,7 +401,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
-      this.removeUser();
+      await this.removeUser();
       return;
     }
 
@@ -409,7 +409,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
-      this.removeUser();
+      await this.removeUser();
       return;
     }
 
@@ -430,26 +430,29 @@ class LocalStorageAuthStorage implements AuthStorage {
     const unlockedUser = await this.getUser();
 
     if (!unlockedUser) {
-      this.removeUser();
+      await this.removeUser();
       return null;
     }
 
     return unlockedUser;
   }
 
-  removeUser(): void {
+  async removeUser(): Promise<void> {
     clearOfflineVaultSession();
-    void clearOfflineVaultTables().catch((error: unknown) => {
-      console.warn("Failed to clear offline vault tables on logout:", error);
-    });
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
     localStorage.removeItem(this.VAULT_LOCK_KEY);
+
+    try {
+      await clearOfflineVaultTables();
+    } catch (error: unknown) {
+      console.warn("Failed to clear offline vault tables on logout:", error);
+    }
   }
 
-  clear(): void {
+  async clear(): Promise<void> {
     this.setLogoutBarrier();
-    this.removeUser();
+    await this.removeUser();
   }
 }
 

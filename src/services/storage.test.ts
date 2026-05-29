@@ -356,7 +356,7 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("clears vault IndexedDB tables when removeUser is called due to invalid persisted state", async () => {
+  it("waits for vault IndexedDB cleanup before removeUser resolves", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -368,11 +368,9 @@ describe("authStorage", () => {
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     expect(await db.vaultProfile.count()).toBe(1);
 
-    authStorage.removeUser();
+    await authStorage.removeUser();
 
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-    // clearOfflineVaultTables is fire-and-forget; give it a microtask cycle
-    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(await db.vaultProfile.count()).toBe(0);
   });
 });
