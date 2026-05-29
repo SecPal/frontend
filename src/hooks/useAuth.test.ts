@@ -613,7 +613,9 @@ describe("useAuth", () => {
         result.current.logout();
       });
 
-      expect(clearSpy).toHaveBeenCalled();
+      expect(clearSpy).toHaveBeenCalledWith({
+        clearOfflineVaultTables: false,
+      });
       expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
@@ -630,6 +632,75 @@ describe("useAuth", () => {
       await waitForSensitiveClientCleanup();
     } finally {
       clearSpy.mockRestore();
+    }
+  });
+
+  it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
+    const storageClear = createDeferredPromise<void>();
+    const restoreError = new Error("restore failed");
+    const clearSpy = vi
+      .spyOn(authStorage, "clear")
+      .mockImplementation(() => storageClear.promise);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockRejectedValue(restoreError);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(clearSpy).toHaveBeenCalledWith({
+          clearOfflineVaultTables: true,
+        });
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      act(() => {
+        result.current.logout();
+      });
+
+      storageClear.resolve();
+
+      await waitForSensitiveClientCleanup();
+    } finally {
+      clearSpy.mockRestore();
+      getUserSpy.mockRestore();
+    }
+  });
+
+  it("continues logout cleanup when analytics reset fails", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const analyticsError = new Error("analytics reset failed");
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    await persistAuthUser(mockUser);
+    mockAnalyticsResetForLogout.mockRejectedValue(analyticsError);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      await waitForSensitiveClientCleanup();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Failed to reset analytics state during logout:",
+        analyticsError
+      );
+    } finally {
+      consoleWarnSpy.mockRestore();
     }
   });
 
