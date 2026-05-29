@@ -40,6 +40,12 @@ vi.mock("../services/authApi");
 vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("../lib/analytics", () => ({
+  analytics: {
+    resetForLogout: vi.fn().mockResolvedValue(undefined),
+    resumeAuthenticatedSession: vi.fn(),
+  },
+}));
 
 const QUERY_TIMEOUT = 15000;
 
@@ -399,7 +405,9 @@ describe("ApplicationLayout", () => {
 
       // User should be cleared from localStorage
       expect(getStoredAuthState()).toBeNull();
-      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      });
     });
 
     it("does not clear local state before API call completes, then clears it in finally (ordering guarantee)", async () => {
@@ -510,7 +518,10 @@ describe("ApplicationLayout", () => {
           )
         ).toBe(true);
         expect(getStoredAuthState()).toBeNull();
-        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+        vi.useRealTimers();
+        await waitFor(() => {
+          expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+        });
       } finally {
         vi.useRealTimers();
         consoleSpy.mockRestore();

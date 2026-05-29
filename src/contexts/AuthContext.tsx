@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useState<AuthBootstrapRecoveryReason | null>(null);
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
+  const shouldClearSensitiveStateRef = useRef(false);
   const bootstrapRequestVersionRef = useRef(0);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
@@ -174,14 +175,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
+        shouldClearSensitiveStateRef.current =
+          shouldClearSensitiveStateRef.current || clearSensitiveState;
         return;
       }
 
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
+      shouldClearSensitiveStateRef.current = clearSensitiveState;
       hasLogoutBarrierRef.current = true;
       setBootstrapRecoveryReason(null);
-      const clearAuthStoragePromise = authStorage.clear();
+      const clearAuthStoragePromise = authStorage.clear({
+        clearOfflineVaultTables: !shouldClearSensitiveStateRef.current,
+      });
       const resetAnalyticsStatePromise = resetAnalyticsState();
       setUser(null);
       setIsVaultLocked(false);
@@ -193,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetAnalyticsStatePromise,
       ])
         .then(async () => {
-          if (!clearSensitiveState) {
+          if (!shouldClearSensitiveStateRef.current) {
             return;
           }
 
@@ -207,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         })
         .finally(() => {
+          shouldClearSensitiveStateRef.current = false;
           isClearingSessionRef.current = false;
         });
     },

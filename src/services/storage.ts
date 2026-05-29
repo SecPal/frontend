@@ -259,7 +259,7 @@ export interface AuthStorage {
   lockVault(): void;
   unlockVault(): Promise<User | null>;
   removeUser(): Promise<void>;
-  clear(): Promise<void>;
+  clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   hasLogoutBarrier(): boolean;
 }
 
@@ -450,11 +450,17 @@ class LocalStorageAuthStorage implements AuthStorage {
     return unlockedUser;
   }
 
-  async removeUser(): Promise<void> {
+  async removeUser({
+    clearOfflineVaultTables: shouldClearOfflineVaultTables = true,
+  }: { clearOfflineVaultTables?: boolean } = {}): Promise<void> {
     clearOfflineVaultSession();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
     localStorage.removeItem(this.VAULT_LOCK_KEY);
+
+    if (!shouldClearOfflineVaultTables) {
+      return;
+    }
 
     try {
       await clearOfflineVaultTables();
@@ -463,9 +469,9 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  async clear(): Promise<void> {
+  async clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void> {
     this.setLogoutBarrier();
-    await this.removeUser();
+    await this.removeUser(options);
   }
 }
 
