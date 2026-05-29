@@ -311,13 +311,26 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private clearInvalidStoredUser(): null {
-    this.removeUser();
+    void this.removeUser();
+    return null;
+  }
+
+  private async clearInvalidStoredUserAsync(): Promise<null> {
+    await this.removeUser();
     return null;
   }
 
   private handleStoredUserError(message: string, error: unknown): null {
     console.error(message, error);
     return this.clearInvalidStoredUser();
+  }
+
+  private async handleStoredUserErrorAsync(
+    message: string,
+    error: unknown
+  ): Promise<null> {
+    console.error(message, error);
+    return this.clearInvalidStoredUserAsync();
   }
 
   getUserSnapshot(): User | null {
@@ -370,7 +383,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       const storedVaultUser = await readPersistedAuthUserFromVault();
 
       if (!storedVaultUser) {
-        return this.clearInvalidStoredUser();
+        return this.clearInvalidStoredUserAsync();
       }
 
       return storedVaultUser;
@@ -383,14 +396,14 @@ class LocalStorageAuthStorage implements AuthStorage {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
 
       if (!sanitizedUser) {
-        return this.clearInvalidStoredUser();
+        return this.clearInvalidStoredUserAsync();
       }
 
       await initializeOfflineVault(sanitizedUser);
 
       return sanitizedUser;
     } catch (error) {
-      return this.handleStoredUserError(
+      return this.handleStoredUserErrorAsync(
         "Failed to parse stored user data:",
         error
       );
