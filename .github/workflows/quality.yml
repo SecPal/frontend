@@ -65,7 +65,27 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        # --foreground-scripts serializes lifecycle scripts to dodge the
+        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
+        # short retry loop covers any residual transient failures.
+        # ETXTBSY surfaces in seconds, so retries are cheap and a
+        # per-attempt timeout would only risk killing legitimate
+        # cold-cache installs without bounding actual failure modes.
+        # The job's 15-minute timeout-minutes is the overall safety net.
+        run: |
+          set -uo pipefail
+          attempts=3
+          for i in $(seq 1 "$attempts"); do
+            if npm ci --foreground-scripts; then
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "::warning::npm ci failed (attempt ${i}/${attempts}); retrying in 5s"
+              sleep 5
+            fi
+          done
+          echo "::error::npm ci failed after ${attempts} attempts"
+          exit 1
 
       - name: Run tests with coverage
         run: npm run test:coverage
@@ -102,7 +122,27 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        # --foreground-scripts serializes lifecycle scripts to dodge the
+        # esbuild postinstall ETXTBSY race on hosted Linux runners; the
+        # short retry loop covers any residual transient failures.
+        # ETXTBSY surfaces in seconds, so retries are cheap and a
+        # per-attempt timeout would only risk killing legitimate
+        # cold-cache installs without bounding actual failure modes.
+        # The job's 15-minute timeout-minutes is the overall safety net.
+        run: |
+          set -uo pipefail
+          attempts=3
+          for i in $(seq 1 "$attempts"); do
+            if npm ci --foreground-scripts; then
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "::warning::npm ci failed (attempt ${i}/${attempts}); retrying in 5s"
+              sleep 5
+            fi
+          done
+          echo "::error::npm ci failed after ${attempts} attempts"
+          exit 1
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
