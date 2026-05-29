@@ -541,6 +541,46 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("skips broader client cleanup when persisted auth restore fails before login state exists", async () => {
+    const restoreError = new Error("restore failed");
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockRejectedValueOnce(restoreError);
+    const clearSpy = vi.spyOn(authStorage, "clear");
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(clearSpy).toHaveBeenCalledWith({
+        clearOfflineVaultTables: true,
+      });
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to restore persisted auth state:",
+        restoreError
+      );
+    } finally {
+      clearSpy.mockRestore();
+      getUserSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   it("login stores user", async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
