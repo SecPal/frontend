@@ -261,6 +261,7 @@ export interface AuthStorage {
   removeUser(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   hasLogoutBarrier(): boolean;
+  setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
 }
 
 /**
@@ -271,6 +272,8 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly VAULT_KEY = AUTH_VAULT_STORAGE_KEY;
   private readonly VAULT_LOCK_KEY = AUTH_VAULT_LOCK_KEY;
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
+  private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
+    "auth_logout_skip_vault_table_cleanup";
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -287,10 +290,32 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private clearLogoutBarrier(): void {
     localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
+    localStorage.removeItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY);
   }
 
   private setLogoutBarrier(): void {
     localStorage.setItem(this.LOGOUT_BARRIER_KEY, "1");
+  }
+
+  setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void {
+    if (shouldSkip) {
+      localStorage.setItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY, "1");
+      return;
+    }
+
+    localStorage.removeItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY);
+  }
+
+  private shouldSkipBarrierVaultTableCleanup(): boolean {
+    return (
+      localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !== null
+    );
+  }
+
+  private async waitForBarrierCleanupUpgrade(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      globalThis.setTimeout(resolve, 0);
+    });
   }
 
   hasLogoutBarrier(): boolean {
@@ -462,6 +487,14 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
+    if (this.hasLogoutBarrier()) {
+      await this.waitForBarrierCleanupUpgrade();
+
+      if (this.shouldSkipBarrierVaultTableCleanup()) {
+        return;
+      }
+    }
+
     try {
       await clearOfflineVaultTables();
     } catch (error: unknown) {
@@ -471,6 +504,9 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void> {
     this.setLogoutBarrier();
+    this.setSkipBarrierVaultTableCleanup(
+      options?.clearOfflineVaultTables === false
+    );
     await this.removeUser(options);
   }
 }

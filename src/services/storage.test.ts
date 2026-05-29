@@ -340,6 +340,37 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("skips vault table cleanup when setUser fails after a full logout barrier is raised", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cryptoFailure = new DOMException(
+      "The operation failed.",
+      "OperationError"
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+    vi.spyOn(globalThis.crypto.subtle, "deriveBits").mockRejectedValueOnce(
+      cryptoFailure
+    );
+
+    await expect(authStorage.setUser(user)).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to persist stored user data:",
+      cryptoFailure
+    );
+    expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+  });
+
   it("clears persisted auth state when setUser receives an invalid user", async () => {
     localStorage.setItem("auth_user", "stale-auth-storage-record");
 

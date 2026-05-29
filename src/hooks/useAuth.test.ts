@@ -21,6 +21,7 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
+import { db } from "../lib/db";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 
 const {
@@ -782,6 +783,69 @@ describe("useAuth", () => {
     } finally {
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
+    }
+  });
+
+  it("skips vault-table cleanup when a cross-tab logout upgrades an in-flight restore clear", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const restoreError = new Error("restore failed");
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockRejectedValueOnce(restoreError);
+    const actualClear = authStorage.clear.bind(authStorage);
+    const clearSpy = vi
+      .spyOn(authStorage, "clear")
+      .mockImplementationOnce(async (options) => {
+        const clearPromise = actualClear(options);
+
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "auth_logout_barrier",
+            oldValue: null,
+            newValue: "1",
+            storageArea: localStorage,
+          })
+        );
+
+        return clearPromise;
+      });
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(clearSpy).toHaveBeenCalledTimes(1);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await waitForSensitiveClientCleanup();
+
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to restore persisted auth state:",
+        restoreError
+      );
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+      clearSpy.mockRestore();
+      getUserSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     }
   });
 
