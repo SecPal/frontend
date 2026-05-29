@@ -138,8 +138,8 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    vi.spyOn(console, "log").mockImplementation(() => { });
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
@@ -298,6 +298,80 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
     await waitForSensitiveClientCleanup();
+  });
+
+  it("skips vault-table cleanup when logout lands during bootstrap setUser", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+    const revalidatedUser = {
+      ...mockUser,
+      permissions: ["employees.read"],
+    };
+    const currentUserDeferred = createDeferredPromise<typeof revalidatedUser>();
+    const setUserDeferred = createDeferredPromise<void>();
+    const actualSetUser = authStorage.setUser.bind(authStorage);
+    const setUserSpy = vi
+      .spyOn(authStorage, "setUser")
+      .mockImplementationOnce(async (user) => {
+        await setUserDeferred.promise;
+        await actualSetUser(user);
+      });
+    const removeUserSpy = vi.spyOn(authStorage, "removeUser");
+
+    try {
+      await actualSetUser(mockUser);
+      mockGetCurrentUser.mockReturnValueOnce(currentUserDeferred.promise);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
+
+      await waitFor(() => {
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        currentUserDeferred.resolve(revalidatedUser);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      expect(removeUserSpy).toHaveBeenNthCalledWith(1, {
+        clearOfflineVaultTables: false,
+      });
+
+      await act(async () => {
+        setUserDeferred.resolve();
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(removeUserSpy).toHaveBeenCalledTimes(2);
+      });
+
+      expect(removeUserSpy).toHaveBeenNthCalledWith(2, {
+        clearOfflineVaultTables: false,
+      });
+
+      await waitForSensitiveClientCleanup();
+    } finally {
+      setUserSpy.mockRestore();
+      removeUserSpy.mockRestore();
+    }
   });
 
   it("clears stale stored auth data when revalidation fails", async () => {

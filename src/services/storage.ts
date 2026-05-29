@@ -258,7 +258,7 @@ export interface AuthStorage {
   setUser(user: User): Promise<void>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
-  removeUser(): Promise<void>;
+  removeUser(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   hasLogoutBarrier(): boolean;
 }
