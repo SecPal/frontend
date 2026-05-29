@@ -654,6 +654,7 @@ describe("useAuth", () => {
     await waitFor(() => {
       expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
     });
+    await waitForSensitiveClientCleanup();
   });
 
   it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {
