@@ -34,7 +34,7 @@ export interface AuthContextType {
   isVaultLocked?: boolean;
   bootstrapRecoveryReason: AuthBootstrapRecoveryReason | null;
   login: (user: User) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void> | void;
   lock?: () => void;
   unlock?: () => Promise<boolean>;
   retryBootstrap: () => void;

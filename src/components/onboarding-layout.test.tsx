@@ -120,7 +120,7 @@ describe("OnboardingLayout", () => {
     });
   });
 
-  it("does not call logout or navigate when transport logout fails", async () => {
+  it("still calls logout and navigates to login when transport logout fails", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     const transportLogout = vi
@@ -147,15 +147,14 @@ describe("OnboardingLayout", () => {
         "Logout API call failed:",
         expect.any(Error)
       );
-      // auth state must be preserved so the user can retry
-      expect(logout).not.toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(logout).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
   });
 
-  it("shows an error message when transport logout fails", async () => {
+  it("does not show a retry error when transport logout fails", async () => {
     const user = userEvent.setup();
     const transportLogout = vi
       .fn()
@@ -171,15 +170,14 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/we could not complete the sign out request/i)
-      ).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
   });
 
-  it("shows the sign-out error message in German", async () => {
+  it("does not show a localized retry error in German", async () => {
     const user = userEvent.setup();
     const transportLogout = vi
       .fn()
@@ -198,11 +196,8 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /abmelden/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /wir konnten die abmeldung nicht abschließen\. bitte versuchen sie es erneut\./i
-        )
-      ).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
@@ -235,6 +230,78 @@ describe("OnboardingLayout", () => {
       expect(logout).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
+  });
+
+  it("awaits logout completion before navigating even when transport logout rejects", async () => {
+    const user = userEvent.setup();
+
+    let resolveLogout!: () => void;
+    const logoutSettled = new Promise<void>((resolve) => {
+      resolveLogout = resolve;
+    });
+    const logout = vi.fn().mockReturnValue(logoutSettled);
+    const transportLogout = vi
+      .fn()
+      .mockRejectedValue(new Error("Network down"));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      logout,
+    });
+
+    mockTransport(transportLogout);
+
+    renderLayout();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(logout).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLogout();
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+
+    consoleError.mockRestore();
+  });
+
+  it("navigates to login when local logout cleanup fails", async () => {
+    const user = userEvent.setup();
+    const cleanupError = new Error("Storage unavailable");
+    const logout = vi.fn().mockRejectedValue(cleanupError);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      logout,
+    });
+
+    renderLayout();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(logout).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        "Local logout cleanup failed:",
+        cleanupError
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+
+    consoleError.mockRestore();
   });
 
   it("completes client-side logout when the logout API hangs past the timeout", async () => {

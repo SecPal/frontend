@@ -10,6 +10,10 @@ import {
   shouldUseSingleWorker,
 } from "./tests/e2e/performance-mode";
 import {
+  getConfiguredLiveWebPushBrowserPath,
+  shouldEnableLiveWebPushBrowser,
+} from "./tests/e2e/web-push-live-mode";
+import {
   PREVIEW_BASE_URL,
   isRemotePlaywrightTarget,
   resolvePlaywrightBaseUrl,
@@ -85,15 +89,38 @@ const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
+const liveWebPushExecutablePath = getConfiguredLiveWebPushBrowserPath();
 
-const chromiumLaunchOptions = shouldEnableLighthouseBrowser()
-  ? {
-      args: [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`],
-      ...(lighthouseExecutablePath !== undefined && {
-        executablePath: lighthouseExecutablePath,
-      }),
+const chromiumLaunchOptions = (() => {
+  const lighthouseEnabled = shouldEnableLighthouseBrowser();
+  const liveWebPushEnabled = shouldEnableLiveWebPushBrowser();
+
+  if (lighthouseEnabled && liveWebPushEnabled) {
+    throw new Error(
+      "PLAYWRIGHT_LIGHTHOUSE and PLAYWRIGHT_LIVE_WEB_PUSH cannot be enabled at the same time. " +
+        "Run Lighthouse audits and the live Web Push smoke in separate invocations."
+    );
+  }
+
+  const launchOptions: {
+    args?: string[];
+    executablePath?: string;
+  } = {};
+
+  if (lighthouseEnabled) {
+    launchOptions.args = [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`];
+
+    if (lighthouseExecutablePath !== undefined) {
+      launchOptions.executablePath = lighthouseExecutablePath;
     }
-  : undefined;
+  }
+
+  if (liveWebPushEnabled && liveWebPushExecutablePath !== undefined) {
+    launchOptions.executablePath = liveWebPushExecutablePath;
+  }
+
+  return Object.keys(launchOptions).length > 0 ? launchOptions : undefined;
+})();
 
 export default defineConfig({
   // Global setup - logs in once and saves session state

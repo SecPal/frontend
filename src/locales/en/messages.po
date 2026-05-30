@@ -1064,10 +1064,6 @@ msgstr "Edit Organizational Scope"
 msgid "Postal Address"
 msgstr "Postal Address"
 
-#: src/components/onboarding-layout.tsx
-msgid "We could not complete the sign out request. Please try again."
-msgstr "We could not complete the sign out request. Please try again."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Done"
 msgstr "Done"

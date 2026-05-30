@@ -840,6 +840,46 @@ describe("useAuth", () => {
     }
   });
 
+  it("logout resolves only after sensitive client cleanup settles", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+
+    await persistAuthUser(mockUser);
+
+    const cleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => cleanupDeferred.promise
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    let settled = false;
+    let logoutPromise!: Promise<void>;
+
+    act(() => {
+      logoutPromise = Promise.resolve(result.current.logout());
+      void logoutPromise.then(() => {
+        settled = true;
+      });
+    });
+
+    await waitForSensitiveClientCleanup();
+    expect(settled).toBe(false);
+
+    cleanupDeferred.resolve();
+
+    await act(async () => {
+      await logoutPromise;
+    });
+
+    expect(settled).toBe(true);
+  });
+
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
     const storageClear = createDeferredPromise<void>();
     const restoreError = new Error("restore failed");
