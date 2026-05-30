@@ -324,8 +324,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   beginSensitiveLogoutBarrierCleanup(): void {
-    const activeCleanupCount =
-      this.getSensitiveLogoutBarrierCleanupCount() + 1;
+    const activeCleanupCount = this.getSensitiveLogoutBarrierCleanupCount() + 1;
 
     localStorage.setItem(
       this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY,

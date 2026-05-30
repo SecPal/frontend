@@ -1148,7 +1148,9 @@ describe("useAuth", () => {
 
     await waitFor(() => {
       expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBeNull();
+      expect(
+        localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+      ).toBeNull();
     });
   });
 
