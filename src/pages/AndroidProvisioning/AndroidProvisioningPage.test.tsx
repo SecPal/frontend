@@ -74,6 +74,18 @@ describe("AndroidProvisioningPage", () => {
     } as Response);
   });
 
+  it("renders bootstrap token expiry with seconds included", async () => {
+    renderPage();
+
+    await screen.findByText("Front desk tablet");
+    // Seconds must not be silently dropped from expiry timestamps – regression
+    // for the formatApiDateTime refactor that omitted `second: "2-digit"`.
+    const expiryText = screen
+      .getAllByText(/\d{2}:\d{2}:\d{2}/)
+      .find((el) => el.textContent?.match(/\d{2}:\d{2}:\d{2}/));
+    expect(expiryText).toBeDefined();
+  });
+
   it("loads and renders Android enrollment sessions", async () => {
     renderPage();
 
