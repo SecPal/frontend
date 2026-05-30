@@ -147,6 +147,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
   const shouldClearSensitiveStateRef = useRef(false);
+  const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
+  const sensitiveLogoutBarrierCleanupOwnerTokenRef = useRef<string | null>(
+    null
+  );
   const bootstrapRequestVersionRef = useRef(0);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
@@ -172,21 +176,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const beginSensitiveLogoutBarrierCleanup = useCallback(() => {
+    if (sensitiveLogoutBarrierCleanupOwnerTokenRef.current !== null) {
+      return;
+    }
+
+    sensitiveLogoutBarrierCleanupOwnerTokenRef.current =
+      authStorage.beginSensitiveLogoutBarrierCleanup();
+  }, []);
+
+  const endSensitiveLogoutBarrierCleanup = useCallback(() => {
+    if (sensitiveLogoutBarrierCleanupOwnerTokenRef.current === null) {
+      return;
+    }
+
+    authStorage.endSensitiveLogoutBarrierCleanup(
+      sensitiveLogoutBarrierCleanupOwnerTokenRef.current
+    );
+    sensitiveLogoutBarrierCleanupOwnerTokenRef.current = null;
+  }, []);
+
+  const syncBarrierStateFromStorage = useCallback(() => {
+    if (!authStorage.hasLogoutBarrier()) {
+      return false;
+    }
+
+    hasLogoutBarrierRef.current = true;
+    shouldSkipBarrierVaultTableCleanupRef.current =
+      shouldSkipBarrierVaultTableCleanupRef.current ||
+      authStorage.shouldSkipBarrierVaultTableCleanup();
+
+    return true;
+  }, []);
+
+  const removeUserForActiveBarrier = useCallback(() => {
+    const shouldSkipBarrierVaultTableCleanup =
+      shouldSkipBarrierVaultTableCleanupRef.current ||
+      authStorage.shouldSkipBarrierVaultTableCleanup();
+
+    shouldSkipBarrierVaultTableCleanupRef.current =
+      shouldSkipBarrierVaultTableCleanup;
+
+    void authStorage.removeUser({
+      clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
+      allowBarrierSkipUpgrade: true,
+    });
+  }, []);
+
+  const reconcileActiveBarrierState = useCallback(() => {
+    syncBarrierStateFromStorage();
+    invalidateBootstrapRevalidation();
+    setBootstrapRecoveryReason(null);
+    setUser(null);
+    setIsVaultLocked(false);
+    setIsLoading(false);
+    syncOfflineAuthState(false);
+    removeUserForActiveBarrier();
+  }, [
+    invalidateBootstrapRevalidation,
+    removeUserForActiveBarrier,
+    syncBarrierStateFromStorage,
+    syncOfflineAuthState,
+  ]);
+
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
+        const shouldUpgradeSensitiveState =
+          clearSensitiveState && !shouldClearSensitiveStateRef.current;
+
         shouldClearSensitiveStateRef.current =
           shouldClearSensitiveStateRef.current || clearSensitiveState;
+        shouldSkipBarrierVaultTableCleanupRef.current =
+          shouldSkipBarrierVaultTableCleanupRef.current || clearSensitiveState;
+
+        if (shouldUpgradeSensitiveState) {
+          beginSensitiveLogoutBarrierCleanup();
+        }
+
         return;
       }
 
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
       shouldClearSensitiveStateRef.current = clearSensitiveState;
+      shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
+
+      if (clearSensitiveState) {
+        beginSensitiveLogoutBarrierCleanup();
+      }
+
       hasLogoutBarrierRef.current = true;
       setBootstrapRecoveryReason(null);
       const clearAuthStoragePromise = authStorage.clear({
-        clearOfflineVaultTables: !shouldClearSensitiveStateRef.current,
+        clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanupRef.current,
       });
       const resetAnalyticsStatePromise = resetAnalyticsState();
       setUser(null);
@@ -204,20 +287,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           try {
+            await authStorage.waitForInFlightVaultTableCleanup();
+          } catch (error: unknown) {
+            console.warn(
+              "Failed while waiting for in-flight vault cleanup during logout:",
+              error
+            );
+          }
+
+          try {
             await clearSensitiveClientState();
           } catch (error: unknown) {
             console.error(
               "Failed to clear sensitive client state during logout:",
               error
             );
+          } finally {
+            endSensitiveLogoutBarrierCleanup();
           }
         })
         .finally(() => {
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
           shouldClearSensitiveStateRef.current = false;
           isClearingSessionRef.current = false;
         });
     },
-    [invalidateBootstrapRevalidation, resetAnalyticsState, syncOfflineAuthState]
+    [
+      beginSensitiveLogoutBarrierCleanup,
+      endSensitiveLogoutBarrierCleanup,
+      invalidateBootstrapRevalidation,
+      resetAnalyticsState,
+      syncOfflineAuthState,
+    ]
   );
 
   const login = useCallback(
@@ -232,6 +333,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       invalidateBootstrapRevalidation();
       await authStorage.setUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
+      shouldSkipBarrierVaultTableCleanupRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(sanitizedUser);
       setIsVaultLocked(false);
@@ -271,6 +373,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       hasLogoutBarrierRef.current = false;
+      shouldSkipBarrierVaultTableCleanupRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(restoredUser);
       setIsVaultLocked(false);
@@ -377,8 +480,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           await authStorage.setUser(currentUser);
 
-          if (hasLogoutBarrierRef.current) {
-            void authStorage.removeUser();
+          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+            reconcileActiveBarrierState();
             return;
           }
 
@@ -391,6 +494,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           hasLogoutBarrierRef.current = false;
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
           setBootstrapRecoveryReason(null);
           setUser(currentUser);
           setIsLoading(false);
@@ -445,6 +549,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+        reconcileActiveBarrierState();
+        return;
+      }
+
       if (!storedUser) {
         if (authTransport.kind === "browser-session" && hadStoredUser) {
           if (!isOnline()) {
@@ -477,6 +586,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       hasLogoutBarrierRef.current = false;
+      shouldSkipBarrierVaultTableCleanupRef.current = false;
       setBootstrapRecoveryReason(null);
       setUser(storedUser);
       setIsVaultLocked(false);
@@ -529,6 +639,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
   ]);
 
@@ -564,6 +676,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             hasLogoutBarrierRef.current = false;
+            shouldSkipBarrierVaultTableCleanupRef.current = false;
             setBootstrapRecoveryReason(null);
             invalidateBootstrapRevalidation();
             setUser(unlockedUser);
@@ -598,8 +711,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // an inflight setUser() from bootstrap may have already cleared the
           // localStorage barrier (via clearLogoutBarrier()) before we got
           // here.
-          if (hasLogoutBarrierRef.current) {
-            void authStorage.removeUser();
+          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+            reconcileActiveBarrierState();
             return;
           }
 
@@ -609,6 +722,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           hasLogoutBarrierRef.current = false;
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
           setBootstrapRecoveryReason(null);
           invalidateBootstrapRevalidation();
           setUser(nextUser);
@@ -630,6 +744,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
   ]);
 
@@ -652,8 +768,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedUser = await authStorage.getUser();
 
         // Re-check the in-memory barrier after the async decrypt.
-        if (hasLogoutBarrierRef.current) {
-          void authStorage.removeUser();
+        if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+          reconcileActiveBarrierState();
           return;
         }
 
@@ -666,6 +782,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         hasLogoutBarrierRef.current = false;
+        shouldSkipBarrierVaultTableCleanupRef.current = false;
         setBootstrapRecoveryReason(null);
         invalidateBootstrapRevalidation();
         setUser(storedUser);
@@ -683,6 +800,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
     user,
   ]);

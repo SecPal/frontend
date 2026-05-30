@@ -18,6 +18,17 @@ const CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
 const textEncoder = new TextEncoder();
+const SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX =
+  "auth_logout_skip_vault_table_cleanup_owner:";
+
+function getSensitiveLogoutCleanupOwnerKeys(): string[] {
+  return Array.from({ length: localStorage.length }, (_, index) =>
+    localStorage.key(index)
+  ).filter(
+    (storageKey): storageKey is string =>
+      storageKey?.startsWith(SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX) ?? false
+  );
+}
 
 function encodeBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -340,6 +351,87 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("skips vault table cleanup when setUser fails after a full logout barrier is raised", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cryptoFailure = new DOMException(
+      "The operation failed.",
+      "OperationError"
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+    vi.spyOn(globalThis.crypto.subtle, "deriveBits").mockRejectedValueOnce(
+      cryptoFailure
+    );
+
+    await expect(authStorage.setUser(user)).resolves.toBeUndefined();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to persist stored user data:",
+      cryptoFailure
+    );
+    expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+  });
+
+  it("preserves the skip marker when setUser clears the logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await expect(authStorage.setUser(user)).resolves.toBeUndefined();
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+  });
+
+  it("honors a skip-marker upgrade after getUserSnapshot sees a logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await authStorage.setUser(user);
+      localStorage.setItem("auth_logout_barrier", "1");
+
+      expect(authStorage.getUserSnapshot()).toBeNull();
+
+      authStorage.setSkipBarrierVaultTableCleanup(true);
+
+      await new Promise<void>((resolve) => {
+        globalThis.setTimeout(resolve, 0);
+      });
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+    }
+  });
+
   it("clears persisted auth state when setUser receives an invalid user", async () => {
     localStorage.setItem("auth_user", "stale-auth-storage-record");
 
@@ -431,6 +523,132 @@ describe("authStorage", () => {
     }
   });
 
+  it("preserves an existing skip marker when clear runs during an active logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await authStorage.clear();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(await db.vaultProfile.count()).toBe(1);
+  });
+
+  it("resets stale sensitive logout cleanup owners when a new full logout starts after re-login", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    const staleOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    await authStorage.clear({ clearOfflineVaultTables: false });
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
+
+    await authStorage.setUser(user);
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
+
+    const refreshedOwnerToken =
+      authStorage.beginSensitiveLogoutBarrierCleanup();
+    authStorage.endSensitiveLogoutBarrierCleanup(refreshedOwnerToken);
+
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+    ).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+
+    // The stale owner token from the previous barrier must no longer be able to
+    // influence the refreshed logout lifecycle.
+    authStorage.endSensitiveLogoutBarrierCleanup(staleOwnerToken);
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+    ).toBeNull();
+  });
+
+  it("keeps the skip marker while another tab still owns sensitive logout cleanup", () => {
+    const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    localStorage.setItem(
+      `${SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX}other-tab`,
+      String(Date.now())
+    );
+
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
+
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+  });
+
+  it("ignores stale owner markers when a new non-sensitive barrier starts", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
+
+    await authStorage.clear({ clearOfflineVaultTables: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
+  it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await authStorage.removeUser({ clearOfflineVaultTables: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
   it("logs and resolves when vault table cleanup fails during removeUser", async () => {
     const user = {
       id: "1",
@@ -453,5 +671,96 @@ describe("authStorage", () => {
       cleanupError
     );
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("does not reject concurrent vault cleanup waiters when logout cleanup fails", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cleanupError = new Error("clear failed");
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    let rejectCleanup!: (reason?: unknown) => void;
+    const cleanupPromise = new Promise<void>((_resolve, reject) => {
+      rejectCleanup = reject;
+    });
+
+    await authStorage.setUser(user);
+    vi.spyOn(db.vaultProfile, "clear").mockReturnValue(
+      cleanupPromise as ReturnType<typeof db.vaultProfile.clear>
+    );
+
+    const removeUserPromise = authStorage.removeUser();
+    const waitForCleanupPromise =
+      authStorage.waitForInFlightVaultTableCleanup();
+
+    rejectCleanup(cleanupError);
+
+    await expect(waitForCleanupPromise).resolves.toBeUndefined();
+    await expect(removeUserPromise).resolves.toBeUndefined();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Failed to clear offline vault tables on logout:",
+      cleanupError
+    );
+  });
+
+  it("waits for queued vault-table cleanup work before resolving cleanup waiters", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    let resolveFirstCleanup!: () => void;
+    let resolveSecondCleanup!: () => void;
+    const firstCleanupPromise = new Promise<void>((resolve) => {
+      resolveFirstCleanup = resolve;
+    });
+    const secondCleanupPromise = new Promise<void>((resolve) => {
+      resolveSecondCleanup = resolve;
+    });
+    let waitResolved = false;
+    const vaultProfileClearSpy = vi
+      .spyOn(db.vaultProfile, "clear")
+      .mockImplementationOnce(
+        () => firstCleanupPromise as ReturnType<typeof db.vaultProfile.clear>
+      )
+      .mockImplementationOnce(
+        () => secondCleanupPromise as ReturnType<typeof db.vaultProfile.clear>
+      );
+
+    await authStorage.setUser(user);
+
+    const firstRemoveUserPromise = authStorage.removeUser();
+    const secondRemoveUserPromise = authStorage.removeUser();
+    const waitForCleanupPromise = authStorage
+      .waitForInFlightVaultTableCleanup()
+      .then(() => {
+        waitResolved = true;
+      });
+
+    await vi.waitFor(() => {
+      expect(vaultProfileClearSpy).toHaveBeenCalledTimes(1);
+    });
+
+    resolveFirstCleanup();
+
+    await vi.waitFor(() => {
+      expect(vaultProfileClearSpy).toHaveBeenCalledTimes(2);
+    });
+
+    expect(waitResolved).toBe(false);
+
+    resolveSecondCleanup();
+
+    await Promise.all([
+      firstRemoveUserPromise,
+      secondRemoveUserPromise,
+      waitForCleanupPromise,
+    ]);
   });
 });

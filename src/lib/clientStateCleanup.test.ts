@@ -26,6 +26,18 @@ const mockPushManager = {
   getSubscription: vi.fn(),
 };
 
+function createDeferredPromise<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("clearSensitiveClientState", () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
@@ -189,5 +201,46 @@ describe("clearSensitiveClientState", () => {
     expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(installationId).not.toBeNull();
     expect(peekBrowserPushInstallationId()).toBeNull();
+  });
+
+  it("waits for IndexedDB cleanup to settle before rejecting after another sensitive cleanup fails", async () => {
+    const deleteDeferred = createDeferredPromise<void>();
+    const cacheDeleteDeferred = createDeferredPromise<boolean>();
+    const cacheError = new Error("cache delete failed");
+    const deleteSpy = vi
+      .spyOn(db, "delete")
+      .mockImplementationOnce(
+        () => deleteDeferred.promise as ReturnType<typeof db.delete>
+      );
+    let settled = false;
+    let rejected = false;
+
+    mockCaches.keys.mockResolvedValue([SENSITIVE_CACHE_NAMES[0]]);
+    mockCaches.delete.mockImplementationOnce(() => cacheDeleteDeferred.promise);
+
+    const clearPromise = clearSensitiveClientState()
+      .catch((error: unknown) => {
+        rejected = true;
+        throw error;
+      })
+      .finally(() => {
+        settled = true;
+      });
+
+    await Promise.resolve();
+
+    expect(deleteSpy).toHaveBeenCalledTimes(1);
+
+    cacheDeleteDeferred.reject(cacheError);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(settled).toBe(false);
+    expect(rejected).toBe(false);
+
+    deleteDeferred.resolve();
+
+    await expect(clearPromise).rejects.toBe(cacheError);
   });
 });

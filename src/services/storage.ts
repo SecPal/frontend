@@ -258,9 +258,19 @@ export interface AuthStorage {
   setUser(user: User): Promise<void>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
-  removeUser(): Promise<void>;
-  clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
+  removeUser(options?: AuthStorageClearOptions): Promise<void>;
+  clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
+  shouldSkipBarrierVaultTableCleanup(): boolean;
+  setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
+  beginSensitiveLogoutBarrierCleanup(): string;
+  endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
+  waitForInFlightVaultTableCleanup(): Promise<void>;
+}
+
+interface AuthStorageClearOptions {
+  clearOfflineVaultTables?: boolean;
+  allowBarrierSkipUpgrade?: boolean;
 }
 
 /**
@@ -271,6 +281,11 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly VAULT_KEY = AUTH_VAULT_STORAGE_KEY;
   private readonly VAULT_LOCK_KEY = AUTH_VAULT_LOCK_KEY;
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
+  private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
+    "auth_logout_skip_vault_table_cleanup";
+  private readonly SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX =
+    "auth_logout_skip_vault_table_cleanup_owner:";
+  private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -291,6 +306,116 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private setLogoutBarrier(): void {
     localStorage.setItem(this.LOGOUT_BARRIER_KEY, "1");
+  }
+
+  setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void {
+    if (shouldSkip) {
+      localStorage.setItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY, "1");
+      return;
+    }
+
+    localStorage.removeItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY);
+  }
+
+  shouldSkipBarrierVaultTableCleanup(): boolean {
+    return (
+      localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !==
+        null || this.hasSensitiveLogoutBarrierCleanupOwners()
+    );
+  }
+
+  beginSensitiveLogoutBarrierCleanup(): string {
+    const hasActiveSkipBarrier =
+      this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
+    const ownerToken = crypto.randomUUID();
+
+    if (!hasActiveSkipBarrier) {
+      this.clearSensitiveLogoutBarrierCleanupOwners();
+    }
+
+    this.setLogoutBarrier();
+    localStorage.setItem(
+      this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken),
+      "1"
+    );
+    this.setSkipBarrierVaultTableCleanup(true);
+
+    return ownerToken;
+  }
+
+  endSensitiveLogoutBarrierCleanup(ownerToken: string): void {
+    localStorage.removeItem(
+      this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken)
+    );
+
+    if (this.hasSensitiveLogoutBarrierCleanupOwners()) {
+      return;
+    }
+
+    this.setSkipBarrierVaultTableCleanup(false);
+  }
+
+  private clearSensitiveLogoutBarrierCleanupOwners(): void {
+    const ownerKeys = this.getSensitiveLogoutBarrierCleanupOwnerKeys();
+
+    for (const ownerKey of ownerKeys) {
+      localStorage.removeItem(ownerKey);
+    }
+  }
+
+  private hasSensitiveLogoutBarrierCleanupOwners(): boolean {
+    return this.getSensitiveLogoutBarrierCleanupOwnerKeys().length > 0;
+  }
+
+  private getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken: string): string {
+    return `${this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX}${ownerToken}`;
+  }
+
+  private getSensitiveLogoutBarrierCleanupOwnerKeys(): string[] {
+    const ownerKeys: string[] = [];
+
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const storageKey = localStorage.key(index);
+
+      if (
+        storageKey?.startsWith(
+          this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX
+        )
+      ) {
+        ownerKeys.push(storageKey);
+      }
+    }
+
+    return ownerKeys;
+  }
+
+  private async waitForBarrierCleanupUpgrade(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      globalThis.setTimeout(resolve, 0);
+    });
+  }
+
+  async waitForInFlightVaultTableCleanup(): Promise<void> {
+    try {
+      await this.vaultTableCleanupQueuePromise;
+    } catch {
+      // The cleanup initiator handles the vault-table failure; waiters should
+      // still continue with their own best-effort logout cleanup.
+    }
+  }
+
+  private async clearVaultTables(): Promise<void> {
+    const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
+      .catch(() => {
+        // The cleanup initiator handles the vault-table failure; later
+        // cleanups still need to run in order.
+      })
+      .then(async () => {
+        await clearOfflineVaultTables();
+      });
+
+    this.vaultTableCleanupQueuePromise = queuedCleanupPromise;
+    await queuedCleanupPromise;
   }
 
   hasLogoutBarrier(): boolean {
@@ -335,7 +460,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
-      void this.removeUser();
+      void this.removeUser({
+        clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+        allowBarrierSkipUpgrade: true,
+      });
       return null;
     }
 
@@ -371,7 +499,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async getUser(): Promise<User | null> {
     if (this.hasLogoutBarrier()) {
-      void this.removeUser();
+      void this.removeUser({
+        clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+        allowBarrierSkipUpgrade: true,
+      });
       return null;
     }
 
@@ -450,9 +581,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     return unlockedUser;
   }
 
-  async removeUser({
-    clearOfflineVaultTables: shouldClearOfflineVaultTables = true,
-  }: { clearOfflineVaultTables?: boolean } = {}): Promise<void> {
+  async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
+    const shouldClearOfflineVaultTables =
+      options.clearOfflineVaultTables ?? true;
+
     clearOfflineVaultSession();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
@@ -462,16 +594,44 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
+    if (this.hasLogoutBarrier()) {
+      await this.waitForBarrierCleanupUpgrade();
+
+      if (
+        (options.allowBarrierSkipUpgrade ||
+          options.clearOfflineVaultTables !== true) &&
+        this.shouldSkipBarrierVaultTableCleanup()
+      ) {
+        return;
+      }
+    }
+
     try {
-      await clearOfflineVaultTables();
+      await this.clearVaultTables();
     } catch (error: unknown) {
       console.warn("Failed to clear offline vault tables on logout:", error);
     }
   }
 
-  async clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void> {
+  async clear(options?: AuthStorageClearOptions): Promise<void> {
+    const shouldPreserveExistingSkipMarker =
+      this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
+
+    if (!shouldPreserveExistingSkipMarker) {
+      this.clearSensitiveLogoutBarrierCleanupOwners();
+    }
+
     this.setLogoutBarrier();
-    await this.removeUser(options);
+    this.setSkipBarrierVaultTableCleanup(
+      shouldPreserveExistingSkipMarker ||
+        options?.clearOfflineVaultTables === false
+    );
+    await this.removeUser({
+      ...options,
+      allowBarrierSkipUpgrade:
+        options?.allowBarrierSkipUpgrade ??
+        options?.clearOfflineVaultTables !== false,
+    });
   }
 }
 
