@@ -162,9 +162,12 @@ async function main() {
     process.exit(143);
   });
 
-  const exitCode = await onceExit(playwright);
-
-  cleanup();
+  let exitCode;
+  try {
+    exitCode = await onceExit(playwright);
+  } finally {
+    cleanup();
+  }
   process.exit(exitCode);
 }
 
