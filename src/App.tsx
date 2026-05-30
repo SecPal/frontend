@@ -172,12 +172,7 @@ function LoginRoute() {
       return <Navigate to="/" replace />;
     }
 
-    return (
-      <RouteVaultLockedState
-        onUnlock={unlock}
-        onSignInAgain={logout}
-      />
-    );
+    return <RouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />;
   }
 
   if (isAuthenticated) {
