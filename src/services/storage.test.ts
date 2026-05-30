@@ -504,4 +504,36 @@ describe("authStorage", () => {
     );
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
   });
+
+  it("does not reject concurrent vault cleanup waiters when logout cleanup fails", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const cleanupError = new Error("clear failed");
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    let rejectCleanup!: (reason?: unknown) => void;
+    const cleanupPromise = new Promise<void>((_resolve, reject) => {
+      rejectCleanup = reject;
+    });
+
+    await authStorage.setUser(user);
+    vi.spyOn(db.vaultProfile, "clear").mockReturnValue(cleanupPromise);
+
+    const removeUserPromise = authStorage.removeUser();
+    const waitForCleanupPromise = authStorage.waitForInFlightVaultTableCleanup();
+
+    rejectCleanup(cleanupError);
+
+    await expect(waitForCleanupPromise).resolves.toBeUndefined();
+    await expect(removeUserPromise).resolves.toBeUndefined();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Failed to clear offline vault tables on logout:",
+      cleanupError
+    );
+  });
 });
