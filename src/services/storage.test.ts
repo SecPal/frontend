@@ -481,6 +481,27 @@ describe("authStorage", () => {
     }
   });
 
+  it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await authStorage.removeUser({ clearOfflineVaultTables: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
   it("logs and resolves when vault table cleanup fails during removeUser", async () => {
     const user = {
       id: "1",
@@ -525,7 +546,8 @@ describe("authStorage", () => {
     vi.spyOn(db.vaultProfile, "clear").mockReturnValue(cleanupPromise);
 
     const removeUserPromise = authStorage.removeUser();
-    const waitForCleanupPromise = authStorage.waitForInFlightVaultTableCleanup();
+    const waitForCleanupPromise =
+      authStorage.waitForInFlightVaultTableCleanup();
 
     rejectCleanup(cleanupError);
 

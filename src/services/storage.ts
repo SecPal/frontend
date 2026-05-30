@@ -502,9 +502,12 @@ class LocalStorageAuthStorage implements AuthStorage {
     return unlockedUser;
   }
 
-  async removeUser({
-    clearOfflineVaultTables: shouldClearOfflineVaultTables = true,
-  }: { clearOfflineVaultTables?: boolean } = {}): Promise<void> {
+  async removeUser(
+    options: { clearOfflineVaultTables?: boolean } = {}
+  ): Promise<void> {
+    const shouldClearOfflineVaultTables =
+      options.clearOfflineVaultTables ?? true;
+
     clearOfflineVaultSession();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
@@ -517,7 +520,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (this.hasLogoutBarrier()) {
       await this.waitForBarrierCleanupUpgrade();
 
-      if (this.shouldSkipBarrierVaultTableCleanup()) {
+      if (
+        options.clearOfflineVaultTables !== true &&
+        this.shouldSkipBarrierVaultTableCleanup()
+      ) {
         return;
       }
     }
