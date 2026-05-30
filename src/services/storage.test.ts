@@ -390,6 +390,37 @@ describe("authStorage", () => {
     );
   });
 
+  it("honors a skip-marker upgrade after getUserSnapshot sees a logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await authStorage.setUser(user);
+      localStorage.setItem("auth_logout_barrier", "1");
+
+      expect(authStorage.getUserSnapshot()).toBeNull();
+
+      authStorage.setSkipBarrierVaultTableCleanup(true);
+
+      await new Promise<void>((resolve) => {
+        globalThis.setTimeout(resolve, 0);
+      });
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+    }
+  });
+
   it("clears persisted auth state when setUser receives an invalid user", async () => {
     localStorage.setItem("auth_user", "stale-auth-storage-record");
 

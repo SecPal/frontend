@@ -1093,6 +1093,65 @@ describe("useAuth", () => {
     await waitForSensitiveClientCleanup();
   });
 
+  it("keeps the skip marker until overlapping full logout cleanups finish", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const firstSensitiveCleanup = createDeferredPromise<void>();
+    const secondSensitiveCleanup = createDeferredPromise<void>();
+
+    vi.mocked(clearSensitiveClientState)
+      .mockImplementationOnce(() => firstSensitiveCleanup.promise)
+      .mockImplementationOnce(() => secondSensitiveCleanup.promise);
+
+    await persistAuthUser(mockUser);
+
+    const firstAuth = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+    const secondAuth = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(firstAuth.result.current.isAuthenticated).toBe(true);
+      expect(secondAuth.result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      firstAuth.result.current.logout();
+      secondAuth.result.current.logout();
+    });
+
+    await waitForSensitiveClientCleanup(2);
+
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+
+    await act(async () => {
+      firstSensitiveCleanup.resolve();
+      await Promise.resolve();
+    });
+
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+
+    await act(async () => {
+      secondSensitiveCleanup.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBeNull();
+    });
+  });
+
   it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {
     const mockUser = {
       id: "1",
@@ -1447,6 +1506,48 @@ describe("useAuth", () => {
         "1"
       );
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+    }
+  });
+
+  it("honors a late skip-marker upgrade when BFCache reconciliation sees a logout barrier", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
+
+      act(() => {
+        localStorage.setItem("auth_logout_barrier", "1");
+        window.dispatchEvent(
+          new PageTransitionEvent("pageshow", { persisted: true })
+        );
+      });
+
+      authStorage.setSkipBarrierVaultTableCleanup(true);
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(false);
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      });
+
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
     } finally {
       vaultProfileClearSpy.mockRestore();
     }

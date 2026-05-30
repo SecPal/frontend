@@ -263,6 +263,8 @@ export interface AuthStorage {
   hasLogoutBarrier(): boolean;
   shouldSkipBarrierVaultTableCleanup(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
+  beginSensitiveLogoutBarrierCleanup(): void;
+  endSensitiveLogoutBarrierCleanup(): void;
   waitForInFlightVaultTableCleanup(): Promise<void>;
 }
 
@@ -281,6 +283,8 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
   private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
     "auth_logout_skip_vault_table_cleanup";
+  private readonly SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY =
+    "auth_logout_skip_vault_table_cleanup_count";
   private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
 
   /**
@@ -317,6 +321,54 @@ class LocalStorageAuthStorage implements AuthStorage {
     return (
       localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !== null
     );
+  }
+
+  beginSensitiveLogoutBarrierCleanup(): void {
+    const activeCleanupCount =
+      this.getSensitiveLogoutBarrierCleanupCount() + 1;
+
+    localStorage.setItem(
+      this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY,
+      String(activeCleanupCount)
+    );
+    this.setSkipBarrierVaultTableCleanup(true);
+  }
+
+  endSensitiveLogoutBarrierCleanup(): void {
+    const activeCleanupCount = this.getSensitiveLogoutBarrierCleanupCount();
+
+    if (activeCleanupCount === 0) {
+      return;
+    }
+
+    if (activeCleanupCount === 1) {
+      localStorage.removeItem(this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY);
+      this.setSkipBarrierVaultTableCleanup(false);
+      return;
+    }
+
+    localStorage.setItem(
+      this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY,
+      String(activeCleanupCount - 1)
+    );
+  }
+
+  private getSensitiveLogoutBarrierCleanupCount(): number {
+    const storedCount = localStorage.getItem(
+      this.SENSITIVE_LOGOUT_BARRIER_CLEANUP_COUNT_KEY
+    );
+
+    if (!storedCount) {
+      return 0;
+    }
+
+    const parsedCount = Number.parseInt(storedCount, 10);
+
+    if (!Number.isFinite(parsedCount) || parsedCount < 1) {
+      return 0;
+    }
+
+    return parsedCount;
   }
 
   private async waitForBarrierCleanupUpgrade(): Promise<void> {
@@ -392,6 +444,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (this.hasLogoutBarrier()) {
       void this.removeUser({
         clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+        allowBarrierSkipUpgrade: true,
       });
       return null;
     }
@@ -430,6 +483,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     if (this.hasLogoutBarrier()) {
       void this.removeUser({
         clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+        allowBarrierSkipUpgrade: true,
       });
       return null;
     }

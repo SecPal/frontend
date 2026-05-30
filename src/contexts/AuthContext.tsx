@@ -148,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isClearingSessionRef = useRef(false);
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
+  const hasSensitiveLogoutBarrierCleanupRef = useRef(false);
   const bootstrapRequestVersionRef = useRef(0);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
@@ -173,6 +174,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const beginSensitiveLogoutBarrierCleanup = useCallback(() => {
+    if (hasSensitiveLogoutBarrierCleanupRef.current) {
+      return;
+    }
+
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+    hasSensitiveLogoutBarrierCleanupRef.current = true;
+  }, []);
+
+  const endSensitiveLogoutBarrierCleanup = useCallback(() => {
+    if (!hasSensitiveLogoutBarrierCleanupRef.current) {
+      return;
+    }
+
+    authStorage.endSensitiveLogoutBarrierCleanup();
+    hasSensitiveLogoutBarrierCleanupRef.current = false;
+  }, []);
+
   const syncBarrierStateFromStorage = useCallback(() => {
     if (!authStorage.hasLogoutBarrier()) {
       return false;
@@ -196,6 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void authStorage.removeUser({
       clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
+      allowBarrierSkipUpgrade: true,
     });
   }, []);
 
@@ -218,13 +238,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
       if (isClearingSessionRef.current) {
+        const shouldUpgradeSensitiveState =
+          clearSensitiveState && !shouldClearSensitiveStateRef.current;
+
         shouldClearSensitiveStateRef.current =
           shouldClearSensitiveStateRef.current || clearSensitiveState;
         shouldSkipBarrierVaultTableCleanupRef.current =
           shouldSkipBarrierVaultTableCleanupRef.current || clearSensitiveState;
 
-        if (clearSensitiveState) {
-          authStorage.setSkipBarrierVaultTableCleanup(true);
+        if (shouldUpgradeSensitiveState) {
+          beginSensitiveLogoutBarrierCleanup();
         }
 
         return;
@@ -234,7 +257,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isClearingSessionRef.current = true;
       shouldClearSensitiveStateRef.current = clearSensitiveState;
       shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
-      authStorage.setSkipBarrierVaultTableCleanup(clearSensitiveState);
+
+      if (clearSensitiveState) {
+        beginSensitiveLogoutBarrierCleanup();
+      }
+
       hasLogoutBarrierRef.current = true;
       setBootstrapRecoveryReason(null);
       const clearAuthStoragePromise = authStorage.clear({
@@ -272,7 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               error
             );
           } finally {
-            authStorage.setSkipBarrierVaultTableCleanup(false);
+            endSensitiveLogoutBarrierCleanup();
           }
         })
         .finally(() => {
@@ -281,7 +308,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isClearingSessionRef.current = false;
         });
     },
-    [invalidateBootstrapRevalidation, resetAnalyticsState, syncOfflineAuthState]
+    [
+      beginSensitiveLogoutBarrierCleanup,
+      endSensitiveLogoutBarrierCleanup,
+      invalidateBootstrapRevalidation,
+      resetAnalyticsState,
+      syncOfflineAuthState,
+    ]
   );
 
   const login = useCallback(
