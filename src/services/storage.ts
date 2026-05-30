@@ -330,7 +330,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private async clearVaultTables(): Promise<void> {
     if (this.inFlightVaultTableCleanupPromise) {
-      await this.inFlightVaultTableCleanupPromise;
+      await this.waitForInFlightVaultTableCleanup();
     }
 
     const cleanupPromise = clearOfflineVaultTables();
