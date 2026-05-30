@@ -261,6 +261,7 @@ export interface AuthStorage {
   removeUser(options?: AuthStorageClearOptions): Promise<void>;
   clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
+  shouldSkipBarrierVaultTableCleanup(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
   waitForInFlightVaultTableCleanup(): Promise<void>;
 }
@@ -312,7 +313,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     localStorage.removeItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY);
   }
 
-  private shouldSkipBarrierVaultTableCleanup(): boolean {
+  shouldSkipBarrierVaultTableCleanup(): boolean {
     return (
       localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !== null
     );
@@ -389,7 +390,9 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
-      void this.removeUser();
+      void this.removeUser({
+        clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+      });
       return null;
     }
 
@@ -425,7 +428,9 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async getUser(): Promise<User | null> {
     if (this.hasLogoutBarrier()) {
-      void this.removeUser();
+      void this.removeUser({
+        clearOfflineVaultTables: !this.shouldSkipBarrierVaultTableCleanup(),
+      });
       return null;
     }
 

@@ -1410,6 +1410,48 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("preserves the persisted skip marker when BFCache restore sees another tab's logout barrier", async () => {
+    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
+
+      act(() => {
+        localStorage.setItem("auth_logout_barrier", "1");
+        authStorage.setSkipBarrierVaultTableCleanup(true);
+        window.dispatchEvent(
+          new PageTransitionEvent("pageshow", { persisted: true })
+        );
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(false);
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      });
+
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+    }
+  });
+
   it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", async () => {
     const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
 
@@ -1425,6 +1467,41 @@ describe("useAuth", () => {
     expect(result.current.isLoading).toBe(false);
     expectNoStoredAuthState();
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("honors a persisted skip marker when bootstrap sees an existing logout barrier", async () => {
+    const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
+    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+
+    try {
+      await persistAuthUser(staleUser);
+      localStorage.setItem("auth_logout_barrier", "1");
+      authStorage.setSkipBarrierVaultTableCleanup(true);
+      vaultProfileClearSpy.mockClear();
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.user).toBeNull();
+        expect(result.current.isAuthenticated).toBe(false);
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+      });
+
+      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+      expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+    }
   });
 
   it("ignores storage events for keys other than supported auth storage keys", async () => {

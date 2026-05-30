@@ -173,11 +173,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const syncBarrierStateFromStorage = useCallback(() => {
+    if (!authStorage.hasLogoutBarrier()) {
+      return false;
+    }
+
+    hasLogoutBarrierRef.current = true;
+    shouldSkipBarrierVaultTableCleanupRef.current =
+      shouldSkipBarrierVaultTableCleanupRef.current ||
+      authStorage.shouldSkipBarrierVaultTableCleanup();
+
+    return true;
+  }, []);
+
   const removeUserForActiveBarrier = useCallback(() => {
+    const shouldSkipBarrierVaultTableCleanup =
+      shouldSkipBarrierVaultTableCleanupRef.current ||
+      authStorage.shouldSkipBarrierVaultTableCleanup();
+
+    shouldSkipBarrierVaultTableCleanupRef.current =
+      shouldSkipBarrierVaultTableCleanup;
+
     void authStorage.removeUser({
-      clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanupRef.current,
+      clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
     });
   }, []);
+
+  const reconcileActiveBarrierState = useCallback(() => {
+    syncBarrierStateFromStorage();
+    invalidateBootstrapRevalidation();
+    setBootstrapRecoveryReason(null);
+    setUser(null);
+    setIsVaultLocked(false);
+    setIsLoading(false);
+    syncOfflineAuthState(false);
+    removeUserForActiveBarrier();
+  }, [
+    invalidateBootstrapRevalidation,
+    removeUserForActiveBarrier,
+    syncBarrierStateFromStorage,
+    syncOfflineAuthState,
+  ]);
 
   const clearAuthenticatedState = useCallback(
     (clearSensitiveState: boolean) => {
@@ -407,8 +443,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           await authStorage.setUser(currentUser);
 
-          if (hasLogoutBarrierRef.current) {
-            removeUserForActiveBarrier();
+          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+            reconcileActiveBarrierState();
             return;
           }
 
@@ -476,8 +512,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (hasLogoutBarrierRef.current) {
-        removeUserForActiveBarrier();
+      if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+        reconcileActiveBarrierState();
         return;
       }
 
@@ -566,7 +602,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
-    removeUserForActiveBarrier,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
   ]);
 
@@ -637,8 +674,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // an inflight setUser() from bootstrap may have already cleared the
           // localStorage barrier (via clearLogoutBarrier()) before we got
           // here.
-          if (hasLogoutBarrierRef.current) {
-            removeUserForActiveBarrier();
+          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+            reconcileActiveBarrierState();
             return;
           }
 
@@ -670,7 +707,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
-    removeUserForActiveBarrier,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
   ]);
 
@@ -693,8 +731,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedUser = await authStorage.getUser();
 
         // Re-check the in-memory barrier after the async decrypt.
-        if (hasLogoutBarrierRef.current) {
-          removeUserForActiveBarrier();
+        if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+          reconcileActiveBarrierState();
           return;
         }
 
@@ -725,7 +763,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
-    removeUserForActiveBarrier,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
     user,
   ]);
