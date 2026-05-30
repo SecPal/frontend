@@ -606,6 +606,28 @@ describe("authStorage", () => {
     );
   });
 
+  it("ignores stale owner markers when a new non-sensitive barrier starts", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
+
+    await authStorage.clear({ clearOfflineVaultTables: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
   it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {
     const user = {
       id: "1",

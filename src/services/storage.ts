@@ -617,6 +617,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     const shouldPreserveExistingSkipMarker =
       this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
 
+    if (!shouldPreserveExistingSkipMarker) {
+      this.clearSensitiveLogoutBarrierCleanupOwners();
+    }
+
     this.setLogoutBarrier();
     this.setSkipBarrierVaultTableCleanup(
       shouldPreserveExistingSkipMarker ||
