@@ -118,6 +118,18 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
+function createDeferredPromise<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("authStorage", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -543,7 +555,9 @@ describe("authStorage", () => {
     });
 
     await authStorage.setUser(user);
-    vi.spyOn(db.vaultProfile, "clear").mockReturnValue(cleanupPromise);
+    vi.spyOn(db.vaultProfile, "clear").mockReturnValue(
+      cleanupPromise as ReturnType<typeof db.vaultProfile.clear>
+    );
 
     const removeUserPromise = authStorage.removeUser();
     const waitForCleanupPromise =
@@ -557,5 +571,55 @@ describe("authStorage", () => {
       "Failed to clear offline vault tables on logout:",
       cleanupError
     );
+  });
+
+  it("waits for queued vault-table cleanup work before resolving cleanup waiters", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const firstCleanup = createDeferredPromise<void>();
+    const secondCleanup = createDeferredPromise<void>();
+    let waitResolved = false;
+    const vaultProfileClearSpy = vi
+      .spyOn(db.vaultProfile, "clear")
+      .mockImplementationOnce(
+        () =>
+          firstCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
+      )
+      .mockImplementationOnce(
+        () =>
+          secondCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
+      );
+
+    await authStorage.setUser(user);
+
+    const firstRemoveUserPromise = authStorage.removeUser();
+    const secondRemoveUserPromise = authStorage.removeUser();
+    const waitForCleanupPromise = authStorage
+      .waitForInFlightVaultTableCleanup()
+      .then(() => {
+        waitResolved = true;
+      });
+
+    await vi.waitFor(() => {
+      expect(vaultProfileClearSpy).toHaveBeenCalledTimes(1);
+    });
+
+    firstCleanup.resolve();
+
+    await vi.waitFor(() => {
+      expect(vaultProfileClearSpy).toHaveBeenCalledTimes(2);
+    });
+
+    expect(waitResolved).toBe(false);
+
+    secondCleanup.resolve();
+
+    await waitForCleanupPromise;
+    await expect(firstRemoveUserPromise).resolves.toBeUndefined();
+    await expect(secondRemoveUserPromise).resolves.toBeUndefined();
   });
 });

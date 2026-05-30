@@ -221,12 +221,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             await authStorage.waitForInFlightVaultTableCleanup();
+          } catch (error: unknown) {
+            console.warn(
+              "Failed while waiting for in-flight vault cleanup during logout:",
+              error
+            );
+          }
+
+          try {
             await clearSensitiveClientState();
           } catch (error: unknown) {
             console.error(
               "Failed to clear sensitive client state during logout:",
               error
             );
+          } finally {
+            authStorage.setSkipBarrierVaultTableCleanup(false);
           }
         })
         .finally(() => {

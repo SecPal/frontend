@@ -258,11 +258,16 @@ export interface AuthStorage {
   setUser(user: User): Promise<void>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
-  removeUser(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
-  clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
+  removeUser(options?: AuthStorageClearOptions): Promise<void>;
+  clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
   waitForInFlightVaultTableCleanup(): Promise<void>;
+}
+
+interface AuthStorageClearOptions {
+  clearOfflineVaultTables?: boolean;
+  allowBarrierSkipUpgrade?: boolean;
 }
 
 /**
@@ -276,6 +281,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
     "auth_logout_skip_vault_table_cleanup";
   private inFlightVaultTableCleanupPromise: Promise<void> | null = null;
+  private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -321,7 +327,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async waitForInFlightVaultTableCleanup(): Promise<void> {
     try {
-      await this.inFlightVaultTableCleanupPromise;
+      await this.vaultTableCleanupQueuePromise;
     } catch {
       // The cleanup initiator handles the vault-table failure; waiters should
       // still continue with their own best-effort logout cleanup.
@@ -329,20 +335,28 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(): Promise<void> {
-    if (this.inFlightVaultTableCleanupPromise) {
-      await this.waitForInFlightVaultTableCleanup();
-    }
+    let cleanupPromise: Promise<void> | null = null;
 
-    const cleanupPromise = clearOfflineVaultTables();
-    this.inFlightVaultTableCleanupPromise = cleanupPromise;
+    const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
+      .catch(() => {
+        // The cleanup initiator handles the vault-table failure; later
+        // cleanups still need to run in order.
+      })
+      .then(async () => {
+        cleanupPromise = clearOfflineVaultTables();
+        this.inFlightVaultTableCleanupPromise = cleanupPromise;
 
-    try {
-      await cleanupPromise;
-    } finally {
-      if (this.inFlightVaultTableCleanupPromise === cleanupPromise) {
-        this.inFlightVaultTableCleanupPromise = null;
-      }
-    }
+        try {
+          await cleanupPromise;
+        } finally {
+          if (this.inFlightVaultTableCleanupPromise === cleanupPromise) {
+            this.inFlightVaultTableCleanupPromise = null;
+          }
+        }
+      });
+
+    this.vaultTableCleanupQueuePromise = queuedCleanupPromise;
+    await queuedCleanupPromise;
   }
 
   hasLogoutBarrier(): boolean {
@@ -503,7 +517,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async removeUser(
-    options: { clearOfflineVaultTables?: boolean } = {}
+    options: AuthStorageClearOptions = {}
   ): Promise<void> {
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
@@ -521,7 +535,8 @@ class LocalStorageAuthStorage implements AuthStorage {
       await this.waitForBarrierCleanupUpgrade();
 
       if (
-        options.clearOfflineVaultTables !== true &&
+        (options.allowBarrierSkipUpgrade ||
+          options.clearOfflineVaultTables !== true) &&
         this.shouldSkipBarrierVaultTableCleanup()
       ) {
         return;
@@ -535,12 +550,17 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  async clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void> {
+  async clear(options?: AuthStorageClearOptions): Promise<void> {
     this.setLogoutBarrier();
     this.setSkipBarrierVaultTableCleanup(
       options?.clearOfflineVaultTables === false
     );
-    await this.removeUser(options);
+    await this.removeUser({
+      ...options,
+      allowBarrierSkipUpgrade:
+        options?.allowBarrierSkipUpgrade ??
+        options?.clearOfflineVaultTables !== false,
+    });
   }
 }
 
