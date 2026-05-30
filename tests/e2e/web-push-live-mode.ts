@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { isRemoteE2ETarget } from "./auth-helpers";
+import { DESKTOP_CHROMIUM_PROJECT_NAME } from "./performance-mode";
 import {
   detectPolyscopeWorkspaceName,
   resolvePlaywrightApiBaseUrl,
@@ -10,7 +11,6 @@ import {
 
 export const LIVE_WEB_PUSH_MODE_ENV_VAR = "PLAYWRIGHT_LIVE_WEB_PUSH";
 export const LIVE_WEB_PUSH_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
-export const DESKTOP_CHROMIUM_PROJECT_NAME = "chromium";
 
 interface LiveWebPushMode {
   baseUrl: string;
