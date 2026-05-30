@@ -168,9 +168,13 @@ function LoginRoute() {
   }
 
   if (isVaultLocked) {
+    if (!unlock) {
+      return <Navigate to="/" replace />;
+    }
+
     return (
       <RouteVaultLockedState
-        onUnlock={unlock ?? (async () => false)}
+        onUnlock={unlock}
         onSignInAgain={logout}
       />
     );

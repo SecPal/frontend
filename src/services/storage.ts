@@ -8,6 +8,7 @@ import {
   clearOfflineVaultLockState,
   clearOfflineVaultSession,
   clearOfflineVaultTables,
+  clearRecentAuthVaultKeyMaterials,
   isOfflineVaultLocked,
   initializeOfflineVault,
   lockOfflineVault,
@@ -436,12 +437,12 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private clearInvalidStoredUser(): null {
-    void this.removeUser();
+    void this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
   private async clearInvalidStoredUserAsync(): Promise<null> {
-    await this.removeUser();
+    await this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
@@ -553,7 +554,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
-      await this.removeUser();
+      await this.removeUser({ allowBarrierSkipUpgrade: true });
       return;
     }
 
@@ -587,10 +588,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     const hasLogoutBarrier = this.hasLogoutBarrier();
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true ||
-      options.clearOfflineVaultTables === false ||
-      (hasLogoutBarrier && options.clearOfflineVaultTables !== true);
+      options.clearOfflineVaultTables === false;
 
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
     localStorage.removeItem(this.VAULT_LOCK_KEY);

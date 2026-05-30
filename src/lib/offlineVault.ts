@@ -352,10 +352,15 @@ export function clearOfflineVaultSession(): void {
   vaultOrgUnitIndexEnsured = false;
 }
 
+export function clearRecentAuthVaultKeyMaterials(): void {
+  recentAuthVaultKeyMaterials = [];
+}
+
 export function clearStoredOfflineVaultState(): void {
   localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
   localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
   clearOfflineVaultSession();
+  recentAuthVaultKeyMaterials = [];
 }
 
 export function lockOfflineVault(): void {
