@@ -11,6 +11,7 @@ import {
 
 export const LIVE_WEB_PUSH_MODE_ENV_VAR = "PLAYWRIGHT_LIVE_WEB_PUSH";
 export const LIVE_WEB_PUSH_BROWSER_PATH_ENV_VAR = "CHROME_PATH";
+const CHROMIUM_BROWSER_NAME = "chromium";
 
 interface LiveWebPushMode {
   baseUrl: string;
@@ -51,7 +52,7 @@ export function getLiveWebPushProjectSkipReason(
   projectName: string,
   browserName: string
 ): string | undefined {
-  if (browserName !== DESKTOP_CHROMIUM_PROJECT_NAME) {
+  if (browserName !== CHROMIUM_BROWSER_NAME) {
     return "Live browser Web Push smoke only works with Chromium";
   }
 
