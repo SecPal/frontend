@@ -128,6 +128,39 @@ describe("App", () => {
     expect(screen.getByRole("combobox")).toBeInTheDocument();
   });
 
+  it("redirects authenticated users away from the login route", async () => {
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Active User",
+      email: "guard@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-1",
+        status: "active",
+      },
+    });
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /log in/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
     window.history.replaceState({}, "", "/");
 
@@ -573,7 +606,7 @@ describe("App", () => {
   });
 
   it("redirects unauthenticated users from the protected onboarding route to login", async () => {
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     window.history.replaceState({}, "", "/onboarding");
 

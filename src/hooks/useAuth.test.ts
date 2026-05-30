@@ -139,8 +139,8 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    vi.spyOn(console, "log").mockImplementation(() => { });
     sessionEvents.reset();
     mockGetCurrentUser.mockResolvedValue({
       id: 1,
@@ -195,6 +195,29 @@ describe("useAuth", () => {
       emailVerified: false,
     });
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {
+    window.history.replaceState({}, "", "/");
+    mockGetCurrentUser.mockRejectedValue(
+      Object.assign(new Error("Unauthenticated."), {
+        code: "HTTP_401",
+      })
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("skips bootstrap revalidation on the login route with a trailing slash", async () => {
@@ -950,10 +973,11 @@ describe("useAuth", () => {
 
         return clearPromise;
       });
-    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
+    let vaultProfileClearSpy: ReturnType<typeof vi.spyOn> | null = null;
 
     try {
       await persistAuthUser(mockUser);
+      vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
@@ -975,7 +999,7 @@ describe("useAuth", () => {
         restoreError
       );
     } finally {
-      vaultProfileClearSpy.mockRestore();
+      vaultProfileClearSpy?.mockRestore();
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
       consoleErrorSpy.mockRestore();
@@ -1024,8 +1048,7 @@ describe("useAuth", () => {
       });
 
       await waitForSensitiveClientCleanup();
-      expect(localStorage.length).toBe(1);
-      expect(localStorage.key(0)).toBe("auth_logout_barrier");
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
     } finally {
       vaultProfileClearSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -1109,7 +1132,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("logout stores only the minimal logout barrier flag", async () => {
+  it("logout stores the logout barrier", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
     await persistAuthUser(mockUser);
@@ -1219,6 +1242,8 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
+    vi.mocked(syncOfflineSessionAccess).mockClear();
+
     act(() => {
       result.current.lock?.();
     });
@@ -1228,6 +1253,8 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+    expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
 
     await act(async () => {
       await result.current.unlock?.();
@@ -1236,6 +1263,73 @@ describe("useAuth", () => {
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("keeps offline session access enabled when bootstrap restores a locked vault", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    authStorage.lockVault();
+    vi.mocked(syncOfflineSessionAccess).mockClear();
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
+    expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
+  });
+
+  it("unlocks the vault after a browser-session CSRF token rotation while locked", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const revalidatedUser = {
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(revalidatedUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    await act(async () => {
+      await result.current.unlock?.();
+    });
+
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(revalidatedUser);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("propagates vault lock and unlock state across tabs", async () => {
@@ -1302,6 +1396,65 @@ describe("useAuth", () => {
 
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("does not logout when auth vault storage changes while the vault is locked", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(storedVaultState).not.toBeNull();
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
+      const crossTabLockEvent = new Event("storage");
+      Object.defineProperties(crossTabLockEvent, {
+        key: { value: AUTH_VAULT_LOCK_KEY },
+        newValue: { value: "1" },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(crossTabLockEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    act(() => {
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, storedVaultState as string);
+      const crossTabVaultStateEvent = new Event("storage");
+      Object.defineProperties(crossTabVaultStateEvent, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        oldValue: { value: storedVaultState },
+        newValue: { value: storedVaultState },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(crossTabVaultStateEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("updates isAuthenticated when user changes", async () => {

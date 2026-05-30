@@ -320,7 +320,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   shouldSkipBarrierVaultTableCleanup(): boolean {
     return (
       localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !==
-        null || this.hasSensitiveLogoutBarrierCleanupOwners()
+      null || this.hasSensitiveLogoutBarrierCleanupOwners()
     );
   }
 
@@ -584,6 +584,11 @@ class LocalStorageAuthStorage implements AuthStorage {
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
+    const hasLogoutBarrier = this.hasLogoutBarrier();
+    const shouldHonorBarrierSkipUpgrade =
+      options.allowBarrierSkipUpgrade === true ||
+      options.clearOfflineVaultTables === false ||
+      (hasLogoutBarrier && options.clearOfflineVaultTables !== true);
 
     clearOfflineVaultSession();
     localStorage.removeItem(this.USER_KEY);
@@ -594,12 +599,11 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
-    if (this.hasLogoutBarrier()) {
+    if (shouldHonorBarrierSkipUpgrade || hasLogoutBarrier) {
       await this.waitForBarrierCleanupUpgrade();
 
       if (
-        (options.allowBarrierSkipUpgrade ||
-          options.clearOfflineVaultTables !== true) &&
+        shouldHonorBarrierSkipUpgrade &&
         this.shouldSkipBarrierVaultTableCleanup()
       ) {
         return;
@@ -624,7 +628,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.setLogoutBarrier();
     this.setSkipBarrierVaultTableCleanup(
       shouldPreserveExistingSkipMarker ||
-        options?.clearOfflineVaultTables === false
+      options?.clearOfflineVaultTables === false
     );
     await this.removeUser({
       ...options,

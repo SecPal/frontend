@@ -10,6 +10,7 @@ import { OfflineIndicator } from "./components/OfflineIndicator";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useNotifications } from "./hooks/useNotifications";
+import { useAuth } from "./hooks/useAuth";
 import {
   AppAccessRoute,
   OnboardingOnlyRoute,
@@ -17,7 +18,11 @@ import {
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
-import { RouteNotFoundState } from "./components/RouteGuardState";
+import {
+  RouteNotFoundState,
+  RouteLoadingState,
+  RouteVaultLockedState,
+} from "./components/RouteGuardState";
 import { OnboardingLayout } from "./components/onboarding-layout";
 import { Heading } from "./components/heading";
 import { Text } from "./components/text";
@@ -149,6 +154,35 @@ function NotificationLifecycleCoordinator() {
   return null;
 }
 
+function LoginRoute() {
+  const {
+    isAuthenticated,
+    isLoading,
+    isVaultLocked = false,
+    logout,
+    unlock,
+  } = useAuth();
+
+  if (isLoading) {
+    return <RouteLoadingState />;
+  }
+
+  if (isVaultLocked) {
+    return (
+      <RouteVaultLockedState
+        onUnlock={unlock ?? (async () => false)}
+        onSignInAgain={logout}
+      />
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Login />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -158,7 +192,7 @@ function App() {
         <UpdatePrompt />
         <Suspense fallback={<RouteLoader />}>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<LoginRoute />} />
             {/* Onboarding Complete - PUBLIC route (no auth required) */}
             <Route
               path="/onboarding/complete"

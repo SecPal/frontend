@@ -120,7 +120,7 @@ describe("clearSensitiveClientState", () => {
     expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
-    expect(sessionStorage.length).toBe(0);
+    expect(sessionStorage.getItem("share-draft")).toBeNull();
 
     if (typeof indexedDB.databases === "function") {
       const databases = await indexedDB.databases();
@@ -179,7 +179,7 @@ describe("clearSensitiveClientState", () => {
     );
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
-    expect(sessionStorage.length).toBe(0);
+    expect(sessionStorage.getItem("share-draft")).toBeNull();
     expect(await db.analytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(0);
   });

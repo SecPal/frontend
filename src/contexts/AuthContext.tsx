@@ -363,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setIsVaultLocked(true);
     setIsLoading(false);
-    syncOfflineAuthState(false);
+    syncOfflineAuthState(true);
   }, [invalidateBootstrapRevalidation, syncOfflineAuthState]);
 
   const unlock = useCallback(async (): Promise<boolean> => {
@@ -450,7 +450,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const startBootstrapRevalidation = () => {
+    const startBootstrapRevalidation = (
+      clearSensitiveStateOnInvalidSession: boolean
+    ) => {
       timeoutId = globalThis.setTimeout(() => {
         if (
           !isActive ||
@@ -518,7 +520,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (isInvalidBootstrapSessionError(error)) {
-            clearAuthenticatedState(true);
+            clearAuthenticatedState(clearSensitiveStateOnInvalidSession);
             return;
           }
 
@@ -543,7 +545,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setIsVaultLocked(true);
         setIsLoading(false);
-        syncOfflineAuthState(false);
+        syncOfflineAuthState(true);
         return;
       }
 
@@ -569,7 +571,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          startBootstrapRevalidation();
+          startBootstrapRevalidation(true);
           return;
         }
 
@@ -579,7 +581,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hasLogoutBarrierRef.current
           )
         ) {
-          startBootstrapRevalidation();
+          startBootstrapRevalidation(false);
           return;
         }
 
@@ -603,7 +605,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        startBootstrapRevalidation();
+        startBootstrapRevalidation(true);
         return;
       }
 
@@ -622,7 +624,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      startBootstrapRevalidation();
+      startBootstrapRevalidation(true);
     };
 
     void restoreAndRevalidate().catch((error: unknown) => {
@@ -667,7 +669,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setIsVaultLocked(true);
           setIsLoading(false);
-          syncOfflineAuthState(false);
+          syncOfflineAuthState(true);
           return;
         }
 
@@ -705,6 +707,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
       ) {
         clearAuthenticatedState(true);
+        return;
+      }
+
+      if (
+        event.key === AUTH_VAULT_STORAGE_KEY &&
+        event.newValue !== null &&
+        authStorage.hasVaultLock?.()
+      ) {
+        invalidateBootstrapRevalidation();
+        setBootstrapRecoveryReason(null);
+        setUser(null);
+        setIsVaultLocked(true);
+        setIsLoading(false);
+        syncOfflineAuthState(true);
         return;
       }
 
@@ -766,7 +782,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setIsVaultLocked(true);
           setIsLoading(false);
-          syncOfflineAuthState(false);
+          syncOfflineAuthState(true);
           return;
         }
 
