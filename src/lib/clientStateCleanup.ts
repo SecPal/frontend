@@ -94,6 +94,31 @@ async function clearBrowserPushClientState(): Promise<void> {
   }
 }
 
+async function waitForSensitiveCleanupTasks(
+  cleanupTasks: [Promise<void>, Promise<void>, Promise<void>]
+): Promise<void> {
+  const cleanupResults = await Promise.allSettled(cleanupTasks);
+  const cleanupErrors = cleanupResults
+    .filter(
+      (cleanupResult): cleanupResult is PromiseRejectedResult =>
+        cleanupResult.status === "rejected"
+    )
+    .map((cleanupResult) => cleanupResult.reason);
+
+  if (cleanupErrors.length === 0) {
+    return;
+  }
+
+  if (cleanupErrors.length === 1) {
+    throw cleanupErrors[0];
+  }
+
+  throw new AggregateError(
+    cleanupErrors,
+    "Failed to clear all sensitive client state"
+  );
+}
+
 export async function clearSensitiveClientState(): Promise<void> {
   clearOfflineVaultSession();
 
@@ -103,7 +128,7 @@ export async function clearSensitiveClientState(): Promise<void> {
 
   sessionStorage.clear();
 
-  await Promise.all([
+  await waitForSensitiveCleanupTasks([
     clearBrowserPushClientState(),
     clearSensitiveCaches(),
     clearSensitiveIndexedDbState(),

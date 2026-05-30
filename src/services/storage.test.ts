@@ -537,6 +537,48 @@ describe("authStorage", () => {
     expect(await db.vaultProfile.count()).toBe(1);
   });
 
+  it("resets stale sensitive logout cleanup counts when a new full logout starts after re-login", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+    await authStorage.clear({ clearOfflineVaultTables: false });
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
+    ).toBe("1");
+
+    await authStorage.setUser(user);
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
+    ).toBe("1");
+
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+    authStorage.endSensitiveLogoutBarrierCleanup();
+
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+    ).toBeNull();
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
+    ).toBeNull();
+  });
+
   it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {
     const user = {
       id: "1",
