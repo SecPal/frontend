@@ -15,6 +15,7 @@ import { MfaQrCode } from "../../components/MfaQrCode";
 import { Select } from "../../components/select";
 import { Text } from "../../components/text";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { formatApiDateTime } from "../../lib/dateUtils";
 import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
 import {
@@ -49,7 +50,17 @@ const DEFAULT_PROVISIONING_PROFILE = {
 };
 
 function formatDateTime(value: string | null): string {
-  return value ? new Date(value).toLocaleString() : "-";
+  return formatApiDateTime(value, {
+    fallback: "-",
+    formatOptions: {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    },
+  });
 }
 
 function getStatusColor(status: AndroidEnrollmentStatus) {

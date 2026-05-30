@@ -74,6 +74,19 @@ describe("AndroidProvisioningPage", () => {
     } as Response);
   });
 
+  it("renders bootstrap token expiry with seconds included", async () => {
+    renderPage();
+
+    await screen.findByText("Front desk tablet");
+    // Regression: seconds must not be silently dropped from expiry timestamps.
+    // The fixture value is "2026-04-07T12:00:00Z"; the formatted output must
+    // contain an HH:MM:SS segment regardless of locale's separator characters.
+    // Using queryAllByText avoids a throw-on-miss that would mask the real
+    // assertion failure when second: "2-digit" is accidentally removed.
+    const expiries = screen.queryAllByText(/\d{2}:\d{2}:\d{2}/);
+    expect(expiries.length).toBeGreaterThan(0);
+  });
+
   it("loads and renders Android enrollment sessions", async () => {
     renderPage();
 
