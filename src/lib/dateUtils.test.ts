@@ -1,8 +1,14 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect } from "vitest";
-import { formatApiDateTime, formatDate, formatDateTime } from "./dateUtils";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  formatApiDateTime,
+  formatDate,
+  formatDateTime,
+  isCanonicalApiTimestamp,
+  parseApiTimestamp,
+} from "./dateUtils";
 
 describe("formatDate", () => {
   it("formats ISO date string using the given locale", () => {
@@ -17,6 +23,30 @@ describe("formatDate", () => {
     expect(result).toContain("2026");
     expect(result).toContain("03");
     expect(result).toContain("23");
+  });
+});
+
+describe("isCanonicalApiTimestamp", () => {
+  it("accepts whole-second UTC timestamps with a trailing Z", () => {
+    expect(isCanonicalApiTimestamp("2026-03-23T09:15:00Z")).toBe(true);
+  });
+
+  it("rejects fractional seconds and explicit offsets", () => {
+    expect(isCanonicalApiTimestamp("2026-03-23T09:15:00.000Z")).toBe(false);
+    expect(isCanonicalApiTimestamp("2026-03-23T10:15:00+01:00")).toBe(false);
+  });
+});
+
+describe("parseApiTimestamp", () => {
+  it("parses canonical API timestamps", () => {
+    expect(parseApiTimestamp("2026-03-23T09:15:00Z")?.toISOString()).toBe(
+      "2026-03-23T09:15:00.000Z"
+    );
+  });
+
+  it("returns null for missing or invalid input", () => {
+    expect(parseApiTimestamp("")).toBeNull();
+    expect(parseApiTimestamp("not-a-date")).toBeNull();
   });
 });
 
@@ -59,5 +89,33 @@ describe("formatApiDateTime", () => {
     expect(formatApiDateTime("invalid", { locale: "en", fallback: "-" })).toBe(
       "-"
     );
+  });
+
+  describe("non-canonical timestamp warning", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("warns in DEV mode when value is not a canonical API timestamp", () => {
+      formatApiDateTime("2026-03-23T09:15:00.000Z", { locale: "en" });
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Non-canonical API timestamp")
+      );
+    });
+
+    it("does not warn for canonical API timestamps", () => {
+      formatApiDateTime("2026-03-23T09:15:00Z", { locale: "en" });
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    it("does not warn for null or empty values", () => {
+      formatApiDateTime(null, { locale: "en" });
+      formatApiDateTime("", { locale: "en" });
+      expect(console.warn).not.toHaveBeenCalled();
+    });
   });
 });

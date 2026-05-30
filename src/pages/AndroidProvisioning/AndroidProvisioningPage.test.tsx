@@ -78,12 +78,13 @@ describe("AndroidProvisioningPage", () => {
     renderPage();
 
     await screen.findByText("Front desk tablet");
-    // Seconds must not be silently dropped from expiry timestamps – regression
-    // for the formatApiDateTime refactor that omitted `second: "2-digit"`.
-    const expiryText = screen
-      .getAllByText(/\d{2}:\d{2}:\d{2}/)
-      .find((el) => el.textContent?.match(/\d{2}:\d{2}:\d{2}/));
-    expect(expiryText).toBeDefined();
+    // Regression: seconds must not be silently dropped from expiry timestamps.
+    // The fixture value is "2026-04-07T12:00:00Z"; the formatted output must
+    // contain an HH:MM:SS segment regardless of locale's separator characters.
+    // Using queryAllByText avoids a throw-on-miss that would mask the real
+    // assertion failure when second: "2-digit" is accidentally removed.
+    const expiries = screen.queryAllByText(/\d{2}:\d{2}:\d{2}/);
+    expect(expiries.length).toBeGreaterThan(0);
   });
 
   it("loads and renders Android enrollment sessions", async () => {
