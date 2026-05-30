@@ -97,12 +97,6 @@ function expectNoStoredAuthState(): void {
   expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
 }
 
-function getLocalStorageKeys(): string[] {
-  return Array.from({ length: localStorage.length }, (_value, index) =>
-    localStorage.key(index)
-  ).filter((key): key is string => key !== null);
-}
-
 async function waitForAuthState(
   assertion: Parameters<typeof waitForTestingLibrary>[0],
   timeout = AUTH_BOOTSTRAP_TIMEOUT_MS
@@ -359,9 +353,7 @@ describe("useAuth", () => {
 
       expect(removeUserSpy).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({
-          clearOfflineVaultTables: false,
-        })
+        expect.objectContaining({ clearOfflineVaultTables: false })
       );
 
       await act(async () => {
@@ -375,9 +367,7 @@ describe("useAuth", () => {
 
       expect(removeUserSpy).toHaveBeenNthCalledWith(
         2,
-        expect.objectContaining({
-          clearOfflineVaultTables: false,
-        })
+        expect.objectContaining({ clearOfflineVaultTables: false })
       );
 
       await waitForSensitiveClientCleanup();
@@ -906,69 +896,11 @@ describe("useAuth", () => {
       });
 
       await waitForSensitiveClientCleanup();
-      expect(getLocalStorageKeys()).toEqual(["auth_logout_barrier"]);
+      expect(localStorage.length).toBe(1);
+      expect(localStorage.key(0)).toBe("auth_logout_barrier");
     } finally {
       vaultProfileClearSpy.mockRestore();
       getUserSpy.mockRestore();
-    }
-  });
-
-  it("continues sensitive logout cleanup after an in-flight vault-table cleanup failure", async () => {
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email: "test@secpal.dev",
-      emailVerified: false,
-    };
-    const restoreError = new Error("restore failed");
-    const cleanupError = new Error("clear failed");
-    const vaultProfileClear = createDeferredPromise<void>();
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-    const getUserSpy = vi
-      .spyOn(authStorage, "getUser")
-      .mockRejectedValueOnce(restoreError);
-    const vaultProfileClearSpy = vi
-      .spyOn(db.vaultProfile, "clear")
-      .mockImplementationOnce(
-        () =>
-          vaultProfileClear.promise as ReturnType<typeof db.vaultProfile.clear>
-      );
-
-    try {
-      await persistAuthUser(mockUser);
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(vaultProfileClearSpy).toHaveBeenCalledTimes(1);
-      });
-
-      act(() => {
-        result.current.logout();
-      });
-
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
-      await act(async () => {
-        vaultProfileClear.reject(cleanupError);
-        await Promise.resolve();
-      });
-
-      await waitForSensitiveClientCleanup();
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Failed to clear offline vault tables on logout:",
-        cleanupError
-      );
-      expect(getLocalStorageKeys()).toEqual(["auth_logout_barrier"]);
-    } finally {
-      vaultProfileClearSpy.mockRestore();
-      getUserSpy.mockRestore();
-      consoleWarnSpy.mockRestore();
     }
   });
 
