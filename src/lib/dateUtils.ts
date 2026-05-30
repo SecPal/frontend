@@ -1,9 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const CANONICAL_API_TIMESTAMP_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-
 const DEFAULT_DATE_FORMAT_OPTIONS = {
   year: "numeric",
   month: "2-digit",
@@ -51,16 +48,6 @@ function formatDateValue(
   }
 
   return parsed.toLocaleString(locale, formatOptions);
-}
-
-export function isCanonicalApiTimestamp(value: string): boolean {
-  return CANONICAL_API_TIMESTAMP_PATTERN.test(value);
-}
-
-export function parseApiTimestamp(
-  value: string | null | undefined
-): Date | null {
-  return parseDateValue(value);
 }
 
 export function formatApiDateTime(

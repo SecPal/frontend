@@ -2,13 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect } from "vitest";
-import {
-  formatApiDateTime,
-  formatDate,
-  formatDateTime,
-  isCanonicalApiTimestamp,
-  parseApiTimestamp,
-} from "./dateUtils";
+import { formatApiDateTime, formatDate, formatDateTime } from "./dateUtils";
 
 describe("formatDate", () => {
   it("formats ISO date string using the given locale", () => {
@@ -23,30 +17,6 @@ describe("formatDate", () => {
     expect(result).toContain("2026");
     expect(result).toContain("03");
     expect(result).toContain("23");
-  });
-});
-
-describe("isCanonicalApiTimestamp", () => {
-  it("accepts whole-second UTC timestamps with a trailing Z", () => {
-    expect(isCanonicalApiTimestamp("2026-03-23T09:15:00Z")).toBe(true);
-  });
-
-  it("rejects fractional seconds and explicit offsets", () => {
-    expect(isCanonicalApiTimestamp("2026-03-23T09:15:00.000Z")).toBe(false);
-    expect(isCanonicalApiTimestamp("2026-03-23T10:15:00+01:00")).toBe(false);
-  });
-});
-
-describe("parseApiTimestamp", () => {
-  it("parses canonical API timestamps", () => {
-    expect(parseApiTimestamp("2026-03-23T09:15:00Z")?.toISOString()).toBe(
-      "2026-03-23T09:15:00.000Z"
-    );
-  });
-
-  it("returns null for missing or invalid input", () => {
-    expect(parseApiTimestamp("")).toBeNull();
-    expect(parseApiTimestamp("not-a-date")).toBeNull();
   });
 });
 
