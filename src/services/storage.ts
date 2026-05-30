@@ -262,6 +262,7 @@ export interface AuthStorage {
   clear(options?: { clearOfflineVaultTables?: boolean }): Promise<void>;
   hasLogoutBarrier(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
+  waitForInFlightVaultTableCleanup(): Promise<void>;
 }
 
 /**
@@ -274,6 +275,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
   private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
     "auth_logout_skip_vault_table_cleanup";
+  private inFlightVaultTableCleanupPromise: Promise<void> | null = null;
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -290,7 +292,6 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private clearLogoutBarrier(): void {
     localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
-    localStorage.removeItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY);
   }
 
   private setLogoutBarrier(): void {
@@ -316,6 +317,27 @@ class LocalStorageAuthStorage implements AuthStorage {
     await new Promise<void>((resolve) => {
       globalThis.setTimeout(resolve, 0);
     });
+  }
+
+  async waitForInFlightVaultTableCleanup(): Promise<void> {
+    await this.inFlightVaultTableCleanupPromise;
+  }
+
+  private async clearVaultTables(): Promise<void> {
+    if (this.inFlightVaultTableCleanupPromise) {
+      await this.inFlightVaultTableCleanupPromise;
+    }
+
+    const cleanupPromise = clearOfflineVaultTables();
+    this.inFlightVaultTableCleanupPromise = cleanupPromise;
+
+    try {
+      await cleanupPromise;
+    } finally {
+      if (this.inFlightVaultTableCleanupPromise === cleanupPromise) {
+        this.inFlightVaultTableCleanupPromise = null;
+      }
+    }
   }
 
   hasLogoutBarrier(): boolean {
@@ -496,7 +518,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
-      await clearOfflineVaultTables();
+      await this.clearVaultTables();
     } catch (error: unknown) {
       console.warn("Failed to clear offline vault tables on logout:", error);
     }

@@ -806,14 +806,17 @@ describe("useAuth", () => {
       .mockImplementationOnce(async (options) => {
         const clearPromise = actualClear(options);
 
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "auth_logout_barrier",
-            oldValue: null,
-            newValue: "1",
-            storageArea: localStorage,
-          })
-        );
+        const crossTabLogoutEvent = new Event("storage");
+        Object.defineProperties(crossTabLogoutEvent, {
+          key: { value: "auth_logout_barrier" },
+          oldValue: { value: null },
+          newValue: { value: "1" },
+          storageArea: { value: localStorage },
+        } satisfies Partial<
+          Record<keyof StorageEventInit, PropertyDescriptor>
+        >);
+
+        window.dispatchEvent(crossTabLogoutEvent);
 
         return clearPromise;
       });
@@ -846,6 +849,98 @@ describe("useAuth", () => {
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
       consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("waits for in-flight vault table cleanup before full logout deletes broader client state", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const restoreError = new Error("restore failed");
+    const vaultProfileClear = createDeferredPromise<void>();
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockRejectedValueOnce(restoreError);
+    const vaultProfileClearSpy = vi
+      .spyOn(db.vaultProfile, "clear")
+      .mockImplementationOnce(
+        () =>
+          vaultProfileClear.promise as ReturnType<typeof db.vaultProfile.clear>
+      );
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(vaultProfileClearSpy).toHaveBeenCalledTimes(1);
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      await act(async () => {
+        vaultProfileClear.resolve();
+        await Promise.resolve();
+      });
+
+      await waitForSensitiveClientCleanup();
+    } finally {
+      vaultProfileClearSpy.mockRestore();
+      getUserSpy.mockRestore();
+    }
+  });
+
+  it("does not restore persisted auth state when logout lands during initial restore", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const restoreDeferred = createDeferredPromise<void>();
+    const actualGetUser = authStorage.getUser.bind(authStorage);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockImplementationOnce(async () => {
+        await restoreDeferred.promise;
+        return actualGetUser();
+      });
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      await act(async () => {
+        restoreDeferred.resolve();
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(false);
+      });
+
+      expect(result.current.user).toBeNull();
+      expectNoStoredAuthState();
+      await waitForSensitiveClientCleanup();
+    } finally {
+      getUserSpy.mockRestore();
     }
   });
 

@@ -371,6 +371,25 @@ describe("authStorage", () => {
     expect(vaultProfileClearSpy).not.toHaveBeenCalled();
   });
 
+  it("preserves the skip marker when setUser clears the logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await expect(authStorage.setUser(user)).resolves.toBeUndefined();
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+  });
+
   it("clears persisted auth state when setUser receives an invalid user", async () => {
     localStorage.setItem("auth_user", "stale-auth-storage-record");
 

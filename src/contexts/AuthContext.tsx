@@ -220,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           try {
+            await authStorage.waitForInFlightVaultTableCleanup();
             await clearSensitiveClientState();
           } catch (error: unknown) {
             console.error(
@@ -249,7 +250,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authStorage.setUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
-      authStorage.setSkipBarrierVaultTableCleanup(false);
       setBootstrapRecoveryReason(null);
       setUser(sanitizedUser);
       setIsVaultLocked(false);
@@ -290,7 +290,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
-      authStorage.setSkipBarrierVaultTableCleanup(false);
       setBootstrapRecoveryReason(null);
       setUser(restoredUser);
       setIsVaultLocked(false);
@@ -412,7 +411,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           hasLogoutBarrierRef.current = false;
           shouldSkipBarrierVaultTableCleanupRef.current = false;
-          authStorage.setSkipBarrierVaultTableCleanup(false);
           setBootstrapRecoveryReason(null);
           setUser(currentUser);
           setIsLoading(false);
@@ -467,6 +465,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (hasLogoutBarrierRef.current) {
+        removeUserForActiveBarrier();
+        return;
+      }
+
       if (!storedUser) {
         if (authTransport.kind === "browser-session" && hadStoredUser) {
           if (!isOnline()) {
@@ -500,7 +503,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
-      authStorage.setSkipBarrierVaultTableCleanup(false);
       setBootstrapRecoveryReason(null);
       setUser(storedUser);
       setIsVaultLocked(false);
@@ -590,7 +592,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             hasLogoutBarrierRef.current = false;
             shouldSkipBarrierVaultTableCleanupRef.current = false;
-            authStorage.setSkipBarrierVaultTableCleanup(false);
             setBootstrapRecoveryReason(null);
             invalidateBootstrapRevalidation();
             setUser(unlockedUser);
@@ -637,7 +638,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           hasLogoutBarrierRef.current = false;
           shouldSkipBarrierVaultTableCleanupRef.current = false;
-          authStorage.setSkipBarrierVaultTableCleanup(false);
           setBootstrapRecoveryReason(null);
           invalidateBootstrapRevalidation();
           setUser(nextUser);
@@ -697,7 +697,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         hasLogoutBarrierRef.current = false;
         shouldSkipBarrierVaultTableCleanupRef.current = false;
-        authStorage.setSkipBarrierVaultTableCleanup(false);
         setBootstrapRecoveryReason(null);
         invalidateBootstrapRevalidation();
         setUser(storedUser);
