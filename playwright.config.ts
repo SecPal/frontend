@@ -92,12 +92,22 @@ const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
 const liveWebPushExecutablePath = getConfiguredLiveWebPushBrowserPath();
 
 const chromiumLaunchOptions = (() => {
+  const lighthouseEnabled = shouldEnableLighthouseBrowser();
+  const liveWebPushEnabled = shouldEnableLiveWebPushBrowser();
+
+  if (lighthouseEnabled && liveWebPushEnabled) {
+    throw new Error(
+      "PLAYWRIGHT_LIGHTHOUSE and PLAYWRIGHT_LIVE_WEB_PUSH cannot be enabled at the same time. " +
+        "Run Lighthouse audits and the live Web Push smoke in separate invocations."
+    );
+  }
+
   const launchOptions: {
     args?: string[];
     executablePath?: string;
   } = {};
 
-  if (shouldEnableLighthouseBrowser()) {
+  if (lighthouseEnabled) {
     launchOptions.args = [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`];
 
     if (lighthouseExecutablePath !== undefined) {
@@ -105,10 +115,7 @@ const chromiumLaunchOptions = (() => {
     }
   }
 
-  if (
-    shouldEnableLiveWebPushBrowser() &&
-    liveWebPushExecutablePath !== undefined
-  ) {
+  if (liveWebPushEnabled && liveWebPushExecutablePath !== undefined) {
     launchOptions.executablePath = liveWebPushExecutablePath;
   }
 

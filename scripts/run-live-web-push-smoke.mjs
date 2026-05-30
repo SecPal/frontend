@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const PLAYWRIGHT_BASE_URL = process.env.PLAYWRIGHT_BASE_URL?.trim() ?? "";
 const CHROME_PATH = process.env.CHROME_PATH?.trim() ?? "";
@@ -35,6 +38,21 @@ function hasDisplay() {
   return DISPLAY.length > 0 || WAYLAND_DISPLAY.length > 0;
 }
 
+async function probeDisplay(display, { retries = 10, intervalMs = 200 } = {}) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      await execFileAsync("xdpyinfo", ["-display", display], {
+        timeout: 2000,
+      });
+      return true;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+  }
+
+  return false;
+}
+
 async function startVirtualDisplay() {
   if (process.platform !== "linux" || hasDisplay()) {
     return undefined;
@@ -60,24 +78,27 @@ async function startVirtualDisplay() {
       }
     );
 
-    const started = await new Promise((resolve) => {
-      const timeout = setTimeout(() => resolve(true), 500);
-
-      xvfb.once("error", () => {
-        clearTimeout(timeout);
-        resolve(false);
-      });
-      xvfb.once("exit", () => {
-        clearTimeout(timeout);
-        resolve(false);
-      });
+    const exitedEarly = await new Promise((resolve) => {
+      xvfb.once("error", () => resolve(true));
+      xvfb.once("exit", () => resolve(true));
+      setTimeout(() => resolve(false), 200);
     });
+
+    if (exitedEarly) {
+      continue;
+    }
+
+    const started = await probeDisplay(display);
 
     if (started) {
       return {
         display,
         xvfb,
       };
+    }
+
+    if (!xvfb.killed) {
+      xvfb.kill("SIGTERM");
     }
   }
 

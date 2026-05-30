@@ -120,7 +120,7 @@ describe("OnboardingLayout", () => {
     });
   });
 
-  it("does not call logout or navigate when transport logout fails", async () => {
+  it("still calls logout and navigates to login when transport logout fails", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     const transportLogout = vi
@@ -147,9 +147,8 @@ describe("OnboardingLayout", () => {
         "Logout API call failed:",
         expect.any(Error)
       );
-      // auth state must be preserved so the user can retry
-      expect(logout).not.toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(logout).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
@@ -235,6 +234,49 @@ describe("OnboardingLayout", () => {
       expect(logout).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
+  });
+
+  it("awaits logout completion before navigating even when transport logout rejects", async () => {
+    const user = userEvent.setup();
+
+    let resolveLogout!: () => void;
+    const logoutSettled = new Promise<void>((resolve) => {
+      resolveLogout = resolve;
+    });
+    const logout = vi.fn().mockReturnValue(logoutSettled);
+    const transportLogout = vi
+      .fn()
+      .mockRejectedValue(new Error("Network down"));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      logout,
+    });
+
+    mockTransport(transportLogout);
+
+    renderLayout();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(logout).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLogout();
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+
+    consoleError.mockRestore();
   });
 
   it("completes client-side logout when the logout API hangs past the timeout", async () => {
