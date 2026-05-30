@@ -86,8 +86,8 @@ describe("formatApiDateTime", () => {
 
   it("returns the configured fallback for missing or invalid timestamps", () => {
     expect(formatApiDateTime("", { locale: "en" })).toBe("—");
-    expect(
-      formatApiDateTime("invalid", { locale: "en", fallback: "-" })
-    ).toBe("-");
+    expect(formatApiDateTime("invalid", { locale: "en", fallback: "-" })).toBe(
+      "-"
+    );
   });
 });

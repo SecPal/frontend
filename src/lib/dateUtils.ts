@@ -57,7 +57,9 @@ export function isCanonicalApiTimestamp(value: string): boolean {
   return CANONICAL_API_TIMESTAMP_PATTERN.test(value);
 }
 
-export function parseApiTimestamp(value: string | null | undefined): Date | null {
+export function parseApiTimestamp(
+  value: string | null | undefined
+): Date | null {
   return parseDateValue(value);
 }
 
