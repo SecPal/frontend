@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added shared `addressApi` service with typed helpers (`fetchAddressStreetSuggestions`, `fetchAddressLocalitySuggestions`) for OpenPLZ-backed postal-code and street lookups against the `/v1/addresses/de/` API endpoints.
 - Added `getCountrySelectOptions` in `src/lib/iso3166CountryOptions.ts` to generate a locale-sorted ISO 3166-1 alpha-2 country dropdown with per-code `Intl.DisplayNames` fallback for unsupported region identifiers.
 - Added shared `EmployeeAddressFields` component with OpenPLZ street/locality autocomplete, keyboard navigation, and a country combobox; adopted in the employee create, edit, contacts-edit, and inline postal-address dialog flows.
+- Added an opt-in live Playwright browser Web Push smoke plus operator runbook coverage for selected HTTPS deployments: the new `test:e2e:live:web-push` flow now runs in a headed persistent Chromium profile, auto-starts `Xvfb` on headless Linux hosts when available, and proves browser bootstrap metadata publication, same-origin service-worker prerequisites, authenticated `PUT /v1/me/notification-installations/{installationId}` registration, and sign-out driven `DELETE /v1/me/notification-installations/{installationId}` cleanup with explicit diagnostics for missing runtime metadata or rejected registration. Closes #1156.
 
 ### Fixed
 

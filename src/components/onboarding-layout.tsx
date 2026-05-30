@@ -43,7 +43,7 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
 
     try {
       await logoutWithTimeout(getAuthTransport().logout());
-      logout();
+      await Promise.resolve(logout());
       navigate("/login");
     } catch (error) {
       console.error("Logout API call failed:", error);

@@ -223,7 +223,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Logout API call failed:", error);
     } finally {
-      logout();
+      await Promise.resolve(logout());
       navigate("/login");
     }
   };

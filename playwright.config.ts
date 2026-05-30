@@ -10,6 +10,10 @@ import {
   shouldUseSingleWorker,
 } from "./tests/e2e/performance-mode";
 import {
+  getConfiguredLiveWebPushBrowserPath,
+  shouldEnableLiveWebPushBrowser,
+} from "./tests/e2e/web-push-live-mode";
+import {
   PREVIEW_BASE_URL,
   isRemotePlaywrightTarget,
   resolvePlaywrightBaseUrl,
@@ -85,15 +89,31 @@ const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
+const liveWebPushExecutablePath = getConfiguredLiveWebPushBrowserPath();
 
-const chromiumLaunchOptions = shouldEnableLighthouseBrowser()
-  ? {
-      args: [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`],
-      ...(lighthouseExecutablePath !== undefined && {
-        executablePath: lighthouseExecutablePath,
-      }),
+const chromiumLaunchOptions = (() => {
+  const launchOptions: {
+    args?: string[];
+    executablePath?: string;
+  } = {};
+
+  if (shouldEnableLighthouseBrowser()) {
+    launchOptions.args = [`--remote-debugging-port=${LIGHTHOUSE_DEBUG_PORT}`];
+
+    if (lighthouseExecutablePath !== undefined) {
+      launchOptions.executablePath = lighthouseExecutablePath;
     }
-  : undefined;
+  }
+
+  if (
+    shouldEnableLiveWebPushBrowser() &&
+    liveWebPushExecutablePath !== undefined
+  ) {
+    launchOptions.executablePath = liveWebPushExecutablePath;
+  }
+
+  return Object.keys(launchOptions).length > 0 ? launchOptions : undefined;
+})();
 
 export default defineConfig({
   // Global setup - logs in once and saves session state

@@ -49,6 +49,44 @@ Current operational references:
 - Registrations are tied to the signed-in browser profile plus the selected deployment domain, so changing domains, service-worker scope, site data, or signing out can require re-enabling notifications.
 - The current frontend surface is intentionally limited to truthful backend-backed browser delivery state; category-by-category notification preferences are not part of the server contract yet.
 
+#### Live Browser Web Push Smoke
+
+Use the deployment-facing Playwright smoke to prove the real browser registration lifecycle against the selected HTTPS deployment:
+
+```bash
+export PLAYWRIGHT_BASE_URL="https://frontend-your-workspace.preview.secpal.dev"
+# Required when the API host cannot be derived from the selected frontend host.
+export PLAYWRIGHT_API_BASE_URL="https://api-your-workspace.preview.secpal.dev"
+# Required for live browser notification permission on deployment-facing HTTPS targets.
+export CHROME_PATH="/usr/bin/chromium"
+
+# Required for non-preview live targets such as app.secpal.dev.
+export TEST_USER_EMAIL="test@example.com"
+export TEST_USER_PASSWORD="password"
+
+npm run test:e2e:live:web-push
+```
+
+Required deployment and operator prerequisites:
+
+- `PLAYWRIGHT_BASE_URL` must point to the exact HTTPS frontend deployment you want to verify; the smoke refuses local HTTP targets.
+- `CHROME_PATH` must point to a stable system Chrome/Chromium binary; the bundled Playwright Chromium snapshot denies notification permission on live HTTPS targets.
+- The smoke runs in a headed persistent Chromium profile because deployment-facing Web Push subscription creation is rejected in Playwright's default ephemeral browser context. On headless Linux hosts, `npm run test:e2e:live:web-push` auto-starts `/usr/bin/Xvfb` when available.
+- The selected deployment must serve an active same-origin service worker for the app shell.
+- `GET /v1/bootstrap?client_platform=browser` must publish `notification_channels.web_push` with browser runtime metadata for that deployment.
+- The test user must be able to authenticate with browser-session login on the selected deployment.
+- For non-canonical hosts, set `PLAYWRIGHT_API_BASE_URL` explicitly so the smoke can reach the matching API deployment.
+- Run the smoke in desktop Chromium; the script already pins `--project=chromium` because notification permission and push diagnostics are collected there.
+
+What the smoke proves:
+
+- bootstrap metadata publication for `notification_channels.web_push`
+- granted browser notification permission under HTTPS with a same-origin service worker
+- authenticated `PUT /v1/me/notification-installations/{installationId}` registration
+- sign-out driven cleanup that hits the canonical `DELETE /v1/me/notification-installations/{installationId}` path and clears local browser push state
+
+The smoke fails with explicit diagnostics when bootstrap metadata is missing, the service worker/origin requirements are not met, or the registration/delete requests are rejected by the selected deployment.
+
 ## 🌍 Internationalization (i18n)
 
 SecPal supports multiple languages using [Lingui](https://lingui.dev/) with checked-in `.po` catalogs.

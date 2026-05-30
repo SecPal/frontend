@@ -51,6 +51,7 @@
     "test:e2e:live:onboarding": "node -e \"const url = process.env.PLAYWRIGHT_BASE_URL || ''; if (!/^https:\\/\\//.test(url)) { console.error('PLAYWRIGHT_BASE_URL must be set to an https:// app URL before running test:e2e:live:onboarding'); process.exit(1); }\" && cross-env PLAYWRIGHT_LIVE_ONBOARDING=1 playwright test tests/e2e/onboarding-wizard.live.spec.ts --project=chromium",
     "test:e2e:live:onboarding:velvet-zebra": "cross-env PLAYWRIGHT_BASE_URL=https://velvet-zebra.preview.secpal.dev PLAYWRIGHT_LIVE_ONBOARDING=1 playwright test tests/e2e/onboarding-wizard.live.spec.ts --project=chromium",
     "test:e2e:live:passkeys": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_API_BASE_URL=https://api.secpal.dev PLAYWRIGHT_LIVE_PASSKEY=1 PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/passkeys.live.spec.ts --project=chromium",
+    "test:e2e:live:web-push": "node ./scripts/run-live-web-push-smoke.mjs",
     "test:e2e:offline-logout": "cross-env CI=true PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
     "test:e2e:offline-logout:staging": "cross-env PLAYWRIGHT_BASE_URL=https://app.secpal.dev PLAYWRIGHT_SKIP_GLOBAL_LOGIN=1 playwright test tests/e2e/offline-logout.spec.ts --project=chromium --project=mobile-chrome",
     "test:live:assetlinks": "bash ./scripts/check-live-assetlinks.sh",

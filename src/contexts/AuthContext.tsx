@@ -146,6 +146,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useState<AuthBootstrapRecoveryReason | null>(null);
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
+  const clearAuthenticatedStatePromiseRef = useRef<Promise<void>>(
+    Promise.resolve()
+  );
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
   const sensitiveLogoutBarrierCleanupOwnerTokenRef = useRef<string | null>(
@@ -277,7 +280,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       syncOfflineAuthState(false);
 
-      void Promise.allSettled([
+      clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
         clearAuthStoragePromise,
         resetAnalyticsStatePromise,
       ])
@@ -310,6 +313,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           shouldSkipBarrierVaultTableCleanupRef.current = false;
           shouldClearSensitiveStateRef.current = false;
           isClearingSessionRef.current = false;
+          clearAuthenticatedStatePromiseRef.current = Promise.resolve();
         });
     },
     [
@@ -347,8 +351,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     clearAuthenticatedState(true);
+    await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
 
   const lock = useCallback(() => {
