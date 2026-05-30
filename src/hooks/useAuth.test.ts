@@ -19,7 +19,9 @@ import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
+  clearRecentAuthVaultKeyMaterials,
   clearOfflineVaultSession,
+  readPersistedAuthUserFromVault,
 } from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
@@ -164,7 +166,9 @@ describe("useAuth", () => {
     }).toThrow("useAuth must be used within an AuthProvider");
   });
 
-  it("initializes with no user when localStorage is empty", () => {
+  it("initializes with no user on onboarding/complete when localStorage is empty", () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -220,20 +224,32 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
-  it("skips bootstrap revalidation on the login route with a trailing slash", async () => {
+  it("bootstraps browser-session auth on the login route with a trailing slash when no local auth snapshot exists", async () => {
     window.history.replaceState({}, "", "/login/");
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: 1,
+      name: "Recovered Login User",
+      email: "recovered-login@secpal.dev",
+      emailVerified: true,
+    });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
+    expect(result.current.isLoading).toBe(true);
+
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isAuthenticated).toBe(true);
     });
 
-    expect(result.current.user).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Recovered Login User",
+      email: "recovered-login@secpal.dev",
+      emailVerified: true,
+    });
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("revalidates a stored user before completing bootstrap", async () => {
@@ -1329,6 +1345,87 @@ describe("useAuth", () => {
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("keeps the vault unlockable after a locked tab receives a cross-tab vault rewrite and the CSRF token rotates again", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    const initialVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(initialVaultState).not.toBeNull();
+
+    setCsrfTokenCookie("intermediate-csrf-token");
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(user);
+
+    const rewrittenVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(rewrittenVaultState).not.toBeNull();
+    expect(rewrittenVaultState).not.toBe(initialVaultState);
+
+    clearRecentAuthVaultKeyMaterials();
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, initialVaultState as string);
+    clearOfflineVaultSession();
+    setCsrfTokenCookie("test-csrf-token");
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(user);
+    clearOfflineVaultSession();
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, initialVaultState as string);
+
+    mockGetCurrentUser.mockResolvedValueOnce(user);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    setCsrfTokenCookie("intermediate-csrf-token");
+    localStorage.setItem(
+      AUTH_VAULT_STORAGE_KEY,
+      rewrittenVaultState as string
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: AUTH_VAULT_STORAGE_KEY,
+          oldValue: initialVaultState as string,
+          newValue: rewrittenVaultState as string,
+          storageArea: localStorage,
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    setCsrfTokenCookie("final-csrf-token");
+
+    await act(async () => {
+      await result.current.unlock?.();
+    });
+
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(user);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 

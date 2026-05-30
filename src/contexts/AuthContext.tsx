@@ -22,6 +22,7 @@ import { hasUserPermission } from "../lib/capabilities";
 import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
+  rememberCurrentAuthVaultKeyMaterial,
 } from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
@@ -33,7 +34,7 @@ function isPublicUnauthenticatedRoute(pathname: string): boolean {
     pathname !== "/" && pathname.endsWith("/")
       ? pathname.slice(0, -1)
       : pathname;
-  return normalized === "/login" || normalized === "/onboarding/complete";
+  return normalized === "/onboarding/complete";
 }
 
 function shouldBootstrapBrowserSessionWithoutStoredUser(
@@ -721,6 +722,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         event.newValue !== null &&
         authStorage.hasVaultLock?.()
       ) {
+        rememberCurrentAuthVaultKeyMaterial();
         invalidateBootstrapRevalidation();
         setBootstrapRecoveryReason(null);
         setUser(null);

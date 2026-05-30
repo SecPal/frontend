@@ -161,6 +161,40 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("redirects browser-session users away from the login route even without a local auth snapshot", async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "1",
+      name: "Recovered Session User",
+      email: "recovered-session@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /log in/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
     window.history.replaceState({}, "", "/");
 

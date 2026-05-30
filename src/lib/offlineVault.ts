@@ -192,6 +192,10 @@ function getAuthVaultKeyMaterial(): string | null {
   return keyMaterial;
 }
 
+export function rememberCurrentAuthVaultKeyMaterial(): void {
+  void getAuthVaultKeyMaterial();
+}
+
 function getAuthVaultKeyMaterialCandidates(): string[] {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
 
