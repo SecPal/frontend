@@ -280,7 +280,6 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
   private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
     "auth_logout_skip_vault_table_cleanup";
-  private inFlightVaultTableCleanupPromise: Promise<void> | null = null;
   private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
 
   /**
@@ -335,24 +334,13 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(): Promise<void> {
-    let cleanupPromise: Promise<void> | null = null;
-
     const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
       .catch(() => {
         // The cleanup initiator handles the vault-table failure; later
         // cleanups still need to run in order.
       })
       .then(async () => {
-        cleanupPromise = clearOfflineVaultTables();
-        this.inFlightVaultTableCleanupPromise = cleanupPromise;
-
-        try {
-          await cleanupPromise;
-        } finally {
-          if (this.inFlightVaultTableCleanupPromise === cleanupPromise) {
-            this.inFlightVaultTableCleanupPromise = null;
-          }
-        }
+        await clearOfflineVaultTables();
       });
 
     this.vaultTableCleanupQueuePromise = queuedCleanupPromise;

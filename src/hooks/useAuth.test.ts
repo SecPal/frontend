@@ -313,6 +313,7 @@ describe("useAuth", () => {
     };
     const currentUserDeferred = createDeferredPromise<typeof revalidatedUser>();
     const setUserDeferred = createDeferredPromise<void>();
+    const sensitiveCleanupDeferred = createDeferredPromise<void>();
     const actualSetUser = authStorage.setUser.bind(authStorage);
     const setUserSpy = vi
       .spyOn(authStorage, "setUser")
@@ -321,6 +322,9 @@ describe("useAuth", () => {
         await actualSetUser(user);
       });
     const removeUserSpy = vi.spyOn(authStorage, "removeUser");
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => sensitiveCleanupDeferred.promise
+    );
 
     try {
       await actualSetUser(mockUser);
@@ -371,6 +375,90 @@ describe("useAuth", () => {
       );
 
       await waitForSensitiveClientCleanup();
+      await act(async () => {
+        sensitiveCleanupDeferred.resolve();
+        await Promise.resolve();
+      });
+    } finally {
+      setUserSpy.mockRestore();
+      removeUserSpy.mockRestore();
+    }
+  });
+
+  it("retries barrier vault-table cleanup after sensitive logout cleanup finishes", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+    const revalidatedUser = {
+      ...mockUser,
+      permissions: ["employees.read"],
+    };
+    const currentUserDeferred = createDeferredPromise<typeof revalidatedUser>();
+    const setUserDeferred = createDeferredPromise<void>();
+    const sensitiveCleanupError = new Error("cleanup failed");
+    const actualSetUser = authStorage.setUser.bind(authStorage);
+    const setUserSpy = vi
+      .spyOn(authStorage, "setUser")
+      .mockImplementationOnce(async (user) => {
+        await setUserDeferred.promise;
+        await actualSetUser(user);
+      });
+    const removeUserSpy = vi.spyOn(authStorage, "removeUser");
+    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
+      sensitiveCleanupError
+    );
+
+    try {
+      await actualSetUser(mockUser);
+      mockGetCurrentUser.mockReturnValueOnce(currentUserDeferred.promise);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
+
+      await waitFor(() => {
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        currentUserDeferred.resolve(revalidatedUser);
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+      });
+
+      act(() => {
+        result.current.logout();
+      });
+
+      expect(removeUserSpy).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ clearOfflineVaultTables: false })
+      );
+
+      await waitForSensitiveClientCleanup();
+
+      await act(async () => {
+        setUserDeferred.resolve();
+        await Promise.resolve();
+      });
+
+      await waitFor(() => {
+        expect(removeUserSpy).toHaveBeenCalledTimes(2);
+      });
+
+      expect(removeUserSpy).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ clearOfflineVaultTables: true })
+      );
     } finally {
       setUserSpy.mockRestore();
       removeUserSpy.mockRestore();

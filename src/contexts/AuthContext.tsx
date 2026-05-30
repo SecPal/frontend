@@ -240,6 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         })
         .finally(() => {
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
           shouldClearSensitiveStateRef.current = false;
           isClearingSessionRef.current = false;
         });
