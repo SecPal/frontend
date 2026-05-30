@@ -22,6 +22,7 @@ import {
   getPasskeyAssertion,
   isPasskeySupported,
 } from "../services/passkeyBrowser";
+import { formatApiDateTime } from "../lib/dateUtils";
 import { AuthLayout } from "../components/auth-layout";
 import { Footer } from "../components/Footer";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
@@ -126,20 +127,12 @@ function getLocalizedLoginErrorMessage(
 }
 
 function formatDateTime(value: string): string {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  return formatApiDateTime(value, {
+    formatOptions: {
+      dateStyle: "medium",
+      timeStyle: "short",
+    },
+  });
 }
 
 export function Login() {

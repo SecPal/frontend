@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
@@ -25,6 +25,7 @@ import {
   type ActivityVerification,
 } from "../../services/activityLogApi";
 import { VerificationDots } from "../../components/VerificationDots";
+import { formatApiDateTime } from "../../lib/dateUtils";
 
 interface ActivityDetailDialogProps {
   activity: Activity;
@@ -36,14 +37,15 @@ interface ActivityDetailDialogProps {
  * Format date for display
  */
 function formatDateTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+  return formatApiDateTime(dateString, {
+    formatOptions: {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    },
   });
 }
 

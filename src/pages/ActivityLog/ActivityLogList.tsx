@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect, useCallback } from "react";
@@ -31,18 +31,20 @@ import { Button } from "../../components/button";
 import { Badge } from "../../components/badge";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
 import { VerificationDots } from "../../components/VerificationDots";
+import { formatApiDateTime } from "../../lib/dateUtils";
 
 /**
  * Format date for display
  */
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return formatApiDateTime(dateString, {
+    formatOptions: {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
   });
 }
 
