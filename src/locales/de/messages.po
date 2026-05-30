@@ -1064,10 +1064,6 @@ msgstr "Organisatorischen Umfang bearbeiten"
 msgid "Postal Address"
 msgstr "Postanschrift"
 
-#: src/components/onboarding-layout.tsx
-msgid "We could not complete the sign out request. Please try again."
-msgstr "Wir konnten die Abmeldung nicht abschließen. Bitte versuchen Sie es erneut."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Done"
 msgstr "Erledigt"
