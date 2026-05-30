@@ -1115,9 +1115,8 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
     return null;
   }
 
-  const { rootKeyBytes, keyMaterialUsed } = await decryptVaultRootKeyBytes(
-    storedState
-  );
+  const { rootKeyBytes, keyMaterialUsed } =
+    await decryptVaultRootKeyBytes(storedState);
 
   if (!rootKeyBytes) {
     if (

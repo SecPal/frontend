@@ -320,7 +320,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   shouldSkipBarrierVaultTableCleanup(): boolean {
     return (
       localStorage.getItem(this.SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY) !==
-      null || this.hasSensitiveLogoutBarrierCleanupOwners()
+        null || this.hasSensitiveLogoutBarrierCleanupOwners()
     );
   }
 
@@ -628,7 +628,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.setLogoutBarrier();
     this.setSkipBarrierVaultTableCleanup(
       shouldPreserveExistingSkipMarker ||
-      options?.clearOfflineVaultTables === false
+        options?.clearOfflineVaultTables === false
     );
     await this.removeUser({
       ...options,

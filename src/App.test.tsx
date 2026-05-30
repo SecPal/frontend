@@ -606,7 +606,7 @@ describe("App", () => {
   });
 
   it("redirects unauthenticated users from the protected onboarding route to login", async () => {
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => { });
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     window.history.replaceState({}, "", "/onboarding");
 
