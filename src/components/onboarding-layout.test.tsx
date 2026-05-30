@@ -154,7 +154,7 @@ describe("OnboardingLayout", () => {
     consoleError.mockRestore();
   });
 
-  it("shows an error message when transport logout fails", async () => {
+  it("does not show a retry error when transport logout fails", async () => {
     const user = userEvent.setup();
     const transportLogout = vi
       .fn()
@@ -170,15 +170,14 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/we could not complete the sign out request/i)
-      ).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
   });
 
-  it("shows the sign-out error message in German", async () => {
+  it("does not show a localized retry error in German", async () => {
     const user = userEvent.setup();
     const transportLogout = vi
       .fn()
@@ -197,11 +196,8 @@ describe("OnboardingLayout", () => {
     await user.click(screen.getByRole("button", { name: /abmelden/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          /wir konnten die abmeldung nicht abschließen\. bitte versuchen sie es erneut\./i
-        )
-      ).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
     });
 
     consoleError.mockRestore();
