@@ -542,9 +542,13 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async clear(options?: AuthStorageClearOptions): Promise<void> {
+    const shouldPreserveExistingSkipMarker =
+      this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
+
     this.setLogoutBarrier();
     this.setSkipBarrierVaultTableCleanup(
-      options?.clearOfflineVaultTables === false
+      shouldPreserveExistingSkipMarker ||
+        options?.clearOfflineVaultTables === false
     );
     await this.removeUser({
       ...options,

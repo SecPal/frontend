@@ -481,6 +481,31 @@ describe("authStorage", () => {
     }
   });
 
+  it("preserves an existing skip marker when clear runs during an active logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+
+    await authStorage.clear();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(await db.vaultProfile.count()).toBe(1);
+  });
+
   it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {
     const user = {
       id: "1",
