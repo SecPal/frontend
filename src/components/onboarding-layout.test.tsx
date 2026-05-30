@@ -275,6 +275,35 @@ describe("OnboardingLayout", () => {
     consoleError.mockRestore();
   });
 
+  it("navigates to login when local logout cleanup fails", async () => {
+    const user = userEvent.setup();
+    const cleanupError = new Error("Storage unavailable");
+    const logout = vi.fn().mockRejectedValue(cleanupError);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      ...authContext,
+      logout,
+    });
+
+    renderLayout();
+
+    await user.click(screen.getByRole("button", { name: /sign out/i }));
+
+    await waitFor(() => {
+      expect(logout).toHaveBeenCalledTimes(1);
+      expect(consoleError).toHaveBeenCalledWith(
+        "Local logout cleanup failed:",
+        cleanupError
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+
+    consoleError.mockRestore();
+  });
+
   it("completes client-side logout when the logout API hangs past the timeout", async () => {
     vi.useFakeTimers();
 
