@@ -1397,10 +1397,7 @@ describe("useAuth", () => {
     });
 
     setCsrfTokenCookie("intermediate-csrf-token");
-    localStorage.setItem(
-      AUTH_VAULT_STORAGE_KEY,
-      rewrittenVaultState as string
-    );
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, rewrittenVaultState as string);
 
     act(() => {
       window.dispatchEvent(
