@@ -161,11 +161,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrapRequestVersionRef.current += 1;
   }, []);
 
-  const syncOfflineAuthState = useCallback((isAuthenticated: boolean) => {
-    void syncOfflineSessionAccess(isAuthenticated).catch((error: unknown) => {
-      console.warn("Failed to synchronize offline auth state:", error);
-    });
-  }, []);
+  const syncOfflineAuthState = useCallback(
+    (shouldAllowOfflineSessionAccess: boolean) => {
+      void syncOfflineSessionAccess(shouldAllowOfflineSessionAccess).catch(
+        (error: unknown) => {
+          console.warn("Failed to synchronize offline auth state:", error);
+        }
+      );
+    },
+    []
+  );
 
   const resetAnalyticsState = useCallback(async () => {
     if (!analytics) {
@@ -363,6 +368,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setIsVaultLocked(true);
     setIsLoading(false);
+    // Vault lock is a recoverable local state, so keep offline session access enabled.
     syncOfflineAuthState(true);
   }, [invalidateBootstrapRevalidation, syncOfflineAuthState]);
 

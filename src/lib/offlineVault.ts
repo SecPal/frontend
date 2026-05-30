@@ -360,7 +360,7 @@ export function clearStoredOfflineVaultState(): void {
   localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
   localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
   clearOfflineVaultSession();
-  recentAuthVaultKeyMaterials = [];
+  clearRecentAuthVaultKeyMaterials();
 }
 
 export function lockOfflineVault(): void {
