@@ -18,6 +18,17 @@ const CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS = 600_000;
 const AUTH_STORAGE_HALF_KEY_BYTES = 32;
 const AUTH_STORAGE_DERIVED_KEY_BYTES = AUTH_STORAGE_HALF_KEY_BYTES * 2;
 const textEncoder = new TextEncoder();
+const SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX =
+  "auth_logout_skip_vault_table_cleanup_owner:";
+
+function getSensitiveLogoutCleanupOwnerKeys(): string[] {
+  return Array.from({ length: localStorage.length }, (_, index) =>
+    localStorage.key(index)
+  ).filter(
+    (storageKey): storageKey is string =>
+      storageKey?.startsWith(SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX) ?? false
+  );
+}
 
 function encodeBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -537,7 +548,7 @@ describe("authStorage", () => {
     expect(await db.vaultProfile.count()).toBe(1);
   });
 
-  it("resets stale sensitive logout cleanup counts when a new full logout starts after re-login", async () => {
+  it("resets stale sensitive logout cleanup owners when a new full logout starts after re-login", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -547,16 +558,14 @@ describe("authStorage", () => {
 
     await authStorage.setUser(user);
 
-    authStorage.beginSensitiveLogoutBarrierCleanup();
+    const staleOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
     await authStorage.clear({ clearOfflineVaultTables: false });
 
     expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );
-    expect(
-      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
-    ).toBe("1");
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
 
     await authStorage.setUser(user);
 
@@ -564,19 +573,37 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );
-    expect(
-      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
-    ).toBe("1");
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(1);
 
-    authStorage.beginSensitiveLogoutBarrierCleanup();
-    authStorage.endSensitiveLogoutBarrierCleanup();
+    const refreshedOwnerToken =
+      authStorage.beginSensitiveLogoutBarrierCleanup();
+    authStorage.endSensitiveLogoutBarrierCleanup(refreshedOwnerToken);
 
     expect(
       localStorage.getItem("auth_logout_skip_vault_table_cleanup")
     ).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+
+    // The stale owner token from the previous barrier must no longer be able to
+    // influence the refreshed logout lifecycle.
+    authStorage.endSensitiveLogoutBarrierCleanup(staleOwnerToken);
     expect(
-      localStorage.getItem("auth_logout_skip_vault_table_cleanup_count")
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup")
     ).toBeNull();
+  });
+
+  it("keeps the skip marker while another tab still owns sensitive logout cleanup", () => {
+    const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    localStorage.setItem(
+      `${SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX}other-tab`,
+      String(Date.now())
+    );
+
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
+
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
   });
 
   it("clears vault tables when cleanup is explicitly requested for an active logout barrier", async () => {

@@ -148,7 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isClearingSessionRef = useRef(false);
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
-  const hasSensitiveLogoutBarrierCleanupRef = useRef(false);
+  const sensitiveLogoutBarrierCleanupOwnerTokenRef = useRef<string | null>(
+    null
+  );
   const bootstrapRequestVersionRef = useRef(0);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
@@ -175,21 +177,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const beginSensitiveLogoutBarrierCleanup = useCallback(() => {
-    if (hasSensitiveLogoutBarrierCleanupRef.current) {
+    if (sensitiveLogoutBarrierCleanupOwnerTokenRef.current !== null) {
       return;
     }
 
-    authStorage.beginSensitiveLogoutBarrierCleanup();
-    hasSensitiveLogoutBarrierCleanupRef.current = true;
+    sensitiveLogoutBarrierCleanupOwnerTokenRef.current =
+      authStorage.beginSensitiveLogoutBarrierCleanup();
   }, []);
 
   const endSensitiveLogoutBarrierCleanup = useCallback(() => {
-    if (!hasSensitiveLogoutBarrierCleanupRef.current) {
+    if (sensitiveLogoutBarrierCleanupOwnerTokenRef.current === null) {
       return;
     }
 
-    authStorage.endSensitiveLogoutBarrierCleanup();
-    hasSensitiveLogoutBarrierCleanupRef.current = false;
+    authStorage.endSensitiveLogoutBarrierCleanup(
+      sensitiveLogoutBarrierCleanupOwnerTokenRef.current
+    );
+    sensitiveLogoutBarrierCleanupOwnerTokenRef.current = null;
   }, []);
 
   const syncBarrierStateFromStorage = useCallback(() => {
