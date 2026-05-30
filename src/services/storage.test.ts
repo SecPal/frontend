@@ -586,12 +586,10 @@ describe("authStorage", () => {
     const vaultProfileClearSpy = vi
       .spyOn(db.vaultProfile, "clear")
       .mockImplementationOnce(
-        () =>
-          firstCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
+        () => firstCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
       )
       .mockImplementationOnce(
-        () =>
-          secondCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
+        () => secondCleanup.promise as ReturnType<typeof db.vaultProfile.clear>
       );
 
     await authStorage.setUser(user);

@@ -516,9 +516,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     return unlockedUser;
   }
 
-  async removeUser(
-    options: AuthStorageClearOptions = {}
-  ): Promise<void> {
+  async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
 
