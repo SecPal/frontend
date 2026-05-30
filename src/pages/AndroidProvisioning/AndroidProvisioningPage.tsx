@@ -50,7 +50,17 @@ const DEFAULT_PROVISIONING_PROFILE = {
 };
 
 function formatDateTime(value: string | null): string {
-  return formatApiDateTime(value, { fallback: "-" });
+  return formatApiDateTime(value, {
+    fallback: "-",
+    formatOptions: {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    },
+  });
 }
 
 function getStatusColor(status: AndroidEnrollmentStatus) {
