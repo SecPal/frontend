@@ -51,7 +51,11 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
         )
       );
     } finally {
-      await Promise.resolve(logout());
+      try {
+        await Promise.resolve(logout());
+      } catch (error) {
+        console.error("Local logout cleanup failed:", error);
+      }
       navigate("/login");
     }
   };
