@@ -127,16 +127,13 @@ describe("web push live mode", () => {
   });
 
   it("limits the live web push smoke to the desktop chromium project", async () => {
-    const { getLiveWebPushProjectSkipReason } = await import(
-      "./e2e/web-push-live-mode"
-    );
+    const { getLiveWebPushProjectSkipReason } =
+      await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushProjectSkipReason("chromium", "chromium")).toBe(
       undefined
     );
-    expect(
-      getLiveWebPushProjectSkipReason("mobile-chrome", "chromium")
-    ).toBe(
+    expect(getLiveWebPushProjectSkipReason("mobile-chrome", "chromium")).toBe(
       "Live browser Web Push smoke only runs in the desktop chromium project because notification permission and push subscription diagnostics are only collected there."
     );
     expect(getLiveWebPushProjectSkipReason("webkit", "webkit")).toBe(

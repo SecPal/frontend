@@ -241,8 +241,11 @@ async function fetchBrowserPushBootstrapProof(
       : undefined;
   const publicRuntimeMetadata =
     webPushRuntime && "public_runtime_metadata" in webPushRuntime
-      ? (webPushRuntime as { public_runtime_metadata?: Record<string, unknown> })
-          .public_runtime_metadata
+      ? (
+          webPushRuntime as {
+            public_runtime_metadata?: Record<string, unknown>;
+          }
+        ).public_runtime_metadata
       : undefined;
   const metadataRevision =
     webPushRuntime && "metadata_revision" in webPushRuntime
@@ -268,7 +271,8 @@ async function fetchBrowserPushBootstrapProof(
   if (
     typeof vapidPublicKey !== "string" ||
     vapidPublicKey.trim().length === 0 ||
-    (typeof metadataRevision !== "string" && typeof metadataRevision !== "number")
+    (typeof metadataRevision !== "string" &&
+      typeof metadataRevision !== "number")
   ) {
     throw new Error(
       `GET /v1/bootstrap?client_platform=browser returned incomplete browser Web Push runtime metadata on ${apiBaseUrl}: ${formatDiagnostics(parsedBody)}`
@@ -426,7 +430,9 @@ async function waitForSuccessfulUpsert(
   try {
     await expect
       .poll(
-        () => traffic.upsert.findLast((exchange) => isOkStatus(exchange.status)) !== undefined,
+        () =>
+          traffic.upsert.findLast((exchange) => isOkStatus(exchange.status)) !==
+          undefined,
         {
           timeout: LIVE_WEB_PUSH_TIMEOUT_MS,
         }
@@ -482,7 +488,9 @@ async function waitForSuccessfulRevoke(
   } catch {
     const runtimeState = await readBrowserPushRuntimeState(page);
     const lastExchange = traffic.revoke
-      .filter((exchange) => extractInstallationId(exchange.url) === installationId)
+      .filter(
+        (exchange) => extractInstallationId(exchange.url) === installationId
+      )
       .at(-1);
 
     if (lastExchange) {
@@ -543,7 +551,9 @@ async function performLogout(page: Page): Promise<void> {
     return;
   }
 
-  await page.getByRole("button", { name: /sign out|abmelden|ausloggen/i }).click();
+  await page
+    .getByRole("button", { name: /sign out|abmelden|ausloggen/i })
+    .click();
 }
 
 async function attachFailureScreenshot(
@@ -579,10 +589,9 @@ test.describe("Live browser Web Push smoke", () => {
       "Set PLAYWRIGHT_LIVE_WEB_PUSH=1 and select an HTTPS deployment target to run the live browser Web Push smoke."
   );
 
-  test("proves bootstrap metadata, authenticated registration, and logout cleanup against the selected deployment", async (
-    { browserName },
-    testInfo
-  ) => {
+  test("proves bootstrap metadata, authenticated registration, and logout cleanup against the selected deployment", async ({
+    browserName,
+  }, testInfo) => {
     const projectSkipReason = getLiveWebPushProjectSkipReason(
       testInfo.project.name,
       browserName
@@ -615,19 +624,16 @@ test.describe("Live browser Web Push smoke", () => {
         await expect(page).not.toHaveURL(/\/login$/);
       });
 
-      const bootstrapProof = await test.step(
-        "prove browser bootstrap metadata publication",
-        async () => {
+      const bootstrapProof =
+        await test.step("prove browser bootstrap metadata publication", async () => {
           return await fetchBrowserPushBootstrapProof(
             page,
             liveWebPushMode.apiBaseUrl as string
           );
-        }
-      );
+        });
 
-      const runtimeState = await test.step(
-        "grant notification permission and prove same-origin service-worker prerequisites",
-        async () => {
+      const runtimeState =
+        await test.step("grant notification permission and prove same-origin service-worker prerequisites", async () => {
           await context.grantPermissions(["notifications"], {
             origin: deploymentOrigin,
           });
@@ -638,12 +644,10 @@ test.describe("Live browser Web Push smoke", () => {
           ).toBeVisible();
 
           return await assertBrowserPushPrerequisites(page, deploymentOrigin);
-        }
-      );
+        });
 
-      const successfulUpsert = await test.step(
-        "prove authenticated registration on the canonical PUT installation endpoint",
-        async () => {
+      const successfulUpsert =
+        await test.step("prove authenticated registration on the canonical PUT installation endpoint", async () => {
           const exchange = await waitForSuccessfulUpsert(page, traffic);
 
           expect(exchange.method).toBe("PUT");
@@ -679,31 +683,29 @@ test.describe("Live browser Web Push smoke", () => {
           );
 
           return exchange;
-        }
-      );
+        });
 
       const installationId = extractInstallationId(successfulUpsert.url);
 
-      await test.step(
-        "prove browser-side installation state after registration",
-        async () => {
-          const registeredState = await readBrowserPushRuntimeState(page);
+      await test.step("prove browser-side installation state after registration", async () => {
+        const registeredState = await readBrowserPushRuntimeState(page);
 
-          expect(registeredState.permission).toBe("granted");
-          expect(registeredState.installationId).toBe(installationId);
-          expect(registeredState.hasSubscription).toBe(true);
-          expect(registeredState.subscriptionEndpoint).toBe(
-            (successfulUpsert.payload as {
+        expect(registeredState.permission).toBe("granted");
+        expect(registeredState.installationId).toBe(installationId);
+        expect(registeredState.hasSubscription).toBe(true);
+        expect(registeredState.subscriptionEndpoint).toBe(
+          (
+            successfulUpsert.payload as {
               registration?: {
                 subscription?: {
                   endpoint?: string;
                 };
               };
-            })?.registration?.subscription?.endpoint
-          );
-          expect(bootstrapProof.vapidPublicKey).not.toHaveLength(0);
-        }
-      );
+            }
+          )?.registration?.subscription?.endpoint
+        );
+        expect(bootstrapProof.vapidPublicKey).not.toHaveLength(0);
+      });
 
       await test.step("sign out and prove canonical DELETE cleanup", async () => {
         await performLogout(page);
