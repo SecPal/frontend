@@ -587,8 +587,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       options.clearOfflineVaultTables ?? true;
     const hasLogoutBarrier = this.hasLogoutBarrier();
     const shouldHonorBarrierSkipUpgrade =
-      options.allowBarrierSkipUpgrade === true ||
-      options.clearOfflineVaultTables === false;
+      options.allowBarrierSkipUpgrade === true;
 
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
