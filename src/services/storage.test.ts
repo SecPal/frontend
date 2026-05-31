@@ -211,6 +211,25 @@ describe("authStorage", () => {
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 
+  it("restores the locked offline vault after the browser-session CSRF token rotates", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+
+    authStorage.lockVault();
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    await expect(authStorage.unlockVault()).resolves.toEqual(user);
+    expect(authStorage.hasVaultLock()).toBe(false);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    await expect(authStorage.getUser()).resolves.toEqual(user);
+  });
+
   it("clears auth state when unlockVault finds no readable user after removing the lock", async () => {
     const user = {
       id: "1",
@@ -644,6 +663,27 @@ describe("authStorage", () => {
     authStorage.setSkipBarrierVaultTableCleanup(true);
 
     await authStorage.removeUser({ clearOfflineVaultTables: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
+  it("does not honor a stale skip marker when no logout barrier is active", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+
+    await authStorage.removeUser({ allowBarrierSkipUpgrade: true });
 
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
     expect(await db.vaultProfile.count()).toBe(0);

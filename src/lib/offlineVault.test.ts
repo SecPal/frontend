@@ -19,6 +19,10 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
+function clearCsrfTokenCookie(): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+}
+
 function setCapacitorNativeRuntime(
   value = { isNativePlatform: () => true }
 ): void {
@@ -136,6 +140,18 @@ describe("offlineVault", () => {
 
     expect(rotatedVaultState).not.toBeNull();
     expect(rotatedVaultState).not.toBe(initialVaultState);
+  });
+
+  it("keeps the vault readable when the current csrf cookie is missing but a recent key is cached", async () => {
+    await initializeOfflineVault(persistedUser);
+
+    clearOfflineVaultSession();
+    clearCsrfTokenCookie();
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
   });
 
   it("migrates legacy IndexedDB PII into vault-backed stores and clears plaintext records", async () => {

@@ -8,6 +8,7 @@ import {
   clearOfflineVaultLockState,
   clearOfflineVaultSession,
   clearOfflineVaultTables,
+  clearRecentAuthVaultKeyMaterials,
   isOfflineVaultLocked,
   initializeOfflineVault,
   lockOfflineVault,
@@ -436,12 +437,12 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private clearInvalidStoredUser(): null {
-    void this.removeUser();
+    void this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
   private async clearInvalidStoredUserAsync(): Promise<null> {
-    await this.removeUser();
+    await this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
@@ -553,7 +554,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
-      await this.removeUser();
+      await this.removeUser({ allowBarrierSkipUpgrade: true });
       return;
     }
 
@@ -584,8 +585,15 @@ class LocalStorageAuthStorage implements AuthStorage {
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
+    const shouldForceVaultTableCleanup =
+      options.clearOfflineVaultTables === true &&
+      options.allowBarrierSkipUpgrade !== true;
+    const hasLogoutBarrier = this.hasLogoutBarrier();
+    const shouldHonorBarrierSkipUpgrade =
+      options.allowBarrierSkipUpgrade === true;
 
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
     localStorage.removeItem(this.VAULT_LOCK_KEY);
@@ -594,12 +602,12 @@ class LocalStorageAuthStorage implements AuthStorage {
       return;
     }
 
-    if (this.hasLogoutBarrier()) {
+    if (shouldHonorBarrierSkipUpgrade || hasLogoutBarrier) {
       await this.waitForBarrierCleanupUpgrade();
 
       if (
-        (options.allowBarrierSkipUpgrade ||
-          options.clearOfflineVaultTables !== true) &&
+        !shouldForceVaultTableCleanup &&
+        this.hasLogoutBarrier() &&
         this.shouldSkipBarrierVaultTableCleanup()
       ) {
         return;
