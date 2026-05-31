@@ -1400,7 +1400,7 @@ describe("useAuth", () => {
     localStorage.setItem(AUTH_VAULT_STORAGE_KEY, rewrittenVaultState as string);
 
     act(() => {
-      const storageEvent = new StorageEvent("storage");
+      const storageEvent = new Event("storage");
 
       Object.defineProperties(storageEvent, {
         key: {
