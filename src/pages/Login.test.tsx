@@ -1179,6 +1179,13 @@ describe("Login", () => {
     });
     renderLogin();
 
+    await waitFor(() => {
+      expect(authApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    const bootstrapGetCurrentUserCalls = vi.mocked(authApi.getCurrentUser).mock
+      .calls.length;
+
     fireEvent.click(
       await screen.findByRole("button", { name: /sign in with passkey/i })
     );
@@ -1189,7 +1196,9 @@ describe("Login", () => {
       ).toHaveBeenCalledTimes(1);
     });
 
-    expect(authApi.getCurrentUser).not.toHaveBeenCalled();
+    expect(authApi.getCurrentUser).toHaveBeenCalledTimes(
+      bootstrapGetCurrentUserCalls
+    );
   });
 
   it("clears the browser passkey loading state after verify succeeds", async () => {
@@ -1232,6 +1241,13 @@ describe("Login", () => {
     });
     renderLogin();
 
+    await waitFor(() => {
+      expect(authApi.getCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    const bootstrapGetCurrentUserCalls = vi.mocked(authApi.getCurrentUser).mock
+      .calls.length;
+
     fireEvent.click(
       await screen.findByRole("button", { name: /sign in with passkey/i })
     );
@@ -1242,7 +1258,9 @@ describe("Login", () => {
       ).not.toBeInTheDocument();
     });
 
-    expect(authApi.getCurrentUser).not.toHaveBeenCalled();
+    expect(authApi.getCurrentUser).toHaveBeenCalledTimes(
+      bootstrapGetCurrentUserCalls
+    );
   });
 
   it("verifies an MFA challenge and continues the session login flow", async () => {
