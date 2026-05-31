@@ -277,5 +277,63 @@ test.describe("Authentication", () => {
         timeout: 15_000,
       });
     });
+
+    test("should restore the csrf cookie and vault state when an authenticated browser session loads /login", async ({
+      authenticatedPage: page,
+    }) => {
+      test.skip(
+        isRemoteE2ETarget(),
+        "Deterministic missing-XSRF bootstrap coverage uses local mocked auth routes only."
+      );
+
+      const targetedConsoleMessages: string[] = [];
+
+      page.on("console", (message) => {
+        const text = message.text();
+
+        if (
+          /Failed to track analytics event|Offline vault is not available|Another connection wants to delete database 'SecPalDB'/.test(
+            text
+          )
+        ) {
+          targetedConsoleMessages.push(text);
+        }
+      });
+
+      await page.evaluate(() => {
+        document.cookie =
+          "XSRF-TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+      });
+
+      await page.goto("/login");
+      await page.waitForLoadState("networkidle");
+
+      await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
+      await expect(
+        page
+          .getByRole("button", { name: /user menu/i })
+          .or(page.getByRole("button", { name: /sign out|abmelden|ausloggen/i }))
+      ).toBeVisible({ timeout: 15_000 });
+
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(
+              () => globalThis.localStorage.getItem("auth_vault_state") !== null
+            ),
+          { timeout: 15_000 }
+        )
+        .toBe(true);
+
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(() => document.cookie.includes("XSRF-TOKEN=")),
+          { timeout: 15_000 }
+        )
+        .toBe(true);
+
+      expect(targetedConsoleMessages).toEqual([]);
+    });
   });
 });

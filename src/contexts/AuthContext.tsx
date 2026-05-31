@@ -16,6 +16,7 @@ import {
 import { getAuthTransport } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
+import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission } from "../lib/capabilities";
@@ -185,6 +186,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const persistAuthenticatedUser = useCallback(
+    async (nextUser: User) => {
+      if (
+        authTransport.kind === "browser-session" &&
+        getCsrfTokenFromCookie() === null
+      ) {
+        await fetchCsrfToken();
+        rememberCurrentAuthVaultKeyMaterial();
+      }
+
+      await authStorage.setUser(nextUser);
+    },
+    [authTransport.kind]
+  );
+
   const beginSensitiveLogoutBarrierCleanup = useCallback(() => {
     if (sensitiveLogoutBarrierCleanupOwnerTokenRef.current !== null) {
       return;
@@ -341,7 +357,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       invalidateBootstrapRevalidation();
-      await authStorage.setUser(sanitizedUser);
+      await persistAuthenticatedUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
       setBootstrapRecoveryReason(null);
@@ -353,6 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [
       clearAuthenticatedState,
       invalidateBootstrapRevalidation,
+      persistAuthenticatedUser,
       syncOfflineAuthState,
     ]
   );
@@ -492,7 +509,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          await authStorage.setUser(currentUser);
+          await persistAuthenticatedUser(currentUser);
 
           if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
             reconcileActiveBarrierState();
@@ -653,6 +670,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
+    persistAuthenticatedUser,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,

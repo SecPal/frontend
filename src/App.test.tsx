@@ -12,8 +12,9 @@ import { authStorage } from "./services/storage";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
-const { mockGetCurrentUser } = vi.hoisted(() => ({
+const { mockGetCurrentUser, mockFetchCsrfToken } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
+  mockFetchCsrfToken: vi.fn(),
 }));
 
 vi.mock("./services/authApi", async () => {
@@ -21,6 +22,14 @@ vi.mock("./services/authApi", async () => {
   return {
     ...actual,
     getCurrentUser: mockGetCurrentUser,
+  };
+});
+
+vi.mock("./services/csrf", async () => {
+  const actual = await vi.importActual("./services/csrf");
+  return {
+    ...actual,
+    fetchCsrfToken: mockFetchCsrfToken,
   };
 });
 
@@ -34,6 +43,15 @@ vi.mock("./services/authApi", async () => {
 vi.spyOn(globalThis, "fetch").mockRejectedValue(
   new TypeError("fetch is not available in App.test.tsx")
 );
+
+function setXsrfCookie(token = "test-xsrf-token"): void {
+  document.cookie = `XSRF-TOKEN=${encodeURIComponent(token)}; path=/; SameSite=Lax`;
+}
+
+function clearXsrfCookie(): void {
+  document.cookie =
+    "XSRF-TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+}
 
 // Helper to render with I18n and wait for async updates
 async function renderWithI18n(component: React.ReactElement) {
@@ -55,6 +73,7 @@ async function seedPersistedAuthUser(user: Record<string, unknown>) {
     throw new Error("Failed to seed persisted auth user for test");
   }
 
+  setXsrfCookie();
   await authStorage.setUser(persistedUser);
   mockGetCurrentUser.mockResolvedValue(persistedUser);
 
@@ -95,9 +114,12 @@ describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    clearXsrfCookie();
+    setXsrfCookie();
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
+    mockFetchCsrfToken.mockResolvedValue(undefined);
     mockGetCurrentUser.mockRejectedValue(
       Object.assign(new Error("No mock auth user available for bootstrap"), {
         code: "HTTP_401",
@@ -193,6 +215,43 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /log in/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("refreshes the csrf cookie before restoring a browser session on the login route when the cookie is missing", async () => {
+    clearXsrfCookie();
+    mockFetchCsrfToken.mockImplementation(async () => {
+      setXsrfCookie("bootstrap-restored-xsrf-token");
+    });
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "1",
+      name: "Recovered Session User",
+      email: "recovered-session@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(mockFetchCsrfToken).toHaveBeenCalledTimes(1);
+        expect(authStorage.hasStoredUser()).toBe(true);
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
   });
 
   it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
