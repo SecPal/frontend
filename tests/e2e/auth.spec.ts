@@ -312,7 +312,9 @@ test.describe("Authentication", () => {
       await expect(
         page
           .getByRole("button", { name: /user menu/i })
-          .or(page.getByRole("button", { name: /sign out|abmelden|ausloggen/i }))
+          .or(
+            page.getByRole("button", { name: /sign out|abmelden|ausloggen/i })
+          )
       ).toBeVisible({ timeout: 15_000 });
 
       await expect
