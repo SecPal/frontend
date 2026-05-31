@@ -544,6 +544,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (isInvalidBootstrapSessionError(error)) {
+            if (!clearSensitiveStateOnInvalidSession) {
+              hasLogoutBarrierRef.current = false;
+              shouldSkipBarrierVaultTableCleanupRef.current = false;
+              setBootstrapRecoveryReason(null);
+              setUser(null);
+              setIsVaultLocked(false);
+              setIsLoading(false);
+              syncOfflineAuthState(false);
+              return;
+            }
+
             clearAuthenticatedState(clearSensitiveStateOnInvalidSession);
             return;
           }

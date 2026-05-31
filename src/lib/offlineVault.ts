@@ -200,7 +200,7 @@ function getAuthVaultKeyMaterialCandidates(): string[] {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
 
   if (!currentKeyMaterial) {
-    return [];
+    return [...recentAuthVaultKeyMaterials];
   }
 
   return [

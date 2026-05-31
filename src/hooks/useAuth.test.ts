@@ -252,6 +252,58 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("adopts a cross-tab login after an unauthenticated login-route bootstrap probe with no local auth snapshot", async () => {
+    window.history.replaceState({}, "", "/login");
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(new Error("Unauthenticated."), {
+        code: "HTTP_401",
+      })
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    const crossTabUser = {
+      id: "1",
+      name: "Recovered Login User",
+      email: "recovered-login@secpal.dev",
+      emailVerified: true,
+    };
+
+    await authStorage.setUser(crossTabUser);
+
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(storedVaultState).not.toBeNull();
+
+    await act(async () => {
+      const storageEvent = new Event("storage");
+
+      Object.defineProperties(storageEvent, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        oldValue: { value: null },
+        newValue: { value: storedVaultState },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+
+      window.dispatchEvent(storageEvent);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).toEqual(crossTabUser);
+  });
+
   it("revalidates a stored user before completing bootstrap", async () => {
     const mockUser = {
       id: 1,
