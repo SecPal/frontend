@@ -1400,14 +1400,28 @@ describe("useAuth", () => {
     localStorage.setItem(AUTH_VAULT_STORAGE_KEY, rewrittenVaultState as string);
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: AUTH_VAULT_STORAGE_KEY,
-          oldValue: initialVaultState as string,
-          newValue: rewrittenVaultState as string,
-          storageArea: localStorage,
-        })
-      );
+      const storageEvent = new StorageEvent("storage");
+
+      Object.defineProperties(storageEvent, {
+        key: {
+          configurable: true,
+          value: AUTH_VAULT_STORAGE_KEY,
+        },
+        oldValue: {
+          configurable: true,
+          value: initialVaultState as string,
+        },
+        newValue: {
+          configurable: true,
+          value: rewrittenVaultState as string,
+        },
+        storageArea: {
+          configurable: true,
+          value: localStorage,
+        },
+      });
+
+      window.dispatchEvent(storageEvent);
     });
 
     await waitFor(() => {
@@ -1916,6 +1930,8 @@ describe("useAuth", () => {
   });
 
   it("updates auth state when another tab logs in", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });

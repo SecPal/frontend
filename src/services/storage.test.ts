@@ -668,6 +668,27 @@ describe("authStorage", () => {
     expect(await db.vaultProfile.count()).toBe(0);
   });
 
+  it("does not honor a stale skip marker when no logout barrier is active", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(user);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+
+    authStorage.setSkipBarrierVaultTableCleanup(true);
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+
+    await authStorage.removeUser({ allowBarrierSkipUpgrade: true });
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+  });
+
   it("logs and resolves when vault table cleanup fails during removeUser", async () => {
     const user = {
       id: "1",

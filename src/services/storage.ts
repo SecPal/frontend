@@ -585,6 +585,9 @@ class LocalStorageAuthStorage implements AuthStorage {
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
+    const shouldForceVaultTableCleanup =
+      options.clearOfflineVaultTables === true &&
+      options.allowBarrierSkipUpgrade !== true;
     const hasLogoutBarrier = this.hasLogoutBarrier();
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true;
@@ -603,7 +606,8 @@ class LocalStorageAuthStorage implements AuthStorage {
       await this.waitForBarrierCleanupUpgrade();
 
       if (
-        shouldHonorBarrierSkipUpgrade &&
+        !shouldForceVaultTableCleanup &&
+        this.hasLogoutBarrier() &&
         this.shouldSkipBarrierVaultTableCleanup()
       ) {
         return;
