@@ -42,6 +42,28 @@ vi.mock("../../services/authApi", () => ({
   logoutAll: vi.fn(),
 }));
 
+// Pin the test clock so contract-start-date / residence-title-expiry
+// validation scenarios stay deterministic. Without this, hard-coded
+// fixture dates (e.g. `2026-06-01`) silently become "in the past" once
+// the wall clock crosses them, breaking CI without any code change.
+// We only fake `Date`, leaving real `setTimeout`/`setInterval` for
+// React Testing Library's `findBy*`/`waitFor` polling, and let the
+// mocked clock advance naturally so animations behave normally.
+//
+// The pinned date sits a few weeks before the earliest fixture date
+// (`2026-06-01`) so residence-title expiries used in "happy path"
+// scenarios are still strictly in the future, while expiries used in
+// "expired" scenarios (e.g. `2020-01-01`) remain firmly in the past.
+const FROZEN_TEST_DATE = new Date("2026-05-15T12:00:00Z");
+
+beforeEach(() => {
+  vi.useFakeTimers({
+    toFake: ["Date"],
+    shouldAdvanceTime: true,
+    now: FROZEN_TEST_DATE.getTime(),
+  });
+});
+
 function renderWithProviders() {
   return render(
     <MemoryRouter initialEntries={["/onboarding"]}>
