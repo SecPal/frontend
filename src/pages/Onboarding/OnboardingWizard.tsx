@@ -28,13 +28,7 @@ import {
 } from "../../services/onboardingApi";
 import { fetchEmployee } from "../../services/employeeApi";
 import { ApiError } from "../../services/ApiError";
-import {
-  Checkbox,
-  CheckboxField,
-  CheckboxGroup,
-} from "../../components/checkbox";
 import { Heading } from "../../components/heading";
-import { Combobox, ComboboxOption } from "../../components/combobox";
 import { Radio, RadioField, RadioGroup } from "../../components/radio";
 import {
   Description,
@@ -47,7 +41,6 @@ import {
 import { Input } from "../../components/input";
 import { Select } from "../../components/select";
 import { Text } from "../../components/text";
-import { Textarea } from "../../components/textarea";
 import { getLocalizedErrorMessage } from "../../lib/errorUtils";
 import {
   getAuthOnboardingWorkflowStatus,
@@ -78,7 +71,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Checkbox as UiCheckbox,
+  CommandPopover,
+  Field as UiField,
+  FieldDescription as UiFieldDescription,
+  FieldError as UiFieldError,
+  FieldLabel as UiFieldLabel,
+  Input as UiInput,
   Progress,
+  Select as UiSelect,
+  Textarea as UiTextarea,
 } from "./ui";
 
 interface OnboardingSchemaArrayItems {
@@ -1224,6 +1226,10 @@ function ProgressIndicator({
   );
 }
 
+function RequiredMarker({ show }: { show: boolean }) {
+  return show ? <span aria-hidden="true"> *</span> : null;
+}
+
 function SchemaFieldRenderer({
   fieldName,
   property,
@@ -1247,24 +1253,36 @@ function SchemaFieldRenderer({
   const { _ } = useLingui();
   const showRequiredMarker = required && !readOnly;
   const fieldRequired = required && !readOnly;
+  const safeFieldId = fieldName.replace(/[^A-Za-z0-9_-]/g, "-");
+  const fieldId = `onboarding-field-${safeFieldId}`;
+  const descriptionId = property.description
+    ? `${fieldId}-description`
+    : undefined;
+  const errorId = error ? `${fieldId}-error` : undefined;
+  const describedBy = [descriptionId, errorId].filter(Boolean).join(" ");
+  const ariaDescribedBy = describedBy.length > 0 ? describedBy : undefined;
 
   if (property.type === "string") {
     const options = getSchemaOptions(property);
 
     return (
-      <Field>
-        <Label>
+      <UiField>
+        <UiFieldLabel htmlFor={fieldId}>
           {title}
-          {showRequiredMarker ? " *" : null}
-        </Label>
+          <RequiredMarker show={showRequiredMarker} />
+        </UiFieldLabel>
         {property.description ? (
-          <Description>{property.description}</Description>
+          <UiFieldDescription id={descriptionId}>
+            {property.description}
+          </UiFieldDescription>
         ) : null}
         {options.length > 0 ? (
-          <Select
+          <UiSelect
+            id={fieldId}
             aria-label={title}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={Boolean(error) || undefined}
             disabled={readOnly}
-            invalid={Boolean(error)}
             name={fieldName}
             required={fieldRequired}
             value={getTextValue(formData[fieldName])}
@@ -1276,12 +1294,14 @@ function SchemaFieldRenderer({
                 {option.label}
               </option>
             ))}
-          </Select>
+          </UiSelect>
         ) : (
-          <Input
+          <UiInput
+            id={fieldId}
             aria-label={title}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={Boolean(error) || undefined}
             disabled={readOnly}
-            invalid={Boolean(error)}
             name={fieldName}
             pattern={property.pattern}
             required={fieldRequired}
@@ -1290,8 +1310,8 @@ function SchemaFieldRenderer({
             onChange={(event) => onChange(fieldName, event.target.value)}
           />
         )}
-        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-      </Field>
+        {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+      </UiField>
     );
   }
 
@@ -1299,19 +1319,23 @@ function SchemaFieldRenderer({
     const options = getSchemaOptions(property);
 
     return (
-      <Field>
-        <Label>
+      <UiField>
+        <UiFieldLabel htmlFor={fieldId}>
           {title}
-          {showRequiredMarker ? " *" : null}
-        </Label>
+          <RequiredMarker show={showRequiredMarker} />
+        </UiFieldLabel>
         {property.description ? (
-          <Description>{property.description}</Description>
+          <UiFieldDescription id={descriptionId}>
+            {property.description}
+          </UiFieldDescription>
         ) : null}
         {options.length > 0 ? (
-          <Select
+          <UiSelect
+            id={fieldId}
             aria-label={title}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={Boolean(error) || undefined}
             disabled={readOnly}
-            invalid={Boolean(error)}
             name={fieldName}
             required={fieldRequired}
             value={getNumberValue(formData[fieldName])}
@@ -1328,12 +1352,14 @@ function SchemaFieldRenderer({
                 {option.label}
               </option>
             ))}
-          </Select>
+          </UiSelect>
         ) : (
-          <Input
+          <UiInput
+            id={fieldId}
             aria-label={title}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={Boolean(error) || undefined}
             disabled={readOnly}
-            invalid={Boolean(error)}
             type="number"
             name={fieldName}
             required={fieldRequired}
@@ -1345,29 +1371,37 @@ function SchemaFieldRenderer({
             }}
           />
         )}
-        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-      </Field>
+        {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+      </UiField>
     );
   }
 
   if (property.type === "boolean") {
     return (
-      <CheckboxField>
-        <Checkbox
-          aria-label={title}
-          checked={getBooleanValue(formData[fieldName])}
-          disabled={readOnly}
-          onChange={(checked) => onChange(fieldName, checked)}
-        />
-        <Label>
-          {title}
-          {showRequiredMarker ? " *" : null}
-        </Label>
+      <UiField className="space-y-2">
+        <div className="flex items-center gap-3">
+          <UiCheckbox
+            id={fieldId}
+            aria-label={title}
+            aria-describedby={ariaDescribedBy}
+            aria-invalid={Boolean(error) || undefined}
+            checked={getBooleanValue(formData[fieldName])}
+            disabled={readOnly}
+            required={fieldRequired}
+            onChange={(event) => onChange(fieldName, event.target.checked)}
+          />
+          <UiFieldLabel htmlFor={fieldId}>
+            {title}
+            <RequiredMarker show={showRequiredMarker} />
+          </UiFieldLabel>
+        </div>
         {property.description ? (
-          <Description>{property.description}</Description>
+          <UiFieldDescription id={descriptionId}>
+            {property.description}
+          </UiFieldDescription>
         ) : null}
-        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-      </CheckboxField>
+        {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+      </UiField>
     );
   }
 
@@ -1380,30 +1414,36 @@ function SchemaFieldRenderer({
 
     if (fieldName === "nationalities" && itemOptions.length === 0) {
       return (
-        <Field>
-          <Label>
+        <UiField>
+          <UiFieldLabel htmlFor={fieldId}>
             {title}
-            {showRequiredMarker ? " *" : null}
-          </Label>
-          <Description>
+            <RequiredMarker show={showRequiredMarker} />
+          </UiFieldLabel>
+          <UiFieldDescription id={descriptionId ?? `${fieldId}-description`}>
             <Trans>
               Nationality options could not be loaded right now. Please reload
               this page and try again.
             </Trans>
-          </Description>
-          <Select
+          </UiFieldDescription>
+          <UiSelect
+            id={fieldId}
             aria-label={title}
+            aria-describedby={
+              [descriptionId ?? `${fieldId}-description`, errorId]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
+            aria-invalid={Boolean(error) || undefined}
             disabled
-            invalid={Boolean(error)}
             name={fieldName}
             required={fieldRequired}
             value=""
             onChange={() => {}}
           >
             <option value="">{_(msg`Select an option`)}</option>
-          </Select>
-          {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-        </Field>
+          </UiSelect>
+          {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+        </UiField>
       );
     }
 
@@ -1414,93 +1454,108 @@ function SchemaFieldRenderer({
           label: option.label,
         }));
         const selectedValue = selectedValues[0] ?? "";
-        const selectedOption =
-          nationalityOptions.find((option) => option.value === selectedValue) ??
-          null;
 
         return (
-          <Field>
-            <Label>
-              {title}
-              {showRequiredMarker ? " *" : null}
-            </Label>
-            <Description>
-              {_(msg`Search and select one nationality.`)}
-            </Description>
-            <Combobox
-              aria-label={title}
-              disabled={readOnly}
-              invalid={Boolean(error)}
-              name={fieldName}
+          <UiField>
+            <CommandPopover
+              label={title}
               options={nationalityOptions}
+              value={selectedValue}
+              disabled={readOnly}
               placeholder={_(msg`Select an option`)}
-              value={selectedOption}
-              displayValue={(option) => option?.label}
-              onChange={(option) =>
-                onChange(fieldName, option ? [option.value] : [])
+              searchPlaceholder={_(msg`Search and select one nationality.`)}
+              emptyMessage="No results found"
+              errorMessage={error}
+              onValueChange={(value) =>
+                onChange(fieldName, value.length > 0 ? [value] : [])
               }
-            >
-              {(option) => (
-                <ComboboxOption value={option}>{option.label}</ComboboxOption>
-              )}
-            </Combobox>
-            {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-          </Field>
+            />
+            <UiFieldDescription id={descriptionId ?? `${fieldId}-description`}>
+              {_(msg`Search and select one nationality.`)}
+            </UiFieldDescription>
+          </UiField>
         );
       }
 
       return (
-        <Field>
-          <Label>
-            {title}
-            {showRequiredMarker ? " *" : null}
-          </Label>
-          {property.description ? (
-            <Description>{property.description}</Description>
-          ) : null}
-          <CheckboxGroup aria-label={title}>
-            {itemOptions.map((option) => {
-              const optionValue = String(option.value);
+        <UiField>
+          <div
+            role="group"
+            aria-labelledby={`${fieldId}-label`}
+            aria-describedby={ariaDescribedBy}
+          >
+            <div className="space-y-2">
+              <div>
+                <span
+                  id={`${fieldId}-label`}
+                  className="text-sm font-medium text-zinc-950 dark:text-zinc-50"
+                >
+                  {title}
+                  <RequiredMarker show={showRequiredMarker} />
+                </span>
+              </div>
+              {property.description ? (
+                <UiFieldDescription id={descriptionId}>
+                  {property.description}
+                </UiFieldDescription>
+              ) : null}
+              <div className="space-y-3">
+                {itemOptions.map((option) => {
+                  const optionValue = String(option.value);
+                  const optionId = `${fieldId}-${optionValue.replace(
+                    /[^A-Za-z0-9_-]/g,
+                    "-"
+                  )}`;
 
-              return (
-                <CheckboxField key={optionValue}>
-                  <Checkbox
-                    aria-label={option.label}
-                    checked={selectedValues.includes(optionValue)}
-                    disabled={readOnly}
-                    onChange={(checked) => {
-                      const nextValues = checked
-                        ? [...selectedValues, optionValue]
-                        : selectedValues.filter(
-                            (entry) => entry !== optionValue
-                          );
+                  return (
+                    <div key={optionValue} className="flex items-center gap-3">
+                      <UiCheckbox
+                        id={optionId}
+                        checked={selectedValues.includes(optionValue)}
+                        disabled={readOnly}
+                        onChange={(event) => {
+                          const nextValues = event.target.checked
+                            ? [...selectedValues, optionValue]
+                            : selectedValues.filter(
+                                (entry) => entry !== optionValue
+                              );
 
-                      onChange(fieldName, nextValues);
-                    }}
-                  />
-                  <Label>{option.label}</Label>
-                </CheckboxField>
-              );
-            })}
-          </CheckboxGroup>
-          {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-        </Field>
+                          onChange(fieldName, nextValues);
+                        }}
+                      />
+                      <UiFieldLabel htmlFor={optionId}>
+                        {option.label}
+                      </UiFieldLabel>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+        </UiField>
       );
     }
 
     return (
-      <Field>
-        <Label>
+      <UiField>
+        <UiFieldLabel htmlFor={fieldId}>
           {title}
-          {showRequiredMarker ? " *" : null}
-        </Label>
-        <Description>
+          <RequiredMarker show={showRequiredMarker} />
+        </UiFieldLabel>
+        <UiFieldDescription id={descriptionId ?? `${fieldId}-description`}>
           {property.description ?? _(msg`Enter one value per line.`)}
-        </Description>
-        <Textarea
+        </UiFieldDescription>
+        <UiTextarea
+          id={fieldId}
           aria-label={title}
+          aria-describedby={
+            [descriptionId ?? `${fieldId}-description`, errorId]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
+          aria-invalid={Boolean(error) || undefined}
           disabled={readOnly}
-          invalid={Boolean(error)}
           name={fieldName}
           required={fieldRequired}
           rows={4}
@@ -1509,8 +1564,8 @@ function SchemaFieldRenderer({
             onChange(fieldName, parseArrayTextareaValue(event.target.value))
           }
         />
-        {error ? <ErrorMessage>{error}</ErrorMessage> : null}
-      </Field>
+        {error ? <UiFieldError id={errorId}>{error}</UiFieldError> : null}
+      </UiField>
     );
   }
 

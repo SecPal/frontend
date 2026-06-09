@@ -178,10 +178,17 @@ async function selectNationality(
     return;
   }
 
-  const nationalityInput = nationalityControl as HTMLInputElement;
-  await user.click(nationalityInput);
-  await user.clear(nationalityInput);
-  await user.type(nationalityInput, query);
+  await user.click(nationalityControl);
+
+  if (nationalityControl instanceof HTMLInputElement) {
+    await user.clear(nationalityControl);
+    await user.type(nationalityControl, query);
+  } else {
+    const searchbox = await screen.findByRole("searchbox");
+    await user.clear(searchbox);
+    await user.type(searchbox, query);
+  }
+
   await user.keyboard("{ArrowDown}{Enter}");
 }
 
