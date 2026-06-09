@@ -1,6 +1,7 @@
 ## Codebase Patterns
 - Onboarding-only shadcn-style primitives live under `src/pages/Onboarding/ui` and are imported from that local barrel so migrated onboarding routes do not depend on Catalyst wrappers in `src/components`.
 - Migrated onboarding forms should pair local `FieldLabel`/`Input` primitives with stable `id`, `htmlFor`, `aria-invalid`, and `aria-describedby` wiring so existing label-based tests and accessible error descriptions keep working after leaving Headless/Catalyst field wrappers.
+- Authenticated onboarding shell and passive route states should use semantic containers plus onboarding-local `Button`, `Card`, and `Alert` primitives while leaving auth gating and logout sequencing in the route/layout layer.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 - Implemented a minimal onboarding-ready shadcn primitive set: button, input, textarea, select, checkbox, radio group, alert, card, form layout helpers, `cn`, and a keyboard-searchable command popover select.
@@ -26,3 +27,24 @@
 - **Learnings for future iterations:**
   - Patterns discovered: when replacing Headless/Catalyst field components with plain shadcn-style primitives, stable IDs and explicit ARIA relationships are the migration boundary that preserves user-facing accessibility and test queries.
   - Gotchas encountered: existing e2e mocks still returned legacy identity data from token validation, so they had to be updated to the no-prefill security contract before the UI migration could be considered covered.
+
+## US-003: Onboarding-Shell und Abschlusszustände auf shadcn migrieren
+- Rebuilt the authenticated onboarding layout shell with semantic `<main>`/`<header>` structure and the onboarding-local shadcn `Button`, preserving the existing transport logout timeout, local logout cleanup, and `/login` redirect behavior.
+- Migrated the submitted-state screen, entry feedback, global wizard feedback, initial loading, initial error, and empty onboarding-state wrappers to onboarding-local shadcn `Card`/`Alert` primitives while keeping existing copy and localization output intact where behavior already existed.
+- Added focused unit coverage for the shell banner/sign-out action, submitted landmark region, and wizard loading/error/empty passive states; synced Lingui catalogs for the new empty-state copy.
+- Files changed:
+  - `src/components/onboarding-layout.tsx`
+  - `src/components/onboarding-layout.test.tsx`
+  - `src/pages/Onboarding/OnboardingSubmitted.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingSubmitted.test.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`
+  - `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: ref-forwarding shadcn feedback primitives keeps existing focus management intact when replacing hand-rolled alert wrappers.
+  - Gotchas encountered: the empty onboarding branch previously fell through to a blank wizard frame, so migrating the passive wrapper required adding a localized empty-state string and syncing catalogs.

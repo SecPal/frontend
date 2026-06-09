@@ -144,12 +144,13 @@ export function RadioGroupItem({
   );
 }
 
-export function Alert({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"div">) {
+export const Alert = forwardRef(function Alert(
+  { className, ...props }: ComponentPropsWithoutRef<"div">,
+  ref: ForwardedRef<HTMLDivElement>
+) {
   return (
     <div
+      ref={ref}
       role="alert"
       className={cn(
         "rounded-md border border-zinc-200 bg-white p-4 text-sm text-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
@@ -158,7 +159,7 @@ export function Alert({
       {...props}
     />
   );
-}
+});
 
 export function AlertTitle({
   className,

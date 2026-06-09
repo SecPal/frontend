@@ -68,6 +68,7 @@ import {
   getResidentialAddressHistoryValue,
   validateResidentialAddressHistoryValue,
 } from "./onboardingResidentialAddressHistory";
+import { Alert, Card, CardContent } from "./ui";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
@@ -3291,14 +3292,15 @@ export function OnboardingWizard() {
 
   const entryFeedbackBanner =
     entryFeedback && currentStepIndex === 0 ? (
-      <div
+      <Alert
+        role={entryFeedback.tone === "error" ? "alert" : "status"}
         className={
           entryFeedback.tone === "error"
-            ? "mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-            : "mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+            ? "mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+            : "mb-6 border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
         }
       >
-        <Text
+        <p
           className={
             entryFeedback.tone === "error"
               ? "text-red-800 dark:text-red-200"
@@ -3306,17 +3308,21 @@ export function OnboardingWizard() {
           }
         >
           {entryFeedback.message}
-        </Text>
-      </div>
+        </p>
+      </Alert>
     ) : null;
 
   if (loading && steps.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Text>
+      <Card
+        role="status"
+        aria-live="polite"
+        className="mx-auto max-w-4xl"
+      >
+        <CardContent className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
           <Trans>Loading onboarding...</Trans>
-        </Text>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -3324,10 +3330,20 @@ export function OnboardingWizard() {
     return (
       <div>
         {entryFeedbackBanner}
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <Text className="text-red-800">{error}</Text>
-        </div>
+        <Alert className="border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
+        </Alert>
       </div>
+    );
+  }
+
+  if (!template && steps.length === 0) {
+    return (
+      <Card className="mx-auto max-w-4xl">
+        <CardContent className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
+          <Trans>No onboarding steps are available right now.</Trans>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -3346,7 +3362,7 @@ export function OnboardingWizard() {
         {entryFeedbackBanner}
 
         {feedback ? (
-          <div
+          <Alert
             ref={feedback.tone === "error" ? onboardingErrorRef : null}
             tabIndex={feedback.tone === "error" ? -1 : undefined}
             role={feedback.tone === "error" ? "alert" : "status"}
@@ -3354,11 +3370,11 @@ export function OnboardingWizard() {
             aria-atomic="true"
             className={
               feedback.tone === "error"
-                ? "mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-                : "mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                ? "mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+                : "mb-6 border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
             }
           >
-            <Text
+            <p
               className={
                 feedback.tone === "error"
                   ? "text-red-800 dark:text-red-200"
@@ -3366,19 +3382,19 @@ export function OnboardingWizard() {
               }
             >
               {feedback.message}
-            </Text>
-          </div>
+            </p>
+          </Alert>
         ) : null}
         {error ? (
-          <div
+          <Alert
             ref={onboardingErrorRef}
             tabIndex={-1}
             role="alert"
             aria-live="assertive"
-            className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+            className="mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
           >
-            <Text className="text-red-800 dark:text-red-200">{error}</Text>
-          </div>
+            <p className="text-red-800 dark:text-red-200">{error}</p>
+          </Alert>
         ) : null}
         {apiValidationDetailMessages.length > 0 ? (
           <div

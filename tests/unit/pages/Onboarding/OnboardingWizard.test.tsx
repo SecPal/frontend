@@ -332,6 +332,47 @@ describe("OnboardingWizard", () => {
     );
   });
 
+  it("renders the initial loading wrapper as a status region", () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockReturnValue(
+      new Promise(() => {})
+    );
+
+    renderWizard();
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /loading onboarding/i
+    );
+  });
+
+  it("renders the initial loading failure in an alert wrapper", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockRejectedValueOnce(
+      new Error("Network unavailable")
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /failed to load onboarding steps/i
+      );
+    });
+  });
+
+  it("renders an empty-state wrapper when no onboarding steps are available", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValueOnce([]);
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no onboarding steps are available right now/i)
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText("Welcome to SecPal Onboarding")
+    ).not.toBeInTheDocument();
+  });
+
   it("loads the current runtime templates and advances after saving the active template draft", async () => {
     renderWizard();
 

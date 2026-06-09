@@ -92,6 +92,7 @@ describe("OnboardingLayout", () => {
   it("renders children and a dedicated sign-out action", () => {
     renderLayout();
 
+    expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByText("Onboarding Wizard Content")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /sign out/i })

@@ -1991,6 +1991,10 @@ msgstr "Optional"
 msgid "Sign in with passkey"
 msgstr "Mit Passkey anmelden"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No onboarding steps are available right now."
+msgstr "Derzeit sind keine Onboarding-Schritte verfügbar."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.checkingSystem"
