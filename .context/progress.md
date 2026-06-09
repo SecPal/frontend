@@ -5,6 +5,7 @@
 - Wizard chrome should use onboarding-local `CardHeader`/`CardContent`, `AlertDescription`, `Badge`, `Progress`, and `Button` primitives while keeping navigation conditions and state transitions in the existing wizard handlers.
 - Schema-driven wizard field paths should use onboarding-local `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Select`, `Textarea`, `Checkbox`, and `CommandPopover` primitives with deterministic `onboarding-field-*` IDs; keep special upload and address-history blocks isolated until their own migrations.
 - Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
+- Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 - Implemented a minimal onboarding-ready shadcn primitive set: button, input, textarea, select, checkbox, radio group, alert, card, form layout helpers, `cn`, and a keyboard-searchable command popover select.
@@ -96,3 +97,13 @@
 - **Learnings for future iterations:**
   - Patterns discovered: keep custom onboarding behavior in place and migrate the control surface by replacing imports plus explicit accessibility wiring, especially for dynamic sections with synchronized hidden rows.
   - Gotchas encountered: local onboarding e2e specs exist but are skipped in this workspace configuration, so story proof needed an additional focused onboarding unit regression around the actual address-history wrapper.
+
+## US-007: Dokument-Upload und Sonderlogik im Wizard auf shadcn finalisieren
+- Rebuilt the onboarding wizard identity-document upload choice, German identity-document kind select, upload file inputs, residence-title type/date/employment fields, residence-title upload choice, residence-title upload inputs, uploaded-file list, and remove-file actions with onboarding-local shadcn primitives or semantic elements.
+- Preserved the existing behavior hooks for nationality-driven residence-title logic, upload-now branching, draft creation before first upload, editable-only upload enforcement, selected-file navigation blocking, residence-title business rules, required draft-step validation, and workflow-conflict refresh handling.
+- Files changed:
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: file upload sections can migrate presentation cleanly by leaving upload context, pending file arrays, and `handleUpload`/remove handlers untouched while replacing only labels, descriptions, native file inputs, and radio/select controls.
+  - Gotchas encountered: the wizard upload tests query radio groups by accessible role and name, so shadcn-style native radio groups need explicit `role="radiogroup"` plus stable `aria-label` when replacing the previous wrapper components.
