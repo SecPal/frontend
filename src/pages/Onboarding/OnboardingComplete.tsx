@@ -6,11 +6,18 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
-import { Field, Label, FieldGroup } from "../../components/fieldset";
-import { Heading } from "../../components/heading";
-import { Text } from "../../components/text";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  Input,
+} from "./ui";
 import {
   getErrorRetryAfterSeconds,
   getErrorValidationErrors,
@@ -469,15 +476,14 @@ export function OnboardingComplete() {
           <LanguageSwitcher />
         </div>
 
-        <div
+        <Alert
           className={
             isRateLimited
-              ? "mt-8 rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30"
-              : "mt-8 rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-950/30"
+              ? "mt-8 border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+              : "mt-8 border-red-200 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100"
           }
         >
-          <Heading
-            level={2}
+          <AlertTitle
             className={
               isRateLimited
                 ? "text-amber-800 dark:text-amber-200"
@@ -489,8 +495,8 @@ export function OnboardingComplete() {
             ) : (
               <Trans>Invalid Link</Trans>
             )}
-          </Heading>
-          <Text
+          </AlertTitle>
+          <AlertDescription
             className={
               isRateLimited
                 ? "mt-2 text-amber-700 dark:text-amber-300"
@@ -498,11 +504,11 @@ export function OnboardingComplete() {
             }
           >
             {tokenValidationState.message}
-          </Text>
+          </AlertDescription>
           {isRateLimited && retryHint && (
-            <Text className="mt-2 text-amber-700 dark:text-amber-300">
+            <AlertDescription className="mt-2 text-amber-700 dark:text-amber-300">
               {retryHint}
-            </Text>
+            </AlertDescription>
           )}
           <div className="mt-4">
             {isRateLimited ? (
@@ -512,12 +518,12 @@ export function OnboardingComplete() {
                 <Trans>Try Again</Trans>
               </Button>
             ) : (
-              <Button color="red" onClick={() => navigate("/login")}>
+              <Button variant="destructive" onClick={() => navigate("/login")}>
                 <Trans>Go to Login</Trans>
               </Button>
             )}
           </div>
-        </div>
+        </Alert>
       </AuthLayout>
     );
   }
@@ -535,9 +541,9 @@ export function OnboardingComplete() {
         </div>
 
         <div className="mt-8 text-center">
-          <Text>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
             <Trans>Validating your link...</Trans>
-          </Text>
+          </p>
         </div>
       </AuthLayout>
     );
@@ -554,12 +560,12 @@ export function OnboardingComplete() {
       </div>
 
       <div className="mt-8">
-        <Heading level={2}>
+        <h2 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
           <Trans>Welcome to SecPal!</Trans>
-        </Heading>
-        <Text className="mt-2 text-zinc-600 dark:text-zinc-400">
+        </h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           <Trans>Complete your account setup to get started</Trans>
-        </Text>
+        </p>
       </div>
 
       <form
@@ -568,20 +574,21 @@ export function OnboardingComplete() {
         data-onboarding-form="true"
       >
         {errors.general && (
-          <div className="mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <Text className="text-red-800 dark:text-red-200">
+          <Alert className="mb-6 border-red-200 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100">
+            <AlertDescription className="text-red-800 dark:text-red-200">
               {errors.general}
-            </Text>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
 
         <FieldGroup>
           {/* First Name - BewachV §16 requires all first names */}
           <Field>
-            <Label>
+            <FieldLabel htmlFor="onboarding-first-name">
               <Trans>First Names (all)</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="onboarding-first-name"
               type="text"
               name="first_name"
               value={formData.first_name}
@@ -590,47 +597,57 @@ export function OnboardingComplete() {
               }
               disabled={loading}
               autoFocus
-              invalid={!!errors.first_name}
+              aria-invalid={errors.first_name ? true : undefined}
+              aria-describedby={
+                errors.first_name
+                  ? "onboarding-first-name-description onboarding-first-name-error"
+                  : "onboarding-first-name-description"
+              }
             />
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            <FieldDescription id="onboarding-first-name-description">
               <Trans>
                 Enter all your first names as shown on your ID (e.g.,
                 "Hans-Peter Friedrich")
               </Trans>
-            </Text>
+            </FieldDescription>
             {errors.first_name && (
-              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+              <FieldError id="onboarding-first-name-error">
                 {errors.first_name}
-              </Text>
+              </FieldError>
             )}
           </Field>
 
           {/* Last Name */}
           <Field>
-            <Label>
+            <FieldLabel htmlFor="onboarding-last-name">
               <Trans>Last Name</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="onboarding-last-name"
               type="text"
               name="last_name"
               value={formData.last_name}
               onChange={(e) => updateIdentityField("last_name", e.target.value)}
               disabled={loading}
-              invalid={!!errors.last_name}
+              aria-invalid={errors.last_name ? true : undefined}
+              aria-describedby={
+                errors.last_name ? "onboarding-last-name-error" : undefined
+              }
             />
             {errors.last_name && (
-              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+              <FieldError id="onboarding-last-name-error">
                 {errors.last_name}
-              </Text>
+              </FieldError>
             )}
           </Field>
 
           {/* Date of Birth — proves identity together with the name */}
           <Field>
-            <Label>
+            <FieldLabel htmlFor="onboarding-date-of-birth">
               <Trans>Date of Birth</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="onboarding-date-of-birth"
               type="date"
               name="date_of_birth"
               value={formData.date_of_birth}
@@ -638,27 +655,33 @@ export function OnboardingComplete() {
                 updateIdentityField("date_of_birth", e.target.value)
               }
               disabled={loading}
-              invalid={!!errors.date_of_birth}
+              aria-invalid={errors.date_of_birth ? true : undefined}
+              aria-describedby={
+                errors.date_of_birth
+                  ? "onboarding-date-of-birth-description onboarding-date-of-birth-error"
+                  : "onboarding-date-of-birth-description"
+              }
             />
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+            <FieldDescription id="onboarding-date-of-birth-description">
               <Trans>
                 We compare this with the date of birth on file to verify your
                 identity before activating your account.
               </Trans>
-            </Text>
+            </FieldDescription>
             {errors.date_of_birth && (
-              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+              <FieldError id="onboarding-date-of-birth-error">
                 {errors.date_of_birth}
-              </Text>
+              </FieldError>
             )}
           </Field>
 
           {/* Password */}
           <Field>
-            <Label>
+            <FieldLabel htmlFor="onboarding-password">
               <Trans>Password</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="onboarding-password"
               type="password"
               name="password"
               aria-label="Password"
@@ -667,28 +690,34 @@ export function OnboardingComplete() {
                 setFormData((prev) => ({ ...prev, password: e.target.value }))
               }
               disabled={loading}
-              invalid={!!errors.password}
+              aria-invalid={errors.password ? true : undefined}
+              aria-describedby={
+                errors.password
+                  ? "onboarding-password-error onboarding-password-description"
+                  : "onboarding-password-description"
+              }
             />
             {errors.password && (
-              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+              <FieldError id="onboarding-password-error">
                 {errors.password}
-              </Text>
+              </FieldError>
             )}
-            <Text className="text-sm text-zinc-500 mt-1">
+            <FieldDescription id="onboarding-password-description">
               <Trans>
                 Use at least 12 characters with uppercase and lowercase letters,
                 a number, and a symbol. Passwords that appear in known data
                 breaches cannot be used.
               </Trans>
-            </Text>
+            </FieldDescription>
           </Field>
 
           {/* Password Confirmation */}
           <Field>
-            <Label>
+            <FieldLabel htmlFor="onboarding-password-confirmation">
               <Trans>Confirm Password</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="onboarding-password-confirmation"
               type="password"
               name="password_confirmation"
               value={formData.password_confirmation}
@@ -699,23 +728,23 @@ export function OnboardingComplete() {
                 }))
               }
               disabled={loading}
-              invalid={!!errors.password_confirmation}
+              aria-invalid={errors.password_confirmation ? true : undefined}
+              aria-describedby={
+                errors.password_confirmation
+                  ? "onboarding-password-confirmation-error"
+                  : undefined
+              }
             />
             {errors.password_confirmation && (
-              <Text className="text-sm !text-red-600 dark:!text-red-400 mt-1 font-medium">
+              <FieldError id="onboarding-password-confirmation-error">
                 {errors.password_confirmation}
-              </Text>
+              </FieldError>
             )}
           </Field>
 
           {/* Submit Button */}
           <div className="mt-8">
-            <Button
-              type="submit"
-              color="indigo"
-              className="w-full"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <Trans>Completing Setup...</Trans>
               ) : (

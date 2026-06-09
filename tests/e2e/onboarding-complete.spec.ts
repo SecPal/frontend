@@ -134,9 +134,7 @@ async function installRemoteOnboardingFetchMocks(
           if (token === validToken && email === validEmail) {
             return jsonResponse({
               data: {
-                first_name: "John",
-                last_name: "Doe",
-                email: validEmail,
+                valid: true,
               },
             });
           }
@@ -344,9 +342,7 @@ async function installMockOnboardingRoutes(
         contentType: "application/json",
         body: JSON.stringify({
           data: {
-            first_name: "John",
-            last_name: "Doe",
-            email: validOnboardingEmail,
+            valid: true,
           },
         }),
       });
@@ -499,9 +495,13 @@ test.describe("Onboarding Complete Flow", () => {
     await expect(
       page.getByRole("heading", { name: /Welcome to SecPal!/i })
     ).toBeVisible();
-    await expect(page.getByLabel(/First Names \(all\)/i)).toHaveValue("John");
-    await expect(page.getByLabel(/Last Name/i)).toHaveValue("Doe");
+    await expect(page.getByLabel(/First Names \(all\)/i)).toHaveValue("");
+    await expect(page.getByLabel(/Last Name/i)).toHaveValue("");
+    await expect(page.getByLabel(/Date of Birth/i)).toHaveValue("");
 
+    await page.getByLabel(/First Names \(all\)/i).fill("John");
+    await page.getByLabel(/Last Name/i).fill("Doe");
+    await page.getByLabel(/Date of Birth/i).fill("1990-01-01");
     await passwordInput(page).fill("SecurePass123!");
     await passwordConfirmationInput(page).fill("SecurePass123!");
     await page.getByRole("button", { name: /Complete Account Setup/i }).click();
@@ -578,7 +578,7 @@ test.describe("Onboarding Complete Flow", () => {
     ).toBeVisible();
   });
 
-  test("validates required onboarding fields with the current prefills", async ({
+  test("validates required onboarding fields without token prefills", async ({
     page,
   }) => {
     await page.goto(
@@ -601,6 +601,9 @@ test.describe("Onboarding Complete Flow", () => {
       `/onboarding/complete?token=${validOnboardingToken}&email=${validOnboardingEmail}`
     );
 
+    await page.getByLabel(/First Names \(all\)/i).fill("John");
+    await page.getByLabel(/Last Name/i).fill("Doe");
+    await page.getByLabel(/Date of Birth/i).fill("1990-01-01");
     await passwordInput(page).fill("SecurePass123!");
     await passwordConfirmationInput(page).fill("SecurePass123!");
     await page.getByRole("button", { name: /Complete Account Setup/i }).click();
