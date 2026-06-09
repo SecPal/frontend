@@ -339,9 +339,7 @@ describe("OnboardingWizard", () => {
 
     renderWizard();
 
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /loading onboarding/i
-    );
+    expect(screen.getByRole("status")).toHaveTextContent(/loading onboarding/i);
   });
 
   it("renders the initial loading failure in an alert wrapper", async () => {
@@ -395,6 +393,29 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(screen.getByText("Tax Details")).toBeInTheDocument();
     });
+  });
+
+  it("renders shadcn wizard chrome for progress, step overview, and navigation", async () => {
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("progressbar", { name: /onboarding progress/i })
+    ).toHaveAttribute("aria-valuenow", "50");
+    expect(
+      screen.getByRole("region", { name: /required information/i })
+    ).toHaveTextContent("Step 1: Personal Information");
+    expect(
+      screen.getByRole("region", { name: /optional sections/i })
+    ).toHaveTextContent("Step 2: Tax Details");
+    expect(
+      screen.getByRole("navigation", {
+        name: /onboarding step navigation/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows onboarding-required entry feedback only on the first step", async () => {

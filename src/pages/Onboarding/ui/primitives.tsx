@@ -240,6 +240,54 @@ export function CardFooter({
   );
 }
 
+export function Badge({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"span">) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md border border-transparent bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Progress({
+  className,
+  value,
+  max = 100,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  value: number;
+  max?: number;
+}) {
+  const boundedMax = max > 0 ? max : 100;
+  const boundedValue = Math.min(Math.max(value, 0), boundedMax);
+  const percentage = (boundedValue / boundedMax) * 100;
+
+  return (
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={boundedMax}
+      aria-valuenow={boundedValue}
+      className={cn(
+        "relative h-2.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800",
+        className
+      )}
+      {...props}
+    >
+      <div
+        className="h-full rounded-full bg-blue-600 transition-all duration-300 dark:bg-blue-500"
+        style={{ width: `${percentage}%` }}
+      />
+    </div>
+  );
+}
+
 export function Field({
   className,
   ...props

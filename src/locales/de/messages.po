@@ -3102,6 +3102,10 @@ msgstr "SecPal konnte die verschlüsselten Offline-Daten auf diesem Gerät nicht
 msgid "Last name is required"
 msgstr "Nachname ist erforderlich"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding progress"
+msgstr "Onboarding-Fortschritt"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Profile"
 msgstr "Profil"

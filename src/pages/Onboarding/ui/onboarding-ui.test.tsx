@@ -8,6 +8,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  Progress,
   RadioGroup,
   RadioGroupItem,
   Select,
@@ -140,6 +142,20 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Missing fieldsComplete the required fields."
     );
+  });
+
+  it("renders badge and progress primitives with accessible state", () => {
+    render(
+      <div>
+        <Badge>Optional</Badge>
+        <Progress value={40} aria-label="Onboarding progress" />
+      </div>
+    );
+
+    expect(screen.getByText("Optional")).toBeInTheDocument();
+    expect(
+      screen.getByRole("progressbar", { name: "Onboarding progress" })
+    ).toHaveAttribute("aria-valuenow", "40");
   });
 
   it("supports a keyboard-searchable command popover select", async () => {

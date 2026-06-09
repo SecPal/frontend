@@ -3026,6 +3026,10 @@ msgstr "SecPal could not unlock the encrypted offline data on this device. Sign 
 msgid "Last name is required"
 msgstr "Last name is required"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding progress"
+msgstr "Onboarding progress"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Profile"
 msgstr "Profile"
