@@ -5,7 +5,8 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   OnboardingResidentialAddressHistoryFields,
   type ResidentialAddressHistoryChange,
@@ -33,10 +34,20 @@ vi.mock("../../services/addressApi", () => ({
   fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
 }));
 
+import {
+  fetchAddressLocalitySuggestions,
+  fetchAddressStreetSuggestions,
+} from "../../services/addressApi";
+
 describe("OnboardingResidentialAddressHistoryFields", () => {
   beforeEach(() => {
     i18n.load("en", {});
     i18n.activate("en");
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("normalizes empty onboarding form data", () => {
@@ -193,6 +204,80 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
     expect(screen.getByLabelText(/house number/i)).toBeDisabled();
     expect(screen.getByLabelText(/address supplement/i)).toBeDisabled();
     expect(screen.getByRole("combobox", { name: /country/i })).toBeDisabled();
+  });
+
+  it("keeps street autocomplete working inside the onboarding address history step", async () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
+      {
+        name: "Grabstraße",
+        postal_code: "13156",
+        locality: "Berlin",
+      },
+    ]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={getResidentialAddressHistoryValue({
+            current_address: {
+              street: "Gr",
+              country: "DE",
+            },
+          })}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    const streetInput = screen.getByLabelText(/^street$/i);
+    fireEvent.focus(streetInput);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    expect(fetchAddressStreetSuggestions).toHaveBeenCalledWith({
+      name: "Gr",
+      postalCode: undefined,
+      locality: undefined,
+      limit: 8,
+    });
+
+    fireEvent.keyDown(streetInput, { key: "ArrowDown" });
+    fireEvent.keyDown(streetInput, { key: "Enter" });
+
+    const base = getResidentialAddressHistoryValue({
+      current_address: {
+        street: "Gr",
+        country: "DE",
+      },
+    });
+    const appliedChanges = onChange.mock.calls.map(([change]) =>
+      typeof change === "function" ? change(base) : change
+    );
+
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.street === "Grabstraße"
+      )
+    ).toBe(true);
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.postal_code === "13156"
+      )
+    ).toBe(true);
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.city === "Berlin"
+      )
+    ).toBe(true);
+
+    vi.useRealTimers();
   });
 });
 

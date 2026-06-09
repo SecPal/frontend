@@ -4,6 +4,7 @@
 - Authenticated onboarding shell and passive route states should use semantic containers plus onboarding-local `Button`, `Card`, and `Alert` primitives while leaving auth gating and logout sequencing in the route/layout layer.
 - Wizard chrome should use onboarding-local `CardHeader`/`CardContent`, `AlertDescription`, `Badge`, `Progress`, and `Button` primitives while keeping navigation conditions and state transitions in the existing wizard handlers.
 - Schema-driven wizard field paths should use onboarding-local `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Select`, `Textarea`, `Checkbox`, and `CommandPopover` primitives with deterministic `onboarding-field-*` IDs; keep special upload and address-history blocks isolated until their own migrations.
+- Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 - Implemented a minimal onboarding-ready shadcn primitive set: button, input, textarea, select, checkbox, radio group, alert, card, form layout helpers, `cn`, and a keyboard-searchable command popover select.
@@ -82,3 +83,16 @@
 - **Learnings for future iterations:**
   - Patterns discovered: deterministic field IDs plus explicit `aria-label`, `aria-describedby`, and `aria-invalid` let schema fields move off Catalyst wrappers without weakening label-based tests.
   - Gotchas encountered: popover-backed comboboxes expose a button first and the editable searchbox only after opening, so test helpers need to branch between native selects, editable combobox inputs, and command-popover buttons.
+
+## US-006: Adresshistorie und Autovervollständigung auf shadcn migrieren
+- Migrated the residential address history sections, Bewacher ID branching controls, conditional previous-residence rows, date fields, and inline feedback to onboarding-local shadcn primitives with stable labels and ARIA error wiring.
+- Swapped the reused address field presentation to shadcn-style `Field`, `Input`, feedback, and `CommandPopover` controls while preserving the existing debounced street/locality autocomplete requests, keyboard navigation, focus handoff, country-based enablement, empty states, and API error display.
+- Added an onboarding-level autocomplete regression that drives the address-history street combobox through debounce and keyboard selection, alongside the existing conditional rendering and shared address autocomplete unit coverage.
+- Files changed:
+  - `src/pages/Employees/EmployeeAddressFields.tsx`
+  - `src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx`
+  - `src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep custom onboarding behavior in place and migrate the control surface by replacing imports plus explicit accessibility wiring, especially for dynamic sections with synchronized hidden rows.
+  - Gotchas encountered: local onboarding e2e specs exist but are skipped in this workspace configuration, so story proof needed an additional focused onboarding unit regression around the actual address-history wrapper.

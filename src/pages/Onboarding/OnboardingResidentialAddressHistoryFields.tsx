@@ -6,17 +6,17 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
-  ErrorMessage,
   Field,
   FieldGroup,
-  Fieldset,
-  Label,
-  Description,
-} from "../../components/fieldset";
-import { Heading } from "../../components/heading";
-import { Input } from "../../components/input";
-import { Checkbox, CheckboxField } from "../../components/checkbox";
-import { Radio, RadioField, RadioGroup } from "../../components/radio";
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FormSection,
+  Input,
+  Checkbox,
+  RadioGroup,
+  RadioGroupItem,
+} from "./ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import { EmployeeAddressFields } from "../Employees/EmployeeAddressFields";
 import {
@@ -176,12 +176,12 @@ export function OnboardingResidentialAddressHistoryFields({
   const currentAddressErrors = getEntryErrors(errors, "current_address");
 
   return (
-    <Fieldset>
+    <FormSection>
       <FieldGroup>
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-          <Heading level={3} className="mb-4">
+        <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <h3 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
             <Trans>Current Residential Address</Trans>
-          </Heading>
+          </h3>
           <EmployeeAddressFields
             draft={addressEntryToDraft(value.current_address)}
             onChange={updateCurrentAddress}
@@ -190,14 +190,20 @@ export function OnboardingResidentialAddressHistoryFields({
             fieldNamePrefix="current_address"
           />
           <Field className="mt-6">
-            <Label htmlFor="current_address_resided_from">
+            <FieldLabel htmlFor="current_address_resided_from">
               <Trans>Living There Since</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
               id="current_address_resided_from"
               name="current_address_resided_from"
               type="date"
               disabled={readOnly}
+              aria-invalid={currentAddressErrors.length > 0 || undefined}
+              aria-describedby={
+                currentAddressErrors.length > 0
+                  ? "current_address_errors"
+                  : undefined
+              }
               value={value.current_address.resided_from}
               onChange={(event) =>
                 onChange((prev) => ({
@@ -210,73 +216,95 @@ export function OnboardingResidentialAddressHistoryFields({
               }
             />
           </Field>
-          {currentAddressErrors.map((message) => (
-            <ErrorMessage key={message}>{message}</ErrorMessage>
-          ))}
-        </div>
+          {currentAddressErrors.length > 0 ? (
+            <div id="current_address_errors" className="mt-3 space-y-1">
+              {currentAddressErrors.map((message) => (
+                <FieldError key={message}>{message}</FieldError>
+              ))}
+            </div>
+          ) : null}
+        </section>
 
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-          <Heading level={3} className="mb-4">
+        <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <h3 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
             <Trans>Bewacher ID</Trans>
-          </Heading>
+          </h3>
           <Field>
-            <Label>
+            <span className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
               <Trans>Do you currently have a Bewacher ID?</Trans>
-            </Label>
-            <Description className="mb-3">
+            </span>
+            <FieldDescription className="mb-3">
               <Trans>
                 A Bewacher ID is issued for registration in the
                 Bewacherregister.
               </Trans>
-            </Description>
+            </FieldDescription>
             <RadioGroup
               aria-label={_(msg`Do you currently have a Bewacher ID?`)}
-              value={value.has_current_bewacher_id}
-              onChange={(next) => {
-                const choice = next as "yes" | "no";
-                onChange((prev) => ({
-                  ...prev,
-                  has_current_bewacher_id: choice,
-                  ...(choice === "no"
-                    ? { bewacher_id: "", bewacher_id_unknown: false }
-                    : {}),
-                }));
-              }}
-              disabled={readOnly}
-              className="mt-1"
+              aria-invalid={hasBewacherIdQuestionError ? true : undefined}
+              aria-describedby={
+                hasBewacherIdQuestionError
+                  ? "has_current_bewacher_id_error"
+                  : undefined
+              }
+              className="mt-1 space-y-3"
             >
-              <RadioField>
-                <Radio value="yes" />
-                <Label>
-                  <Trans>Yes</Trans>
-                </Label>
-              </RadioField>
-              <RadioField>
-                <Radio value="no" />
-                <Label>
-                  <Trans>No</Trans>
-                </Label>
-              </RadioField>
+              {(["yes", "no"] as const).map((choice) => (
+                <label
+                  key={choice}
+                  className="flex items-center gap-3 text-sm text-zinc-950 dark:text-zinc-50"
+                >
+                  <RadioGroupItem
+                    name="has_current_bewacher_id"
+                    value={choice}
+                    checked={value.has_current_bewacher_id === choice}
+                    disabled={readOnly}
+                    aria-disabled={readOnly}
+                    onChange={() => {
+                      onChange((prev) => ({
+                        ...prev,
+                        has_current_bewacher_id: choice,
+                        ...(choice === "no"
+                          ? { bewacher_id: "", bewacher_id_unknown: false }
+                          : {}),
+                      }));
+                    }}
+                  />
+                  {choice === "yes" ? (
+                    <span>
+                      <Trans>Yes</Trans>
+                    </span>
+                  ) : (
+                    <span>
+                      <Trans>No</Trans>
+                    </span>
+                  )}
+                </label>
+              ))}
             </RadioGroup>
             {hasBewacherIdQuestionError ? (
-              <ErrorMessage className="mt-2">
+              <FieldError id="has_current_bewacher_id_error" className="mt-2">
                 {hasBewacherIdQuestionError}
-              </ErrorMessage>
+              </FieldError>
             ) : null}
           </Field>
 
           {value.has_current_bewacher_id === "yes" &&
           !value.bewacher_id_unknown ? (
             <Field className="mt-6">
-              <Label htmlFor="bewacher_id">
+              <FieldLabel htmlFor="bewacher_id">
                 <Trans>Bewacher ID</Trans>
-              </Label>
+              </FieldLabel>
               <Input
                 id="bewacher_id"
                 name="bewacher_id"
                 type="text"
                 autoComplete="off"
                 disabled={readOnly}
+                aria-invalid={bewacherIdFieldError ? true : undefined}
+                aria-describedby={
+                  bewacherIdFieldError ? "bewacher_id_error" : undefined
+                }
                 value={value.bewacher_id}
                 onChange={(event) =>
                   onChange((prev) => ({
@@ -287,46 +315,46 @@ export function OnboardingResidentialAddressHistoryFields({
                 }
               />
               {bewacherIdFieldError ? (
-                <ErrorMessage className="mt-2">
+                <FieldError id="bewacher_id_error" className="mt-2">
                   {bewacherIdFieldError}
-                </ErrorMessage>
+                </FieldError>
               ) : null}
             </Field>
           ) : null}
 
           {value.has_current_bewacher_id === "yes" &&
           value.bewacher_id.trim().length === 0 ? (
-            <CheckboxField className="mt-4">
+            <label className="mt-4 flex items-center gap-3 text-sm text-zinc-950 dark:text-zinc-50">
               <Checkbox
                 checked={value.bewacher_id_unknown}
                 disabled={readOnly}
-                onChange={(checked) =>
+                onChange={(event) =>
                   onChange((prev) => ({
                     ...prev,
-                    bewacher_id_unknown: checked,
-                    bewacher_id: checked ? "" : prev.bewacher_id,
+                    bewacher_id_unknown: event.target.checked,
+                    bewacher_id: event.target.checked ? "" : prev.bewacher_id,
                   }))
                 }
               />
-              <Label>
+              <span>
                 <Trans>I do not know my Bewacher ID.</Trans>
-              </Label>
-            </CheckboxField>
+              </span>
+            </label>
           ) : null}
-        </div>
+        </section>
 
         {showPreviousResidencesSection ? (
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
             <div className="mb-4">
-              <Heading level={3} className="mb-1">
+              <h3 className="mb-1 text-base font-semibold text-zinc-950 dark:text-zinc-50">
                 <Trans>Previous Residences</Trans>
-              </Heading>
+              </h3>
             </div>
 
             {previousCoverageError ? (
-              <ErrorMessage className="mb-4">
+              <FieldError id="previous_addresses_coverage_error" className="mb-4">
                 {previousCoverageError}
-              </ErrorMessage>
+              </FieldError>
             ) : null}
 
             <div className="space-y-6">
@@ -340,14 +368,14 @@ export function OnboardingResidentialAddressHistoryFields({
                 const fieldIdPrefix = `previous_address_${index}`;
 
                 return (
-                  <div
+                  <section
                     key={fieldIdPrefix}
-                    className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
+                    className="rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
                   >
                     <div className="mb-4">
-                      <Heading level={3} className="mb-0">
+                      <h4 className="mb-0 text-sm font-semibold text-zinc-950 dark:text-zinc-50">
                         {_(msg`Previous residence ${index + 1}`)}
-                      </Heading>
+                      </h4>
                     </div>
 
                     <EmployeeAddressFields
@@ -362,9 +390,9 @@ export function OnboardingResidentialAddressHistoryFields({
 
                     <div className="mt-6 grid gap-6 sm:grid-cols-2">
                       <Field>
-                        <Label htmlFor={`${fieldIdPrefix}_resided_from`}>
+                        <FieldLabel htmlFor={`${fieldIdPrefix}_resided_from`}>
                           <Trans>Resided From</Trans> *
-                        </Label>
+                        </FieldLabel>
                         <Input
                           id={`${fieldIdPrefix}_resided_from`}
                           name={`${fieldIdPrefix}_resided_from`}
@@ -381,34 +409,47 @@ export function OnboardingResidentialAddressHistoryFields({
                         />
                       </Field>
                       <Field>
-                        <Label htmlFor={`${fieldIdPrefix}_resided_until`}>
+                        <FieldLabel htmlFor={`${fieldIdPrefix}_resided_until`}>
                           <Trans>Resided Until</Trans> *
-                        </Label>
+                        </FieldLabel>
                         <Input
                           id={`${fieldIdPrefix}_resided_until`}
                           name={`${fieldIdPrefix}_resided_until`}
                           type="date"
                           disabled
+                          aria-invalid={residedUntilError ? true : undefined}
+                          aria-describedby={
+                            residedUntilError
+                              ? `${fieldIdPrefix}_resided_until_error`
+                              : undefined
+                          }
                           value={entry.resided_until}
                         />
                         {residedUntilError ? (
-                          <ErrorMessage className="mt-2">
+                          <FieldError
+                            id={`${fieldIdPrefix}_resided_until_error`}
+                            className="mt-2"
+                          >
                             {residedUntilError}
-                          </ErrorMessage>
+                          </FieldError>
                         ) : null}
                       </Field>
                     </div>
 
-                    {entryErrors.map((message) => (
-                      <ErrorMessage key={message}>{message}</ErrorMessage>
-                    ))}
-                  </div>
+                    {entryErrors.length > 0 ? (
+                      <div className="mt-3 space-y-1">
+                        {entryErrors.map((message) => (
+                          <FieldError key={message}>{message}</FieldError>
+                        ))}
+                      </div>
+                    ) : null}
+                  </section>
                 );
               })}
             </div>
-          </div>
+          </section>
         ) : null}
       </FieldGroup>
-    </Fieldset>
+    </FormSection>
   );
 }
