@@ -13,6 +13,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
 - Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
 - Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
+- Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -137,3 +138,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: mirror the onboarding migration boundary for auth by keeping login-local shadcn wrappers in a route-adjacent barrel and preserving stable IDs/ARIA relationships when swapping out Headless/Catalyst field wrappers.
   - Gotchas encountered: a component prop named `title` collides with the native HTML `title` attribute when intersecting with `ComponentPropsWithoutRef<"div">`, so wrapper APIs that accept React nodes need to omit or rename native attributes explicitly.
+
+## US-002: Login-Shell auf Shadcn `login-05` umstellen
+
+- Rebuilt `/login` around a shadcn `login-05`-style split shell with a mobile-first form column, desktop brand panel, retained SecPal logo, retained language switcher, and unchanged email/password, passkey, health, rate-limit, offline, and MFA behavior.
+- Replaced the old full footer placement with route-local SecPal slogan, AGPL, and source-code links oriented to the current footer template, and synced Lingui catalog source references for those existing strings.
+- Added auth UI primitive coverage for the brand panel and kept the login route footer/link assertions passing.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/de/messages.po`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep split login shell layout in auth-local primitives while placing shell-specific legal/footer content in the route so shared auth controls stay form-focused.
+  - Gotchas encountered: moving existing translated footer strings into the login route does not change translations but still requires Lingui extraction so catalog source references stay current.

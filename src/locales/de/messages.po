@@ -2240,6 +2240,7 @@ msgid "Default"
 msgstr "Standard"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
@@ -2328,6 +2329,7 @@ msgid "Password must include at least one symbol"
 msgstr "Das Passwort muss mindestens ein Sonderzeichen enthalten"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -3092,6 +3094,7 @@ msgid "← Back to Employees"
 msgstr "← Zurück zu Mitarbeitern"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 

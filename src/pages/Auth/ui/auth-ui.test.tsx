@@ -4,6 +4,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  LoginBrandPanel,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -29,6 +30,9 @@ describe("auth login shadcn primitives", () => {
           </LoginCardHeader>
           <p>Shared login surface</p>
         </LoginCard>
+        <LoginBrandPanel aria-label="Brand panel">
+          <p>Brand promise</p>
+        </LoginBrandPanel>
       </LoginShell>
     );
 
@@ -36,6 +40,9 @@ describe("auth login shadcn primitives", () => {
     expect(screen.getByRole("region", { name: "SecPal" })).toHaveTextContent(
       "Shared login surface"
     );
+    expect(
+      screen.getByRole("complementary", { name: "Brand panel" })
+    ).toHaveTextContent("Brand promise");
   });
 
   it("wires auth form labels, descriptions, and errors explicitly", () => {

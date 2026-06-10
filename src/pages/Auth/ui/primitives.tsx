@@ -48,7 +48,7 @@ export function LoginShell({
   return (
     <main
       className={cn(
-        "flex min-h-svh flex-col bg-white p-4 dark:bg-zinc-900 lg:items-center lg:justify-center lg:bg-zinc-50 lg:p-8 dark:lg:bg-zinc-950",
+        "grid min-h-svh bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 lg:grid-cols-2",
         className
       )}
       {...props}
@@ -63,7 +63,22 @@ export function LoginCard({
   return (
     <section
       className={cn(
-        "flex w-full max-w-2xl flex-1 flex-col bg-white p-8 text-zinc-950 dark:bg-zinc-900 dark:text-zinc-50 lg:flex-none lg:rounded-md lg:border lg:border-zinc-200 lg:p-12 lg:shadow-sm dark:lg:border-zinc-800",
+        "flex min-h-svh w-full flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function LoginBrandPanel({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"aside">) {
+  return (
+    <aside
+      className={cn(
+        "relative hidden min-h-svh overflow-hidden bg-zinc-950 text-white lg:flex lg:flex-col lg:justify-between",
         className
       )}
       {...props}

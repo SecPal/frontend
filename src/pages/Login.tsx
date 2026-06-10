@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { CodeBracketIcon, ScaleIcon } from "@heroicons/react/24/outline";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -23,10 +24,10 @@ import {
   isPasskeySupported,
 } from "../services/passkeyBrowser";
 import { formatApiDateTime } from "../lib/dateUtils";
-import { Footer } from "../components/Footer";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { Logo } from "../components/Logo";
 import {
+  LoginBrandPanel,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -457,212 +458,224 @@ export function Login() {
   return (
     <LoginShell>
       <LoginCard aria-labelledby="login-title">
-        <div className="flex-1 lg:hidden" />
-        <LoginCardHeader>
-          <div className="flex items-center gap-3">
-            <Logo size="48" />
-            <LoginCardTitle>SecPal</LoginCardTitle>
+        <LoginCardHeader className="px-6 pt-6 sm:px-8 md:px-10 md:pt-8 lg:px-12">
+          <div className="flex min-w-0 items-center gap-3">
+            <Logo size="32" />
+            <LoginCardTitle className="truncate text-xl">SecPal</LoginCardTitle>
           </div>
           <LanguageSwitcher />
         </LoginCardHeader>
 
-        <h2 id="login-title" className="mt-8 text-2xl font-semibold">
-          <Trans id="login.title">Log in</Trans>
-        </h2>
+        <div className="flex flex-1 flex-col px-6 py-10 sm:px-8 md:px-10 lg:px-12">
+          <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
+            <div className="space-y-2">
+              <h2
+                id="login-title"
+                className="text-2xl font-semibold tracking-normal"
+              >
+                <Trans id="login.title">Log in</Trans>
+              </h2>
+            </div>
 
-        <LoginForm onSubmit={handleSubmit} aria-label="Login form">
-          {/* Offline Warning - shown when user has no internet connection */}
-          {!isOnline && (
-            <LoginStatusMessage
-              id="offline-warning"
-              variant="error"
-              title={
-                <Trans id="login.offlineWarning.title">
-                  No internet connection
-                </Trans>
-              }
-            >
-              <p>
-                <Trans id="login.offlineWarning.message">
-                  Login requires an internet connection. Please check your
-                  connection and try again.
-                </Trans>
-              </p>
-            </LoginStatusMessage>
-          )}
+            <LoginForm onSubmit={handleSubmit} aria-label="Login form">
+              {/* Offline Warning - shown when user has no internet connection */}
+              {!isOnline && (
+                <LoginStatusMessage
+                  id="offline-warning"
+                  variant="error"
+                  title={
+                    <Trans id="login.offlineWarning.title">
+                      No internet connection
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.offlineWarning.message">
+                      Login requires an internet connection. Please check your
+                      connection and try again.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-          {/* Health Check Warning - shown when backend is not ready */}
-          {isSystemNotReady && (
-            <LoginStatusMessage
-              id="health-warning"
-              variant="warning"
-              title={
-                <Trans id="login.healthWarning.title">System not ready</Trans>
-              }
-            >
-              <p>
-                <Trans id="login.healthWarning.message">
-                  The system is not fully configured. Please contact your
-                  administrator.
-                </Trans>
-              </p>
-            </LoginStatusMessage>
-          )}
+              {/* Health Check Warning - shown when backend is not ready */}
+              {isSystemNotReady && (
+                <LoginStatusMessage
+                  id="health-warning"
+                  variant="warning"
+                  title={
+                    <Trans id="login.healthWarning.title">
+                      System not ready
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.healthWarning.message">
+                      The system is not fully configured. Please contact your
+                      administrator.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-          {/* Rate Limit Lockout Warning */}
-          {isLocked && (
-            <LoginStatusMessage
-              id="lockout-warning"
-              variant="error"
-              live="assertive"
-              title={
-                <Trans id="login.rateLimitLocked.title">
-                  Too many failed attempts
-                </Trans>
-              }
-            >
-              <p>
-                <Trans id="login.rateLimitLocked.message">
-                  Please wait {remainingLockoutSeconds} seconds before trying
-                  again.
-                </Trans>
-              </p>
-            </LoginStatusMessage>
-          )}
+              {/* Rate Limit Lockout Warning */}
+              {isLocked && (
+                <LoginStatusMessage
+                  id="lockout-warning"
+                  variant="error"
+                  live="assertive"
+                  title={
+                    <Trans id="login.rateLimitLocked.title">
+                      Too many failed attempts
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.rateLimitLocked.message">
+                      Please wait {remainingLockoutSeconds} seconds before
+                      trying again.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-          {error && (
-            <LoginStatusMessage
-              id="login-error"
-              variant="error"
-              live="assertive"
-            >
-              <p>{error}</p>
-              {/* Show remaining attempts warning when running low */}
-              {!isLocked && remainingAttempts > 0 && remainingAttempts <= 3 && (
-                <p className="mt-2 text-amber-700 dark:text-amber-400">
-                  <Trans id="login.remainingAttempts">
-                    {remainingAttempts} attempt(s) remaining before temporary
-                    lockout.
+              {error && (
+                <LoginStatusMessage
+                  id="login-error"
+                  variant="error"
+                  live="assertive"
+                >
+                  <p>{error}</p>
+                  {/* Show remaining attempts warning when running low */}
+                  {!isLocked &&
+                    remainingAttempts > 0 &&
+                    remainingAttempts <= 3 && (
+                      <p className="mt-2 text-amber-700 dark:text-amber-400">
+                        <Trans id="login.remainingAttempts">
+                          {remainingAttempts} attempt(s) remaining before
+                          temporary lockout.
+                        </Trans>
+                      </p>
+                    )}
+                </LoginStatusMessage>
+              )}
+
+              <LoginField>
+                <LoginFieldLabel htmlFor="email">
+                  <Trans id="login.email">Email address</Trans>
+                </LoginFieldLabel>
+                <LoginInput
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@secpal.app"
+                  aria-describedby={ariaDescribedBy}
+                  disabled={
+                    !isOnline ||
+                    isSystemNotReady ||
+                    isLocked ||
+                    pendingMfaChallenge !== null
+                  }
+                />
+              </LoginField>
+
+              <LoginField>
+                <LoginFieldLabel htmlFor="password">
+                  <Trans id="login.password">Password</Trans>
+                </LoginFieldLabel>
+                <LoginInput
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  aria-describedby={ariaDescribedBy}
+                  disabled={
+                    !isOnline ||
+                    isSystemNotReady ||
+                    isLocked ||
+                    pendingMfaChallenge !== null
+                  }
+                />
+              </LoginField>
+
+              <LoginButton
+                type="submit"
+                disabled={
+                  !isOnline ||
+                  isSubmitting ||
+                  isSubmittingPasskey ||
+                  isSystemNotReady ||
+                  isHealthCheckLoading ||
+                  isLocked ||
+                  pendingMfaChallenge !== null
+                }
+                className="w-full"
+                aria-busy={isSubmitting}
+                aria-disabled={
+                  !isOnline ||
+                  isSubmittingPasskey ||
+                  isSystemNotReady ||
+                  isHealthCheckLoading ||
+                  isLocked ||
+                  pendingMfaChallenge !== null
+                }
+              >
+                {isHealthCheckLoading ? (
+                  <Trans id="login.checkingSystem">Checking system...</Trans>
+                ) : isLocked ? (
+                  <Trans id="login.lockedButton">
+                    Locked ({remainingLockoutSeconds}s)
                   </Trans>
-                </p>
-              )}
-            </LoginStatusMessage>
-          )}
-
-          <LoginField>
-            <LoginFieldLabel htmlFor="email">
-              <Trans id="login.email">Email address</Trans>
-            </LoginFieldLabel>
-            <LoginInput
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@secpal.app"
-              aria-describedby={ariaDescribedBy}
-              disabled={
-                !isOnline ||
-                isSystemNotReady ||
-                isLocked ||
-                pendingMfaChallenge !== null
-              }
-            />
-          </LoginField>
-
-          <LoginField>
-            <LoginFieldLabel htmlFor="password">
-              <Trans id="login.password">Password</Trans>
-            </LoginFieldLabel>
-            <LoginInput
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              aria-describedby={ariaDescribedBy}
-              disabled={
-                !isOnline ||
-                isSystemNotReady ||
-                isLocked ||
-                pendingMfaChallenge !== null
-              }
-            />
-          </LoginField>
-
-          <LoginButton
-            type="submit"
-            disabled={
-              !isOnline ||
-              isSubmitting ||
-              isSubmittingPasskey ||
-              isSystemNotReady ||
-              isHealthCheckLoading ||
-              isLocked ||
-              pendingMfaChallenge !== null
-            }
-            className="w-full"
-            aria-busy={isSubmitting}
-            aria-disabled={
-              !isOnline ||
-              isSubmittingPasskey ||
-              isSystemNotReady ||
-              isHealthCheckLoading ||
-              isLocked ||
-              pendingMfaChallenge !== null
-            }
-          >
-            {isHealthCheckLoading ? (
-              <Trans id="login.checkingSystem">Checking system...</Trans>
-            ) : isLocked ? (
-              <Trans id="login.lockedButton">
-                Locked ({remainingLockoutSeconds}s)
-              </Trans>
-            ) : isSubmitting ? (
-              <Trans id="login.submitting">Logging in...</Trans>
-            ) : (
-              <Trans id="login.submit">Log in</Trans>
-            )}
-          </LoginButton>
-
-          {supportsPasskeys ? (
-            <LoginButton
-              type="button"
-              variant="outline"
-              onClick={() => void handlePasskeySignIn()}
-              disabled={
-                !isOnline ||
-                isSubmitting ||
-                isSubmittingPasskey ||
-                isSystemNotReady ||
-                isHealthCheckLoading ||
-                isLocked ||
-                pendingMfaChallenge !== null
-              }
-              className="w-full"
-              aria-busy={isSubmittingPasskey}
-            >
-              {isSubmittingPasskey ? (
-                passkeyStep === "browser" ? (
-                  <Trans>Check your browser…</Trans>
-                ) : passkeyStep === "native" ? (
-                  <Trans>Check your device…</Trans>
-                ) : passkeyStep === "verifying" ? (
-                  <Trans>Verifying passkey…</Trans>
+                ) : isSubmitting ? (
+                  <Trans id="login.submitting">Logging in...</Trans>
                 ) : (
-                  <Trans>Signing in with passkey...</Trans>
-                )
-              ) : (
-                <Trans>Sign in with passkey</Trans>
-              )}
-            </LoginButton>
-          ) : null}
-        </LoginForm>
+                  <Trans id="login.submit">Log in</Trans>
+                )}
+              </LoginButton>
+
+              {supportsPasskeys ? (
+                <LoginButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handlePasskeySignIn()}
+                  disabled={
+                    !isOnline ||
+                    isSubmitting ||
+                    isSubmittingPasskey ||
+                    isSystemNotReady ||
+                    isHealthCheckLoading ||
+                    isLocked ||
+                    pendingMfaChallenge !== null
+                  }
+                  className="w-full"
+                  aria-busy={isSubmittingPasskey}
+                >
+                  {isSubmittingPasskey ? (
+                    passkeyStep === "browser" ? (
+                      <Trans>Check your browser…</Trans>
+                    ) : passkeyStep === "native" ? (
+                      <Trans>Check your device…</Trans>
+                    ) : passkeyStep === "verifying" ? (
+                      <Trans>Verifying passkey…</Trans>
+                    ) : (
+                      <Trans>Signing in with passkey...</Trans>
+                    )
+                  ) : (
+                    <Trans>Sign in with passkey</Trans>
+                  )}
+                </LoginButton>
+              ) : null}
+            </LoginForm>
+          </div>
+        </div>
 
         <Dialog
           open={pendingMfaChallenge !== null}
@@ -798,12 +811,66 @@ export function Login() {
           </DialogBody>
         </Dialog>
 
-        <div className="flex-1" />
-
-        <div className="-mx-8 -mb-8 lg:-mx-12 lg:-mb-12 pt-8">
-          <Footer />
-        </div>
+        <LoginLegalFooter />
       </LoginCard>
+
+      <LoginBrandPanel aria-label="SecPal">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.14),transparent_42%),linear-gradient(0deg,rgba(39,39,42,0.88),rgba(9,9,11,1))]" />
+        <div className="relative p-12">
+          <img
+            src="/logo-dark-64.png"
+            alt=""
+            aria-hidden="true"
+            width="64"
+            height="64"
+          />
+        </div>
+        <div className="relative max-w-xl p-12">
+          <p className="text-4xl font-semibold tracking-normal text-white">
+            <Trans>Powered by SecPal – A guard's best friend</Trans>
+          </p>
+        </div>
+      </LoginBrandPanel>
     </LoginShell>
+  );
+}
+
+function LoginLegalFooter() {
+  return (
+    <footer className="px-6 pb-6 text-[11px] sm:px-8 md:px-10 lg:px-12">
+      <div className="mx-auto flex w-full max-w-sm flex-col gap-2 text-zinc-500 dark:text-zinc-400">
+        <a
+          href="https://secpal.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+        >
+          <Trans>Powered by SecPal – A guard's best friend</Trans>
+        </a>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
+          >
+            <ScaleIcon className="h-4 w-4" aria-hidden="true" />
+            <Trans>AGPL v3+</Trans>
+          </a>
+          <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">
+            |
+          </span>
+          <a
+            href="https://github.com/SecPal"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
+          >
+            <CodeBracketIcon className="h-4 w-4" aria-hidden="true" />
+            <Trans>Source Code</Trans>
+          </a>
+        </div>
+      </div>
+    </footer>
   );
 }
