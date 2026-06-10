@@ -795,6 +795,10 @@ msgstr "Einheit"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No results found"
+msgstr "Keine Ergebnisse gefunden"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht "

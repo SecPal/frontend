@@ -771,6 +771,10 @@ msgstr "Unit"
 msgid "Customer Number"
 msgstr "Customer Number"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No results found"
+msgstr "No results found"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Enter your Bewacher ID or indicate that you do not know it."
