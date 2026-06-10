@@ -260,9 +260,19 @@ describe("Login", () => {
 
     renderLogin();
 
+    const passkeyButton = await screen.findByRole("button", {
+      name: /sign in with passkey/i,
+    });
+
+    expect(passkeyButton).toBeInTheDocument();
+    expect(passkeyButton.querySelector("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true"
+    );
     expect(
-      await screen.findByRole("button", { name: /sign in with passkey/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /continue with (apple|google)/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/or continue with/i)).not.toBeInTheDocument();
   });
 
   it("routes passkey sign-in through the native auth bridge without forwarding the typed email", async () => {

@@ -6,7 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { CodeBracketIcon, ScaleIcon } from "@heroicons/react/24/outline";
+import {
+  CodeBracketIcon,
+  KeyIcon,
+  ScaleIcon,
+} from "@heroicons/react/24/outline";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -660,16 +664,31 @@ export function Login() {
                   >
                     {isSubmittingPasskey ? (
                       passkeyStep === "browser" ? (
-                        <Trans>Check your browser…</Trans>
+                        <>
+                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <Trans>Check your browser…</Trans>
+                        </>
                       ) : passkeyStep === "native" ? (
-                        <Trans>Check your device…</Trans>
+                        <>
+                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <Trans>Check your device…</Trans>
+                        </>
                       ) : passkeyStep === "verifying" ? (
-                        <Trans>Verifying passkey…</Trans>
+                        <>
+                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <Trans>Verifying passkey…</Trans>
+                        </>
                       ) : (
-                        <Trans>Signing in with passkey...</Trans>
+                        <>
+                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <Trans>Signing in with passkey...</Trans>
+                        </>
                       )
                     ) : (
-                      <Trans>Sign in with passkey</Trans>
+                      <>
+                        <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                        <Trans>Sign in with passkey</Trans>
+                      </>
                     )}
                   </LoginButton>
                 ) : null}

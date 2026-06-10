@@ -15,6 +15,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
 - Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
 - Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
+- Login secondary auth actions should keep their provider-specific button identity visible in the shadcn composition while preserving the same accessible names used by browser and native passkey flow tests.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -170,3 +171,16 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: pull shared auth form spacing into small route-local primitives such as `LoginFieldGroup` and `LoginFormActions`, but keep all behavioral predicates in the route component where auth flow state already lives.
   - Gotchas encountered: once the MFA dialog opens, Headless UI hides the background login form from the accessibility tree, so tests that prove the disabled submit state during an active challenge need to inspect the preserved background form DOM directly.
+
+## US-004: Passkey-Aktion als sekundären Login-Pfad integrieren
+
+- Made the secondary login action explicitly passkey-specific inside the shadcn login action stack by adding a passkey/key icon to the idle and in-progress passkey button states without changing button labels or handlers.
+- Preserved the existing browser WebAuthn and native-bridge passkey behavior, including challenge, browser prompt, native prompt, verification, cancellation, timeout, provider guidance, and error rendering.
+- Extended the passkey rendering regression to assert the login surface exposes the passkey button instead of Apple/Google-style social continuation controls.
+- Files changed:
+  - `src/pages/Login.tsx`
+  - `src/pages/Login.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: provider-specific secondary login actions can be made visually explicit with an aria-hidden icon while keeping the existing accessible name stable for route and e2e tests.
+  - Gotchas encountered: the passkey tests already rely on the exact accessible button names for every in-progress state, so visual changes should wrap the existing translated labels rather than replacing them.
