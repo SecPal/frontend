@@ -409,15 +409,19 @@ export function CommandPopover({
   const activeOptionId =
     open && filteredOptions.length > 0 ? getOptionId(activeIndex) : undefined;
 
+  function closePopover() {
+    setOpen(false);
+    setQuery("");
+    setActiveIndex(0);
+  }
+
   function selectOption(option: CommandOption) {
     if (option.disabled) {
       return;
     }
 
     onValueChange(option.value);
-    setOpen(false);
-    setQuery("");
-    setActiveIndex(0);
+    closePopover();
   }
 
   function moveActiveIndex(direction: 1 | -1) {
@@ -462,7 +466,14 @@ export function CommandPopover({
         aria-activedescendant={activeOptionId}
         disabled={disabled}
         role="combobox"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          if (open) {
+            closePopover();
+            return;
+          }
+
+          setOpen(true);
+        }}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();
@@ -515,12 +526,7 @@ export function CommandPopover({
               }
 
               if (event.key === "Escape") {
-                setOpen(false);
-                // Reset the typed query and active option so the next open
-                // does not show stale filtering or an out-of-context active
-                // option.
-                setQuery("");
-                setActiveIndex(0);
+                closePopover();
               }
             }}
           />
