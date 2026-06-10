@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The MFA dialog's inner `<form className="space-y-6">` is now `LoginForm`, consistent with the primary login form.
 - Upgraded the `cn` helper in `src/pages/Auth/ui/utils.ts` to compose `clsx` with `tailwind-merge` so conflicting Tailwind classes deduplicate predictably (matches the canonical shadcn `cn` implementation).
 - Added JSDOM stubs for `Element.prototype.hasPointerCapture` / `setPointerCapture` / `releasePointerCapture` / `scrollIntoView` in `tests/setup.ts` so Radix Select can be opened and interacted with in Vitest under JSDOM.
+- Refactored `LoginButton` in `src/pages/Auth/ui/primitives.tsx` to use `class-variance-authority` (`cva`) for variant management, matching the canonical shadcn stylistic approach: `loginButtonVariants` is now a `cva()` definition with a `variants.variant` map (`default` / `secondary` / `outline` / `ghost`) and `defaultVariants`; the public `LoginButtonVariant` type is derived from `VariantProps<typeof loginButtonVariants>`; the standalone `focusRing` helper class is inlined into the cva base so it is always applied without an extra `cn(...)` argument.
+- Replaced the native `<label>` element that wrapped each `LoginRadioGroupItem` "card" in the MFA-method selection (`src/pages/Login.tsx`) with `LoginFieldLabel` (Radix Label) bound to the radio via `htmlFor` / `id` (`mfa-method-${method}`), so the entire card click target is dispatched through Radix Label instead of a raw HTML label and the login route now contains zero native form-control HTML on the MFA flow.
 
 ### Fixed
 

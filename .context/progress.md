@@ -204,6 +204,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-012: Login-Button auf class-variance-authority und MFA-Karten auf Radix Label kanonisieren
+
+- Closed two minor non-canonical-shadcn gaps left over from US-011: `LoginButton` still managed its variants through a hand-written `Record<Variant, string>` and the MFA-method picker wrapped each `LoginRadioGroupItem` in a native HTML `<label>` instead of `LoginFieldLabel` (Radix Label).
+- Refactored `LoginButton` in `src/pages/Auth/ui/primitives.tsx` to use `cva()`: a single `loginButtonVariants` definition holds the base classes plus the per-`variant` map (`default`, `secondary`, `outline`, `ghost`) with `defaultVariants.variant = "default"`; the standalone `focusRing` helper was inlined into the cva base; the public `LoginButtonVariant` type is now derived from `VariantProps<typeof loginButtonVariants>` so adding a new variant only touches the cva definition.
+- Replaced the native `<label>` wrapping each `LoginRadioGroupItem` in `src/pages/Login.tsx` with `LoginFieldLabel` (which itself wraps `@radix-ui/react-label`); the radio item gets an explicit `id={`mfa-method-${method}`}` and the label sets `htmlFor` to the same id so Radix Label handles click forwarding to the `<button role="radio">`. Added `font-normal` to the card override so `tailwind-merge` cleanly cancels the label primitive's `font-medium`.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Login.tsx`
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: when a `LoginFieldLabel` wraps a non-text "card" surface, override the primitive's `font-medium` with `font-normal` in the call site so `tailwind-merge` keeps the card body weight uniform; the label itself stays bold-capable for true form labels.
+  - Gotchas encountered: `cva()` infers `variant` as `"default" | "secondary" | ... | null | undefined` through `VariantProps`; wrap the public type with `NonNullable<...>` when re-exporting it, otherwise consumers see a `null`-tainted union that does not match the original hand-written variant type.
+
 ## US-011: Login-Route vollständig auf echte shadcn-Komponenten (Radix-basiert) umstellen
 
 - Diagnosed that the existing `LoginXxx` primitives were only **visually** shadcn (Tailwind classes in the shadcn idiom) but technically had **zero** Radix backing — no `@radix-ui/*` package was installed in the repo. The login route additionally still contained three native HTML controls (`<select>` for the language switcher, `<fieldset>` + `<input type="radio">` for the MFA-method selector, and an inner `<form>` in the MFA dialog) that no shadcn primitive wrapped.

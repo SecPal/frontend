@@ -779,11 +779,13 @@ export function Login() {
                   aria-labelledby="mfa-method-label"
                 >
                   {pendingMfaChallenge.available_methods.map((method) => (
-                    <label
+                    <LoginFieldLabel
                       key={method}
-                      className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                      htmlFor={`mfa-method-${method}`}
+                      className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
                     >
                       <LoginRadioGroupItem
+                        id={`mfa-method-${method}`}
                         value={method}
                         className="mt-1"
                         aria-label={
@@ -808,7 +810,7 @@ export function Login() {
                           </span>
                         ) : null}
                       </span>
-                    </label>
+                    </LoginFieldLabel>
                   ))}
                 </LoginRadioGroup>
               </div>

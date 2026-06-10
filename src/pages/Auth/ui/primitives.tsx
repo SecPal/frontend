@@ -17,28 +17,38 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
+import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronDown, ChevronUp, Circle } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950";
-
 const controlBase =
   "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 aria-invalid:ring-red-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950";
 
-type LoginButtonVariant = "default" | "secondary" | "outline" | "ghost";
+const loginButtonVariants = cva(
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200",
+        secondary:
+          "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700",
+        outline:
+          "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-800",
+        ghost:
+          "text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
-const loginButtonVariants: Record<LoginButtonVariant, string> = {
-  default:
-    "bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200",
-  secondary:
-    "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700",
-  outline:
-    "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-800",
-  ghost:
-    "text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
-};
+export type LoginButtonVariant = NonNullable<
+  VariantProps<typeof loginButtonVariants>["variant"]
+>;
 
 const statusMessageVariants = {
   error:
@@ -160,24 +170,18 @@ export function LoginFieldSeparator({
 export const LoginButton = forwardRef(function LoginButton(
   {
     className,
-    variant = "default",
+    variant,
     type = "button",
     ...props
-  }: ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: LoginButtonVariant;
-  },
+  }: ButtonHTMLAttributes<HTMLButtonElement> &
+    VariantProps<typeof loginButtonVariants>,
   ref: ForwardedRef<HTMLButtonElement>
 ) {
   return (
     <button
       ref={ref}
       type={type}
-      className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-        focusRing,
-        loginButtonVariants[variant],
-        className
-      )}
+      className={cn(loginButtonVariants({ variant }), className)}
       {...props}
     />
   );
