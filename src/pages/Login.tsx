@@ -201,6 +201,11 @@ export function Login() {
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [isHealthCheckLoading, setIsHealthCheckLoading] = useState(true);
+  const normalizedMfaCode = mfaCode.trim();
+  const isIncompleteTotpCode =
+    mfaMethod === "totp" && normalizedMfaCode.length !== TOTP_CODE_LENGTH;
+  const isMfaSubmitDisabled =
+    isVerifyingMfa || normalizedMfaCode.length === 0 || isIncompleteTotpCode;
 
   // Check backend health on component mount and when online status changes
   useEffect(() => {
@@ -460,7 +465,7 @@ export function Login() {
   const handleVerifyMfa = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!pendingMfaChallenge) {
+    if (!pendingMfaChallenge || isMfaSubmitDisabled) {
       return;
     }
 
@@ -470,7 +475,7 @@ export function Login() {
     try {
       const response = await verifyMfaChallenge(pendingMfaChallenge.id, {
         method: mfaMethod,
-        code: mfaCode.trim(),
+        code: normalizedMfaCode,
       });
 
       if (response.authentication.mode !== "session") {
@@ -866,7 +871,7 @@ export function Login() {
                 </LoginButton>
                 <LoginButton
                   type="submit"
-                  disabled={isVerifyingMfa || mfaCode.trim().length === 0}
+                  disabled={isMfaSubmitDisabled}
                   aria-busy={isVerifyingMfa}
                 >
                   {isVerifyingMfa ? (
