@@ -3377,7 +3377,7 @@ export function OnboardingWizard() {
       </Alert>
     ) : null;
 
-  if (loading && steps.length === 0) {
+  if (loading && (steps.length === 0 || template === null)) {
     return (
       <Card role="status" aria-live="polite" className="mx-auto max-w-4xl">
         <CardContent className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
@@ -4118,6 +4118,7 @@ export function OnboardingWizard() {
                                 checked={
                                   residenceTitleUploadNowSelection === "yes"
                                 }
+                                disabled={!isCurrentStepEditable}
                                 onChange={() => {
                                   setResidenceTitleUploadNowSelection("yes");
                                   clearUploadRequirementErrors();
@@ -4136,6 +4137,7 @@ export function OnboardingWizard() {
                                 checked={
                                   residenceTitleUploadNowSelection === "no"
                                 }
+                                disabled={!isCurrentStepEditable}
                                 onChange={() => {
                                   setResidenceTitleUploadNowSelection("no");
                                   setUploadFiles([]);
