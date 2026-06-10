@@ -2814,6 +2814,18 @@ describe("Login", () => {
   });
 
   describe("footer", () => {
+    it("reserves bottom space for the legal footer", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      expect(screen.getByRole("main")).toHaveClass("pb-32", "md:pb-32");
+    });
+
     it("renders footer with license and source code links", async () => {
       renderLogin();
 
