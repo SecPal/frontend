@@ -157,6 +157,7 @@ describe("useAuth", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     clearOfflineVaultSession();
   });
 
@@ -726,6 +727,59 @@ describe("useAuth", () => {
       },
       BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
     );
+  });
+
+  it("keeps the silent timeout retry in control when the original bootstrap request rejects afterward", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const firstAttempt = createDeferredPromise<typeof mockUser>();
+    const secondAttempt = createDeferredPromise<typeof mockUser>();
+
+    await authStorage.setUser(mockUser);
+    vi.useFakeTimers();
+    mockGetCurrentUser
+      .mockImplementationOnce(() => firstAttempt.promise)
+      .mockImplementationOnce(() => secondAttempt.promise);
+
+    const { result, unmount } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await act(async () => {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(result.current.isLoading).toBe(true);
+
+    await act(async () => {
+      vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      firstAttempt.reject(new Error("Simulated stale bootstrap failure"));
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await Promise.resolve();
+      }
+    });
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+    unmount();
+
+    await act(async () => {
+      secondAttempt.resolve(mockUser);
+      await Promise.resolve();
+    });
   });
 
   it("grants a fresh silent retry for each manual retryBootstrap cycle after the recovery UI was shown", async () => {

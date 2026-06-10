@@ -470,6 +470,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearSensitiveStateOnInvalidSession: boolean
     ) => {
       const retryBootstrapAutomatically = () => {
+        invalidateBootstrapRevalidation();
         hasAutomaticallyRetriedBootstrapRef.current = true;
         setBootstrapRecoveryReason(null);
         setIsLoading(true);
@@ -710,6 +711,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
+    invalidateBootstrapRevalidation,
     persistAuthenticatedUser,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
