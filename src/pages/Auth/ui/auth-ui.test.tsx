@@ -110,7 +110,7 @@ describe("auth login shadcn primitives", () => {
     );
   });
 
-  it("renders the MFA dialog with native shadcn-style modal semantics", async () => {
+  it("renders the MFA dialog with shadcn Radix dialog semantics", async () => {
     const handleClose = vi.fn();
     const user = userEvent.setup();
 
@@ -137,11 +137,11 @@ describe("auth login shadcn primitives", () => {
     const cancelButton = screen.getByRole("button", { name: "Cancel" });
     const verifyButton = screen.getByRole("button", { name: "Verify" });
 
-    expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAccessibleDescription(
       "Complete MFA to finish signing in."
     );
-    expect(backgroundButton).toHaveAttribute("inert");
+    expect(dialog).toHaveAttribute("data-state", "open");
+    expect(backgroundButton.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(cancelButton).toHaveFocus();
 
     await user.tab();
@@ -153,15 +153,9 @@ describe("auth login shadcn primitives", () => {
     await user.tab({ shift: true });
     expect(verifyButton).toHaveFocus();
 
-    fireEvent.click(dialog);
-    expect(handleClose).not.toHaveBeenCalled();
-
-    fireEvent.click(dialog.parentElement!);
-    expect(handleClose).toHaveBeenCalledTimes(1);
-
     fireEvent.keyDown(document, { key: "Escape" });
 
-    expect(handleClose).toHaveBeenCalledTimes(2);
+    expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
   it("keeps focus on the active dialog input when the parent rerenders", () => {

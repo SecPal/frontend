@@ -156,6 +156,34 @@ function enterTotpCode(code: string) {
   fireEvent.change(getTotpInput(), { target: { value: code } });
 }
 
+async function selectLanguage(visibleName: string) {
+  const trigger = screen.getByRole("combobox", { name: /select language/i });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: visibleName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -2627,12 +2655,7 @@ describe("Login", () => {
         ).toBeInTheDocument();
       });
 
-      fireEvent.change(
-        screen.getByRole("combobox", { name: /select language/i }),
-        {
-          target: { value: "de" },
-        }
-      );
+      await selectLanguage("Deutsch");
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
         /failed to change language/i
@@ -2654,12 +2677,7 @@ describe("Login", () => {
         ).toBeInTheDocument();
       });
 
-      fireEvent.change(
-        screen.getByRole("combobox", { name: /select language/i }),
-        {
-          target: { value: "de" },
-        }
-      );
+      await selectLanguage("Deutsch");
 
       await waitFor(() => {
         expect(i18nModule.setLocalePreference).toHaveBeenCalledWith("de");

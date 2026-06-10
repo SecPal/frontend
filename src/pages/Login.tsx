@@ -1,13 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  useState,
-  useEffect,
-  useMemo,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -51,6 +45,13 @@ import {
   LoginForm,
   LoginInput,
   LoginOtpInput,
+  LoginRadioGroup,
+  LoginRadioGroupItem,
+  LoginSelect,
+  LoginSelectContent,
+  LoginSelectItem,
+  LoginSelectTrigger,
+  LoginSelectValue,
   LoginShell,
   LoginStatusMessage,
 } from "./Auth/ui";
@@ -751,7 +752,7 @@ export function Login() {
 
         <LoginDialogBody>
           {pendingMfaChallenge && (
-            <form className="space-y-6" onSubmit={handleVerifyMfa}>
+            <LoginForm onSubmit={handleVerifyMfa}>
               <LoginStatusMessage variant="neutral" live="off">
                 <p>
                   <Trans id="login.mfa.expiry">
@@ -761,44 +762,56 @@ export function Login() {
                 </p>
               </LoginStatusMessage>
 
-              <fieldset className="space-y-3">
-                <legend className="text-sm font-medium text-zinc-950 dark:text-white">
+              <div className="space-y-3">
+                <span
+                  id="mfa-method-label"
+                  className="text-sm font-medium text-zinc-950 dark:text-white"
+                >
                   <Trans id="login.mfa.method">Verification method</Trans>
-                </legend>
+                </span>
 
-                {pendingMfaChallenge.available_methods.map((method) => (
-                  <label
-                    key={method}
-                    className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
-                  >
-                    <input
-                      type="radio"
-                      name="mfa-method"
-                      value={method}
-                      checked={mfaMethod === method}
-                      onChange={() => handleMfaMethodChange(method)}
-                      disabled={isVerifyingMfa}
-                      className="mt-1"
-                    />
-                    <span>
-                      {method === "recovery_code" ? (
-                        <Trans id="login.mfa.method.recovery_code">
-                          Recovery code
-                        </Trans>
-                      ) : (
-                        <Trans id="login.mfa.method.totp">
-                          Authenticator code
-                        </Trans>
-                      )}
-                      {method === pendingMfaChallenge.primary_method ? (
-                        <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
-                          <Trans id="login.mfa.preferred">recommended</Trans>
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
+                <LoginRadioGroup
+                  value={mfaMethod}
+                  onValueChange={(value) =>
+                    handleMfaMethodChange(value as MfaVerificationMethod)
+                  }
+                  disabled={isVerifyingMfa}
+                  aria-labelledby="mfa-method-label"
+                >
+                  {pendingMfaChallenge.available_methods.map((method) => (
+                    <label
+                      key={method}
+                      className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                    >
+                      <LoginRadioGroupItem
+                        value={method}
+                        className="mt-1"
+                        aria-label={
+                          method === "recovery_code"
+                            ? _(msg`Recovery code`)
+                            : _(msg`Authenticator code`)
+                        }
+                      />
+                      <span>
+                        {method === "recovery_code" ? (
+                          <Trans id="login.mfa.method.recovery_code">
+                            Recovery code
+                          </Trans>
+                        ) : (
+                          <Trans id="login.mfa.method.totp">
+                            Authenticator code
+                          </Trans>
+                        )}
+                        {method === pendingMfaChallenge.primary_method ? (
+                          <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            <Trans id="login.mfa.preferred">recommended</Trans>
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </LoginRadioGroup>
+              </div>
 
               <LoginField>
                 <LoginFieldLabel htmlFor="mfa-code">
@@ -884,7 +897,7 @@ export function Login() {
                   )}
                 </LoginButton>
               </LoginDialogActions>
-            </form>
+            </LoginForm>
           )}
         </LoginDialogBody>
       </LoginDialog>
@@ -896,8 +909,7 @@ function LoginLanguageSwitcher() {
   const { _, i18n } = useLingui();
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = async (event: ChangeEvent<HTMLSelectElement>) => {
-    const locale = event.target.value;
+  const handleValueChange = async (locale: string) => {
     setError(null);
 
     try {
@@ -910,18 +922,21 @@ function LoginLanguageSwitcher() {
 
   return (
     <div>
-      <select
-        value={i18n.locale}
-        onChange={handleChange}
-        aria-label={_(msg`Select language`)}
-        className="h-10 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus-visible:ring-offset-zinc-950"
-      >
-        {Object.entries(locales).map(([code, name]) => (
-          <option key={code} value={code}>
-            {name}
-          </option>
-        ))}
-      </select>
+      <LoginSelect value={i18n.locale} onValueChange={handleValueChange}>
+        <LoginSelectTrigger
+          aria-label={_(msg`Select language`)}
+          className="w-auto min-w-[7rem]"
+        >
+          <LoginSelectValue />
+        </LoginSelectTrigger>
+        <LoginSelectContent>
+          {Object.entries(locales).map(([code, name]) => (
+            <LoginSelectItem key={code} value={code}>
+              {name}
+            </LoginSelectItem>
+          ))}
+        </LoginSelectContent>
+      </LoginSelect>
       {error ? (
         <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
           {error}

@@ -78,3 +78,21 @@ class MockResizeObserver implements ResizeObserver {
   disconnect() {}
 }
 global.ResizeObserver = MockResizeObserver;
+
+// Stubs for Radix UI primitives (Select, etc.) in JSDOM. Radix relies on
+// pointer-capture and scrollIntoView APIs that JSDOM does not implement; without
+// these stubs, opening a Radix Select trigger in tests throws.
+if (typeof Element !== "undefined") {
+  if (!("hasPointerCapture" in Element.prototype)) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!("setPointerCapture" in Element.prototype)) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!("releasePointerCapture" in Element.prototype)) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!("scrollIntoView" in Element.prototype)) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}

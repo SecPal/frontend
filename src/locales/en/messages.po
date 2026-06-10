@@ -1683,6 +1683,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Select language"
 msgstr "Select language"
 
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
 msgstr "Recovery code"

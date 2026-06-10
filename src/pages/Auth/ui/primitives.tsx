@@ -2,20 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-  createContext,
   forwardRef,
   useContext,
-  useEffect,
-  useId,
-  useRef,
   type ButtonHTMLAttributes,
   type ComponentProps,
   type ComponentPropsWithoutRef,
+  type ElementRef,
   type ForwardedRef,
   type FormHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { Check, ChevronDown, ChevronUp, Circle } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
@@ -216,20 +218,21 @@ export function LoginFormActions({
   return <div className={cn("space-y-3", className)} {...props} />;
 }
 
-export function LoginFieldLabel({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"label">) {
+export const LoginFieldLabel = forwardRef<
+  ElementRef<typeof LabelPrimitive.Root>,
+  ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+>(function LoginFieldLabel({ className, ...props }, ref) {
   return (
-    <label
+    <LabelPrimitive.Root
+      ref={ref}
       className={cn(
-        "text-sm font-medium text-zinc-950 dark:text-zinc-50",
+        "text-sm font-medium text-zinc-950 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-zinc-50",
         className
       )}
       {...props}
     />
   );
-}
+});
 
 export function LoginFieldDescription({
   className,
@@ -287,36 +290,193 @@ export function LoginStatusMessage({
   );
 }
 
+export const LoginRadioGroup = forwardRef<
+  ElementRef<typeof RadioGroupPrimitive.Root>,
+  ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
+>(function LoginRadioGroup({ className, ...props }, ref) {
+  return (
+    <RadioGroupPrimitive.Root
+      ref={ref}
+      data-slot="login-radio-group"
+      className={cn("grid gap-3", className)}
+      {...props}
+    />
+  );
+});
+
+export const LoginRadioGroupItem = forwardRef<
+  ElementRef<typeof RadioGroupPrimitive.Item>,
+  ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+>(function LoginRadioGroupItem({ className, ...props }, ref) {
+  return (
+    <RadioGroupPrimitive.Item
+      ref={ref}
+      data-slot="login-radio-group-item"
+      className={cn(
+        "aspect-square size-4 shrink-0 rounded-full border border-zinc-300 text-blue-600 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 dark:border-zinc-700 dark:focus-visible:ring-offset-zinc-950",
+        className
+      )}
+      {...props}
+    >
+      <RadioGroupPrimitive.Indicator
+        data-slot="login-radio-group-indicator"
+        className="relative flex items-center justify-center"
+      >
+        <Circle className="size-2 fill-current text-current" />
+      </RadioGroupPrimitive.Indicator>
+    </RadioGroupPrimitive.Item>
+  );
+});
+
+export function LoginSelect(
+  props: ComponentProps<typeof SelectPrimitive.Root>
+) {
+  return <SelectPrimitive.Root {...props} />;
+}
+
+export function LoginSelectGroup(
+  props: ComponentProps<typeof SelectPrimitive.Group>
+) {
+  return <SelectPrimitive.Group {...props} />;
+}
+
+export function LoginSelectValue(
+  props: ComponentProps<typeof SelectPrimitive.Value>
+) {
+  return <SelectPrimitive.Value {...props} />;
+}
+
+export const LoginSelectTrigger = forwardRef<
+  ElementRef<typeof SelectPrimitive.Trigger>,
+  ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
+>(function LoginSelectTrigger({ className, children, ...props }, ref) {
+  return (
+    <SelectPrimitive.Trigger
+      ref={ref}
+      data-slot="login-select-trigger"
+      className={cn(
+        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 [&>span]:line-clamp-1 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown
+          className="size-4 opacity-50"
+          aria-hidden="true"
+          data-slot="login-select-trigger-icon"
+        />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  );
+});
+
+const LoginSelectScrollUpButton = forwardRef<
+  ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+  ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
+>(function LoginSelectScrollUpButton({ className, ...props }, ref) {
+  return (
+    <SelectPrimitive.ScrollUpButton
+      ref={ref}
+      data-slot="login-select-scroll-up"
+      className={cn(
+        "flex cursor-default items-center justify-center py-1",
+        className
+      )}
+      {...props}
+    >
+      <ChevronUp className="size-4" aria-hidden="true" />
+    </SelectPrimitive.ScrollUpButton>
+  );
+});
+
+const LoginSelectScrollDownButton = forwardRef<
+  ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+  ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
+>(function LoginSelectScrollDownButton({ className, ...props }, ref) {
+  return (
+    <SelectPrimitive.ScrollDownButton
+      ref={ref}
+      data-slot="login-select-scroll-down"
+      className={cn(
+        "flex cursor-default items-center justify-center py-1",
+        className
+      )}
+      {...props}
+    >
+      <ChevronDown className="size-4" aria-hidden="true" />
+    </SelectPrimitive.ScrollDownButton>
+  );
+});
+
+export const LoginSelectContent = forwardRef<
+  ElementRef<typeof SelectPrimitive.Content>,
+  ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+>(function LoginSelectContent(
+  { className, children, position = "popper", ...props },
+  ref
+) {
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        ref={ref}
+        data-slot="login-select-content"
+        position={position}
+        className={cn(
+          "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+          position === "popper" &&
+            "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
+          className
+        )}
+        {...props}
+      >
+        <LoginSelectScrollUpButton />
+        <SelectPrimitive.Viewport
+          data-slot="login-select-viewport"
+          className={cn(
+            "p-1",
+            position === "popper" &&
+              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+          )}
+        >
+          {children}
+        </SelectPrimitive.Viewport>
+        <LoginSelectScrollDownButton />
+      </SelectPrimitive.Content>
+    </SelectPrimitive.Portal>
+  );
+});
+
+export const LoginSelectItem = forwardRef<
+  ElementRef<typeof SelectPrimitive.Item>,
+  ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(function LoginSelectItem({ className, children, ...props }, ref) {
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      data-slot="login-select-item"
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-zinc-950 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-zinc-100 data-[disabled]:opacity-50 dark:text-zinc-50 dark:data-[highlighted]:bg-zinc-800",
+        className
+      )}
+      {...props}
+    >
+      <span className="absolute right-2 flex size-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="size-4" aria-hidden="true" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+});
+
 const dialogSizes = {
   sm: "sm:max-w-sm",
   md: "sm:max-w-md",
   lg: "sm:max-w-lg",
 } satisfies Record<string, string>;
-
-const focusableElementSelector = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled]):not([type='hidden'])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  "[tabindex]:not([tabindex='-1'])",
-].join(", ");
-
-function getFocusableElements(container: HTMLElement) {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>(focusableElementSelector)
-  ).filter(
-    (element) =>
-      !element.hasAttribute("disabled") &&
-      element.getAttribute("aria-hidden") !== "true" &&
-      element.tabIndex >= 0
-  );
-}
-
-const LoginDialogContext = createContext<{
-  titleId: string;
-  descriptionId: string;
-} | null>(null);
 
 export function LoginDialog({
   size = "md",
@@ -324,183 +484,69 @@ export function LoginDialog({
   children,
   open,
   onClose,
-  ...props
 }: {
   size?: keyof typeof dialogSizes;
   className?: string;
   children: ReactNode;
   open: boolean;
   onClose: () => void;
-} & Omit<ComponentPropsWithoutRef<"div">, "className" | "role">) {
-  const titleId = useId();
-  const descriptionId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const dialog = dialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    const previousActiveElement =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    const backgroundElements = Array.from(
-      rootRef.current?.parentElement?.children ?? []
-    )
-      .filter((element): element is HTMLElement => element !== rootRef.current)
-      .map((element) => ({
-        element,
-        ariaHidden: element.getAttribute("aria-hidden"),
-        inert: element.hasAttribute("inert"),
-      }));
-
-    backgroundElements.forEach(({ element }) => {
-      element.setAttribute("aria-hidden", "true");
-      element.setAttribute("inert", "");
-    });
-
-    const initialFocusTarget = getFocusableElements(dialog)[0] ?? dialog;
-    initialFocusTarget.focus();
-
-    const trappedDialog: HTMLDivElement = dialog;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onCloseRef.current();
-        return;
-      }
-
-      if (event.key !== "Tab") {
-        return;
-      }
-
-      const focusableElements = getFocusableElements(trappedDialog);
-
-      if (focusableElements.length === 0) {
-        event.preventDefault();
-        trappedDialog.focus();
-        return;
-      }
-
-      const firstElement = focusableElements[0]!;
-      const lastElement = focusableElements[focusableElements.length - 1]!;
-      const activeElement =
-        document.activeElement instanceof HTMLElement
-          ? document.activeElement
-          : null;
-
-      if (!activeElement || !trappedDialog.contains(activeElement)) {
-        event.preventDefault();
-        (event.shiftKey ? lastElement : firstElement).focus();
-        return;
-      }
-
-      if (!event.shiftKey && activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      } else if (event.shiftKey && activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      backgroundElements.forEach(({ element, ariaHidden, inert }) => {
-        if (ariaHidden === null) {
-          element.removeAttribute("aria-hidden");
-        } else {
-          element.setAttribute("aria-hidden", ariaHidden);
-        }
-
-        if (inert) {
-          element.setAttribute("inert", "");
-        } else {
-          element.removeAttribute("inert");
-        }
-      });
-      previousActiveElement?.focus();
-    };
-  }, [open]);
-
-  if (!open) {
-    return null;
-  }
-
+}) {
   return (
-    <LoginDialogContext.Provider value={{ titleId, descriptionId }}>
-      <div ref={rootRef} {...props}>
-        <div className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/70" />
-        <div
-          className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6"
-          onClick={onClose}
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          data-slot="login-dialog-overlay"
+          className="fixed inset-0 z-40 bg-zinc-950/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-zinc-950/70"
+        />
+        <DialogPrimitive.Content
+          data-slot="login-dialog-content"
+          className={cn(
+            "fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+            dialogSizes[size],
+            className
+          )}
         >
-          <div
-            ref={dialogRef}
-            role="dialog"
-            tabIndex={-1}
-            aria-modal="true"
-            aria-labelledby={titleId}
-            aria-describedby={descriptionId}
-            onClick={(event) => event.stopPropagation()}
-            className={cn(
-              "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-              dialogSizes[size],
-              className
-            )}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
-    </LoginDialogContext.Provider>
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
 
-export function LoginDialogTitle({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"h2">) {
-  const dialogContext = useContext(LoginDialogContext);
-
+export const LoginDialogTitle = forwardRef<
+  ElementRef<typeof DialogPrimitive.Title>,
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(function LoginDialogTitle({ className, ...props }, ref) {
   return (
-    <h2
-      id={dialogContext?.titleId}
+    <DialogPrimitive.Title
+      ref={ref}
+      data-slot="login-dialog-title"
       className={cn("text-lg font-semibold tracking-normal", className)}
       {...props}
     />
   );
-}
+});
 
-export function LoginDialogDescription({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"p">) {
-  const dialogContext = useContext(LoginDialogContext);
-
+export const LoginDialogDescription = forwardRef<
+  ElementRef<typeof DialogPrimitive.Description>,
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(function LoginDialogDescription({ className, ...props }, ref) {
   return (
-    <p
-      id={dialogContext?.descriptionId}
+    <DialogPrimitive.Description
+      ref={ref}
+      data-slot="login-dialog-description"
       className={cn("mt-2 text-sm text-zinc-600 dark:text-zinc-300", className)}
       {...props}
     />
   );
-}
+});
 
 export function LoginDialogBody({
   className,

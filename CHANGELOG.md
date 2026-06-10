@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
 - Swapped the three icons on the login surface from `@heroicons/react/24/outline` to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`. `@heroicons/react` remains a project dependency because other routes still use it; the login surface itself no longer references it.
+- Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
+  - `LoginDialog` (MFA challenge) now wraps `@radix-ui/react-dialog` with Portal + Overlay + Content + auto-focus + focus-trap + Esc/outside-click dismissal handled by Radix (the previous custom div + hand-rolled focus-trap is removed; `LoginDialogTitle` / `LoginDialogDescription` are thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`).
+  - `LoginFieldLabel` wraps `@radix-ui/react-label` for proper `<button role="radio">` association.
+  - New `LoginRadioGroup` / `LoginRadioGroupItem` wrap `@radix-ui/react-radio-group` and replace the native `<fieldset>` + `<input type="radio">` MFA-method selector.
+  - New `LoginSelect` / `LoginSelectTrigger` / `LoginSelectValue` / `LoginSelectContent` / `LoginSelectItem` (plus internal `LoginSelectScrollUpButton` / `LoginSelectScrollDownButton`) wrap `@radix-ui/react-select` and replace the native `<select>` + `<option>` language switcher.
+  - The MFA dialog's inner `<form className="space-y-6">` is now `LoginForm`, consistent with the primary login form.
+- Upgraded the `cn` helper in `src/pages/Auth/ui/utils.ts` to compose `clsx` with `tailwind-merge` so conflicting Tailwind classes deduplicate predictably (matches the canonical shadcn `cn` implementation).
+- Added JSDOM stubs for `Element.prototype.hasPointerCapture` / `setPointerCapture` / `releasePointerCapture` / `scrollIntoView` in `tests/setup.ts` so Radix Select can be opened and interacted with in Vitest under JSDOM.
 
 ### Fixed
 

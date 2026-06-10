@@ -1684,6 +1684,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Select language"
 msgstr "Sprache auswählen"
 
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
 msgstr "Wiederherstellungscode"

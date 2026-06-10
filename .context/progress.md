@@ -204,6 +204,39 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-011: Login-Route vollständig auf echte shadcn-Komponenten (Radix-basiert) umstellen
+
+- Diagnosed that the existing `LoginXxx` primitives were only **visually** shadcn (Tailwind classes in the shadcn idiom) but technically had **zero** Radix backing — no `@radix-ui/*` package was installed in the repo. The login route additionally still contained three native HTML controls (`<select>` for the language switcher, `<fieldset>` + `<input type="radio">` for the MFA-method selector, and an inner `<form>` in the MFA dialog) that no shadcn primitive wrapped.
+- Installed the canonical shadcn dependency set: `@radix-ui/react-dialog`, `@radix-ui/react-label`, `@radix-ui/react-radio-group`, `@radix-ui/react-select`, `class-variance-authority`, and `tailwind-merge`. Upgraded `cn` in `src/pages/Auth/ui/utils.ts` to compose `clsx` with `twMerge` so conflicting Tailwind classes deduplicate predictably, matching the canonical shadcn implementation.
+- Refactored `LoginDialog` in `src/pages/Auth/ui/primitives.tsx` from a custom `div role="dialog"` + bugbot's hand-rolled focus-trap to a thin wrapper around `@radix-ui/react-dialog` (Portal + Overlay + Content). The custom focus-trap, the manual `aria-hidden` / `inert` background mutation, the `focusableElementSelector` / `getFocusableElements` helpers, and the `LoginDialogContext` were all removed because Radix Dialog handles focus trap, auto-focus, escape dismissal, and outside-click dismissal internally. `LoginDialogTitle` / `LoginDialogDescription` are now thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`. The public API of `LoginDialog` (`open`, `onClose`, `size`, `children`, `className`) is unchanged so `Login.tsx` did not need touching for the dialog migration.
+- Refactored `LoginFieldLabel` to wrap `@radix-ui/react-label` so it correctly associates with non-`<input>` form controls (notably the Radix RadioGroup item which renders as `<button role="radio">`).
+- Added new primitives in `src/pages/Auth/ui/primitives.tsx`:
+  - `LoginRadioGroup` + `LoginRadioGroupItem` wrap `@radix-ui/react-radio-group`. The item renders the radio button with a filled `Circle` indicator from `lucide-react` and SecPal's zinc theme.
+  - `LoginSelect` + `LoginSelectGroup` + `LoginSelectValue` + `LoginSelectTrigger` + `LoginSelectContent` + `LoginSelectItem` wrap `@radix-ui/react-select`. Trigger uses `ChevronDown`, Item uses `Check` for the selected indicator, and the Content portal includes hidden `LoginSelectScrollUpButton` / `LoginSelectScrollDownButton` for overflow viewports. Root/Group/Value are explicit function wrappers (not `const x = Primitive.Root` re-exports) so that `react-refresh/only-export-components` stays clean.
+- Migrated `src/pages/Login.tsx` to use the new primitives end-to-end:
+  - Replaced the MFA dialog's inner `<form className="space-y-6">` with `LoginForm` (matches the primary login form's primitive choice).
+  - Replaced the MFA-method `<fieldset>` + `<legend>` + per-method `<label>` wrapping `<input type="radio">` with a `LoginRadioGroup` containing `LoginRadioGroupItem` instances; each item carries an `aria-label` (`Recovery code` / `Authenticator code`) so screen readers announce a meaningful name even when the surrounding "card" label wraps the radio button.
+  - Replaced `LoginLanguageSwitcher`'s native `<select>` with the `LoginSelect` stack. The trigger keeps the `aria-label="Select language"` from the previous implementation and uses `w-auto min-w-[7rem]` so it stays compact in the shell's top-right slot.
+  - Dropped the now-unused `ChangeEvent` type import.
+- Tests:
+  - Added JSDOM stubs in `tests/setup.ts` for `Element.prototype.hasPointerCapture`, `setPointerCapture`, `releasePointerCapture`, and `scrollIntoView` so Radix Select can be opened in Vitest. Without these, opening a Select trigger throws.
+  - Added a `selectLanguage(visibleName)` helper in `src/pages/Login.test.tsx` that dispatches the canonical `pointerDown` + `pointerUp` + `click` sequence on the Radix Select trigger and option, since `fireEvent.change` no longer works against a Radix combobox button. Updated the two language-switcher tests to use it.
+  - Rewrote the `auth-ui.test.tsx` MFA-dialog test for the Radix DOM: removed the `aria-modal="true"` assertion (Radix Dialog does not set this attribute), checked `data-state="open"` instead, and verified background hiding via `closest('[aria-hidden="true"]')` since Radix's `HideOthers` sets aria-hidden on the dialog portal's body-level siblings rather than directly on the test fixture's "Language" button. Dropped the manual backdrop-click assertion and kept the Escape-to-close assertion (Radix DismissableLayer handles both; the test now asserts the close happens, not the exact event path).
+- Files changed:
+  - `package.json`, `package-lock.json` (new Radix + cva + tailwind-merge deps)
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/utils.ts`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `src/pages/Login.test.tsx`
+  - `tests/setup.ts`
+  - `src/locales/de/messages.po`, `src/locales/en/messages.po`, `src/locales/{en,de}/messages.mjs` (catalogs re-synced for the new Login.tsx Recovery/Authenticator code msg references)
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: a Login surface that claims "shadcn" must be backed by Radix for the interactive primitives (Dialog, Select, RadioGroup, Label); CSS-only mimicry leaks once a password manager, screen reader, or pointer-capture-aware browser shows up. Wrap each shadcn primitive in a `LoginXxx` re-export so the route imports stay barrel-only (`./Auth/ui`).
+  - Gotchas encountered: Radix Dialog does not set `aria-modal="true"`; tests must rely on `role="dialog"` + `data-state="open"` + the `aria-hidden` overlay-managed by `HideOthers`. Radix Select needs JSDOM pointer-capture stubs in the global test setup, otherwise opening the trigger throws synchronously. `react-refresh/only-export-components` flags `export const X = Primitive.Root` re-exports — wrap each in a function so the dev-time HMR stays happy.
+  - Compatibility constraint: the public API of `LoginDialog` is preserved (`open`/`onClose`/`size`/`children`/`className`), so future consumers can keep their call-sites untouched even though the implementation now goes through Radix.
+
 ## US-009: Login-Icons von heroicons auf lucide-react umstellen
 
 - Replaced the three `@heroicons/react/24/outline` imports on the login surface with their `lucide-react` equivalents: `KeyIcon` → `KeyRound` (passkey-action button, five usages), `ScaleIcon` → `Scale` (AGPL license link), `CodeBracketIcon` → `Code2` (source-code link), matching the shadcn `login-05` reference's icon library while keeping `aria-hidden="true"` and the existing `h-4 w-4` sizing untouched.
