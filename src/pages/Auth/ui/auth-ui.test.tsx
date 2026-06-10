@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import {
   LoginBrandPanel,
@@ -108,27 +109,48 @@ describe("auth login shadcn primitives", () => {
     );
   });
 
-  it("renders the MFA dialog with native shadcn-style modal semantics", () => {
+  it("renders the MFA dialog with native shadcn-style modal semantics", async () => {
     const handleClose = vi.fn();
+    const user = userEvent.setup();
 
     render(
-      <LoginDialog open onClose={handleClose}>
-        <LoginDialogTitle>Second factor required</LoginDialogTitle>
-        <LoginDialogDescription>
-          Complete MFA to finish signing in.
-        </LoginDialogDescription>
-        <p>Challenge body</p>
-      </LoginDialog>
+      <LoginShell>
+        <button type="button">Language</button>
+        <LoginDialog open onClose={handleClose}>
+          <LoginDialogTitle>Second factor required</LoginDialogTitle>
+          <LoginDialogDescription>
+            Complete MFA to finish signing in.
+          </LoginDialogDescription>
+          <div className="mt-6 flex gap-2">
+            <LoginButton type="button">Cancel</LoginButton>
+            <LoginButton type="submit">Verify</LoginButton>
+          </div>
+        </LoginDialog>
+      </LoginShell>
     );
 
     const dialog = screen.getByRole("dialog", {
       name: "Second factor required",
     });
+    const backgroundButton = screen.getByRole("button", { name: "Language" });
+    const cancelButton = screen.getByRole("button", { name: "Cancel" });
+    const verifyButton = screen.getByRole("button", { name: "Verify" });
 
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAccessibleDescription(
       "Complete MFA to finish signing in."
     );
+    expect(backgroundButton).toHaveAttribute("inert");
+    expect(cancelButton).toHaveFocus();
+
+    await user.tab();
+    expect(verifyButton).toHaveFocus();
+
+    await user.tab();
+    expect(cancelButton).toHaveFocus();
+
+    await user.tab({ shift: true });
+    expect(verifyButton).toHaveFocus();
 
     fireEvent.click(dialog);
     expect(handleClose).not.toHaveBeenCalled();

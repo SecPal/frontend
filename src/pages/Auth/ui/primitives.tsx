@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useRef,
   type ButtonHTMLAttributes,
   type ComponentProps,
   type ComponentPropsWithoutRef,
@@ -292,6 +293,26 @@ const dialogSizes = {
   lg: "sm:max-w-lg",
 } satisfies Record<string, string>;
 
+const focusableElementSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(", ");
+
+function getFocusableElements(container: HTMLElement) {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(focusableElementSelector)
+  ).filter(
+    (element) =>
+      !element.hasAttribute("disabled") &&
+      element.getAttribute("aria-hidden") !== "true" &&
+      element.tabIndex >= 0
+  );
+}
+
 const LoginDialogContext = createContext<{
   titleId: string;
   descriptionId: string;
@@ -313,15 +334,79 @@ export function LoginDialog({
 } & Omit<ComponentPropsWithoutRef<"div">, "className" | "role">) {
   const titleId = useId();
   const descriptionId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    const dialog = dialogRef.current;
+
+    if (!dialog) {
+      return;
+    }
+
+    const previousActiveElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const backgroundElements = Array.from(
+      rootRef.current?.parentElement?.children ?? []
+    )
+      .filter((element): element is HTMLElement => element !== rootRef.current)
+      .map((element) => ({
+        element,
+        ariaHidden: element.getAttribute("aria-hidden"),
+        inert: element.hasAttribute("inert"),
+      }));
+
+    backgroundElements.forEach(({ element }) => {
+      element.setAttribute("aria-hidden", "true");
+      element.setAttribute("inert", "");
+    });
+
+    const initialFocusTarget = getFocusableElements(dialog)[0] ?? dialog;
+    initialFocusTarget.focus();
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialog);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+
+      if (!activeElement || !dialog.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? lastElement : firstElement).focus();
+        return;
+      }
+
+      if (!event.shiftKey && activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      } else if (event.shiftKey && activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
       }
     }
 
@@ -329,6 +414,20 @@ export function LoginDialog({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      backgroundElements.forEach(({ element, ariaHidden, inert }) => {
+        if (ariaHidden === null) {
+          element.removeAttribute("aria-hidden");
+        } else {
+          element.setAttribute("aria-hidden", ariaHidden);
+        }
+
+        if (inert) {
+          element.setAttribute("inert", "");
+        } else {
+          element.removeAttribute("inert");
+        }
+      });
+      previousActiveElement?.focus();
     };
   }, [onClose, open]);
 
@@ -338,26 +437,28 @@ export function LoginDialog({
 
   return (
     <LoginDialogContext.Provider value={{ titleId, descriptionId }}>
-      <div {...props}>
+      <div ref={rootRef} {...props}>
         <div className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/70" />
-      </div>
-      <div
-        className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6"
-        onClick={onClose}
-      >
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          aria-describedby={descriptionId}
-          onClick={(event) => event.stopPropagation()}
-          className={cn(
-            "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-            dialogSizes[size],
-            className
-          )}
+          className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6"
+          onClick={onClose}
         >
-          {children}
+          <div
+            ref={dialogRef}
+            role="dialog"
+            tabIndex={-1}
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
+            onClick={(event) => event.stopPropagation()}
+            className={cn(
+              "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+              dialogSizes[size],
+              className
+            )}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </LoginDialogContext.Provider>
