@@ -3,6 +3,7 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   LoginBrandPanel,
@@ -161,6 +162,49 @@ describe("auth login shadcn primitives", () => {
     fireEvent.keyDown(document, { key: "Escape" });
 
     expect(handleClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps focus on the active dialog input when the parent rerenders", () => {
+    function DialogRerenderHarness() {
+      const [code, setCode] = useState("");
+
+      return (
+        <LoginShell>
+          <button type="button">Language</button>
+          <LoginDialog open onClose={() => undefined}>
+            <LoginDialogTitle>Second factor required</LoginDialogTitle>
+            <LoginDialogDescription>
+              Complete MFA to finish signing in.
+            </LoginDialogDescription>
+            <div className="mt-6 space-y-3">
+              <label className="flex items-center gap-2">
+                <input type="radio" name="mfa-method" defaultChecked />
+                <span>Authenticator app</span>
+              </label>
+              <LoginInput
+                aria-label="Authenticator code"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+              />
+            </div>
+          </LoginDialog>
+        </LoginShell>
+      );
+    }
+
+    render(<DialogRerenderHarness />);
+
+    const codeInput = screen.getByRole("textbox", {
+      name: "Authenticator code",
+    });
+
+    codeInput.focus();
+    expect(codeInput).toHaveFocus();
+
+    fireEvent.change(codeInput, { target: { value: "1" } });
+
+    expect(codeInput).toHaveFocus();
+    expect(codeInput).toHaveValue("1");
   });
 
   it("offers a controlled digits-only OTP input rendered as shadcn slots", async () => {
