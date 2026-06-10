@@ -182,7 +182,7 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
 
-  it("opens the popover and exposes aria-activedescendant when ArrowDown is pressed on the trigger", async () => {
+  it("opens the popover and highlights the first option when ArrowDown is pressed on the closed trigger", async () => {
     const user = userEvent.setup();
 
     render(
@@ -204,10 +204,14 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
-    const activeId = trigger.getAttribute("aria-activedescendant");
-    expect(activeId).toBeTruthy();
     const options = screen.getAllByRole("option");
-    expect(options[1]).toHaveAttribute("id", activeId!);
+    // First ArrowDown opens the popover and highlights the first option,
+    // matching the visual list order. It must not skip past the first item.
+    const searchbox = screen.getByRole("searchbox");
+    expect(searchbox).toHaveAttribute(
+      "aria-activedescendant",
+      options[0]!.id
+    );
   });
 
   it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
@@ -241,23 +245,44 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
 
-  it("closes the popover when Escape is pressed", async () => {
+  it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
     const user = userEvent.setup();
 
     render(
       <CommandPopover
         label="Country"
         onValueChange={vi.fn()}
-        options={[{ value: "de", label: "Germany" }]}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+          { value: "es", label: "Spain" },
+        ]}
       />
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
 
+    // Move the active index away from the first option and apply a query so
+    // there is observable stale state to be cleared on Escape.
+    await user.type(screen.getByRole("searchbox"), "fra");
+    expect(screen.getByRole("searchbox")).toHaveValue("fra");
+
     await user.keyboard("{Escape}");
 
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+
+    // Re-open: query must be reset and the first option must be the active
+    // descendant again, so the popover does not show stale filtering or an
+    // out-of-context active option.
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(3);
+    expect(screen.getByRole("searchbox")).toHaveAttribute(
+      "aria-activedescendant",
+      options[0]!.id
+    );
   });
 
   it("renders the empty message when no options match the query", async () => {
@@ -434,6 +459,25 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
+  });
+
+  it("exposes an accessible name for the searchbox derived from the localized search placeholder", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CommandPopover
+        label="Country"
+        searchPlaceholder="Search or select country"
+        onValueChange={vi.fn()}
+        options={[{ value: "de", label: "Germany" }]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+
+    expect(
+      screen.getByRole("searchbox", { name: "Search or select country" })
+    ).toBeInTheDocument();
   });
 
   it("disables the trigger when the disabled prop is set", () => {

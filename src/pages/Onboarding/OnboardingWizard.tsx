@@ -3582,6 +3582,16 @@ export function OnboardingWizard() {
                                   aria-label={_(
                                     msg`Would you like to upload your identity document now?`
                                   )}
+                                  aria-invalid={
+                                    fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
+                                      ? true
+                                      : undefined
+                                  }
+                                  aria-describedby={
+                                    fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
+                                      ? "onboarding-field-id-document-upload-now-error"
+                                      : undefined
+                                  }
                                   className="mt-3"
                                 >
                                   <UiFieldLabel className="flex items-center gap-2">
@@ -3624,7 +3634,7 @@ export function OnboardingWizard() {
                                   </UiFieldLabel>
                                 </UiRadioGroup>
                                 {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD] ? (
-                                  <UiFieldError>
+                                  <UiFieldError id="onboarding-field-id-document-upload-now-error">
                                     {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]}
                                   </UiFieldError>
                                 ) : null}
@@ -4046,6 +4056,16 @@ export function OnboardingWizard() {
                       <UiRadioGroup
                         role="radiogroup"
                         aria-label={_(msg`Employment permitted`)}
+                        aria-invalid={
+                          fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                            ? true
+                            : undefined
+                        }
+                        aria-describedby={
+                          fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                            ? "onboarding-field-residence-title-employment-allowed-error"
+                            : undefined
+                        }
                         className="mt-3"
                       >
                         <UiFieldLabel className="flex items-center gap-2">
@@ -4092,7 +4112,7 @@ export function OnboardingWizard() {
                         </UiFieldLabel>
                       </UiRadioGroup>
                       {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] ? (
-                        <UiFieldError>
+                        <UiFieldError id="onboarding-field-residence-title-employment-allowed-error">
                           {
                             fieldErrors[
                               RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD
@@ -4123,6 +4143,16 @@ export function OnboardingWizard() {
                             aria-label={_(
                               msg`Would you like to upload your residence title now?`
                             )}
+                            aria-invalid={
+                              fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
+                                ? true
+                                : undefined
+                            }
+                            aria-describedby={
+                              fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
+                                ? "onboarding-field-residence-title-upload-now-error"
+                                : undefined
+                            }
                             className="mt-3"
                           >
                             <UiFieldLabel className="flex items-center gap-2">
@@ -4167,7 +4197,7 @@ export function OnboardingWizard() {
                             </UiFieldLabel>
                           </UiRadioGroup>
                           {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD] ? (
-                            <UiFieldError>
+                            <UiFieldError id="onboarding-field-residence-title-upload-now-error">
                               {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]}
                             </UiFieldError>
                           ) : null}

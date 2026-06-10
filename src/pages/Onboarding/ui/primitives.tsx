@@ -466,8 +466,14 @@ export function CommandPopover({
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            setOpen(true);
-            moveActiveIndex(1);
+            // When opening from a closed state, keep the active option at the
+            // first item so initial keyboard focus matches the visual order.
+            // Only advance when the popover is already open.
+            if (open) {
+              moveActiveIndex(1);
+            } else {
+              setOpen(true);
+            }
           }
         }}
       >
@@ -479,6 +485,7 @@ export function CommandPopover({
           <Input
             autoFocus
             role="searchbox"
+            aria-label={searchPlaceholder}
             value={query}
             placeholder={searchPlaceholder}
             aria-activedescendant={activeOptionId}
@@ -509,6 +516,11 @@ export function CommandPopover({
 
               if (event.key === "Escape") {
                 setOpen(false);
+                // Reset the typed query and active option so the next open
+                // does not show stale filtering or an out-of-context active
+                // option.
+                setQuery("");
+                setActiveIndex(0);
               }
             }}
           />

@@ -852,6 +852,7 @@ export function EmployeeAddressFields({
           type="hidden"
           name={fieldName("country")}
           value={selectedCountryOption?.code ?? ""}
+          disabled={readOnly}
         />
         <CommandPopover
           label={i18n._(msg`Country`)}

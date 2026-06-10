@@ -1873,26 +1873,105 @@ describe("OnboardingWizard", () => {
     fireEvent.blur(expiryInput);
     await setEmploymentPermitted(user, "yes");
 
-    expect(
-      await screen.findByRole("radiogroup", {
-        name: /would you like to upload your residence title now\?/i,
-      })
-    ).toBeInTheDocument();
+    const residenceTitleUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your residence title now\?/i,
+    });
+    expect(residenceTitleUploadGroup).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
     );
 
-    expect(
-      await screen.findByText(
-        /please choose whether you want to upload your residence title now/i
-      )
-    ).toBeInTheDocument();
+    const residenceTitleUploadError = await screen.findByText(
+      /please choose whether you want to upload your residence title now/i
+    );
+    expect(residenceTitleUploadError).toBeInTheDocument();
+
+    // The radiogroup must be marked invalid and reference the error so
+    // assistive technologies can announce the failure in context.
+    expect(residenceTitleUploadGroup).toBeInvalid();
+    const residenceTitleUploadErrorId =
+      residenceTitleUploadError.getAttribute("id");
+    expect(residenceTitleUploadErrorId).toBeTruthy();
+    expect(residenceTitleUploadGroup).toHaveAttribute(
+      "aria-describedby",
+      residenceTitleUploadErrorId!
+    );
+
     expect(
       onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ status: "submitted" })
+    );
+  });
+
+  it("marks the employment-permitted radiogroup invalid and connects it to the error when employment is denied", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["TR"] },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+    await setEmploymentPermitted(user, "no");
+
+    const employmentGroup = screen.getByRole("radiogroup", {
+      name: /employment permitted/i,
+    });
+    const employmentError = await screen.findByText(
+      /a valid residence title without employment authorization/i
+    );
+    expect(employmentError).toBeInTheDocument();
+
+    expect(employmentGroup).toBeInvalid();
+    const employmentErrorId = employmentError.getAttribute("id");
+    expect(employmentErrorId).toBeTruthy();
+    expect(employmentGroup).toHaveAttribute(
+      "aria-describedby",
+      employmentErrorId!
     );
   });
 
@@ -2191,11 +2270,24 @@ describe("OnboardingWizard", () => {
       screen.getByRole("button", { name: /submit for review/i })
     );
 
-    expect(
-      await screen.findByText(
-        /please choose whether you want to upload your identity document now/i
-      )
-    ).toBeInTheDocument();
+    const identityUploadError = await screen.findByText(
+      /please choose whether you want to upload your identity document now/i
+    );
+    expect(identityUploadError).toBeInTheDocument();
+
+    // The radiogroup must be marked invalid and reference the error so
+    // assistive technologies can announce the failure in context.
+    const identityUploadGroup = screen.getByRole("radiogroup", {
+      name: /would you like to upload your identity document now\?/i,
+    });
+    expect(identityUploadGroup).toBeInvalid();
+    const identityErrorId = identityUploadError.getAttribute("id");
+    expect(identityErrorId).toBeTruthy();
+    expect(identityUploadGroup).toHaveAttribute(
+      "aria-describedby",
+      identityErrorId!
+    );
+
     expect(
       onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalled();
