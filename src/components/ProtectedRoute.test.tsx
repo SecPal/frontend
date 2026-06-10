@@ -332,12 +332,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    await waitFor(
-      () => {
-        expect(screen.getByText("Protected Content")).toBeInTheDocument();
-      },
-      BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000
-    );
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
 
     expect(
       screen.queryByRole("heading", {

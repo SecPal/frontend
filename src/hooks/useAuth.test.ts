@@ -716,13 +716,16 @@ describe("useAuth", () => {
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
     });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.user).toEqual(mockUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
+    await waitFor(
+      () => {
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.user).toEqual(mockUser);
+        expect(result.current.isAuthenticated).toBe(true);
+        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+      },
+      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
+    );
   });
 
   it("grants a fresh silent retry for each manual retryBootstrap cycle after the recovery UI was shown", async () => {
@@ -743,10 +746,13 @@ describe("useAuth", () => {
     });
 
     // Wait for the first recovery UI to appear (two timeout cycles: initial + auto-retry).
-    await waitFor(() => {
-      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
+    await waitFor(
+      () => {
+        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+      },
+      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
+    );
 
     // User clicks Retry — this should reset the silent-retry flag and issue a
     // third call, then a fourth (auto-retry), before showing recovery again.
@@ -757,10 +763,13 @@ describe("useAuth", () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
 
-    await waitFor(() => {
-      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      expect(mockGetCurrentUser).toHaveBeenCalledTimes(4);
-    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
+    await waitFor(
+      () => {
+        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(4);
+      },
+      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
+    );
   });
 
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
@@ -795,12 +804,9 @@ describe("useAuth", () => {
       .mockReturnValue(false);
 
     try {
-      await waitFor(
-        () => {
-          expect(result.current.isLoading).toBe(false);
-        },
-        BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000
-      );
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
 
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
