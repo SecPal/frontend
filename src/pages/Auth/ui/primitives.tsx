@@ -174,6 +174,13 @@ export function LoginFieldGroup({
   return <div className={cn("space-y-6", className)} {...props} />;
 }
 
+export function LoginFormActions({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return <div className={cn("space-y-3", className)} {...props} />;
+}
+
 export function LoginFieldLabel({
   className,
   ...props

@@ -35,8 +35,10 @@ import {
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
+  LoginFieldGroup,
   LoginFieldLabel,
   LoginForm,
+  LoginFormActions,
   LoginInput,
   LoginShell,
   LoginStatusMessage,
@@ -245,6 +247,25 @@ export function Login() {
 
   // Only an explicit backend not_ready result should block sign-in.
   const isSystemNotReady = isOnline && healthStatus?.status === "not_ready";
+  const isMfaChallengeActive = pendingMfaChallenge !== null;
+  const areCredentialsDisabled =
+    !isOnline || isSystemNotReady || isLocked || isMfaChallengeActive;
+  const isLoginSubmitDisabled =
+    !isOnline ||
+    isSubmitting ||
+    isSubmittingPasskey ||
+    isSystemNotReady ||
+    isHealthCheckLoading ||
+    isLocked ||
+    isMfaChallengeActive;
+  const isPasskeySubmitDisabled =
+    !isOnline ||
+    isSubmitting ||
+    isSubmittingPasskey ||
+    isSystemNotReady ||
+    isHealthCheckLoading ||
+    isLocked ||
+    isMfaChallengeActive;
 
   // Compute aria-describedby for inputs (combines error, lockout, and offline alerts)
   const ariaDescribedBy =
@@ -560,119 +581,99 @@ export function Login() {
                 </LoginStatusMessage>
               )}
 
-              <LoginField>
-                <LoginFieldLabel htmlFor="email">
-                  <Trans id="login.email">Email address</Trans>
-                </LoginFieldLabel>
-                <LoginInput
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@secpal.app"
-                  aria-describedby={ariaDescribedBy}
-                  disabled={
-                    !isOnline ||
-                    isSystemNotReady ||
-                    isLocked ||
-                    pendingMfaChallenge !== null
-                  }
-                />
-              </LoginField>
+              <LoginFieldGroup>
+                <LoginField>
+                  <LoginFieldLabel htmlFor="email">
+                    <Trans id="login.email">Email address</Trans>
+                  </LoginFieldLabel>
+                  <LoginInput
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@secpal.app"
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={ariaDescribedBy}
+                    disabled={areCredentialsDisabled}
+                  />
+                </LoginField>
 
-              <LoginField>
-                <LoginFieldLabel htmlFor="password">
-                  <Trans id="login.password">Password</Trans>
-                </LoginFieldLabel>
-                <LoginInput
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  aria-describedby={ariaDescribedBy}
-                  disabled={
-                    !isOnline ||
-                    isSystemNotReady ||
-                    isLocked ||
-                    pendingMfaChallenge !== null
-                  }
-                />
-              </LoginField>
+                <LoginField>
+                  <LoginFieldLabel htmlFor="password">
+                    <Trans id="login.password">Password</Trans>
+                  </LoginFieldLabel>
+                  <LoginInput
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={ariaDescribedBy}
+                    disabled={areCredentialsDisabled}
+                  />
+                </LoginField>
+              </LoginFieldGroup>
 
-              <LoginButton
-                type="submit"
-                disabled={
-                  !isOnline ||
-                  isSubmitting ||
-                  isSubmittingPasskey ||
-                  isSystemNotReady ||
-                  isHealthCheckLoading ||
-                  isLocked ||
-                  pendingMfaChallenge !== null
-                }
-                className="w-full"
-                aria-busy={isSubmitting}
-                aria-disabled={
-                  !isOnline ||
-                  isSubmittingPasskey ||
-                  isSystemNotReady ||
-                  isHealthCheckLoading ||
-                  isLocked ||
-                  pendingMfaChallenge !== null
-                }
-              >
-                {isHealthCheckLoading ? (
-                  <Trans id="login.checkingSystem">Checking system...</Trans>
-                ) : isLocked ? (
-                  <Trans id="login.lockedButton">
-                    Locked ({remainingLockoutSeconds}s)
-                  </Trans>
-                ) : isSubmitting ? (
-                  <Trans id="login.submitting">Logging in...</Trans>
-                ) : (
-                  <Trans id="login.submit">Log in</Trans>
-                )}
-              </LoginButton>
-
-              {supportsPasskeys ? (
+              <LoginFormActions>
                 <LoginButton
-                  type="button"
-                  variant="outline"
-                  onClick={() => void handlePasskeySignIn()}
-                  disabled={
+                  type="submit"
+                  disabled={isLoginSubmitDisabled}
+                  className="w-full"
+                  aria-busy={isSubmitting}
+                  aria-disabled={
                     !isOnline ||
-                    isSubmitting ||
                     isSubmittingPasskey ||
                     isSystemNotReady ||
                     isHealthCheckLoading ||
                     isLocked ||
-                    pendingMfaChallenge !== null
+                    isMfaChallengeActive
                   }
-                  className="w-full"
-                  aria-busy={isSubmittingPasskey}
                 >
-                  {isSubmittingPasskey ? (
-                    passkeyStep === "browser" ? (
-                      <Trans>Check your browser…</Trans>
-                    ) : passkeyStep === "native" ? (
-                      <Trans>Check your device…</Trans>
-                    ) : passkeyStep === "verifying" ? (
-                      <Trans>Verifying passkey…</Trans>
-                    ) : (
-                      <Trans>Signing in with passkey...</Trans>
-                    )
+                  {isHealthCheckLoading ? (
+                    <Trans id="login.checkingSystem">Checking system...</Trans>
+                  ) : isLocked ? (
+                    <Trans id="login.lockedButton">
+                      Locked ({remainingLockoutSeconds}s)
+                    </Trans>
+                  ) : isSubmitting ? (
+                    <Trans id="login.submitting">Logging in...</Trans>
                   ) : (
-                    <Trans>Sign in with passkey</Trans>
+                    <Trans id="login.submit">Log in</Trans>
                   )}
                 </LoginButton>
-              ) : null}
+
+                {supportsPasskeys ? (
+                  <LoginButton
+                    type="button"
+                    variant="outline"
+                    onClick={() => void handlePasskeySignIn()}
+                    disabled={isPasskeySubmitDisabled}
+                    className="w-full"
+                    aria-busy={isSubmittingPasskey}
+                  >
+                    {isSubmittingPasskey ? (
+                      passkeyStep === "browser" ? (
+                        <Trans>Check your browser…</Trans>
+                      ) : passkeyStep === "native" ? (
+                        <Trans>Check your device…</Trans>
+                      ) : passkeyStep === "verifying" ? (
+                        <Trans>Verifying passkey…</Trans>
+                      ) : (
+                        <Trans>Signing in with passkey...</Trans>
+                      )
+                    ) : (
+                      <Trans>Sign in with passkey</Trans>
+                    )}
+                  </LoginButton>
+                ) : null}
+              </LoginFormActions>
             </LoginForm>
           </div>
         </div>

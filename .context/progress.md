@@ -14,6 +14,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
 - Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
 - Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
+- Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -154,3 +155,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep split login shell layout in auth-local primitives while placing shell-specific legal/footer content in the route so shared auth controls stay form-focused.
   - Gotchas encountered: moving existing translated footer strings into the login route does not change translations but still requires Lingui extraction so catalog source references stay current.
+
+## US-003: E-Mail/Passwort-Formular in Shadcn-Komposition migrieren
+
+- Migrated the email/password credential block and primary/passkey action area into auth-local shadcn-style `LoginFieldGroup` and `LoginFormActions` composition while preserving the existing submit, passkey, MFA, health, offline, and lockout handlers.
+- Centralized the route-owned credential, login-submit, and passkey-submit disabled predicates so the existing disable rules remain unchanged and are applied consistently across the migrated form controls.
+- Kept server and local error feedback visible through the existing `LoginStatusMessage` alerts, added explicit `aria-invalid` on credential fields while errors are active, and extended login unit coverage for MFA-active disabling plus accessible error descriptions.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `src/pages/Login.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: pull shared auth form spacing into small route-local primitives such as `LoginFieldGroup` and `LoginFormActions`, but keep all behavioral predicates in the route component where auth flow state already lives.
+  - Gotchas encountered: once the MFA dialog opens, Headless UI hides the background login form from the accessibility tree, so tests that prove the disabled submit state during an active challenge need to inspect the preserved background form DOM directly.

@@ -14,6 +14,7 @@ import {
   LoginFieldError,
   LoginFieldLabel,
   LoginForm,
+  LoginFormActions,
   LoginInput,
   LoginOtpInput,
   LoginShell,
@@ -61,7 +62,9 @@ describe("auth login shadcn primitives", () => {
           </LoginFieldDescription>
           <LoginFieldError id="email-error">Email is required.</LoginFieldError>
         </LoginField>
-        <LoginButton type="submit">Log in</LoginButton>
+        <LoginFormActions>
+          <LoginButton type="submit">Log in</LoginButton>
+        </LoginFormActions>
       </LoginForm>
     );
 

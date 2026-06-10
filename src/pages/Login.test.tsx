@@ -246,6 +246,13 @@ describe("Login", () => {
     expect(
       screen.getByRole("radio", { name: /recovery code/i })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/password/i)).toBeDisabled();
+    expect(
+      document.querySelector(
+        'form[aria-label="Login form"] button[type="submit"]'
+      )
+    ).toBeDisabled();
   });
 
   it("shows a passkey sign-in action when the browser supports passkeys", async () => {
@@ -1468,6 +1475,11 @@ describe("Login", () => {
       { timeout: 3000 }
     );
     expect(errorElement).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInvalid();
+    expect(screen.getByLabelText(/password/i)).toBeInvalid();
+    expect(screen.getByLabelText(/email/i)).toHaveAccessibleDescription(
+      /the provided credentials are incorrect/i
+    );
   });
 
   it("localizes invalid-credentials login errors with the active locale", async () => {
