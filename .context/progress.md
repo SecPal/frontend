@@ -204,6 +204,27 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-015: Login-Copy straffen und MFA-Fehlerfeedback härten
+
+- Three connected polish strokes on the Login route, all driven by direct UX review on the live page:
+  1. Dropped the `login.subtitle` "Sign in to your operations workspace." line below the brand-card title (`src/pages/Login.tsx`) — the title alone is enough on a brand-only login surface. Removed the corresponding entry from `src/locales/{en,de}/messages.po` (compiled `.mjs` re-synced).
+  2. Lowercased the `login.separator` from "Or" / "Oder" to "or" / "oder" so it reads as a connector rather than a heading.
+  3. Removed the `login.mfa.expiry` "This verification step expires at …" `LoginStatusMessage` from the MFA dialog (`src/pages/Login.tsx`); the modal presentation already conveys the urgency and the ISO-style timestamp added cognitive noise without actionable value. Dropped the now-orphan `formatDateTime` helper and `formatApiDateTime` import.
+- Localized the new backend wording in `getLocalizedMfaErrorMessage`: both the existing `^MFA verification failed\.?$` pattern and the new `^The provided multi-factor authentication code is invalid\.?$` pattern map to the same canonical message (`MFA verification failed. Please check your code.` / `MFA-Verifizierung fehlgeschlagen. Bitte prüfen Sie Ihren Code.`), so users get a translated and actionable error regardless of which API wording lands in their session.
+- Highlighted invalid OTP slots: `LoginOtpInput` (`src/pages/Auth/ui/primitives.tsx`) now forwards its `aria-invalid` prop to every `LoginInputOtpSlot` it renders, so the per-slot `aria-invalid:border-red-600` class actually paints when MFA verify fails. Previously `aria-invalid` only landed on the hidden `<input>` driven by `OTPInput`, leaving the six visible slot boxes without the red border feedback the user expects after a wrong code.
+- Centered the OTP slots: the same `LoginOtpInput` wrapper now sets `containerClassName={cn("justify-center", className)}` so the six slot boxes sit horizontally centered in the MFA dialog instead of left-aligned; the `className` prop still wins via `tailwind-merge`, so call sites can override the alignment without forking the primitive.
+- Tests:
+  - Added a `Login.test.tsx` case that asserts the new backend wording "The provided multi-factor authentication code is invalid." gets localized via the existing canonical MFA-failure message in DE (`mfa-verifizierung fehlgeschlagen`).
+  - Added a second `Login.test.tsx` case that drives a failed MFA verify and asserts every one of the six `[data-slot="login-input-otp-slot"]` elements carries `aria-invalid="true"`, proving the red-border styling actually applies after a wrong code.
+- Files changed:
+  - `src/pages/Login.tsx`, `src/pages/Auth/ui/primitives.tsx`, `src/pages/Login.test.tsx`
+  - `src/locales/{en,de}/messages.po`, `src/locales/{en,de}/messages.mjs`
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: backend-error localization for an auth surface should be a `pattern → canonical Lingui msg` table; adding a new backend wording is then a one-line pattern add, not a new translation. Reuse the same canonical message when the user-visible recovery is identical.
+  - Gotchas encountered: `OTPInput` from `input-otp` accepts `aria-invalid` and renders it on the hidden text input, but the visible slot `<div>` elements are rendered by the consumer and never see it — propagate `aria-invalid` explicitly to each `LoginInputOtpSlot` so the per-slot `aria-invalid:*` classes can take effect. Equally for centered alignment: the `OTPInput`'s `containerClassName` is the flex container that holds the slots, so `justify-center` belongs there (not on the slot itself).
+  - Compatibility constraint: `LoginOtpInput`'s public API is unchanged — both `aria-invalid` forwarding and `justify-center` defaulting happen inside the wrapper. Call sites that previously passed a `className` to override alignment still win because `tailwind-merge` keeps the last-set utility.
+
 ## US-014: Login-Footer am Viewport-Rand verankern und Mobile-Hintergrundstreifen entfernen
 
 - Pinned the login legal footer to the bottom of the viewport on every breakpoint instead of letting it ride inside the `LoginShell`'s vertical-center flex stack. The footer is now `absolute bottom-4 left-1/2 w-full max-w-sm -translate-x-1/2 px-6` so it sits 1rem above the viewport edge and stays horizontally centered (with `px-6` safety padding for narrow viewports), and the credential card no longer competes with it for the centered slot — it stays perfectly mid-viewport on mobile (previously the centering was pushed up by the footer + `gap-6`).

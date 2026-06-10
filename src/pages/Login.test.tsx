@@ -1652,6 +1652,68 @@ describe("Login", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it("localizes the backend 'multi-factor authentication code is invalid' wording", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "The provided multi-factor authentication code is invalid."
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /prüfen/i }));
+
+    expect(
+      await screen.findByText(/mfa-verifizierung fehlgeschlagen/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("marks every OTP slot aria-invalid when the MFA verify fails so the red border styling applies", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "The provided multi-factor authentication code is invalid."
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await screen.findByText(
+      /mfa verification failed\. please check your code\./i
+    );
+
+    const slots = document.querySelectorAll<HTMLDivElement>(
+      '[data-slot="login-input-otp-slot"]'
+    );
+    expect(slots).toHaveLength(6);
+    slots.forEach((slot) => {
+      expect(slot).toHaveAttribute("aria-invalid", "true");
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("closes the MFA dialog when the cancel button is clicked", async () => {
     await openMfaDialog();
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));

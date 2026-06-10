@@ -23,7 +23,6 @@ import {
   getPasskeyAssertion,
   isPasskeySupported,
 } from "../services/passkeyBrowser";
-import { formatApiDateTime } from "../lib/dateUtils";
 import { Logo } from "../components/Logo";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
 import {
@@ -150,20 +149,16 @@ function getLocalizedMfaErrorMessage(
   message: string,
   translate: Translate
 ): string {
-  if (/^MFA verification failed\.?$/i.test(message)) {
+  if (
+    /^MFA verification failed\.?$/i.test(message) ||
+    /^The provided multi-factor authentication code is invalid\.?$/i.test(
+      message
+    )
+  ) {
     return translate(msg`MFA verification failed. Please check your code.`);
   }
 
   return message;
-}
-
-function formatDateTime(value: string): string {
-  return formatApiDateTime(value, {
-    formatOptions: {
-      dateStyle: "medium",
-      timeStyle: "short",
-    },
-  });
 }
 
 export function Login() {
@@ -574,11 +569,6 @@ export function Login() {
               <LoginCardTitle id="login-title">
                 <Trans id="login.title">Welcome to SecPal</Trans>
               </LoginCardTitle>
-              <LoginFieldDescription>
-                <Trans id="login.subtitle">
-                  Sign in to your operations workspace.
-                </Trans>
-              </LoginFieldDescription>
             </LoginCardHeader>
 
             {!isOnline && (
@@ -727,7 +717,7 @@ export function Login() {
             {supportsPasskeys ? (
               <>
                 <LoginFieldSeparator>
-                  <Trans id="login.separator">Or</Trans>
+                  <Trans id="login.separator">or</Trans>
                 </LoginFieldSeparator>
                 <LoginField>
                   <LoginButton
@@ -792,15 +782,6 @@ export function Login() {
         <LoginDialogBody>
           {pendingMfaChallenge && (
             <LoginForm onSubmit={handleVerifyMfa}>
-              <LoginStatusMessage variant="neutral" live="off">
-                <p>
-                  <Trans id="login.mfa.expiry">
-                    This verification step expires at{" "}
-                    {formatDateTime(pendingMfaChallenge.expires_at)}.
-                  </Trans>
-                </p>
-              </LoginStatusMessage>
-
               <div className="space-y-3">
                 <span
                   id="mfa-method-label"

@@ -1910,12 +1910,6 @@ msgid "login.mfa.description"
 msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
 
 #. js-lingui-explicit-id
-#. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx
-msgid "login.mfa.expiry"
-msgstr "Dieser Überprüfungsschritt läuft um {0} ab."
-
-#. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.method"
 msgstr "Methode zur Überprüfung"
@@ -1998,7 +1992,7 @@ msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.separator"
-msgstr "Oder"
+msgstr "oder"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2009,11 +2003,6 @@ msgstr "Einloggen"
 #: src/pages/Login.tsx
 msgid "login.submitting"
 msgstr "Einloggen..."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.subtitle"
-msgstr "Melden Sie sich in Ihrem Arbeitsbereich an."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx

@@ -1909,12 +1909,6 @@ msgid "login.mfa.description"
 msgstr "Your password was accepted. Complete MFA to finish signing in."
 
 #. js-lingui-explicit-id
-#. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx
-msgid "login.mfa.expiry"
-msgstr "This verification step expires at {0}."
-
-#. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.method"
 msgstr "Verification method"
@@ -1997,7 +1991,7 @@ msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.separator"
-msgstr "Or"
+msgstr "or"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2008,11 +2002,6 @@ msgstr "Log in"
 #: src/pages/Login.tsx
 msgid "login.submitting"
 msgstr "Logging in..."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.subtitle"
-msgstr "Sign in to your operations workspace."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx

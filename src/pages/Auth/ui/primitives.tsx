@@ -670,11 +670,15 @@ export function LoginOtpInput({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid}
-      containerClassName={className}
+      containerClassName={cn("justify-center", className)}
     >
       <LoginInputOtpGroup>
         {Array.from({ length }, (_, index) => (
-          <LoginInputOtpSlot key={`${idPrefix}-${index}`} index={index} />
+          <LoginInputOtpSlot
+            key={`${idPrefix}-${index}`}
+            index={index}
+            aria-invalid={ariaInvalid}
+          />
         ))}
       </LoginInputOtpGroup>
     </LoginInputOtp>
