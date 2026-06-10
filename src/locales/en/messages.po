@@ -771,6 +771,12 @@ msgstr "Unit"
 msgid "Customer Number"
 msgstr "Customer Number"
 
+#: src/pages/Employees/EmployeeAddressFields.test.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No results found"
+msgstr "No results found"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Enter your Bewacher ID or indicate that you do not know it."
@@ -1944,6 +1950,10 @@ msgstr "Optional"
 msgid "Sign in with passkey"
 msgstr "Sign in with passkey"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "No onboarding steps are available right now."
+msgstr "No onboarding steps are available right now."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.checkingSystem"
@@ -3021,6 +3031,10 @@ msgstr "SecPal could not unlock the encrypted offline data on this device. Sign 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Last name is required"
 msgstr "Last name is required"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding progress"
+msgstr "Onboarding progress"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Profile"

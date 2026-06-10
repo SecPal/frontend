@@ -5,7 +5,8 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   OnboardingResidentialAddressHistoryFields,
   type ResidentialAddressHistoryChange,
@@ -33,10 +34,20 @@ vi.mock("../../services/addressApi", () => ({
   fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
 }));
 
+import {
+  fetchAddressLocalitySuggestions,
+  fetchAddressStreetSuggestions,
+} from "../../services/addressApi";
+
 describe("OnboardingResidentialAddressHistoryFields", () => {
   beforeEach(() => {
     i18n.load("en", {});
     i18n.activate("en");
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("normalizes empty onboarding form data", () => {
@@ -193,6 +204,80 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
     expect(screen.getByLabelText(/house number/i)).toBeDisabled();
     expect(screen.getByLabelText(/address supplement/i)).toBeDisabled();
     expect(screen.getByRole("combobox", { name: /country/i })).toBeDisabled();
+  });
+
+  it("keeps street autocomplete working inside the onboarding address history step", async () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
+      {
+        name: "Grabstraße",
+        postal_code: "13156",
+        locality: "Berlin",
+      },
+    ]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={getResidentialAddressHistoryValue({
+            current_address: {
+              street: "Gr",
+              country: "DE",
+            },
+          })}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    const streetInput = screen.getByLabelText(/^street$/i);
+    fireEvent.focus(streetInput);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    expect(fetchAddressStreetSuggestions).toHaveBeenCalledWith({
+      name: "Gr",
+      postalCode: undefined,
+      locality: undefined,
+      limit: 8,
+    });
+
+    fireEvent.keyDown(streetInput, { key: "ArrowDown" });
+    fireEvent.keyDown(streetInput, { key: "Enter" });
+
+    const base = getResidentialAddressHistoryValue({
+      current_address: {
+        street: "Gr",
+        country: "DE",
+      },
+    });
+    const appliedChanges = onChange.mock.calls.map(([change]) =>
+      typeof change === "function" ? change(base) : change
+    );
+
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.street === "Grabstraße"
+      )
+    ).toBe(true);
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.postal_code === "13156"
+      )
+    ).toBe(true);
+    expect(
+      appliedChanges.some(
+        (nextValue) => nextValue.current_address.city === "Berlin"
+      )
+    ).toBe(true);
+
+    vi.useRealTimers();
   });
 });
 
@@ -731,5 +816,212 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     );
 
     expect(screen.getByText("Enter your Bewacher ID")).toBeInTheDocument();
+  });
+
+  it("renders current address errors and wires aria-describedby on the move-in date", () => {
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue()}
+          errors={{
+            "current_address.street": "Street is required",
+            "current_address.country": "Country must be a two-letter code",
+          }}
+          readOnly={false}
+          onChange={() => {}}
+        />
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Street is required")).toBeInTheDocument();
+    expect(
+      screen.getByText("Country must be a two-letter code")
+    ).toBeInTheDocument();
+
+    const movedIn = screen.getByLabelText(/living there since/i);
+    expect(movedIn).toBeInvalid();
+    expect(movedIn).toHaveAttribute(
+      "aria-describedby",
+      "current_address_errors"
+    );
+  });
+
+  it("clears bewacher_id and unknown flag when switching from yes to no", async () => {
+    const user = userEvent.setup();
+    let stored = buildValue({
+      has_current_bewacher_id: "yes",
+      bewacher_id: "BW-42",
+      bewacher_id_unknown: false,
+    });
+    const onChange = vi.fn((change: ResidentialAddressHistoryChange) => {
+      stored = typeof change === "function" ? change(stored) : change;
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={stored}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    await user.click(screen.getByRole("radio", { name: /^no$/i }));
+
+    expect(stored.has_current_bewacher_id).toBe("no");
+    expect(stored.bewacher_id).toBe("");
+    expect(stored.bewacher_id_unknown).toBe(false);
+  });
+
+  it("renders the coverage error when previous residences section is visible", () => {
+    const recent = localIsoDateWithDayOffset(-100);
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue({
+            has_current_bewacher_id: "no",
+            current_address: {
+              street: "A",
+              house_number: "1",
+              postal_code: "10115",
+              city: "Berlin",
+              supplement: "",
+              country: "DE",
+              resided_from: recent,
+              resided_until: "",
+            },
+            previous_addresses: [
+              {
+                street: "",
+                house_number: "",
+                postal_code: "",
+                city: "",
+                supplement: "",
+                country: "DE",
+                resided_from: "",
+                resided_until: addCalendarDaysToIsoDate(recent, -1),
+              },
+            ],
+          })}
+          errors={{
+            "previous_addresses.coverage":
+              "Complete each earlier residence to cover five years",
+          }}
+          readOnly={false}
+          onChange={() => {}}
+        />
+      </I18nProvider>
+    );
+
+    const coverageError = screen.getByText(/complete each earlier residence/i);
+    expect(coverageError).toBeInTheDocument();
+    expect(coverageError.closest("[id]")).toHaveAttribute(
+      "id",
+      "previous_addresses_coverage_error"
+    );
+  });
+
+  it("renders previous address resided_until and field errors with stable ids", () => {
+    const recent = localIsoDateWithDayOffset(-100);
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue({
+            has_current_bewacher_id: "no",
+            current_address: {
+              street: "A",
+              house_number: "1",
+              postal_code: "10115",
+              city: "Berlin",
+              supplement: "",
+              country: "DE",
+              resided_from: recent,
+              resided_until: "",
+            },
+            previous_addresses: [
+              {
+                street: "Old",
+                house_number: "2",
+                postal_code: "20095",
+                city: "Hamburg",
+                supplement: "",
+                country: "DE",
+                resided_from: "2020-01-01",
+                resided_until: "2019-12-31",
+              },
+            ],
+          })}
+          errors={{
+            "previous_addresses.0.resided_until":
+              "End date must be on or after the start date",
+            "previous_addresses.0.street": "Street is required",
+          }}
+          readOnly={false}
+          onChange={() => {}}
+        />
+      </I18nProvider>
+    );
+
+    const residedUntil = screen.getByLabelText(/resided until/i);
+    expect(residedUntil).toBeInvalid();
+    expect(residedUntil).toHaveAttribute(
+      "aria-describedby",
+      "previous_address_0_resided_until_error"
+    );
+    expect(
+      screen.getByText(/end date must be on or after the start date/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/street is required/i)).toBeInTheDocument();
+  });
+
+  it("calls onChange with the updated street when a previous address street changes", () => {
+    const recent = localIsoDateWithDayOffset(-100);
+    const onChange = vi.fn();
+    const initialValue = buildValue({
+      has_current_bewacher_id: "no",
+      current_address: {
+        street: "A",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        supplement: "",
+        country: "DE",
+        resided_from: recent,
+        resided_until: "",
+      },
+      previous_addresses: [
+        {
+          street: "Old",
+          house_number: "2",
+          postal_code: "20095",
+          city: "Hamburg",
+          supplement: "",
+          country: "DE",
+          resided_from: "",
+          resided_until: addCalendarDaysToIsoDate(recent, -1),
+        },
+      ],
+    });
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={initialValue}
+          errors={{}}
+          readOnly={false}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    const streetInputs = screen.getAllByLabelText(/^street$/i);
+    fireEvent.change(streetInputs[1]!, { target: { value: "New Street" } });
+
+    expect(onChange).toHaveBeenCalled();
+    const lastArg = onChange.mock.calls[onChange.mock.calls.length - 1]![0];
+    const applied =
+      typeof lastArg === "function" ? lastArg(initialValue) : lastArg;
+    expect(applied.previous_addresses[0]!.street).toBe("New Street");
   });
 });

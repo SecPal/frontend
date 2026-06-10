@@ -178,10 +178,17 @@ async function selectNationality(
     return;
   }
 
-  const nationalityInput = nationalityControl as HTMLInputElement;
-  await user.click(nationalityInput);
-  await user.clear(nationalityInput);
-  await user.type(nationalityInput, query);
+  await user.click(nationalityControl);
+
+  if (nationalityControl instanceof HTMLInputElement) {
+    await user.clear(nationalityControl);
+    await user.type(nationalityControl, query);
+  } else {
+    const searchbox = await screen.findByRole("searchbox");
+    await user.clear(searchbox);
+    await user.type(searchbox, query);
+  }
+
   await user.keyboard("{ArrowDown}{Enter}");
 }
 
@@ -1866,26 +1873,105 @@ describe("OnboardingWizard", () => {
     fireEvent.blur(expiryInput);
     await setEmploymentPermitted(user, "yes");
 
-    expect(
-      await screen.findByRole("radiogroup", {
-        name: /would you like to upload your residence title now\?/i,
-      })
-    ).toBeInTheDocument();
+    const residenceTitleUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your residence title now\?/i,
+    });
+    expect(residenceTitleUploadGroup).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /submit for review/i })
     );
 
-    expect(
-      await screen.findByText(
-        /please choose whether you want to upload your residence title now/i
-      )
-    ).toBeInTheDocument();
+    const residenceTitleUploadError = await screen.findByText(
+      /please choose whether you want to upload your residence title now/i
+    );
+    expect(residenceTitleUploadError).toBeInTheDocument();
+
+    // The radiogroup must be marked invalid and reference the error so
+    // assistive technologies can announce the failure in context.
+    expect(residenceTitleUploadGroup).toBeInvalid();
+    const residenceTitleUploadErrorId =
+      residenceTitleUploadError.getAttribute("id");
+    expect(residenceTitleUploadErrorId).toBeTruthy();
+    expect(residenceTitleUploadGroup).toHaveAttribute(
+      "aria-describedby",
+      residenceTitleUploadErrorId!
+    );
+
     expect(
       onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ status: "submitted" })
+    );
+  });
+
+  it("marks the employment-permitted radiogroup invalid and connects it to the error when employment is denied", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: { type: "string", enum: ["TR"] },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+
+    await user.selectOptions(
+      screen.getByLabelText(/residence title type/i),
+      "Aufenthaltserlaubnis"
+    );
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+    await setEmploymentPermitted(user, "no");
+
+    const employmentGroup = screen.getByRole("radiogroup", {
+      name: /employment permitted/i,
+    });
+    const employmentError = await screen.findByText(
+      /a valid residence title without employment authorization/i
+    );
+    expect(employmentError).toBeInTheDocument();
+
+    expect(employmentGroup).toBeInvalid();
+    const employmentErrorId = employmentError.getAttribute("id");
+    expect(employmentErrorId).toBeTruthy();
+    expect(employmentGroup).toHaveAttribute(
+      "aria-describedby",
+      employmentErrorId!
     );
   });
 
@@ -2184,11 +2270,24 @@ describe("OnboardingWizard", () => {
       screen.getByRole("button", { name: /submit for review/i })
     );
 
-    expect(
-      await screen.findByText(
-        /please choose whether you want to upload your identity document now/i
-      )
-    ).toBeInTheDocument();
+    const identityUploadError = await screen.findByText(
+      /please choose whether you want to upload your identity document now/i
+    );
+    expect(identityUploadError).toBeInTheDocument();
+
+    // The radiogroup must be marked invalid and reference the error so
+    // assistive technologies can announce the failure in context.
+    const identityUploadGroup = screen.getByRole("radiogroup", {
+      name: /would you like to upload your identity document now\?/i,
+    });
+    expect(identityUploadGroup).toBeInvalid();
+    const identityErrorId = identityUploadError.getAttribute("id");
+    expect(identityErrorId).toBeTruthy();
+    expect(identityUploadGroup).toHaveAttribute(
+      "aria-describedby",
+      identityErrorId!
+    );
+
     expect(
       onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalled();
@@ -3515,5 +3614,98 @@ describe("OnboardingWizard skip step behavior", () => {
     expect(
       onboardingApiMocks.updateOnboardingSubmission
     ).not.toHaveBeenCalled();
+  });
+});
+
+describe("OnboardingWizard initial loading and error states", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+  });
+
+  it("announces the initial loading state on the inner CardContent (not the outer Card)", () => {
+    let resolveSteps: (value: unknown[]) => void = () => {};
+    onboardingApiMocks.fetchOnboardingSteps.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSteps = resolve as (value: unknown[]) => void;
+        })
+    );
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+
+    renderWithProviders();
+
+    const loadingRegion = screen.getByRole("status");
+    expect(loadingRegion).toHaveTextContent(/loading onboarding/i);
+    expect(loadingRegion).toHaveAttribute("aria-live", "polite");
+    // The role/aria-live must live on the inner CardContent, not the outer Card,
+    // so a region landmark is not promoted on the surrounding container.
+    expect(loadingRegion.tagName.toLowerCase()).toBe("div");
+
+    resolveSteps([]);
+  });
+
+  it("focuses the top-level error alert when steps fail to load", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockRejectedValueOnce(
+      new ApiError("Server error", 500)
+    );
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+
+    renderWithProviders();
+
+    const errorAlert = await screen.findByRole("alert");
+    expect(errorAlert).toBeInTheDocument();
+    await waitFor(() => expect(errorAlert).toHaveFocus());
+  });
+
+  it("focuses the feedback error alert when a save-draft submission fails (uses feedbackErrorRef)", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-bank",
+      name: "Bank Account Details",
+      title: "Bank Account Details",
+      description: "Bank info",
+      form_schema: {
+        type: "object",
+        required: [],
+        properties: {
+          iban: { type: "string", title: "IBAN" },
+        },
+      },
+      is_required: false,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("Backend was unreachable", 500)
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE123");
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    const errorAlert = await screen.findByRole("alert");
+    expect(errorAlert).toBeInTheDocument();
+    await waitFor(() => expect(errorAlert).toHaveFocus());
   });
 });

@@ -126,10 +126,17 @@ async function selectNationality(
     return;
   }
 
-  const nationalityInput = nationalityControl as HTMLInputElement;
-  await user.click(nationalityInput);
-  await user.clear(nationalityInput);
-  await user.type(nationalityInput, query);
+  await user.click(nationalityControl);
+
+  if (nationalityControl instanceof HTMLInputElement) {
+    await user.clear(nationalityControl);
+    await user.type(nationalityControl, query);
+  } else {
+    const searchbox = await screen.findByRole("searchbox");
+    await user.clear(searchbox);
+    await user.type(searchbox, query);
+  }
+
   await user.keyboard("{ArrowDown}{Enter}");
 }
 
@@ -332,6 +339,45 @@ describe("OnboardingWizard", () => {
     );
   });
 
+  it("renders the initial loading wrapper as a status region", () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockReturnValue(
+      new Promise(() => {})
+    );
+
+    renderWizard();
+
+    expect(screen.getByRole("status")).toHaveTextContent(/loading onboarding/i);
+  });
+
+  it("renders the initial loading failure in an alert wrapper", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockRejectedValueOnce(
+      new Error("Network unavailable")
+    );
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /failed to load onboarding steps/i
+      );
+    });
+  });
+
+  it("renders an empty-state wrapper when no onboarding steps are available", async () => {
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValueOnce([]);
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no onboarding steps are available right now/i)
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText("Welcome to SecPal Onboarding")
+    ).not.toBeInTheDocument();
+  });
+
   it("loads the current runtime templates and advances after saving the active template draft", async () => {
     renderWizard();
 
@@ -354,6 +400,29 @@ describe("OnboardingWizard", () => {
     await waitFor(() => {
       expect(screen.getByText("Tax Details")).toBeInTheDocument();
     });
+  });
+
+  it("renders shadcn wizard chrome for progress, step overview, and navigation", async () => {
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("progressbar", { name: /onboarding progress/i })
+    ).toHaveAttribute("aria-valuenow", "50");
+    expect(
+      screen.getByRole("region", { name: /required information/i })
+    ).toHaveTextContent("Step 1: Personal Information");
+    expect(
+      screen.getByRole("region", { name: /optional sections/i })
+    ).toHaveTextContent("Step 2: Tax Details");
+    expect(
+      screen.getByRole("navigation", {
+        name: /onboarding step navigation/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows onboarding-required entry feedback only on the first step", async () => {
@@ -447,6 +516,106 @@ describe("OnboardingWizard", () => {
     expect(screen.getByText("Personal Information")).toBeInTheDocument();
     expect(screen.queryByText("Tax Details")).not.toBeInTheDocument();
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
+  });
+
+  it("renders standard schema fields with migrated controls and saves their values", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(onboardingApi.fetchOnboardingSteps).mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Standard Fields",
+        description: "Standard Fields description",
+        template_id: "template-standard",
+        is_required: true,
+        is_completed: false,
+        submission: makeSubmission("template-standard", {}),
+      },
+    ]);
+
+    vi.mocked(onboardingApi.fetchOnboardingTemplate)
+      .mockReset()
+      .mockResolvedValue(
+        makeTemplate(
+          "template-standard",
+          "Standard Fields",
+          "Standard Fields description",
+          {
+            type: "object",
+            required: [
+              "legal_name",
+              "age",
+              "confirmed",
+              "gender",
+              "languages",
+              "activities",
+            ],
+            properties: {
+              legal_name: { type: "string", title: "Legal Name" },
+              age: { type: "integer", title: "Age" },
+              confirmed: { type: "boolean", title: "Confirmed" },
+              gender: {
+                type: "string",
+                title: "Gender",
+                enum: ["female", "male"],
+                enumNames: ["Female", "Male"],
+              },
+              languages: {
+                type: "array",
+                title: "Languages",
+                items: {
+                  type: "string",
+                  enum: ["de", "en"],
+                  enumNames: ["German", "English"],
+                },
+              },
+              activities: { type: "array", title: "Activities" },
+            },
+          }
+        )
+      );
+
+    renderWizard();
+
+    await user.type(await screen.findByLabelText("Legal Name"), "Jane Doe");
+    await user.type(screen.getByLabelText("Age"), "32");
+    await user.click(screen.getByLabelText("Confirmed"));
+    await user.selectOptions(screen.getByLabelText("Gender"), "female");
+    await user.click(screen.getByLabelText("German"));
+    fireEvent.change(screen.getByLabelText("Activities"), {
+      target: { value: "Patrol\nGate" },
+    });
+
+    expect(screen.getByLabelText("Legal Name")).toHaveAttribute(
+      "id",
+      "onboarding-field-legal_name"
+    );
+    expect(screen.getByLabelText("Age")).toHaveAttribute(
+      "id",
+      "onboarding-field-age"
+    );
+    expect(screen.getByLabelText("Activities")).not.toHaveAttribute(
+      "aria-invalid"
+    );
+
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    await waitFor(() => {
+      expect(onboardingApi.updateOnboardingSubmission).toHaveBeenCalledWith(
+        "submission-template-standard",
+        {
+          form_data: {
+            legal_name: "Jane Doe",
+            age: 32,
+            confirmed: true,
+            gender: "female",
+            languages: ["de"],
+            activities: ["Patrol", "Gate"],
+          },
+          status: "draft",
+        }
+      );
+    });
   });
 
   it("shows inline success feedback when saving the current step as draft", async () => {
@@ -2097,12 +2266,7 @@ describe("OnboardingWizard", () => {
 
     expect(onboardingApi.updateOnboardingSubmission).not.toHaveBeenCalled();
 
-    const nationalityInput =
-      screen.getByLabelText<HTMLInputElement>(/^nationalities$/i);
-    await user.click(nationalityInput);
-    await user.clear(nationalityInput);
-    await user.type(nationalityInput, "ger");
-    await user.keyboard("{ArrowDown}{Enter}");
+    await selectNationality(user, "ger");
 
     await waitFor(() => {
       expect(

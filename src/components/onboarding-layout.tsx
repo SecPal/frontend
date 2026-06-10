@@ -4,11 +4,10 @@
 import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import type React from "react";
-import { AuthLayout } from "./auth-layout";
-import { Button } from "./button";
 import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
+import { Button } from "../pages/Onboarding/ui";
 
 export const LOGOUT_TIMEOUT_MS = 8000;
 
@@ -49,14 +48,16 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthLayout>
-      <div className="flex items-center justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
-        <Logo size="32" />
-        <Button outline onClick={() => void handleLogout()}>
-          <Trans>Sign out</Trans>
-        </Button>
+    <main className="flex min-h-svh flex-col bg-white p-4 dark:bg-zinc-900 lg:items-center lg:justify-center lg:bg-zinc-50 lg:p-8 dark:lg:bg-zinc-950">
+      <div className="flex w-full max-w-4xl flex-1 flex-col lg:flex-none">
+        <header className="flex items-center justify-between gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
+          <Logo size="32" />
+          <Button variant="outline" onClick={() => void handleLogout()}>
+            <Trans>Sign out</Trans>
+          </Button>
+        </header>
+        <div className="pt-8">{children}</div>
       </div>
-      <div className="pt-8">{children}</div>
-    </AuthLayout>
+    </main>
   );
 }

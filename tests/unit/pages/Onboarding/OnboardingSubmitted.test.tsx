@@ -23,6 +23,9 @@ describe("OnboardingSubmitted", () => {
     expect(
       screen.getByRole("heading", { name: /you're all set/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /you're all set/i })
+    ).toBeInTheDocument();
   });
 
   it("renders the HR review pending message", () => {

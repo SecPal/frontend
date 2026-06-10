@@ -8,7 +8,7 @@
 
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -375,6 +375,34 @@ async function fillTextareas(page: Page): Promise<void> {
   }
 }
 
+async function searchComboboxOption(
+  page: Page,
+  box: Locator,
+  term: string,
+  optionPattern: RegExp
+): Promise<boolean> {
+  await box.click();
+
+  const searchbox = page.getByRole("searchbox").last();
+  const hasSearchbox = await searchbox.isVisible().catch(() => false);
+  const target = hasSearchbox ? searchbox : box;
+
+  await target.fill("").catch(() => undefined);
+  await target.fill(term);
+
+  const opt = page.getByRole("option", { name: optionPattern }).first();
+  try {
+    await opt.waitFor({ state: "visible", timeout: 15_000 });
+    await opt.click();
+    return true;
+  } catch {
+    await page.keyboard.press("ArrowDown").catch(() => undefined);
+    await page.keyboard.press("Enter").catch(() => undefined);
+    const after = await target.inputValue().catch(() => "");
+    return after.trim().length > 0;
+  }
+}
+
 async function fillComboboxes(page: Page): Promise<void> {
   const combos = page.getByRole("combobox");
   const n = await combos.count();
@@ -430,23 +458,9 @@ async function fillComboboxes(page: Page): Promise<void> {
 
     let filled = false;
     for (const term of searchTerms) {
-      await box.click();
-      await box.fill("");
-      await box.fill(term);
-      const opt = page.getByRole("option", { name: optionPattern }).first();
-      try {
-        await opt.waitFor({ state: "visible", timeout: 15_000 });
-        await opt.click();
+      if (await searchComboboxOption(page, box, term, optionPattern)) {
         filled = true;
         break;
-      } catch {
-        await page.keyboard.press("ArrowDown").catch(() => undefined);
-        await page.keyboard.press("Enter").catch(() => undefined);
-        const after = await box.inputValue().catch(() => "");
-        if (after.trim().length > 0) {
-          filled = true;
-          break;
-        }
       }
     }
 
@@ -506,24 +520,15 @@ async function ensureNationalityComboboxFilled(page: Page): Promise<void> {
     return;
   }
   for (const term of ["Germany", "Deutschland", "DE"]) {
-    await target.click();
-    await target.fill("");
-    await target.fill(term);
-    const opt = page
-      .getByRole("option", { name: /Deutschland|\(DE\)|Germany/i })
-      .first();
-    try {
-      await opt.waitFor({ state: "visible", timeout: 15_000 });
-      await opt.click();
+    if (
+      await searchComboboxOption(
+        page,
+        target,
+        term,
+        /Deutschland|\(DE\)|Germany/i
+      )
+    ) {
       return;
-    } catch {
-      await page.keyboard.press("ArrowDown").catch(() => undefined);
-      await page.keyboard.press("Enter").catch(() => undefined);
-      if (
-        ((await target.inputValue().catch(() => "")) ?? "").trim().length > 0
-      ) {
-        return;
-      }
     }
   }
 }

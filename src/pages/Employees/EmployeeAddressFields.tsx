@@ -14,18 +14,14 @@ import {
   type KeyboardEvent,
 } from "react";
 import {
-  Combobox,
-  ComboboxDescription,
-  ComboboxLabel,
-  ComboboxOption,
-} from "../../components/combobox";
-import {
-  Description,
-  ErrorMessage,
   Field,
-  Label,
-} from "../../components/fieldset";
-import { Input } from "../../components/input";
+  FieldDescription as Description,
+  FieldError as ErrorMessage,
+  FieldLabel as Label,
+  Input,
+  CommandPopover,
+  type CommandOption,
+} from "../Onboarding/ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import {
   getCountrySelectOptions,
@@ -98,6 +94,15 @@ export function EmployeeAddressFields({
   const countryOptions = useMemo(
     () => getCountrySelectOptions(i18n.locale),
     [i18n.locale]
+  );
+  const countryCommandOptions = useMemo<CommandOption[]>(
+    () =>
+      countryOptions.map((option) => ({
+        value: option.code,
+        label: option.label,
+        keywords: [option.code],
+      })),
+    [countryOptions]
   );
 
   const selectedCountryOption = useMemo((): CountrySelectOption | null => {
@@ -843,41 +848,22 @@ export function EmployeeAddressFields({
       </Field>
 
       <Field>
-        <Label>
-          <Trans>Country</Trans>
-        </Label>
-        <Combobox
-          aria-label={i18n._(msg`Country`)}
+        <input
+          type="hidden"
           name={fieldName("country")}
+          value={selectedCountryOption?.code ?? ""}
           disabled={readOnly}
-          by={(a, z) => a?.code === z?.code}
-          options={countryOptions}
+        />
+        <CommandPopover
+          label={i18n._(msg`Country`)}
+          options={countryCommandOptions}
+          value={selectedCountryOption?.code}
           placeholder={i18n._(msg`Search or select country`)}
-          value={selectedCountryOption}
-          displayValue={(option) => option?.label ?? ""}
-          filter={(option, query) => {
-            if (!option) {
-              return false;
-            }
-
-            const q = query.trim().toLowerCase();
-            if (!q) {
-              return true;
-            }
-            return (
-              option.label.toLowerCase().includes(q) ||
-              option.code.toLowerCase().includes(q)
-            );
-          }}
-          onChange={(option) => onChange("country", option?.code ?? "")}
-        >
-          {(option) => (
-            <ComboboxOption key={option.code} value={option}>
-              <ComboboxLabel>{option.label}</ComboboxLabel>
-              <ComboboxDescription>{option.code}</ComboboxDescription>
-            </ComboboxOption>
-          )}
-        </Combobox>
+          searchPlaceholder={i18n._(msg`Search or select country`)}
+          emptyMessage={i18n._(msg`No results found`)}
+          disabled={readOnly}
+          onValueChange={(countryCode) => onChange("country", countryCode)}
+        />
       </Field>
     </>
   );

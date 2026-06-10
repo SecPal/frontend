@@ -563,7 +563,7 @@ describe("OnboardingComplete", () => {
     });
   });
 
-  it("sets emailVerified from API when email_verified is omitted (legacy response)", async () => {
+  it("defaults emailVerified to false when email_verified is omitted (fail closed)", async () => {
     const mockResponse = {
       message: "Onboarding completed successfully",
       data: {
@@ -593,7 +593,7 @@ describe("OnboardingComplete", () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith(
-        expect.objectContaining({ emailVerified: true })
+        expect.objectContaining({ emailVerified: false })
       );
     });
   });

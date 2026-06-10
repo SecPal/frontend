@@ -3,6 +3,9 @@
 
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { act } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
@@ -22,7 +25,8 @@ import {
 describe("EmployeeAddressFields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    i18n.load("en", {});
+    i18n.load("en", enMessages);
+    i18n.load("de", deMessages);
     i18n.activate("en");
     vi.useFakeTimers();
   });
@@ -702,7 +706,7 @@ describe("EmployeeAddressFields", () => {
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
     vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
 
-    render(
+    const { container } = render(
       <I18nProvider i18n={i18n}>
         <EmployeeAddressFields
           draft={{
@@ -724,6 +728,15 @@ describe("EmployeeAddressFields", () => {
     expect(screen.getByLabelText(/^city$/i)).toBeDisabled();
     expect(screen.getByLabelText(/house number/i)).toBeDisabled();
     expect(screen.getByLabelText(/supplement/i)).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: /country/i })).toBeDisabled();
+    // The hidden country input must also be disabled in read-only mode so
+    // its value is excluded from FormData serialization, matching the
+    // behavior of the visible disabled controls.
+    const hiddenCountryInput = container.querySelector<HTMLInputElement>(
+      "input[type='hidden'][name='address_country']"
+    );
+    expect(hiddenCountryInput).not.toBeNull();
+    expect(hiddenCountryInput).toBeDisabled();
   });
 
   it("shows no suggestions and empty state after clearing street below 2 chars", async () => {
@@ -1083,6 +1096,66 @@ describe("EmployeeAddressFields", () => {
     expect(
       screen.getByRole("combobox", { name: /country/i })
     ).toBeInTheDocument();
+  });
+
+  it("calls onChange with the selected country code when a country is picked", async () => {
+    vi.useRealTimers();
+    const user = (await import("@testing-library/user-event")).default.setup();
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /country/i }));
+    await user.type(screen.getByRole("searchbox"), "FR");
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith("country", "FR");
+  });
+
+  it("renders the localized empty state when no countries match the search", async () => {
+    vi.useRealTimers();
+    i18n.activate("de");
+    const user = (await import("@testing-library/user-event")).default.setup();
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /land/i }));
+    await user.type(screen.getByRole("searchbox"), "zzzzzz");
+
+    expect(screen.getByText(i18n._(msg`No results found`))).toBeInTheDocument();
   });
 
   it("shows empty state for no locality suggestions found", async () => {
