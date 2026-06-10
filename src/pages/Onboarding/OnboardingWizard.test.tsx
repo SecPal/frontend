@@ -3554,7 +3554,7 @@ describe("OnboardingWizard initial loading and error states", () => {
     resolveSteps([]);
   });
 
-  it("renders a top-level error alert (without focusing through feedbackErrorRef) when steps fail to load", async () => {
+  it("focuses the top-level error alert when steps fail to load", async () => {
     onboardingApiMocks.fetchOnboardingSteps.mockRejectedValueOnce(
       new ApiError("Server error", 500)
     );
@@ -3562,7 +3562,9 @@ describe("OnboardingWizard initial loading and error states", () => {
 
     renderWithProviders();
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    const errorAlert = await screen.findByRole("alert");
+    expect(errorAlert).toBeInTheDocument();
+    await waitFor(() => expect(errorAlert).toHaveFocus());
   });
 
   it("focuses the feedback error alert when a save-draft submission fails (uses feedbackErrorRef)", async () => {

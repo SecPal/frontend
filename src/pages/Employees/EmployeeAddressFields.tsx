@@ -859,6 +859,7 @@ export function EmployeeAddressFields({
           value={selectedCountryOption?.code}
           placeholder={i18n._(msg`Search or select country`)}
           searchPlaceholder={i18n._(msg`Search or select country`)}
+          emptyMessage={i18n._(msg`No results found`)}
           disabled={readOnly}
           onValueChange={(countryCode) => onChange("country", countryCode)}
         />

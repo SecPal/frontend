@@ -3399,7 +3399,13 @@ export function OnboardingWizard() {
     return (
       <div>
         {entryFeedbackBanner}
-        <Alert className="border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30">
+        <Alert
+          ref={onboardingErrorRef}
+          tabIndex={-1}
+          role="alert"
+          aria-live="assertive"
+          className="border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+        >
           <AlertDescription className="text-red-800 dark:text-red-200">
             {error}
           </AlertDescription>
