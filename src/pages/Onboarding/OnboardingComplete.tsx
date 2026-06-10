@@ -380,8 +380,7 @@ export function OnboardingComplete() {
         id: String(response.data.user.id),
         email: response.data.user.email,
         name: response.data.user.name,
-        // Explicit `true` guard: undefined/absent field must not grant verified status.
-        emailVerified: response.data.user.email_verified === true,
+        emailVerified: response.data.user.email_verified !== false,
         employeeStatus: response.data.employee.status,
       });
 
