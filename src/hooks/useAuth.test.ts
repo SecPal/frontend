@@ -586,7 +586,7 @@ describe("useAuth", () => {
     await waitForSensitiveClientCleanup();
   });
 
-  it("keeps cached auth state when bootstrap revalidation fails for a transient error", async () => {
+  it("keeps cached auth state when bootstrap revalidation fails for a transient error after an automatic retry", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -610,6 +610,7 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBe("network");
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
@@ -693,7 +694,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("stops blocking protected routes when bootstrap revalidation exceeds the startup deadline", async () => {
+  it("stops blocking protected routes when bootstrap revalidation exceeds the startup deadline after an automatic retry", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -720,7 +721,46 @@ describe("useAuth", () => {
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
+  });
+
+  it("grants a fresh silent retry for each manual retryBootstrap cycle after the recovery UI was shown", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const deferred = createDeferredPromise<typeof mockUser>();
+
+    await persistAuthUser(mockUser);
+    // All attempts stall so each cycle hits the timeout twice (auto-retry + final timeout).
+    mockGetCurrentUser.mockImplementation(() => deferred.promise);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    // Wait for the first recovery UI to appear (two timeout cycles: initial + auto-retry).
+    await waitFor(() => {
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
+
+    // User clicks Retry — this should reset the silent-retry flag and issue a
+    // third call, then a fourth (auto-retry), before showing recovery again.
+    act(() => {
+      result.current.retryBootstrap();
+    });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+    await waitFor(() => {
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(4);
+    }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
   });
 
   it("keeps stored auth when offline without revalidation", async () => {

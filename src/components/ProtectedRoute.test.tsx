@@ -279,8 +279,12 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("shows a retry recovery state instead of spinning forever when bootstrap stalls", async () => {
-    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+  it("retries bootstrap recovery automatically before showing the recovery state", async () => {
+    const stalledBootstrap = new Promise(() => undefined);
+
+    mockGetCurrentUser
+      .mockReturnValueOnce(stalledBootstrap)
+      .mockReturnValueOnce(stalledBootstrap);
 
     await persistAuthUser({
       id: 1,
@@ -291,11 +295,13 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+
     expect(
       await screen.findByRole(
         "heading",
         { name: /still loading your secure session/i },
-        { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000 }
+        { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000 }
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
@@ -304,12 +310,48 @@ describe("ProtectedRoute", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps bootstrap recovery hidden when the automatic retry succeeds", async () => {
+    mockGetCurrentUser
+      .mockReturnValueOnce(new Promise(() => undefined))
+      .mockResolvedValueOnce({
+        id: 1,
+        name: "Recovered User",
+        email: "recovered@secpal.dev",
+        emailVerified: true,
+      });
+
+    await persistAuthUser({
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
+
+    renderProtectedRoute();
+
+    await waitFor(
+      () => {
+        expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      },
+      BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000
+    );
+
+    expect(
+      screen.queryByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).not.toBeInTheDocument();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
   });
 
   it("retries bootstrap recovery when the user requests it", async () => {
     const pendingBootstrap = new Promise(() => undefined);
 
     mockGetCurrentUser
+      .mockReturnValueOnce(pendingBootstrap)
       .mockReturnValueOnce(pendingBootstrap)
       .mockResolvedValueOnce({
         id: 1,
@@ -330,7 +372,7 @@ describe("ProtectedRoute", () => {
     await screen.findByRole(
       "button",
       { name: /retry/i },
-      { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000 }
+      { timeout: BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000 }
     );
 
     await act(async () => {
@@ -340,7 +382,7 @@ describe("ProtectedRoute", () => {
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
     });
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
