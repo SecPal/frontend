@@ -524,6 +524,33 @@ describe("Login", () => {
     }
   });
 
+  it("localizes the short invalid-credentials backend message with the active locale", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockRejectedValue(new authApi.AuthApiError("Invalid credentials"));
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    renderLogin();
+
+    fireEvent.change(await screen.findByLabelText(/e-mail-adresse/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/passwort/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /einloggen/i }));
+
+    expect(
+      await screen.findByText(/die angegebenen zugangsdaten sind falsch/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
+  });
+
   it("shows a localized message for interrupted native passkey flows", async () => {
     const authGlobal = globalThis as {
       SecPalNativeAuthBridge?: {
@@ -1449,6 +1476,34 @@ describe("Login", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it("localizes known MFA verification failures with the active locale", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError("MFA verification failed")
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /prüfen/i }));
+
+    expect(
+      await screen.findByText(/mfa-verifizierung fehlgeschlagen/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
+    consoleErrorSpy.mockRestore();
+  });
+
   it("closes the MFA dialog when the cancel button is clicked", async () => {
     await openMfaDialog();
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
@@ -2004,7 +2059,9 @@ describe("Login", () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/provided credentials are incorrect/i)
+        ).toBeInTheDocument();
       });
 
       // Check localStorage has recorded the attempt

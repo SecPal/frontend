@@ -747,6 +747,10 @@ msgstr "Failed to load employee"
 msgid "Delete Site"
 msgstr "Delete Site"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an unsupported login mode."
+msgstr "The passkey sign-in completed with an unsupported login mode."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your current answers will be saved as a draft before the first file upload."
 msgstr "Your current answers will be saved as a draft before the first file upload."
@@ -754,6 +758,10 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "This field"
+
+#: src/pages/Login.tsx
+msgid "Login form"
+msgstr "Login form"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -836,6 +844,10 @@ msgstr "You'll now receive important updates from SecPal"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
+
+#: src/pages/Login.tsx
+msgid "Failed to change language. Please try again."
+msgstr "Failed to change language. Please try again."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -1340,6 +1352,12 @@ msgstr "Employees"
 msgid "Passkey sign-in timed out. Please try again."
 msgstr "Passkey sign-in timed out. Please try again."
 
+#: src/pages/Login.tsx
+msgid "An unexpected MFA verification error occurred. Please try logging in "
+"again."
+msgstr "An unexpected MFA verification error occurred. Please try logging in "
+"again."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
@@ -1351,6 +1369,10 @@ msgstr "Bewacher ID"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Requested"
 msgstr "Invitation Requested"
+
+#: src/pages/Login.tsx
+msgid "MFA verification failed. Please check your code."
+msgstr "MFA verification failed. Please check your code."
 
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Close detail panel"
@@ -1656,6 +1678,10 @@ msgstr "Authenticator app QR code"
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
+
+#: src/pages/Login.tsx
+msgid "Select language"
+msgstr "Select language"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
@@ -2062,6 +2088,10 @@ msgstr "Too many requests. Please try again later."
 msgid "I have verified my email"
 msgstr "I have verified my email"
 
+#: src/pages/Login.tsx
+msgid "An unexpected error occurred. Please try again or contact support."
+msgstr "An unexpected error occurred. Please try again or contact support."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2442,6 +2472,10 @@ msgstr "Move"
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Status"
 msgstr "All Status"
+
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an unsupported login mode."
+msgstr "The MFA challenge completed with an unsupported login mode."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Search in descriptions..."
@@ -2990,6 +3024,10 @@ msgstr "Please review the highlighted fields and try again."
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an invalid user payload."
+msgstr "The passkey sign-in completed with an invalid user payload."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Save Draft"
 msgstr "Save Draft"
@@ -3082,6 +3120,10 @@ msgstr "Missing token and email. Please use the link from your email."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading documents..."
 msgstr "Loading documents..."
+
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an invalid user payload."
+msgstr "The MFA challenge completed with an invalid user payload."
 
 #: src/components/RouteGuardState.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx

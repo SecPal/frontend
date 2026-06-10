@@ -747,6 +747,11 @@ msgstr "Mitarbeiter konnte nicht geladen werden"
 msgid "Delete Site"
 msgstr "Standort löschen"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an unsupported login mode."
+msgstr "Die Passkey-Anmeldung wurde mit einem nicht unterstützten Anmeldemodus "
+"abgeschlossen."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your current answers will be saved as a draft before the first file upload."
 msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf gespeichert."
@@ -754,6 +759,10 @@ msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf g
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "Dieses Feld"
+
+#: src/pages/Login.tsx
+msgid "Login form"
+msgstr "Anmeldeformular"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -836,6 +845,10 @@ msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
+
+#: src/pages/Login.tsx
+msgid "Failed to change language. Please try again."
+msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -1340,6 +1353,12 @@ msgstr "Mitarbeiter"
 msgid "Passkey sign-in timed out. Please try again."
 msgstr "Die Passkey-Anmeldung hat das Zeitlimit überschritten. Bitte versuchen Sie es erneut."
 
+#: src/pages/Login.tsx
+msgid "An unexpected MFA verification error occurred. Please try logging in "
+"again."
+msgstr "Bei der MFA-Verifizierung ist ein unerwarteter Fehler aufgetreten. "
+"Bitte melden Sie sich erneut an."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
 msgstr "Ungültiges Datum. Bitte verwenden Sie das Format {format}"
@@ -1351,6 +1370,10 @@ msgstr "Bewacher-ID"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Requested"
 msgstr "Einladung angefordert"
+
+#: src/pages/Login.tsx
+msgid "MFA verification failed. Please check your code."
+msgstr "MFA-Verifizierung fehlgeschlagen. Bitte prüfen Sie Ihren Code."
 
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Close detail panel"
@@ -1656,6 +1679,10 @@ msgstr "QR-Code der Authenticator-App"
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
+
+#: src/pages/Login.tsx
+msgid "Select language"
+msgstr "Sprache auswählen"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
@@ -2062,6 +2089,11 @@ msgstr "Zu viele Anfragen. Bitte versuchen Sie es spaeter erneut."
 msgid "I have verified my email"
 msgstr "Ich habe meine E-Mail verifiziert"
 
+#: src/pages/Login.tsx
+msgid "An unexpected error occurred. Please try again or contact support."
+msgstr "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut "
+"oder kontaktieren Sie den Support."
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2442,6 +2474,11 @@ msgstr "Verschieben"
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Status"
 msgstr "Alle Status"
+
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an unsupported login mode."
+msgstr "Die MFA-Abfrage wurde mit einem nicht unterstützten Anmeldemodus "
+"abgeschlossen."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Search in descriptions..."
@@ -2990,6 +3027,10 @@ msgstr "Bitte pruefen Sie die markierten Felder und versuchen Sie es erneut."
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder leer für Nicht-Führungskräfte). Bereich: 0-255"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an invalid user payload."
+msgstr "Die Passkey-Anmeldung wurde mit ungültigen Benutzerdaten abgeschlossen."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Save Draft"
 msgstr "Entwurf speichern"
@@ -3082,6 +3123,10 @@ msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading documents..."
 msgstr "Dokumente laden..."
+
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an invalid user payload."
+msgstr "Die MFA-Abfrage wurde mit ungültigen Benutzerdaten abgeschlossen."
 
 #: src/components/RouteGuardState.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx

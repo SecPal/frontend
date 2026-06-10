@@ -17,6 +17,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
 - Login secondary auth actions should keep their provider-specific button identity visible in the shadcn composition while preserving the same accessible names used by browser and native passkey flow tests.
 - Login MFA surfaces should render TOTP through auth-local `LoginOtpInput` with route-owned digit sanitization/length constraints, while keeping `recovery_code` on a free text `LoginInput`; tests should assert the submitted method/code payload rather than only the visible control.
+- Login-specific shared controls such as dialogs and language selectors should stay in `src/pages/Auth/ui` or `src/pages/Login.tsx` with native/shadcn-style markup so unauthenticated auth routes do not pull old Catalyst/Headless component chains through shared app components.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -202,3 +203,22 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
+
+## US-006: Login-Flow lokalisieren, bereinigen und regressionssicher abschließen
+
+- Removed the remaining login-specific Headless/Catalyst dependency chain by replacing the auth-local MFA dialog with native shadcn-style modal semantics and moving the login language selector to route-local native markup.
+- Localized known login and MFA fallback/error messages, the login form accessible label, and the route-local language selector strings in English and German with synced Lingui catalogs.
+- Extended auth UI and login regressions for native dialog semantics, German invalid-credentials localization, German MFA verification localization, and canonicalized credential errors; reran the Chromium auth e2e smoke against the migrated surface.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `src/pages/Login.test.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`
+  - `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep login-only cross-cutting controls route-local or auth-local when a shared app component still wraps old Catalyst/Headless primitives.
+  - Gotchas encountered: locale-switching tests need to account for translated accessible names on both action buttons and OTP digit inputs, so enter values before switching locale when the assertion is about the translated failure output.

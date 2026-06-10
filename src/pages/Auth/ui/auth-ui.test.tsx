@@ -9,6 +9,9 @@ import {
   LoginCard,
   LoginCardHeader,
   LoginCardTitle,
+  LoginDialog,
+  LoginDialogDescription,
+  LoginDialogTitle,
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
@@ -103,6 +106,33 @@ describe("auth login shadcn primitives", () => {
     expect(alerts[1]).toHaveTextContent(
       "System not readyContact your administrator."
     );
+  });
+
+  it("renders the MFA dialog with native shadcn-style modal semantics", () => {
+    const handleClose = vi.fn();
+
+    render(
+      <LoginDialog open onClose={handleClose}>
+        <LoginDialogTitle>Second factor required</LoginDialogTitle>
+        <LoginDialogDescription>
+          Complete MFA to finish signing in.
+        </LoginDialogDescription>
+        <p>Challenge body</p>
+      </LoginDialog>
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Second factor required",
+    });
+
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleDescription(
+      "Complete MFA to finish signing in."
+    );
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
   it("offers a controlled OTP input with paste support", async () => {

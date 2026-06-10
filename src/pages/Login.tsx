@@ -1,7 +1,13 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useMemo, FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -28,8 +34,8 @@ import {
   isPasskeySupported,
 } from "../services/passkeyBrowser";
 import { formatApiDateTime } from "../lib/dateUtils";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { Logo } from "../components/Logo";
+import { activateLocale, locales, setLocalePreference } from "../i18n";
 import {
   LoginBrandPanel,
   LoginButton,
@@ -58,7 +64,7 @@ const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
   "Login is temporarily unavailable. Please try again later.";
 const INVALID_CREDENTIALS_PATTERN =
-  /^The provided credentials are incorrect\.?$/i;
+  /^(Invalid credentials|The provided credentials are incorrect)\.?$/i;
 const NATIVE_PASSKEY_CANCELLED_PATTERN = /^Passkey sign-in was cancelled\.?$/i;
 const NATIVE_PASSKEY_INTERRUPTED_PATTERN =
   /^Passkey sign-in was interrupted\.?$/i;
@@ -133,6 +139,17 @@ function getLocalizedLoginErrorMessage(
 ): string {
   if (INVALID_CREDENTIALS_PATTERN.test(message)) {
     return translate(msg`The provided credentials are incorrect.`);
+  }
+
+  return message;
+}
+
+function getLocalizedMfaErrorMessage(
+  message: string,
+  translate: Translate
+): string {
+  if (/^MFA verification failed\.?$/i.test(message)) {
+    return translate(msg`MFA verification failed. Please check your code.`);
   }
 
   return message;
@@ -328,7 +345,9 @@ export function Login() {
       } else {
         recordFailedAttempt();
         setError(
-          "An unexpected error occurred. Please try again or contact support."
+          _(
+            msg`An unexpected error occurred. Please try again or contact support.`
+          )
         );
       }
     } finally {
@@ -414,7 +433,9 @@ export function Login() {
 
       if (response.authentication.mode !== "session") {
         throw new Error(
-          "The passkey sign-in completed with an unsupported login mode."
+          _(
+            msg`The passkey sign-in completed with an unsupported login mode.`
+          )
         );
       }
 
@@ -422,7 +443,7 @@ export function Login() {
 
       if (!sanitizedUser) {
         throw new Error(
-          "The passkey sign-in completed with an invalid user payload."
+          _(msg`The passkey sign-in completed with an invalid user payload.`)
         );
       }
 
@@ -457,7 +478,7 @@ export function Login() {
 
       if (response.authentication.mode !== "session") {
         throw new Error(
-          "The MFA challenge completed with an unsupported login mode."
+          _(msg`The MFA challenge completed with an unsupported login mode.`)
         );
       }
 
@@ -465,7 +486,7 @@ export function Login() {
 
       if (!sanitizedUser) {
         throw new Error(
-          "The MFA challenge completed with an invalid user payload."
+          _(msg`The MFA challenge completed with an invalid user payload.`)
         );
       }
 
@@ -477,12 +498,14 @@ export function Login() {
       console.error("MFA verification error:", err);
 
       if (err instanceof AuthApiError) {
-        setMfaError(err.message);
+        setMfaError(getLocalizedMfaErrorMessage(err.message, _));
       } else if (err instanceof Error) {
         setMfaError(err.message);
       } else {
         setMfaError(
-          "An unexpected MFA verification error occurred. Please try logging in again."
+          _(
+            msg`An unexpected MFA verification error occurred. Please try logging in again.`
+          )
         );
       }
     } finally {
@@ -498,7 +521,7 @@ export function Login() {
             <Logo size="32" />
             <LoginCardTitle className="truncate text-xl">SecPal</LoginCardTitle>
           </div>
-          <LanguageSwitcher />
+          <LoginLanguageSwitcher />
         </LoginCardHeader>
 
         <div className="flex flex-1 flex-col px-6 py-10 sm:px-8 md:px-10 lg:px-12">
@@ -512,7 +535,7 @@ export function Login() {
               </h2>
             </div>
 
-            <LoginForm onSubmit={handleSubmit} aria-label="Login form">
+            <LoginForm onSubmit={handleSubmit} aria-label={_(msg`Login form`)}>
               {/* Offline Warning - shown when user has no internet connection */}
               {!isOnline && (
                 <LoginStatusMessage
@@ -885,6 +908,48 @@ export function Login() {
         </div>
       </LoginBrandPanel>
     </LoginShell>
+  );
+}
+
+function LoginLanguageSwitcher() {
+  const { _, i18n } = useLingui();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const locale = event.target.value;
+    setError(null);
+
+    try {
+      await activateLocale(locale);
+      setLocalePreference(locale);
+    } catch (err) {
+      const fallbackMessage = _(
+        msg`Failed to change language. Please try again.`
+      );
+      setError(err instanceof Error ? err.message : fallbackMessage);
+    }
+  };
+
+  return (
+    <div>
+      <select
+        value={i18n.locale}
+        onChange={handleChange}
+        aria-label={_(msg`Select language`)}
+        className="h-10 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus-visible:ring-offset-zinc-950"
+      >
+        {Object.entries(locales).map(([code, name]) => (
+          <option key={code} value={code}>
+            {name}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
+          {error}
+        </LoginFieldError>
+      ) : null}
+    </div>
   );
 }
 

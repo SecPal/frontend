@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-  Dialog as HeadlessDialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle as HeadlessDialogTitle,
-  Description as HeadlessDescription,
-} from "@headlessui/react";
-import {
+  createContext,
   forwardRef,
+  useContext,
+  useEffect,
+  useId,
   type ButtonHTMLAttributes,
   type ComponentPropsWithoutRef,
   type ForwardedRef,
@@ -265,44 +262,86 @@ const dialogSizes = {
   lg: "sm:max-w-lg",
 } satisfies Record<string, string>;
 
+const LoginDialogContext = createContext<{
+  titleId: string;
+  descriptionId: string;
+} | null>(null);
+
 export function LoginDialog({
   size = "md",
   className,
   children,
+  open,
+  onClose,
   ...props
 }: {
   size?: keyof typeof dialogSizes;
   className?: string;
   children: ReactNode;
-} & Omit<ComponentPropsWithoutRef<typeof HeadlessDialog>, "as" | "className">) {
+  open: boolean;
+  onClose: () => void;
+} & Omit<ComponentPropsWithoutRef<"div">, "className" | "role">) {
+  const titleId = useId();
+  const descriptionId = useId();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose, open]);
+
+  if (!open) {
+    return null;
+  }
+
   return (
-    <HeadlessDialog {...props}>
-      <DialogBackdrop
-        transition
-        className="fixed inset-0 z-40 bg-zinc-950/40 transition-opacity duration-150 data-closed:opacity-0 dark:bg-zinc-950/70"
-      />
+    <LoginDialogContext.Provider value={{ titleId, descriptionId }}>
+      <div {...props}>
+        <div
+          className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/70"
+          onClick={onClose}
+        />
+      </div>
       <div className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
-        <DialogPanel
-          transition
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
           className={cn(
-            "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg transition duration-150 data-closed:translate-y-4 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:data-closed:translate-y-0 sm:data-closed:scale-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+            "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
             dialogSizes[size],
             className
           )}
         >
           {children}
-        </DialogPanel>
+        </div>
       </div>
-    </HeadlessDialog>
+    </LoginDialogContext.Provider>
   );
 }
 
 export function LoginDialogTitle({
   className,
   ...props
-}: Omit<ComponentPropsWithoutRef<typeof HeadlessDialogTitle>, "as">) {
+}: ComponentPropsWithoutRef<"h2">) {
+  const dialogContext = useContext(LoginDialogContext);
+
   return (
-    <HeadlessDialogTitle
+    <h2
+      id={dialogContext?.titleId}
       className={cn("text-lg font-semibold tracking-normal", className)}
       {...props}
     />
@@ -312,9 +351,12 @@ export function LoginDialogTitle({
 export function LoginDialogDescription({
   className,
   ...props
-}: Omit<ComponentPropsWithoutRef<typeof HeadlessDescription>, "as">) {
+}: ComponentPropsWithoutRef<"p">) {
+  const dialogContext = useContext(LoginDialogContext);
+
   return (
-    <HeadlessDescription
+    <p
+      id={dialogContext?.descriptionId}
       className={cn("mt-2 text-sm text-zinc-600 dark:text-zinc-300", className)}
       {...props}
     />
