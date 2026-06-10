@@ -795,6 +795,8 @@ msgstr "Einheit"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
+#: src/pages/Employees/EmployeeAddressFields.test.tsx
+#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No results found"
 msgstr "Keine Ergebnisse gefunden"
