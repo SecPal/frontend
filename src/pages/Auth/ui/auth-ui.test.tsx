@@ -132,7 +132,7 @@ describe("auth login shadcn primitives", () => {
     const dialog = screen.getByRole("dialog", {
       name: "Second factor required",
     });
-    const backgroundButton = screen.getByRole("button", { name: "Language" });
+    const backgroundButton = screen.getByText("Language");
     const cancelButton = screen.getByRole("button", { name: "Cancel" });
     const verifyButton = screen.getByRole("button", { name: "Verify" });
 
