@@ -3195,7 +3195,7 @@ msgstr "Onboarding-Einladung"
 
 #: src/pages/Login.tsx
 msgid "Loading"
-msgstr ""
+msgstr "Lädt"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
