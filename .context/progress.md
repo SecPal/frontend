@@ -204,6 +204,28 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-013: MFA-Abschluss-Spinner ("Empty"/Spinner) zur Vermeidung des Login-Form-Flackerns
+
+- Diagnosed a visible flicker on `/login` after a successful MFA verify: between `setPendingMfaChallenge(null)` (which starts the Radix Dialog's close animation) and `navigate("/")` (route transition), the dialog fade-out exposed the credential form for a few frames before the redirect. The credential form was already filled with the user's email which felt jarring on a verified login.
+- Added the canonical shadcn `Spinner` + `Empty` primitives in `src/pages/Auth/ui/primitives.tsx` so the route can render a loading surface that mirrors the shadcn `new-york-v4` registry: `LoginSpinner` wraps `Loader2` (lucide) with `role="status"`, an overridable `aria-label`, and `animate-spin`; `LoginEmpty`, `LoginEmptyHeader`, `LoginEmptyMedia` (with `cva` `default` / `icon` variants), `LoginEmptyTitle`, `LoginEmptyDescription`, and `LoginEmptyContent` keep the shadcn DOM/data-slot structure but swap `bg-muted` / `text-foreground` for the existing zinc palette to fit the auth chrome.
+- Wired the completion state in `src/pages/Login.tsx`: a new `isCompletingLogin` flag flips to `true` in `handleVerifyMfa` immediately before `setPendingMfaChallenge(null)`, hides the credential card via `hidden` + `aria-hidden`, hides the language switcher, and renders a centered `LoginEmpty` block with `LoginSpinner`, the localized title (`login.completing.title` – "Completing sign-in" / "Anmeldung wird abgeschlossen"), and a short description (`login.completing.description` – "Please wait…" / "Bitte warten…"). The title is overridden locally with `text-sm/relaxed font-bold` so title and description share the same font-size while only the title is bold, which feels cleaner than the default shadcn `text-lg` title for a single-line transient state. The MFA dialog closes over the spinner, so users never see the credential form between dialog and redirect.
+- Restored the credential form on completion failure: when the asynchronous tail (`login(user)`, `navigate("/")`) throws after the completion state was entered, the catch resets `isCompletingLogin` to `false` so the user lands back on the credential form with the surfaced `setError(...)` message instead of a stuck spinner.
+- Tests:
+  - Added `auth-ui.test.tsx` coverage for `LoginSpinner` (`role="status"`, `data-slot="login-spinner"`, `animate-spin` via `toHaveClass`) and the full `LoginEmpty` composition (all `data-slot` markers including the `icon` variant on `LoginEmptyMedia`).
+  - Added a new `Login.test.tsx` integration test that drives a successful MFA verify and asserts the spinner state is visible (`data-testid="login-completing"`, `aria-live="polite"`, `aria-busy="true"`, the spinner status node, the title, and the description), that the credential controls (`Log in` button, `email` textbox) are no longer reachable by accessible queries during completion, and that the MFA heading is gone.
+  - Locales: added `login.completing.title` and `login.completing.description` to `src/locales/en/messages.po` and `src/locales/de/messages.po` with manual EN/DE strings; recompiled message catalogs.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx` (Spinner + Empty primitives, Loader2 import)
+  - `src/pages/Login.tsx` (state, render branch, completion handler updates, new primitive imports)
+  - `src/pages/Login.test.tsx` (completion-state integration test)
+  - `src/pages/Auth/ui/auth-ui.test.tsx` (spinner + empty primitive tests)
+  - `src/locales/{en,de}/messages.po`, `src/locales/{en,de}/messages.mjs` (new completion strings + recompiled)
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: when a Radix Dialog wraps a long async operation that resolves while the dialog is closing, swap the page background to a spinner state BEFORE closing the dialog (same render batch). React 18 auto-batching collapses the two state updates into one commit, so the dialog's close animation reveals the spinner instead of the previous content.
+  - Gotchas encountered: an SVG icon's `className` is a `SVGAnimatedString` in JSDOM, so asserting `.className.toContain("animate-spin")` fails — use `toHaveClass(...)`. `react-testing-library`'s `getByRole` excludes `aria-hidden` ancestors by default, which is convenient: hiding the credential card with `aria-hidden={true}` simultaneously hides it from accessibility queries during completion.
+  - Compatibility constraint: the Empty/Spinner primitives are exported through the existing `src/pages/Auth/ui/index.ts` barrel (`export *`) so future auth surfaces (e.g. passkey completion, password reset) can reuse the same loading layer without new imports.
+
 ## US-012: Login-Button auf class-variance-authority und MFA-Karten auf Radix Label kanonisieren
 
 - Closed two minor non-canonical-shadcn gaps left over from US-011: `LoginButton` still managed its variants through a hand-written `Record<Variant, string>` and the MFA-method picker wrapped each `LoginRadioGroupItem` in a native HTML `<label>` instead of `LoginFieldLabel` (Radix Label).

@@ -1866,6 +1866,16 @@ msgstr "Überprüfung des Systems..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.completing.description"
+msgstr "Bitte warten…"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.completing.title"
+msgstr "Anmeldung wird abgeschlossen"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.email"
 msgstr "E-Mail-Adresse"
 
@@ -3193,6 +3203,10 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Onboarding Invitation"
 msgstr "Onboarding-Einladung"
+
+#: src/pages/Login.tsx
+msgid "Loading"
+msgstr ""
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx

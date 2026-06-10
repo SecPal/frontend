@@ -1423,6 +1423,68 @@ describe("Login", () => {
     });
   });
 
+  it("shows the shadcn Empty/Spinner completion state and hides the login form after a successful MFA verify", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    const completing = await screen.findByTestId("login-completing");
+    expect(completing).toHaveAttribute("aria-busy", "true");
+    expect(completing).toHaveAttribute("aria-live", "polite");
+
+    expect(
+      screen.getByRole("status", { name: /loading/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/completing sign-in/i)).toBeInTheDocument();
+    expect(screen.getByText(/please wait/i)).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /email/i })
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("keeps TOTP verification digits-only in the MFA challenge dialog", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);

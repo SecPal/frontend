@@ -14,6 +14,12 @@ import {
   LoginDialog,
   LoginDialogDescription,
   LoginDialogTitle,
+  LoginEmpty,
+  LoginEmptyContent,
+  LoginEmptyDescription,
+  LoginEmptyHeader,
+  LoginEmptyMedia,
+  LoginEmptyTitle,
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
@@ -23,6 +29,7 @@ import {
   LoginInput,
   LoginOtpInput,
   LoginShell,
+  LoginSpinner,
   LoginStatusMessage,
 } from ".";
 
@@ -232,5 +239,57 @@ describe("auth login shadcn primitives", () => {
     handleChange.mockClear();
     fireEvent.change(otpInput, { target: { value: "12a 34-56" } });
     expect(handleChange).not.toHaveBeenCalled();
+  });
+
+  it("renders the shadcn Spinner with accessible status semantics", () => {
+    render(<LoginSpinner aria-label="Loading" />);
+
+    const spinner = screen.getByRole("status", { name: "Loading" });
+    expect(spinner).toHaveAttribute("data-slot", "login-spinner");
+    expect(spinner).toHaveClass("animate-spin");
+  });
+
+  it("composes the shadcn Empty state with header, media (icon), title, description and content", () => {
+    const { container } = render(
+      <LoginEmpty data-testid="empty">
+        <LoginEmptyHeader>
+          <LoginEmptyMedia variant="icon">
+            <LoginSpinner aria-label="Loading" />
+          </LoginEmptyMedia>
+          <LoginEmptyTitle>Working on it</LoginEmptyTitle>
+          <LoginEmptyDescription>
+            Hang tight while we finish up.
+          </LoginEmptyDescription>
+        </LoginEmptyHeader>
+        <LoginEmptyContent>
+          <button type="button">Cancel</button>
+        </LoginEmptyContent>
+      </LoginEmpty>
+    );
+
+    const empty = screen.getByTestId("empty");
+    expect(empty).toHaveAttribute("data-slot", "login-empty");
+
+    expect(
+      container.querySelector('[data-slot="login-empty-header"]')
+    ).not.toBeNull();
+
+    const media = container.querySelector('[data-slot="login-empty-media"]');
+    expect(media).not.toBeNull();
+    expect(media).toHaveAttribute("data-variant", "icon");
+
+    expect(screen.getByText("Working on it")).toHaveAttribute(
+      "data-slot",
+      "login-empty-title"
+    );
+    expect(screen.getByText("Hang tight while we finish up.")).toHaveAttribute(
+      "data-slot",
+      "login-empty-description"
+    );
+    expect(
+      container.querySelector('[data-slot="login-empty-content"]')
+    ).not.toBeNull();
+
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
   });
 });

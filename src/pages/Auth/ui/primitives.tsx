@@ -18,7 +18,7 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown, ChevronUp, Circle } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Circle, Loader2 } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
@@ -678,5 +678,131 @@ export function LoginOtpInput({
         ))}
       </LoginInputOtpGroup>
     </LoginInputOtp>
+  );
+}
+
+export function LoginSpinner({
+  className,
+  ...props
+}: ComponentProps<typeof Loader2>) {
+  return (
+    <Loader2
+      role="status"
+      aria-label="Loading"
+      data-slot="login-spinner"
+      className={cn("size-4 animate-spin", className)}
+      {...props}
+    />
+  );
+}
+
+export function LoginEmpty({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-empty"
+      className={cn(
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function LoginEmptyHeader({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-empty-header"
+      className={cn(
+        "flex max-w-sm flex-col items-center gap-2 text-center",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+const loginEmptyMediaVariants = cva(
+  "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50 [&_svg:not([class*='size-'])]:size-6",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+export function LoginEmptyMedia({
+  className,
+  variant = "default",
+  ...props
+}: ComponentPropsWithoutRef<"div"> &
+  VariantProps<typeof loginEmptyMediaVariants>) {
+  return (
+    <div
+      data-slot="login-empty-media"
+      data-variant={variant ?? undefined}
+      className={cn(loginEmptyMediaVariants({ variant, className }))}
+      {...props}
+    />
+  );
+}
+
+export function LoginEmptyTitle({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-empty-title"
+      className={cn(
+        "text-lg font-medium tracking-tight text-zinc-950 dark:text-zinc-50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function LoginEmptyDescription({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"p">) {
+  return (
+    <p
+      data-slot="login-empty-description"
+      className={cn(
+        "text-sm/relaxed text-zinc-500 dark:text-zinc-400 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-zinc-950 dark:[&>a:hover]:text-zinc-50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function LoginEmptyContent({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-empty-content"
+      className={cn(
+        "flex w-full max-w-sm min-w-0 flex-col items-center gap-4 text-sm text-balance",
+        className
+      )}
+      {...props}
+    />
   );
 }

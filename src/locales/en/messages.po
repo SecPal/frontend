@@ -1865,6 +1865,16 @@ msgstr "Checking system..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.completing.description"
+msgstr "Please wait…"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.completing.title"
+msgstr "Completing sign-in"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.email"
 msgstr "Email address"
 
@@ -3190,6 +3200,10 @@ msgstr "Create a new root organizational unit."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Onboarding Invitation"
 msgstr "Onboarding Invitation"
+
+#: src/pages/Login.tsx
+msgid "Loading"
+msgstr "Loading"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx

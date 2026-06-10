@@ -36,6 +36,11 @@ import {
   LoginDialogBody,
   LoginDialogDescription,
   LoginDialogTitle,
+  LoginEmpty,
+  LoginEmptyDescription,
+  LoginEmptyHeader,
+  LoginEmptyMedia,
+  LoginEmptyTitle,
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
@@ -53,6 +58,7 @@ import {
   LoginSelectTrigger,
   LoginSelectValue,
   LoginShell,
+  LoginSpinner,
   LoginStatusMessage,
 } from "./Auth/ui";
 
@@ -196,6 +202,7 @@ export function Login() {
   const [mfaCode, setMfaCode] = useState("");
   const [mfaError, setMfaError] = useState<string | null>(null);
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
+  const [isCompletingLogin, setIsCompletingLogin] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const [isHealthCheckLoading, setIsHealthCheckLoading] = useState(true);
   const normalizedMfaCode = mfaCode.trim();
@@ -490,6 +497,7 @@ export function Login() {
         );
       }
 
+      setIsCompletingLogin(true);
       setPendingMfaChallenge(null);
       setMfaCode("");
       shouldSurfaceLoginError = true;
@@ -497,6 +505,10 @@ export function Login() {
       navigate("/");
     } catch (err) {
       console.error("MFA verification error:", err);
+
+      if (shouldSurfaceLoginError) {
+        setIsCompletingLogin(false);
+      }
 
       let errorMessage: string;
       if (err instanceof AuthApiError) {
@@ -521,11 +533,38 @@ export function Login() {
 
   return (
     <LoginShell>
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-        <LoginLanguageSwitcher />
-      </div>
+      {!isCompletingLogin && (
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <LoginLanguageSwitcher />
+        </div>
+      )}
 
-      <LoginCard aria-labelledby="login-title">
+      {isCompletingLogin && (
+        <LoginEmpty
+          data-testid="login-completing"
+          aria-live="polite"
+          aria-busy="true"
+          className="w-full max-w-sm"
+        >
+          <LoginEmptyHeader>
+            <LoginEmptyMedia variant="icon">
+              <LoginSpinner aria-label={_(msg`Loading`)} />
+            </LoginEmptyMedia>
+            <LoginEmptyTitle className="text-sm/relaxed font-bold">
+              <Trans id="login.completing.title">Completing sign-in</Trans>
+            </LoginEmptyTitle>
+            <LoginEmptyDescription>
+              <Trans id="login.completing.description">Please wait…</Trans>
+            </LoginEmptyDescription>
+          </LoginEmptyHeader>
+        </LoginEmpty>
+      )}
+
+      <LoginCard
+        aria-labelledby="login-title"
+        className={isCompletingLogin ? "hidden" : undefined}
+        aria-hidden={isCompletingLogin || undefined}
+      >
         <LoginForm onSubmit={handleSubmit} aria-label={_(msg`Login form`)}>
           <LoginFieldGroup>
             <LoginCardHeader>
