@@ -1454,7 +1454,7 @@ function SchemaFieldRenderer({
               disabled={readOnly}
               placeholder={_(msg`Select an option`)}
               searchPlaceholder={_(msg`Search and select one nationality.`)}
-              emptyMessage="No results found"
+              emptyMessage={_(msg`No results found`)}
               errorMessage={error}
               onValueChange={(value) =>
                 onChange(fieldName, value.length > 0 ? [value] : [])
@@ -1762,6 +1762,7 @@ export function OnboardingWizard() {
   >(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const onboardingErrorRef = useRef<HTMLDivElement | null>(null);
+  const feedbackErrorRef = useRef<HTMLDivElement | null>(null);
   const currentStepIndexRef = useRef(0);
   const templateCacheRef = useRef<Map<string, OnboardingFormTemplate>>(
     new Map()
@@ -2084,7 +2085,10 @@ export function OnboardingWizard() {
       return;
     }
 
-    const errorElement = onboardingErrorRef.current;
+    const errorElement =
+      feedback?.tone === "error"
+        ? (feedbackErrorRef.current ?? onboardingErrorRef.current)
+        : onboardingErrorRef.current;
     if (!errorElement) {
       return;
     }
@@ -3379,8 +3383,12 @@ export function OnboardingWizard() {
 
   if (loading && (steps.length === 0 || template === null)) {
     return (
-      <Card role="status" aria-live="polite" className="mx-auto max-w-4xl">
-        <CardContent className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
+      <Card className="mx-auto max-w-4xl">
+        <CardContent
+          role="status"
+          aria-live="polite"
+          className="p-6 text-sm text-zinc-600 dark:text-zinc-300"
+        >
           <Trans>Loading onboarding...</Trans>
         </CardContent>
       </Card>
@@ -3427,7 +3435,7 @@ export function OnboardingWizard() {
 
           {feedback ? (
             <Alert
-              ref={feedback.tone === "error" ? onboardingErrorRef : null}
+              ref={feedback.tone === "error" ? feedbackErrorRef : null}
               tabIndex={feedback.tone === "error" ? -1 : undefined}
               role={feedback.tone === "error" ? "alert" : "status"}
               aria-live={feedback.tone === "error" ? "assertive" : "polite"}

@@ -382,6 +382,7 @@ export function CommandPopover({
   const labelId = useId();
   const listboxId = useId();
   const errorId = useId();
+  const optionIdPrefix = useId();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -400,6 +401,13 @@ export function CommandPopover({
       )
     );
   }, [options, query]);
+
+  function getOptionId(index: number) {
+    return `${optionIdPrefix}-option-${index}`;
+  }
+
+  const activeOptionId =
+    open && filteredOptions.length > 0 ? getOptionId(activeIndex) : undefined;
 
   function selectOption(option: CommandOption) {
     if (option.disabled) {
@@ -451,6 +459,7 @@ export function CommandPopover({
         aria-haspopup="listbox"
         aria-invalid={errorMessage ? true : undefined}
         aria-describedby={errorMessage ? errorId : undefined}
+        aria-activedescendant={activeOptionId}
         disabled={disabled}
         role="combobox"
         onClick={() => setOpen((current) => !current)}
@@ -472,6 +481,8 @@ export function CommandPopover({
             role="searchbox"
             value={query}
             placeholder={searchPlaceholder}
+            aria-activedescendant={activeOptionId}
+            aria-controls={listboxId}
             onChange={(event) => {
               setQuery(event.target.value);
               setActiveIndex(0);
@@ -514,6 +525,7 @@ export function CommandPopover({
               filteredOptions.map((option, index) => (
                 <button
                   key={option.value}
+                  id={getOptionId(index)}
                   type="button"
                   role="option"
                   aria-selected={option.value === value}

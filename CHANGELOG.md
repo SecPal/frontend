@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Migrated the onboarding wizard, onboarding-complete, and onboarding-submitted pages from the legacy Catalyst component set to a new self-contained `src/pages/Onboarding/ui/primitives.tsx` design-system layer (Button, Input, Textarea, Select, Checkbox, RadioGroup, Alert, Card, Badge, Progress, Field, CommandPopover, and related helpers), removing the dependency on external Catalyst primitives for this flow and aligning the visual language with the rest of the shadcn-based UI.
+- Added `CommandPopover` with full keyboard navigation (ArrowDown/ArrowUp/Enter/Escape), ARIA combobox/listbox pattern with `aria-activedescendant`, and stable per-option `id` attributes for screen-reader announcement of the active item; used for nationality selection in the onboarding wizard.
+- Added `ProgressIndicator` using the new `Progress` primitive with `aria-label` for accessible progress announcement.
+
+### Fixed
+
+- Fixed `emailVerified` flag in the onboarding-complete auth session: the expression now requires an explicit `=== true` rather than `!== false`, preventing a missing or undefined `email_verified` field from silently granting email-verified status.
+- Fixed focus management in the onboarding wizard error flow: the `feedback`-error alert and the `error` alert now hold separate refs (`feedbackErrorRef` / `onboardingErrorRef`) so the focus effect always targets the correct element when both are present simultaneously.
+- Fixed `role="status"` / `aria-live` placement on the wizard loading state: the live-region attributes are now scoped to the inner `CardContent` element rather than the outer `Card` container, per the ARIA scoping rule for dynamic content regions.
+
 - Added shared `addressApi` service with typed helpers (`fetchAddressStreetSuggestions`, `fetchAddressLocalitySuggestions`) for OpenPLZ-backed postal-code and street lookups against the `/v1/addresses/de/` API endpoints.
 - Added `getCountrySelectOptions` in `src/lib/iso3166CountryOptions.ts` to generate a locale-sorted ISO 3166-1 alpha-2 country dropdown with per-code `Intl.DisplayNames` fallback for unsupported region identifiers.
 - Added shared `EmployeeAddressFields` component with OpenPLZ street/locality autocomplete, keyboard navigation, and a country combobox; adopted in the employee create, edit, contacts-edit, and inline postal-address dialog flows.

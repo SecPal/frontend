@@ -353,7 +353,10 @@ export function OnboardingResidentialAddressHistoryFields({
             </div>
 
             {previousCoverageError ? (
-              <FieldError id="previous_addresses_coverage_error" className="mb-4">
+              <FieldError
+                id="previous_addresses_coverage_error"
+                className="mb-4"
+              >
                 {previousCoverageError}
               </FieldError>
             ) : null}
