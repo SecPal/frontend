@@ -135,6 +135,14 @@ async function openMfaDialog() {
   await screen.findByRole("heading", { name: /second factor required/i });
 }
 
+function enterTotpCode(code: string) {
+  fireEvent.paste(screen.getByLabelText(/authenticator code digit 1/i), {
+    clipboardData: {
+      getData: () => code,
+    },
+  } as unknown as ClipboardEvent);
+}
+
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -241,8 +249,11 @@ describe("Login", () => {
       await screen.findByRole("heading", { name: /second factor required/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /authenticator code/i })
+      screen.getByRole("group", { name: /authenticator code/i })
     ).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/authenticator code digit/i)).toHaveLength(
+      6
+    );
     expect(
       screen.getByRole("radio", { name: /recovery code/i })
     ).toBeInTheDocument();
@@ -1320,12 +1331,7 @@ describe("Login", () => {
 
     await screen.findByRole("heading", { name: /second factor required/i });
 
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      {
-        target: { value: "123456" },
-      }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -1344,6 +1350,51 @@ describe("Login", () => {
       expect(
         screen.queryByRole("heading", { name: /second factor required/i })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps TOTP verification digits-only in the MFA challenge dialog", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    await screen.findByRole("button", { name: /log in/i });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    enterTotpCode("12a 34-56");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyMfaChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "totp",
+          code: "123456",
+        }
+      );
     });
   });
 
@@ -1386,12 +1437,7 @@ describe("Login", () => {
 
     await screen.findByRole("heading", { name: /second factor required/i });
 
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      {
-        target: { value: "123456" },
-      }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -1421,8 +1467,39 @@ describe("Login", () => {
       screen.getByRole("textbox", { name: /recovery code/i })
     ).toHaveAttribute("placeholder", "B6F42Q8P");
     expect(
-      screen.queryByRole("textbox", { name: /authenticator code/i })
+      screen.queryByRole("group", { name: /authenticator code/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("verifies an MFA challenge with a recovery code fallback", async () => {
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    await openMfaDialog();
+
+    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+    fireEvent.change(screen.getByRole("textbox", { name: /recovery code/i }), {
+      target: { value: "B6F42Q8P" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyMfaChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "recovery_code",
+          code: "B6F42Q8P",
+        }
+      );
+    });
   });
 
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
@@ -1437,10 +1514,7 @@ describe("Login", () => {
       },
     });
     await openMfaDialog();
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      { target: { value: "123456" } }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );

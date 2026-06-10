@@ -2,6 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+  Dialog as HeadlessDialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle as HeadlessDialogTitle,
+  Description as HeadlessDescription,
+} from "@headlessui/react";
+import {
   forwardRef,
   type ButtonHTMLAttributes,
   type ComponentPropsWithoutRef,
@@ -252,6 +259,94 @@ export function LoginStatusMessage({
   );
 }
 
+const dialogSizes = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+} satisfies Record<string, string>;
+
+export function LoginDialog({
+  size = "md",
+  className,
+  children,
+  ...props
+}: {
+  size?: keyof typeof dialogSizes;
+  className?: string;
+  children: ReactNode;
+} & Omit<ComponentPropsWithoutRef<typeof HeadlessDialog>, "as" | "className">) {
+  return (
+    <HeadlessDialog {...props}>
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 z-40 bg-zinc-950/40 transition-opacity duration-150 data-closed:opacity-0 dark:bg-zinc-950/70"
+      />
+      <div className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+        <DialogPanel
+          transition
+          className={cn(
+            "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg transition duration-150 data-closed:translate-y-4 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:data-closed:translate-y-0 sm:data-closed:scale-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+            dialogSizes[size],
+            className
+          )}
+        >
+          {children}
+        </DialogPanel>
+      </div>
+    </HeadlessDialog>
+  );
+}
+
+export function LoginDialogTitle({
+  className,
+  ...props
+}: Omit<ComponentPropsWithoutRef<typeof HeadlessDialogTitle>, "as">) {
+  return (
+    <HeadlessDialogTitle
+      className={cn("text-lg font-semibold tracking-normal", className)}
+      {...props}
+    />
+  );
+}
+
+export function LoginDialogDescription({
+  className,
+  ...props
+}: Omit<ComponentPropsWithoutRef<typeof HeadlessDescription>, "as">) {
+  return (
+    <HeadlessDescription
+      className={cn("mt-2 text-sm text-zinc-600 dark:text-zinc-300", className)}
+      {...props}
+    />
+  );
+}
+
+export function LoginDialogBody({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return <div className={cn("mt-6", className)} {...props} />;
+}
+
+export function LoginDialogActions({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      className={cn(
+        "mt-8 flex flex-col-reverse items-stretch justify-end gap-3 sm:flex-row sm:items-center sm:[&>*]:w-auto",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+function sanitizeOtpDigits(value: string, length: number) {
+  return value.replace(/\D/g, "").slice(0, length);
+}
+
 export function LoginOtpInput({
   value,
   onChange,
@@ -259,6 +354,8 @@ export function LoginOtpInput({
   idPrefix = "login-otp",
   disabled = false,
   "aria-label": ariaLabel = "One-time code",
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
   className,
 }: {
   value: string;
@@ -267,14 +364,28 @@ export function LoginOtpInput({
   idPrefix?: string;
   disabled?: boolean;
   "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
   className?: string;
 }) {
-  const cells = Array.from({ length }, (_, index) => value[index] ?? "");
+  const normalizedValue = sanitizeOtpDigits(value, length);
+  const cells = Array.from(
+    { length },
+    (_, index) => normalizedValue[index] ?? ""
+  );
 
   function updateCell(index: number, nextCellValue: string) {
-    const nextCharacter = nextCellValue.slice(-1);
+    const nextDigits = sanitizeOtpDigits(nextCellValue, length);
     const nextCells = cells.slice();
-    nextCells[index] = nextCharacter;
+    if (nextDigits.length > 1) {
+      nextDigits.split("").forEach((digit, digitIndex) => {
+        if (index + digitIndex < length) {
+          nextCells[index + digitIndex] = digit;
+        }
+      });
+    } else {
+      nextCells[index] = nextDigits;
+    }
     onChange(nextCells.join("").slice(0, length));
   }
 
@@ -282,6 +393,8 @@ export function LoginOtpInput({
     <div
       role="group"
       aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid}
       className={cn("flex gap-2", className)}
     >
       {cells.map((cellValue, index) => (
@@ -294,17 +407,17 @@ export function LoginOtpInput({
           className="h-12 w-10 text-center text-base font-semibold"
           value={cellValue}
           maxLength={1}
+          pattern="[0-9]*"
           disabled={disabled}
           onChange={(event) => updateCell(index, event.target.value)}
           onPaste={(event) => {
             const pastedCode = event.clipboardData
               .getData("text")
-              .replace(/\s+/g, "")
-              .slice(0, length);
+              .replace(/\s+/g, "");
 
             if (pastedCode.length > 1) {
               event.preventDefault();
-              onChange(pastedCode);
+              updateCell(index, pastedCode);
             }
           }}
         />

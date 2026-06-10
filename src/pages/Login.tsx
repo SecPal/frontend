@@ -36,6 +36,11 @@ import {
   LoginCard,
   LoginCardHeader,
   LoginCardTitle,
+  LoginDialog,
+  LoginDialogActions,
+  LoginDialogBody,
+  LoginDialogDescription,
+  LoginDialogTitle,
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
@@ -44,16 +49,10 @@ import {
   LoginForm,
   LoginFormActions,
   LoginInput,
+  LoginOtpInput,
   LoginShell,
   LoginStatusMessage,
 } from "./Auth/ui";
-import {
-  Dialog,
-  DialogActions,
-  DialogBody,
-  DialogDescription,
-  DialogTitle,
-} from "../components/dialog";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
@@ -66,6 +65,7 @@ const NATIVE_PASSKEY_INTERRUPTED_PATTERN =
 const NATIVE_PASSKEY_TIMEOUT_PATTERN = /^Passkey sign-in timed out\.?$/i;
 const NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN =
   /^No credential provider is available on this device\.?$/i;
+const TOTP_CODE_LENGTH = 6;
 
 type Translate = ReturnType<typeof useLingui>["_"];
 
@@ -344,6 +344,16 @@ export function Login() {
     setPendingMfaChallenge(null);
     setMfaCode("");
     setMfaError(null);
+  };
+
+  const handleMfaMethodChange = (method: MfaVerificationMethod) => {
+    setMfaMethod(method);
+    setMfaError(null);
+    if (method === "totp") {
+      setMfaCode((currentCode) =>
+        currentCode.replace(/\D/g, "").slice(0, TOTP_CODE_LENGTH)
+      );
+    }
   };
 
   const handlePasskeySignIn = async () => {
@@ -697,20 +707,20 @@ export function Login() {
           </div>
         </div>
 
-        <Dialog
+        <LoginDialog
           open={pendingMfaChallenge !== null}
           onClose={handleCloseMfaDialog}
         >
-          <DialogTitle>
+          <LoginDialogTitle>
             <Trans id="login.mfa.title">Second factor required</Trans>
-          </DialogTitle>
-          <DialogDescription>
+          </LoginDialogTitle>
+          <LoginDialogDescription>
             <Trans id="login.mfa.description">
               Your password was accepted. Complete MFA to finish signing in.
             </Trans>
-          </DialogDescription>
+          </LoginDialogDescription>
 
-          <DialogBody>
+          <LoginDialogBody>
             {pendingMfaChallenge && (
               <form className="space-y-6" onSubmit={handleVerifyMfa}>
                 <LoginStatusMessage variant="neutral" live="off">
@@ -737,7 +747,7 @@ export function Login() {
                         name="mfa-method"
                         value={method}
                         checked={mfaMethod === method}
-                        onChange={() => setMfaMethod(method)}
+                        onChange={() => handleMfaMethodChange(method)}
                         disabled={isVerifyingMfa}
                         className="mt-1"
                       />
@@ -762,7 +772,11 @@ export function Login() {
                 </fieldset>
 
                 <LoginField>
-                  <LoginFieldLabel htmlFor="mfa-code">
+                  <LoginFieldLabel
+                    htmlFor={
+                      mfaMethod === "recovery_code" ? "mfa-code" : "mfa-code-0"
+                    }
+                  >
                     {mfaMethod === "recovery_code" ? (
                       <Trans id="login.mfa.recoveryCode">Recovery code</Trans>
                     ) : (
@@ -771,7 +785,7 @@ export function Login() {
                       </Trans>
                     )}
                   </LoginFieldLabel>
-                  <LoginFieldDescription>
+                  <LoginFieldDescription id="mfa-code-help">
                     {mfaMethod === "recovery_code" ? (
                       <Trans id="login.mfa.recoveryHelp">
                         Enter one unused recovery code exactly as stored.
@@ -783,21 +797,40 @@ export function Login() {
                       </Trans>
                     )}
                   </LoginFieldDescription>
-                  <LoginInput
-                    id="mfa-code"
-                    name="mfa-code"
-                    type="text"
-                    autoComplete="one-time-code"
-                    required
-                    value={mfaCode}
-                    onChange={(event) => setMfaCode(event.target.value)}
-                    placeholder={
-                      mfaMethod === "recovery_code" ? "B6F42Q8P" : "123456"
-                    }
-                    disabled={isVerifyingMfa}
-                    aria-invalid={mfaError ? true : undefined}
-                    aria-describedby={mfaError ? "mfa-code-error" : undefined}
-                  />
+                  {mfaMethod === "recovery_code" ? (
+                    <LoginInput
+                      id="mfa-code"
+                      name="mfa-code"
+                      type="text"
+                      autoComplete="one-time-code"
+                      required
+                      value={mfaCode}
+                      onChange={(event) => setMfaCode(event.target.value)}
+                      placeholder="B6F42Q8P"
+                      disabled={isVerifyingMfa}
+                      aria-invalid={mfaError ? true : undefined}
+                      aria-describedby={
+                        mfaError
+                          ? "mfa-code-help mfa-code-error"
+                          : "mfa-code-help"
+                      }
+                    />
+                  ) : (
+                    <LoginOtpInput
+                      idPrefix="mfa-code"
+                      value={mfaCode}
+                      onChange={setMfaCode}
+                      length={TOTP_CODE_LENGTH}
+                      disabled={isVerifyingMfa}
+                      aria-label={_(msg`Authenticator code`)}
+                      aria-invalid={mfaError ? true : undefined}
+                      aria-describedby={
+                        mfaError
+                          ? "mfa-code-help mfa-code-error"
+                          : "mfa-code-help"
+                      }
+                    />
+                  )}
                   {mfaError ? (
                     <LoginFieldError id="mfa-code-error">
                       {mfaError}
@@ -805,7 +838,7 @@ export function Login() {
                   ) : null}
                 </LoginField>
 
-                <DialogActions>
+                <LoginDialogActions>
                   <LoginButton
                     type="button"
                     variant="outline"
@@ -825,11 +858,11 @@ export function Login() {
                       <Trans id="login.mfa.submit">Verify and continue</Trans>
                     )}
                   </LoginButton>
-                </DialogActions>
+                </LoginDialogActions>
               </form>
             )}
-          </DialogBody>
-        </Dialog>
+          </LoginDialogBody>
+        </LoginDialog>
 
         <LoginLegalFooter />
       </LoginCard>

@@ -3190,6 +3190,7 @@ msgstr "Laden..."
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Einladungen sind nur für Arbeitnehmer im Vorvertragsstatus verfügbar."
 
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator code"
 msgstr "Authenticator-Code"

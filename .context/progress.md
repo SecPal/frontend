@@ -16,6 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
 - Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
 - Login secondary auth actions should keep their provider-specific button identity visible in the shadcn composition while preserving the same accessible names used by browser and native passkey flow tests.
+- Login MFA surfaces should render TOTP through auth-local `LoginOtpInput` with route-owned digit sanitization/length constraints, while keeping `recovery_code` on a free text `LoginInput`; tests should assert the submitted method/code payload rather than only the visible control.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -184,3 +185,20 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: provider-specific secondary login actions can be made visually explicit with an aria-hidden icon while keeping the existing accessible name stable for route and e2e tests.
   - Gotchas encountered: the passkey tests already rely on the exact accessible button names for every in-progress state, so visual changes should wrap the existing translated labels rather than replacing them.
+
+## US-005: MFA-Dialog auf Shadcn mit digits-only OTP umstellen
+
+- Replaced the login MFA challenge surface with auth-local shadcn-style dialog primitives and kept the existing expiry, method switching, cancel, disabled, and verification flow behavior.
+- Switched TOTP entry to the auth-local six-cell `LoginOtpInput` with digits-only sanitization for typed and pasted values, while preserving a free text `LoginInput` for recovery codes.
+- Extended login coverage for the new TOTP UI, digits-only TOTP submission, recovery-code fallback verification, inline MFA errors, and method switching; synced Lingui catalog references for the reused authenticator-code label.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `src/pages/Login.test.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/de/messages.po`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
+  - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.

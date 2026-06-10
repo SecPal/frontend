@@ -128,12 +128,12 @@ describe("auth login shadcn primitives", () => {
 
     fireEvent.paste(screen.getByLabelText("Authenticator code digit 1"), {
       clipboardData: {
-        getData: () => "654321",
+        getData: () => "65 43-21",
       },
     } as unknown as ClipboardEvent);
 
     fireEvent.change(screen.getByLabelText("Authenticator code digit 3"), {
-      target: { value: "9" },
+      target: { value: "x9" },
     });
 
     expect(handleChange).toHaveBeenNthCalledWith(1, "654321");
