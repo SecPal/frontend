@@ -157,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     null
   );
   const bootstrapRequestVersionRef = useRef(0);
+  const hasAutomaticallyRetriedBootstrapRef = useRef(false);
   const hasLogoutBarrierRef = useRef(authStorage.hasLogoutBarrier());
 
   const invalidateBootstrapRevalidation = useCallback(() => {
@@ -423,6 +424,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    hasAutomaticallyRetriedBootstrapRef.current = false;
     setBootstrapRecoveryReason(null);
     setIsLoading(true);
     setBootstrapRetryKey((currentValue) => currentValue + 1);
@@ -463,20 +465,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
-    const snapshotUser = authStorage.getUserSnapshot();
-
-    if (
-      snapshotUser &&
-      authTransport.kind === "browser-session" &&
-      !isOnline()
-    ) {
-      syncOfflineAuthState(true);
-      return;
-    }
 
     const startBootstrapRevalidation = (
       clearSensitiveStateOnInvalidSession: boolean
     ) => {
+      const retryBootstrapAutomatically = () => {
+        invalidateBootstrapRevalidation();
+        hasAutomaticallyRetriedBootstrapRef.current = true;
+        setBootstrapRecoveryReason(null);
+        setIsLoading(true);
+        setBootstrapRetryKey((currentValue) => currentValue + 1);
+      };
+
       timeoutId = globalThis.setTimeout(() => {
         if (
           !isActive ||
@@ -487,6 +487,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         didTimeout = true;
+        if (!hasAutomaticallyRetriedBootstrapRef.current) {
+          retryBootstrapAutomatically();
+          return;
+        }
+
         setIsLoading(false);
         setBootstrapRecoveryReason("timeout");
         console.warn(
@@ -562,6 +567,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isOfflineBootstrapError(error)) {
             setIsLoading(false);
             setBootstrapRecoveryReason(null);
+            return;
+          }
+
+          if (!hasAutomaticallyRetriedBootstrapRef.current) {
+            retryBootstrapAutomatically();
             return;
           }
 
@@ -681,6 +691,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
+    invalidateBootstrapRevalidation,
     persistAuthenticatedUser,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
