@@ -12,11 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import {
-  CodeBracketIcon,
-  KeyIcon,
-  ScaleIcon,
-} from "@heroicons/react/24/outline";
+import { Code2, KeyRound, Scale } from "lucide-react";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -698,28 +694,28 @@ export function Login() {
                     {isSubmittingPasskey ? (
                       passkeyStep === "browser" ? (
                         <>
-                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <KeyRound className="h-4 w-4" aria-hidden="true" />
                           <Trans>Check your browser…</Trans>
                         </>
                       ) : passkeyStep === "native" ? (
                         <>
-                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <KeyRound className="h-4 w-4" aria-hidden="true" />
                           <Trans>Check your device…</Trans>
                         </>
                       ) : passkeyStep === "verifying" ? (
                         <>
-                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <KeyRound className="h-4 w-4" aria-hidden="true" />
                           <Trans>Verifying passkey…</Trans>
                         </>
                       ) : (
                         <>
-                          <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                          <KeyRound className="h-4 w-4" aria-hidden="true" />
                           <Trans>Signing in with passkey...</Trans>
                         </>
                       )
                     ) : (
                       <>
-                        <KeyIcon className="h-4 w-4" aria-hidden="true" />
+                        <KeyRound className="h-4 w-4" aria-hidden="true" />
                         <Trans>Sign in with passkey</Trans>
                       </>
                     )}
@@ -947,7 +943,7 @@ function LoginLegalFooter() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
           >
-            <ScaleIcon className="h-4 w-4" aria-hidden="true" />
+            <Scale className="h-4 w-4" aria-hidden="true" />
             <Trans>AGPL v3+</Trans>
           </a>
           <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">
@@ -959,7 +955,7 @@ function LoginLegalFooter() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
           >
-            <CodeBracketIcon className="h-4 w-4" aria-hidden="true" />
+            <Code2 className="h-4 w-4" aria-hidden="true" />
             <Trans>Source Code</Trans>
           </a>
         </div>

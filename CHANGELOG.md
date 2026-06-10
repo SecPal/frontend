@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
+- Swapped the three icons on the login surface from `@heroicons/react/24/outline` to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`. `@heroicons/react` remains a project dependency because other routes still use it; the login surface itself no longer references it.
 
 ### Fixed
 

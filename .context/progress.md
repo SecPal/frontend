@@ -204,6 +204,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-009: Login-Icons von heroicons auf lucide-react umstellen
+
+- Replaced the three `@heroicons/react/24/outline` imports on the login surface with their `lucide-react` equivalents: `KeyIcon` → `KeyRound` (passkey-action button, five usages), `ScaleIcon` → `Scale` (AGPL license link), `CodeBracketIcon` → `Code2` (source-code link), matching the shadcn `login-05` reference's icon library while keeping `aria-hidden="true"` and the existing `h-4 w-4` sizing untouched.
+- Confirmed the login surface no longer transitively depends on `@headlessui/react`: `src/pages/Login.tsx`, `src/pages/Auth/ui/*`, `src/components/Logo.tsx`, the auth hooks (`useAuth`, `useLoginRateLimiter`, `useOnlineStatus`), the auth services (`authTransport`, `authApi`, `authState`, `passkeyBrowser`, `healthApi`), and the i18n entry are all free of `@headlessui` imports. The dependency remains in `package.json` because legacy Catalyst components under `src/components/` still rely on it.
+- Files changed:
+  - `package.json`, `package-lock.json` (new `lucide-react` dependency)
+  - `src/pages/Login.tsx`
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: a shadcn login surface should target `lucide-react` directly so future copy-paste from shadcn blocks lands without a translation step from heroicons.
+  - Gotchas encountered: `lucide-react` icon names rarely match heroicons one-to-one; `KeyRound` and `Code2` were chosen over the more literal `Key` and `Code` to match the visual weight and modern feel of the new login card.
+
 ## US-008: Login-Card auf shadcn `login-05` Komposition umstellen (Passwort bleibt)
 
 - Restructured the unauthenticated login surface from the previous split brand-panel shell into a centered shadcn `login-05` card (`max-w-sm`, brand block on top, primary submit, `FieldSeparator` "Or", passkey as secondary action) while keeping the existing email + password flow, passkey path, MFA dialog, health-check, offline, rate-limit, and language-switching behavior intact.
