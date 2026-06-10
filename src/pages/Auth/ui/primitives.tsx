@@ -375,6 +375,8 @@ export function LoginDialog({
     const initialFocusTarget = getFocusableElements(dialog)[0] ?? dialog;
     initialFocusTarget.focus();
 
+    const trappedDialog: HTMLDivElement = dialog;
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onCloseRef.current();
@@ -385,22 +387,22 @@ export function LoginDialog({
         return;
       }
 
-      const focusableElements = getFocusableElements(dialog);
+      const focusableElements = getFocusableElements(trappedDialog);
 
       if (focusableElements.length === 0) {
         event.preventDefault();
-        dialog.focus();
+        trappedDialog.focus();
         return;
       }
 
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+      const firstElement = focusableElements[0]!;
+      const lastElement = focusableElements[focusableElements.length - 1]!;
       const activeElement =
         document.activeElement instanceof HTMLElement
           ? document.activeElement
           : null;
 
-      if (!activeElement || !dialog.contains(activeElement)) {
+      if (!activeElement || !trappedDialog.contains(activeElement)) {
         event.preventDefault();
         (event.shiftKey ? lastElement : firstElement).focus();
         return;
