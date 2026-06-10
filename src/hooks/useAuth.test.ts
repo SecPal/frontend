@@ -740,46 +740,54 @@ describe("useAuth", () => {
     const secondAttempt = createDeferredPromise<typeof mockUser>();
 
     await authStorage.setUser(mockUser);
-    vi.useFakeTimers();
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockResolvedValue(mockUser);
     mockGetCurrentUser
       .mockImplementationOnce(() => firstAttempt.promise)
       .mockImplementationOnce(() => secondAttempt.promise);
+    vi.useFakeTimers();
 
     const { result, unmount } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    await act(async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        firstAttempt.reject(new Error("Simulated stale bootstrap failure"));
         await Promise.resolve();
-      }
-    });
+      });
 
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    expect(result.current.isLoading).toBe(true);
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
 
-    await act(async () => {
-      vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-      firstAttempt.reject(new Error("Simulated stale bootstrap failure"));
-      await Promise.resolve();
-    });
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
 
-    await act(async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+      unmount();
+
+      await act(async () => {
+        secondAttempt.resolve(mockUser);
         await Promise.resolve();
-      }
-    });
-
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.bootstrapRecoveryReason).toBeNull();
-
-    unmount();
-
-    await act(async () => {
-      secondAttempt.resolve(mockUser);
-      await Promise.resolve();
-    });
+      });
+    } finally {
+      getUserSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it("grants a fresh silent retry for each manual retryBootstrap cycle after the recovery UI was shown", async () => {
@@ -791,39 +799,88 @@ describe("useAuth", () => {
     };
     const deferred = createDeferredPromise<typeof mockUser>();
 
-    await persistAuthUser(mockUser);
+    await authStorage.setUser(mockUser);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockResolvedValue(mockUser);
     // All attempts stall so each cycle hits the timeout twice (auto-retry + final timeout).
     mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    vi.useFakeTimers();
 
-    const { result } = renderHook(() => useAuth(), {
+    const { result, unmount } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    // Wait for the first recovery UI to appear (two timeout cycles: initial + auto-retry).
-    await waitFor(
-      () => {
-        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-        expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-      },
-      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
-    );
+    try {
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
 
-    // User clicks Retry — this should reset the silent-retry flag and issue a
-    // third call, then a fourth (auto-retry), before showing recovery again.
-    act(() => {
-      result.current.retryBootstrap();
-    });
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
 
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.bootstrapRecoveryReason).toBeNull();
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
 
-    await waitFor(
-      () => {
-        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-        expect(mockGetCurrentUser).toHaveBeenCalledTimes(4);
-      },
-      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
-    );
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+
+      // User clicks Retry — this should reset the silent-retry flag and issue a
+      // third call, then a fourth (auto-retry), before showing recovery again.
+      act(() => {
+        result.current.retryBootstrap();
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(4);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+    } finally {
+      unmount();
+      getUserSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
