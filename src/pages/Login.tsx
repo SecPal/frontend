@@ -467,6 +467,7 @@ export function Login() {
 
     setMfaError(null);
     setIsVerifyingMfa(true);
+    let shouldSurfaceLoginError = false;
 
     try {
       const response = await verifyMfaChallenge(pendingMfaChallenge.id, {
@@ -490,21 +491,27 @@ export function Login() {
 
       setPendingMfaChallenge(null);
       setMfaCode("");
+      shouldSurfaceLoginError = true;
       await login(sanitizedUser);
       navigate("/");
     } catch (err) {
       console.error("MFA verification error:", err);
 
+      let errorMessage: string;
       if (err instanceof AuthApiError) {
-        setMfaError(getLocalizedMfaErrorMessage(err.message, _));
+        errorMessage = getLocalizedMfaErrorMessage(err.message, _);
       } else if (err instanceof Error) {
-        setMfaError(err.message);
+        errorMessage = err.message;
       } else {
-        setMfaError(
-          _(
-            msg`An unexpected MFA verification error occurred. Please try logging in again.`
-          )
+        errorMessage = _(
+          msg`An unexpected MFA verification error occurred. Please try logging in again.`
         );
+      }
+
+      setMfaError(errorMessage);
+
+      if (shouldSurfaceLoginError) {
+        setError(errorMessage);
       }
     } finally {
       setIsVerifyingMfa(false);

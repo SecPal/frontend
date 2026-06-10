@@ -20,6 +20,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
 import * as passkeyBrowser from "../services/passkeyBrowser";
+import { authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import * as i18nModule from "../i18n";
 
@@ -1493,6 +1494,42 @@ describe("Login", () => {
     expect(
       await screen.findByText(/the login challenge has expired/i)
     ).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("shows a login-form error if session finalization fails after MFA succeeds", async () => {
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.spyOn(authStorage, "setUser").mockRejectedValueOnce(
+      new Error("Failed to persist authenticated session.")
+    );
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    expect(
+      await screen.findByText(/failed to persist authenticated session/i)
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
 
     consoleErrorSpy.mockRestore();
   });
