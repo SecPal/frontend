@@ -989,7 +989,7 @@ function LoginLanguageSwitcher() {
 
 function LoginLegalFooter() {
   return (
-    <footer className="w-full max-w-sm text-center text-[11px]">
+    <footer className="absolute bottom-4 left-1/2 w-full max-w-sm -translate-x-1/2 px-6 text-center text-[11px]">
       <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
         <a
           href="https://secpal.app"

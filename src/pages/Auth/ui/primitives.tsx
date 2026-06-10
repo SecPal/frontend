@@ -67,7 +67,7 @@ export function LoginShell({
   return (
     <main
       className={cn(
-        "relative flex min-h-svh flex-col items-center justify-center gap-6 bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
+        "relative flex min-h-dvh flex-col items-center justify-center gap-6 bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
         className
       )}
       {...props}

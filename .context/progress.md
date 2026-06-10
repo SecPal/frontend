@@ -204,6 +204,21 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-014: Login-Footer am Viewport-Rand verankern und Mobile-Hintergrundstreifen entfernen
+
+- Pinned the login legal footer to the bottom of the viewport on every breakpoint instead of letting it ride inside the `LoginShell`'s vertical-center flex stack. The footer is now `absolute bottom-4 left-1/2 w-full max-w-sm -translate-x-1/2 px-6` so it sits 1rem above the viewport edge and stays horizontally centered (with `px-6` safety padding for narrow viewports), and the credential card no longer competes with it for the centered slot — it stays perfectly mid-viewport on mobile (previously the centering was pushed up by the footer + `gap-6`).
+- Switched the `LoginShell` (`src/pages/Auth/ui/primitives.tsx`) from `min-h-svh` to `min-h-dvh` so the shell grows with the visible viewport when the mobile browser's URL bar collapses. With `svh` the shell stayed at the small-viewport height and exposed a strip of the body's default background once the URL bar hid; `dvh` makes the shell track the dynamic viewport.
+- Added explicit body background colors in `src/index.css`: `body { background-color: #ffffff }` plus a `prefers-color-scheme: dark` override that sets `#09090b` (the same `zinc-950` token the `LoginShell` uses for dark mode). This is the defensive layer: any region the shell does not cover (safe-area-inset under iOS notches, URL-bar fade transitions, scroll over-shoot) now reads the same color as the login surface instead of the UA's `color-scheme: dark` default (~`#1c1b22` / `#1e1e1e`), which the user observed as a "slightly lighter dark gray stripe" along the mobile bottom edge.
+- Files changed:
+  - `src/pages/Login.tsx` (footer positioning)
+  - `src/pages/Auth/ui/primitives.tsx` (`min-h-svh` → `min-h-dvh`)
+  - `src/index.css` (body bg color light/dark)
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: any auth surface that fills the viewport should use `min-h-dvh`, not `min-h-svh`. `svh` is the right unit when you explicitly want to layout for the smallest stable viewport (form-only flows that must never reflow when the URL bar toggles); `dvh` is the right unit when you want the surface to always cover what the user sees.
+  - Gotchas encountered: the body's default background depends on `color-scheme`; declaring `color-scheme: dark` does NOT also set a dark background color, it only switches UA-rendered controls (scrollbars, default form widgets). Pages that want a specific dark canvas must set `body { background-color: ... }` explicitly under the `prefers-color-scheme: dark` media query (or via Tailwind tokens once the project standardizes them).
+  - Compatibility constraint: pinning the footer absolutely is safe because the `LoginShell` already declares `relative`. Other routes that mount `LoginLegalFooter` (currently none) would need their own `relative` ancestor — but the footer is route-local to `Login.tsx`, so the constraint is contained.
+
 ## US-013: MFA-Abschluss-Spinner ("Empty"/Spinner) zur Vermeidung des Login-Form-Flackerns
 
 - Diagnosed a visible flicker on `/login` after a successful MFA verify: between `setPendingMfaChallenge(null)` (which starts the Radix Dialog's close animation) and `navigate("/")` (route transition), the dialog fade-out exposed the credential form for a few frames before the redirect. The credential form was already filled with the user's email which felt jarring on a verified login.
