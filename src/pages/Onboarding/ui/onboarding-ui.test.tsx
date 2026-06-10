@@ -181,4 +181,271 @@ describe("onboarding shadcn primitives", () => {
 
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
+
+  it("opens the popover and exposes aria-activedescendant when ArrowDown is pressed on the trigger", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+          { value: "es", label: "Spain" },
+        ]}
+      />
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    expect(trigger).not.toHaveAttribute("aria-activedescendant");
+
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    const activeId = trigger.getAttribute("aria-activedescendant");
+    expect(activeId).toBeTruthy();
+    const options = screen.getAllByRole("option");
+    expect(options[1]).toHaveAttribute("id", activeId!);
+  });
+
+  it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+          { value: "es", label: "Spain" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const searchbox = screen.getByRole("searchbox");
+
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{ArrowUp}");
+    expect(searchbox).toHaveAttribute(
+      "aria-activedescendant",
+      screen.getAllByRole("option")[1]!.id
+    );
+
+    await user.keyboard("{Enter}");
+    expect(handleValueChange).toHaveBeenCalledWith("fr");
+  });
+
+  it("closes the popover when Escape is pressed", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={vi.fn()}
+        options={[{ value: "de", label: "Germany" }]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+  });
+
+  it("renders the empty message when no options match the query", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CommandPopover
+        label="Country"
+        emptyMessage="No matches"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    await user.type(screen.getByRole("searchbox"), "zzzzzz");
+
+    expect(screen.getByText("No matches")).toBeInTheDocument();
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+  });
+
+  it("activates an option on hover and selects it on click", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const options = screen.getAllByRole("option");
+
+    await user.hover(options[1]!);
+    expect(screen.getByRole("searchbox")).toHaveAttribute(
+      "aria-activedescendant",
+      options[1]!.id
+    );
+
+    await user.click(options[1]!);
+    expect(handleValueChange).toHaveBeenCalledWith("fr");
+  });
+
+  it("does not call onValueChange when a disabled option is clicked", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France", disabled: true },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const options = screen.getAllByRole("option");
+
+    await user.click(options[1]!);
+    expect(handleValueChange).not.toHaveBeenCalled();
+  });
+
+  it("skips disabled options when navigating with the keyboard", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France", disabled: true },
+          { value: "es", label: "Spain" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const searchbox = screen.getByRole("searchbox");
+    const options = screen.getAllByRole("option");
+
+    await user.keyboard("{ArrowDown}");
+    expect(searchbox).toHaveAttribute("aria-activedescendant", options[2]!.id);
+
+    await user.keyboard("{Enter}");
+    expect(handleValueChange).toHaveBeenCalledWith("es");
+  });
+
+  it("renders an error message bound to the trigger via aria-describedby and marks it invalid", () => {
+    render(
+      <CommandPopover
+        label="Country"
+        errorMessage="Country is required"
+        onValueChange={vi.fn()}
+        options={[{ value: "de", label: "Germany" }]}
+      />
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    expect(trigger).toBeInvalid();
+    expect(trigger).toHaveAccessibleDescription("Country is required");
+  });
+
+  it("ignores Enter on a disabled active option", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[{ value: "de", label: "Germany", disabled: true }]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    await user.keyboard("{Enter}");
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+  });
+
+  it("does not move the active index when ArrowDown is pressed on an empty result list", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const searchbox = screen.getByRole("searchbox");
+    await user.type(searchbox, "zzzzz");
+
+    await user.keyboard("{ArrowDown}");
+    expect(searchbox).not.toHaveAttribute("aria-activedescendant");
+  });
+
+  it("keeps the active index stable when ArrowDown only finds disabled options", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <CommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany", disabled: true },
+          { value: "fr", label: "France", disabled: true },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    await user.keyboard("{ArrowDown}");
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+  });
+
+  it("disables the trigger when the disabled prop is set", () => {
+    render(
+      <CommandPopover
+        label="Country"
+        disabled
+        onValueChange={vi.fn()}
+        options={[{ value: "de", label: "Germany" }]}
+      />
+    );
+
+    expect(screen.getByRole("combobox", { name: "Country" })).toBeDisabled();
+  });
 });

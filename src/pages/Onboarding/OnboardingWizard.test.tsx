@@ -3524,3 +3524,94 @@ describe("OnboardingWizard skip step behavior", () => {
     ).not.toHaveBeenCalled();
   });
 });
+
+describe("OnboardingWizard initial loading and error states", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+  });
+
+  it("announces the initial loading state on the inner CardContent (not the outer Card)", () => {
+    let resolveSteps: (value: unknown[]) => void = () => {};
+    onboardingApiMocks.fetchOnboardingSteps.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSteps = resolve as (value: unknown[]) => void;
+        })
+    );
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+
+    renderWithProviders();
+
+    const loadingRegion = screen.getByRole("status");
+    expect(loadingRegion).toHaveTextContent(/loading onboarding/i);
+    expect(loadingRegion).toHaveAttribute("aria-live", "polite");
+    // The role/aria-live must live on the inner CardContent, not the outer Card,
+    // so a region landmark is not promoted on the surrounding container.
+    expect(loadingRegion.tagName.toLowerCase()).toBe("div");
+
+    resolveSteps([]);
+  });
+
+  it("renders a top-level error alert (without focusing through feedbackErrorRef) when steps fail to load", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockRejectedValueOnce(
+      new ApiError("Server error", 500)
+    );
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+
+    renderWithProviders();
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+  });
+
+  it("focuses the feedback error alert when a save-draft submission fails (uses feedbackErrorRef)", async () => {
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-bank",
+      name: "Bank Account Details",
+      title: "Bank Account Details",
+      description: "Bank info",
+      form_schema: {
+        type: "object",
+        required: [],
+        properties: {
+          iban: { type: "string", title: "IBAN" },
+        },
+      },
+      is_required: false,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("Backend was unreachable", 500)
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE123");
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    const errorAlert = await screen.findByRole("alert");
+    expect(errorAlert).toBeInTheDocument();
+    await waitFor(() => expect(errorAlert).toHaveFocus());
+  });
+});

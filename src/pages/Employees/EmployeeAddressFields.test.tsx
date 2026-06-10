@@ -1085,6 +1085,36 @@ describe("EmployeeAddressFields", () => {
     ).toBeInTheDocument();
   });
 
+  it("calls onChange with the selected country code when a country is picked", async () => {
+    vi.useRealTimers();
+    const user = (await import("@testing-library/user-event")).default.setup();
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /country/i }));
+    await user.type(screen.getByRole("searchbox"), "FR");
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(onChange).toHaveBeenCalledWith("country", "FR");
+  });
+
   it("shows empty state for no locality suggestions found", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
