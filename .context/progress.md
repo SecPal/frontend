@@ -12,6 +12,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Schema-driven wizard field paths should use onboarding-local `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Select`, `Textarea`, `Checkbox`, and `CommandPopover` primitives with deterministic `onboarding-field-*` IDs; keep special upload and address-history blocks isolated until their own migrations.
 - Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
 - Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
+- Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -120,3 +121,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: file upload sections can migrate presentation cleanly by leaving upload context, pending file arrays, and `handleUpload`/remove handlers untouched while replacing only labels, descriptions, native file inputs, and radio/select controls.
   - Gotchas encountered: the wizard upload tests query radio groups by accessible role and name, so shadcn-style native radio groups need explicit `role="radiogroup"` plus stable `aria-label` when replacing the previous wrapper components.
+
+## US-001: Shadcn-Auth-Bausteine für Login einführen
+
+- Added a login-specific shadcn-style UI layer for shell/card/header, form fields, buttons, themed status messages, and a controlled OTP input under `src/pages/Auth/ui`.
+- Migrated the existing login surface, passkey action button, and MFA dialog form/status controls to the new auth-local primitives while leaving the auth, rate-limit, passkey, and MFA flow logic unchanged.
+- Added focused rendering tests for the auth UI layer covering shell/card semantics, explicit label/error wiring, themed status messages, and OTP paste/cell updates.
+- Files changed:
+  - `src/pages/Auth/ui/index.ts`
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/utils.ts`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: mirror the onboarding migration boundary for auth by keeping login-local shadcn wrappers in a route-adjacent barrel and preserving stable IDs/ARIA relationships when swapping out Headless/Catalyst field wrappers.
+  - Gotchas encountered: a component prop named `title` collides with the native HTML `title` attribute when intersecting with `ComponentPropsWithoutRef<"div">`, so wrapper APIs that accept React nodes need to omit or rename native attributes explicitly.

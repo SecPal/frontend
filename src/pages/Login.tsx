@@ -23,17 +23,23 @@ import {
   isPasskeySupported,
 } from "../services/passkeyBrowser";
 import { formatApiDateTime } from "../lib/dateUtils";
-import { AuthLayout } from "../components/auth-layout";
 import { Footer } from "../components/Footer";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { Logo } from "../components/Logo";
-import { Button } from "../components/button";
 import {
-  Description,
-  ErrorMessage,
-  Field,
-  Label,
-} from "../components/fieldset";
+  LoginButton,
+  LoginCard,
+  LoginCardHeader,
+  LoginCardTitle,
+  LoginField,
+  LoginFieldDescription,
+  LoginFieldError,
+  LoginFieldLabel,
+  LoginForm,
+  LoginInput,
+  LoginShell,
+  LoginStatusMessage,
+} from "./Auth/ui";
 import {
   Dialog,
   DialogActions,
@@ -41,7 +47,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "../components/dialog";
-import { Input } from "../components/input";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
@@ -450,216 +455,148 @@ export function Login() {
   };
 
   return (
-    <AuthLayout>
-      <div className="flex-1 lg:hidden" />
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Logo size="48" />
-          <h1 className="text-3xl font-bold">SecPal</h1>
-        </div>
-        <LanguageSwitcher />
-      </div>
-
-      <h2 className="mt-8 text-2xl font-semibold">
-        <Trans id="login.title">Log in</Trans>
-      </h2>
-
-      <form
-        onSubmit={handleSubmit}
-        className="mt-10 space-y-8"
-        aria-label="Login form"
-      >
-        {/* Offline Warning - shown when user has no internet connection */}
-        {!isOnline && (
-          <div
-            id="offline-warning"
-            role="alert"
-            aria-live="polite"
-            className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-xl" aria-hidden="true">
-                🌐
-              </span>
-              <div>
-                <p className="font-medium text-red-800 dark:text-red-200">
-                  <Trans id="login.offlineWarning.title">
-                    No internet connection
-                  </Trans>
-                </p>
-                <p className="mt-1 text-sm text-red-800 dark:text-red-200">
-                  <Trans id="login.offlineWarning.message">
-                    Login requires an internet connection. Please check your
-                    connection and try again.
-                  </Trans>
-                </p>
-              </div>
-            </div>
+    <LoginShell>
+      <LoginCard aria-labelledby="login-title">
+        <div className="flex-1 lg:hidden" />
+        <LoginCardHeader>
+          <div className="flex items-center gap-3">
+            <Logo size="48" />
+            <LoginCardTitle>SecPal</LoginCardTitle>
           </div>
-        )}
+          <LanguageSwitcher />
+        </LoginCardHeader>
 
-        {/* Health Check Warning - shown when backend is not ready */}
-        {isSystemNotReady && (
-          <div
-            id="health-warning"
-            role="alert"
-            aria-live="polite"
-            className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-xl" aria-hidden="true">
-                ⚠️
-              </span>
-              <div>
-                <p className="font-medium text-amber-800 dark:text-amber-200">
-                  <Trans id="login.healthWarning.title">System not ready</Trans>
-                </p>
-                <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                  <Trans id="login.healthWarning.message">
-                    The system is not fully configured. Please contact your
-                    administrator.
-                  </Trans>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <h2 id="login-title" className="mt-8 text-2xl font-semibold">
+          <Trans id="login.title">Log in</Trans>
+        </h2>
 
-        {/* Rate Limit Lockout Warning */}
-        {isLocked && (
-          <div
-            id="lockout-warning"
-            role="alert"
-            aria-live="assertive"
-            className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20"
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-xl" aria-hidden="true">
-                🔒
-              </span>
-              <div>
-                <p className="font-medium text-red-800 dark:text-red-200">
-                  <Trans id="login.rateLimitLocked.title">
-                    Too many failed attempts
-                  </Trans>
-                </p>
-                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                  <Trans id="login.rateLimitLocked.message">
-                    Please wait {remainingLockoutSeconds} seconds before trying
-                    again.
-                  </Trans>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            id="login-error"
-            role="alert"
-            aria-live="assertive"
-            className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
-          >
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-            {/* Show remaining attempts warning when running low */}
-            {!isLocked && remainingAttempts > 0 && remainingAttempts <= 3 && (
-              <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">
-                <Trans id="login.remainingAttempts">
-                  {remainingAttempts} attempt(s) remaining before temporary
-                  lockout.
+        <LoginForm onSubmit={handleSubmit} aria-label="Login form">
+          {/* Offline Warning - shown when user has no internet connection */}
+          {!isOnline && (
+            <LoginStatusMessage
+              id="offline-warning"
+              variant="error"
+              title={
+                <Trans id="login.offlineWarning.title">
+                  No internet connection
+                </Trans>
+              }
+            >
+              <p>
+                <Trans id="login.offlineWarning.message">
+                  Login requires an internet connection. Please check your
+                  connection and try again.
                 </Trans>
               </p>
-            )}
-          </div>
-        )}
-
-        <Field>
-          <Label htmlFor="email">
-            <Trans id="login.email">Email address</Trans>
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@secpal.app"
-            aria-describedby={ariaDescribedBy}
-            disabled={
-              !isOnline ||
-              isSystemNotReady ||
-              isLocked ||
-              pendingMfaChallenge !== null
-            }
-          />
-        </Field>
-
-        <Field>
-          <Label htmlFor="password">
-            <Trans id="login.password">Password</Trans>
-          </Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            aria-describedby={ariaDescribedBy}
-            disabled={
-              !isOnline ||
-              isSystemNotReady ||
-              isLocked ||
-              pendingMfaChallenge !== null
-            }
-          />
-        </Field>
-
-        <Button
-          type="submit"
-          disabled={
-            !isOnline ||
-            isSubmitting ||
-            isSubmittingPasskey ||
-            isSystemNotReady ||
-            isHealthCheckLoading ||
-            isLocked ||
-            pendingMfaChallenge !== null
-          }
-          className="w-full"
-          aria-busy={isSubmitting}
-          aria-disabled={
-            !isOnline ||
-            isSubmittingPasskey ||
-            isSystemNotReady ||
-            isHealthCheckLoading ||
-            isLocked ||
-            pendingMfaChallenge !== null
-          }
-        >
-          {isHealthCheckLoading ? (
-            <Trans id="login.checkingSystem">Checking system...</Trans>
-          ) : isLocked ? (
-            <Trans id="login.lockedButton">
-              Locked ({remainingLockoutSeconds}s)
-            </Trans>
-          ) : isSubmitting ? (
-            <Trans id="login.submitting">Logging in...</Trans>
-          ) : (
-            <Trans id="login.submit">Log in</Trans>
+            </LoginStatusMessage>
           )}
-        </Button>
 
-        {supportsPasskeys ? (
-          <Button
-            type="button"
-            outline
-            onClick={() => void handlePasskeySignIn()}
+          {/* Health Check Warning - shown when backend is not ready */}
+          {isSystemNotReady && (
+            <LoginStatusMessage
+              id="health-warning"
+              variant="warning"
+              title={
+                <Trans id="login.healthWarning.title">System not ready</Trans>
+              }
+            >
+              <p>
+                <Trans id="login.healthWarning.message">
+                  The system is not fully configured. Please contact your
+                  administrator.
+                </Trans>
+              </p>
+            </LoginStatusMessage>
+          )}
+
+          {/* Rate Limit Lockout Warning */}
+          {isLocked && (
+            <LoginStatusMessage
+              id="lockout-warning"
+              variant="error"
+              live="assertive"
+              title={
+                <Trans id="login.rateLimitLocked.title">
+                  Too many failed attempts
+                </Trans>
+              }
+            >
+              <p>
+                <Trans id="login.rateLimitLocked.message">
+                  Please wait {remainingLockoutSeconds} seconds before trying
+                  again.
+                </Trans>
+              </p>
+            </LoginStatusMessage>
+          )}
+
+          {error && (
+            <LoginStatusMessage
+              id="login-error"
+              variant="error"
+              live="assertive"
+            >
+              <p>{error}</p>
+              {/* Show remaining attempts warning when running low */}
+              {!isLocked && remainingAttempts > 0 && remainingAttempts <= 3 && (
+                <p className="mt-2 text-amber-700 dark:text-amber-400">
+                  <Trans id="login.remainingAttempts">
+                    {remainingAttempts} attempt(s) remaining before temporary
+                    lockout.
+                  </Trans>
+                </p>
+              )}
+            </LoginStatusMessage>
+          )}
+
+          <LoginField>
+            <LoginFieldLabel htmlFor="email">
+              <Trans id="login.email">Email address</Trans>
+            </LoginFieldLabel>
+            <LoginInput
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@secpal.app"
+              aria-describedby={ariaDescribedBy}
+              disabled={
+                !isOnline ||
+                isSystemNotReady ||
+                isLocked ||
+                pendingMfaChallenge !== null
+              }
+            />
+          </LoginField>
+
+          <LoginField>
+            <LoginFieldLabel htmlFor="password">
+              <Trans id="login.password">Password</Trans>
+            </LoginFieldLabel>
+            <LoginInput
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              aria-describedby={ariaDescribedBy}
+              disabled={
+                !isOnline ||
+                isSystemNotReady ||
+                isLocked ||
+                pendingMfaChallenge !== null
+              }
+            />
+          </LoginField>
+
+          <LoginButton
+            type="submit"
             disabled={
               !isOnline ||
               isSubmitting ||
@@ -670,164 +607,203 @@ export function Login() {
               pendingMfaChallenge !== null
             }
             className="w-full"
-            aria-busy={isSubmittingPasskey}
+            aria-busy={isSubmitting}
+            aria-disabled={
+              !isOnline ||
+              isSubmittingPasskey ||
+              isSystemNotReady ||
+              isHealthCheckLoading ||
+              isLocked ||
+              pendingMfaChallenge !== null
+            }
           >
-            {isSubmittingPasskey ? (
-              passkeyStep === "browser" ? (
-                <Trans>Check your browser…</Trans>
-              ) : passkeyStep === "native" ? (
-                <Trans>Check your device…</Trans>
-              ) : passkeyStep === "verifying" ? (
-                <Trans>Verifying passkey…</Trans>
-              ) : (
-                <Trans>Signing in with passkey...</Trans>
-              )
+            {isHealthCheckLoading ? (
+              <Trans id="login.checkingSystem">Checking system...</Trans>
+            ) : isLocked ? (
+              <Trans id="login.lockedButton">
+                Locked ({remainingLockoutSeconds}s)
+              </Trans>
+            ) : isSubmitting ? (
+              <Trans id="login.submitting">Logging in...</Trans>
             ) : (
-              <Trans>Sign in with passkey</Trans>
+              <Trans id="login.submit">Log in</Trans>
             )}
-          </Button>
-        ) : null}
-      </form>
+          </LoginButton>
 
-      <Dialog
-        open={pendingMfaChallenge !== null}
-        onClose={handleCloseMfaDialog}
-      >
-        <DialogTitle>
-          <Trans id="login.mfa.title">Second factor required</Trans>
-        </DialogTitle>
-        <DialogDescription>
-          <Trans id="login.mfa.description">
-            Your password was accepted. Complete MFA to finish signing in.
-          </Trans>
-        </DialogDescription>
+          {supportsPasskeys ? (
+            <LoginButton
+              type="button"
+              variant="outline"
+              onClick={() => void handlePasskeySignIn()}
+              disabled={
+                !isOnline ||
+                isSubmitting ||
+                isSubmittingPasskey ||
+                isSystemNotReady ||
+                isHealthCheckLoading ||
+                isLocked ||
+                pendingMfaChallenge !== null
+              }
+              className="w-full"
+              aria-busy={isSubmittingPasskey}
+            >
+              {isSubmittingPasskey ? (
+                passkeyStep === "browser" ? (
+                  <Trans>Check your browser…</Trans>
+                ) : passkeyStep === "native" ? (
+                  <Trans>Check your device…</Trans>
+                ) : passkeyStep === "verifying" ? (
+                  <Trans>Verifying passkey…</Trans>
+                ) : (
+                  <Trans>Signing in with passkey...</Trans>
+                )
+              ) : (
+                <Trans>Sign in with passkey</Trans>
+              )}
+            </LoginButton>
+          ) : null}
+        </LoginForm>
 
-        <DialogBody>
-          {pendingMfaChallenge && (
-            <form className="space-y-6" onSubmit={handleVerifyMfa}>
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">
-                  <Trans id="login.mfa.expiry">
-                    This verification step expires at{" "}
-                    {formatDateTime(pendingMfaChallenge.expires_at)}.
-                  </Trans>
-                </p>
-              </div>
+        <Dialog
+          open={pendingMfaChallenge !== null}
+          onClose={handleCloseMfaDialog}
+        >
+          <DialogTitle>
+            <Trans id="login.mfa.title">Second factor required</Trans>
+          </DialogTitle>
+          <DialogDescription>
+            <Trans id="login.mfa.description">
+              Your password was accepted. Complete MFA to finish signing in.
+            </Trans>
+          </DialogDescription>
 
-              <fieldset className="space-y-3">
-                <legend className="text-sm font-medium text-zinc-950 dark:text-white">
-                  <Trans id="login.mfa.method">Verification method</Trans>
-                </legend>
+          <DialogBody>
+            {pendingMfaChallenge && (
+              <form className="space-y-6" onSubmit={handleVerifyMfa}>
+                <LoginStatusMessage variant="neutral" live="off">
+                  <p>
+                    <Trans id="login.mfa.expiry">
+                      This verification step expires at{" "}
+                      {formatDateTime(pendingMfaChallenge.expires_at)}.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
 
-                {pendingMfaChallenge.available_methods.map((method) => (
-                  <label
-                    key={method}
-                    className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                <fieldset className="space-y-3">
+                  <legend className="text-sm font-medium text-zinc-950 dark:text-white">
+                    <Trans id="login.mfa.method">Verification method</Trans>
+                  </legend>
+
+                  {pendingMfaChallenge.available_methods.map((method) => (
+                    <label
+                      key={method}
+                      className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                    >
+                      <input
+                        type="radio"
+                        name="mfa-method"
+                        value={method}
+                        checked={mfaMethod === method}
+                        onChange={() => setMfaMethod(method)}
+                        disabled={isVerifyingMfa}
+                        className="mt-1"
+                      />
+                      <span>
+                        {method === "recovery_code" ? (
+                          <Trans id="login.mfa.method.recovery_code">
+                            Recovery code
+                          </Trans>
+                        ) : (
+                          <Trans id="login.mfa.method.totp">
+                            Authenticator code
+                          </Trans>
+                        )}
+                        {method === pendingMfaChallenge.primary_method ? (
+                          <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            <Trans id="login.mfa.preferred">recommended</Trans>
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+
+                <LoginField>
+                  <LoginFieldLabel htmlFor="mfa-code">
+                    {mfaMethod === "recovery_code" ? (
+                      <Trans id="login.mfa.recoveryCode">Recovery code</Trans>
+                    ) : (
+                      <Trans id="login.mfa.authenticatorCode">
+                        Authenticator code
+                      </Trans>
+                    )}
+                  </LoginFieldLabel>
+                  <LoginFieldDescription>
+                    {mfaMethod === "recovery_code" ? (
+                      <Trans id="login.mfa.recoveryHelp">
+                        Enter one unused recovery code exactly as stored.
+                      </Trans>
+                    ) : (
+                      <Trans id="login.mfa.totpHelp">
+                        Enter the current 6-digit code from your authenticator
+                        app.
+                      </Trans>
+                    )}
+                  </LoginFieldDescription>
+                  <LoginInput
+                    id="mfa-code"
+                    name="mfa-code"
+                    type="text"
+                    autoComplete="one-time-code"
+                    required
+                    value={mfaCode}
+                    onChange={(event) => setMfaCode(event.target.value)}
+                    placeholder={
+                      mfaMethod === "recovery_code" ? "B6F42Q8P" : "123456"
+                    }
+                    disabled={isVerifyingMfa}
+                    aria-invalid={mfaError ? true : undefined}
+                    aria-describedby={mfaError ? "mfa-code-error" : undefined}
+                  />
+                  {mfaError ? (
+                    <LoginFieldError id="mfa-code-error">
+                      {mfaError}
+                    </LoginFieldError>
+                  ) : null}
+                </LoginField>
+
+                <DialogActions>
+                  <LoginButton
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseMfaDialog}
+                    disabled={isVerifyingMfa}
                   >
-                    <input
-                      type="radio"
-                      name="mfa-method"
-                      value={method}
-                      checked={mfaMethod === method}
-                      onChange={() => setMfaMethod(method)}
-                      disabled={isVerifyingMfa}
-                      className="mt-1"
-                    />
-                    <span>
-                      {method === "recovery_code" ? (
-                        <Trans id="login.mfa.method.recovery_code">
-                          Recovery code
-                        </Trans>
-                      ) : (
-                        <Trans id="login.mfa.method.totp">
-                          Authenticator code
-                        </Trans>
-                      )}
-                      {method === pendingMfaChallenge.primary_method ? (
-                        <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
-                          <Trans id="login.mfa.preferred">recommended</Trans>
-                        </span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
-              </fieldset>
+                    <Trans id="login.mfa.cancel">Cancel</Trans>
+                  </LoginButton>
+                  <LoginButton
+                    type="submit"
+                    disabled={isVerifyingMfa || mfaCode.trim().length === 0}
+                    aria-busy={isVerifyingMfa}
+                  >
+                    {isVerifyingMfa ? (
+                      <Trans id="login.mfa.verifying">Verifying...</Trans>
+                    ) : (
+                      <Trans id="login.mfa.submit">Verify and continue</Trans>
+                    )}
+                  </LoginButton>
+                </DialogActions>
+              </form>
+            )}
+          </DialogBody>
+        </Dialog>
 
-              <Field>
-                <Label htmlFor="mfa-code">
-                  {mfaMethod === "recovery_code" ? (
-                    <Trans id="login.mfa.recoveryCode">Recovery code</Trans>
-                  ) : (
-                    <Trans id="login.mfa.authenticatorCode">
-                      Authenticator code
-                    </Trans>
-                  )}
-                </Label>
-                <Description>
-                  {mfaMethod === "recovery_code" ? (
-                    <Trans id="login.mfa.recoveryHelp">
-                      Enter one unused recovery code exactly as stored.
-                    </Trans>
-                  ) : (
-                    <Trans id="login.mfa.totpHelp">
-                      Enter the current 6-digit code from your authenticator
-                      app.
-                    </Trans>
-                  )}
-                </Description>
-                <Input
-                  id="mfa-code"
-                  name="mfa-code"
-                  type="text"
-                  autoComplete="one-time-code"
-                  required
-                  value={mfaCode}
-                  onChange={(event) => setMfaCode(event.target.value)}
-                  placeholder={
-                    mfaMethod === "recovery_code" ? "B6F42Q8P" : "123456"
-                  }
-                  disabled={isVerifyingMfa}
-                  aria-invalid={mfaError ? true : undefined}
-                  data-invalid={mfaError ? true : undefined}
-                  aria-describedby={mfaError ? "mfa-code-error" : undefined}
-                />
-                {mfaError ? (
-                  <ErrorMessage id="mfa-code-error">{mfaError}</ErrorMessage>
-                ) : null}
-              </Field>
+        <div className="flex-1" />
 
-              <DialogActions>
-                <Button
-                  type="button"
-                  outline
-                  onClick={handleCloseMfaDialog}
-                  disabled={isVerifyingMfa}
-                >
-                  <Trans id="login.mfa.cancel">Cancel</Trans>
-                </Button>
-                <Button
-                  type="submit"
-                  color="blue"
-                  disabled={isVerifyingMfa || mfaCode.trim().length === 0}
-                  aria-busy={isVerifyingMfa}
-                >
-                  {isVerifyingMfa ? (
-                    <Trans id="login.mfa.verifying">Verifying...</Trans>
-                  ) : (
-                    <Trans id="login.mfa.submit">Verify and continue</Trans>
-                  )}
-                </Button>
-              </DialogActions>
-            </form>
-          )}
-        </DialogBody>
-      </Dialog>
-
-      <div className="flex-1" />
-
-      <div className="-mx-8 -mb-8 lg:-mx-12 lg:-mb-12 pt-8">
-        <Footer />
-      </div>
-    </AuthLayout>
+        <div className="-mx-8 -mb-8 lg:-mx-12 lg:-mb-12 pt-8">
+          <Footer />
+        </div>
+      </LoginCard>
+    </LoginShell>
   );
 }
