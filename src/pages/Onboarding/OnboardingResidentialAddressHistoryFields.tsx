@@ -240,6 +240,7 @@ export function OnboardingResidentialAddressHistoryFields({
               </Trans>
             </FieldDescription>
             <RadioGroup
+              role="radiogroup"
               aria-label={_(msg`Do you currently have a Bewacher ID?`)}
               aria-invalid={hasBewacherIdQuestionError ? true : undefined}
               aria-describedby={
