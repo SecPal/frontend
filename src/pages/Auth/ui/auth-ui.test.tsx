@@ -135,38 +135,36 @@ describe("auth login shadcn primitives", () => {
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
 
-  it("offers a controlled OTP input with paste support", async () => {
+  it("offers a controlled digits-only OTP input rendered as shadcn slots", async () => {
     const handleChange = vi.fn();
 
-    render(
+    const { container } = render(
       <LoginOtpInput
+        idPrefix="auth-otp"
         value="12"
         onChange={handleChange}
         aria-label="Authenticator code"
       />
     );
 
-    expect(
-      screen.getByRole("group", { name: "Authenticator code" })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Authenticator code digit 1")).toHaveValue(
-      "1"
+    const otpInput = screen.getByLabelText("Authenticator code");
+    expect(otpInput).toHaveAttribute("id", "auth-otp");
+    expect(otpInput).toHaveAttribute("inputmode", "numeric");
+    expect(otpInput).toHaveAttribute("autocomplete", "one-time-code");
+    expect(otpInput).toHaveValue("12");
+
+    const slots = container.querySelectorAll(
+      '[data-slot="login-input-otp-slot"]'
     );
-    expect(screen.getByLabelText("Authenticator code digit 2")).toHaveValue(
-      "2"
-    );
+    expect(slots).toHaveLength(6);
+    expect(slots[0]).toHaveTextContent("1");
+    expect(slots[1]).toHaveTextContent("2");
 
-    fireEvent.paste(screen.getByLabelText("Authenticator code digit 1"), {
-      clipboardData: {
-        getData: () => "65 43-21",
-      },
-    } as unknown as ClipboardEvent);
+    fireEvent.change(otpInput, { target: { value: "654321" } });
+    expect(handleChange).toHaveBeenCalledWith("654321");
 
-    fireEvent.change(screen.getByLabelText("Authenticator code digit 3"), {
-      target: { value: "x9" },
-    });
-
-    expect(handleChange).toHaveBeenNthCalledWith(1, "654321");
-    expect(handleChange).toHaveBeenNthCalledWith(2, "129");
+    handleChange.mockClear();
+    fireEvent.change(otpInput, { target: { value: "12a 34-56" } });
+    expect(handleChange).not.toHaveBeenCalled();
   });
 });

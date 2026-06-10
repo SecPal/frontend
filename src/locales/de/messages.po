@@ -1986,6 +1986,11 @@ msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden 
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.separator"
+msgstr "Oder"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.submit"
 msgstr "Einloggen"
 
@@ -1996,8 +2001,13 @@ msgstr "Einloggen..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.subtitle"
+msgstr "Melden Sie sich in Ihrem Arbeitsbereich an."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.title"
-msgstr "Einloggen"
+msgstr "Willkommen bei SecPal"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Minijob"

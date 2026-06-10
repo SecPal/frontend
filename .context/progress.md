@@ -204,6 +204,38 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-008: Login-Card auf shadcn `login-05` Komposition umstellen (Passwort bleibt)
+
+- Restructured the unauthenticated login surface from the previous split brand-panel shell into a centered shadcn `login-05` card (`max-w-sm`, brand block on top, primary submit, `FieldSeparator` "Or", passkey as secondary action) while keeping the existing email + password flow, passkey path, MFA dialog, health-check, offline, rate-limit, and language-switching behavior intact.
+- Reworked `LoginShell` into a centered flex container (`relative flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10`) and `LoginCard` into a slim `max-w-sm` section; `LoginCardHeader`/`LoginCardTitle` now drive the centered brand block, and a new `LoginFieldSeparator` primitive provides the "Or" divider between primary and secondary auth actions.
+- Moved the SecPal language switcher into an absolute-positioned slot at the shell's top-right and lifted the legal footer (Powered-by + AGPL + Source-Code links) out of the card to a centered `max-w-sm` strip below it, so the card itself stays focused on the auth form per `login-05`.
+- Updated the localized login title to "Welcome to SecPal" / "Willkommen bei SecPal" plus new `login.subtitle` and `login.separator` catalog entries; adjusted `App.test.tsx` and `main.test.tsx` to disambiguate the login route by the email field instead of the removed `Log in` heading.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx` (`LoginShell`, `LoginCard`, `LoginCardHeader`, `LoginCardTitle`, `LoginForm`, new `LoginFieldSeparator`)
+  - `src/pages/Login.tsx` (centered `login-05` composition; absolute language switcher; legal footer outside card)
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`, `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `src/App.test.tsx`, `src/main.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: when migrating a shell from a split-panel layout to a centered card, keep `<main>` and `<section aria-labelledby>` roles intact so existing role-based test queries continue to pass while only the class-driven layout changes.
+  - Gotchas encountered: explicit-id Lingui messages are not auto-rewritten when the source string changes, so the English catalog had to be updated by hand (and the German equivalent translated) for the new `login.title`/`login.subtitle`/`login.separator` strings before tests asserting the heading would pass.
+
+## US-007: TOTP-OTP-Feld auf offizielles shadcn `input-otp` umstellen
+
+- Added the `input-otp@1.4.2` dependency and wrapped its `OTPInput`/`OTPInputContext`/`REGEXP_ONLY_DIGITS` exports in auth-local primitives `LoginInputOtp`, `LoginInputOtpGroup`, and `LoginInputOtpSlot` styled to the existing zinc/blue auth theme.
+- Rewrote `LoginOtpInput` as a thin convenience wrapper that renders the new primitives with a six-slot group, digits-only `pattern`, `inputMode="numeric"`, and `autoComplete="one-time-code"`, while preserving the existing `(value, onChange, length, idPrefix, disabled, aria-*)` signature so the MFA dialog call site only had to drop the `mfa-code-0` cell suffix in the `FieldLabel htmlFor`.
+- Updated the auth UI primitive test for the new slot-based DOM (single labeled OTP input, six `data-slot="login-input-otp-slot"` cells, pattern rejection of mixed input) and adjusted the login MFA tests to use a disambiguated `getTotpInput` helper that prefers the `autocomplete="one-time-code"` input over the radio option labeled "Authenticator code".
+- Files changed:
+  - `package.json`, `package-lock.json` (new `input-otp@1.4.2` dependency)
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx` (`htmlFor="mfa-code"` instead of `mfa-code-0`)
+  - `src/pages/Login.test.tsx` (`getTotpInput` helper, slot-based DOM assertions)
+  - `.context/login-spec-vs-implementation.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: when an OTP input shares its accessible name with a radio option label, disambiguate via the unique `autocomplete="one-time-code"` attribute rather than introducing a different aria-label.
+  - Gotchas encountered: the `input-otp` library's `pattern` enforcement rejects mixed-character inputs entirely (no partial sanitization), so the digits-only regression test now asserts that an invalid paste leaves the value empty and the verify button disabled before the valid 6-digit happy path.
+
 ## US-006: Login-Flow lokalisieren, bereinigen und regressionssicher abschließen
 
 - Removed the remaining login-specific Headless/Catalyst dependency chain by replacing the auth-local MFA dialog with native shadcn-style modal semantics and moving the login language selector to route-local native markup.

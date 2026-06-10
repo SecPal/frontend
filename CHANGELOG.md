@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Migrated the Login page from the legacy Catalyst component set to a new self-contained `src/pages/Auth/ui/primitives.tsx` design-system layer (`LoginShell`, `LoginCard`, `LoginCardHeader`, `LoginCardTitle`, `LoginForm`, `LoginButton`, `LoginInput`, `LoginField`, `LoginFieldGroup`, `LoginFieldLabel`, `LoginFieldDescription`, `LoginFieldError`, `LoginFieldSeparator`, `LoginStatusMessage`, `LoginDialog`, `LoginInputOtp`, `LoginInputOtpGroup`, `LoginInputOtpSlot`, `LoginOtpInput`, and related helpers), removing the dependency on external Catalyst primitives for the auth flow and aligning the visual language with the rest of the shadcn-based UI.
+- Restructured `/login` around the shadcn `login-05` block: a centered `max-w-sm` card with brand block on top, primary submit, `LoginFieldSeparator` "Or", and the passkey button as the secondary action, with the language switcher pinned to the shell's top-right and the legal footer rendered as a centered strip below the card.
+- Adopted the official shadcn `input-otp` library (`input-otp@1.4.2`) and wrapped it in route-local `LoginInputOtp` / `LoginInputOtpGroup` / `LoginInputOtpSlot` primitives styled to the existing zinc theme; `LoginOtpInput` is now a thin convenience wrapper over the new primitives with digits-only pattern enforcement (`REGEXP_ONLY_DIGITS`) for TOTP entry in the MFA challenge dialog.
+- Inlined `LoginLanguageSwitcher` and `LoginLegalFooter` into the Login page, removing the dependency on the shared `LanguageSwitcher` and `Footer` components for the auth flow.
+- Extended `INVALID_CREDENTIALS_PATTERN` to also match the short `"Invalid credentials"` backend message so both forms are localized consistently.
+- Added i18n coverage for previously hardcoded error strings in the Login page: passkey completion errors, MFA completion errors, unexpected submission errors, and the MFA verification failure message.
+- Added localized `login.title` ("Welcome to SecPal" / "Willkommen bei SecPal"), `login.subtitle`, and `login.separator` ("Or" / "Oder") strings for the new `login-05` brand block and separator.
+
+### Changed
+
+- `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
+
+### Fixed
+
+- Fixed `LoginLanguageSwitcher` error handling: locale-load failures now always display the localized fallback message instead of leaking raw internal `Error.message` strings (network errors, chunk URLs) into the UI.
+
 - Migrated the onboarding wizard, onboarding-complete, and onboarding-submitted pages from the legacy Catalyst component set to a new self-contained `src/pages/Onboarding/ui/primitives.tsx` design-system layer (Button, Input, Textarea, Select, Checkbox, RadioGroup, Alert, Card, Badge, Progress, Field, CommandPopover, and related helpers), removing the dependency on external Catalyst primitives for this flow and aligning the visual language with the rest of the shadcn-based UI.
 - Added `CommandPopover` with full keyboard navigation (ArrowDown/ArrowUp/Enter/Escape), ARIA combobox/listbox pattern with `aria-activedescendant`, and stable per-option `id` attributes for screen-reader announcement of the active item; used for nationality selection in the onboarding wizard.
 - Added `ProgressIndicator` using the new `Progress` primitive with `aria-label` for accessible progress announcement.

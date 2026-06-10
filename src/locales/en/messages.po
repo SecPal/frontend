@@ -1985,6 +1985,11 @@ msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.separator"
+msgstr "Or"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.submit"
 msgstr "Log in"
 
@@ -1995,8 +2000,13 @@ msgstr "Logging in..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.subtitle"
+msgstr "Sign in to your operations workspace."
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.title"
-msgstr "Log in"
+msgstr "Welcome to SecPal"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Minijob"

@@ -8,12 +8,14 @@ import {
   useEffect,
   useId,
   type ButtonHTMLAttributes,
+  type ComponentProps,
   type ComponentPropsWithoutRef,
   type ForwardedRef,
   type FormHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
+import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
 const focusRing =
@@ -52,7 +54,7 @@ export function LoginShell({
   return (
     <main
       className={cn(
-        "grid min-h-svh bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 lg:grid-cols-2",
+        "relative flex min-h-svh flex-col items-center justify-center gap-6 bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
         className
       )}
       {...props}
@@ -67,7 +69,7 @@ export function LoginCard({
   return (
     <section
       className={cn(
-        "flex min-h-svh w-full flex-col bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50",
+        "w-full max-w-sm text-zinc-950 dark:text-zinc-50",
         className
       )}
       {...props}
@@ -96,7 +98,7 @@ export function LoginCardHeader({
 }: ComponentPropsWithoutRef<"div">) {
   return (
     <div
-      className={cn("flex items-center justify-between gap-4", className)}
+      className={cn("flex flex-col items-center gap-2 text-center", className)}
       {...props}
     />
   );
@@ -109,7 +111,7 @@ export function LoginCardTitle({
   return (
     <h1
       className={cn(
-        "text-3xl font-bold text-zinc-950 dark:text-zinc-50",
+        "text-xl font-bold text-zinc-950 dark:text-zinc-50",
         className
       )}
       {...props}
@@ -121,7 +123,35 @@ export function LoginForm({
   className,
   ...props
 }: FormHTMLAttributes<HTMLFormElement>) {
-  return <form className={cn("mt-10 space-y-8", className)} {...props} />;
+  return <form className={cn("flex flex-col gap-6", className)} {...props} />;
+}
+
+export function LoginFieldSeparator({
+  className,
+  children,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-field-separator"
+      role="separator"
+      className={cn(
+        "relative my-2 h-5 text-center text-sm text-zinc-500 dark:text-zinc-400",
+        className
+      )}
+      {...props}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-zinc-200 dark:bg-zinc-800"
+      />
+      {children ? (
+        <span className="relative mx-auto inline-block bg-white px-2 dark:bg-zinc-950">
+          {children}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 export const LoginButton = forwardRef(function LoginButton(
@@ -385,8 +415,66 @@ export function LoginDialogActions({
   );
 }
 
-function sanitizeOtpDigits(value: string, length: number) {
-  return value.replace(/\D/g, "").slice(0, length);
+export function LoginInputOtp({
+  containerClassName,
+  className,
+  ...props
+}: ComponentProps<typeof OTPInput> & { containerClassName?: string }) {
+  return (
+    <OTPInput
+      data-slot="login-input-otp"
+      containerClassName={cn(
+        "flex items-center gap-2 has-[:disabled]:opacity-50",
+        containerClassName
+      )}
+      className={cn("disabled:cursor-not-allowed", className)}
+      {...props}
+    />
+  );
+}
+
+export function LoginInputOtpGroup({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-input-otp-group"
+      className={cn("flex items-center", className)}
+      {...props}
+    />
+  );
+}
+
+export function LoginInputOtpSlot({
+  index,
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & { index: number }) {
+  const context = useContext(OTPInputContext);
+  const slot = context?.slots[index];
+  const char = slot?.char ?? "";
+  const hasFakeCaret = slot?.hasFakeCaret ?? false;
+  const isActive = slot?.isActive ?? false;
+
+  return (
+    <div
+      data-slot="login-input-otp-slot"
+      data-active={isActive || undefined}
+      className={cn(
+        "relative flex h-12 w-10 items-center justify-center border border-zinc-300 bg-white text-base font-semibold text-zinc-950 shadow-sm transition-all outline-none first:rounded-l-md last:rounded-r-md [&:not(:first-child)]:border-l-0 aria-invalid:border-red-600 data-[active]:z-10 data-[active]:border-blue-600 data-[active]:ring-2 data-[active]:ring-blue-600 data-[active]:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:data-[active]:ring-offset-zinc-950",
+        className
+      )}
+      {...props}
+    >
+      {char}
+      {hasFakeCaret ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="h-4 w-px animate-pulse bg-zinc-950 dark:bg-zinc-50" />
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export function LoginOtpInput({
@@ -410,60 +498,26 @@ export function LoginOtpInput({
   "aria-invalid"?: boolean;
   className?: string;
 }) {
-  const normalizedValue = sanitizeOtpDigits(value, length);
-  const cells = Array.from(
-    { length },
-    (_, index) => normalizedValue[index] ?? ""
-  );
-
-  function updateCell(index: number, nextCellValue: string) {
-    const nextDigits = sanitizeOtpDigits(nextCellValue, length);
-    const nextCells = cells.slice();
-    if (nextDigits.length > 1) {
-      nextDigits.split("").forEach((digit, digitIndex) => {
-        if (index + digitIndex < length) {
-          nextCells[index + digitIndex] = digit;
-        }
-      });
-    } else {
-      nextCells[index] = nextDigits;
-    }
-    onChange(nextCells.join("").slice(0, length));
-  }
-
   return (
-    <div
-      role="group"
+    <LoginInputOtp
+      id={idPrefix}
+      value={value}
+      onChange={onChange}
+      maxLength={length}
+      pattern={REGEXP_ONLY_DIGITS}
+      inputMode="numeric"
+      autoComplete="one-time-code"
+      disabled={disabled}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-invalid={ariaInvalid}
-      className={cn("flex gap-2", className)}
+      containerClassName={className}
     >
-      {cells.map((cellValue, index) => (
-        <LoginInput
-          key={`${idPrefix}-${index}`}
-          id={`${idPrefix}-${index}`}
-          inputMode="numeric"
-          autoComplete={index === 0 ? "one-time-code" : undefined}
-          aria-label={`${ariaLabel} digit ${index + 1}`}
-          className="h-12 w-10 text-center text-base font-semibold"
-          value={cellValue}
-          maxLength={1}
-          pattern="[0-9]*"
-          disabled={disabled}
-          onChange={(event) => updateCell(index, event.target.value)}
-          onPaste={(event) => {
-            const pastedCode = event.clipboardData
-              .getData("text")
-              .replace(/\s+/g, "");
-
-            if (pastedCode.length > 1) {
-              event.preventDefault();
-              updateCell(index, pastedCode);
-            }
-          }}
-        />
-      ))}
-    </div>
+      <LoginInputOtpGroup>
+        {Array.from({ length }, (_, index) => (
+          <LoginInputOtpSlot key={`${idPrefix}-${index}`} index={index} />
+        ))}
+      </LoginInputOtpGroup>
+    </LoginInputOtp>
   );
 }

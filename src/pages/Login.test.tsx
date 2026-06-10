@@ -21,6 +21,7 @@ import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
 import * as passkeyBrowser from "../services/passkeyBrowser";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import * as i18nModule from "../i18n";
 
 // Mock only the API functions, not AuthApiError class
 vi.mock("../services/authApi", async () => {
@@ -55,6 +56,15 @@ vi.mock("../services/passkeyBrowser", () => ({
   isPasskeySupported: vi.fn(),
   getPasskeyAssertion: vi.fn(),
 }));
+
+vi.mock("../i18n", async () => {
+  const actual = await vi.importActual("../i18n");
+  return {
+    ...actual,
+    activateLocale: vi.fn(),
+    setLocalePreference: vi.fn(),
+  };
+});
 
 const renderLogin = () => {
   return render(
@@ -135,12 +145,14 @@ async function openMfaDialog() {
   await screen.findByRole("heading", { name: /second factor required/i });
 }
 
+function getTotpInput(): HTMLInputElement {
+  return screen.getByLabelText(/authenticator code/i, {
+    selector: '[autocomplete="one-time-code"]',
+  }) as HTMLInputElement;
+}
+
 function enterTotpCode(code: string) {
-  fireEvent.paste(screen.getByLabelText(/authenticator code digit 1/i), {
-    clipboardData: {
-      getData: () => code,
-    },
-  } as unknown as ClipboardEvent);
+  fireEvent.change(getTotpInput(), { target: { value: code } });
 }
 
 describe("Login", () => {
@@ -248,12 +260,12 @@ describe("Login", () => {
     expect(
       await screen.findByRole("heading", { name: /second factor required/i })
     ).toBeInTheDocument();
+    const totpInput = getTotpInput();
+    expect(totpInput).toBeInTheDocument();
+    expect(totpInput).toHaveAttribute("inputmode", "numeric");
     expect(
-      screen.getByRole("group", { name: /authenticator code/i })
-    ).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/authenticator code digit/i)).toHaveLength(
-      6
-    );
+      document.querySelectorAll('[data-slot="login-input-otp-slot"]')
+    ).toHaveLength(6);
     expect(
       screen.getByRole("radio", { name: /recovery code/i })
     ).toBeInTheDocument();
@@ -526,7 +538,9 @@ describe("Login", () => {
 
   it("localizes the short invalid-credentials backend message with the active locale", async () => {
     const mockLogin = vi.mocked(authApi.login);
-    mockLogin.mockRejectedValue(new authApi.AuthApiError("Invalid credentials"));
+    mockLogin.mockRejectedValue(
+      new authApi.AuthApiError("Invalid credentials")
+    );
 
     act(() => {
       i18n.activate("de");
@@ -1410,6 +1424,13 @@ describe("Login", () => {
     await screen.findByRole("heading", { name: /second factor required/i });
 
     enterTotpCode("12a 34-56");
+
+    expect(getTotpInput()).toHaveValue("");
+    expect(
+      screen.getByRole("button", { name: /verify and continue/i })
+    ).toBeDisabled();
+
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -2552,6 +2573,64 @@ describe("Login", () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe("language switcher", () => {
+    it("shows the localized fallback error message when locale activation fails", async () => {
+      vi.mocked(i18nModule.activateLocale).mockRejectedValueOnce(
+        new Error("Failed to fetch chunk /assets/de-abc123.js")
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.change(
+        screen.getByRole("combobox", { name: /select language/i }),
+        {
+          target: { value: "de" },
+        }
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /failed to change language/i
+      );
+
+      expect(
+        screen.queryByText(/failed to fetch chunk/i)
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show an error when locale activation succeeds", async () => {
+      vi.mocked(i18nModule.activateLocale).mockResolvedValueOnce(undefined);
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      fireEvent.change(
+        screen.getByRole("combobox", { name: /select language/i }),
+        {
+          target: { value: "de" },
+        }
+      );
+
+      await waitFor(() => {
+        expect(i18nModule.setLocalePreference).toHaveBeenCalledWith("de");
+      });
+
+      expect(
+        screen.queryByRole("alert", { name: /failed to change language/i })
+      ).not.toBeInTheDocument();
     });
   });
 
