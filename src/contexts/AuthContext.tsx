@@ -465,16 +465,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
-    const snapshotUser = authStorage.getUserSnapshot();
-
-    if (
-      snapshotUser &&
-      authTransport.kind === "browser-session" &&
-      !isOnline()
-    ) {
-      syncOfflineAuthState(true);
-      return;
-    }
 
     const startBootstrapRevalidation = (
       clearSensitiveStateOnInvalidSession: boolean
@@ -594,6 +584,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const restoreAndRevalidate = async () => {
+      // Offline browser-session shortcut: trust the persisted snapshot user
+      // and skip vault decryption + revalidation. This also resets the
+      // loading/recovery state in case this effect run was triggered by
+      // `retryBootstrapAutomatically` (which forces `isLoading=true` and
+      // bumps `bootstrapRetryKey`) before the browser went offline —
+      // otherwise protected routes would spin forever instead of falling
+      // back to the offline session view.
+      const snapshotUser = authStorage.getUserSnapshot();
+      if (
+        snapshotUser &&
+        authTransport.kind === "browser-session" &&
+        !isOnline() &&
+        !authStorage.hasVaultLock?.()
+      ) {
+        setBootstrapRecoveryReason(null);
+        setIsLoading(false);
+        syncOfflineAuthState(true);
+        return;
+      }
+
       if (authStorage.hasVaultLock?.()) {
         setBootstrapRecoveryReason(null);
         setUser(null);

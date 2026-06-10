@@ -763,6 +763,56 @@ describe("useAuth", () => {
     }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000);
   });
 
+  it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await persistAuthUser(mockUser);
+
+    // First bootstrap attempt stalls so the bootstrap timeout fires and
+    // schedules an automatic silent retry (which sets `isLoading=true` and
+    // bumps `bootstrapRetryKey`). Once that re-runs the bootstrap effect,
+    // the browser is offline, so revalidation must be skipped without
+    // leaving protected routes spinning.
+    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    });
+
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(false);
+
+    try {
+      await waitFor(
+        () => {
+          expect(result.current.isLoading).toBe(false);
+        },
+        BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000
+      );
+
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      // The offline shortcut must not issue another revalidation after the
+      // automatic retry re-runs the bootstrap effect.
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    } finally {
+      onLineSpy.mockRestore();
+    }
+  });
+
   it("keeps stored auth when offline without revalidation", async () => {
     const mockUser = {
       id: "1",
