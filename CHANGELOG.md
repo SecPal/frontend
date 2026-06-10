@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed protected-route browser-session recovery so the app now performs one
+  automatic bootstrap retry after a transient timeout or network failure before
+  showing the manual session-recovery screen, and so the loading spinner no
+  longer hangs when the browser goes offline between the timeout and the
+  automatic retry's bootstrap re-run (the dead synchronous-body offline
+  shortcut that previously swallowed the re-run without clearing
+  `isLoading` is now removed; the existing `restoreAndRevalidate` offline
+  branch handles the browser-session + offline case uniformly).
 - Fixed the offline app-lock flow so locking no longer downgrades the service-worker session gate to a logout, cross-tab `auth_vault_state` refreshes no longer get misread as an empty logout while the vault is still locked, and unlocking no longer drops the local session when the browser-session CSRF token rotates while the vault is locked, including focused storage and `useAuth` regression coverage for the lock -> background-tab activity -> unlock path.
 - Fixed the public login route so already authenticated users no longer keep seeing the login form when they hit `/login`; the app now waits for auth bootstrap, preserves the vault-unlock state there, and redirects authenticated sessions back into the app instead.
 - Fixed browser-session bootstrap persistence on authenticated `/login` loads when the `XSRF-TOKEN` cookie is missing: the frontend now refreshes the CSRF cookie before rewriting the offline auth vault, preventing the restored session from running without persisted vault state and avoiding the follow-on `Offline vault is not available` analytics noise. Added focused App and Playwright regression coverage for the missing-cookie recovery path.
