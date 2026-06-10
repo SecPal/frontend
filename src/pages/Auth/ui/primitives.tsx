@@ -339,17 +339,18 @@ export function LoginDialog({
   return (
     <LoginDialogContext.Provider value={{ titleId, descriptionId }}>
       <div {...props}>
-        <div
-          className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/70"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/70" />
       </div>
-      <div className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6">
+      <div
+        className="fixed inset-0 z-50 flex min-h-svh items-end justify-center overflow-y-auto p-4 sm:items-center sm:p-6"
+        onClick={onClose}
+      >
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
+          onClick={(event) => event.stopPropagation()}
           className={cn(
             "w-full rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
             dialogSizes[size],

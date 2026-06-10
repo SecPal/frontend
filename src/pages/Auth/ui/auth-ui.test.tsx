@@ -130,9 +130,15 @@ describe("auth login shadcn primitives", () => {
       "Complete MFA to finish signing in."
     );
 
+    fireEvent.click(dialog);
+    expect(handleClose).not.toHaveBeenCalled();
+
+    fireEvent.click(dialog.parentElement!);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+
     fireEvent.keyDown(document, { key: "Escape" });
 
-    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(handleClose).toHaveBeenCalledTimes(2);
   });
 
   it("offers a controlled digits-only OTP input rendered as shadcn slots", async () => {
