@@ -7,27 +7,39 @@
  */
 
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { Eye, Plus } from "lucide-react";
 import { listSites } from "../../services/customersApi";
 import type { Site, SiteFilters } from "../../types/customers";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
-import { Input } from "../../components/input";
-import { Select } from "../../components/select";
-import { Field, Label } from "../../components/fieldset";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  DataTable,
+  Field,
+  FieldLabel,
+  Input,
+  LinkButton,
+  PageLink,
+  PageText,
+  PageTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Spinner,
+  StatusBadge,
   Table,
-  TableHead,
   TableBody,
-  TableRow,
-  TableHeader,
   TableCell,
-} from "../../components/table";
-import { Badge } from "../../components/badge";
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function SitesPage() {
@@ -67,7 +79,7 @@ export default function SitesPage() {
           return;
         }
 
-        setError(err instanceof Error ? err.message : "Failed to load sites");
+        setError(err instanceof Error ? err.message : _(msg`Failed to load sites`));
       })
       .finally(() => {
         if (active) {
@@ -78,7 +90,7 @@ export default function SitesPage() {
     return () => {
       active = false;
     };
-  }, [filters]);
+  }, [_, filters]);
 
   function handleSearch(value: string) {
     setLoading(true);
@@ -91,7 +103,7 @@ export default function SitesPage() {
     setError(null);
     setFilters({
       ...filters,
-      is_active: value === "" ? undefined : value === "true",
+      is_active: value === "all" ? undefined : value === "true",
       page: 1,
     });
   }
@@ -101,7 +113,7 @@ export default function SitesPage() {
     setError(null);
     setFilters({
       ...filters,
-      type: value === "" ? undefined : (value as "permanent" | "temporary"),
+      type: value === "all" ? undefined : (value as "permanent" | "temporary"),
       page: 1,
     });
   }
@@ -115,27 +127,29 @@ export default function SitesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Heading>
+        <PageTitle>
           <Trans>Sites</Trans>
-        </Heading>
+        </PageTitle>
         {capabilities.actions.sites.create && (
-          <Button
-            href={
+          <LinkButton
+            to={
               customerId ? `/sites/new/customer/${customerId}` : "/sites/new"
             }
           >
+            <Plus className="size-4" aria-hidden="true" />
             <Trans>New Site</Trans>
-          </Button>
+          </LinkButton>
         )}
       </div>
 
       {/* Search and Filter */}
-      <div className="flex gap-4">
+      <div className="grid gap-4 sm:grid-cols-[1fr_12rem_12rem]">
         <Field className="flex-1">
-          <Label>
+          <FieldLabel htmlFor="site-search">
             <Trans>Search</Trans>
-          </Label>
+          </FieldLabel>
           <Input
+            id="site-search"
             name="search"
             type="text"
             placeholder={_(msg`Search sites...`)}
@@ -144,145 +158,156 @@ export default function SitesPage() {
           />
         </Field>
         <Field>
-          <Label>
+          <FieldLabel htmlFor="site-type-filter">
             <Trans>Type</Trans>
-          </Label>
+          </FieldLabel>
           <Select
             name="type"
-            value={filters.type || ""}
-            onChange={(e) => handleTypeFilter(e.target.value)}
+            value={filters.type || "all"}
+            onValueChange={handleTypeFilter}
           >
-            <option value="">{_(msg`All Types`)}</option>
-            <option value="permanent">{_(msg`Permanent`)}</option>
-            <option value="temporary">{_(msg`Temporary`)}</option>
+            <SelectTrigger id="site-type-filter">
+              <SelectValue placeholder={_(msg`All Types`)} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{_(msg`All Types`)}</SelectItem>
+              <SelectItem value="permanent">{_(msg`Permanent`)}</SelectItem>
+              <SelectItem value="temporary">{_(msg`Temporary`)}</SelectItem>
+            </SelectContent>
           </Select>
         </Field>
         <Field>
-          <Label>
+          <FieldLabel htmlFor="site-status-filter">
             <Trans>Status</Trans>
-          </Label>
+          </FieldLabel>
           <Select
             name="status"
             value={
-              filters.is_active === undefined ? "" : String(filters.is_active)
+              filters.is_active === undefined ? "all" : String(filters.is_active)
             }
-            onChange={(e) => handleStatusFilter(e.target.value)}
+            onValueChange={handleStatusFilter}
           >
-            <option value="">{_(msg`All Status`)}</option>
-            <option value="true">{_(msg`Active`)}</option>
-            <option value="false">{_(msg`Inactive`)}</option>
+            <SelectTrigger id="site-status-filter">
+              <SelectValue placeholder={_(msg`All Status`)} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{_(msg`All Status`)}</SelectItem>
+              <SelectItem value="true">{_(msg`Active`)}</SelectItem>
+              <SelectItem value="false">{_(msg`Inactive`)}</SelectItem>
+            </SelectContent>
           </Select>
         </Field>
       </div>
 
       {/* Error State */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
-          <Text className="text-red-800 dark:text-red-200">{error}</Text>
-        </div>
+        <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Site Table */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Text>
+        <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
+          <Spinner aria-label={_(msg`Loading...`)} />
+          <span>
             <Trans>Loading...</Trans>
-          </Text>
+          </span>
         </div>
       ) : sites.length === 0 ? (
         <div className="text-center py-12">
-          <Text className="text-gray-500 dark:text-gray-400">
+          <PageText className="text-zinc-500 dark:text-zinc-400">
             <Trans>No sites found</Trans>
-          </Text>
+          </PageText>
         </div>
       ) : (
-        <Table className="[--gutter:--spacing-6] lg:[--gutter:--spacing-10]">
-          <TableHead>
-            <TableRow>
-              <TableHeader>
-                <Trans>Site Number</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Name</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Type</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Address</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Status</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Actions</Trans>
-              </TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sites.map((site) => (
-              <TableRow key={site.id}>
-                <TableCell className="font-medium">
-                  {site.site_number}
-                </TableCell>
-                <TableCell>{site.name}</TableCell>
-                <TableCell>
-                  <Badge color={site.type === "permanent" ? "blue" : "amber"}>
-                    {site.type === "permanent" ? (
-                      <Trans>Permanent</Trans>
-                    ) : (
-                      <Trans>Temporary</Trans>
-                    )}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-zinc-500">
-                  {site.address.city}, {site.address.country}
-                </TableCell>
-                <TableCell>
-                  <Badge color={site.is_active ? "lime" : "zinc"}>
-                    {site.is_active ? (
-                      <Trans>Active</Trans>
-                    ) : (
-                      <Trans>Inactive</Trans>
-                    )}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Link
-                    to={`/sites/${site.id}`}
-                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400"
-                  >
-                    <Trans>View</Trans>
-                  </Link>
-                </TableCell>
+        <DataTable>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeader>
+                  <Trans>Site Number</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Name</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Type</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Address</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Status</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Actions</Trans>
+                </TableHeader>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {sites.map((site) => (
+                <TableRow key={site.id}>
+                  <TableCell className="font-medium">
+                    {site.site_number}
+                  </TableCell>
+                  <TableCell>{site.name}</TableCell>
+                  <TableCell>
+                    <StatusBadge color={site.type === "permanent" ? "blue" : "amber"}>
+                      {site.type === "permanent" ? (
+                        <Trans>Permanent</Trans>
+                      ) : (
+                        <Trans>Temporary</Trans>
+                      )}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                    {site.address.city}, {site.address.country}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge color={site.is_active ? "lime" : "zinc"}>
+                      {site.is_active ? (
+                        <Trans>Active</Trans>
+                      ) : (
+                        <Trans>Inactive</Trans>
+                      )}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell>
+                    <PageLink to={`/sites/${site.id}`}>
+                      <Eye className="inline size-4" aria-hidden="true" />{" "}
+                      <Trans>View</Trans>
+                    </PageLink>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataTable>
       )}
 
       {/* Pagination */}
       {pagination.last_page > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg dark:bg-zinc-900 dark:border-zinc-700">
+        <div className="mt-6 flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
               onClick={() => handlePageChange(pagination.current_page - 1)}
               disabled={pagination.current_page === 1}
-              outline
+              variant="outline"
             >
               <Trans>Previous</Trans>
             </Button>
             <Button
               onClick={() => handlePageChange(pagination.current_page + 1)}
               disabled={pagination.current_page === pagination.last_page}
-              outline
+              variant="outline"
             >
               <Trans>Next</Trans>
             </Button>
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <Text className="text-sm text-gray-700 dark:text-gray-300">
+              <PageText>
                 <Trans>
                   Showing{" "}
                   <span className="font-medium">
@@ -298,26 +323,24 @@ export default function SitesPage() {
                   of <span className="font-medium">{pagination.total}</span>{" "}
                   sites
                 </Trans>
-              </Text>
+              </PageText>
             </div>
             <div>
               <nav
-                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                aria-label="Pagination"
+                className="relative z-0 inline-flex gap-2"
+                aria-label={_(msg`Pagination`)}
               >
                 <Button
                   onClick={() => handlePageChange(pagination.current_page - 1)}
                   disabled={pagination.current_page === 1}
-                  outline
-                  className="rounded-l-md"
+                  variant="outline"
                 >
                   <Trans>Previous</Trans>
                 </Button>
                 <Button
                   onClick={() => handlePageChange(pagination.current_page + 1)}
                   disabled={pagination.current_page === pagination.last_page}
-                  outline
-                  className="rounded-r-md"
+                  variant="outline"
                 >
                   <Trans>Next</Trans>
                 </Button>

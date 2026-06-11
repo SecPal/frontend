@@ -18,6 +18,15 @@ const scopedEntries = [
   "src/pages/Settings/SettingsPage.tsx",
   "src/pages/Profile/ProfilePage.tsx",
   "src/pages/Organization/OrganizationPage.tsx",
+  "src/pages/CustomerSites/ui.tsx",
+  "src/pages/Customers/CustomersPage.tsx",
+  "src/pages/Customers/CustomerCreate.tsx",
+  "src/pages/Customers/CustomerEdit.tsx",
+  "src/pages/Customers/CustomerDetail.tsx",
+  "src/pages/Sites/SitesPage.tsx",
+  "src/pages/Sites/SiteCreate.tsx",
+  "src/pages/Sites/SiteEdit.tsx",
+  "src/pages/Sites/SiteDetail.tsx",
   "src/components/OrganizationalUnitTree.tsx",
   "src/components/OrganizationalUnitFormDialog.tsx",
   "src/components/MoveOrganizationalUnitDialog.tsx",
@@ -47,10 +56,13 @@ const oldComponentWrapperPaths = new Set([
   "src/components/fieldset",
   "src/components/heading",
   "src/components/input",
+  "src/components/link",
+  "src/components/pagination",
   "src/components/radio",
   "src/components/select",
   "src/components/spinner",
   "src/components/switch",
+  "src/components/table",
   "src/components/text",
   "src/components/textarea",
 ]);
@@ -143,7 +155,7 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
 }
 
 describe("admin migration boundary", () => {
-  it("covers settings, profile, organization, and organization dialogs", () => {
+  it("covers migrated admin, customer, site, and organization sources", () => {
     expect(readScopedSources().map((source) => source.path)).toEqual([
       ...scopedEntries,
     ]);

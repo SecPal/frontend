@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -73,6 +74,12 @@ const mockResponse: PaginatedResponse<Customer> = {
 };
 
 const QUERY_TIMEOUT = 15000;
+
+async function selectRadixOption(label: RegExp, optionName: RegExp) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: label }));
+  await user.click(await screen.findByRole("option", { name: optionName }));
+}
 
 describe("CustomersPage", () => {
   beforeEach(() => {
@@ -145,8 +152,7 @@ describe("CustomersPage", () => {
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByRole("combobox", { name: /status/i });
-    fireEvent.change(statusSelect, { target: { value: "false" } });
+    await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith(
@@ -338,8 +344,7 @@ describe("CustomersPage", () => {
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByRole("combobox", { name: /status/i });
-    fireEvent.change(statusSelect, { target: { value: "false" } });
+    await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith(

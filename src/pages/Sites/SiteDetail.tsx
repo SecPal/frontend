@@ -8,34 +8,42 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { ArrowLeft, Edit, List, Trash2 } from "lucide-react";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type { Site, Customer } from "../../types/customers";
 import type { OrganizationalUnit } from "../../types/organizational";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
-import { Badge } from "../../components/badge";
 import {
   DescriptionList,
-  DescriptionTerm,
   DescriptionDetails,
-} from "../../components/description-list";
+  DescriptionTerm,
+  Alert,
+  AlertDescription,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  LinkButton,
+  PageLink,
+  PageText,
+  PageTitle,
+  Spinner,
+  StatusBadge,
+} from "../CustomerSites/ui";
 import { formatDate } from "../../lib/dateUtils";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
-import {
-  Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
-  DialogActions,
-} from "../../components/dialog";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 export default function SiteDetail() {
-  const { i18n } = useLingui();
+  const { _, i18n } = useLingui();
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,7 +51,8 @@ export default function SiteDetail() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -51,7 +60,7 @@ export default function SiteDetail() {
     async function loadData() {
       if (!id) return;
       setLoading(true);
-      setError(null);
+      setLoadError(null);
       try {
         const siteData = await getSite(id);
         setSite(siteData);
@@ -69,25 +78,25 @@ export default function SiteDetail() {
           setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load site");
+        setLoadError(err instanceof Error ? err.message : _(msg`Failed to load site`));
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [id]);
+  }, [_, id]);
 
   async function handleDelete() {
     if (!site) return;
 
     setDeleting(true);
-    setError(null);
+    setDeleteError(null);
 
     try {
       await deleteSite(site.id);
       navigate("/sites");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete site");
+      setDeleteError(err instanceof Error ? err.message : _(msg`Failed to delete site`));
       setDeleting(false);
       // Keep dialog open to show error message
     }
@@ -95,21 +104,25 @@ export default function SiteDetail() {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <Trans>Loading...</Trans>
+      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
+        <Spinner aria-label={_(msg`Loading...`)} />
+        <span>
+          <Trans>Loading...</Trans>
+        </span>
       </div>
     );
   }
 
-  if (error || !site) {
+  if (loadError || !site) {
     return (
       <div className="text-center py-12">
-        <Text className="text-red-600 dark:text-red-400">
-          {error || <Trans>Site not found</Trans>}
-        </Text>
-        <Button href="/sites" outline className="mt-4">
+        <PageText className="text-red-600 dark:text-red-400">
+          {loadError || <Trans>Site not found</Trans>}
+        </PageText>
+        <LinkButton to="/sites" variant="outline" className="mt-4">
+          <ArrowLeft className="size-4" aria-hidden="true" />
           <Trans>Back to Sites</Trans>
-        </Button>
+        </LinkButton>
       </div>
     );
   }
@@ -118,26 +131,26 @@ export default function SiteDetail() {
     <div className="max-w-4xl">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <Heading>{site.name}</Heading>
-          <Text className="mt-1 text-zinc-500 dark:text-zinc-400">
+          <PageTitle>{site.name}</PageTitle>
+          <PageText className="mt-1 text-zinc-500 dark:text-zinc-400">
             {site.site_number}
-          </Text>
+          </PageText>
         </div>
         <div className="flex gap-2">
-          <Badge color={site.type === "permanent" ? "blue" : "amber"}>
+          <StatusBadge color={site.type === "permanent" ? "blue" : "amber"}>
             {site.type === "permanent" ? (
               <Trans>Permanent</Trans>
             ) : (
               <Trans>Temporary</Trans>
             )}
-          </Badge>
-          <Badge color={site.is_active ? "lime" : "zinc"}>
+          </StatusBadge>
+          <StatusBadge color={site.is_active ? "lime" : "zinc"}>
             {site.is_active ? <Trans>Active</Trans> : <Trans>Inactive</Trans>}
-          </Badge>
+          </StatusBadge>
           {site.is_expired && (
-            <Badge color="red">
+            <StatusBadge color="red">
               <Trans>Expired</Trans>
-            </Badge>
+            </StatusBadge>
           )}
         </div>
       </div>
@@ -145,9 +158,9 @@ export default function SiteDetail() {
       <div className="space-y-8">
         {/* Address */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Address</Trans>
-          </Heading>
+          </PageTitle>
           <DescriptionList>
             <DescriptionTerm>
               <Trans>Street</Trans>
@@ -182,9 +195,9 @@ export default function SiteDetail() {
         {/* Contact Information */}
         {site.contact && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Contact Person</Trans>
-            </Heading>
+            </PageTitle>
             <DescriptionList>
               <DescriptionTerm>
                 <Trans>Name</Trans>
@@ -198,12 +211,9 @@ export default function SiteDetail() {
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {isSafeMailtoTarget(site.contact.email) ? (
-                      <a
-                        href={`mailto:${site.contact.email}`}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
+                      <PageLink to={`mailto:${site.contact.email}`}>
                         {site.contact.email}
-                      </a>
+                      </PageLink>
                     ) : (
                       site.contact.email
                     )}
@@ -218,12 +228,9 @@ export default function SiteDetail() {
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {isSafeTelTarget(site.contact.phone) ? (
-                      <a
-                        href={`tel:${site.contact.phone}`}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
+                      <PageLink to={`tel:${site.contact.phone}`}>
                         {site.contact.phone}
-                      </a>
+                      </PageLink>
                     ) : (
                       site.contact.phone
                     )}
@@ -248,9 +255,9 @@ export default function SiteDetail() {
         {/* Validity Period */}
         {(site.valid_from || site.valid_until) && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Validity Period</Trans>
-            </Heading>
+            </PageTitle>
             <DescriptionList>
               {site.valid_from && (
                 <>
@@ -280,39 +287,39 @@ export default function SiteDetail() {
         {/* Access Instructions */}
         {site.access_instructions && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Access Instructions</Trans>
-            </Heading>
-            <Text className="whitespace-pre-wrap">
+            </PageTitle>
+            <PageText className="whitespace-pre-wrap">
               {site.access_instructions}
-            </Text>
+            </PageText>
           </div>
         )}
 
         {/* Notes */}
         {site.notes && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Notes</Trans>
-            </Heading>
-            <Text className="whitespace-pre-wrap">{site.notes}</Text>
+            </PageTitle>
+            <PageText className="whitespace-pre-wrap">{site.notes}</PageText>
           </div>
         )}
 
         {/* Metadata */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Details</Trans>
-          </Heading>
+          </PageTitle>
           <DescriptionList>
             <DescriptionTerm>
               <Trans>Customer</Trans>
             </DescriptionTerm>
             <DescriptionDetails>
               {customer ? (
-                <Button href={`/customers/${site.customer_id}`} plain>
+                <PageLink to={`/customers/${site.customer_id}`}>
                   {customer.name}
-                </Button>
+                </PageLink>
               ) : (
                 site.customer_id
               )}
@@ -344,58 +351,70 @@ export default function SiteDetail() {
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
           {capabilities.actions.sites.update && (
-            <Button href={`/sites/${site.id}/edit`}>
+            <LinkButton to={`/sites/${site.id}/edit`}>
+              <Edit className="size-4" aria-hidden="true" />
               <Trans>Edit</Trans>
-            </Button>
+            </LinkButton>
           )}
           {capabilities.actions.sites.delete && (
             <Button
-              outline
-              onClick={() => setShowDeleteDialog(true)}
+              variant="outline"
+              onClick={() => {
+                setDeleteError(null);
+                setShowDeleteDialog(true);
+              }}
               disabled={deleting}
             >
+              <Trash2 className="size-4" aria-hidden="true" />
               <Trans>Delete</Trans>
             </Button>
           )}
-          <Button href="/sites" outline>
+          <LinkButton to="/sites" variant="outline">
+            <List className="size-4" aria-hidden="true" />
             <Trans>Back to List</Trans>
-          </Button>
+          </LinkButton>
         </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
       {capabilities.actions.sites.delete && (
-        <Dialog open={showDeleteDialog} onClose={setShowDeleteDialog}>
-          <DialogTitle>
-            <Trans>Delete Site</Trans>
-          </DialogTitle>
-          <DialogDescription>
-            <Trans>
-              Are you sure you want to delete this site? This action cannot be
-              undone.
-            </Trans>
-          </DialogDescription>
-          <DialogBody>
-            {error !== null && (
-              <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
-                {error}
-              </div>
-            )}
-            <Text>
-              <Trans>Site:</Trans> <strong>{site.name}</strong>
-            </Text>
-            <Text>
-              <Trans>Site Number:</Trans> <strong>{site.site_number}</strong>
-            </Text>
-          </DialogBody>
-          <DialogActions>
-            <Button outline onClick={() => setShowDeleteDialog(false)}>
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button onClick={handleDelete} disabled={deleting}>
-              {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
-            </Button>
-          </DialogActions>
+        <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent>
+              <DialogTitle>
+                <Trans>Delete Site</Trans>
+              </DialogTitle>
+              <DialogDescription>
+                <Trans>
+                  Are you sure you want to delete this site? This action cannot be
+                  undone.
+                </Trans>
+              </DialogDescription>
+              <DialogBody>
+                {deleteError !== null && (
+                  <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+                    <AlertDescription>{deleteError}</AlertDescription>
+                  </Alert>
+                )}
+                <PageText>
+                  <Trans>Site:</Trans> <strong>{site.name}</strong>
+                </PageText>
+                <PageText>
+                  <Trans>Site Number:</Trans> <strong>{site.site_number}</strong>
+                </PageText>
+              </DialogBody>
+              <DialogActions>
+                <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+                  <Trans>Cancel</Trans>
+                </Button>
+                <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                  <Trash2 className="size-4" aria-hidden="true" />
+                  {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+                </Button>
+              </DialogActions>
+            </DialogContent>
+          </DialogPortal>
         </Dialog>
       )}
     </div>

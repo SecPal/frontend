@@ -8,29 +8,39 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
+import { ArrowLeft, Edit, List, MapPinned, Trash2 } from "lucide-react";
 import { getCustomer, deleteCustomer } from "../../services/customersApi";
 import type { Customer } from "../../types/customers";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
-import { Badge } from "../../components/badge";
 import {
   DescriptionList,
-  DescriptionTerm,
   DescriptionDetails,
-} from "../../components/description-list";
-import {
+  DescriptionTerm,
+  Alert,
+  AlertDescription,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
   DialogActions,
-} from "../../components/dialog";
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  LinkButton,
+  PageLink,
+  PageText,
+  PageTitle,
+  Spinner,
+  StatusBadge,
+} from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 
 export default function CustomerDetail() {
+  const { _ } = useLingui();
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -54,14 +64,14 @@ export default function CustomerDetail() {
         setCustomer(data);
       } catch (err) {
         setLoadError(
-          err instanceof Error ? err.message : "Failed to load customer"
+          err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
         setLoading(false);
       }
     }
     loadCustomer();
-  }, [id]);
+  }, [_, id]);
 
   async function handleDelete() {
     if (!customer) return;
@@ -74,7 +84,7 @@ export default function CustomerDetail() {
       navigate("/customers");
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete customer"
+        err instanceof Error ? err.message : _(msg`Failed to delete customer`)
       );
       setDeleting(false);
       // Keep dialog open to show error message
@@ -83,8 +93,11 @@ export default function CustomerDetail() {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <Trans>Loading...</Trans>
+      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
+        <Spinner aria-label={_(msg`Loading...`)} />
+        <span>
+          <Trans>Loading...</Trans>
+        </span>
       </div>
     );
   }
@@ -92,12 +105,13 @@ export default function CustomerDetail() {
   if (loadError || !customer) {
     return (
       <div className="text-center py-12">
-        <Text className="text-red-600">
+        <PageText className="text-red-600 dark:text-red-400">
           {loadError || <Trans>Customer not found</Trans>}
-        </Text>
-        <Button href="/customers" outline className="mt-4">
+        </PageText>
+        <LinkButton to="/customers" variant="outline" className="mt-4">
+          <ArrowLeft className="size-4" aria-hidden="true" />
           <Trans>Back to Customers</Trans>
-        </Button>
+        </LinkButton>
       </div>
     );
   }
@@ -106,26 +120,26 @@ export default function CustomerDetail() {
     <div className="max-w-4xl">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <Heading>{customer.name}</Heading>
-          <Text className="mt-1 text-zinc-500">{customer.customer_number}</Text>
+          <PageTitle>{customer.name}</PageTitle>
+          <PageText className="mt-1 text-zinc-500">{customer.customer_number}</PageText>
         </div>
         <div className="flex gap-2">
-          <Badge color={customer.is_active ? "lime" : "zinc"}>
+          <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
             {customer.is_active ? (
               <Trans>Active</Trans>
             ) : (
               <Trans>Inactive</Trans>
             )}
-          </Badge>
+          </StatusBadge>
         </div>
       </div>
 
       <div className="space-y-8">
         {/* Billing Address */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Billing Address</Trans>
-          </Heading>
+          </PageTitle>
           <DescriptionList>
             <DescriptionTerm>
               <Trans>Street</Trans>
@@ -154,9 +168,9 @@ export default function CustomerDetail() {
         {/* Contact Information */}
         {customer.contact && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Contact Person</Trans>
-            </Heading>
+            </PageTitle>
             <DescriptionList>
               {customer.contact.name && (
                 <>
@@ -176,12 +190,9 @@ export default function CustomerDetail() {
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {isSafeMailtoTarget(customer.contact.email) ? (
-                      <a
-                        href={`mailto:${customer.contact.email}`}
-                        className="text-blue-600 hover:underline"
-                      >
+                      <PageLink to={`mailto:${customer.contact.email}`}>
                         {customer.contact.email}
-                      </a>
+                      </PageLink>
                     ) : (
                       customer.contact.email
                     )}
@@ -196,12 +207,9 @@ export default function CustomerDetail() {
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {isSafeTelTarget(customer.contact.phone) ? (
-                      <a
-                        href={`tel:${customer.contact.phone}`}
-                        className="text-blue-600 hover:underline"
-                      >
+                      <PageLink to={`tel:${customer.contact.phone}`}>
                         {customer.contact.phone}
-                      </a>
+                      </PageLink>
                     ) : (
                       customer.contact.phone
                     )}
@@ -215,53 +223,57 @@ export default function CustomerDetail() {
         {/* Notes */}
         {customer.notes && (
           <div>
-            <Heading level={2} className="mb-4">
+            <PageTitle level={2} className="mb-4">
               <Trans>Notes</Trans>
-            </Heading>
-            <Text className="whitespace-pre-wrap">{customer.notes}</Text>
+            </PageTitle>
+            <PageText className="whitespace-pre-wrap">{customer.notes}</PageText>
           </div>
         )}
 
         {/* Sites */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Sites</Trans>
-          </Heading>
-          <Text className="mb-4">
+          </PageTitle>
+          <PageText className="mb-4">
             <Plural
               value={customer.sites_count || 0}
               zero="This customer has no sites."
               one="This customer has # site."
               other="This customer has # sites."
             />
-          </Text>
-          <Button href={`/sites/customer/${customer.id}`} outline>
+          </PageText>
+          <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
+            <MapPinned className="size-4" aria-hidden="true" />
             <Trans>View Sites</Trans>
-          </Button>
+          </LinkButton>
         </div>
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
           {capabilities.actions.customers.update && (
-            <Button href={`/customers/${customer.id}/edit`}>
+            <LinkButton to={`/customers/${customer.id}/edit`}>
+              <Edit className="size-4" aria-hidden="true" />
               <Trans>Edit</Trans>
-            </Button>
+            </LinkButton>
           )}
           {capabilities.actions.customers.delete && (
             <Button
-              outline
+              variant="outline"
               onClick={() => {
                 setDeleteError(null);
                 setShowDeleteDialog(true);
               }}
               disabled={deleting}
             >
+              <Trash2 className="size-4" aria-hidden="true" />
               <Trans>Delete</Trans>
             </Button>
           )}
-          <Button href="/customers" outline>
+          <LinkButton to="/customers" variant="outline">
+            <List className="size-4" aria-hidden="true" />
             <Trans>Back to List</Trans>
-          </Button>
+          </LinkButton>
         </div>
       </div>
 
@@ -271,32 +283,40 @@ export default function CustomerDetail() {
           open={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}
         >
-          <DialogTitle>
-            <Trans>Delete Customer</Trans>
-          </DialogTitle>
-          <DialogDescription>
-            <Trans>
-              Are you sure you want to delete "{customer.name}"? This action
-              cannot be undone.
-            </Trans>
-          </DialogDescription>
-          <DialogBody>
-            {deleteError && (
-              <Text className="text-red-600 mb-4">{deleteError}</Text>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <Button
-              plain
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={deleting}
-            >
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button color="red" onClick={handleDelete} disabled={deleting}>
-              {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
-            </Button>
-          </DialogActions>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent>
+              <DialogTitle>
+                <Trans>Delete Customer</Trans>
+              </DialogTitle>
+              <DialogDescription>
+                <Trans>
+                  Are you sure you want to delete "{customer.name}"? This action
+                  cannot be undone.
+                </Trans>
+              </DialogDescription>
+              <DialogBody>
+                {deleteError && (
+                  <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+                    <AlertDescription>{deleteError}</AlertDescription>
+                  </Alert>
+                )}
+              </DialogBody>
+              <DialogActions>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={deleting}
+                >
+                  <Trans>Cancel</Trans>
+                </Button>
+                <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                  <Trash2 className="size-4" aria-hidden="true" />
+                  {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+                </Button>
+              </DialogActions>
+            </DialogContent>
+          </DialogPortal>
         </Dialog>
       )}
     </div>

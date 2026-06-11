@@ -8,7 +8,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import type {
   Customer,
@@ -16,14 +18,22 @@ import type {
   Address,
   Contact,
 } from "../../types/customers";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
-import { Field, Label, FieldGroup } from "../../components/fieldset";
-import { Textarea } from "../../components/textarea";
-import { Checkbox, CheckboxField } from "../../components/checkbox";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Checkbox,
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FormCheckboxField,
+  Input,
+  PageTitle,
+  Textarea,
+} from "../CustomerSites/ui";
 
 export default function CustomerEdit() {
+  const { _ } = useLingui();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -50,14 +60,14 @@ export default function CustomerEdit() {
         });
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load customer"
+          err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
         setLoading(false);
       }
     }
     loadCustomer();
-  }, [id]);
+  }, [_, id]);
 
   function updateField(field: keyof UpdateCustomerRequest, value: unknown) {
     setFormData((currentFormData) => ({
@@ -98,7 +108,7 @@ export default function CustomerEdit() {
       navigate(`/customers/${id}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to update customer"
+        err instanceof Error ? err.message : _(msg`Failed to update customer`)
       );
     } finally {
       setSaving(false);
@@ -128,25 +138,26 @@ export default function CustomerEdit() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <Heading>
+        <PageTitle>
           <Trans>Edit Customer</Trans>
-        </Heading>
+        </PageTitle>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
-          {error}
-        </div>
+        <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <FieldGroup>
           <Field>
-            <Label>
+            <FieldLabel htmlFor="customer-name">
               <Trans>Customer Name</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="customer-name"
               name="name"
               type="text"
               required
@@ -159,15 +170,16 @@ export default function CustomerEdit() {
 
         {/* Billing Address */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Billing Address</Trans>
-          </Heading>
+          </PageTitle>
           <FieldGroup>
             <Field>
-              <Label>
+              <FieldLabel htmlFor="customer-street">
                 <Trans>Street</Trans> *
-              </Label>
+              </FieldLabel>
               <Input
+                id="customer-street"
                 name="street"
                 type="text"
                 required
@@ -179,10 +191,11 @@ export default function CustomerEdit() {
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <Label>
+                <FieldLabel htmlFor="customer-postal-code">
                   <Trans>Postal Code</Trans> *
-                </Label>
+                </FieldLabel>
                 <Input
+                  id="customer-postal-code"
                   name="postal_code"
                   type="text"
                   required
@@ -193,10 +206,11 @@ export default function CustomerEdit() {
               </Field>
 
               <Field>
-                <Label>
+                <FieldLabel htmlFor="customer-city">
                   <Trans>City</Trans> *
-                </Label>
+                </FieldLabel>
                 <Input
+                  id="customer-city"
                   name="city"
                   type="text"
                   required
@@ -208,10 +222,11 @@ export default function CustomerEdit() {
             </div>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="customer-country">
                 <Trans>Country</Trans> *
-              </Label>
+              </FieldLabel>
               <Input
+                id="customer-country"
                 name="country"
                 type="text"
                 required
@@ -229,15 +244,16 @@ export default function CustomerEdit() {
 
         {/* Contact Information */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Contact Person</Trans>
-          </Heading>
+          </PageTitle>
           <FieldGroup>
             <Field>
-              <Label>
+              <FieldLabel htmlFor="customer-contact-name">
                 <Trans>Name</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="customer-contact-name"
                 name="contact_name"
                 type="text"
                 autoComplete="name"
@@ -247,10 +263,11 @@ export default function CustomerEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="customer-contact-email">
                 <Trans>Email</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="customer-contact-email"
                 name="contact_email"
                 type="email"
                 autoComplete="email"
@@ -260,10 +277,11 @@ export default function CustomerEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="customer-contact-phone">
                 <Trans>Phone</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="customer-contact-phone"
                 name="contact_phone"
                 type="tel"
                 autoComplete="tel"
@@ -276,10 +294,11 @@ export default function CustomerEdit() {
 
         {/* Additional Information */}
         <Field>
-          <Label>
+          <FieldLabel htmlFor="customer-notes">
             <Trans>Notes</Trans>
-          </Label>
+          </FieldLabel>
           <Textarea
+            id="customer-notes"
             name="notes"
             rows={4}
             value={formData.notes || ""}
@@ -287,16 +306,17 @@ export default function CustomerEdit() {
           />
         </Field>
 
-        <CheckboxField>
+        <FormCheckboxField>
           <Checkbox
+            id="customer-is-active"
             name="is_active"
             checked={formData.is_active || false}
-            onChange={(checked) => updateField("is_active", checked)}
+            onCheckedChange={(checked) => updateField("is_active", checked === true)}
           />
-          <Label>
+          <FieldLabel htmlFor="customer-is-active">
             <Trans>Active</Trans>
-          </Label>
-        </CheckboxField>
+          </FieldLabel>
+        </FormCheckboxField>
 
         {/* Actions */}
         <div className="flex gap-4">
@@ -305,7 +325,7 @@ export default function CustomerEdit() {
           </Button>
           <Button
             type="button"
-            outline
+            variant="outline"
             onClick={() => navigate(`/customers/${id}`)}
           >
             <Trans>Cancel</Trans>

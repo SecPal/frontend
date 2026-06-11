@@ -29,6 +29,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Shared app-level shadcn/Radix primitives live in `src/ui`; keep route-local Auth/Onboarding barrels as compatibility layers for prefixed `data-slot`s, route-specific helpers, and legacy-compatible event shapes while delegating shared colors, spacing, radius, focus rings, dark-mode classes, and Radix wrappers to `src/ui`.
 - Migrated admin surfaces should import shared `src/ui` primitives directly for pages, dialogs, fields, cards, alerts, and status controls; keep domain components such as QR code rendering, offline banners, dropdown/listbox compatibility wrappers, and organization data hooks at the feature boundary.
 - Admin Radix Select regressions should open the combobox and assert rendered `role="option"` items with stable `data-value` markers instead of using native `fireEvent.change`/`user.selectOptions`.
+- Customer/site management pages should share route-scoped helpers in `src/pages/CustomerSites/ui` backed by `src/ui`, native semantic tables/description lists, router links, and lucide icons; keep CRUD behavior in the pages while asserting Radix Select options and explicit field error wiring in route tests.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
@@ -667,3 +668,30 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: direct `src/ui` imports work well for authenticated admin surfaces when domain-only components remain at the route boundary; source-level migration audits should allow Radix-backed domain compatibility controls intentionally kept for dropdown/listbox behavior.
   - Gotchas encountered: moving organization type selection from native select to Radix Select requires tests to open portal-rendered options and assert stable `data-value` attributes; native `change` and `selectOptions` helpers silently stop exercising the real control.
+
+## US-005: Kunden- und Standortverwaltung migrieren
+- Migrated `CustomersPage`, `CustomerCreate`, `CustomerEdit`, `CustomerDetail`, `SitesPage`, `SiteCreate`, `SiteEdit`, and `SiteDetail` off old shared component wrappers onto a route-scoped `src/pages/CustomerSites/ui` layer backed by shared `src/ui` shadcn/Radix primitives, native semantic tables/description lists, router links, and lucide icons.
+- Preserved customer/site CRUD behavior for search, filters, pagination, detail views, delete confirmations, payload cleanup, and form validation while converting filters and forms to Radix Select, Radix Checkbox, explicit `id`/`htmlFor`, `aria-invalid`, and `aria-describedby` wiring.
+- Localized new route-owned fallback errors, pagination labels, optional markers, and country option labels in English and German; extended admin migration boundary coverage to include customer/site pages and block old wrapper imports in this scope.
+- Updated route regressions to drive Radix combobox options by role and added validation wiring assertions for site form errors; verified with focused customer/site tests, `npm run typecheck`, `npm run lint`, `npm run i18n:check`, and full `npm test`.
+- Files changed:
+  - `src/pages/CustomerSites/ui.tsx`
+  - `src/pages/Customers/CustomersPage.tsx`
+  - `src/pages/Customers/CustomerCreate.tsx`
+  - `src/pages/Customers/CustomerEdit.tsx`
+  - `src/pages/Customers/CustomerDetail.tsx`
+  - `src/pages/Sites/SitesPage.tsx`
+  - `src/pages/Sites/SiteCreate.tsx`
+  - `src/pages/Sites/SiteEdit.tsx`
+  - `src/pages/Sites/SiteDetail.tsx`
+  - `src/pages/Customers/CustomersPage.test.tsx`
+  - `src/pages/Sites/SitesPage.test.tsx`
+  - `src/pages/Sites/SiteCreate.test.tsx`
+  - `src/pages/Sites/SiteEdit.test.tsx`
+  - `tests/admin-migration-boundary.test.ts`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: route-scoped feature UI helpers are useful when a page family needs direct `src/ui` primitives plus repeated domain presentation such as table, detail-list, badge, and router-link styling without expanding the global primitive API.
+  - Gotchas encountered: Radix Select cannot be driven by native `fireEvent.change`, and Radix Checkbox emits `CheckedState`, so form tests and handlers must select rendered options by role and normalize checkbox values with `checked === true`.

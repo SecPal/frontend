@@ -436,6 +436,10 @@ msgstr "Emergency contact name is required."
 msgid "Retry"
 msgstr "Retry"
 
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to update site"
+msgstr "Failed to update site"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Personal Information"
@@ -779,6 +783,11 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 msgid "This field"
 msgstr "This field"
 
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to load site"
+msgstr "Failed to load site"
+
 #: src/pages/Login.tsx
 msgid "Login form"
 msgstr "Login form"
@@ -879,6 +888,11 @@ msgstr "Would you like to upload your identity document now?"
 #: src/pages/Employees/EmployeeList.tsx
 msgid "ML"
 msgstr "ML"
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Switzerland"
+msgstr "Switzerland"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session expired before setup completed. Create a new session to continue."
@@ -1114,6 +1128,10 @@ msgstr "Done"
 msgid "Optional: Upload the reverse side as a second file."
 msgstr "Optional: Upload the reverse side as a second file."
 
+#: src/pages/Sites/SitesPage.tsx
+msgid "Failed to load sites"
+msgstr "Failed to load sites"
+
 #: src/pages/Login.tsx
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
@@ -1313,6 +1331,10 @@ msgstr "My Organization"
 msgid "Suspended"
 msgstr "Suspended"
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Failed to delete site"
+msgstr "Failed to delete site"
+
 #: src/lib/organizationalUnitUtils.ts
 msgid "Holding"
 msgstr "Holding"
@@ -1509,6 +1531,10 @@ msgstr "Create"
 msgid "Passkey label"
 msgstr "Passkey label"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to create customer"
+msgstr "Failed to create customer"
+
 #: src/components/application-layout.tsx
 msgid "Home"
 msgstr "Home"
@@ -1546,6 +1572,11 @@ msgstr "File uploaded successfully."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "No activity logs found."
 msgstr "No activity logs found."
+
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to load customer"
+msgstr "Failed to load customer"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Back"
@@ -2364,6 +2395,10 @@ msgstr "Enable"
 msgid "Nationality options could not be loaded right now. Please reload this page and try again."
 msgstr "Nationality options could not be loaded right now. Please reload this page and try again."
 
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Failed to create site"
+msgstr "Failed to create site"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
 msgstr "Regenerate recovery codes"
@@ -2378,6 +2413,10 @@ msgstr "Permanent"
 #: src/components/OfflineIndicator.tsx
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Failed to delete customer"
+msgstr "Failed to delete customer"
 
 #: src/components/NotificationPermissionPrompt.tsx
 msgid "Dismiss notification prompt"
@@ -2674,6 +2713,11 @@ msgstr "Error"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Austria"
+msgstr "Austria"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Please enter a valid emergency contact email."
@@ -2718,6 +2762,10 @@ msgstr "\"{0}\" created successfully"
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Failed to load customers"
+msgstr "Failed to load customers"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
 msgstr "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
@@ -2726,6 +2774,10 @@ msgstr "We could not verify your identity with the details provided. For securit
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Remove"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to update customer"
+msgstr "Failed to update customer"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
@@ -2947,6 +2999,11 @@ msgstr "Onboarding progress"
 msgid "Profile"
 msgstr "Profile"
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Please correct the errors below."
+msgstr "Please correct the errors below."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Orphaned Genesis"
 msgstr "Orphaned Genesis"
@@ -3087,6 +3144,11 @@ msgstr "The passkey sign-in completed with an invalid user payload."
 msgid "Save Draft"
 msgstr "Save Draft"
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "(Optional)"
+msgstr "(Optional)"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Living There Since"
@@ -3146,6 +3208,11 @@ msgstr "Verification Status"
 msgid "Please use the required format (YYYY-MM-DD)."
 msgstr "Please use the required format (YYYY-MM-DD)."
 
+#: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Sites/SitesPage.tsx
+msgid "Pagination"
+msgstr "Pagination"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty to prevent any assignment"
 msgstr "0 or empty to prevent any assignment"
@@ -3161,6 +3228,11 @@ msgstr "Passkey registration timed out. Please try again."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 msgstr "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Germany"
+msgstr "Germany"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -3271,6 +3343,10 @@ msgstr "Activity Log Details"
 #: src/App.tsx
 msgid "View Profile"
 msgstr "View Profile"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Failed to load required data"
+msgstr "Failed to load required data"
 
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx

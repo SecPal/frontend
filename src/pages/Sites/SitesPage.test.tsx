@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -84,6 +85,12 @@ const mockResponse: PaginatedResponse<Site> = {
   },
 };
 
+async function selectRadixOption(label: RegExp, optionName: RegExp) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: label }));
+  await user.click(await screen.findByRole("option", { name: optionName }));
+}
+
 describe("SitesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -156,8 +163,7 @@ describe("SitesPage", () => {
     // Clear call history to isolate this test's API calls
     vi.mocked(customersApi.listSites).mockClear();
 
-    const typeSelect = screen.getByRole("combobox", { name: /type/i });
-    fireEvent.change(typeSelect, { target: { value: "permanent" } });
+    await selectRadixOption(/type/i, /permanent/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -173,8 +179,7 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByRole("combobox", { name: /status/i });
-    fireEvent.change(statusSelect, { target: { value: "false" } });
+    await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -382,8 +387,7 @@ describe("SitesPage", () => {
     // Clear call history to isolate this test's API calls
     vi.mocked(customersApi.listSites).mockClear();
 
-    const typeSelect = screen.getByRole("combobox", { name: /type/i });
-    fireEvent.change(typeSelect, { target: { value: "temporary" } });
+    await selectRadixOption(/type/i, /temporary/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -399,8 +403,7 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByRole("combobox", { name: /status/i });
-    fireEvent.change(statusSelect, { target: { value: "false" } });
+    await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
