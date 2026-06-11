@@ -741,6 +741,7 @@ export function LoginOtpInput({
     },
     [0]
   );
+  const autoComplete = inputMode === "numeric" ? "one-time-code" : "off";
 
   return (
     <LoginInputOtp
@@ -750,7 +751,7 @@ export function LoginOtpInput({
       maxLength={length}
       pattern={pattern}
       inputMode={inputMode}
-      autoComplete="one-time-code"
+      autoComplete={autoComplete}
       disabled={disabled}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}

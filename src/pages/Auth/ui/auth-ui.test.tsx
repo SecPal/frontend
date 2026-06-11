@@ -270,6 +270,7 @@ describe("auth login shadcn primitives", () => {
     const recoveryInput = screen.getByLabelText("Recovery code");
     expect(recoveryInput).toHaveAttribute("inputmode", "text");
     expect(recoveryInput).toHaveAttribute("maxlength", "8");
+    expect(recoveryInput).toHaveAttribute("autocomplete", "off");
 
     // 8 slots rendered in two groups separated by a single shadcn-style
     // separator (mirrors the shadcn `input-otp` "Pattern" example).
