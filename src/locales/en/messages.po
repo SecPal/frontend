@@ -348,6 +348,10 @@ msgstr "Customer Name"
 msgid "Update channel"
 msgstr "Update channel"
 
+#: src/pages/Login.tsx
+msgid "Your verification session expired. Please log in again."
+msgstr "Your verification session expired. Please log in again."
+
 #: src/components/OrganizationalUnitPicker.tsx
 msgid "All Units"
 msgstr "All Units"

@@ -1804,6 +1804,49 @@ describe("Login", () => {
     });
   });
 
+  it("closes the MFA dialog and surfaces an expiry error when the challenge has been invalidated (404)", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    // After a failed verification, the backend invalidates the challenge
+    // id (one-shot pattern). The next submit on the same id returns a 404
+    // with a generic body — "Ressource nicht gefunden." in German — that
+    // would otherwise leak through the MFA dialog as the user's only
+    // feedback. We close the dialog and surface a localized, actionable
+    // expiry message on the password form instead.
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "Ressource nicht gefunden.",
+        undefined,
+        404,
+        undefined
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+
+    expect(
+      await screen.findByText(/your verification session expired/i)
+    ).toBeInTheDocument();
+    // The generic 404 body must NOT leak to the user.
+    expect(
+      screen.queryByText(/ressource nicht gefunden/i)
+    ).not.toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")

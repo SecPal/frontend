@@ -348,6 +348,10 @@ msgstr "Name des Kunden"
 msgid "Update channel"
 msgstr "Update-Kanal"
 
+#: src/pages/Login.tsx
+msgid "Your verification session expired. Please log in again."
+msgstr "Ihre Verifizierungssitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+
 #: src/components/OrganizationalUnitPicker.tsx
 msgid "All Units"
 msgstr "Alle Einheiten"

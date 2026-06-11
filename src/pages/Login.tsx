@@ -521,6 +521,25 @@ export function Login() {
         setIsCompletingLogin(false);
       }
 
+      // Backend invalidates the `challenge_id` after a failed verification
+      // (one-shot pattern / exhausted retry budget). A subsequent submit on
+      // the same id then returns 404 with a generic body like
+      // "Ressource nicht gefunden.", which is useless and confusing for
+      // the user. Detect the case at the HTTP layer, close the MFA dialog,
+      // clear MFA state and surface a clear, actionable top-level error on
+      // the password form so the user can re-submit credentials and get a
+      // fresh challenge.
+      if (err instanceof AuthApiError && err.status === 404) {
+        const expiredMessage = _(
+          msg`Your verification session expired. Please log in again.`
+        );
+        setPendingMfaChallenge(null);
+        setMfaCode("");
+        setMfaError(null);
+        setError(expiredMessage);
+        return;
+      }
+
       let errorMessage: string;
       if (err instanceof AuthApiError) {
         errorMessage = getLocalizedMfaErrorMessage(err.message, _);
