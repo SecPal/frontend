@@ -15,8 +15,7 @@ msgstr ""
 
 #: src/pages/Login.tsx
 msgid "Passkey sign-in was interrupted. Please try again."
-msgstr "Die Passkey-Anmeldung wurde unterbrochen. Bitte versuchen Sie es "
-"erneut."
+msgstr "Die Passkey-Anmeldung wurde unterbrochen. Bitte versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Full Name"
@@ -46,8 +45,7 @@ msgstr "Informationen zur Tätigkeit"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't save your draft yet. Please review the highlighted fields."
-msgstr "Wir konnten Ihren Entwurf noch nicht speichern. Bitte überprüfen Sie "
-"die markierten Felder."
+msgstr "Wir konnten Ihren Entwurf noch nicht speichern. Bitte überprüfen Sie die markierten Felder."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -77,11 +75,8 @@ msgid "Merkle Tree"
 msgstr "Merkelbaum"
 
 #: src/components/NotificationPreferences.tsx
-msgid "SecPal only exposes backend-backed browser delivery state here. It does "
-"not offer category-by-category notification controls yet."
-msgstr "SecPal zeigt hier nur den backendgestützten Browser-Zustellstatus an. "
-"Kategorienbezogene Benachrichtigungssteuerungen sind derzeit nicht "
-"verfügbar."
+msgid "SecPal only exposes backend-backed browser delivery state here. It does not offer category-by-category notification controls yet."
+msgstr "SecPal zeigt hier nur den backendgestützten Browser-Zustellstatus an. Kategorienbezogene Benachrichtigungssteuerungen sind derzeit nicht verfügbar."
 
 #: src/components/RouteGuardState.tsx
 msgid "Unlock your secure offline data"
@@ -128,11 +123,8 @@ msgid "Employment permitted"
 msgstr "Erwerbstätigkeit gestattet"
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "To remove rank from employee, user must have permission to assign that "
-"rank. This prevents privilege escalation."
-msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die "
-"Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine "
-"Eskalation der Privilegien."
+msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
+msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
 
 #: src/components/RouteGuardState.tsx
 msgid "Still loading your secure session"
@@ -162,10 +154,8 @@ msgid "Create Employee"
 msgstr "Mitarbeiter anlegen"
 
 #: src/pages/Organization/OrganizationPage.tsx
-msgid "Manage your internal organizational units including departments, "
-"branches, and teams."
-msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, "
-"Niederlassungen und Teams."
+msgid "Manage your internal organizational units including departments, branches, and teams."
+msgstr "Verwalten Sie Ihre internen Organisationseinheiten wie Abteilungen, Niederlassungen und Teams."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Expand"
@@ -192,8 +182,7 @@ msgstr "Anmerkungen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload front and back as separate files if available."
-msgstr "Laden Sie Vorder- und Rückseite als separate Dateien hoch, falls "
-"vorhanden."
+msgstr "Laden Sie Vorder- und Rückseite als separate Dateien hoch, falls vorhanden."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Organizational structure"
@@ -204,10 +193,8 @@ msgid "Failed to load form template"
 msgstr "Formularvorlage konnte nicht geladen werden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "A valid residence title without employment authorization cannot be "
-"accepted. Please contact HR."
-msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht "
-"akzeptiert werden. Bitte kontaktieren Sie HR."
+msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
+msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptiert werden. Bitte kontaktieren Sie HR."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -223,11 +210,8 @@ msgid "Global"
 msgstr "Global"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "Confirm with your authenticator app or one recovery code to disable MFA "
-"for this account."
-msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem "
-"Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren "
-"möchten."
+msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
+msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren möchten."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
@@ -254,8 +238,7 @@ msgstr "Keine organisatorischen Einheiten"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This onboarding step uses a schema we cannot render yet."
-msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht "
-"dargestellt werden kann."
+msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
@@ -281,11 +264,8 @@ msgid "City"
 msgstr "Stadt"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
-msgid "Creating organizational units is not possible while offline. Please "
-"reconnect to make changes."
-msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht "
-"möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen "
-"vorzunehmen."
+msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Site Number:"
@@ -299,18 +279,12 @@ msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> customers"
 msgstr "Anzeigen von <0>{0}</0> bis <1>{1}</1> von <2>{2}</2> Mitarbeitern"
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "Configure which rank range this user can view. Leave empty or set to 0 "
-"to see only non-leadership employees (Guards)."
-msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen "
-"Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne "
-"Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
+msgid "Configure which rank range this user can view. Leave empty or set to 0 to see only non-leadership employees (Guards)."
+msgstr "Legen Sie fest, welchen Rangbereich dieser Benutzer sehen kann. Lassen Sie das Feld leer oder setzen Sie es auf 0, um nur Mitarbeiter ohne Führungsaufgaben (Sicherheitsmitarbeiter) zu sehen."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
-msgid "Editing organizational units is not possible while offline. Please "
-"reconnect to make changes."
-msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht "
-"möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen "
-"vorzunehmen."
+msgid "Editing organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Die Bearbeitung von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -322,29 +296,20 @@ msgid "Failed to upload file"
 msgstr "Datei konnte nicht hochgeladen werden"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Use at least 12 characters with uppercase and lowercase letters, a "
-"number, and a symbol. Passwords that appear in known data breaches "
-"cannot be used."
-msgstr "Verwenden Sie mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, "
-"einer Zahl und einem Sonderzeichen. Passwörter, die in bekannten "
-"Datenlecks vorkommen, sind nicht zulässig."
+msgid "Use at least 12 characters with uppercase and lowercase letters, a number, and a symbol. Passwords that appear in known data breaches cannot be used."
+msgstr "Verwenden Sie mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, einer Zahl und einem Sonderzeichen. Passwörter, die in bekannten Datenlecks vorkommen, sind nicht zulässig."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Your residence history does not cover the required period yet. Add "
-"previous addresses or move your “Living there since” date further back."
-msgstr "Ihre Wohnadress-Historie deckt den erforderlichen Zeitraum noch nicht "
-"ab. Ergänzen Sie frühere Wohnorte oder legen Sie das Datum „Wohnhaft "
-"seit“ weiter in der Vergangenheit fest."
+msgid "Your residence history does not cover the required period yet. Add previous addresses or move your “Living there since” date further back."
+msgstr "Ihre Wohnadress-Historie deckt den erforderlichen Zeitraum noch nicht ab. Ergänzen Sie frühere Wohnorte oder legen Sie das Datum „Wohnhaft seit“ weiter in der Vergangenheit fest."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR status updated."
 msgstr "BWR-Status aktualisiert."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "HR will still require these documents for the Bewacherregister "
-"registration."
-msgstr "Die Personalabteilung benötigt diese Unterlagen dennoch zwingend für "
-"die Meldung im Bewacherregister."
+msgid "HR will still require these documents for the Bewacherregister registration."
+msgstr "Die Personalabteilung benötigt diese Unterlagen dennoch zwingend für die Meldung im Bewacherregister."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -363,14 +328,11 @@ msgstr "Vorname ist erforderlich"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please choose whether you want to upload your residence title now."
-msgstr "Bitte wählen Sie aus, ob Sie Ihren Aufenthaltstitel jetzt hochladen "
-"möchten."
+msgstr "Bitte wählen Sie aus, ob Sie Ihren Aufenthaltstitel jetzt hochladen möchten."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter "
-"Friedrich\")"
-msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. "
-"\"Hans-Peter Friedrich\")"
+msgid "Enter all your first names as shown on your ID (e.g., \"Hans-Peter Friedrich\")"
+msgstr "Geben Sie alle Vornamen ein, die auf Ihrem Ausweis stehen (z. B. \"Hans-Peter Friedrich\")"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -404,10 +366,8 @@ msgid "Site not found"
 msgstr "Standort nicht gefunden"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "You can inspect Android enrollment status, but write permission is "
-"required to create or revoke sessions."
-msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen "
-"oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
+msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
+msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Additional validation messages from the server"
@@ -422,19 +382,12 @@ msgid "Employee Number"
 msgstr "Mitarbeiter Nummer"
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "By default (unchecked), users cannot see or edit their own employee "
-"record. This prevents self-manipulation of salary, rank, etc. Check this "
-"box only if you want this user to access their own HR data."
-msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte "
-"weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von "
-"Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie "
-"möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen "
-"kann."
+msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
+msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
-msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen "
-"Sie es erneut."
+msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "The new unit will be created under this parent."
@@ -486,8 +439,7 @@ msgstr "Kunden suchen..."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: No employees will be visible with this range."
-msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich "
-"angezeigt."
+msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Search and select one nationality."
@@ -535,13 +487,8 @@ msgstr "Fehlgeschlagen"
 
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
-msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, "
-"the selected deployment domain, and same-origin service-worker hosting "
-"aligned before rollout."
-msgstr "Dieses Deployment veröffentlicht derzeit kein Browser-Web-Push. Halten "
-"Sie vor dem Rollout HTTPS, die ausgewählte Deployment-Domain und das "
-"Hosting des Service Workers mit demselben Ursprung aufeinander "
-"abgestimmt."
+msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
+msgstr "Dieses Deployment veröffentlicht derzeit kein Browser-Web-Push. Halten Sie vor dem Rollout HTTPS, die ausgewählte Deployment-Domain und das Hosting des Service Workers mit demselben Ursprung aufeinander abgestimmt."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity Document Upload"
@@ -596,8 +543,7 @@ msgstr "Kunde"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "User cannot assign OR remove ANY rank (prevents privilege escalation)."
-msgstr "Der Benutzer kann KEINEN Rang zuweisen ODER entfernen (verhindert eine "
-"Eskalation der Rechte)."
+msgstr "Der Benutzer kann KEINEN Rang zuweisen ODER entfernen (verhindert eine Eskalation der Rechte)."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Welcome to SecPal! Let's complete your profile."
@@ -631,11 +577,8 @@ msgid "Refresh data"
 msgstr "Daten aktualisieren"
 
 #: src/lib/errorUtils.ts
-msgid "A server error occurred. Please try again later or contact support if "
-"the problem persists."
-msgstr "Ein Serverfehler ist aufgetreten. Bitte versuchen Sie es spaeter erneut "
-"oder wenden Sie sich an den Support, wenn das Problem weiterhin "
-"besteht."
+msgid "A server error occurred. Please try again later or contact support if the problem persists."
+msgstr "Ein Serverfehler ist aufgetreten. Bitte versuchen Sie es spaeter erneut oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht."
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Custom"
@@ -691,18 +634,12 @@ msgid "Failed to enable notifications"
 msgstr "Benachrichtigungen konnten nicht aktiviert werden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Here is what the onboarding wizard will ask for. Required sections must "
-"be completed; optional sections can be skipped when empty."
-msgstr "So setzt sich der Onboarding-Assistent zusammen. Erforderliche "
-"Abschnitte müssen ausgefüllt werden; leere optionale Abschnitte können "
-"übersprungen werden."
+msgid "Here is what the onboarding wizard will ask for. Required sections must be completed; optional sections can be skipped when empty."
+msgstr "So setzt sich der Onboarding-Assistent zusammen. Erforderliche Abschnitte müssen ausgefüllt werden; leere optionale Abschnitte können übersprungen werden."
 
 #: src/components/RouteGuardState.tsx
-msgid "SecPal could not confirm your session because the session check failed. "
-"Retry the session check or return to the login screen."
-msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung "
-"fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie "
-"zum Anmeldebildschirm zurück."
+msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generate BWR Export"
@@ -726,8 +663,7 @@ msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select a new parent for this organizational unit."
-msgstr "Wählen Sie eine neue übergeordnete Stelle für diese "
-"Organisationseinheit aus."
+msgstr "Wählen Sie eine neue übergeordnete Stelle für diese Organisationseinheit aus."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract Type"
@@ -735,8 +671,7 @@ msgstr "Vertragsart"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to reload onboarding after a workflow state change"
-msgstr "Onboarding konnte nach einer Änderung des Workflow-Status nicht neu "
-"geladen werden"
+msgstr "Onboarding konnte nach einer Änderung des Workflow-Status nicht neu geladen werden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your residence title now?"
@@ -759,17 +694,12 @@ msgid "Supporting documents"
 msgstr "Belege und Nachweise"
 
 #: src/components/RouteGuardState.tsx
-msgid "You do not have permission to access this feature. Contact your "
-"administrator if you believe this is an error."
-msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden "
-"Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler "
-"ist."
+msgid "You do not have permission to access this feature. Contact your administrator if you believe this is an error."
+msgstr "Sie haben keine Berechtigung, auf diese Funktion zuzugreifen. Wenden Sie sich an Ihren Administrator, wenn Sie glauben, dass dies ein Fehler ist."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "The given password has appeared in a data leak. Please choose a "
-"different password."
-msgstr "Das angegebene Passwort ist in einem Datenleck aufgetaucht. Bitte "
-"wählen Sie ein anderes Passwort."
+msgid "The given password has appeared in a data leak. Please choose a different password."
+msgstr "Das angegebene Passwort ist in einem Datenleck aufgetaucht. Bitte wählen Sie ein anderes Passwort."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Accepted formats: PDF, JPG, JPEG, PNG."
@@ -803,8 +733,7 @@ msgstr "Keine Ergebnisse gefunden"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
-msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht "
-"kennen."
+msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht kennen."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
@@ -819,10 +748,8 @@ msgid "Delete Site"
 msgstr "Standort löschen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Your current answers will be saved as a draft before the first file "
-"upload."
-msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf "
-"gespeichert."
+msgid "Your current answers will be saved as a draft before the first file upload."
+msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf gespeichert."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
@@ -830,8 +757,7 @@ msgstr "Dieses Feld"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
-msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum "
-"Onboarding erlaubt."
+msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -840,10 +766,8 @@ msgid "Valid From"
 msgstr "Gültig von"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Document uploads are only shown where a specific document is required "
-"for the current onboarding step."
-msgstr "Dokument-Uploads werden nur dort angezeigt, wo für den aktuellen "
-"Onboarding-Schritt ein konkretes Dokument erforderlich ist."
+msgid "Document uploads are only shown where a specific document is required for the current onboarding step."
+msgstr "Dokument-Uploads werden nur dort angezeigt, wo für den aktuellen Onboarding-Schritt ein konkretes Dokument erforderlich ist."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Minimum Assignable Rank"
@@ -851,8 +775,7 @@ msgstr "Minimaler zuweisbarer Rang"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing onboarding token. Please use the link from your email."
-msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer "
-"E-Mail."
+msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "View Sites"
@@ -864,8 +787,7 @@ msgstr "Keine Kunden gefunden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your residence title (PDF, JPG, JPEG, PNG; max. 10 MB)."
-msgstr "Bitte laden Sie Ihren Aufenthaltstitel hoch (PDF, JPG, JPEG, PNG; max. "
-"10 MB)."
+msgstr "Bitte laden Sie Ihren Aufenthaltstitel hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/RouteGuardState.tsx
 msgid "Page Not Found"
@@ -912,11 +834,8 @@ msgid "You'll now receive important updates from SecPal"
 msgstr "Sie erhalten jetzt wichtige Updates von SecPal"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-msgid "Complete each earlier residence until your history reaches five years "
-"before today, or move your current residence start date back."
-msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf "
-"Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der "
-"aktuellen Adresse weiter zurück."
+msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
+msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -930,10 +849,8 @@ msgid "ML"
 msgstr "FE"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "This session expired before setup completed. Create a new session to "
-"continue."
-msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen "
-"wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
+msgid "This session expired before setup completed. Create a new session to continue."
+msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate codes"
@@ -948,48 +865,37 @@ msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Manage the employee's BWR export and registration state from the "
-"dedicated runtime endpoints."
-msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses "
-"Mitarbeiters über die dedizierten Runtime-Endpunkte."
+msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
+msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbeiters über die dedizierten Runtime-Endpunkte."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
-msgid "You do not need to take further action right now. If we need anything "
-"else, we will contact you directly."
-msgstr "Sie müssen vorerst nichts weiter tun. Falls wir noch etwas benötigen, "
-"melden wir uns bei Ihnen."
+msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
+msgstr "Sie müssen vorerst nichts weiter tun. Falls wir noch etwas benötigen, melden wir uns bei Ihnen."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Use this QR code during Android setup before it expires."
-msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er "
-"abläuft."
+msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower "
-"positions). Range: 1-255"
-msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere "
-"Zahlen = niedrigere Positionen). Bereich: 1-255"
+msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
+msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too many onboarding attempts. Please try again later."
-msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch "
-"einmal."
+msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password is required"
 msgstr "Passwort ist erforderlich"
 
 #: src/components/NotificationPreferences.tsx
-msgid "HTTPS and a same-origin service worker are required before browser Web "
-"Push can register."
-msgstr "HTTPS und ein Service Worker mit demselben Ursprung sind erforderlich, "
-"bevor Browser-Web-Push registriert werden kann."
+msgid "HTTPS and a same-origin service worker are required before browser Web Push can register."
+msgstr "HTTPS und ein Service Worker mit demselben Ursprung sind erforderlich, bevor Browser-Web-Push registriert werden kann."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Use a two-letter country code in uppercase, for example DE."
-msgstr "Verwenden Sie einen zweistelligen Ländercode in Großbuchstaben, zum "
-"Beispiel DE."
+msgstr "Verwenden Sie einen zweistelligen Ländercode in Großbuchstaben, zum Beispiel DE."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -1034,10 +940,8 @@ msgid "Required documents for this step"
 msgstr "Erforderliche Dokumente für diesen Schritt"
 
 #: src/pages/Employees/EmployeeCreate.tsx
-msgid "Organizational units are still loading. Please wait a moment and try "
-"again."
-msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen "
-"Moment und versuchen Sie es erneut."
+msgid "Organizational units are still loading. Please wait a moment and try again."
+msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -1086,16 +990,12 @@ msgid "Maximum Viewable Rank"
 msgstr "Maximal sichtbarer Rang"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generate the initial export to move this employee into the pending BWR "
-"state."
-msgstr "Erstellen Sie den initialen Export, um diesen Mitarbeiter in den "
-"ausstehenden BWR-Status zu überführen."
+msgid "Generate the initial export to move this employee into the pending BWR state."
+msgstr "Erstellen Sie den initialen Export, um diesen Mitarbeiter in den ausstehenden BWR-Status zu überführen."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
-msgid "Thank you for submitting your onboarding information. Our HR team will "
-"review your details."
-msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team "
-"wird Ihre Daten prüfen."
+msgid "Thank you for submitting your onboarding information. Our HR team will review your details."
+msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team wird Ihre Daten prüfen."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
@@ -1117,8 +1017,7 @@ msgstr "Abbrechen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session was revoked and can no longer be used for device setup."
-msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die "
-"Geräteeinrichtung verwendet werden."
+msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -1142,13 +1041,8 @@ msgid "Postal Code"
 msgstr "Postleitzahl"
 
 #: src/components/RouteGuardState.tsx
-msgid "SecPal locked the local encrypted vault on this device. Unlock to "
-"restore previously cached offline-safe data, or sign out to clear the "
-"device state."
-msgstr "SecPal hat den lokalen verschlüsselten Tresor auf diesem Gerät "
-"gesperrt. Entsperren Sie ihn, um zuvor zwischengespeicherte "
-"offlinefähige Daten wiederherzustellen, oder melden Sie sich ab, um den "
-"Gerätezustand zu löschen."
+msgid "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
+msgstr "SecPal hat den lokalen verschlüsselten Tresor auf diesem Gerät gesperrt. Entsperren Sie ihn, um zuvor zwischengespeicherte offlinefähige Daten wiederherzustellen, oder melden Sie sich ab, um den Gerätezustand zu löschen."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Enable Notifications"
@@ -1237,8 +1131,7 @@ msgstr "Hinzugefügt am {0}"
 #. placeholder {0}: customer.name
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
-msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann "
-"nicht rückgängig gemacht werden."
+msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nicht rückgängig gemacht werden."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -1251,23 +1144,16 @@ msgid "Direct APK sideload"
 msgstr "Direktes APK-Sideloading"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
-msgid "This unit has {childCount} child unit(s). Please delete or move the "
-"child units before deleting this unit."
-msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte "
-"löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie "
-"diese Einheit löschen."
+msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
+msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
 
 #: src/components/OfflineIndicator.tsx
-msgid "Some features may be limited. Your changes will sync when you're back "
-"online."
-msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen "
-"werden synchronisiert, sobald Sie wieder online sind."
+msgid "Some features may be limited. Your changes will sync when you're back online."
+msgstr "Einige Funktionen sind möglicherweise eingeschränkt. Ihre Änderungen werden synchronisiert, sobald Sie wieder online sind."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Proof of residence registration (Meldebestätigung), only if your ID does "
-"not show your current address"
-msgstr "Meldebestätigung, nur wenn Ihre aktuelle Adresse nicht auf dem "
-"Ausweisdokument steht"
+msgid "Proof of residence registration (Meldebestätigung), only if your ID does not show your current address"
+msgstr "Meldebestätigung, nur wenn Ihre aktuelle Adresse nicht auf dem Ausweisdokument steht"
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Types"
@@ -1331,8 +1217,7 @@ msgstr "{label}: Ungültig"
 #. js-lingui-explicit-id
 #: src/components/LanguageSwitcher.tsx
 msgid "Failed to change language. Please try again."
-msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es "
-"erneut."
+msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
 #: src/components/application-layout.tsx
 #: src/components/onboarding-layout.tsx
@@ -1341,11 +1226,8 @@ msgid "Sign out"
 msgstr "Abmelden"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "You signed in successfully, but your onboarding is not complete yet. "
-"Please complete onboarding to continue using SecPal."
-msgstr "Sie wurden erfolgreich angemeldet, aber Ihr Onboarding ist noch nicht "
-"abgeschlossen. Bitte schließen Sie das Onboarding ab, um SecPal weiter "
-"zu nutzen."
+msgid "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
+msgstr "Sie wurden erfolgreich angemeldet, aber Ihr Onboarding ist noch nicht abgeschlossen. Bitte schließen Sie das Onboarding ab, um SecPal weiter zu nutzen."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"
@@ -1364,10 +1246,8 @@ msgid "Loading activity logs..."
 msgstr "Laden von Aktivitätsprotokollen..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "You can upload now or continue and add this document later before final "
-"submission."
-msgstr "Sie können jetzt hochladen oder fortfahren und dieses Dokument später "
-"vor der finalen Übermittlung hinzufügen."
+msgid "You can upload now or continue and add this document later before final submission."
+msgstr "Sie können jetzt hochladen oder fortfahren und dieses Dokument später vor der finalen Übermittlung hinzufügen."
 
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
@@ -1410,10 +1290,8 @@ msgid "Required information"
 msgstr "Erforderliche Angaben"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "We couldn't prepare this step for file uploads. Please try saving your "
-"draft again."
-msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte "
-"versuchen Sie erneut, Ihren Entwurf zu speichern."
+msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
+msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte versuchen Sie erneut, Ihren Entwurf zu speichern."
 
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
@@ -1424,11 +1302,8 @@ msgid "Residence Title Upload"
 msgstr "Aufenthaltstitel hochladen"
 
 #: src/components/RouteGuardState.tsx
-msgid "Open the verification email, then return here and check again. If the "
-"message is missing, request a new verification email below."
-msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und "
-"überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten "
-"eine neue Bestätigungs-E-Mail an."
+msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
+msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück und überprüfen Sie sie erneut. Wenn die Nachricht fehlt, fordern Sie unten eine neue Bestätigungs-E-Mail an."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Confirm Onboarding"
@@ -1463,8 +1338,7 @@ msgstr "Mitarbeiter"
 
 #: src/pages/Login.tsx
 msgid "Passkey sign-in timed out. Please try again."
-msgstr "Die Passkey-Anmeldung hat das Zeitlimit überschritten. Bitte versuchen "
-"Sie es erneut."
+msgstr "Die Passkey-Anmeldung hat das Zeitlimit überschritten. Bitte versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
@@ -1491,11 +1365,8 @@ msgid "Revoke"
 msgstr "Widerrufen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
-msgid "Child units must be deleted or reassigned to a different parent before "
-"this organizational unit can be removed."
-msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen "
-"übergeordneten Einheit neu zugeordnet werden, bevor diese "
-"Organisationseinheit entfernt werden kann."
+msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
+msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen übergeordneten Einheit neu zugeordnet werden, bevor diese Organisationseinheit entfernt werden kann."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Not enabled"
@@ -1515,11 +1386,8 @@ msgid "Sent"
 msgstr "Gesendet"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "Scan this QR code with your authenticator app, or enter the setup key "
-"manually, then confirm the current code to enable MFA."
-msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie "
-"den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen "
-"Code, um MFA zu aktivieren."
+msgid "Scan this QR code with your authenticator app, or enter the setup key manually, then confirm the current code to enable MFA."
+msgstr "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App oder geben Sie den Setup-Schlüssel manuell ein und bestätigen Sie dann den aktuellen Code, um MFA zu aktivieren."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator app"
@@ -1535,11 +1403,8 @@ msgid "Back to List"
 msgstr "Zurück zur Liste"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Your onboarding state changed on the server while you were editing. The "
-"wizard was refreshed to the current server state."
-msgstr "Ihr Onboarding-Status hat sich auf dem Server geändert, während Sie "
-"bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand "
-"aktualisiert."
+msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
+msgstr "Ihr Onboarding-Status hat sich auf dem Server geändert, während Sie bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand aktualisiert."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
@@ -1615,21 +1480,16 @@ msgid "Back to Sites"
 msgstr "zurück zu den Standorten"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "Anyone with one of these recovery codes can bypass your authenticator "
-"app once. Do not store them in chat, email, or screenshots."
-msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre "
-"Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in "
-"Chats, E-Mails oder Screenshots."
+msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
+msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentifizierungs-App einmal umgehen. Speichern Sie sie nicht in Chats, E-Mails oder Screenshots."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Submission Date"
 msgstr "BWR-Übermittlungsdatum"
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower "
-"positions). Range: 1-255"
-msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere "
-"Zahlen = niedrigere Positionen). Bereich: 1-255"
+msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
+msgstr "Niedrigste Rangnummer, die der Benutzer vergeben kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File uploaded successfully."
@@ -1683,15 +1543,12 @@ msgid "Manage your application preferences."
 msgstr "Verwalten Sie Ihre Anwendungspräferenzen."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Please answer whether you currently have a Bewacher ID (Yes / No) in the "
-"section below your address."
-msgstr "Bitte beantworten Sie unterhalb Ihrer Adresse, ob Sie derzeit eine "
-"Bewacher-ID haben (Ja / Nein)."
+msgid "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
+msgstr "Bitte beantworten Sie unterhalb Ihrer Adresse, ob Sie derzeit eine Bewacher-ID haben (Ja / Nein)."
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Are you sure you want to delete this site? This action cannot be undone."
-msgstr "Sind Sie sicher, dass Sie diesen Standort löschen möchten? Diese Aktion "
-"kann nicht rückgängig gemacht werden."
+msgstr "Sind Sie sicher, dass Sie diesen Standort löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
 
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Create Site"
@@ -1707,10 +1564,8 @@ msgstr "Personalausweis"
 
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
-msgid "Turn on notifications for this signed-in browser on the current SecPal "
-"deployment."
-msgstr "Aktivieren Sie Benachrichtigungen für diesen angemeldeten Browser auf "
-"dem aktuellen SecPal-Deployment."
+msgid "Turn on notifications for this signed-in browser on the current SecPal deployment."
+msgstr "Aktivieren Sie Benachrichtigungen für diesen angemeldeten Browser auf dem aktuellen SecPal-Deployment."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Download Latest Export"
@@ -1743,10 +1598,8 @@ msgid "Step {0}: {1}"
 msgstr "Schritt {0}: {1}"
 
 #: src/components/RouteGuardState.tsx
-msgid "SecPal signed you in as {email}, but this account cannot access the "
-"protected app until the email address is verified."
-msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf "
-"die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
+msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
+msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -1825,12 +1678,8 @@ msgid "Moving..."
 msgstr "Verschiebe..."
 
 #: src/components/NotificationPreferences.tsx
-msgid "Category-specific notification preferences are not available yet. SecPal "
-"currently manages browser notifications at the browser and deployment "
-"level."
-msgstr "Kategoriespezifische Benachrichtigungseinstellungen sind noch nicht "
-"verfügbar. SecPal verwaltet Browser-Benachrichtigungen derzeit auf "
-"Browser- und Deployment-Ebene."
+msgid "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
+msgstr "Kategoriespezifische Benachrichtigungseinstellungen sind noch nicht verfügbar. SecPal verwaltet Browser-Benachrichtigungen derzeit auf Browser- und Deployment-Ebene."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Try again"
@@ -1851,12 +1700,8 @@ msgid "Terminate"
 msgstr "Beenden"
 
 #: src/components/NotificationPreferences.tsx
-msgid "Browser notifications are enabled for this signed-in browser on this "
-"deployment. SecPal will deliver backend-backed notifications when this "
-"deployment publishes them."
-msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf "
-"diesem Deployment aktiviert. SecPal stellt backendgestützte "
-"Benachrichtigungen zu, wenn dieses Deployment sie veröffentlicht."
+msgid "Browser notifications are enabled for this signed-in browser on this deployment. SecPal will deliver backend-backed notifications when this deployment publishes them."
+msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf diesem Deployment aktiviert. SecPal stellt backendgestützte Benachrichtigungen zu, wenn dieses Deployment sie veröffentlicht."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
@@ -1867,22 +1712,16 @@ msgid "Generating BWR Export..."
 msgstr "BWR-Export wird erstellt..."
 
 #: src/pages/Login.tsx
-msgid "No credential provider is available on this device. Check that a "
-"passkey-capable app (e.g. Bitwarden) is installed and enabled as a "
-"credential provider in your device settings."
-msgstr "Auf diesem Gerät ist kein Anmeldeinformationsanbieter verfügbar. Prüfen "
-"Sie, ob eine passkey-fähige App (z. B. Bitwarden) installiert und in "
-"den Geräteeinstellungen als Anmeldeinformationsanbieter aktiviert ist."
+msgid "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+msgstr "Auf diesem Gerät ist kein Anmeldeinformationsanbieter verfügbar. Prüfen Sie, ob eine passkey-fähige App (z. B. Bitwarden) installiert und in den Geräteeinstellungen als Anmeldeinformationsanbieter aktiviert ist."
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "Site Number"
 msgstr "Standort Nummer"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "You can upload now or continue and add documents later before final "
-"submission."
-msgstr "Sie können jetzt hochladen oder fortfahren und Dokumente später vor der "
-"finalen Einreichung hinzufügen."
+msgid "You can upload now or continue and add documents later before final submission."
+msgstr "Sie können jetzt hochladen oder fortfahren und Dokumente später vor der finalen Einreichung hinzufügen."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Expires"
@@ -1914,11 +1753,8 @@ msgid "Unknown status"
 msgstr "Unbekannter Status"
 
 #: src/components/NotificationPreferences.tsx
-msgid "Changing deployment domains, service-worker scope, site data, or signing "
-"out can require you to enable notifications again."
-msgstr "Das Wechseln von Deployment-Domains, Service-Worker-Bereich, "
-"Website-Daten oder das Abmelden kann erfordern, Benachrichtigungen "
-"erneut zu aktivieren."
+msgid "Changing deployment domains, service-worker scope, site data, or signing out can require you to enable notifications again."
+msgstr "Das Wechseln von Deployment-Domains, Service-Worker-Bereich, Website-Daten oder das Abmelden kann erfordern, Benachrichtigungen erneut zu aktivieren."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too Many Attempts"
@@ -1944,8 +1780,7 @@ msgstr "{label}: Gültig"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to complete onboarding. Please try again or contact support."
-msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie "
-"es erneut oder kontaktieren Sie den Support."
+msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Auto-refresh (30s)"
@@ -1958,8 +1793,7 @@ msgstr "Aktualisieren"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "The export download link returned by the server is not safe to open."
-msgstr "Der vom Server zurückgegebene Export-Downloadlink ist nicht sicher zu "
-"öffnen."
+msgstr "Der vom Server zurückgegebene Export-Downloadlink ist nicht sicher zu öffnen."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Rollout Expectations"
@@ -1974,16 +1808,12 @@ msgid "Management level must be between 1 and 255"
 msgstr "Die Führungsebene muss zwischen 1 und 255 liegen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Based on the selected nationality, please specify which valid German "
-"residence title is available."
-msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, "
-"welcher gültige deutsche Aufenthaltstitel vorliegt."
+msgid "Based on the selected nationality, please specify which valid German residence title is available."
+msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, welcher gültige deutsche Aufenthaltstitel vorliegt."
 
 #: src/components/NotificationPreferences.tsx
-msgid "Notifications are tied to this signed-in browser profile and the "
-"selected deployment domain."
-msgstr "Benachrichtigungen sind an dieses angemeldete Browserprofil und die "
-"ausgewählte Deployment-Domain gebunden."
+msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
+msgstr "Benachrichtigungen sind an dieses angemeldete Browserprofil und die ausgewählte Deployment-Domain gebunden."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating your link..."
@@ -2014,8 +1844,7 @@ msgstr "E-Mail-Adresse"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.healthWarning.message"
-msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an "
-"Ihren Administrator."
+msgstr "Das System ist nicht vollständig konfiguriert. Bitte wenden Sie sich an Ihren Administrator."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2040,8 +1869,7 @@ msgstr "Abbrechen"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.description"
-msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung "
-"zu beenden."
+msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung zu beenden."
 
 #. js-lingui-explicit-id
 #. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
@@ -2077,8 +1905,7 @@ msgstr "Wiederherstellungscode"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.recoveryHelp"
-msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie "
-"gespeichert ein."
+msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2093,8 +1920,7 @@ msgstr "Zweiter Faktor erforderlich"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.totpHelp"
-msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App "
-"ein."
+msgstr "Geben Sie den aktuellen 6-stelligen Code aus Ihrer Authenticator-App ein."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2104,8 +1930,7 @@ msgstr "Überprüfen..."
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.offlineWarning.message"
-msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte "
-"überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+msgstr "Für die Anmeldung ist eine Internetverbindung erforderlich. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2120,8 +1945,7 @@ msgstr "Passwort"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.rateLimitLocked.message"
-msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es "
-"erneut versuchen."
+msgstr "Bitte warten Sie {remainingLockoutSeconds} Sekunden, bevor Sie es erneut versuchen."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2131,8 +1955,7 @@ msgstr "Zu viele gescheiterte Versuche"
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.remainingAttempts"
-msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden "
-"Sperre."
+msgstr "{remainingAttempts} verbleibende(r) Versuch(e) vor der vorübergehenden Sperre."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2162,34 +1985,20 @@ msgid "The end date must be on or after the start date."
 msgstr "Das Enddatum muss am Startdatum liegen oder danach."
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "These codes are shown only once. Store them securely before closing this "
-"dialog."
-msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, "
-"bevor Sie diesen Dialog schließen."
+msgid "These codes are shown only once. Store them securely before closing this dialog."
+msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Not requested"
 msgstr "Nicht angefordert"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
-msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. "
-"\"Pending\" indicates the hash chain is still being built.<1/><2>Merkle "
-"Tree:</2> Batch verification for efficient proof of log inclusion. Runs "
-"every minute in development, hourly in "
-"production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for "
-"immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
-msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von "
-"Aktivitätsprotokollen. \"Ausstehend\" zeigt an, dass die Hash-Kette "
-"noch aufgebaut wird.<1/><2>Merkle Tree:</2> Batch-Verifizierung für "
-"einen effizienten Nachweis der Log-Einbindung. Läuft jede Minute in der "
-"Entwicklung, stündlich im produktiven Einsatz.<3/><4>OpenTimestamp:</4> "
-"Bitcoin-Blockchain-Verankerung für unveränderlichen Existenznachweis. "
-"Bitcoin-Bestätigung dauert ~10 Minuten."
+msgid "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \"Pending\" indicates the hash chain is still being built.<1/><2>Merkle Tree:</2> Batch verification for efficient proof of log inclusion. Runs every minute in development, hourly in production.<3/><4>OpenTimestamp:</4> Bitcoin blockchain anchoring for immutable proof of existence. Bitcoin confirmation takes ~10 minutes."
+msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivitätsprotokollen. \"Ausstehend\" zeigt an, dass die Hash-Kette noch aufgebaut wird.<1/><2>Merkle Tree:</2> Batch-Verifizierung für einen effizienten Nachweis der Log-Einbindung. Läuft jede Minute in der Entwicklung, stündlich im produktiven Einsatz.<3/><4>OpenTimestamp:</4> Bitcoin-Blockchain-Verankerung für unveränderlichen Existenznachweis. Bitcoin-Bestätigung dauert ~10 Minuten."
 
 #: src/pages/Login.tsx
 msgid "An unexpected passkey sign-in error occurred. Please try again."
-msgstr "Bei der Passkey-Anmeldung ist ein unerwarteter Fehler aufgetreten. "
-"Bitte versuchen Sie es erneut."
+msgstr "Bei der Passkey-Anmeldung ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -2215,10 +2024,8 @@ msgid "MFA status could not be loaded."
 msgstr "Der MFA-Status konnte nicht geladen werden."
 
 #: src/lib/errorUtils.ts
-msgid "Your session has expired or your sign-in could not be verified. Please "
-"sign in again."
-msgstr "Ihre Sitzung ist abgelaufen oder Ihre Anmeldung konnte nicht bestaetigt "
-"werden. Bitte melden Sie sich erneut an."
+msgid "Your session has expired or your sign-in could not be verified. Please sign in again."
+msgstr "Ihre Sitzung ist abgelaufen oder Ihre Anmeldung konnte nicht bestaetigt werden. Bitte melden Sie sich erneut an."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2266,21 +2073,16 @@ msgid "Enrollment Sessions"
 msgstr "Enrollment-Sitzungen"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
-msgid "Moving organizational units is not possible while offline. Please "
-"reconnect to make changes."
-msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht "
-"möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen "
-"vorzunehmen."
+msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include at least one number"
 msgstr "Das Passwort muss mindestens eine Zahl enthalten"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "We compare this with the date of birth on file to verify your identity "
-"before activating your account."
-msgstr "Wir gleichen dieses Datum mit dem hinterlegten Geburtsdatum ab, um Ihre "
-"Identität vor der Aktivierung Ihres Kontos zu prüfen."
+msgid "We compare this with the date of birth on file to verify your identity before activating your account."
+msgstr "Wir gleichen dieses Datum mit dem hinterlegten Geburtsdatum ab, um Ihre Identität vor der Aktivierung Ihres Kontos zu prüfen."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "No action available"
@@ -2288,8 +2090,7 @@ msgstr "Keine Aktion verfügbar"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one identity document file before continuing."
-msgstr "Bitte laden Sie mindestens eine Datei zum Ausweisdokument hoch, bevor "
-"Sie fortfahren."
+msgstr "Bitte laden Sie mindestens eine Datei zum Ausweisdokument hoch, bevor Sie fortfahren."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please try again in about {retryAfterMinutes} minutes."
@@ -2309,8 +2110,7 @@ msgstr "Alle"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please enter your Bewacher ID or indicate that you do not know it."
-msgstr "Bitte geben Sie Ihre Bewacher-ID ein oder geben Sie an, dass Sie sie "
-"nicht kennen."
+msgstr "Bitte geben Sie Ihre Bewacher-ID ein oder geben Sie an, dass Sie sie nicht kennen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Mail Sent"
@@ -2346,8 +2146,7 @@ msgstr "Inaktiv"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Choose a new parent unit or make this a root unit."
-msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu "
-"einer Stammeinheit."
+msgstr "Wählen Sie eine neue übergeordnete Einheit oder machen Sie diese zu einer Stammeinheit."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
@@ -2358,8 +2157,7 @@ msgstr "Beschreibung"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "You can inspect BWR data, but write permission is required to manage it."
-msgstr "Sie können die BWR-Daten einsehen, aber zum Verwalten ist "
-"Schreibberechtigung erforderlich."
+msgstr "Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich."
 
 #. placeholder {0}: formatRelativeTime(lastSynced, i18n.locale)
 #: src/components/OfflineDataBanner.tsx
@@ -2386,11 +2184,8 @@ msgid "Email"
 msgstr "E-Mail-Adresse"
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "User's own rank (FE{userRank}) is within viewable range. Should this "
-"user be able to view/edit their own HR data?"
-msgstr "Der eigene Rang des Benutzers (FE{userRank}) liegt im sichtbaren "
-"Bereich. Sollte dieser Benutzer seine eigenen HR-Daten "
-"einsehen/bearbeiten können?"
+msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
+msgstr "Der eigene Rang des Benutzers (FE{userRank}) liegt im sichtbaren Bereich. Sollte dieser Benutzer seine eigenen HR-Daten einsehen/bearbeiten können?"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2406,10 +2201,8 @@ msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "I stored these recovery codes securely and understand they will not be "
-"shown again."
-msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, "
-"dass sie nicht mehr angezeigt werden."
+msgid "I stored these recovery codes securely and understand they will not be shown again."
+msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, dass sie nicht mehr angezeigt werden."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
@@ -2474,11 +2267,8 @@ msgid "Confirm Password"
 msgstr "Bestätigen Sie Ihr Passwort"
 
 #: src/components/NotificationPreferences.tsx
-msgid "Browser notifications are blocked for this site. Re-enable them in your "
-"browser settings to receive SecPal updates on this device."
-msgstr "Browser-Benachrichtigungen sind für diese Website blockiert. Aktivieren "
-"Sie sie in Ihren Browsereinstellungen erneut, um "
-"SecPal-Aktualisierungen auf diesem Gerät zu erhalten."
+msgid "Browser notifications are blocked for this site. Re-enable them in your browser settings to receive SecPal updates on this device."
+msgstr "Browser-Benachrichtigungen sind für diese Website blockiert. Aktivieren Sie sie in Ihren Browsereinstellungen erneut, um SecPal-Aktualisierungen auf diesem Gerät zu erhalten."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Minimum rank cannot be greater than maximum rank."
@@ -2505,10 +2295,8 @@ msgid "Enable"
 msgstr "Aktivieren"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Nationality options could not be loaded right now. Please reload this "
-"page and try again."
-msgstr "Nationalitätsoptionen konnten derzeit nicht geladen werden. Bitte laden "
-"Sie die Seite neu und versuchen Sie es erneut."
+msgid "Nationality options could not be loaded right now. Please reload this page and try again."
+msgstr "Nationalitätsoptionen konnten derzeit nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
@@ -2569,20 +2357,16 @@ msgid "Employee ID is missing. Cannot submit form."
 msgstr "Mitarbeiter-ID fehlt. Das Formular kann nicht abgeschickt werden."
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "Highest rank number the user can assign (set to 255 for all, 0 or empty "
-"to prevent any assignment). Range: 0-255"
-msgstr "Höchste Rangnummer, die der Benutzer zuweisen kann (auf 255 für alle, 0 "
-"oder leer, um jede Zuweisung zu verhindern). Bereich: 0-255"
+msgid "Highest rank number the user can assign (set to 255 for all, 0 or empty to prevent any assignment). Range: 0-255"
+msgstr "Höchste Rangnummer, die der Benutzer zuweisen kann (auf 255 für alle, 0 oder leer, um jede Zuweisung zu verhindern). Bereich: 0-255"
 
 #: src/components/UpdatePrompt.tsx
 msgid "Update now"
 msgstr "Jetzt aktualisieren"
 
 #: src/pages/Employees/EmployeeCreate.tsx
-msgid "The new employee will receive an onboarding email immediately after "
-"creation."
-msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine "
-"Einführungs-E-Mail."
+msgid "The new employee will receive an onboarding email immediately after creation."
+msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einführungs-E-Mail."
 
 #: src/lib/errorUtils.ts
 msgid "You do not have permission to perform this action."
@@ -2611,10 +2395,8 @@ msgid "Which document are you uploading?"
 msgstr "Welches Dokument laden Sie hoch?"
 
 #: src/components/RouteGuardState.tsx
-msgid "SecPal could not confirm your session quickly enough. Retry the session "
-"check or return to the login screen."
-msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen "
-"Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
+msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
+msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -2633,23 +2415,17 @@ msgstr "Erneut versuchen"
 
 #. placeholder {0}: customer.sites_count || 0
 #: src/pages/Customers/CustomerDetail.tsx
-msgid "{0, plural, zero {This customer has no sites.} one {This customer has # "
-"site.} other {This customer has # sites.}}"
-msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde "
-"hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
+msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
+msgstr "{0, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
-msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren "
-"Arbeitnehmer!"
+msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
 
 #: src/components/NotificationPreferences.tsx
-msgid "This browser cannot receive SecPal Web Push notifications. Use a current "
-"Chrome, Edge, Firefox, or Safari release with Web Push support."
-msgstr "Dieser Browser kann keine SecPal-Web-Push-Benachrichtigungen empfangen. "
-"Verwenden Sie eine aktuelle Chrome-, Edge-, Firefox- oder "
-"Safari-Version mit Web-Push-Unterstützung."
+msgid "This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support."
+msgstr "Dieser Browser kann keine SecPal-Web-Push-Benachrichtigungen empfangen. Verwenden Sie eine aktuelle Chrome-, Edge-, Firefox- oder Safari-Version mit Web-Push-Unterstützung."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Self-Access Control Required"
@@ -2678,11 +2454,8 @@ msgid "Warning"
 msgstr "Warnung"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "MFA is currently off for this account. Set up an authenticator app now "
-"to require a second factor at sign in."
-msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine "
-"Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung "
-"zu verlangen."
+msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
+msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Authentifizierungs-App ein, um einen zweiten Faktor bei der Anmeldung zu verlangen."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid Link"
@@ -2706,13 +2479,11 @@ msgstr "Dateien erfolgreich hochgeladen."
 
 #: src/components/NotificationPermissionPrompt.tsx
 msgid "Category-specific notification controls are not available yet."
-msgstr "Kategoriespezifische Benachrichtigungssteuerungen sind noch nicht "
-"verfügbar."
+msgstr "Kategoriespezifische Benachrichtigungssteuerungen sind noch nicht verfügbar."
 
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
-msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr "
-"verfügbar."
+msgstr "Die von Ihnen angeforderte Seite existiert nicht oder ist nicht mehr verfügbar."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "No parent (root unit)"
@@ -2758,8 +2529,7 @@ msgstr "Aktiviert"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Files can only be uploaded while this onboarding step is still editable."
-msgstr "Dateien können nur hochgeladen werden, solange dieser "
-"Onboarding-Schritt noch bearbeitbar ist."
+msgstr "Dateien können nur hochgeladen werden, solange dieser Onboarding-Schritt noch bearbeitbar ist."
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -2785,8 +2555,7 @@ msgstr "MFA-Einrichtung vorbereiten..."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The residence title expiry date cannot be in the past."
-msgstr "Das Ablaufdatum des Aufenthaltstitels darf nicht in der Vergangenheit "
-"liegen."
+msgstr "Das Ablaufdatum des Aufenthaltstitels darf nicht in der Vergangenheit liegen."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "From Date"
@@ -2819,11 +2588,8 @@ msgid "Error"
 msgstr "Fehler"
 
 #: src/pages/Settings/SettingsPage.tsx
-msgid "Confirm with your authenticator app or one recovery code to replace "
-"every existing recovery code."
-msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem "
-"Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu "
-"ersetzen."
+msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
+msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2832,8 +2598,7 @@ msgstr "Bitte geben Sie eine gültige E-Mail-Adresse für den Notfallkontakt ein
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one residence title file before continuing."
-msgstr "Bitte laden Sie mindestens eine Datei zum Aufenthaltstitel hoch, bevor "
-"Sie fortfahren."
+msgstr "Bitte laden Sie mindestens eine Datei zum Aufenthaltstitel hoch, bevor Sie fortfahren."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Uploaded in this session"
@@ -2843,8 +2608,7 @@ msgstr "In dieser Sitzung hochgeladen"
 #. placeholder {1}: formData.max_assignable_rank
 #: src/components/ScopeAssignmentForm.tsx
 msgid "User can see ranks (up to {0}) they cannot assign/remove (up to {1})."
-msgstr "Der Benutzer kann Ränge sehen (bis {0}), die er nicht "
-"zuordnen/entfernen kann (bis {1})."
+msgstr "Der Benutzer kann Ränge sehen (bis {0}), die er nicht zuordnen/entfernen kann (bis {1})."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No emergency contacts stored yet."
@@ -2868,19 +2632,12 @@ msgid "\"{0}\" created successfully"
 msgstr "\"{0}\" erfolgreich erstellt"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. "
-"10 MB)."
-msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, "
-"JPEG, PNG; max. 10 MB)."
+msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
+msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "We could not verify your identity with the details provided. For "
-"security reasons this onboarding link has been deactivated. Please "
-"contact HR for a new invitation."
-msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden. "
-"Aus Sicherheitsgründen wurde dieser Onboarding-Link deaktiviert. Bitte "
-"wenden Sie sich an die Personalabteilung, um eine neue Einladung zu "
-"erhalten."
+msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
+msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden. Aus Sicherheitsgründen wurde dieser Onboarding-Link deaktiviert. Bitte wenden Sie sich an die Personalabteilung, um eine neue Einladung zu erhalten."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 #: src/pages/Settings/SettingsPage.tsx
@@ -2889,8 +2646,7 @@ msgstr "Entfernen"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
-msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet "
-"sein."
+msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Residence title valid until"
@@ -2917,8 +2673,7 @@ msgstr "Zurück zu den Kunden"
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
-msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie "
-"die markierten Felder."
+msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
 #: src/components/application-layout.tsx
 #: src/pages/Settings/SettingsPage.tsx
@@ -2957,11 +2712,8 @@ msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
 
 #: src/lib/errorUtils.ts
-msgid "This action could not be completed because the data changed in the "
-"meantime. Please reload and try again."
-msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten "
-"inzwischen geändert haben. Bitte laden Sie die Seite neu und versuchen "
-"Sie es erneut."
+msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
+msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten inzwischen geändert haben. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Organizational unit is required"
@@ -2990,8 +2742,7 @@ msgstr "Region"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Is employment permitted for this residence title in Germany?"
-msgstr "Ist mit diesem Aufenthaltstitel die Erwerbstätigkeit in Deutschland "
-"gestattet?"
+msgstr "Ist mit diesem Aufenthaltstitel die Erwerbstätigkeit in Deutschland gestattet?"
 
 #: src/pages/Login.tsx
 msgid "Check your browser…"
@@ -3097,11 +2848,8 @@ msgid "Unlock"
 msgstr "Entsperren"
 
 #: src/components/RouteGuardState.tsx
-msgid "SecPal could not unlock the encrypted offline data on this device. Sign "
-"in again to rebuild the local vault."
-msgstr "SecPal konnte die verschlüsselten Offline-Daten auf diesem Gerät nicht "
-"entsperren. Melden Sie sich erneut an, um den lokalen Tresor neu "
-"aufzubauen."
+msgid "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
+msgstr "SecPal konnte die verschlüsselten Offline-Daten auf diesem Gerät nicht entsperren. Melden Sie sich erneut an, um den lokalen Tresor neu aufzubauen."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx
@@ -3130,8 +2878,7 @@ msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
 
 #: src/pages/Login.tsx
 msgid "Passkey sign-in was cancelled or not permitted by the browser."
-msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht "
-"zugelassen."
+msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht zugelassen."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Android provisioning QR code"
@@ -3142,11 +2889,8 @@ msgid "Reason"
 msgstr "Grund"
 
 #: src/components/NotificationPreferences.tsx
-msgid "SecPal could not sync this browser's notification registration with the "
-"server. Refresh the app and try again."
-msgstr "SecPal konnte die Benachrichtigungsregistrierung dieses Browsers nicht "
-"mit dem Server synchronisieren. Laden Sie die App neu und versuchen Sie "
-"es erneut."
+msgid "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
+msgstr "SecPal konnte die Benachrichtigungsregistrierung dieses Browsers nicht mit dem Server synchronisieren. Laden Sie die App neu und versuchen Sie es erneut."
 
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
@@ -3171,8 +2915,7 @@ msgstr "Beziehung"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
-msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. "
-"10 MB)."
+msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -3229,8 +2972,7 @@ msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For German nationals, you can provide either identity card or passport."
-msgstr "Für deutsche Staatsangehörige können Sie entweder einen Personalausweis "
-"oder einen Reisepass einreichen."
+msgstr "Für deutsche Staatsangehörige können Sie entweder einen Personalausweis oder einen Reisepass einreichen."
 
 #: src/pages/Login.tsx
 msgid "Verifying passkey…"
@@ -3243,10 +2985,8 @@ msgid "Please review the highlighted fields and try again."
 msgstr "Bitte pruefen Sie die markierten Felder und versuchen Sie es erneut."
 
 #: src/components/ScopeAssignmentForm.tsx
-msgid "Highest rank number the user can view (set to 255 for all, 0 or empty "
-"for non-leadership only). Range: 0-255"
-msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder "
-"leer für Nicht-Führungskräfte). Bereich: 0-255"
+msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
+msgstr "Höchste Rangnummer, die der Benutzer sehen kann (255 für alle, 0 oder leer für Nicht-Führungskräfte). Bereich: 0-255"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Save Draft"
@@ -3279,8 +3019,7 @@ msgstr "Ausweisdokument"
 
 #: src/components/notificationInstallationsErrorMessage.ts
 msgid "Sign in again before SecPal can sync this browser with the server."
-msgstr "Melden Sie sich erneut an, bevor SecPal diesen Browser mit dem Server "
-"synchronisieren kann."
+msgstr "Melden Sie sich erneut an, bevor SecPal diesen Browser mit dem Server synchronisieren kann."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
@@ -3309,11 +3048,8 @@ msgid "Attachment (optional second file)"
 msgstr "Anhang (optionale zweite Datei)"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "The save failed on the server because your onboarding workflow is not "
-"currently editable. The wizard will refresh to the latest server state."
-msgstr "Das Speichern auf dem Server ist fehlgeschlagen, weil Ihr "
-"Onboarding-Workflow derzeit nicht bearbeitbar ist. Der Assistent wird "
-"auf den neuesten Serverstand aktualisiert."
+msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
+msgstr "Das Speichern auf dem Server ist fehlgeschlagen, weil Ihr Onboarding-Workflow derzeit nicht bearbeitbar ist. Der Assistent wird auf den neuesten Serverstand aktualisiert."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -3339,8 +3075,7 @@ msgstr "Optionale Beschreibung für diese Einheit."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing token and email. Please use the link from your email."
-msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer "
-"E-Mail."
+msgstr "Fehlender Token und E-Mail. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading documents..."
@@ -3366,10 +3101,8 @@ msgid "This setup expires at {0}."
 msgstr "Diese Einstellung läuft am {0} ab."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
-msgid "This action cannot be undone. The organizational unit will be "
-"permanently removed."
-msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die "
-"Organisationseinheit wird dauerhaft entfernt."
+msgid "This action cannot be undone. The organizational unit will be permanently removed."
+msgstr "Diese Aktion kann nicht rückgängig gemacht werden. Die Organisationseinheit wird dauerhaft entfernt."
 
 #. placeholder {0}: pagination.from
 #. placeholder {1}: pagination.to
@@ -3384,8 +3117,7 @@ msgstr "HR Zugang"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For identity cards, upload front and back as separate files"
-msgstr "Bei Ausweisdokumenten laden Sie Vorder- und Rückseite als separate "
-"Dateien hoch."
+msgstr "Bei Ausweisdokumenten laden Sie Vorder- und Rückseite als separate Dateien hoch."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "To Date"
@@ -3424,11 +3156,8 @@ msgid "File upload failed with HTTP status {0}."
 msgstr "Datei-Upload fehlgeschlagen (HTTP-Status {0})."
 
 #: src/components/notificationInstallationsErrorMessage.ts
-msgid "This deployment's notification configuration changed. Refresh SecPal and "
-"enable notifications again if the browser prompts you."
-msgstr "Die Benachrichtigungskonfiguration dieses Deployments hat sich "
-"geändert. Laden Sie SecPal neu und aktivieren Sie Benachrichtigungen "
-"erneut, falls der Browser Sie dazu auffordert."
+msgid "This deployment's notification configuration changed. Refresh SecPal and enable notifications again if the browser prompts you."
+msgstr "Die Benachrichtigungskonfiguration dieses Deployments hat sich geändert. Laden Sie SecPal neu und aktivieren Sie Benachrichtigungen erneut, falls der Browser Sie dazu auffordert."
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
@@ -3437,8 +3166,7 @@ msgstr "Schließen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please choose whether you want to upload your identity document now."
-msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen "
-"möchten."
+msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möchten."
 
 #: src/components/RouteGuardState.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -3476,11 +3204,8 @@ msgid "OK"
 msgstr "OK"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
-msgid "Deleting organizational units is not possible while offline. Please "
-"reconnect to make changes."
-msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht "
-"möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen "
-"vorzunehmen."
+msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
+msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
