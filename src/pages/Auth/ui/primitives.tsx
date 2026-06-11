@@ -18,13 +18,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Minus,
-} from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Loader2, Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
