@@ -525,6 +525,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Gotchas encountered: the full Vitest suite surfaced a transient unrelated login passkey test failure on the first run; the test passed in isolation and the full suite passed on rerun, so keep noting full-suite flakes separately from story regressions.
 
 ## US-006: Localize Remaining UI Defaults
+
 - Replaced the remaining hardcoded onboarding accessibility labels with Lingui-owned copy: the public completion password `aria-label` and the wizard step-navigation landmark now follow the active locale.
 - Removed English accessibility defaults from auth-local `LoginOtpInput` and `LoginSpinner` by making their labels caller-provided, while existing login route usage continues to pass translated labels.
 - Added German regressions for the password `aria-label` on `/onboarding/complete` and the wizard navigation landmark accessible name.
@@ -544,6 +545,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Gotchas encountered: label-based queries can pass through the visible `<label>` even when `aria-label` is stale, so regressions for fixed aria labels should assert the attribute or role name that actually changed.
 
 ## US-007: Migrate Address Autocomplete Surface
+
 - Added onboarding-local `AutocompleteListbox` and `AutocompleteOption` primitives backed by Radix Popover so editable autocomplete fields can share the same portal/listbox surface as other migrated onboarding controls.
 - Migrated `EmployeeAddressFields` street, postal-code, and city suggestion popups from custom inline listboxes to the new primitives while preserving debounce, API errors, empty state, keyboard highlight/selection, Tab-to-select, exact-match application, read-only behavior, and focus handoff.
 - Added primitive coverage for the Radix-backed editable autocomplete listbox and kept the existing employee/onboarding residential address autocomplete regressions passing.
@@ -558,6 +560,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Gotchas encountered: Radix Popover auto-focus needs to be prevented for editable suggestions, otherwise opening or closing a suggestions portal can steal focus from the input before the existing blur and focus-handoff logic runs.
 
 ## US-008: Add Flow-Level Regression Coverage
+
 - Added a Login route regression that switches to German through the Radix language selector, verifies translated credential error/status copy, and opens the translated MFA dialog with the migrated OTP entry point still wired.
 - Added an OnboardingWizard route regression that drives schema fields, nationality command selection, identity upload choice, file selection, and residence-title follow-up controls while asserting migrated Radix/shadcn role and `data-slot` boundaries.
 - Re-ran the scoped migration audit, unit suite, typecheck, lint, and Lingui catalog check together for the migrated auth/onboarding surface.

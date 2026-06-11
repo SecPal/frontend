@@ -402,7 +402,7 @@ describe("OnboardingWizard", () => {
 
     const birthNameInput = await screen.findByLabelText(/birth name/i);
     expect(birthNameInput).toHaveValue("Lovelace");
-    expect(screen.getByLabelText(/gender/i)).toHaveValue("female");
+    expect(screen.getByLabelText(/gender/i)).toHaveTextContent("female");
 
     await user.clear(birthNameInput);
     await user.type(birthNameInput, "Ada");

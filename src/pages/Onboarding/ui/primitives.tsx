@@ -156,16 +156,31 @@ function createSelectChangeEvent({
   name?: string;
   value: string;
 }) {
-  const target = {
-    id,
-    name,
-    value,
-  } as EventTarget & HTMLSelectElement;
+  // Use a plain object for target so that own-property checks (e.g. Jest/Vitest
+  // objectContaining matchers) can access .value, .name, and .id directly.
+  // A full HTMLSelectElement would expose .value only as a prototype getter,
+  // which objectContaining cannot match.
+  const target = { id, name, value } as EventTarget & HTMLSelectElement;
+  const nativeEvent = new Event("change", { bubbles: true, cancelable: true });
 
   return {
+    nativeEvent,
     target,
     currentTarget: target,
-  } as ChangeEvent<HTMLSelectElement>;
+    bubbles: true,
+    cancelable: true,
+    defaultPrevented: false,
+    eventPhase: 0,
+    isTrusted: false,
+    preventDefault: () => nativeEvent.preventDefault(),
+    stopPropagation: () => nativeEvent.stopPropagation(),
+    stopImmediatePropagation: () => nativeEvent.stopImmediatePropagation(),
+    isDefaultPrevented: () => nativeEvent.defaultPrevented,
+    isPropagationStopped: () => false,
+    persist: () => {},
+    timeStamp: nativeEvent.timeStamp,
+    type: "change",
+  } as unknown as ChangeEvent<HTMLSelectElement>;
 }
 
 export const Select = forwardRef(function Select(
@@ -197,26 +212,21 @@ export const Select = forwardRef(function Select(
   ref: ForwardedRef<ElementRef<typeof SelectPrimitive.Trigger>>
 ) {
   const options = getSelectOptions(children);
-  const selectedValue =
-    value === undefined ? undefined : toRadixSelectValue(value);
+  const isControlled = value !== undefined;
+  const selectedValue = isControlled ? toRadixSelectValue(value) : undefined;
   const initialValue =
     defaultValue === undefined ? undefined : toRadixSelectValue(defaultValue);
-  const [uncontrolledValue, setUncontrolledValue] = useState(initialValue);
-  const currentValue = selectedValue ?? uncontrolledValue;
   const emptyOption = options.find((option) => option.value === "");
 
   return (
     <SelectPrimitive.Root
-      value={selectedValue}
-      defaultValue={initialValue}
+      {...(isControlled
+        ? { value: selectedValue }
+        : { defaultValue: initialValue })}
       disabled={disabled}
       required={required}
       name={name}
       onValueChange={(nextValue) => {
-        if (value === undefined) {
-          setUncontrolledValue(nextValue);
-        }
-
         onChange?.(
           createSelectChangeEvent({
             id,
@@ -234,7 +244,6 @@ export const Select = forwardRef(function Select(
         aria-describedby={ariaDescribedBy}
         aria-invalid={ariaInvalid}
         aria-required={required || undefined}
-        value={fromRadixSelectValue(currentValue ?? "")}
         className={cn(
           controlBase,
           "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
@@ -836,12 +845,23 @@ export function CommandPopover({
       return;
     }
 
+    // Walk the page's focusable elements in DOM order (matching visual tab sequence
+    // for a standard flat layout). Elements inside the popover portal are excluded
+    // because the portal is being closed; the trigger itself is excluded from the
+    // "next" candidates so we always advance past it.
     const focusableElements = getFocusableElements(document).filter(
-      (element) => !contentRef.current?.contains(element)
+      (element) =>
+        !contentRef.current?.contains(element) && element !== triggerRef.current
     );
-    const triggerIndex = focusableElements.indexOf(triggerRef.current);
+    const triggerIndex = Array.from(document.querySelectorAll<HTMLElement>("*"))
+      .filter(
+        (el) => focusableElements.includes(el) || el === triggerRef.current
+      )
+      .indexOf(triggerRef.current);
     const nextElement =
-      triggerIndex >= 0 ? focusableElements[triggerIndex + 1] : undefined;
+      triggerIndex >= 0
+        ? focusableElements[triggerIndex]
+        : focusableElements[0];
 
     nextElement?.focus();
   }

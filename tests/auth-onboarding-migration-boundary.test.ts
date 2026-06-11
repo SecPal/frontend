@@ -31,10 +31,12 @@ const requiredCoveredPaths = [
   "src/components/auth-layout.tsx",
 ] as const;
 
+// REUSE-IgnoreStart
 const forbiddenTextMarkers = [
   "@headlessui/react",
   "LicenseRef-TailwindPlus",
 ] as const;
+// REUSE-IgnoreEnd
 
 const oldComponentWrapperPaths = new Set([
   "src/components/alert",
@@ -175,6 +177,7 @@ describe("auth/onboarding migration boundary", () => {
   });
 
   it("detects forbidden packages, license markers, and old wrappers", () => {
+    // REUSE-IgnoreStart
     const violations = collectMigrationBoundaryViolations([
       {
         path: "src/pages/Login.tsx",
@@ -197,6 +200,7 @@ describe("auth/onboarding migration boundary", () => {
       "src/pages/Login.tsx: imports forbidden package @headlessui/react",
       "src/pages/Onboarding/OnboardingComplete.tsx: imports old component wrapper ../../components/input",
     ]);
+    // REUSE-IgnoreEnd
   });
 
   it("keeps scoped auth and onboarding sources off legacy UI dependencies", () => {

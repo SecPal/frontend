@@ -28,4 +28,51 @@ describe("shadcn utility helpers", () => {
       "dark:bg-zinc-950 bg-zinc-50"
     );
   });
+
+  describe("onboarding cn — tailwind-merge deduplication (regression for clsx-only upgrade)", () => {
+    it("keeps last background color when two bg- utilities conflict", () => {
+      // Previously (clsx-only) both classes were preserved; now twMerge deduplicates.
+      expect(onboardingCn("bg-white", "bg-zinc-50")).toBe("bg-zinc-50");
+    });
+
+    it("keeps last text color when two text- utilities conflict", () => {
+      expect(onboardingCn("text-zinc-950", "text-zinc-50")).toBe(
+        "text-zinc-50"
+      );
+    });
+
+    it("keeps last border color when two border- utilities conflict", () => {
+      expect(onboardingCn("border-zinc-200", "border-zinc-800")).toBe(
+        "border-zinc-800"
+      );
+    });
+
+    it("preserves non-conflicting utilities from both arguments", () => {
+      expect(onboardingCn("rounded-md p-4", "text-sm")).toBe(
+        "rounded-md p-4 text-sm"
+      );
+    });
+
+    it("deduplicates padding axis conflicts (px overrides individual p-)", () => {
+      expect(onboardingCn("p-4", "px-6")).toBe("p-4 px-6");
+    });
+
+    it("handles dark-mode variants independently of base utilities", () => {
+      // dark: variants are independent; both base and dark should survive when not conflicting
+      expect(
+        onboardingCn("border-zinc-200 dark:border-zinc-800", "border-zinc-300")
+      ).toBe("dark:border-zinc-800 border-zinc-300");
+    });
+
+    it("resolves focus-ring offset color conflicts used in onboarding controls", () => {
+      expect(
+        onboardingCn(
+          "focus-visible:ring-offset-2",
+          "dark:focus-visible:ring-offset-zinc-950"
+        )
+      ).toBe(
+        "focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
+      );
+    });
+  });
 });
