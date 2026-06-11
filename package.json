@@ -39,6 +39,7 @@
     "test:run": "vitest run --bail=1",
     "test:run:all": "vitest run --reporter=verbose",
     "test:related": "vitest related --run --bail=1",
+    "test:migration-boundary": "vitest run tests/auth-onboarding-migration-boundary.test.ts",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",

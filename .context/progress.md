@@ -18,6 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Login secondary auth actions should keep their provider-specific button identity visible in the shadcn composition while preserving the same accessible names used by browser and native passkey flow tests.
 - Login MFA surfaces should render TOTP through auth-local `LoginOtpInput` with route-owned digit sanitization/length constraints, while keeping `recovery_code` on a free text `LoginInput`; tests should assert the submitted method/code payload rather than only the visible control.
 - Login-specific shared controls such as dialogs and language selectors should stay in `src/pages/Auth/ui` or `src/pages/Login.tsx` with native/shadcn-style markup so unauthenticated auth routes do not pull old Catalyst/Headless component chains through shared app components.
+- Auth/Login and Onboarding migration boundaries should be executable Vitest audits over the route scope, checking for forbidden legacy packages, Tailwind Plus license markers, and direct imports from old shared component wrappers so regressions fail in the normal `npm test` path.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -434,3 +435,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep login-only cross-cutting controls route-local or auth-local when a shared app component still wraps old Catalyst/Headless primitives.
   - Gotchas encountered: locale-switching tests need to account for translated accessible names on both action buttons and OTP digit inputs, so enter values before switching locale when the assertion is about the translated failure output.
+
+## US-001: Lock Auth/Onboarding Migration Baseline
+
+- Added a Vitest migration-boundary audit that recursively covers `src/pages/Auth`, `src/pages/Login.tsx`, `src/pages/Onboarding`, `src/components/onboarding-layout.tsx`, and `src/components/auth-layout.tsx`.
+- The audit fails on `@headlessui/react`, `LicenseRef-TailwindPlus`, and static imports/exports that point at old shared Catalyst/Tailwind Plus component wrappers under `src/components`.
+- Replaced the remaining Tailwind Plus-marked `AuthLayout` shell with a SecPal-owned layout so the public onboarding complete flow can stay inside the audited scope.
+- Added `npm run test:migration-boundary` for focused local runs; the audit is also included in the normal `npm test` Vitest suite.
+- Files changed:
+  - `package.json`
+  - `src/components/auth-layout.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: use a route-scope audit with a small import resolver instead of one-off text search so local shadcn barrels stay allowed while old shared wrappers are blocked.
+  - Gotchas encountered: Vitest transforms `import.meta.url` in this setup, so repo-root filesystem audits should resolve from `process.cwd()` when the test is run through npm scripts.
