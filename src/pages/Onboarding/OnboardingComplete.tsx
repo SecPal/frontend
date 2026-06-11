@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, type ReactNode } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -17,13 +17,15 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  OnboardingAuthCard,
+  OnboardingAuthHeader,
+  OnboardingAuthShell,
 } from "./ui";
 import {
   getErrorRetryAfterSeconds,
   getErrorValidationErrors,
   getLocalizedErrorMessage,
 } from "../../lib/errorUtils";
-import { AuthLayout } from "../../components/auth-layout";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 import { useAuth } from "../../hooks/useAuth";
@@ -61,6 +63,26 @@ interface TokenValidationState {
 
 const COMPROMISED_PASSWORD_ERROR =
   "The given password has appeared in a data leak. Please choose a different password.";
+
+function OnboardingCompleteFrame({ children }: { children: ReactNode }) {
+  return (
+    <OnboardingAuthShell>
+      <OnboardingAuthCard aria-labelledby="onboarding-complete-brand">
+        <OnboardingAuthHeader>
+          <div className="flex items-center gap-3">
+            <Logo size="48" />
+            <h1 id="onboarding-complete-brand" className="text-3xl font-bold">
+              SecPal
+            </h1>
+          </div>
+          <LanguageSwitcher />
+        </OnboardingAuthHeader>
+
+        {children}
+      </OnboardingAuthCard>
+    </OnboardingAuthShell>
+  );
+}
 
 function mapOnboardingFieldErrors(
   backendErrors: Record<string, string[]> | undefined,
@@ -466,15 +488,7 @@ export function OnboardingComplete() {
     const retryHint = getRetryHint(tokenValidationState.retryAfterSeconds);
 
     return (
-      <AuthLayout>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Logo size="48" />
-            <h1 className="text-3xl font-bold">SecPal</h1>
-          </div>
-          <LanguageSwitcher />
-        </div>
-
+      <OnboardingCompleteFrame>
         <Alert
           className={
             isRateLimited
@@ -523,41 +537,25 @@ export function OnboardingComplete() {
             )}
           </div>
         </Alert>
-      </AuthLayout>
+      </OnboardingCompleteFrame>
     );
   }
 
   // Show loading spinner while validating token
   if (tokenValidationState.kind === "validating") {
     return (
-      <AuthLayout>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Logo size="48" />
-            <h1 className="text-3xl font-bold">SecPal</h1>
-          </div>
-          <LanguageSwitcher />
-        </div>
-
+      <OnboardingCompleteFrame>
         <div className="mt-8 text-center">
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
             <Trans>Validating your link...</Trans>
           </p>
         </div>
-      </AuthLayout>
+      </OnboardingCompleteFrame>
     );
   }
 
   return (
-    <AuthLayout>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Logo size="48" />
-          <h1 className="text-3xl font-bold">SecPal</h1>
-        </div>
-        <LanguageSwitcher />
-      </div>
-
+    <OnboardingCompleteFrame>
       <div className="mt-8">
         <h2 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
           <Trans>Welcome to SecPal!</Trans>
@@ -683,7 +681,7 @@ export function OnboardingComplete() {
               id="onboarding-password"
               type="password"
               name="password"
-              aria-label="Password"
+              aria-label={_(msg`Password`)}
               value={formData.password}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, password: e.target.value }))
@@ -753,6 +751,6 @@ export function OnboardingComplete() {
           </div>
         </FieldGroup>
       </form>
-    </AuthLayout>
+    </OnboardingCompleteFrame>
   );
 }

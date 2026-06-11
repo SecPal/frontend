@@ -418,6 +418,10 @@ msgstr "Typ ist erforderlich"
 msgid "Android Provisioning"
 msgstr "Android-Provisionierung"
 
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Onboarding step navigation"
+msgstr "Onboarding-Schrittnavigation"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact name is required."

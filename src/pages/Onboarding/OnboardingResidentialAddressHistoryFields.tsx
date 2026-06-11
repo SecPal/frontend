@@ -240,7 +240,6 @@ export function OnboardingResidentialAddressHistoryFields({
               </Trans>
             </FieldDescription>
             <RadioGroup
-              role="radiogroup"
               aria-label={_(msg`Do you currently have a Bewacher ID?`)}
               aria-invalid={hasBewacherIdQuestionError ? true : undefined}
               aria-describedby={
@@ -249,27 +248,33 @@ export function OnboardingResidentialAddressHistoryFields({
                   : undefined
               }
               className="mt-1 space-y-3"
+              name="has_current_bewacher_id"
+              value={value.has_current_bewacher_id ?? ""}
+              onValueChange={(nextValue) => {
+                if (nextValue !== "yes" && nextValue !== "no") {
+                  return;
+                }
+
+                onChange((prev) => ({
+                  ...prev,
+                  has_current_bewacher_id: nextValue,
+                  ...(nextValue === "no"
+                    ? { bewacher_id: "", bewacher_id_unknown: false }
+                    : {}),
+                }));
+              }}
             >
               {(["yes", "no"] as const).map((choice) => (
-                <label
+                <FieldLabel
                   key={choice}
+                  htmlFor={`has_current_bewacher_id_${choice}`}
                   className="flex items-center gap-3 text-sm text-zinc-950 dark:text-zinc-50"
                 >
                   <RadioGroupItem
-                    name="has_current_bewacher_id"
+                    id={`has_current_bewacher_id_${choice}`}
                     value={choice}
-                    checked={value.has_current_bewacher_id === choice}
                     disabled={readOnly}
                     aria-disabled={readOnly}
-                    onChange={() => {
-                      onChange((prev) => ({
-                        ...prev,
-                        has_current_bewacher_id: choice,
-                        ...(choice === "no"
-                          ? { bewacher_id: "", bewacher_id_unknown: false }
-                          : {}),
-                      }));
-                    }}
                   />
                   {choice === "yes" ? (
                     <span>
@@ -280,7 +285,7 @@ export function OnboardingResidentialAddressHistoryFields({
                       <Trans>No</Trans>
                     </span>
                   )}
-                </label>
+                </FieldLabel>
               ))}
             </RadioGroup>
             {hasBewacherIdQuestionError ? (

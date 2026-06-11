@@ -4,7 +4,6 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import clsx from "clsx";
 import {
   useCallback,
   useEffect,
@@ -14,6 +13,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import {
+  AutocompleteListbox,
+  AutocompleteOption,
   Field,
   FieldDescription as Description,
   FieldError as ErrorMessage,
@@ -569,68 +570,60 @@ export function EmployeeAddressFields({
         <Label htmlFor={fieldId("postal_code")}>
           <Trans>Postal Code</Trans>
         </Label>
-        <Input
-          ref={postalCodeInputRef}
-          id={fieldId("postal_code")}
-          name={fieldName("postal_code")}
-          autoComplete="postal-code"
-          disabled={readOnly}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={showPostalSuggestions}
-          aria-controls={localityListboxId}
-          aria-activedescendant={
-            showPostalSuggestions && localityHighlightIndex >= 0
-              ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
-              : undefined
+        <AutocompleteListbox
+          open={showPostalSuggestions}
+          listboxId={localityListboxId}
+          anchor={
+            <Input
+              ref={postalCodeInputRef}
+              id={fieldId("postal_code")}
+              name={fieldName("postal_code")}
+              autoComplete="postal-code"
+              disabled={readOnly}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showPostalSuggestions}
+              aria-controls={localityListboxId}
+              aria-activedescendant={
+                showPostalSuggestions && localityHighlightIndex >= 0
+                  ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
+                  : undefined
+              }
+              value={draft.postalCode}
+              onFocus={() => handleAutocompleteFocus("postalCode")}
+              onBlur={handleAutocompleteInputBlur}
+              onKeyDown={(event) =>
+                handleLocalitySuggestionKeyDown(event, showPostalSuggestions)
+              }
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                onChange("postalCode", nextValue);
+                applyPostalSuggestion(nextValue);
+              }}
+            />
           }
-          value={draft.postalCode}
-          onFocus={() => handleAutocompleteFocus("postalCode")}
-          onBlur={handleAutocompleteInputBlur}
-          onKeyDown={(event) =>
-            handleLocalitySuggestionKeyDown(event, showPostalSuggestions)
-          }
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            onChange("postalCode", nextValue);
-            applyPostalSuggestion(nextValue);
-          }}
-        />
-        {showPostalSuggestions ? (
-          <div
-            id={localityListboxId}
-            role="listbox"
-            className="mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            {localitySuggestions.map((suggestion, index) => (
-              <button
-                key={`${suggestion.postal_code}-${suggestion.locality}`}
-                id={`${fieldIdPrefix}-locality-option-${index}`}
-                type="button"
-                tabIndex={-1}
-                role="option"
-                aria-selected={localityHighlightIndex === index}
-                className={clsx(
-                  "block w-full px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 dark:text-white dark:hover:bg-zinc-800",
-                  "border-b border-zinc-100 last:border-b-0 dark:border-zinc-800",
-                  localityHighlightIndex === index &&
-                    "bg-zinc-100 dark:bg-zinc-800"
-                )}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  selectLocalitySuggestion(suggestion);
-                }}
-              >
-                <span className="block font-medium">
-                  {suggestion.postal_code}
-                </span>
-                <span className="block text-zinc-500 dark:text-zinc-400">
-                  {suggestion.locality}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : null}
+        >
+          {showPostalSuggestions
+            ? localitySuggestions.map((suggestion, index) => (
+                <AutocompleteOption
+                  key={`${suggestion.postal_code}-${suggestion.locality}`}
+                  id={`${fieldIdPrefix}-locality-option-${index}`}
+                  highlighted={localityHighlightIndex === index}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    selectLocalitySuggestion(suggestion);
+                  }}
+                >
+                  <span className="block font-medium">
+                    {suggestion.postal_code}
+                  </span>
+                  <span className="block text-zinc-500 dark:text-zinc-400">
+                    {suggestion.locality}
+                  </span>
+                </AutocompleteOption>
+              ))
+            : null}
+        </AutocompleteListbox>
         {showPostalFeedback && localityRequestState.loading ? (
           <Description>
             <Trans>Loading...</Trans>
@@ -656,66 +649,60 @@ export function EmployeeAddressFields({
         <Label htmlFor={fieldId("city")}>
           <Trans>City</Trans>
         </Label>
-        <Input
-          ref={cityInputRef}
-          id={fieldId("city")}
-          name={fieldName("city")}
-          autoComplete="address-level2"
-          disabled={readOnly}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={showCitySuggestions}
-          aria-controls={localityListboxId}
-          aria-activedescendant={
-            showCitySuggestions && localityHighlightIndex >= 0
-              ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
-              : undefined
+        <AutocompleteListbox
+          open={showCitySuggestions}
+          listboxId={localityListboxId}
+          anchor={
+            <Input
+              ref={cityInputRef}
+              id={fieldId("city")}
+              name={fieldName("city")}
+              autoComplete="address-level2"
+              disabled={readOnly}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showCitySuggestions}
+              aria-controls={localityListboxId}
+              aria-activedescendant={
+                showCitySuggestions && localityHighlightIndex >= 0
+                  ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
+                  : undefined
+              }
+              value={draft.city}
+              onFocus={() => handleAutocompleteFocus("city")}
+              onBlur={handleAutocompleteInputBlur}
+              onKeyDown={(event) =>
+                handleLocalitySuggestionKeyDown(event, showCitySuggestions)
+              }
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                onChange("city", nextValue);
+                applyCitySuggestion(nextValue);
+              }}
+            />
           }
-          value={draft.city}
-          onFocus={() => handleAutocompleteFocus("city")}
-          onBlur={handleAutocompleteInputBlur}
-          onKeyDown={(event) =>
-            handleLocalitySuggestionKeyDown(event, showCitySuggestions)
-          }
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            onChange("city", nextValue);
-            applyCitySuggestion(nextValue);
-          }}
-        />
-        {showCitySuggestions ? (
-          <div
-            id={localityListboxId}
-            role="listbox"
-            className="mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            {localitySuggestions.map((suggestion, index) => (
-              <button
-                key={`${suggestion.locality}-${suggestion.postal_code}`}
-                id={`${fieldIdPrefix}-locality-option-${index}`}
-                type="button"
-                tabIndex={-1}
-                role="option"
-                aria-selected={localityHighlightIndex === index}
-                className={clsx(
-                  "block w-full px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 dark:text-white dark:hover:bg-zinc-800",
-                  "border-b border-zinc-100 last:border-b-0 dark:border-zinc-800",
-                  localityHighlightIndex === index &&
-                    "bg-zinc-100 dark:bg-zinc-800"
-                )}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  selectLocalitySuggestion(suggestion);
-                }}
-              >
-                <span className="block font-medium">{suggestion.locality}</span>
-                <span className="block text-zinc-500 dark:text-zinc-400">
-                  {suggestion.postal_code}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : null}
+        >
+          {showCitySuggestions
+            ? localitySuggestions.map((suggestion, index) => (
+                <AutocompleteOption
+                  key={`${suggestion.locality}-${suggestion.postal_code}`}
+                  id={`${fieldIdPrefix}-locality-option-${index}`}
+                  highlighted={localityHighlightIndex === index}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    selectLocalitySuggestion(suggestion);
+                  }}
+                >
+                  <span className="block font-medium">
+                    {suggestion.locality}
+                  </span>
+                  <span className="block text-zinc-500 dark:text-zinc-400">
+                    {suggestion.postal_code}
+                  </span>
+                </AutocompleteOption>
+              ))
+            : null}
+        </AutocompleteListbox>
         {showCityFeedback && localityRequestState.loading ? (
           <Description>
             <Trans>Loading...</Trans>
@@ -741,64 +728,56 @@ export function EmployeeAddressFields({
         <Label htmlFor={fieldId("street")}>
           <Trans>Street</Trans>
         </Label>
-        <Input
-          ref={streetInputRef}
-          id={fieldId("street")}
-          name={fieldName("street")}
-          autoComplete="street-address"
-          disabled={readOnly}
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={showStreetSuggestions}
-          aria-controls={streetListboxId}
-          aria-activedescendant={
-            showStreetSuggestions && streetHighlightIndex >= 0
-              ? `${fieldIdPrefix}-street-option-${streetHighlightIndex}`
-              : undefined
+        <AutocompleteListbox
+          open={showStreetSuggestions}
+          listboxId={streetListboxId}
+          anchor={
+            <Input
+              ref={streetInputRef}
+              id={fieldId("street")}
+              name={fieldName("street")}
+              autoComplete="street-address"
+              disabled={readOnly}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showStreetSuggestions}
+              aria-controls={streetListboxId}
+              aria-activedescendant={
+                showStreetSuggestions && streetHighlightIndex >= 0
+                  ? `${fieldIdPrefix}-street-option-${streetHighlightIndex}`
+                  : undefined
+              }
+              value={draft.street}
+              onFocus={() => handleAutocompleteFocus("street")}
+              onBlur={handleAutocompleteInputBlur}
+              onKeyDown={handleStreetSuggestionKeyDown}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                onChange("street", nextValue);
+                applyStreetSuggestion(nextValue);
+              }}
+            />
           }
-          value={draft.street}
-          onFocus={() => handleAutocompleteFocus("street")}
-          onBlur={handleAutocompleteInputBlur}
-          onKeyDown={handleStreetSuggestionKeyDown}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            onChange("street", nextValue);
-            applyStreetSuggestion(nextValue);
-          }}
-        />
-        {showStreetSuggestions ? (
-          <div
-            id={streetListboxId}
-            role="listbox"
-            className="mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            {streetSuggestions.map((suggestion, index) => (
-              <button
-                key={`${suggestion.name}-${suggestion.postal_code}-${suggestion.locality}`}
-                id={`${fieldIdPrefix}-street-option-${index}`}
-                type="button"
-                tabIndex={-1}
-                role="option"
-                aria-selected={streetHighlightIndex === index}
-                className={clsx(
-                  "block w-full px-3 py-2 text-left text-sm text-zinc-900 hover:bg-zinc-50 dark:text-white dark:hover:bg-zinc-800",
-                  "border-b border-zinc-100 last:border-b-0 dark:border-zinc-800",
-                  streetHighlightIndex === index &&
-                    "bg-zinc-100 dark:bg-zinc-800"
-                )}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  selectStreetSuggestion(suggestion);
-                }}
-              >
-                <span className="block font-medium">{suggestion.name}</span>
-                <span className="block text-zinc-500 dark:text-zinc-400">
-                  {suggestion.postal_code} {suggestion.locality}
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : null}
+        >
+          {showStreetSuggestions
+            ? streetSuggestions.map((suggestion, index) => (
+                <AutocompleteOption
+                  key={`${suggestion.name}-${suggestion.postal_code}-${suggestion.locality}`}
+                  id={`${fieldIdPrefix}-street-option-${index}`}
+                  highlighted={streetHighlightIndex === index}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    selectStreetSuggestion(suggestion);
+                  }}
+                >
+                  <span className="block font-medium">{suggestion.name}</span>
+                  <span className="block text-zinc-500 dark:text-zinc-400">
+                    {suggestion.postal_code} {suggestion.locality}
+                  </span>
+                </AutocompleteOption>
+              ))
+            : null}
+        </AutocompleteListbox>
         {showStreetFeedback && streetRequestState.loading ? (
           <Description>
             <Trans>Loading...</Trans>

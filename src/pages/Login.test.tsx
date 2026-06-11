@@ -2995,6 +2995,71 @@ describe("Login", () => {
   });
 
   describe("language switcher", () => {
+    it("switches translated login status and MFA dialog copy after selecting German", async () => {
+      vi.mocked(i18nModule.activateLocale).mockImplementationOnce(
+        async (locale) => {
+          i18n.activate(locale);
+        }
+      );
+      vi.mocked(authApi.login)
+        .mockRejectedValueOnce(new authApi.AuthApiError("Invalid credentials"))
+        .mockResolvedValueOnce({
+          challenge: mfaChallengeFixture,
+        });
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await selectLanguage("Deutsch");
+
+      await waitFor(() => {
+        expect(i18nModule.setLocalePreference).toHaveBeenCalledWith("de");
+      });
+      expect(screen.getByLabelText(/e-mail-adresse/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /einloggen/i })
+      ).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText(/e-mail-adresse/i), {
+        target: { value: "wrong@secpal.dev" },
+      });
+      fireEvent.change(screen.getByLabelText(/passwort/i), {
+        target: { value: "wrong-password" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /einloggen/i }));
+
+      expect(
+        await screen.findByText(/die angegebenen zugangsdaten sind falsch/i)
+      ).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText(/passwort/i), {
+        target: { value: "correct-password" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /einloggen/i }));
+
+      expect(
+        await screen.findByRole("heading", {
+          name: /zweiter faktor erforderlich/i,
+        })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/authenticator-code/i)).toHaveAttribute(
+        "inputmode",
+        "numeric"
+      );
+      expect(
+        screen.getByRole("button", { name: /überprüfen und fortfahren/i })
+      ).toBeDisabled();
+
+      act(() => {
+        i18n.activate("en");
+      });
+    });
+
     it("shows the localized fallback error message when locale activation fails", async () => {
       vi.mocked(i18nModule.activateLocale).mockRejectedValueOnce(
         new Error("Failed to fetch chunk /assets/de-abc123.js")

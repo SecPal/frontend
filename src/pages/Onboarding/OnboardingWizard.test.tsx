@@ -192,6 +192,36 @@ async function selectNationality(
   await user.keyboard("{ArrowDown}{Enter}");
 }
 
+async function selectOnboardingOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string | RegExp,
+  value: string
+) {
+  const control = screen.getByLabelText(label);
+
+  if (control instanceof HTMLSelectElement) {
+    await user.selectOptions(control, value);
+    return;
+  }
+
+  await user.click(control);
+  const option = await waitFor(() => {
+    const matchingOption = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-slot="onboarding-select-item"]'
+      )
+    ).find((element) => element.dataset.value === value);
+
+    if (!matchingOption) {
+      throw new Error(`Option with value "${value}" not found`);
+    }
+
+    return matchingOption;
+  });
+
+  await user.click(option);
+}
+
 async function enableIdentityUpload(
   user: ReturnType<typeof userEvent.setup>,
   documentKind?: "id_card" | "passport"
@@ -216,6 +246,12 @@ async function enableIdentityUpload(
     );
     if (kindSelector instanceof HTMLSelectElement) {
       await user.selectOptions(kindSelector, documentKind);
+    } else if (kindSelector) {
+      await selectOnboardingOption(
+        user,
+        /which document are you uploading\?/i,
+        documentKind
+      );
     }
   }
 }
@@ -366,7 +402,7 @@ describe("OnboardingWizard", () => {
 
     const birthNameInput = await screen.findByLabelText(/birth name/i);
     expect(birthNameInput).toHaveValue("Lovelace");
-    expect(screen.getByLabelText(/gender/i)).toHaveValue("female");
+    expect(screen.getByLabelText(/gender/i)).toHaveTextContent("female");
 
     await user.clear(birthNameInput);
     await user.type(birthNameInput, "Ada");
@@ -551,7 +587,7 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await user.type(
       screen.getByLabelText(/contract start date/i),
       "2030-12-31"
@@ -571,7 +607,6 @@ describe("OnboardingWizard", () => {
     expect(
       screen.queryByLabelText(/employment permitted/i)
     ).not.toBeInTheDocument();
-    expect(screen.getByText("EU Blue Card")).toBeInTheDocument();
     expect(
       screen.queryByLabelText(/unlimited residence title/i)
     ).not.toBeInTheDocument();
@@ -584,8 +619,9 @@ describe("OnboardingWizard", () => {
       1
     );
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
     expect(
@@ -738,12 +774,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -833,11 +870,12 @@ describe("OnboardingWizard", () => {
       expect(employeeApiMocks.fetchEmployee).toHaveBeenCalledWith("employee-1");
     });
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -929,11 +967,12 @@ describe("OnboardingWizard", () => {
       );
     });
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1046,12 +1085,13 @@ describe("OnboardingWizard", () => {
       expect(employeeApiMocks.fetchEmployee).toHaveBeenCalledWith("employee-1");
     });
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1136,11 +1176,12 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1229,12 +1270,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1305,11 +1347,12 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1429,11 +1472,12 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -1539,7 +1583,7 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "de");
     await enableIdentityUpload(user, "passport");
 
@@ -1621,6 +1665,131 @@ describe("OnboardingWizard", () => {
       )
     ).toBeInTheDocument();
     expect(screen.getAllByText(/^passport$/i).length).toBeGreaterThan(0);
+  });
+
+  it("keeps migrated wizard controls wired through the route-level nationality, upload, and residence-title flow", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "DE", name: "Germany" },
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      async (id, payload) => ({
+        id,
+        employee_id: "employee-1",
+        form_template_id: "template-1",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+    onboardingApiMocks.uploadOnboardingFile.mockResolvedValueOnce({
+      id: "file-passport",
+      filename: "passport.png",
+    });
+
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await selectOnboardingOption(user, /^gender$/i, "female");
+
+    const nationalityControl = screen.getByLabelText(/^nationalities$/i);
+    expect(nationalityControl).toHaveAttribute("role", "combobox");
+    await user.click(nationalityControl);
+    expect(
+      await screen.findByRole("searchbox", {
+        name: /search and select one nationality/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-slot="onboarding-command-popover-content"]')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: /turkey/i }));
+
+    const identityUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your identity document now\?/i,
+    });
+    expect(identityUploadGroup).toHaveAttribute(
+      "data-slot",
+      "onboarding-radio-group"
+    );
+    await user.click(
+      within(identityUploadGroup).getByRole("radio", { name: /^(yes|ja)$/i })
+    );
+
+    const identityAttachment = await screen.findByLabelText(/^attachment$/i);
+    expect(identityAttachment).toHaveAttribute("type", "file");
+    await user.upload(
+      identityAttachment,
+      new File(["passport"], "passport.png", { type: "image/png" })
+    );
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+    expect(await screen.findByText("passport.png")).toBeInTheDocument();
+
+    const residenceTitleType = screen.getByLabelText(/residence title type/i);
+    expect(residenceTitleType).toHaveAttribute("role", "combobox");
+    expect(residenceTitleType).toHaveAttribute(
+      "data-slot",
+      "onboarding-select-trigger"
+    );
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    expect(expiryInput).toHaveAttribute(
+      "id",
+      "onboarding-field-residence-title-expiry"
+    );
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+
+    const employmentGroup = await screen.findByRole("radiogroup", {
+      name: /employment permitted/i,
+    });
+    expect(employmentGroup).toHaveAttribute(
+      "data-slot",
+      "onboarding-radio-group"
+    );
   });
 
   it("normalizes nationality payloads to a single value before saving", async () => {
@@ -1798,12 +1967,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Niederlassungserlaubnis"
     );
 
@@ -1860,12 +2030,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
@@ -1945,12 +2116,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
@@ -2014,12 +2186,13 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
     await deferIdentityUpload(user);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
@@ -2101,7 +2274,7 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await user.type(
       screen.getByLabelText(/contract start date/i),
       "2030-12-31"
@@ -2117,8 +2290,9 @@ describe("OnboardingWizard", () => {
     await user.click(screen.getByRole("button", { name: /upload file/i }));
     await screen.findByText(/file uploaded successfully\./i);
 
-    await user.selectOptions(
-      screen.getByLabelText(/residence title type/i),
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
       "Aufenthaltserlaubnis"
     );
 
@@ -2263,7 +2437,7 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user, "tr");
 
     await user.click(
@@ -2798,7 +2972,7 @@ describe("OnboardingWizard HR-managed intended activities (BWR)", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/intended activities/i)).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user);
     await deferIdentityUpload(user);
 
@@ -3058,7 +3232,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
       await screen.findByRole("heading", { name: /personal information/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user);
     await deferIdentityUpload(user);
     await user.click(
@@ -3181,7 +3355,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
       await screen.findByRole("heading", { name: /personal information/i })
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/^gender$/i), "female");
+    await selectOnboardingOption(user, /^gender$/i, "female");
     await selectNationality(user);
     await deferIdentityUpload(user);
     await user.click(

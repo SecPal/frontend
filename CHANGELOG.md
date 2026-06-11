@@ -58,6 +58,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated the onboarding wizard, onboarding-complete, and onboarding-submitted pages from the legacy Catalyst component set to a new self-contained `src/pages/Onboarding/ui/primitives.tsx` design-system layer (Button, Input, Textarea, Select, Checkbox, RadioGroup, Alert, Card, Badge, Progress, Field, CommandPopover, and related helpers), removing the dependency on external Catalyst primitives for this flow and aligning the visual language with the rest of the shadcn-based UI.
 - Added `CommandPopover` with full keyboard navigation (ArrowDown/ArrowUp/Enter/Escape), ARIA combobox/listbox pattern with `aria-activedescendant`, and stable per-option `id` attributes for screen-reader announcement of the active item; used for nationality selection in the onboarding wizard.
 - Added `ProgressIndicator` using the new `Progress` primitive with `aria-label` for accessible progress announcement.
+- Added `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` layout primitives to `src/pages/Onboarding/ui/primitives.tsx`; `OnboardingComplete` now uses these via a local `OnboardingCompleteFrame` wrapper instead of repeating the layout markup in every render branch.
+- Extracted shared `cn()` utility to `src/lib/utils.ts` (clsx + tailwind-merge); both `src/pages/Auth/ui/utils.ts` and `src/pages/Onboarding/ui/utils.ts` now re-export from this canonical location.
+- Added `auth/onboarding migration boundary` static-analysis test (`tests/auth-onboarding-migration-boundary.test.ts`) that asserts the auth and onboarding route scope is free of legacy Catalyst/Headless-UI imports and `LicenseRef-TailwindPlus` markers.
+- Migrated `Select`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Progress`, and `FieldLabel` in `src/pages/Onboarding/ui/primitives.tsx` from native HTML elements to Radix UI primitives (`@radix-ui/react-select`, `@radix-ui/react-checkbox`, `@radix-ui/react-radio-group`, `@radix-ui/react-progress`, `@radix-ui/react-label`, `@radix-ui/react-popover`).
+- Added `AutocompleteListbox` and `AutocompleteOption` components to `src/pages/Onboarding/ui/primitives.tsx` for accessible combobox autocomplete surfaces backed by `@radix-ui/react-popover`.
+
+### Changed
+
+- **Breaking:** `LoginOtpInput` `aria-label` prop is now required (no default). Callers that omitted `aria-label` must now pass an explicit localized label string.
+- **Breaking:** `LoginSpinner` `aria-label` prop is now required (no default `"Loading"`). Callers must pass an explicit localized label.
+- **Breaking:** `CommandPopover` props `placeholder`, `searchPlaceholder`, and `emptyMessage` are now required strings (previously optional with English defaults). All call sites must pass localized values.
+- `cn()` in the onboarding barrel now applies `tailwind-merge` (previously used bare `clsx` without conflict resolution). Class lists that previously preserved duplicate conflicting Tailwind utilities will now be deduplicated.
 
 ### Fixed
 

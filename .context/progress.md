@@ -6,18 +6,26 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 ## Codebase Patterns
 
 - Onboarding-only shadcn-style primitives live under `src/pages/Onboarding/ui` and are imported from that local barrel so migrated onboarding routes do not depend on Catalyst wrappers in `src/components`.
+- Public onboarding auth-style pages should frame every passive and form state with onboarding-local `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` primitives; keep route behavior, logo, and language-switcher placement in the route while asserting stable `data-slot` and light/dark classes.
 - Migrated onboarding forms should pair local `FieldLabel`/`Input` primitives with stable `id`, `htmlFor`, `aria-invalid`, and `aria-describedby` wiring so existing label-based tests and accessible error descriptions keep working after leaving Headless/Catalyst field wrappers.
 - Authenticated onboarding shell and passive route states should use semantic containers plus onboarding-local `Button`, `Card`, and `Alert` primitives while leaving auth gating and logout sequencing in the route/layout layer.
 - Wizard chrome should use onboarding-local `CardHeader`/`CardContent`, `AlertDescription`, `Badge`, `Progress`, and `Button` primitives while keeping navigation conditions and state transitions in the existing wizard handlers.
 - Schema-driven wizard field paths should use onboarding-local `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Select`, `Textarea`, `Checkbox`, and `CommandPopover` primitives with deterministic `onboarding-field-*` IDs; keep special upload and address-history blocks isolated until their own migrations.
 - Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
-- Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
+- Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and Radix-backed `RadioGroup` controls; keep pending file names outside the file input so navigation guards can still key off selected files.
 - Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
 - Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
 - Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
 - Login secondary auth actions should keep their provider-specific button identity visible in the shadcn composition while preserving the same accessible names used by browser and native passkey flow tests.
 - Login MFA surfaces should render TOTP through auth-local `LoginOtpInput` with route-owned digit sanitization/length constraints, while keeping `recovery_code` on a free text `LoginInput`; tests should assert the submitted method/code payload rather than only the visible control.
 - Login-specific shared controls such as dialogs and language selectors should stay in `src/pages/Auth/ui` or `src/pages/Login.tsx` with native/shadcn-style markup so unauthenticated auth routes do not pull old Catalyst/Headless component chains through shared app components.
+- Auth/Login and Onboarding migration boundaries should be executable Vitest audits over the route scope, checking for forbidden legacy packages, Tailwind Plus license markers, and direct imports from old shared component wrappers so regressions fail in the normal `npm test` path.
+- Shared shadcn-style utilities live in `src/lib/utils.ts` and should be imported through route-local barrels (`src/pages/Auth/ui`, `src/pages/Onboarding/ui`) or the `@/lib/utils` alias when new shared primitives need canonical `cn` behavior.
+- Radix-backed onboarding primitives should keep the route-local API stable where practical: `Select` may accept existing `<option>` children and expose the current trigger `value` for legacy tests, while route tests should select Radix options by opening the combobox and clicking `[data-slot="onboarding-select-item"][data-value]`.
+- Radix-backed command popovers should require caller-provided placeholder/search/empty-state copy, keep filtering/selection behavior local, and let Radix own portal positioning plus outside/focus dismissal; cover trigger, searchbox, option, selected, disabled, empty, Escape, and Tab boundaries in primitive tests.
+- Editable onboarding autocomplete inputs should keep request, highlight, exact-match, and focus-handoff state in the feature component while moving only the listbox surface to onboarding-local Radix Popover primitives such as `AutocompleteListbox`/`AutocompleteOption`.
+- Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
+- Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -434,3 +442,132 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep login-only cross-cutting controls route-local or auth-local when a shared app component still wraps old Catalyst/Headless primitives.
   - Gotchas encountered: locale-switching tests need to account for translated accessible names on both action buttons and OTP digit inputs, so enter values before switching locale when the assertion is about the translated failure output.
+
+## US-001: Lock Auth/Onboarding Migration Baseline
+
+- Added a Vitest migration-boundary audit that recursively covers `src/pages/Auth`, `src/pages/Login.tsx`, `src/pages/Onboarding`, `src/components/onboarding-layout.tsx`, and `src/components/auth-layout.tsx`.
+- The audit fails on `@headlessui/react`, `LicenseRef-TailwindPlus`, and static imports/exports that point at old shared Catalyst/Tailwind Plus component wrappers under `src/components`.
+- Replaced the remaining Tailwind Plus-marked `AuthLayout` shell with a SecPal-owned layout so the public onboarding complete flow can stay inside the audited scope.
+- Added `npm run test:migration-boundary` for focused local runs; the audit is also included in the normal `npm test` Vitest suite.
+- Files changed:
+  - `package.json`
+  - `src/components/auth-layout.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: use a route-scope audit with a small import resolver instead of one-off text search so local shadcn barrels stay allowed while old shared wrappers are blocked.
+  - Gotchas encountered: Vitest transforms `import.meta.url` in this setup, so repo-root filesystem audits should resolve from `process.cwd()` when the test is run through npm scripts.
+
+## US-002: Create Shared Shadcn Utilities
+
+- Added canonical shadcn-compatible `cn` in `src/lib/utils.ts`, implemented with `clsx` plus `tailwind-merge`.
+- Re-exported the shared helper through both Auth and Onboarding UI utility barrels so existing route-local import paths stay stable while both primitive sets use the same implementation.
+- Added unit coverage for conditional class merging, Tailwind conflict resolution, and the shared Auth/Onboarding `cn` binding.
+- Files changed:
+  - `src/lib/utils.ts`
+  - `src/lib/utils.test.ts`
+  - `src/pages/Auth/ui/utils.ts`
+  - `src/pages/Onboarding/ui/utils.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep route-local UI barrels as the public import surface, but delegate shared shadcn infrastructure to `@/lib/utils` so Auth and Onboarding cannot diverge.
+  - Gotchas encountered: unit tests should assert both class conflict output and function identity through the route barrels; otherwise a future copy-paste helper could still satisfy output-only checks while reintroducing split implementations.
+
+## US-003: Radix-Back Onboarding Controls
+
+- Replaced onboarding-local `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Select`, `FieldLabel`, and `Progress` wrappers with shadcn-style Radix-backed primitives while leaving Button, Input, Textarea, Card, Badge, and Alert as local shadcn-style components.
+- Preserved existing onboarding call sites by adapting Radix Checkbox change events to the previous `event.target.checked` shape and by mapping existing `<Select><option /></Select>` children into Radix Select items.
+- Migrated onboarding radio sections to Radix controlled `value`/`onValueChange` flows in the wizard and residential address history blocks, preserving disabled, invalid, required, label, and dark-mode styling.
+- Updated onboarding primitive and wizard tests for Radix combobox/listbox semantics, radio keyboard behavior, and Radix option selection helpers.
+- Files changed:
+  - `package.json`
+  - `package-lock.json`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep Radix-backed onboarding primitives behind the existing onboarding UI barrel and adapt only narrow compatibility seams (`onChange` event shape, option mapping) so feature code can migrate incrementally.
+  - Gotchas encountered: closed Radix Select content is unmounted, so tests cannot assert native `<option>` text in the DOM or use `user.selectOptions` against a combobox button.
+
+## US-004: Replace Onboarding Command Popover
+
+- Replaced the onboarding `CommandPopover`'s absolute, hand-rendered popover shell with Radix Popover `Root`/`Trigger`/`Portal`/`Content`, preserving the existing searchable listbox behavior, ArrowUp/ArrowDown/Enter/Escape handling, disabled option behavior, selected option state, empty state, and value callback shape.
+- Made `placeholder`, `searchPlaceholder`, and `emptyMessage` required `CommandPopover` props so all user-facing copy is owned and translated by call sites; existing onboarding nationality and country call sites already pass localized strings.
+- Added primitive regressions for Radix outside interaction dismissal and form-friendly tab flow through the searchbox/options and onward to the next control.
+- Files changed:
+  - `package.json`
+  - `package-lock.json`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: Radix Popover is a good replacement boundary for command-style onboarding controls when the route-local API stays stable and only the popover lifecycle/positioning moves to Radix.
+  - Gotchas encountered: Radix Popover portal content uses a looping focus scope at the content boundary, so command controls that act like form fields need an explicit Tab boundary handler to close the popover and continue to the next control.
+
+## US-005: Remove Tailwind Plus AuthLayout
+
+- Removed the `AuthLayout` import from `OnboardingComplete` and replaced the public completion page frame with onboarding-local shadcn-style `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` primitives.
+- Kept the existing SecPal logo, language switcher placement, validating state, invalid-link state, validation rate-limit state, ready form layout, alert variants, and submit behavior intact while centralizing the repeated page chrome in a route-local frame component.
+- Added primitive and route regressions for the new auth shell/card/header `data-slot` markers, light/dark class coverage, and all public onboarding-complete state branches; tightened the migration-boundary audit so scoped auth/onboarding code cannot re-import `src/components/auth-layout`.
+- Files changed:
+  - `src/pages/Onboarding/OnboardingComplete.tsx`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingComplete.test.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: public onboarding pages can share a small onboarding-local auth frame while leaving the route-owned validation state machine and submission flow untouched.
+  - Gotchas encountered: the full Vitest suite surfaced a transient unrelated login passkey test failure on the first run; the test passed in isolation and the full suite passed on rerun, so keep noting full-suite flakes separately from story regressions.
+
+## US-006: Localize Remaining UI Defaults
+
+- Replaced the remaining hardcoded onboarding accessibility labels with Lingui-owned copy: the public completion password `aria-label` and the wizard step-navigation landmark now follow the active locale.
+- Removed English accessibility defaults from auth-local `LoginOtpInput` and `LoginSpinner` by making their labels caller-provided, while existing login route usage continues to pass translated labels.
+- Added German regressions for the password `aria-label` on `/onboarding/complete` and the wizard navigation landmark accessible name.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Onboarding/OnboardingComplete.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingComplete.test.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`
+  - `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep localized accessibility copy at route/call-site boundaries, and make primitive-level labels required when the primitive cannot access the active Lingui locale.
+  - Gotchas encountered: label-based queries can pass through the visible `<label>` even when `aria-label` is stale, so regressions for fixed aria labels should assert the attribute or role name that actually changed.
+
+## US-007: Migrate Address Autocomplete Surface
+
+- Added onboarding-local `AutocompleteListbox` and `AutocompleteOption` primitives backed by Radix Popover so editable autocomplete fields can share the same portal/listbox surface as other migrated onboarding controls.
+- Migrated `EmployeeAddressFields` street, postal-code, and city suggestion popups from custom inline listboxes to the new primitives while preserving debounce, API errors, empty state, keyboard highlight/selection, Tab-to-select, exact-match application, read-only behavior, and focus handoff.
+- Added primitive coverage for the Radix-backed editable autocomplete listbox and kept the existing employee/onboarding residential address autocomplete regressions passing.
+- Files changed:
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `src/pages/Employees/EmployeeAddressFields.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts` (format-only)
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: editable comboboxes do not need to surrender input ownership to Radix; anchoring the existing `Input` with Radix Popover lets feature-owned keyboard and fetch state stay intact while the listbox shell moves to the shared shadcn/Radix layer.
+  - Gotchas encountered: Radix Popover auto-focus needs to be prevented for editable suggestions, otherwise opening or closing a suggestions portal can steal focus from the input before the existing blur and focus-handoff logic runs.
+
+## US-008: Add Flow-Level Regression Coverage
+
+- Added a Login route regression that switches to German through the Radix language selector, verifies translated credential error/status copy, and opens the translated MFA dialog with the migrated OTP entry point still wired.
+- Added an OnboardingWizard route regression that drives schema fields, nationality command selection, identity upload choice, file selection, and residence-title follow-up controls while asserting migrated Radix/shadcn role and `data-slot` boundaries.
+- Re-ran the scoped migration audit, unit suite, typecheck, lint, and Lingui catalog check together for the migrated auth/onboarding surface.
+- Files changed:
+  - `src/pages/Login.test.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep flow-level migration tests on public route controls and a few stable primitive markers, so they catch accidental primitive regressions without becoming full DOM snapshots.
+  - Gotchas encountered: full Vitest surfaced a transient native-passkey Login test failure on the first combined run; the same test passed in isolation and the full suite passed on rerun, so treat that separately from story regressions.
