@@ -204,6 +204,27 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-016: Login-Layout auf Landscape-Mobile reparieren
+
+- Reported direkt aus der Hand: auf Mobile im Landscape-Modus (Viewport-Höhe ≈ 390 px) traten zwei Bugs auf der `/login`-Route auf:
+  1. Der Legal-Footer überlappte den Passkey-Button im zentrierten Card-Stack — Card und Footer teilten sich denselben mittig-zentrierten Flex-Stack ohne Reserve am unteren Rand.
+  2. Der MFA-Dialog war unbenutzbar: durch `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` lief der Inhalt (Methodenauswahl + 6 OTP-Slots + Verify/Cancel-Buttons) oben und unten aus dem Viewport, und es gab weder ein `max-height` noch ein `overflow-y`, also auch kein Scrollen innerhalb des Dialogs.
+- (1) wurde von einem parallel laufenden Cursor-Agent in `c6f9b00` adressiert: `LoginShell` bekommt `pb-32 md:pb-32`, reserviert also 8 rem Bodenraum, damit der absolut positionierte Footer (`bottom-4`) nicht in den Card-Stack hineinragt; ein neuer Login-Test (`reserves bottom space for the legal footer`) sichert die Klassenanwendung. Lokal nur per Rebase übernommen.
+- (2) hier in dieser Iteration gefixt: `DialogPrimitive.Content` in `src/pages/Auth/ui/primitives.tsx` bekommt vier zusätzliche Tailwind-Utilities:
+  - `max-h-[calc(100dvh-2rem)]` — kappt die Dialoghöhe auf den sichtbaren Viewport minus 1 rem Marge oben/unten.
+  - `w-[calc(100%-2rem)]` (statt nur `w-full`) — gleiche 1 rem-Marge an den Seiten, damit der Dialog auch auf schmalen Geräten nicht an die Bildschirmkanten stößt; `dialogSizes[size]` (z. B. `sm:max-w-md`) gewinnt via `tailwind-merge` bei größeren Breakpoints.
+  - `overflow-y-auto` — der Dialog-Body scrollt, sobald der Inhalt höher als der Viewport wird.
+  - `overscroll-contain` — verhindert Scroll-Chaining zur Page, sodass die Seite hinter dem Dialog nicht mitruckelt, wenn man am unteren Dialog-Rand weiterscrollt.
+- Tests: bestehender `renders the MFA dialog with shadcn Radix dialog semantics`-Case in `src/pages/Auth/ui/auth-ui.test.tsx` um vier zusätzliche `toHaveClass`-Assertions erweitert, damit die responsiven Klassen auf der Dialog-Content nicht versehentlich entfernt werden können.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: für fixed-positionierte Modals immer sowohl `max-h-[calc(100dvh-2rem)]` als auch `overflow-y-auto` setzen — `dvh` folgt dem dynamischen Viewport (Adressleiste eingeklappt vs. ausgefahren), und der Scroll-Container sorgt dafür, dass Footer-Actions (Verify/Cancel) selbst auf 390 px hohen Landscape-Viewports erreichbar bleiben. `overscroll-contain` ergänzt den Pattern, damit der Page-Scroll dahinter ruhig bleibt.
+  - Gotchas encountered: `w-full` im Portal-gerenderten Dialog kann an die Bildschirmkanten stoßen, weil das Overlay den Viewport voll bedeckt; `w-[calc(100%-2rem)]` reserviert konsistente seitliche Atemluft und greift trotzdem nicht in die `sm:max-w-md`-Breite via `tailwind-merge`.
+  - Process: vor dem lokalen Fix erst rebasen — ein paralleler Cursor-Agent hatte bereits einen Teilfix (`c6f9b00`) für Issue 1 gepusht, der ohne Rebase eine vermeidbare Doppelarbeit / Merge-Konflikt geworden wäre.
+
 ## US-015: Login-Copy straffen und MFA-Fehlerfeedback härten
 
 - Three connected polish strokes on the Login route, all driven by direct UX review on the live page:

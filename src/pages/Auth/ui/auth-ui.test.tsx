@@ -150,6 +150,15 @@ describe("auth login shadcn primitives", () => {
     expect(dialog).toHaveAttribute("data-state", "open");
     expect(backgroundButton.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(cancelButton).toHaveFocus();
+    // Responsive: the dialog must cap its height to the visible viewport and
+    // scroll its body when content overflows (e.g. landscape mobile), so the
+    // OTP entry and action buttons remain reachable.
+    expect(dialog).toHaveClass(
+      "max-h-[calc(100dvh-2rem)]",
+      "w-[calc(100%-2rem)]",
+      "overflow-y-auto",
+      "overscroll-contain"
+    );
 
     await user.tab();
     expect(verifyButton).toHaveFocus();
