@@ -574,6 +574,7 @@ export function Login() {
       // the main login form instead. When false the dialog is still open and
       // `mfaError` is the right channel.
       if (shouldSurfaceLoginError) {
+        setIsCompletingLogin(false);
         setError(errorMessage);
         // Credential pair was already accepted; failure is post-credential.
         setHasCredentialError(false);
@@ -582,12 +583,6 @@ export function Login() {
       }
     } finally {
       setIsVerifyingMfa(false);
-      // Always reset the completion overlay when settling from an error.
-      // Resetting on the success path is a no-op because navigate("/") will
-      // unmount this component before a re-render fires.
-      if (shouldSurfaceLoginError) {
-        setIsCompletingLogin(false);
-      }
     }
   };
 
