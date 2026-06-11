@@ -214,6 +214,48 @@ describe("onboarding shadcn primitives", () => {
     );
   });
 
+  it("hands the Select onChange callback a React-style synthetic event whose preventDefault and stopPropagation flags stay consistent after they are called", async () => {
+    const user = userEvent.setup();
+    const handleChange = vi.fn();
+
+    render(
+      <Field>
+        <FieldLabel htmlFor="contract-type-event">Contract type</FieldLabel>
+        <Select
+          id="contract-type-event"
+          defaultValue=""
+          onChange={handleChange}
+        >
+          <option value="">Select an option</option>
+          <option value="contractor">Contractor</option>
+        </Select>
+      </Field>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Contract type" }));
+    await user.click(screen.getByRole("option", { name: "Contractor" }));
+
+    expect(handleChange).toHaveBeenCalledTimes(1);
+    const syntheticEvent = handleChange.mock.calls[0]?.[0];
+    expect(syntheticEvent).toBeDefined();
+
+    expect(syntheticEvent.defaultPrevented).toBe(false);
+    expect(syntheticEvent.isDefaultPrevented()).toBe(false);
+    expect(syntheticEvent.isPropagationStopped()).toBe(false);
+
+    syntheticEvent.preventDefault();
+    expect(syntheticEvent.defaultPrevented).toBe(true);
+    expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+
+    syntheticEvent.stopPropagation();
+    expect(syntheticEvent.isPropagationStopped()).toBe(true);
+
+    // stopImmediatePropagation must also flip the same flag so consumers that
+    // prefer the immediate variant still observe a stopped event.
+    syntheticEvent.stopImmediatePropagation();
+    expect(syntheticEvent.isPropagationStopped()).toBe(true);
+  });
+
   it("provides alert and card semantics without Catalyst wrappers", () => {
     render(
       <Card aria-labelledby="required-information">

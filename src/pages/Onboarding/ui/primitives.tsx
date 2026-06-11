@@ -162,25 +162,43 @@ function createSelectChangeEvent({
   // which objectContaining cannot match.
   const target = { id, name, value } as EventTarget & HTMLSelectElement;
   const nativeEvent = new Event("change", { bubbles: true, cancelable: true });
+  let propagationStopped = false;
 
-  return {
+  const syntheticEvent = {
     nativeEvent,
     target,
     currentTarget: target,
     bubbles: true,
     cancelable: true,
-    defaultPrevented: false,
     eventPhase: 0,
     isTrusted: false,
     preventDefault: () => nativeEvent.preventDefault(),
-    stopPropagation: () => nativeEvent.stopPropagation(),
-    stopImmediatePropagation: () => nativeEvent.stopImmediatePropagation(),
+    stopPropagation: () => {
+      propagationStopped = true;
+      nativeEvent.stopPropagation();
+    },
+    stopImmediatePropagation: () => {
+      propagationStopped = true;
+      nativeEvent.stopImmediatePropagation();
+    },
     isDefaultPrevented: () => nativeEvent.defaultPrevented,
-    isPropagationStopped: () => false,
+    isPropagationStopped: () => propagationStopped,
     persist: () => {},
     timeStamp: nativeEvent.timeStamp,
     type: "change",
-  } as unknown as ChangeEvent<HTMLSelectElement>;
+  };
+
+  // Mirror React's SyntheticEvent: `defaultPrevented` is a live getter delegating
+  // to the underlying native event, not a frozen snapshot. Without this, calling
+  // `event.preventDefault()` would update `event.isDefaultPrevented()` and
+  // `event.nativeEvent.defaultPrevented` while leaving `event.defaultPrevented`
+  // stuck at `false`, which breaks any consumer that reads the field directly.
+  Object.defineProperty(syntheticEvent, "defaultPrevented", {
+    enumerable: true,
+    get: () => nativeEvent.defaultPrevented,
+  });
+
+  return syntheticEvent as unknown as ChangeEvent<HTMLSelectElement>;
 }
 
 export const Select = forwardRef(function Select(
