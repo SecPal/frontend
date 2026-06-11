@@ -26,6 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Editable onboarding autocomplete inputs should keep request, highlight, exact-match, and focus-handoff state in the feature component while moving only the listbox surface to onboarding-local Radix Popover primitives such as `AutocompleteListbox`/`AutocompleteOption`.
 - Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
 - Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
+- Shared app-level shadcn/Radix primitives live in `src/ui`; keep route-local Auth/Onboarding barrels as compatibility layers for prefixed `data-slot`s, route-specific helpers, and legacy-compatible event shapes while delegating shared colors, spacing, radius, focus rings, dark-mode classes, and Radix wrappers to `src/ui`.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -571,3 +572,23 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep flow-level migration tests on public route controls and a few stable primitive markers, so they catch accidental primitive regressions without becoming full DOM snapshots.
   - Gotchas encountered: full Vitest surfaced a transient native-passkey Login test failure on the first combined run; the same test passed in isolation and the full suite passed on rerun, so treat that separately from story regressions.
+
+## US-001: Gemeinsame shadcn/radix UI-Basis aus Auth und Onboarding ableiten
+
+- Added `src/ui` as the shared app-level shadcn/Radix UI basis for Button, Input, Textarea, Select, Checkbox, RadioGroup, Dialog, Alert, Card, Badge, Progress, Spinner, and Field structures, with extracted SecPal zinc/blue tokens and canonical `cn` re-export.
+- Rebased the Auth and Onboarding route-local primitive layers onto the shared UI basis while preserving Login-specific OTP/Empty helpers, Onboarding's option-shaped Select API, onboarding checkbox change-event compatibility, and existing prefixed `data-slot` boundaries.
+- Added shared UI component tests, migration guidelines in `src/ui/MIGRATION.md`, and expanded the auth/onboarding migration-boundary audit to cover the new shared UI layer and its guideline document.
+- Verified with `npm run typecheck`, `npm run lint`, focused UI/boundary Vitest coverage, and the full `npm test` suite.
+- Files changed:
+  - `src/ui/index.ts`
+  - `src/ui/primitives.tsx`
+  - `src/ui/styles.ts`
+  - `src/ui/MIGRATION.md`
+  - `src/ui/ui.test.tsx`
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: put app-wide shadcn/Radix building blocks and token classes in `src/ui`, then let route-local barrels adapt names, slots, and compatibility seams until routes can move directly to the shared layer.
+  - Gotchas encountered: Radix Dialog and Select hide background content while open, so primitive tests must finish or split portal interactions before asserting controls outside the active layer; shared style constants should live in `.ts` files so React Fast Refresh does not flag component modules for exporting non-components.

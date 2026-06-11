@@ -15,6 +15,7 @@ interface ScopedSource {
 const projectRoot = cwd();
 
 const scopedEntries = [
+  "src/ui",
   "src/pages/Auth",
   "src/pages/Login.tsx",
   "src/pages/Onboarding",
@@ -23,6 +24,9 @@ const scopedEntries = [
 ] as const;
 
 const requiredCoveredPaths = [
+  "src/ui/index.ts",
+  "src/ui/primitives.tsx",
+  "src/ui/styles.ts",
   "src/pages/Auth/ui/index.ts",
   "src/pages/Login.tsx",
   "src/pages/Onboarding/OnboardingComplete.tsx",
@@ -205,5 +209,19 @@ describe("auth/onboarding migration boundary", () => {
 
   it("keeps scoped auth and onboarding sources off legacy UI dependencies", () => {
     expect(collectMigrationBoundaryViolations(readScopedSources())).toEqual([]);
+  });
+
+  it("documents the shared UI migration boundary", () => {
+    const guide = readFileSync(
+      path.resolve(projectRoot, "src/ui/MIGRATION.md"),
+      "utf8"
+    );
+
+    expect(guide).toContain("src/ui");
+    expect(guide).toContain("Button");
+    expect(guide).toContain("Dialog");
+    expect(guide).toContain(
+      "Do not import old Catalyst/Tailwind Plus wrappers"
+    );
   });
 });

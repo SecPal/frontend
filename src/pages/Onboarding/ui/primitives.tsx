@@ -9,7 +9,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ButtonHTMLAttributes,
   type ChangeEvent,
   type ComponentPropsWithoutRef,
   type ElementRef,
@@ -18,94 +17,45 @@ import {
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
-  type TextareaHTMLAttributes,
 } from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp, Circle } from "lucide-react";
+import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Alert as AppAlert,
+  AlertDescription as AppAlertDescription,
+  AlertTitle as AppAlertTitle,
+  Badge as AppBadge,
+  Button as AppButton,
+  Card as AppCard,
+  CardContent as AppCardContent,
+  CardDescription as AppCardDescription,
+  CardFooter as AppCardFooter,
+  CardHeader as AppCardHeader,
+  CardTitle as AppCardTitle,
+  Checkbox as AppCheckbox,
+  Field as AppField,
+  FieldDescription as AppFieldDescription,
+  FieldError as AppFieldError,
+  FieldGroup as AppFieldGroup,
+  FieldLabel as AppFieldLabel,
+  Input as AppInput,
+  Progress as AppProgress,
+  RadioGroup as AppRadioGroup,
+  RadioGroupItem as AppRadioGroupItem,
+  Textarea as AppTextarea,
+  uiControlBase,
+} from "@/ui";
 import { cn } from "./utils";
 
-const controlBase =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 aria-invalid:ring-red-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950";
+export const Button = AppButton;
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950";
+export const Input = AppInput;
 
-type ButtonVariant =
-  | "default"
-  | "secondary"
-  | "outline"
-  | "ghost"
-  | "destructive";
-
-const buttonVariants: Record<ButtonVariant, string> = {
-  default:
-    "bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200",
-  secondary:
-    "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700",
-  outline:
-    "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-800",
-  ghost:
-    "text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
-  destructive: "bg-red-600 text-white hover:bg-red-700",
-};
-
-export const Button = forwardRef(function Button(
-  {
-    className,
-    variant = "default",
-    type = "button",
-    ...props
-  }: ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: ButtonVariant;
-  },
-  ref: ForwardedRef<HTMLButtonElement>
-) {
-  return (
-    <button
-      ref={ref}
-      type={type}
-      className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-        focusRing,
-        buttonVariants[variant],
-        className
-      )}
-      {...props}
-    />
-  );
-});
-
-export const Input = forwardRef(function Input(
-  { className, type = "text", ...props }: InputHTMLAttributes<HTMLInputElement>,
-  ref: ForwardedRef<HTMLInputElement>
-) {
-  return (
-    <input
-      ref={ref}
-      type={type}
-      className={cn(controlBase, className)}
-      {...props}
-    />
-  );
-});
-
-export const Textarea = forwardRef(function Textarea(
-  { className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>,
-  ref: ForwardedRef<HTMLTextAreaElement>
-) {
-  return (
-    <textarea
-      ref={ref}
-      className={cn(controlBase, "min-h-24 resize-y", className)}
-      {...props}
-    />
-  );
-});
+export const Textarea = AppTextarea;
 
 const emptySelectValue = "__onboarding_select_empty__";
 
@@ -263,7 +213,7 @@ export const Select = forwardRef(function Select(
         aria-invalid={ariaInvalid}
         aria-required={required || undefined}
         className={cn(
-          controlBase,
+          uiControlBase,
           "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
           className
         )}
@@ -340,13 +290,10 @@ export const Checkbox = forwardRef(function Checkbox(
   ref: ForwardedRef<ElementRef<typeof CheckboxPrimitive.Root>>
 ) {
   return (
-    <CheckboxPrimitive.Root
+    <AppCheckbox
       ref={ref}
       data-slot="onboarding-checkbox"
-      className={cn(
-        "peer flex size-4 shrink-0 items-center justify-center rounded border border-zinc-300 bg-white text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:border-blue-500 dark:data-[state=checked]:bg-blue-500",
-        className
-      )}
+      className={className}
       onCheckedChange={(checked) => {
         if (checked === "indeterminate") {
           return;
@@ -365,11 +312,7 @@ export const Checkbox = forwardRef(function Checkbox(
         } as ChangeEvent<HTMLInputElement>);
       }}
       {...props}
-    >
-      <CheckboxPrimitive.Indicator asChild>
-        <Check className="size-3.5" aria-hidden="true" />
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
+    />
   );
 });
 
@@ -378,7 +321,7 @@ export function RadioGroup({
   ...props
 }: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>) {
   return (
-    <RadioGroupPrimitive.Root
+    <AppRadioGroup
       data-slot="onboarding-radio-group"
       className={cn("grid gap-3", className)}
       {...props}
@@ -394,19 +337,12 @@ export const RadioGroupItem = forwardRef(function RadioGroupItem(
   ref: ForwardedRef<ElementRef<typeof RadioGroupPrimitive.Item>>
 ) {
   return (
-    <RadioGroupPrimitive.Item
+    <AppRadioGroupItem
       ref={ref}
       data-slot="onboarding-radio-group-item"
-      className={cn(
-        "flex size-4 shrink-0 items-center justify-center rounded-full border border-zinc-300 bg-white text-blue-600 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 data-[state=checked]:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:border-blue-500",
-        className
-      )}
+      className={className}
       {...props}
-    >
-      <RadioGroupPrimitive.Indicator asChild>
-        <Circle className="size-2.5 fill-current" aria-hidden="true" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
+    />
   );
 });
 
@@ -414,96 +350,63 @@ export const Alert = forwardRef(function Alert(
   { className, ...props }: ComponentPropsWithoutRef<"div">,
   ref: ForwardedRef<HTMLDivElement>
 ) {
-  return (
-    <div
-      ref={ref}
-      role="alert"
-      className={cn(
-        "rounded-md border border-zinc-200 bg-white p-4 text-sm text-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <AppAlert ref={ref} className={className} {...props} />;
 });
 
 export function AlertTitle({
   className,
   ...props
 }: ComponentPropsWithoutRef<"h2">) {
-  return <h2 className={cn("font-medium", className)} {...props} />;
+  return <AppAlertTitle className={className} {...props} />;
 }
 
 export function AlertDescription({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
-  return (
-    <p
-      className={cn("mt-1 text-zinc-600 dark:text-zinc-300", className)}
-      {...props}
-    />
-  );
+  return <AppAlertDescription className={className} {...props} />;
 }
 
 export function Card({
   className,
   ...props
 }: ComponentPropsWithoutRef<"section">) {
-  return (
-    <section
-      className={cn(
-        "rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <AppCard className={className} {...props} />;
 }
 
 export function CardHeader({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">) {
-  return <div className={cn("space-y-1.5 p-6", className)} {...props} />;
+  return <AppCardHeader className={className} {...props} />;
 }
 
 export function CardTitle({
   className,
   ...props
 }: ComponentPropsWithoutRef<"h2">) {
-  return <h2 className={cn("text-lg font-semibold", className)} {...props} />;
+  return <AppCardTitle className={className} {...props} />;
 }
 
 export function CardDescription({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
-  return (
-    <p
-      className={cn("text-sm text-zinc-600 dark:text-zinc-300", className)}
-      {...props}
-    />
-  );
+  return <AppCardDescription className={className} {...props} />;
 }
 
 export function CardContent({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">) {
-  return <div className={cn("p-6 pt-0", className)} {...props} />;
+  return <AppCardContent className={className} {...props} />;
 }
 
 export function CardFooter({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      className={cn("flex items-center justify-end gap-2 p-6 pt-0", className)}
-      {...props}
-    />
-  );
+  return <AppCardFooter className={className} {...props} />;
 }
 
 export function OnboardingAuthShell({
@@ -555,49 +458,26 @@ export function Badge({
   className,
   ...props
 }: ComponentPropsWithoutRef<"span">) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md border border-transparent bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <AppBadge className={className} {...props} />;
 }
 
 export function Progress({
   className,
   value,
   max = 100,
-  style,
   ...props
-}: ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
+}: ComponentPropsWithoutRef<typeof AppProgress> & {
   value: number;
   max?: number;
 }) {
-  const boundedMax = max > 0 ? max : 100;
-  const boundedValue = Math.min(Math.max(value, 0), boundedMax);
-  const percentage = (boundedValue / boundedMax) * 100;
-
   return (
-    <ProgressPrimitive.Root
+    <AppProgress
       data-slot="onboarding-progress"
-      value={boundedValue}
-      max={boundedMax}
-      className={cn(
-        "relative h-2.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800",
-        className
-      )}
-      style={style}
+      value={value}
+      max={max}
+      className={className}
       {...props}
-    >
-      <ProgressPrimitive.Indicator
-        data-slot="onboarding-progress-indicator"
-        className="h-full rounded-full bg-blue-600 transition-all duration-300 dark:bg-blue-500"
-        style={{ transform: `translateX(-${100 - percentage}%)` }}
-      />
-    </ProgressPrimitive.Root>
+    />
   );
 }
 
@@ -605,14 +485,14 @@ export function Field({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">) {
-  return <div className={cn("space-y-2", className)} {...props} />;
+  return <AppField className={className} {...props} />;
 }
 
 export function FieldGroup({
   className,
   ...props
 }: ComponentPropsWithoutRef<"div">) {
-  return <div className={cn("space-y-6", className)} {...props} />;
+  return <AppFieldGroup className={className} {...props} />;
 }
 
 export const FieldLabel = forwardRef(function FieldLabel(
@@ -620,13 +500,10 @@ export const FieldLabel = forwardRef(function FieldLabel(
   ref: ForwardedRef<ElementRef<typeof LabelPrimitive.Root>>
 ) {
   return (
-    <LabelPrimitive.Root
+    <AppFieldLabel
       ref={ref}
       data-slot="onboarding-field-label"
-      className={cn(
-        "text-sm font-medium text-zinc-950 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-zinc-50",
-        className
-      )}
+      className={className}
       {...props}
     />
   );
@@ -636,27 +513,14 @@ export function FieldDescription({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
-  return (
-    <p
-      className={cn("text-sm text-zinc-600 dark:text-zinc-300", className)}
-      {...props}
-    />
-  );
+  return <AppFieldDescription className={className} {...props} />;
 }
 
 export function FieldError({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
-  return (
-    <p
-      className={cn(
-        "text-sm font-medium text-red-600 dark:text-red-500",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <AppFieldError className={className} {...props} />;
 }
 
 export function FormSection({

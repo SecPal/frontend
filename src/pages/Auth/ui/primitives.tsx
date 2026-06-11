@@ -18,36 +18,26 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown, ChevronUp, Loader2, Minus } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
+import {
+  Button as AppButton,
+  Dialog as AppDialog,
+  DialogContent as AppDialogContent,
+  DialogDescription as AppDialogDescription,
+  DialogOverlay as AppDialogOverlay,
+  DialogPortal as AppDialogPortal,
+  DialogTitle as AppDialogTitle,
+  FieldLabel as AppFieldLabel,
+  Input as AppInput,
+  Spinner as AppSpinner,
+  type ButtonVariant,
+  uiControlBase,
+} from "@/ui";
 import { cn } from "./utils";
 
-const controlBase =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 aria-invalid:ring-red-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950";
-
-const loginButtonVariants = cva(
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200",
-        secondary:
-          "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-700",
-        outline:
-          "border border-zinc-300 bg-white text-zinc-950 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-800",
-        ghost:
-          "text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
-
 export type LoginButtonVariant = NonNullable<
-  VariantProps<typeof loginButtonVariants>["variant"]
+  Exclude<ButtonVariant, "destructive">
 >;
 
 const statusMessageVariants = {
@@ -188,15 +178,17 @@ export const LoginButton = forwardRef(function LoginButton(
     variant,
     type = "button",
     ...props
-  }: ButtonHTMLAttributes<HTMLButtonElement> &
-    VariantProps<typeof loginButtonVariants>,
+  }: ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: LoginButtonVariant;
+  },
   ref: ForwardedRef<HTMLButtonElement>
 ) {
   return (
-    <button
+    <AppButton
       ref={ref}
       type={type}
-      className={cn(loginButtonVariants({ variant }), className)}
+      variant={variant}
+      className={className}
       {...props}
     />
   );
@@ -206,14 +198,7 @@ export const LoginInput = forwardRef(function LoginInput(
   { className, type = "text", ...props }: InputHTMLAttributes<HTMLInputElement>,
   ref: ForwardedRef<HTMLInputElement>
 ) {
-  return (
-    <input
-      ref={ref}
-      type={type}
-      className={cn(controlBase, className)}
-      {...props}
-    />
-  );
+  return <AppInput ref={ref} type={type} className={className} {...props} />;
 });
 
 export function LoginField({
@@ -241,16 +226,7 @@ export const LoginFieldLabel = forwardRef<
   ElementRef<typeof LabelPrimitive.Root>,
   ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(function LoginFieldLabel({ className, ...props }, ref) {
-  return (
-    <LabelPrimitive.Root
-      ref={ref}
-      className={cn(
-        "text-sm font-medium text-zinc-950 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-zinc-50",
-        className
-      )}
-      {...props}
-    />
-  );
+  return <AppFieldLabel ref={ref} className={className} {...props} />;
 });
 
 export function LoginFieldDescription({
@@ -354,7 +330,8 @@ export const LoginSelectTrigger = forwardRef<
       ref={ref}
       data-slot="login-select-trigger"
       className={cn(
-        "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 [&>span]:line-clamp-1 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950",
+        uiControlBase,
+        "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
         className
       )}
       {...props}
@@ -471,12 +448,6 @@ export const LoginSelectItem = forwardRef<
   );
 });
 
-const dialogSizes = {
-  sm: "sm:max-w-sm",
-  md: "sm:max-w-md",
-  lg: "sm:max-w-lg",
-} satisfies Record<string, string>;
-
 export function LoginDialog({
   size = "md",
   className,
@@ -484,38 +455,25 @@ export function LoginDialog({
   open,
   onClose,
 }: {
-  size?: keyof typeof dialogSizes;
+  size?: "sm" | "md" | "lg";
   className?: string;
   children: ReactNode;
   open: boolean;
   onClose: () => void;
 }) {
   return (
-    <DialogPrimitive.Root
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose();
-        }
-      }}
-    >
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay
-          data-slot="login-dialog-overlay"
-          className="fixed inset-0 z-40 bg-zinc-950/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 dark:bg-zinc-950/70"
-        />
-        <DialogPrimitive.Content
+    <AppDialog open={open} onClose={onClose}>
+      <AppDialogPortal>
+        <AppDialogOverlay data-slot="login-dialog-overlay" />
+        <AppDialogContent
           data-slot="login-dialog-content"
-          className={cn(
-            "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg duration-200 overscroll-contain data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-            dialogSizes[size],
-            className
-          )}
+          size={size}
+          className={className}
         >
           {children}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        </AppDialogContent>
+      </AppDialogPortal>
+    </AppDialog>
   );
 }
 
@@ -524,7 +482,7 @@ export const LoginDialogTitle = forwardRef<
   ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(function LoginDialogTitle({ className, ...props }, ref) {
   return (
-    <DialogPrimitive.Title
+    <AppDialogTitle
       ref={ref}
       data-slot="login-dialog-title"
       className={cn(
@@ -541,7 +499,7 @@ export const LoginDialogDescription = forwardRef<
   ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(function LoginDialogDescription({ className, ...props }, ref) {
   return (
-    <DialogPrimitive.Description
+    <AppDialogDescription
       ref={ref}
       data-slot="login-dialog-description"
       className={cn(
@@ -817,15 +775,14 @@ export function LoginSpinner({
   className,
   "aria-label": ariaLabel,
   ...props
-}: Omit<ComponentProps<typeof Loader2>, "aria-label"> & {
+}: Omit<ComponentProps<typeof AppSpinner>, "aria-label"> & {
   "aria-label": string;
 }) {
   return (
-    <Loader2
-      role="status"
-      aria-label={ariaLabel}
+    <AppSpinner
       data-slot="login-spinner"
-      className={cn("size-4 animate-spin", className)}
+      aria-label={ariaLabel}
+      className={className}
       {...props}
     />
   );
