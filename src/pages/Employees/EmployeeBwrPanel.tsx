@@ -427,7 +427,15 @@ export function EmployeeBwrPanel({
                   setSelectedStatus(value as EmployeeBwrManagedStatus)
                 }
               >
-                <SelectTrigger id="bwr-status">
+                <SelectTrigger
+                  id="bwr-status"
+                  aria-invalid={panelFieldErrors.status?.[0] ? true : undefined}
+                  aria-describedby={
+                    panelFieldErrors.status?.[0]
+                      ? "bwr-status-error"
+                      : undefined
+                  }
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,7 +447,9 @@ export function EmployeeBwrPanel({
                 </SelectContent>
               </Select>
               {panelFieldErrors.status?.[0] ? (
-                <FieldError>{panelFieldErrors.status[0]}</FieldError>
+                <FieldError id="bwr-status-error">
+                  {panelFieldErrors.status[0]}
+                </FieldError>
               ) : null}
             </Field>
 
@@ -453,9 +463,15 @@ export function EmployeeBwrPanel({
                 onChange={(event) => setBwrId(event.target.value)}
                 inputMode="numeric"
                 maxLength={7}
+                aria-invalid={panelFieldErrors.bwr_id?.[0] ? true : undefined}
+                aria-describedby={
+                  panelFieldErrors.bwr_id?.[0] ? "bwr-id-error" : undefined
+                }
               />
               {panelFieldErrors.bwr_id?.[0] ? (
-                <FieldError>{panelFieldErrors.bwr_id[0]}</FieldError>
+                <FieldError id="bwr-id-error">
+                  {panelFieldErrors.bwr_id[0]}
+                </FieldError>
               ) : null}
             </Field>
           </div>
@@ -469,9 +485,15 @@ export function EmployeeBwrPanel({
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               rows={4}
+              aria-invalid={panelFieldErrors.notes?.[0] ? true : undefined}
+              aria-describedby={
+                panelFieldErrors.notes?.[0] ? "bwr-notes-error" : undefined
+              }
             />
             {panelFieldErrors.notes?.[0] ? (
-              <FieldError>{panelFieldErrors.notes[0]}</FieldError>
+              <FieldError id="bwr-notes-error">
+                {panelFieldErrors.notes[0]}
+              </FieldError>
             ) : null}
           </Field>
 

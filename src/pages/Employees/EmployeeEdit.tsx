@@ -10,20 +10,31 @@ import type { Employee, EmployeeAddress, EmployeeFormData } from "@/types/api";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
 import {
-  Fieldset,
-  Legend,
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
   FieldGroup,
   Field,
-  Label,
-} from "../../components/fieldset";
-import { Input } from "../../components/input";
-import { Select } from "../../components/select";
-import { Switch } from "../../components/switch";
-import { EmployeeStatusOptions } from "./EmployeeStatusOptions";
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Fieldset,
+  Input,
+  Legend,
+  LinkButton,
+  PageText,
+  PageTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+} from "./ui";
+import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
   employeeAddressToDraft,
@@ -309,9 +320,9 @@ export function EmployeeEdit() {
   if (fetchLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Text>
+        <PageText>
           <Trans>Loading employee...</Trans>
-        </Text>
+        </PageText>
       </div>
     );
   }
@@ -319,18 +330,20 @@ export function EmployeeEdit() {
   if (error) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
+        <Alert className="max-w-md border-red-200 bg-red-50 p-6 text-center text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-500">
           <div className="mb-4 text-4xl">❌</div>
-          <Heading level={3} className="text-red-900 dark:text-red-400">
+          <PageTitle level={3} className="text-red-900 dark:text-red-400">
             <Trans>Error Loading Employee</Trans>
-          </Heading>
-          <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
+          </PageTitle>
+          <AlertDescription className="mt-2 text-red-700 dark:text-red-500">
+            {error}
+          </AlertDescription>
           <div className="mt-4">
-            <Button href="/employees" color="red">
+            <LinkButton to="/employees" variant="destructive">
               <Trans>Back to Employees</Trans>
-            </Button>
+            </LinkButton>
           </div>
-        </div>
+        </Alert>
       </div>
     );
   }
@@ -338,328 +351,376 @@ export function EmployeeEdit() {
   return (
     <div>
       <div className="mb-6">
-        <Button plain onClick={() => navigate(`/employees/${id}`)}>
+        <Button variant="ghost" onClick={() => navigate(`/employees/${id}`)}>
           <Trans>← Back to Employee</Trans>
         </Button>
       </div>
 
-      <div className="rounded-lg bg-white shadow-sm ring-1 ring-zinc-950/5 p-6 dark:bg-zinc-900 dark:ring-white/10">
-        <Heading className="mb-6">
-          <Trans>Edit Employee</Trans>
-        </Heading>
+      <Card className="dark:bg-zinc-900">
+        <CardContent className="p-6">
+          <PageTitle className="mb-6">
+            <Trans>Edit Employee</Trans>
+          </PageTitle>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Personal Information */}
-          <Fieldset>
-            <Legend>
-              <Trans>Personal Information</Trans>
-            </Legend>
-            <FieldGroup>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                <Field>
-                  <Label>
-                    <Trans>First Name</Trans> *
-                  </Label>
-                  <Input
-                    type="text"
-                    name="first_name"
-                    required
-                    value={formData.first_name}
-                    onChange={(e) => handleChange("first_name", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <Label>
-                    <Trans>Last Name</Trans> *
-                  </Label>
-                  <Input
-                    type="text"
-                    name="last_name"
-                    required
-                    value={formData.last_name}
-                    onChange={(e) => handleChange("last_name", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <Label>
-                    <Trans>Date of Birth</Trans> *
-                  </Label>
-                  <Input
-                    type="text"
-                    name="date_of_birth"
-                    required
-                    placeholder={
-                      i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
-                    }
-                    value={birthDateInputValue}
-                    onChange={(e) => {
-                      setBirthDateDisplay(e.target.value);
-                      setBirthDateDirty(true);
-                      setBirthDateError(null); // Clear error on change
-                    }}
-                    onBlur={(e) => {
-                      const result = parseEmployeeDateToISO(
-                        e.target.value,
-                        i18n.locale
-                      );
-                      if (result.valid) {
-                        setBirthDateDisplay(result.formatted);
-                        handleChange("date_of_birth", result.iso);
-                        setBirthDateDirty(false);
-                        setBirthDateError(null);
-                      } else if (e.target.value) {
-                        const format =
-                          i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
-                        setBirthDateError(
-                          i18n._(msg`Invalid date. Please use format ${format}`)
-                        );
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Personal Information */}
+            <Fieldset>
+              <Legend>
+                <Trans>Personal Information</Trans>
+              </Legend>
+              <FieldGroup>
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="first_name">
+                      <Trans>First Name</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="first_name"
+                      type="text"
+                      name="first_name"
+                      required
+                      value={formData.first_name}
+                      onChange={(e) =>
+                        handleChange("first_name", e.target.value)
                       }
-                    }}
-                  />
-                  {birthDateError && (
-                    <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
-                      {birthDateError}
-                    </Text>
-                  )}
-                </Field>
+                    />
+                  </Field>
 
-                <Field>
-                  <Label>
-                    <Trans>Email</Trans> *
-                  </Label>
-                  <Input
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <Label>
-                    <Trans>Phone</Trans>
-                  </Label>
-                  <Input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                  />
-                </Field>
-
-                <div className="sm:col-span-2">
-                  <Text className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                    <Trans>Current Address</Trans>
-                  </Text>
-                </div>
-
-                <EmployeeAddressFields
-                  draft={addressDraft}
-                  onChange={handleAddressChange}
-                />
-              </div>
-            </FieldGroup>
-          </Fieldset>
-
-          {/* Employment Details */}
-          <Fieldset>
-            <Legend>
-              <Trans>Employment Details</Trans>
-            </Legend>
-            <FieldGroup>
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                <Field>
-                  <Label>
-                    <Trans>Position</Trans> *
-                  </Label>
-                  <Input
-                    type="text"
-                    name="position"
-                    required
-                    value={formData.position}
-                    onChange={(e) => handleChange("position", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <Label>
-                    <Trans>Contract Start Date</Trans> *
-                  </Label>
-                  <Input
-                    type="text"
-                    name="contract_start_date"
-                    required
-                    placeholder={
-                      i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
-                    }
-                    value={contractDateInputValue}
-                    onChange={(e) => {
-                      setContractDateDisplay(e.target.value);
-                      setContractDateDirty(true);
-                      setContractDateError(null); // Clear error on change
-                    }}
-                    onBlur={(e) => {
-                      const result = parseEmployeeDateToISO(
-                        e.target.value,
-                        i18n.locale,
-                        {
-                          defaultCurrentYearForMissingYear:
-                            i18n.locale === "de",
-                        }
-                      );
-                      if (result.valid) {
-                        setContractDateDisplay(result.formatted);
-                        handleChange("contract_start_date", result.iso);
-                        setContractDateDirty(false);
-                        setContractDateError(null);
-                      } else if (e.target.value) {
-                        const format =
-                          i18n.locale === "de"
-                            ? GERMAN_CONTRACT_START_DATE_FORMAT
-                            : "MM/DD/YYYY";
-                        setContractDateError(
-                          i18n._(msg`Invalid date. Please use format ${format}`)
-                        );
+                  <Field>
+                    <FieldLabel htmlFor="last_name">
+                      <Trans>Last Name</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="last_name"
+                      type="text"
+                      name="last_name"
+                      required
+                      value={formData.last_name}
+                      onChange={(e) =>
+                        handleChange("last_name", e.target.value)
                       }
-                    }}
-                  />
-                  {i18n.locale === "de" && (
-                    <Text className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
-                      {GERMAN_CONTRACT_START_DATE_HINT}
-                    </Text>
-                  )}
-                  {contractDateError && (
-                    <Text className="text-red-600 dark:text-red-400 text-sm mt-1">
-                      {contractDateError}
-                    </Text>
-                  )}
-                </Field>
+                    />
+                  </Field>
 
-                <Field>
-                  <Label>
-                    <Trans>Organizational Unit</Trans> *
-                  </Label>
-                  <Select
-                    name="organizational_unit_id"
-                    required
-                    value={formData.organizational_unit_id}
-                    onChange={(e) =>
-                      handleChange("organizational_unit_id", e.target.value)
-                    }
-                    disabled={unitsLoading}
-                  >
-                    <option value="">
-                      {unitsLoading
-                        ? i18n._(msg`Loading...`)
-                        : i18n._(msg`Select organizational unit`)}
-                    </option>
-                    {organizationalUnits.map((unit) => (
-                      <option key={unit.id} value={unit.id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Label>
-                      <Trans>Leadership Position</Trans>
-                    </Label>
-                    <Switch
-                      name="is_leadership"
-                      checked={isLeadership}
-                      showIcons
-                      onChange={(checked) => {
-                        setIsLeadership(checked);
-                        if (!checked) {
-                          handleChange("management_level", 0);
+                  <Field>
+                    <FieldLabel htmlFor="date_of_birth">
+                      <Trans>Date of Birth</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="date_of_birth"
+                      type="text"
+                      name="date_of_birth"
+                      required
+                      aria-invalid={birthDateError ? true : undefined}
+                      aria-describedby={
+                        birthDateError ? "date_of_birth-error" : undefined
+                      }
+                      placeholder={
+                        i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
+                      }
+                      value={birthDateInputValue}
+                      onChange={(e) => {
+                        setBirthDateDisplay(e.target.value);
+                        setBirthDateDirty(true);
+                        setBirthDateError(null); // Clear error on change
+                      }}
+                      onBlur={(e) => {
+                        const result = parseEmployeeDateToISO(
+                          e.target.value,
+                          i18n.locale
+                        );
+                        if (result.valid) {
+                          setBirthDateDisplay(result.formatted);
+                          handleChange("date_of_birth", result.iso);
+                          setBirthDateDirty(false);
+                          setBirthDateError(null);
+                        } else if (e.target.value) {
+                          const format =
+                            i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY";
+                          setBirthDateError(
+                            i18n._(
+                              msg`Invalid date. Please use format ${format}`
+                            )
+                          );
                         }
                       }}
                     />
+                    {birthDateError && (
+                      <FieldError id="date_of_birth-error">
+                        {birthDateError}
+                      </FieldError>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="email">
+                      <Trans>Email</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="email"
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="phone">
+                      <Trans>Phone</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                    />
+                  </Field>
+
+                  <div className="sm:col-span-2">
+                    <PageText className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Trans>Current Address</Trans>
+                    </PageText>
+                  </div>
+
+                  <EmployeeAddressFields
+                    draft={addressDraft}
+                    onChange={handleAddressChange}
+                  />
+                </div>
+              </FieldGroup>
+            </Fieldset>
+
+            {/* Employment Details */}
+            <Fieldset>
+              <Legend>
+                <Trans>Employment Details</Trans>
+              </Legend>
+              <FieldGroup>
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="position">
+                      <Trans>Position</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="position"
+                      type="text"
+                      name="position"
+                      required
+                      value={formData.position}
+                      onChange={(e) => handleChange("position", e.target.value)}
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="contract_start_date">
+                      <Trans>Contract Start Date</Trans> *
+                    </FieldLabel>
+                    <Input
+                      id="contract_start_date"
+                      type="text"
+                      name="contract_start_date"
+                      required
+                      aria-invalid={contractDateError ? true : undefined}
+                      aria-describedby={
+                        contractDateError
+                          ? "contract_start_date-error"
+                          : undefined
+                      }
+                      placeholder={
+                        i18n.locale === "de" ? "TT.MM.JJJJ" : "MM/DD/YYYY"
+                      }
+                      value={contractDateInputValue}
+                      onChange={(e) => {
+                        setContractDateDisplay(e.target.value);
+                        setContractDateDirty(true);
+                        setContractDateError(null); // Clear error on change
+                      }}
+                      onBlur={(e) => {
+                        const result = parseEmployeeDateToISO(
+                          e.target.value,
+                          i18n.locale,
+                          {
+                            defaultCurrentYearForMissingYear:
+                              i18n.locale === "de",
+                          }
+                        );
+                        if (result.valid) {
+                          setContractDateDisplay(result.formatted);
+                          handleChange("contract_start_date", result.iso);
+                          setContractDateDirty(false);
+                          setContractDateError(null);
+                        } else if (e.target.value) {
+                          const format =
+                            i18n.locale === "de"
+                              ? GERMAN_CONTRACT_START_DATE_FORMAT
+                              : "MM/DD/YYYY";
+                          setContractDateError(
+                            i18n._(
+                              msg`Invalid date. Please use format ${format}`
+                            )
+                          );
+                        }
+                      }}
+                    />
+                    {i18n.locale === "de" && (
+                      <FieldDescription>
+                        {GERMAN_CONTRACT_START_DATE_HINT}
+                      </FieldDescription>
+                    )}
+                    {contractDateError && (
+                      <FieldError id="contract_start_date-error">
+                        {contractDateError}
+                      </FieldError>
+                    )}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="organizational_unit_id">
+                      <Trans>Organizational Unit</Trans> *
+                    </FieldLabel>
+                    <Select
+                      value={
+                        unitsLoading ? "" : formData.organizational_unit_id
+                      }
+                      onValueChange={(value) =>
+                        handleChange("organizational_unit_id", value)
+                      }
+                      disabled={unitsLoading}
+                    >
+                      <SelectTrigger id="organizational_unit_id">
+                        <SelectValue
+                          placeholder={
+                            unitsLoading
+                              ? i18n._(msg`Loading...`)
+                              : i18n._(msg`Select organizational unit`)
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizationalUnits.map((unit) => (
+                          <SelectItem
+                            key={unit.id}
+                            value={unit.id}
+                            data-value={unit.id}
+                          >
+                            {unit.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <FieldLabel htmlFor="is_leadership">
+                        <Trans>Leadership Position</Trans>
+                      </FieldLabel>
+                      <Switch
+                        id="is_leadership"
+                        name="is_leadership"
+                        checked={isLeadership}
+                        showIcons
+                        onChange={(checked) => {
+                          setIsLeadership(checked);
+                          if (!checked) {
+                            handleChange("management_level", 0);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <Field>
+                      <span
+                        data-slot="control"
+                        className="relative block w-full before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm dark:before:hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500"
+                      >
+                        <div className="relative flex items-center rounded-lg border border-zinc-950/10 bg-transparent dark:border-white/10 dark:bg-white/5">
+                          {isLeadership && (
+                            <div className="shrink-0 pl-3.5 pr-2 py-2.5 text-base/6 text-gray-500 select-none sm:pl-3 sm:pr-2 sm:py-1.5 sm:text-sm/6 dark:text-gray-400">
+                              <Trans>ML</Trans>
+                            </div>
+                          )}
+                          <input
+                            type="number"
+                            name="management_level"
+                            min="1"
+                            max="255"
+                            placeholder={
+                              isLeadership
+                                ? "?"
+                                : i18n._(msg`No management position`)
+                            }
+                            disabled={!isLeadership}
+                            required={isLeadership}
+                            value={
+                              isLeadership && formData.management_level > 0
+                                ? formData.management_level
+                                : ""
+                            }
+                            onChange={(e) =>
+                              handleChange(
+                                "management_level",
+                                e.target.value ? Number(e.target.value) : 0
+                              )
+                            }
+                            className={`relative block w-full appearance-none rounded-lg py-2.5 pr-3.5 text-base/6 text-zinc-950 placeholder:text-zinc-500 bg-transparent focus:outline-hidden sm:py-1.5 sm:pr-3 sm:text-sm/6 dark:text-white dark:placeholder:text-zinc-500 disabled:opacity-50 border-0 ${isLeadership ? "pl-0" : "pl-3.5 sm:pl-3"}`}
+                          />
+                        </div>
+                      </span>
+                    </Field>
                   </div>
 
                   <Field>
-                    <span
-                      data-slot="control"
-                      className="relative block w-full before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm dark:before:hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500"
-                    >
-                      <div className="relative flex items-center rounded-lg border border-zinc-950/10 bg-transparent dark:border-white/10 dark:bg-white/5">
-                        {isLeadership && (
-                          <div className="shrink-0 pl-3.5 pr-2 py-2.5 text-base/6 text-gray-500 select-none sm:pl-3 sm:pr-2 sm:py-1.5 sm:text-sm/6 dark:text-gray-400">
-                            <Trans>ML</Trans>
-                          </div>
-                        )}
-                        <input
-                          type="number"
-                          name="management_level"
-                          min="1"
-                          max="255"
-                          placeholder={
-                            isLeadership
-                              ? "?"
-                              : i18n._(msg`No management position`)
-                          }
-                          disabled={!isLeadership}
-                          required={isLeadership}
-                          value={
-                            isLeadership && formData.management_level > 0
-                              ? formData.management_level
-                              : ""
-                          }
-                          onChange={(e) =>
-                            handleChange(
-                              "management_level",
-                              e.target.value ? Number(e.target.value) : 0
-                            )
-                          }
-                          className={`relative block w-full appearance-none rounded-lg py-2.5 pr-3.5 text-base/6 text-zinc-950 placeholder:text-zinc-500 bg-transparent focus:outline-hidden sm:py-1.5 sm:pr-3 sm:text-sm/6 dark:text-white dark:placeholder:text-zinc-500 disabled:opacity-50 border-0 ${isLeadership ? "pl-0" : "pl-3.5 sm:pl-3"}`}
-                        />
-                      </div>
-                    </span>
+                    <FieldLabel htmlFor="status">
+                      <Trans>Status</Trans>
+                    </FieldLabel>
+                    <Select value={formData.status} disabled>
+                      <SelectTrigger id="status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <EmployeeStatusSelectItems />
+                      </SelectContent>
+                    </Select>
+                    <FieldDescription>
+                      <Trans>
+                        Applicant / Pre-Contract / Active / On Leave /
+                        Terminated
+                      </Trans>
+                    </FieldDescription>
+                    <FieldDescription>
+                      <Trans>
+                        Invitations are only available for employees in
+                        pre-contract status.
+                      </Trans>
+                    </FieldDescription>
                   </Field>
                 </div>
+              </FieldGroup>
+            </Fieldset>
 
-                <Field>
-                  <Label>
-                    <Trans>Status</Trans>
-                  </Label>
-                  <Select name="status" value={formData.status} disabled>
-                    <EmployeeStatusOptions />
-                  </Select>
-                  <Text className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>
-                      Applicant / Pre-Contract / Active / On Leave / Terminated
-                    </Trans>
-                  </Text>
-                  <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                    <Trans>
-                      Invitations are only available for employees in
-                      pre-contract status.
-                    </Trans>
-                  </Text>
-                </Field>
-              </div>
-            </FieldGroup>
-          </Fieldset>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              outline
-              onClick={() => navigate(`/employees/${id}`)}
-            >
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? <Trans>Saving...</Trans> : <Trans>Save Changes</Trans>}
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(`/employees/${id}`)}
+              >
+                <Trans>Cancel</Trans>
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <Trans>Saving...</Trans>
+                ) : (
+                  <Trans>Save Changes</Trans>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

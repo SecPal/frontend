@@ -46,6 +46,37 @@ function submitEmployeeCreateForm() {
   );
 }
 
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp | string
+) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 const mockOrganizationalUnits = [
   {
     id: "unit-1",
@@ -112,9 +143,24 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       const select = screen.getByLabelText(/organizational unit/i);
       expect(select).toBeInTheDocument();
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
-      expect(screen.getByText("Remote Team")).toBeInTheDocument();
+      expect(select).not.toBeDisabled();
     });
+
+    fireEvent.pointerDown(
+      screen.getByRole("combobox", { name: /organizational unit/i }),
+      {
+        button: 0,
+        pointerId: 1,
+        pointerType: "mouse",
+      }
+    );
+    expect(
+      await screen.findByRole("option", { name: "Main Office" })
+    ).toHaveAttribute("data-value", "unit-1");
+    expect(screen.getByRole("option", { name: "Remote Team" })).toHaveAttribute(
+      "data-value",
+      "unit-2"
+    );
   });
 
   it(
@@ -162,7 +208,11 @@ describe("EmployeeCreate", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
         expect(
           screen.getByLabelText(/organizational unit/i)
         ).not.toBeDisabled();
@@ -204,15 +254,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "unit-1" },
-      });
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/organizational unit/i)).toHaveValue(
-          "unit-1"
-        );
-      });
+      await selectRadixOption(/organizational unit/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -269,7 +311,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       // Fill in minimal required fields
@@ -293,9 +339,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "unit-1" },
-      });
+      await selectRadixOption(/organizational unit/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -313,7 +357,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
@@ -338,7 +386,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     submitEmployeeCreateForm();
@@ -365,7 +417,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     fireEvent.change(screen.getByLabelText(/first name/i), {
@@ -388,9 +444,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+    await selectRadixOption(/organizational unit/i, "Main Office");
 
     fireEvent.click(screen.getByRole("switch", { name: /leadership/i }));
     submitEmployeeCreateForm();
@@ -419,7 +473,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     fireEvent.change(screen.getByLabelText(/first name/i), {
@@ -442,9 +500,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+    await selectRadixOption(/organizational unit/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -483,7 +539,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     // Fill minimal fields
@@ -505,9 +565,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+    await selectRadixOption(/organizational unit/i, "Main Office");
 
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 
@@ -520,25 +578,33 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
-    // Change status
-    const statusSelect = screen.getByLabelText(/status/i);
-    fireEvent.change(statusSelect, { target: { value: "active" } });
-    expect(statusSelect).toHaveValue("active");
+    await selectRadixOption(/status/i, "Active");
+    expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
+      "Active"
+    );
 
-    // Change contract type
-    const contractTypeSelect = screen.getByLabelText(/contract type/i);
-    fireEvent.change(contractTypeSelect, { target: { value: "part_time" } });
-    expect(contractTypeSelect).toHaveValue("part_time");
+    await selectRadixOption(/contract type/i, "Part Time");
+    expect(
+      screen.getByRole("combobox", { name: /contract type/i })
+    ).toHaveTextContent("Part Time");
   });
 
   it("should disable invitation sending for non pre-contract employees", async () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     const invitationSwitch = screen.getByLabelText(
@@ -546,9 +612,7 @@ describe("EmployeeCreate", () => {
     );
     expect(invitationSwitch).toBeChecked();
 
-    fireEvent.change(screen.getByLabelText(/status/i), {
-      target: { value: "active" },
-    });
+    await selectRadixOption(/status/i, "Active");
 
     expect(invitationSwitch).toBeDisabled();
     expect(invitationSwitch).not.toBeChecked();
@@ -576,7 +640,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     fireEvent.change(screen.getByLabelText(/first name/i), {
@@ -599,9 +667,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+    await selectRadixOption(/organizational unit/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -624,13 +690,18 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
-    const statusSelect = screen.getByLabelText(/status/i);
-    fireEvent.change(statusSelect, { target: { value: "applicant" } });
+    await selectRadixOption(/status/i, "Applicant");
 
-    expect(statusSelect).toHaveValue("applicant");
+    expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
+      "Applicant"
+    );
   });
 
   it("should clear error message when user changes input", async () => {
@@ -651,7 +722,11 @@ describe("EmployeeCreate", () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(screen.getByText("Main Office")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
     });
 
     // Fill form and trigger error
@@ -673,9 +748,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-      target: { value: "unit-1" },
-    });
+    await selectRadixOption(/organizational unit/i, "Main Office");
 
     // Submit form to trigger error
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
@@ -705,7 +778,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const leadershipSwitch = screen.getByRole("switch", {
@@ -726,7 +803,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const leadershipSwitch = screen.getByRole("switch", {
@@ -752,7 +833,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       // Enable leadership
@@ -807,7 +892,11 @@ describe("EmployeeCreate", () => {
         renderWithProviders(<EmployeeCreate />);
 
         await waitFor(() => {
-          expect(screen.getByText("Main Office")).toBeInTheDocument();
+          expect(
+            screen.getByRole("combobox", {
+              name: /organizational unit|organisatorische einheit/i,
+            })
+          ).not.toBeDisabled();
         });
 
         // Fill form with leadership position
@@ -831,9 +920,7 @@ describe("EmployeeCreate", () => {
           target: { value: "01/01/2025" },
         });
         fireEvent.blur(screen.getByLabelText(/contract start date/i));
-        fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-          target: { value: "unit-1" },
-        });
+        await selectRadixOption(/organizational unit/i, "Main Office");
 
         // Enable leadership and set management level
         const leadershipSwitch = screen.getByRole("switch", {
@@ -866,7 +953,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
@@ -886,7 +977,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
@@ -906,7 +1001,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/geburtsdatum/i);
@@ -927,7 +1026,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const currentYear = new Date().getFullYear();
@@ -975,7 +1078,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       fireEvent.change(screen.getByLabelText(/vorname/i), {
@@ -996,9 +1103,7 @@ describe("EmployeeCreate", () => {
       fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
         target: { value: "1.6." },
       });
-      fireEvent.change(screen.getByLabelText(/organisatorische einheit/i), {
-        target: { value: "unit-1" },
-      });
+      await selectRadixOption(/organisatorische einheit/i, "Main Office");
 
       submitEmployeeCreateForm();
 
@@ -1017,7 +1122,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const contractDateInput = screen.getByLabelText(/contract start date/i);
@@ -1037,7 +1146,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
@@ -1062,7 +1175,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
@@ -1088,7 +1205,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
@@ -1106,7 +1227,11 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(screen.getByText("Main Office")).toBeInTheDocument();
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
       });
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);

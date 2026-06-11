@@ -31,6 +31,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Admin Radix Select regressions should open the combobox and assert rendered `role="option"` items with stable `data-value` markers instead of using native `fireEvent.change`/`user.selectOptions`.
 - Customer/site management pages should share route-scoped helpers in `src/pages/CustomerSites/ui` backed by `src/ui`, native semantic tables/description lists, router links, and lucide icons; keep CRUD behavior in the pages while asserting Radix Select options and explicit field error wiring in route tests.
 - Employee management pages should share route-scoped helpers in `src/pages/Employees/ui` backed by `src/ui`, native semantic tables/description lists, router links, status badges, and Radix dialog/select primitives; keep employee API/update behavior in the pages while testing filters and inline dialogs through public roles plus stable `data-slot` markers.
+- Employee form routes should import all presentation controls through `src/pages/Employees/ui`, including form fieldsets, Radix Select/Switch controls, autocomplete popovers, cards, alerts, labels, descriptions, and errors; keep route-owned validation and API payload normalization unchanged while wiring errors with stable `id`, `aria-invalid`, and `aria-describedby`.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
@@ -715,3 +716,26 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: employee pages benefit from the same route-scoped helper layer as customer/site pages when they need direct `src/ui` primitives plus feature-specific tables, detail lists, badges, and link buttons.
   - Gotchas encountered: migrating native selects in list/detail tests requires switching assertions from `toHaveValue`/`fireEvent.change` to opening the Radix combobox and selecting rendered `role="option"` items; otherwise tests keep passing over behavior that no longer exists in the DOM.
+
+## US-007: Mitarbeiter-Bearbeitungs- und BWR-Formulare migrieren
+- Migrated `EmployeeCreate`, `EmployeeEdit`, `EmployeeContactsEdit`, `EmployeeAddressFields`, and the editable BWR status form onto the employee route-scoped shadcn/Radix layer, including Radix Select/Switch controls, employee-local fieldsets, cards, alerts, autocomplete popovers, command popovers, labels, descriptions, and field errors.
+- Preserved employee creation/edit/contact payload normalization, date parsing and German short-date handling, organizational-unit selection, management-level gating, invitation gating, contact/address editing, emergency-contact validation, BWR export, BWR status updates, API validation feedback, and localized EN/DE copy.
+- Added and updated route regressions for happy paths, validation errors, Radix option selection, localization, dark-mode/data-slot surfaces, BWR field error wiring, and expanded the admin migration boundary to cover all migrated employee form sources.
+- Verified with `npm run typecheck`, `npm run lint`, `npm run i18n:check`, focused employee Vitest coverage, and full `npm test`.
+- Files changed:
+  - `src/pages/Employees/ui.tsx`
+  - `src/pages/Employees/EmployeeCreate.tsx`
+  - `src/pages/Employees/EmployeeCreate.test.tsx`
+  - `src/pages/Employees/EmployeeEdit.tsx`
+  - `src/pages/Employees/EmployeeEdit.test.tsx`
+  - `src/pages/Employees/EmployeeContactsEdit.tsx`
+  - `src/pages/Employees/EmployeeContactsEdit.test.tsx`
+  - `src/pages/Employees/EmployeeAddressFields.tsx`
+  - `src/pages/Employees/EmployeeBwrPanel.tsx`
+  - `src/pages/Employees/EmployeeBwrPanel.test.tsx`
+  - `src/pages/Employees/EmployeeStatusOptions.tsx`
+  - `tests/admin-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: employee form migrations should keep behavior and normalization in route components while moving presentation-only structures into `src/pages/Employees/ui`; tests should select Radix options through public combobox/option roles and assert `data-value` markers for dropdown contents.
+  - Gotchas encountered: Radix Select restores focus to its trigger after option selection, which can race with immediate submit-time focus restoration in tests and fast user interactions; invalid-field focusing should reapply on the next macrotask when a recently closed select may still be restoring focus.

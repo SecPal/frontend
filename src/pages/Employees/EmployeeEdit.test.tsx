@@ -46,6 +46,37 @@ const renderWithProviders = (employeeId: string) => {
   );
 };
 
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp | string
+) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 const mockEmployee: Employee = {
   id: "emp-1",
   employee_number: "E001",
@@ -345,17 +376,42 @@ describe("EmployeeEdit", () => {
 
     expect(screen.getByLabelText(/date of birth/i)).toHaveValue("");
     expect(screen.getByLabelText(/contract start date/i)).toHaveValue("");
-    expect(screen.getByLabelText(/organizational unit/i)).toHaveValue("");
+    expect(
+      screen.getByRole("combobox", { name: /organizational unit/i })
+    ).toHaveTextContent(/select organizational unit/i);
   });
 
   it("should load organizational units into dropdown", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
-      expect(screen.getByText("Engineering")).toBeInTheDocument();
+      expect(
+        screen.getByRole("combobox", { name: /organizational unit/i })
+      ).not.toBeDisabled();
     });
 
-    expect(screen.getByText("Marketing")).toBeInTheDocument();
+    const trigger = screen.getByRole("combobox", {
+      name: /organizational unit/i,
+    });
+    fireEvent.pointerDown(trigger, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(trigger, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.click(trigger, { button: 0 });
+
+    expect(
+      await screen.findByRole("option", { name: "Engineering" })
+    ).toHaveAttribute("data-value", "unit-1");
+    expect(screen.getByRole("option", { name: "Marketing" })).toHaveAttribute(
+      "data-value",
+      "unit-2"
+    );
   });
 
   it("should display error on fetch failure", async () => {
@@ -461,9 +517,7 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    // Change organizational unit
-    const orgUnitSelect = screen.getByLabelText(/organizational unit/i);
-    fireEvent.change(orgUnitSelect, { target: { value: "unit-2" } });
+    await selectRadixOption(/organizational unit/i, "Marketing");
 
     // Submit
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -488,9 +542,9 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    const statusSelect = screen.getByLabelText(/status/i);
+    const statusSelect = screen.getByRole("combobox", { name: /status/i });
     expect(statusSelect).toBeDisabled();
-    expect(statusSelect).toHaveValue("active");
+    expect(statusSelect).toHaveTextContent("Active");
 
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
