@@ -749,8 +749,7 @@ msgstr "Standort löschen"
 
 #: src/pages/Login.tsx
 msgid "The passkey sign-in completed with an unsupported login mode."
-msgstr "Die Passkey-Anmeldung wurde mit einem nicht unterstützten Anmeldemodus "
-"abgeschlossen."
+msgstr "Die Passkey-Anmeldung wurde mit einem nicht unterstützten Anmeldemodus abgeschlossen."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your current answers will be saved as a draft before the first file upload."
@@ -1354,10 +1353,8 @@ msgid "Passkey sign-in timed out. Please try again."
 msgstr "Die Passkey-Anmeldung hat das Zeitlimit überschritten. Bitte versuchen Sie es erneut."
 
 #: src/pages/Login.tsx
-msgid "An unexpected MFA verification error occurred. Please try logging in "
-"again."
-msgstr "Bei der MFA-Verifizierung ist ein unerwarteter Fehler aufgetreten. "
-"Bitte melden Sie sich erneut an."
+msgid "An unexpected MFA verification error occurred. Please try logging in again."
+msgstr "Bei der MFA-Verifizierung ist ein unerwarteter Fehler aufgetreten. Bitte melden Sie sich erneut an."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
@@ -2101,8 +2098,7 @@ msgstr "Ich habe meine E-Mail verifiziert"
 
 #: src/pages/Login.tsx
 msgid "An unexpected error occurred. Please try again or contact support."
-msgstr "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut "
-"oder kontaktieren Sie den Support."
+msgstr "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2487,8 +2483,7 @@ msgstr "Alle Status"
 
 #: src/pages/Login.tsx
 msgid "The MFA challenge completed with an unsupported login mode."
-msgstr "Die MFA-Abfrage wurde mit einem nicht unterstützten Anmeldemodus "
-"abgeschlossen."
+msgstr "Die MFA-Abfrage wurde mit einem nicht unterstützten Anmeldemodus abgeschlossen."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Search in descriptions..."

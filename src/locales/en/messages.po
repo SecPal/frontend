@@ -1353,10 +1353,8 @@ msgid "Passkey sign-in timed out. Please try again."
 msgstr "Passkey sign-in timed out. Please try again."
 
 #: src/pages/Login.tsx
-msgid "An unexpected MFA verification error occurred. Please try logging in "
-"again."
-msgstr "An unexpected MFA verification error occurred. Please try logging in "
-"again."
+msgid "An unexpected MFA verification error occurred. Please try logging in again."
+msgstr "An unexpected MFA verification error occurred. Please try logging in again."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
