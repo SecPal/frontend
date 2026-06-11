@@ -156,6 +156,7 @@ describe("auth login shadcn primitives", () => {
     expect(dialog).toHaveClass(
       "max-h-[calc(100dvh-2rem)]",
       "w-[calc(100%-2rem)]",
+      "overflow-x-hidden",
       "overflow-y-auto",
       "overscroll-contain"
     );

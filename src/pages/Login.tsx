@@ -864,7 +864,7 @@ export function Login() {
                     type="button"
                     onClick={() => handleMfaMethodChange(otherMfaMethod)}
                     disabled={isVerifyingMfa}
-                    className="mx-auto block text-sm text-zinc-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:focus-visible:ring-offset-zinc-950"
+                    className="mx-auto block max-w-full text-center text-sm text-balance text-zinc-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:focus-visible:ring-offset-zinc-950"
                   >
                     {mfaMethod === "totp" ? (
                       <Trans id="login.mfa.switchToRecovery">

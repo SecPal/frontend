@@ -157,8 +157,13 @@ function enterTotpCode(code: string) {
 }
 
 function getRecoveryCodeInput(): HTMLInputElement {
+  // The recovery-code input is the `input-otp` hidden input (always
+  // `data-input-otp`), regardless of its `autocomplete` value — the
+  // alphanumeric path opts out of `one-time-code` so browsers do not
+  // mis-suggest SMS codes for the alphanumeric backup field, so the
+  // `[autocomplete="one-time-code"]` selector no longer matches here.
   return screen.getByLabelText(/recovery code/i, {
-    selector: '[autocomplete="one-time-code"]',
+    selector: "[data-input-otp]",
   }) as HTMLInputElement;
 }
 
