@@ -3131,6 +3131,10 @@ msgstr "Enrollment-Sitzung wird erstellt..."
 msgid "Failed to load passkeys."
 msgstr "Passkeys konnten nicht geladen werden."
 
+#: src/components/UpdatePrompt.tsx
+msgid "Updating application"
+msgstr "Anwendung wird aktualisiert"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Add passkey"
 msgstr "Passkey hinzufügen"

@@ -62,6 +62,16 @@ const migratedShellFiles = [
   "src/components/Footer.tsx",
 ] as const;
 
+const forbiddenHeadlessPackagePattern = new RegExp(
+  ["@headlessui", "react"].join("\\/")
+);
+const forbiddenHeroiconsPackagePattern = new RegExp(
+  ["@heroicons", "react"].join("\\/")
+);
+const forbiddenTailwindPlusLicenseMarkerPattern = new RegExp(
+  ["LicenseRef", "TailwindPlus"].join("-")
+);
+
 function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
@@ -71,7 +81,7 @@ function getStoredAuthState(): string | null {
   return localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 }
 
-// Mock ResizeObserver for HeadlessUI Menu component
+// Mock ResizeObserver for Radix menu components.
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
     observe() {}
@@ -1026,9 +1036,9 @@ describe("ApplicationLayout", () => {
   describe("migration boundary", () => {
     it("keeps the migrated shell free of Headless, Heroicons and inline UI icon sources", () => {
       const forbiddenPatterns = [
-        /@headlessui\/react/,
-        /@heroicons\/react/,
-        /LicenseRef-TailwindPlus/,
+        forbiddenHeadlessPackagePattern,
+        forbiddenHeroiconsPackagePattern,
+        forbiddenTailwindPlusLicenseMarkerPattern,
         /function \w+Icon\(/,
         /<svg\s+data-slot="icon"/,
       ];

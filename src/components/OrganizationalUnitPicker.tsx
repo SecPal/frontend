@@ -5,7 +5,13 @@ import { useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Building2, Home, MapPin, Users } from "lucide-react";
-import { Listbox, ListboxOption, ListboxLabel } from "./listbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -20,6 +26,16 @@ interface FlattenedUnit {
   name: string;
   type: OrganizationalUnitType;
   depth: number;
+}
+
+const ALL_UNITS_SELECT_VALUE = "__secpal_all_units__";
+
+function toSelectValue(value: string) {
+  return value === "" ? ALL_UNITS_SELECT_VALUE : value;
+}
+
+function fromSelectValue(value: string) {
+  return value === ALL_UNITS_SELECT_VALUE ? "" : value;
 }
 
 /**
@@ -173,34 +189,43 @@ export function OrganizationalUnitPicker({
   }, [units]);
 
   return (
-    <Listbox
-      value={value}
-      onChange={onChange}
+    <Select
+      value={toSelectValue(value)}
+      onValueChange={(nextValue) => onChange(fromSelectValue(nextValue))}
       disabled={disabled}
-      aria-label={ariaLabel || t`Select organizational unit`}
     >
-      {/* "All Units" option */}
-      <ListboxOption value="">
-        <RootIcon className="h-4 w-4" />
-        <ListboxLabel>{allUnitsLabel || <Trans>All Units</Trans>}</ListboxLabel>
-      </ListboxOption>
-
-      {/* Hierarchically sorted units with indentation and icons */}
-      {sortedUnits.map((u) => (
-        <ListboxOption key={u.id} value={u.id}>
-          <span
-            className="flex items-center gap-2"
-            style={{ paddingLeft: `${u.depth * 16}px` }}
-          >
-            <UnitTypeIcon type={u.type} className="h-4 w-4 shrink-0" />
-            <span className="truncate">{u.name}</span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              ({getTypeLabel(u.type)})
-            </span>
+      <SelectTrigger
+        aria-label={ariaLabel || t`Select organizational unit`}
+        className="min-h-10"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {/* "All Units" option */}
+        <SelectItem value={ALL_UNITS_SELECT_VALUE}>
+          <RootIcon className="h-4 w-4" />
+          <span className="ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0">
+            {allUnitsLabel || <Trans>All Units</Trans>}
           </span>
-        </ListboxOption>
-      ))}
-    </Listbox>
+        </SelectItem>
+
+        {/* Hierarchically sorted units with indentation and icons */}
+        {sortedUnits.map((u) => (
+          <SelectItem key={u.id} value={u.id}>
+            <span
+              className="flex items-center gap-2"
+              style={{ paddingLeft: `${u.depth * 16}px` }}
+            >
+              <UnitTypeIcon type={u.type} className="h-4 w-4 shrink-0" />
+              <span className="truncate">{u.name}</span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                ({getTypeLabel(u.type)})
+              </span>
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 

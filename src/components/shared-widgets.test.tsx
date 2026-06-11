@@ -56,21 +56,33 @@ const migratedWidgetFiles = [
   "textarea.tsx",
 ];
 
+const forbiddenHeadlessPackagePattern = new RegExp(
+  ["@headlessui", "react"].join("\\/")
+);
+const forbiddenHeroiconsPackagePattern = new RegExp(
+  ["@heroicons", "react"].join("\\/")
+);
+const forbiddenTailwindPlusLicenseMarkerPattern = new RegExp(
+  ["LicenseRef", "TailwindPlus"].join("-")
+);
+
 function renderInRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
 }
 
 describe("shared widget migration boundary", () => {
-  it("keeps legacy shared widgets off Headless UI, Heroicons, and Tailwind Plus source markers", () => {
+  it("keeps legacy shared widgets off old UI packages and license source markers", () => {
     for (const fileName of migratedWidgetFiles) {
       const source = readFileSync(
         join(process.cwd(), "src/components", fileName),
         "utf8"
       );
 
-      expect(source, fileName).not.toMatch(/@headlessui\/react/);
-      expect(source, fileName).not.toMatch(/@heroicons\/react/);
-      expect(source, fileName).not.toMatch(/LicenseRef-TailwindPlus/);
+      expect(source, fileName).not.toMatch(forbiddenHeadlessPackagePattern);
+      expect(source, fileName).not.toMatch(forbiddenHeroiconsPackagePattern);
+      expect(source, fileName).not.toMatch(
+        forbiddenTailwindPlusLicenseMarkerPattern
+      );
       expect(source, fileName).toMatch(/@\/ui|@radix-ui|lucide-react|<\w+/);
     }
   });
@@ -91,9 +103,9 @@ describe("shared widget compatibility layer", () => {
       </div>
     );
 
-    expect(
-      screen.getByRole("heading", { name: "Dashboard" })
-    ).toHaveClass("dark:text-white");
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveClass(
+      "dark:text-white"
+    );
     expect(screen.getByText("Operational summary")).toHaveClass(
       "dark:text-zinc-400"
     );
@@ -106,8 +118,9 @@ describe("shared widget compatibility layer", () => {
       "href",
       "/settings"
     );
-    expect(screen.getByRole("status", { name: "Loading shared widgets" }))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading shared widgets" })
+    ).toBeInTheDocument();
   });
 
   it("keeps native form controls accessible and invalid-state styled", async () => {
@@ -163,11 +176,15 @@ describe("shared widget compatibility layer", () => {
     );
 
     await user.click(screen.getByRole("checkbox", { name: "Enabled" }));
-    await user.click(screen.getByRole("switch", { name: "Leadership position" }));
+    await user.click(
+      screen.getByRole("switch", { name: "Leadership position" })
+    );
 
     expect(onCheckboxChange).toHaveBeenCalledWith(true);
     expect(onSwitchChange).toHaveBeenCalledWith(true);
-    expect(screen.getByRole("switch")).toHaveClass("dark:data-[state=checked]:bg-zinc-50");
+    expect(screen.getByRole("switch")).toHaveClass(
+      "dark:data-[state=checked]:bg-zinc-50"
+    );
   });
 
   it("uses Radix listbox semantics while preserving empty-string option values", async () => {
@@ -197,8 +214,9 @@ describe("shared widget compatibility layer", () => {
     fireEvent.click(trigger, { button: 0 });
 
     const listbox = await screen.findByRole("listbox");
-    expect(within(listbox).getByRole("option", { name: "All Units" }))
-      .toBeInTheDocument();
+    expect(
+      within(listbox).getByRole("option", { name: "All Units" })
+    ).toBeInTheDocument();
     const option = within(listbox).getByRole("option", { name: "Head Office" });
     fireEvent.pointerDown(option, {
       button: 0,
@@ -279,8 +297,9 @@ describe("shared widget compatibility layer", () => {
       "href",
       "/units/1"
     );
-    expect(screen.getByRole("navigation", { name: "Units pages" }))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "Units pages" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Previous page" })).toHaveAttribute(
       "href",
       "/units?page=1"

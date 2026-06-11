@@ -9,9 +9,7 @@ import {
   NotificationDeploymentUnavailableError,
   useNotifications,
 } from "@/hooks/useNotifications";
-import { Button } from "./button";
-import { Heading } from "./heading";
-import { Text } from "./text";
+import { Button } from "@/ui";
 import { getNotificationInstallationsErrorMessage } from "./notificationInstallationsErrorMessage";
 
 type NotificationStatusTone = "blue" | "green" | "yellow" | "red";
@@ -197,34 +195,36 @@ export function NotificationPreferences() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2">
-          <Heading level={3}>
+          <h3 className="text-xl/7 font-semibold tracking-normal text-zinc-950 dark:text-white">
             <Trans>Browser Notifications</Trans>
-          </Heading>
-          <Text>
+          </h3>
+          <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
             <Trans>
               SecPal only exposes backend-backed browser delivery state here. It
               does not offer category-by-category notification controls yet.
             </Trans>
-          </Text>
+          </p>
         </div>
         {permission === "granted" && error === null ? (
-          <Button onClick={handleTestNotification} outline>
+          <Button onClick={handleTestNotification} variant="outline">
             <Trans>Send Test</Trans>
           </Button>
         ) : null}
       </div>
 
       <div className={getStatusClasses(status.tone)}>
-        <Text className={getStatusTextClasses(status.tone)}>
+        <p
+          className={`text-base/6 sm:text-sm/6 ${getStatusTextClasses(status.tone)}`}
+        >
           {status.message}
-        </Text>
+        </p>
       </div>
 
       {permission === "default" && isSupported ? (
         <Button
           onClick={handleEnableNotifications}
           disabled={isEnabling}
-          color="blue"
+          className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700"
         >
           {isEnabling ? (
             <Trans>Enabling...</Trans>
@@ -235,9 +235,9 @@ export function NotificationPreferences() {
       ) : null}
 
       <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <Heading level={4}>
+        <h4 className="text-lg/7 font-semibold tracking-normal text-zinc-950 dark:text-white">
           <Trans>Rollout Expectations</Trans>
-        </Heading>
+        </h4>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
           {rolloutExpectations.map((item, index) => (
             <li key={index}>{item}</li>

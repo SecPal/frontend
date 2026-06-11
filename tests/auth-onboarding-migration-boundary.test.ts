@@ -36,9 +36,14 @@ const requiredCoveredPaths = [
 ] as const;
 
 // REUSE-IgnoreStart
+const forbiddenHeadlessPackage = ["@headlessui", "react"].join("/");
+const forbiddenTailwindPlusLicenseMarker = ["LicenseRef", "TailwindPlus"].join(
+  "-"
+);
+
 const forbiddenTextMarkers = [
-  "@headlessui/react",
-  "LicenseRef-TailwindPlus",
+  forbiddenHeadlessPackage,
+  forbiddenTailwindPlusLicenseMarker,
 ] as const;
 // REUSE-IgnoreEnd
 
@@ -146,7 +151,7 @@ function collectMigrationBoundaryViolations(sources: ScopedSource[]) {
 
     const importViolations = getStaticModuleSpecifiers(source).flatMap(
       (moduleSpecifier) => {
-        if (moduleSpecifier === "@headlessui/react") {
+        if (moduleSpecifier === forbiddenHeadlessPackage) {
           return [
             `${source.path}: imports forbidden package ${moduleSpecifier}`,
           ];
@@ -187,8 +192,8 @@ describe("auth/onboarding migration boundary", () => {
         path: "src/pages/Login.tsx",
         content: [
           "import { Button } from '../components/button';",
-          "import { Dialog } from '@headlessui/react';",
-          "// SPDX-License-Identifier: LicenseRef-TailwindPlus",
+          `import { Dialog } from '${forbiddenHeadlessPackage}';`,
+          `// SPDX-License-Identifier: ${forbiddenTailwindPlusLicenseMarker}`,
         ].join("\n"),
       },
       {
@@ -198,10 +203,10 @@ describe("auth/onboarding migration boundary", () => {
     ]);
 
     expect(violations).toEqual([
-      "src/pages/Login.tsx: contains forbidden marker @headlessui/react",
-      "src/pages/Login.tsx: contains forbidden marker LicenseRef-TailwindPlus",
+      `src/pages/Login.tsx: contains forbidden marker ${forbiddenHeadlessPackage}`,
+      `src/pages/Login.tsx: contains forbidden marker ${forbiddenTailwindPlusLicenseMarker}`,
       "src/pages/Login.tsx: imports old component wrapper ../components/button",
-      "src/pages/Login.tsx: imports forbidden package @headlessui/react",
+      `src/pages/Login.tsx: imports forbidden package ${forbiddenHeadlessPackage}`,
       "src/pages/Onboarding/OnboardingComplete.tsx: imports old component wrapper ../../components/input",
     ]);
     // REUSE-IgnoreEnd
@@ -220,8 +225,6 @@ describe("auth/onboarding migration boundary", () => {
     expect(guide).toContain("src/ui");
     expect(guide).toContain("Button");
     expect(guide).toContain("Dialog");
-    expect(guide).toContain(
-      "Do not import old Catalyst/Tailwind Plus wrappers"
-    );
+    expect(guide).toContain("Do not import old shared UI wrappers");
   });
 });

@@ -9,8 +9,8 @@ import {
   NotificationDeploymentUnavailableError,
   useNotifications,
 } from "@/hooks/useNotifications";
-import { Button } from "@/components/button";
 import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
+import { Button } from "@/ui";
 import { Bell, X } from "lucide-react";
 
 function getPromptErrorMessage(
@@ -142,7 +142,7 @@ export function NotificationPermissionPrompt() {
               onClick={handleDismiss}
               disabled={isLoading}
               className="text-sm"
-              color="zinc"
+              variant="secondary"
             >
               <Trans>Not Now</Trans>
             </Button>

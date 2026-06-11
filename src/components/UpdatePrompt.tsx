@@ -5,8 +5,7 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { Button } from "./button";
-import { Spinner } from "./spinner";
+import { Button, Spinner } from "@/ui";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
 
@@ -62,7 +61,10 @@ function BrowserUpdatePrompt() {
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
         {isUpdating ? (
           <>
-            <Spinner size="sm" className="border-t-white" />
+            <Spinner
+              aria-label={_(msg`Updating application`)}
+              className="h-4 w-4 text-white"
+            />
             <p className="text-sm font-medium">
               <Trans>Updating...</Trans>
             </p>
@@ -74,8 +76,7 @@ function BrowserUpdatePrompt() {
             </p>
             <Button
               onClick={handleUpdate}
-              color="white"
-              className="py-1!"
+              className="bg-white py-1! text-zinc-950 hover:bg-zinc-100 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
               aria-label={_(msg`Update application now`)}
             >
               <Trans>Update now</Trans>

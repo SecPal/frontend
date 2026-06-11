@@ -35,6 +35,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Specialized admin pages such as activity logs and provisioning can keep route-local native tables, description lists, and status-badge class helpers while importing shared `src/ui` primitives directly for controls, cards, alerts, and Radix dialogs/selects; keep domain renderers such as verification dots and QR code generation behavior-owned.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
+- Final legacy cleanup guardrails should scan all production source/config metadata for forbidden package names and proprietary license markers, parse static imports to block productive imports of old generic `src/components` wrappers, and build forbidden strings dynamically inside tests so repository-wide text searches stay meaningful.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -762,3 +763,20 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: specialized admin pages can migrate cleanly with route-local native table/description-list helpers plus direct `src/ui` imports, while domain renderers such as verification dots and QR generation remain behavior-owned at the feature boundary.
   - Gotchas encountered: Radix Select renders hidden native `<select>/<option>` nodes for form compatibility, so text assertions may need `findAllByText` and interactions should use the full pointerDown/pointerUp/click sequence on trigger and option.
+
+## US-009: Legacy-Abhängigkeiten restlos entfernen und Migration absichern
+- Removed the remaining stale legacy UI references from build/licensing/documentation metadata: Vite vendor chunking now targets Radix/Lucide UI packages, the Tailwind Plus license file and REUSE annotation are gone, and README/UI migration docs describe the shadcn/Radix/Lucide stack.
+- Migrated the last productive generic wrapper imports in shared app surfaces to direct `src/ui`, native semantic markup, and router links: app home/about links, notification prompt/preferences, route guard states, update prompt, encryption progress, and organization parent/unit selectors.
+- Added a project-wide `tests/legacy-ui-guardrails.test.ts` audit and wired it into `npm run test:migration-boundary`; it blocks legacy package names, proprietary license markers, lockfile/manifest reintroductions, and productive imports of old generic component wrappers outside wrapper-internal compatibility wiring.
+- Updated source-level audits/tests and E2E selectors for Radix combobox semantics, including organization parent moves and org-unit picker selection.
+- Verified with `npm run typecheck`, `npm run lint`, `npm run i18n:check`, `npm run test:migration-boundary`, full `npm test`, and critical Chromium E2E paths for auth/onboarding/organization using `--grep-invert "Live organization proof"`; a full E2E attempt also exposed the local live-proof fixture dependency on remote `Headquarters` data.
+- Files changed:
+  - `vite.config.ts`, `package.json`, `README.md`, `REUSE.toml`, `LICENSES/LicenseRef-TailwindPlus.txt`, `CHANGELOG.md`
+  - `src/App.tsx`, `src/components/NotificationPermissionPrompt.tsx`, `src/components/NotificationPreferences.tsx`, `src/components/RouteGuardState.tsx`, `src/components/UpdatePrompt.tsx`, `src/components/EncryptionProgress.tsx`
+  - `src/components/OrganizationalUnitPicker.tsx`, `src/components/MoveOrganizationalUnitDialog.tsx`
+  - `src/components/*test.tsx`, `tests/*migration-boundary.test.ts`, `tests/legacy-ui-guardrails.test.ts`, `tests/e2e/organization.spec.ts`, `tests/unit/OrganizationalUnitPicker.test.tsx`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`, `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: project-wide cleanup tests should combine text-marker scans, package manifest/lockfile checks, and TypeScript static import resolution so removed UI dependencies cannot return through config, metadata, or newly migrated feature code.
+  - Gotchas encountered: Radix Select exposes parent/unit selectors as `role="combobox"` and needs pointer-style option selection in tests; old button/listbox queries can silently miss the actual migrated control.

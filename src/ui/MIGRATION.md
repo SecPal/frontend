@@ -19,9 +19,9 @@ Migration rules:
   `src/pages/Onboarding/ui` as the public compatibility surface while a route
   still needs prefixed slots, route-specific helpers, or legacy-compatible
   event shapes.
-- Do not import old Catalyst/Tailwind Plus wrappers from `src/components/*` in
-  migrated Auth or Onboarding code. The migration boundary test covers this
-  route scope and the shared UI layer.
+- Do not import old shared UI wrappers from `src/components/*` in migrated Auth
+  or Onboarding code. The migration boundary test covers this route scope and
+  the shared UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.

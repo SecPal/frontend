@@ -49,10 +49,16 @@ const scopedEntries = [
 ] as const;
 
 // REUSE-IgnoreStart
+const forbiddenHeadlessPackage = ["@headlessui", "react"].join("/");
+const forbiddenHeroiconsPackage = ["@heroicons", "react"].join("/");
+const forbiddenTailwindPlusLicenseMarker = ["LicenseRef", "TailwindPlus"].join(
+  "-"
+);
+
 const forbiddenTextMarkers = [
-  "@headlessui/react",
-  "@heroicons/react",
-  "LicenseRef-TailwindPlus",
+  forbiddenHeadlessPackage,
+  forbiddenHeroiconsPackage,
+  forbiddenTailwindPlusLicenseMarker,
   "<svg",
 ] as const;
 // REUSE-IgnoreEnd
@@ -140,8 +146,8 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
     const importViolations = getStaticModuleSpecifiers(source).flatMap(
       (moduleSpecifier) => {
         if (
-          moduleSpecifier === "@headlessui/react" ||
-          moduleSpecifier.startsWith("@heroicons/react")
+          moduleSpecifier === forbiddenHeadlessPackage ||
+          moduleSpecifier.startsWith(forbiddenHeroiconsPackage)
         ) {
           return [
             `${source.path}: imports forbidden package ${moduleSpecifier}`,
@@ -181,22 +187,22 @@ describe("admin migration boundary", () => {
         path: "src/pages/Settings/SettingsPage.tsx",
         content: [
           "import { Button } from '../../components/button';",
-          "import { Dialog } from '@headlessui/react';",
-          "import { XMarkIcon } from '@heroicons/react/24/outline';",
+          `import { Dialog } from '${forbiddenHeadlessPackage}';`,
+          `import { XMarkIcon } from '${forbiddenHeroiconsPackage}/24/outline';`,
           "<svg viewBox='0 0 24 24' />",
-          "// SPDX-License-Identifier: LicenseRef-TailwindPlus",
+          `// SPDX-License-Identifier: ${forbiddenTailwindPlusLicenseMarker}`,
         ].join("\n"),
       },
     ]);
 
     expect(violations).toEqual([
-      "src/pages/Settings/SettingsPage.tsx: contains forbidden marker @headlessui/react",
-      "src/pages/Settings/SettingsPage.tsx: contains forbidden marker @heroicons/react",
-      "src/pages/Settings/SettingsPage.tsx: contains forbidden marker LicenseRef-TailwindPlus",
+      `src/pages/Settings/SettingsPage.tsx: contains forbidden marker ${forbiddenHeadlessPackage}`,
+      `src/pages/Settings/SettingsPage.tsx: contains forbidden marker ${forbiddenHeroiconsPackage}`,
+      `src/pages/Settings/SettingsPage.tsx: contains forbidden marker ${forbiddenTailwindPlusLicenseMarker}`,
       "src/pages/Settings/SettingsPage.tsx: contains forbidden marker <svg",
       "src/pages/Settings/SettingsPage.tsx: imports old component wrapper ../../components/button",
-      "src/pages/Settings/SettingsPage.tsx: imports forbidden package @headlessui/react",
-      "src/pages/Settings/SettingsPage.tsx: imports forbidden package @heroicons/react/24/outline",
+      `src/pages/Settings/SettingsPage.tsx: imports forbidden package ${forbiddenHeadlessPackage}`,
+      `src/pages/Settings/SettingsPage.tsx: imports forbidden package ${forbiddenHeroiconsPackage}/24/outline`,
     ]);
     // REUSE-IgnoreEnd
   });

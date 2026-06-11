@@ -134,14 +134,14 @@ import { Trans } from "@lingui/react/macro";
 
 ## 🎨 UI Components & Design System
 
-This project uses [**Catalyst UI Kit**](https://catalyst.tailwindui.com/) by [Tailwind Labs](https://tailwindcss.com/plus) for its application UI components.
+This project uses a SecPal-owned **shadcn/Radix UI layer** for application UI components.
 
-**Components:** 27 production-ready React components
+**Components:** Shared primitives in `src/ui` plus route-scoped compatibility barrels
 **Routing:** React Router v7 with client-side navigation
-**Typography:** Inter font family (optimized for Catalyst)
-**Icons:** Heroicons (16×16 and 20×20)
-**License:** [Tailwind Plus License](https://tailwindcss.com/plus/license)
-**Documentation:** [Catalyst Docs](https://catalyst.tailwindui.com/docs)
+**Typography:** Inter font family
+**Icons:** Lucide React
+**License:** AGPL-3.0-or-later
+**Documentation:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
 
 ## 📋 Prerequisites
 

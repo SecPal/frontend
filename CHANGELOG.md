@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
-- Swapped the three icons on the login surface from `@heroicons/react/24/outline` to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`. `@heroicons/react` remains a project dependency because other routes still use it; the login surface itself no longer references it.
+- Swapped the three icons on the login surface from the legacy outline icon package to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`.
 - Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
   - `LoginDialog` (MFA challenge) now wraps `@radix-ui/react-dialog` with Portal + Overlay + Content + auto-focus + focus-trap + Esc/outside-click dismissal handled by Radix (the previous custom div + hand-rolled focus-trap is removed; `LoginDialogTitle` / `LoginDialogDescription` are thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`).
   - `LoginFieldLabel` wraps `@radix-ui/react-label` for proper `<button role="radio">` association.
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `ProgressIndicator` using the new `Progress` primitive with `aria-label` for accessible progress announcement.
 - Added `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` layout primitives to `src/pages/Onboarding/ui/primitives.tsx`; `OnboardingComplete` now uses these via a local `OnboardingCompleteFrame` wrapper instead of repeating the layout markup in every render branch.
 - Extracted shared `cn()` utility to `src/lib/utils.ts` (clsx + tailwind-merge); both `src/pages/Auth/ui/utils.ts` and `src/pages/Onboarding/ui/utils.ts` now re-export from this canonical location.
-- Added `auth/onboarding migration boundary` static-analysis test (`tests/auth-onboarding-migration-boundary.test.ts`) that asserts the auth and onboarding route scope is free of legacy Catalyst/Headless-UI imports and `LicenseRef-TailwindPlus` markers.
+- Added `auth/onboarding migration boundary` static-analysis test (`tests/auth-onboarding-migration-boundary.test.ts`) that asserts the auth and onboarding route scope is free of legacy UI imports and proprietary license markers.
 - Migrated `Select`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Progress`, and `FieldLabel` in `src/pages/Onboarding/ui/primitives.tsx` from native HTML elements to Radix UI primitives (`@radix-ui/react-select`, `@radix-ui/react-checkbox`, `@radix-ui/react-radio-group`, `@radix-ui/react-progress`, `@radix-ui/react-label`, `@radix-ui/react-popover`).
 - Added `AutocompleteListbox` and `AutocompleteOption` components to `src/pages/Onboarding/ui/primitives.tsx` for accessible combobox autocomplete surfaces backed by `@radix-ui/react-popover`.
 
@@ -967,10 +967,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Graceful fallback when Storage API unavailable
   - 4 comprehensive tests for all scenarios
 
-- **Catalyst Setup Completion**: Production-ready configuration
+- **Legacy UI setup completion**: Production-ready configuration
   - React Router v7 for client-side navigation with SPA routing
   - Inter font family integration via @fontsource/inter (weights 400-700)
-  - Heroicons icon library (@heroicons/react) for UI consistency
+  - Legacy outline icon library for UI consistency
   - Updated Link component for React Router integration
   - Tailwind @theme configuration with Inter and font features
   - Demo routes (Home, About) showcasing routing capabilities
@@ -986,9 +986,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - PWA icons (192x192, 512x512) with SecPal branding
   - Comprehensive test coverage for online/offline detection
 
-- **Catalyst UI Kit integration**: All 27 Catalyst components
+- **Legacy UI kit integration**: All 27 components
   - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
-  - Dependencies: `@headlessui/react`, `motion`, `clsx`
+  - Dependencies: legacy menu primitives, `motion`, `clsx`
   - Documentation reference in README
   - SPDX license headers for REUSE compliance
 

@@ -18,8 +18,12 @@ import {
   FieldDescription,
   FieldLabel,
   Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/ui";
-import { Listbox, ListboxOption, ListboxLabel } from "./listbox";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -55,6 +59,16 @@ interface FlattenedUnit {
   depth: number;
 }
 
+const ROOT_PARENT_SELECT_VALUE = "__secpal_root_parent__";
+
+function toParentSelectValue(value: string) {
+  return value === "" ? ROOT_PARENT_SELECT_VALUE : value;
+}
+
+function fromParentSelectValue(value: string) {
+  return value === ROOT_PARENT_SELECT_VALUE ? "" : value;
+}
+
 /**
  * Icon component for organizational unit types
  */
@@ -69,18 +83,12 @@ function UnitTypeIcon({
     case "holding":
     case "company":
       return (
-        <Building2
-          className={`${className} text-blue-500`}
-          data-slot="icon"
-        />
+        <Building2 className={`${className} text-blue-500`} data-slot="icon" />
       );
     case "department":
     case "division":
       return (
-        <Users
-          className={`${className} text-green-500`}
-          data-slot="icon"
-        />
+        <Users className={`${className} text-green-500`} data-slot="icon" />
       );
     case "branch":
       return (
@@ -91,17 +99,11 @@ function UnitTypeIcon({
       );
     case "region":
       return (
-        <MapPin
-          className={`${className} text-orange-500`}
-          data-slot="icon"
-        />
+        <MapPin className={`${className} text-orange-500`} data-slot="icon" />
       );
     default:
       return (
-        <Building2
-          className={`${className} text-gray-500`}
-          data-slot="icon"
-        />
+        <Building2 className={`${className} text-gray-500`} data-slot="icon" />
       );
   }
 }
@@ -110,9 +112,7 @@ function UnitTypeIcon({
  * Root icon for the "no parent" option
  */
 function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <Home className={`${className} text-gray-400`} data-slot="icon" />
-  );
+  return <Home className={`${className} text-gray-400`} data-slot="icon" />;
 }
 
 /**
@@ -324,34 +324,45 @@ function MoveOrganizationalUnitDialogContent({
             <FieldDescription>
               <Trans>Choose a new parent unit or make this a root unit.</Trans>
             </FieldDescription>
-            <Listbox
-              value={selectedParentId}
-              onChange={setSelectedParentId}
+            <Select
+              value={toParentSelectValue(selectedParentId)}
+              onValueChange={(nextValue) =>
+                setSelectedParentId(fromParentSelectValue(nextValue))
+              }
               disabled={isLoadingUnits || isMoving}
-              aria-label={t`Select new parent`}
             >
-              {/* Root option */}
-              <ListboxOption value="">
-                <RootIcon className="h-4 w-4" />
-                <ListboxLabel>{t`Make root unit (no parent)`}</ListboxLabel>
-              </ListboxOption>
-
-              {/* Hierarchically sorted units with indentation and icons */}
-              {sortedUnits.map((u) => (
-                <ListboxOption key={u.id} value={u.id}>
-                  <span
-                    className="flex items-center gap-2"
-                    style={{ paddingLeft: `${u.depth * 16}px` }}
-                  >
-                    <UnitTypeIcon type={u.type} className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{u.name}</span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      ({getTypeLabel(u.type)})
-                    </span>
+              <SelectTrigger aria-label={t`Select new parent`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Root option */}
+                <SelectItem value={ROOT_PARENT_SELECT_VALUE}>
+                  <RootIcon className="h-4 w-4" />
+                  <span className="ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0">
+                    {t`Make root unit (no parent)`}
                   </span>
-                </ListboxOption>
-              ))}
-            </Listbox>
+                </SelectItem>
+
+                {/* Hierarchically sorted units with indentation and icons */}
+                {sortedUnits.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    <span
+                      className="flex items-center gap-2"
+                      style={{ paddingLeft: `${u.depth * 16}px` }}
+                    >
+                      <UnitTypeIcon
+                        type={u.type}
+                        className="h-4 w-4 shrink-0"
+                      />
+                      <span className="truncate">{u.name}</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                        ({getTypeLabel(u.type)})
+                      </span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         )}
 
@@ -367,10 +378,7 @@ function MoveOrganizationalUnitDialogContent({
         <Button variant="ghost" onClick={onClose} disabled={isMoving}>
           <Trans>Cancel</Trans>
         </Button>
-        <Button
-          onClick={handleMove}
-          disabled={isMoveDisabled || isOffline}
-        >
+        <Button onClick={handleMove} disabled={isMoveDisabled || isOffline}>
           {isMoving ? <Trans>Moving...</Trans> : <Trans>Move</Trans>}
         </Button>
       </DialogActions>
