@@ -12,7 +12,7 @@ import {
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { X } from "lucide-react";
 import { Heading } from "../../components/heading";
 import { Text } from "../../components/text";
 import { Button } from "../../components/button";
@@ -320,7 +320,7 @@ export function OrganizationPage() {
                     className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
                     aria-label={t`Close detail panel`}
                   >
-                    <XMarkIcon className="h-5 w-5" />
+                    <X className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>

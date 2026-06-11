@@ -1,8 +1,7 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as Headless from "@headlessui/react";
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import {
   Link as RouterLink,
   type LinkProps as RouterLinkProps,
@@ -12,9 +11,6 @@ export const Link = forwardRef(function Link(
   props: { href: string } & Omit<RouterLinkProps, "to">,
   ref: React.ForwardedRef<HTMLAnchorElement>
 ) {
-  return (
-    <Headless.DataInteractive>
-      <RouterLink {...props} to={props.href} ref={ref} />
-    </Headless.DataInteractive>
-  );
+  const { href, ...linkProps } = props;
+  return <RouterLink {...linkProps} to={href} ref={ref} />;
 });

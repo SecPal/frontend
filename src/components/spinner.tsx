@@ -1,45 +1,32 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import clsx from "clsx";
+import { Spinner as UiSpinner } from "@/ui";
+import { cn } from "@/lib/utils";
 
-/**
- * Spinner component for loading states
- *
- * A minimal, non-intrusive loading indicator that can be used
- * in various contexts (dialogs, lazy loading, etc.)
- */
+const sizeClasses = {
+  sm: "h-4 w-4",
+  md: "h-8 w-8",
+  lg: "h-12 w-12",
+};
+
 export function Spinner({
   size = "md",
   className,
+  "aria-label": ariaLabel = "Loading...",
 }: {
   size?: "sm" | "md" | "lg";
   className?: string;
+  "aria-label"?: string;
 }) {
-  const sizeClasses = {
-    sm: "h-4 w-4 border-2",
-    md: "h-8 w-8 border-2",
-    lg: "h-12 w-12 border-2",
-  };
-
   return (
-    <div
-      className={clsx(
-        "animate-spin rounded-full border-transparent border-t-blue-600 dark:border-t-blue-400",
-        sizeClasses[size],
-        className
-      )}
-      role="status"
-      aria-live="polite"
-    >
-      <span className="sr-only">Loading...</span>
-    </div>
+    <UiSpinner
+      aria-label={ariaLabel}
+      className={cn(sizeClasses[size], className)}
+    />
   );
 }
 
-/**
- * Centered spinner container for full-page/section loading
- */
 export function SpinnerContainer({
   children,
   className,
@@ -48,7 +35,7 @@ export function SpinnerContainer({
   className?: string;
 }) {
   return (
-    <div className={clsx("flex items-center justify-center", className)}>
+    <div className={cn("flex items-center justify-center", className)}>
       {children || <Spinner />}
     </div>
   );

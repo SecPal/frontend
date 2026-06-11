@@ -2350,6 +2350,10 @@ msgstr "Dauerhaft"
 msgid "You're offline. Click for details."
 msgstr "Sie sind offline. Klicken Sie für Details."
 
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Dismiss notification prompt"
+msgstr "Benachrichtigungshinweis schließen"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx

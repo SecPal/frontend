@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 export function Divider({
   soft = false,
@@ -12,11 +12,11 @@ export function Divider({
     <hr
       role="presentation"
       {...props}
-      className={clsx(
-        className,
+      className={cn(
         "w-full border-t",
         soft && "border-zinc-950/5 dark:border-white/5",
-        !soft && "border-zinc-950/10 dark:border-white/10"
+        !soft && "border-zinc-950/10 dark:border-white/10",
+        className
       )}
     />
   );

@@ -9,7 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { SquarePen } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
@@ -357,7 +357,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             onClick={() => onEditField("email")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -374,7 +374,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             onClick={() => onEditField("phone")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -397,7 +397,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             onClick={() => onEditField("postal_address")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -426,7 +426,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             onClick={() => onEditField("emergency_contacts")}
             className="mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>

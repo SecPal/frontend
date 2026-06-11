@@ -2350,6 +2350,10 @@ msgstr "Permanent"
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
 
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Dismiss notification prompt"
+msgstr "Dismiss notification prompt"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx

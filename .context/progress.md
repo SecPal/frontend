@@ -28,6 +28,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
 - Shared app-level shadcn/Radix primitives live in `src/ui`; keep route-local Auth/Onboarding barrels as compatibility layers for prefixed `data-slot`s, route-specific helpers, and legacy-compatible event shapes while delegating shared colors, spacing, radius, focus rings, dark-mode classes, and Radix wrappers to `src/ui`.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
+- Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -620,3 +621,21 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: preserving the old shell wrapper exports makes a broad technical migration possible without forcing route/page call-site churn; the wrappers can translate old props such as dropdown `plain` into no-op compatibility at the boundary while Radix owns behavior.
   - Gotchas encountered: Radix DropdownMenu and Select need pointer-event based tests, and Radix Dialog hides background content from role queries while open, so old click/change assertions and duplicate-link counts need to be updated to match the accessibility tree.
+
+## US-003: Legacy-Shared-Widgets durch shadcn/radix ersetzen
+- Replaced the legacy shared widget internals in `src/components` for button, input, textarea, select, checkbox, radio, switch, dialog, alert, table, pagination, listbox, combobox, fieldset, badge, heading, text, link, spinner, divider, and description-list with shadcn/Radix/native semantic compatibility wrappers backed by `src/ui`, Radix primitives, `cn`, and lucide icons.
+- Preserved old caller contracts such as `Button` `href`/`plain`/`outline`/`color`, boolean `Checkbox`/`Switch` `onChange`, native-form-compatible `Select`, empty-string organizational-unit `Listbox` values, large dialog sizes, row-link tables, and implicit Headless-style field label association through generated id wiring.
+- Migrated cross-cutting notification/offline icons from Heroicons to lucide, localized the notification-prompt dismiss aria label, and removed the now-unused `@headlessui/react` and `@heroicons/react` dependencies.
+- Added a shared widget regression suite covering source-level migration boundaries, interaction, accessibility, and dark-mode classes; kept cross-cutting component tests and route/page regressions passing.
+- Verified with `npm run typecheck`, `npm run lint`, `npm run i18n:check`, focused component/page Vitest runs, and full `npm test`.
+- Files changed:
+  - `package.json`, `package-lock.json`
+  - `src/components/alert.tsx`, `src/components/badge.tsx`, `src/components/button.tsx`, `src/components/checkbox.tsx`, `src/components/combobox.tsx`, `src/components/description-list.tsx`, `src/components/dialog.tsx`, `src/components/divider.tsx`, `src/components/field-wiring.ts`, `src/components/fieldset.tsx`, `src/components/heading.tsx`, `src/components/input.tsx`, `src/components/link.tsx`, `src/components/listbox.tsx`, `src/components/pagination.tsx`, `src/components/radio.tsx`, `src/components/select.tsx`, `src/components/spinner.tsx`, `src/components/switch.tsx`, `src/components/table.tsx`, `src/components/text.tsx`, `src/components/textarea.tsx`
+  - `src/components/shared-widgets.test.tsx`, `src/components/spinner.test.tsx`
+  - `src/components/NotificationPermissionPrompt.tsx`, `src/components/OfflineDataBanner.tsx`, `src/components/OfflineIndicator.tsx`
+  - `src/pages/Employees/EmployeeDetail.tsx`, `src/pages/Organization/OrganizationPage.tsx`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`, `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: compatibility wrappers can remove the legacy dependency chain without feature-page churn when old event/value shapes are adapted at the wrapper boundary and source-level tests ban Headless/Heroicons/Tailwind Plus reintroduction.
+  - Gotchas encountered: Headless `Field` implicitly associated bare labels with controls, so replacing it with plain layout divs breaks label queries unless generated `id`/`htmlFor` wiring is restored; Radix Select also cannot use `""` item values, so empty-string domain values need an internal sentinel mapping.

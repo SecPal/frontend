@@ -1,20 +1,21 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as Headless from "@headlessui/react";
-import clsx from "clsx";
-import type React from "react";
+import { useId } from "react";
+import { Field as UiField, FieldDescription, FieldError, FieldLabel } from "@/ui";
+import { cn } from "@/lib/utils";
+import { wireFieldChildren } from "./field-wiring";
 
 export function Fieldset({
   className,
   ...props
-}: { className?: string } & Omit<Headless.FieldsetProps, "as" | "className">) {
+}: React.ComponentPropsWithoutRef<"fieldset">) {
   return (
-    <Headless.Fieldset
+    <fieldset
       {...props}
-      className={clsx(
-        className,
-        "*:data-[slot=text]:mt-1 [&>*+[data-slot=control]]:mt-6"
+      className={cn(
+        "*:data-[slot=text]:mt-1 [&>*+[data-slot=control]]:mt-6",
+        className
       )}
     />
   );
@@ -23,14 +24,14 @@ export function Fieldset({
 export function Legend({
   className,
   ...props
-}: { className?: string } & Omit<Headless.LegendProps, "as" | "className">) {
+}: React.ComponentPropsWithoutRef<"legend">) {
   return (
-    <Headless.Legend
+    <legend
       data-slot="legend"
       {...props}
-      className={clsx(
-        className,
-        "text-base/6 font-semibold text-zinc-950 data-disabled:opacity-50 sm:text-sm/6 dark:text-white"
+      className={cn(
+        "text-base/6 font-semibold text-zinc-950 sm:text-sm/6 dark:text-white",
+        className
       )}
     />
   );
@@ -44,42 +45,52 @@ export function FieldGroup({
     <div
       data-slot="control"
       {...props}
-      className={clsx(className, "space-y-8")}
+      className={cn("space-y-8", className)}
     />
   );
 }
 
 export function Field({
   className,
+  children,
   ...props
-}: { className?: string } & Omit<Headless.FieldProps, "as" | "className">) {
+}: React.ComponentPropsWithoutRef<"div">) {
+  const generatedId = useId();
+
   return (
-    <Headless.Field
+    <UiField
       {...props}
-      className={clsx(
-        className,
+      className={cn(
         "[&>[data-slot=label]+[data-slot=control]]:mt-3",
         "[&>[data-slot=label]+[data-slot=description]]:mt-1",
         "[&>[data-slot=description]+[data-slot=control]]:mt-3",
         "[&>[data-slot=control]+[data-slot=description]]:mt-3",
         "[&>[data-slot=control]+[data-slot=error]]:mt-3",
-        "*:data-[slot=label]:font-medium"
+        "*:data-[slot=label]:font-medium",
+        className
       )}
-    />
+    >
+      {wireFieldChildren({
+        children,
+        generatedId,
+        labelType: Label,
+        helperTypes: [Label, Description, ErrorMessage],
+      })}
+    </UiField>
   );
 }
 
 export function Label({
   className,
   ...props
-}: { className?: string } & Omit<Headless.LabelProps, "as" | "className">) {
+}: React.ComponentPropsWithoutRef<typeof FieldLabel>) {
   return (
-    <Headless.Label
+    <FieldLabel
       data-slot="label"
       {...props}
-      className={clsx(
-        className,
-        "text-base/6 text-zinc-950 select-none data-disabled:opacity-50 sm:text-sm/6 dark:text-white"
+      className={cn(
+        "text-base/6 text-zinc-950 select-none sm:text-sm/6 dark:text-white",
+        className
       )}
     />
   );
@@ -88,17 +99,14 @@ export function Label({
 export function Description({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.DescriptionProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"p">) {
   return (
-    <Headless.Description
+    <FieldDescription
       data-slot="description"
       {...props}
-      className={clsx(
-        className,
-        "text-base/6 text-zinc-500 data-disabled:opacity-50 sm:text-sm/6 dark:text-zinc-400"
+      className={cn(
+        "text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400",
+        className
       )}
     />
   );
@@ -107,17 +115,14 @@ export function Description({
 export function ErrorMessage({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.DescriptionProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"p">) {
   return (
-    <Headless.Description
+    <FieldError
       data-slot="error"
       {...props}
-      className={clsx(
-        className,
-        "text-base/6 text-red-600 data-disabled:opacity-50 sm:text-sm/6 dark:text-red-500"
+      className={cn(
+        "text-base/6 text-red-600 sm:text-sm/6 dark:text-red-500",
+        className
       )}
     />
   );
