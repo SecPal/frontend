@@ -608,6 +608,7 @@ export function LoginDialogActions({
 export function LoginInputOtp({
   containerClassName,
   className,
+  onFocus,
   ...props
 }: ComponentProps<typeof OTPInput> & { containerClassName?: string }) {
   return (
@@ -618,6 +619,27 @@ export function LoginInputOtp({
         containerClassName
       )}
       className={cn("disabled:cursor-not-allowed", className)}
+      onFocus={(event) => {
+        onFocus?.(event);
+        // Keep the OTP cells visible above mobile soft keyboards. The
+        // dialog is `position: fixed; top: 50%`, so the browser's native
+        // auto-scroll-on-focus cannot move it; we instead scroll the
+        // visible slot row into the center of its scroll container (the
+        // dialog body). Delayed via setTimeout so the browser has time
+        // to (a) finish opening the keyboard, (b) shrink the visual
+        // viewport per `interactive-widget=resizes-content`, and (c)
+        // re-center the dialog before we measure where the cells are.
+        // `data-input-otp-container` is input-otp's wrapper around the
+        // visible slot cluster, which is the meaningful scroll target
+        // (the hidden `<input>` itself is `position: absolute; inset: 0`
+        // and has no observable bounding rect of its own).
+        const input = event.currentTarget;
+        const target = (input.closest("[data-input-otp-container]") ??
+          input) as HTMLElement;
+        window.setTimeout(() => {
+          target.scrollIntoView({ block: "center", behavior: "smooth" });
+        }, 200);
+      }}
       {...props}
     />
   );

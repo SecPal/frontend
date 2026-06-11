@@ -1484,9 +1484,11 @@ describe("Login", () => {
     );
 
     const completing = await screen.findByTestId("login-completing");
-    expect(completing).toHaveAttribute("aria-busy", "true");
-    expect(completing).toHaveAttribute("aria-live", "polite");
+    expect(completing).not.toHaveAttribute("aria-busy");
+    expect(completing).not.toHaveAttribute("aria-live");
 
+    // AT announcements are scoped to the LoginSpinner's role="status", not the
+    // wider container (which also holds static heading text).
     expect(
       screen.getByRole("status", { name: /loading/i })
     ).toBeInTheDocument();

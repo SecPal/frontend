@@ -73,6 +73,8 @@ const NATIVE_PASSKEY_TIMEOUT_PATTERN = /^Passkey sign-in timed out\.?$/i;
 const NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN =
   /^No credential provider is available on this device\.?$/i;
 const TOTP_CODE_LENGTH = 6;
+// Backend issues 8-character alphanumeric recovery codes.
+// Source: SecPal/api config/two-factor.php `recovery.length = 8`.
 const RECOVERY_CODE_LENGTH = 8;
 
 type Translate = ReturnType<typeof useLingui>["_"];
@@ -549,14 +551,12 @@ export function Login() {
       )}
 
       {isCompletingLogin && (
-        <LoginEmpty
-          data-testid="login-completing"
-          aria-live="polite"
-          aria-busy="true"
-          className="w-full max-w-sm"
-        >
+        <LoginEmpty data-testid="login-completing" className="w-full max-w-sm">
           <LoginEmptyHeader>
             <LoginEmptyMedia variant="icon">
+              {/* role="status" on LoginSpinner is the scoped live region for AT
+                  announcements. aria-live must not be placed on the wider
+                  LoginEmpty container, which also holds static heading text. */}
               <LoginSpinner aria-label={_(msg`Loading`)} />
             </LoginEmptyMedia>
             <LoginEmptyTitle className="text-sm/relaxed font-bold">

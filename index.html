@@ -47,7 +47,20 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       media="(prefers-color-scheme: dark)"
     />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      `interactive-widget=resizes-content` opts into the modern viewport
+      behavior where the layout viewport (and `100dvh`) shrinks when a
+      mobile soft-keyboard opens, instead of the default
+      `overlays-content` which lets the keyboard sit on top of the page
+      and cover content. Required so the centered MFA dialog
+      (`position: fixed; top: 50%; -translate-y-1/2`) re-centers above
+      the keyboard in landscape mobile instead of staying mid-screen
+      and being half-occluded by the keys.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"
+    />
     <meta name="theme-color" content="#ffffff" />
     <script src="/theme-color.js"></script>
     <title>SecPal</title>

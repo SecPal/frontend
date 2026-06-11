@@ -306,6 +306,47 @@ describe("auth login shadcn primitives", () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
+  it("scrolls the OTP cluster into view on focus so mobile soft keyboards do not occlude the cells", () => {
+    // On landscape mobile the soft keyboard covers the bottom half of
+    // the viewport. The MFA dialog is `position: fixed; top: 50%` so
+    // the browser's native auto-scroll-on-focus cannot help; the OTP
+    // wrapper instead scrolls the visible slot cluster
+    // (`[data-input-otp-container]`) into the center of its scroll
+    // container after the keyboard finishes opening (200ms timer).
+    vi.useFakeTimers();
+    const scrollSpy = vi
+      .spyOn(Element.prototype, "scrollIntoView")
+      .mockImplementation(() => {});
+    const handleChange = vi.fn();
+
+    const { container } = render(
+      <LoginOtpInput
+        idPrefix="kb-otp"
+        value=""
+        onChange={handleChange}
+        aria-label="Authenticator code"
+      />
+    );
+
+    const input = screen.getByLabelText("Authenticator code");
+    const wrapper = container.querySelector("[data-input-otp-container]");
+    expect(wrapper).not.toBeNull();
+
+    fireEvent.focus(input);
+    expect(scrollSpy).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(250);
+
+    expect(scrollSpy).toHaveBeenCalledWith({
+      block: "center",
+      behavior: "smooth",
+    });
+    expect(scrollSpy.mock.contexts[0]).toBe(wrapper);
+
+    scrollSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
   it("clips horizontal overflow at the LoginShell and wraps long words in text-heavy primitives", () => {
     // Defense in depth against horizontal scrollbars on the login surface:
     //   1. `LoginShell` clips horizontal overflow at the page level so a
