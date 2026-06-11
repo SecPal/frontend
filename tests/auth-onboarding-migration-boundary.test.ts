@@ -151,10 +151,7 @@ function collectMigrationBoundaryViolations(sources: ScopedSource[]) {
           moduleSpecifier
         );
 
-        if (
-          resolvedImport &&
-          oldComponentWrapperPaths.has(resolvedImport)
-        ) {
+        if (resolvedImport && oldComponentWrapperPaths.has(resolvedImport)) {
           return [
             `${source.path}: imports old component wrapper ${moduleSpecifier}`,
           ];

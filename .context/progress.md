@@ -23,6 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Shared shadcn-style utilities live in `src/lib/utils.ts` and should be imported through route-local barrels (`src/pages/Auth/ui`, `src/pages/Onboarding/ui`) or the `@/lib/utils` alias when new shared primitives need canonical `cn` behavior.
 - Radix-backed onboarding primitives should keep the route-local API stable where practical: `Select` may accept existing `<option>` children and expose the current trigger `value` for legacy tests, while route tests should select Radix options by opening the combobox and clicking `[data-slot="onboarding-select-item"][data-value]`.
 - Radix-backed command popovers should require caller-provided placeholder/search/empty-state copy, keep filtering/selection behavior local, and let Radix own portal positioning plus outside/focus dismissal; cover trigger, searchbox, option, selected, disabled, empty, Escape, and Tab boundaries in primitive tests.
+- Editable onboarding autocomplete inputs should keep request, highlight, exact-match, and focus-handoff state in the feature component while moving only the listbox surface to onboarding-local Radix Popover primitives such as `AutocompleteListbox`/`AutocompleteOption`.
 - Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
@@ -540,3 +541,17 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep localized accessibility copy at route/call-site boundaries, and make primitive-level labels required when the primitive cannot access the active Lingui locale.
   - Gotchas encountered: label-based queries can pass through the visible `<label>` even when `aria-label` is stale, so regressions for fixed aria labels should assert the attribute or role name that actually changed.
+
+## US-007: Migrate Address Autocomplete Surface
+- Added onboarding-local `AutocompleteListbox` and `AutocompleteOption` primitives backed by Radix Popover so editable autocomplete fields can share the same portal/listbox surface as other migrated onboarding controls.
+- Migrated `EmployeeAddressFields` street, postal-code, and city suggestion popups from custom inline listboxes to the new primitives while preserving debounce, API errors, empty state, keyboard highlight/selection, Tab-to-select, exact-match application, read-only behavior, and focus handoff.
+- Added primitive coverage for the Radix-backed editable autocomplete listbox and kept the existing employee/onboarding residential address autocomplete regressions passing.
+- Files changed:
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `src/pages/Employees/EmployeeAddressFields.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts` (format-only)
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: editable comboboxes do not need to surrender input ownership to Radix; anchoring the existing `Input` with Radix Popover lets feature-owned keyboard and fetch state stay intact while the listbox shell moves to the shared shadcn/Radix layer.
+  - Gotchas encountered: Radix Popover auto-focus needs to be prevented for editable suggestions, otherwise opening or closing a suggestions portal can steal focus from the input before the existing blur and focus-handoff logic runs.

@@ -16,6 +16,7 @@ import {
   type ForwardedRef,
   type InputHTMLAttributes,
   type KeyboardEvent,
+  type ReactElement,
   type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
@@ -643,6 +644,71 @@ export interface CommandOption {
   label: string;
   disabled?: boolean;
   keywords?: string[];
+}
+
+export function AutocompleteListbox({
+  anchor,
+  open,
+  listboxId,
+  className,
+  children,
+}: {
+  anchor: ReactElement;
+  open: boolean;
+  listboxId: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <PopoverPrimitive.Root open={open}>
+      <PopoverPrimitive.Anchor asChild>{anchor}</PopoverPrimitive.Anchor>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          id={listboxId}
+          role="listbox"
+          align="start"
+          sideOffset={4}
+          data-slot="onboarding-autocomplete-listbox"
+          className={cn(
+            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+            className
+          )}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          {children}
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  );
+}
+
+export function AutocompleteOption({
+  className,
+  highlighted = false,
+  type = "button",
+  tabIndex = -1,
+  ...props
+}: ComponentPropsWithoutRef<"button"> & {
+  highlighted?: boolean;
+}) {
+  return (
+    <button
+      type={type}
+      tabIndex={tabIndex}
+      role="option"
+      aria-selected={highlighted}
+      data-slot="onboarding-autocomplete-option"
+      data-highlighted={highlighted ? "" : undefined}
+      className={cn(
+        "block w-full px-3 py-2 text-left text-sm text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
+        "border-b border-zinc-100 last:border-b-0 dark:border-zinc-800",
+        highlighted && "bg-zinc-100 dark:bg-zinc-800",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 const commandPopoverFocusableSelector = [

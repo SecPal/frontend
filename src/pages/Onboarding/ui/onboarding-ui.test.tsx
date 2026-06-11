@@ -9,6 +9,8 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  AutocompleteListbox,
+  AutocompleteOption,
   Badge,
   Button,
   Card,
@@ -252,7 +254,9 @@ describe("onboarding shadcn primitives", () => {
     const card = screen.getByRole("region", {
       name: "Complete account setup",
     });
-    const header = document.querySelector('[data-slot="onboarding-auth-header"]');
+    const header = document.querySelector(
+      '[data-slot="onboarding-auth-header"]'
+    );
 
     expect(shell).toHaveClass(
       "min-h-dvh",
@@ -284,6 +288,45 @@ describe("onboarding shadcn primitives", () => {
     expect(
       screen.getByRole("progressbar", { name: "Onboarding progress" })
     ).toHaveAttribute("aria-valuenow", "40");
+  });
+
+  it("renders editable autocomplete suggestions in a Radix-backed listbox", () => {
+    render(
+      <AutocompleteListbox
+        open
+        listboxId="street-suggestions"
+        anchor={
+          <Input
+            aria-label="Street"
+            role="combobox"
+            aria-controls="street-suggestions"
+            aria-expanded="true"
+          />
+        }
+      >
+        <AutocompleteOption id="street-option-0" highlighted>
+          Main Street
+        </AutocompleteOption>
+        <AutocompleteOption id="street-option-1">
+          Market Street
+        </AutocompleteOption>
+      </AutocompleteListbox>
+    );
+
+    expect(screen.getByRole("combobox", { name: "Street" })).toHaveAttribute(
+      "aria-controls",
+      "street-suggestions"
+    );
+    const listbox = screen.getByRole("listbox");
+    expect(listbox).toHaveAttribute("id", "street-suggestions");
+    expect(listbox).toHaveAttribute(
+      "data-slot",
+      "onboarding-autocomplete-listbox"
+    );
+    expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
+      "data-highlighted",
+      ""
+    );
   });
 
   it("supports a keyboard-searchable command popover select", async () => {
