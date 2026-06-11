@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useEffect, useState } from "react";
+import { Trans } from "@lingui/react/macro";
 import QRCode from "qrcode";
-import { Text } from "./text";
 
 interface MfaQrCodeProps {
   value: string;
@@ -63,9 +63,9 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
   if (qrState.value === value && qrState.hasError) {
     return (
       <div className="flex min-h-48 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-        <Text className="text-sm text-amber-800 dark:text-amber-200">
-          Unable to generate QR code. Use the manual setup key below.
-        </Text>
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          <Trans>Unable to generate QR code.</Trans>
+        </p>
       </div>
     );
   }
@@ -77,9 +77,9 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
         aria-live="polite"
         className="flex min-h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60"
       >
-        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-          Generating QR code...
-        </Text>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <Trans>Generating QR code...</Trans>
+        </p>
       </div>
     );
   }

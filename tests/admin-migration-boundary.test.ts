@@ -36,12 +36,16 @@ const scopedEntries = [
   "src/pages/Employees/EmployeeContactsEdit.tsx",
   "src/pages/Employees/EmployeeAddressFields.tsx",
   "src/pages/Employees/EmployeeStatusOptions.tsx",
+  "src/pages/ActivityLog/ActivityLogList.tsx",
+  "src/pages/ActivityLog/ActivityDetailDialog.tsx",
+  "src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx",
   "src/components/OrganizationalUnitTree.tsx",
   "src/components/OrganizationalUnitFormDialog.tsx",
   "src/components/MoveOrganizationalUnitDialog.tsx",
   "src/components/DeleteOrganizationalUnitDialog.tsx",
   "src/components/ScopeAssignmentForm.tsx",
   "src/components/OrganizationalUnitPicker.tsx",
+  "src/components/MfaQrCode.tsx",
 ] as const;
 
 // REUSE-IgnoreStart
@@ -164,7 +168,7 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
 }
 
 describe("admin migration boundary", () => {
-  it("covers migrated admin, customer, site, employee, and organization sources", () => {
+  it("covers migrated admin, customer, site, employee, activity, provisioning, and organization sources", () => {
     expect(readScopedSources().map((source) => source.path)).toEqual([
       ...scopedEntries,
     ]);

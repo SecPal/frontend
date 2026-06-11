@@ -4,20 +4,37 @@
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type ComponentPropsWithoutRef,
+  type FormEvent,
+} from "react";
+import { Plus, QrCode, RotateCcw } from "lucide-react";
 import { apiConfig } from "../../config";
-import { Badge } from "../../components/badge";
-import { Button } from "../../components/button";
-import { Field, Label } from "../../components/fieldset";
-import { Heading } from "../../components/heading";
-import { Input } from "../../components/input";
 import { MfaQrCode } from "../../components/MfaQrCode";
-import { Select } from "../../components/select";
-import { Text } from "../../components/text";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { formatApiDateTime } from "../../lib/dateUtils";
 import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Field,
+  FieldLabel,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  cn,
+} from "@/ui";
 import {
   ANDROID_RELEASE_CHANNELS,
   type AndroidCreateSessionResponse,
@@ -63,17 +80,26 @@ function formatDateTime(value: string | null): string {
   });
 }
 
-function getStatusColor(status: AndroidEnrollmentStatus) {
+function getStatusBadgeClass(status: AndroidEnrollmentStatus) {
   switch (status) {
     case "pending":
-      return "sky" as const;
+      return "bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300";
     case "exchanged":
-      return "lime" as const;
+      return "bg-lime-400/20 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300";
     case "revoked":
-      return "rose" as const;
+      return "bg-rose-400/15 text-rose-700 dark:bg-rose-400/10 dark:text-rose-400";
     case "expired":
-      return "amber" as const;
+      return "bg-amber-400/20 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400";
   }
+}
+
+function MutedText({ className, ...props }: ComponentPropsWithoutRef<"p">) {
+  return (
+    <p
+      className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)}
+      {...props}
+    />
+  );
 }
 
 function getChannelLabel(
@@ -300,180 +326,203 @@ export default function AndroidProvisioningPage() {
 
   return (
     <div className="space-y-6">
-      <Heading>
+      <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
         <Trans>Android Provisioning</Trans>
-      </Heading>
+      </h1>
 
       {loadError ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+        <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
           {loadError}
-        </div>
+        </Alert>
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <section className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-          {canCreate ? (
-            <form className="space-y-4" onSubmit={handleCreateSession}>
-              <Field>
-                <Label>
-                  <Trans>Device label</Trans>
-                </Label>
-                <Input
-                  name="device_label"
-                  value={formState.device_label}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      device_label: event.target.value,
-                    }))
-                  }
-                  placeholder={_(msg`Front desk tablet`)}
-                />
-              </Field>
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            {canCreate ? (
+              <form className="space-y-4" onSubmit={handleCreateSession}>
+                <Field>
+                  <FieldLabel htmlFor="android-device-label">
+                    <Trans>Device label</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="android-device-label"
+                    name="device_label"
+                    value={formState.device_label}
+                    onChange={(event) =>
+                      setFormState((current) => ({
+                        ...current,
+                        device_label: event.target.value,
+                      }))
+                    }
+                    placeholder={_(msg`Front desk tablet`)}
+                  />
+                </Field>
 
-              <Field>
-                <Label>
-                  <Trans>Update channel</Trans>
-                </Label>
-                <Select
-                  name="update_channel"
-                  value={formState.update_channel}
-                  onChange={(event) =>
-                    setFormState((current) => ({
-                      ...current,
-                      update_channel: event.target
-                        .value as AndroidReleaseChannel,
-                    }))
-                  }
-                >
-                  {CHANNELS.map((channel) => (
-                    <option key={channel} value={channel}>
-                      {getChannelLabel(channel, _)}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
+                <Field>
+                  <FieldLabel htmlFor="android-update-channel">
+                    <Trans>Update channel</Trans>
+                  </FieldLabel>
+                  <Select
+                    name="update_channel"
+                    value={formState.update_channel}
+                    onValueChange={(value) =>
+                      setFormState((current) => ({
+                        ...current,
+                        update_channel: value as AndroidReleaseChannel,
+                      }))
+                    }
+                  >
+                    <SelectTrigger
+                      id="android-update-channel"
+                      aria-label={_(msg`Update channel`)}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHANNELS.map((channel) => (
+                        <SelectItem
+                          key={channel}
+                          value={channel}
+                          data-value={channel}
+                        >
+                          {getChannelLabel(channel, _)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
 
-              {submitError ? (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-                  {submitError}
-                </div>
-              ) : null}
+                {submitError ? (
+                  <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+                    {submitError}
+                  </Alert>
+                ) : null}
 
-              <Button type="submit" disabled={creating}>
-                {creating ? (
-                  <Trans>Creating enrollment session...</Trans>
-                ) : (
-                  <Trans>Create enrollment session</Trans>
-                )}
-              </Button>
-            </form>
-          ) : (
-            <Text>
-              <Trans>
-                You can inspect Android enrollment status, but write permission
-                is required to create or revoke sessions.
-              </Trans>
-            </Text>
-          )}
-
-          {latestQrPayload && latestSession ? (
-            <div className="space-y-3 rounded-3xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
-              <Heading level={3}>
-                <Trans>Provisioning QR code</Trans>
-              </Heading>
-              <MfaQrCode
-                value={latestQrPayload}
-                alt={_(msg`Android provisioning QR code`)}
-              />
-              <Text>
-                {latestSession.device_label ||
-                  _(msg`Unnamed Android enrollment session`)}
-              </Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                {getChannelLabel(latestSession.update_channel, _)}
-              </Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                <Trans>Expires</Trans>:{" "}
-                {formatDateTime(latestSession.bootstrap_token_expires_at)}
-              </Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                {getStatusGuidance(latestSession.status, _)}
-              </Text>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="space-y-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-          <Heading level={2}>
-            <Trans>Enrollment Sessions</Trans>
-          </Heading>
-
-          {loading ? (
-            <Text>
-              <Trans>Loading enrollment sessions...</Trans>
-            </Text>
-          ) : null}
-          {!loading && sessions.length === 0 ? (
-            <Text>
-              <Trans>
-                No Android enrollment sessions have been created yet.
-              </Trans>
-            </Text>
-          ) : null}
-
-          {!loading ? (
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="space-y-1">
-                    <Text className="font-medium text-zinc-950 dark:text-zinc-50">
-                      {session.device_label ||
-                        _(msg`Unnamed Android enrollment session`)}
-                    </Text>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge color={getStatusColor(session.status)}>
-                        {getStatusLabel(session.status, _)}
-                      </Badge>
-                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        {getChannelLabel(session.update_channel, _)}
-                      </Text>
-                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        <Trans>Expires</Trans>:{" "}
-                        {formatDateTime(session.bootstrap_token_expires_at)}
-                      </Text>
-                    </div>
-                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {getStatusGuidance(session.status, _)}
-                    </Text>
-                    {session.revocation_reason ? (
-                      <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                        <Trans>Reason</Trans>: {session.revocation_reason}
-                      </Text>
-                    ) : null}
-                  </div>
-
-                  {canRevoke && session.status === "pending" ? (
-                    <Button outline onClick={() => void handleRevoke(session)}>
-                      <Trans>Revoke</Trans>
-                    </Button>
+                <Button type="submit" disabled={creating}>
+                  <Plus className="size-4" aria-hidden="true" />
+                  {creating ? (
+                    <Trans>Creating enrollment session...</Trans>
                   ) : (
-                    <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {session.revoked_at ? (
-                        <Trans>Revoked</Trans>
-                      ) : (
-                        <Trans>No action available</Trans>
-                      )}
-                    </Text>
+                    <Trans>Create enrollment session</Trans>
                   )}
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </section>
+                </Button>
+              </form>
+            ) : (
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <Trans>
+                  You can inspect Android enrollment status, but write
+                  permission is required to create or revoke sessions.
+                </Trans>
+              </p>
+            )}
+
+            {latestQrPayload && latestSession ? (
+              <div className="space-y-3 rounded-md border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
+                <h2 className="flex items-center gap-2 text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+                  <QrCode className="size-4" aria-hidden="true" />
+                  <Trans>Provisioning QR code</Trans>
+                </h2>
+                <MfaQrCode
+                  value={latestQrPayload}
+                  alt={_(msg`Android provisioning QR code`)}
+                />
+                <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                  {latestSession.device_label ||
+                    _(msg`Unnamed Android enrollment session`)}
+                </p>
+                <MutedText>
+                  {getChannelLabel(latestSession.update_channel, _)}
+                </MutedText>
+                <MutedText>
+                  <Trans>Expires</Trans>:{" "}
+                  {formatDateTime(latestSession.bootstrap_token_expires_at)}
+                </MutedText>
+                <MutedText>
+                  {getStatusGuidance(latestSession.status, _)}
+                </MutedText>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Trans>Enrollment Sessions</Trans>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loading ? (
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <Trans>Loading enrollment sessions...</Trans>
+              </p>
+            ) : null}
+            {!loading && sessions.length === 0 ? (
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <Trans>
+                  No Android enrollment sessions have been created yet.
+                </Trans>
+              </p>
+            ) : null}
+
+            {!loading ? (
+              <div className="space-y-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex flex-col gap-3 rounded-md border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                        {session.device_label ||
+                          _(msg`Unnamed Android enrollment session`)}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className={getStatusBadgeClass(session.status)}>
+                          {getStatusLabel(session.status, _)}
+                        </Badge>
+                        <MutedText>
+                          {getChannelLabel(session.update_channel, _)}
+                        </MutedText>
+                        <MutedText>
+                          <Trans>Expires</Trans>:{" "}
+                          {formatDateTime(session.bootstrap_token_expires_at)}
+                        </MutedText>
+                      </div>
+                      <MutedText>
+                        {getStatusGuidance(session.status, _)}
+                      </MutedText>
+                      {session.revocation_reason ? (
+                        <MutedText>
+                          <Trans>Reason</Trans>: {session.revocation_reason}
+                        </MutedText>
+                      ) : null}
+                    </div>
+
+                    {canRevoke && session.status === "pending" ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => void handleRevoke(session)}
+                      >
+                        <RotateCcw className="size-4" aria-hidden="true" />
+                        <Trans>Revoke</Trans>
+                      </Button>
+                    ) : (
+                      <MutedText>
+                        {session.revoked_at ? (
+                          <Trans>Revoked</Trans>
+                        ) : (
+                          <Trans>No action available</Trans>
+                        )}
+                      </MutedText>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

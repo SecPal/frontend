@@ -1,24 +1,22 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentPropsWithoutRef } from "react";
 import { Trans } from "@lingui/react/macro";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
   DialogActions,
-} from "../../components/dialog";
-import { Button } from "../../components/button";
-import { Badge } from "../../components/badge";
-import { Text } from "../../components/text";
-import { Heading } from "../../components/heading";
-import {
-  DescriptionList,
-  DescriptionTerm,
-  DescriptionDetails,
-} from "../../components/description-list";
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  cn,
+} from "@/ui";
 import {
   verifyActivityLog,
   type Activity,
@@ -69,6 +67,60 @@ function buildVerificationFromActivity(
       orphaned_reason: activity.orphaned_reason || null,
     },
   };
+}
+
+function SectionHeading({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"h3">) {
+  return (
+    <h3
+      className={cn(
+        "mb-4 text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+function DescriptionList(props: ComponentPropsWithoutRef<"dl">) {
+  return (
+    <dl
+      className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-[12rem_minmax(0,1fr)]"
+      {...props}
+    />
+  );
+}
+
+function DescriptionTerm(props: ComponentPropsWithoutRef<"dt">) {
+  return (
+    <dt
+      className="text-sm font-medium text-zinc-600 dark:text-zinc-300"
+      {...props}
+    />
+  );
+}
+
+function DescriptionDetails(props: ComponentPropsWithoutRef<"dd">) {
+  return (
+    <dd
+      className="min-w-0 text-sm text-zinc-950 dark:text-zinc-50"
+      {...props}
+    />
+  );
+}
+
+function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
+  return (
+    <Badge
+      className={cn(
+        "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 function ActivityDetailDialogContent({
@@ -125,9 +177,9 @@ function ActivityDetailDialogContent({
         <div className="space-y-6">
           {/* Basic Information */}
           <div>
-            <Heading level={3} className="mb-4">
+            <SectionHeading>
               <Trans>Activity Information</Trans>
-            </Heading>
+            </SectionHeading>
             <DescriptionList>
               <DescriptionTerm>
                 <Trans>Description</Trans>
@@ -138,7 +190,7 @@ function ActivityDetailDialogContent({
                 <Trans>Log Name</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                <Badge color="zinc">{activity.log_name}</Badge>
+                <LogBadge>{activity.log_name}</LogBadge>
               </DescriptionDetails>
 
               <DescriptionTerm>
@@ -156,9 +208,9 @@ function ActivityDetailDialogContent({
                   <DescriptionDetails>
                     {activity.causer.name}{" "}
                     {activity.causer.email && (
-                      <Text className="inline text-zinc-500 dark:text-zinc-400">
+                      <span className="inline text-zinc-500 dark:text-zinc-400">
                         ({activity.causer.email})
-                      </Text>
+                      </span>
                     )}
                   </DescriptionDetails>
                 </>
@@ -171,9 +223,9 @@ function ActivityDetailDialogContent({
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {activity.subject.name || activity.subject_type}
-                    <Text className="inline text-zinc-500 dark:text-zinc-400 ml-2">
+                    <span className="ml-2 inline text-zinc-500 dark:text-zinc-400">
                       (ID: {activity.subject.id})
-                    </Text>
+                    </span>
                   </DescriptionDetails>
                 </>
               )}
@@ -193,22 +245,20 @@ function ActivityDetailDialogContent({
 
           {/* Verification Status */}
           <div>
-            <Heading level={3} className="mb-4">
+            <SectionHeading>
               <Trans>Verification Status</Trans>
-            </Heading>
+            </SectionHeading>
 
             {verifying && (
-              <Text className="text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 <Trans>Verifying...</Trans>
-              </Text>
+              </p>
             )}
 
             {verificationError && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-md">
-                <Text className="text-red-800 dark:text-red-200">
-                  {verificationError}
-                </Text>
-              </div>
+              <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+                {verificationError}
+              </Alert>
             )}
 
             {verification && !verifying && (
@@ -284,13 +334,13 @@ function ActivityDetailDialogContent({
                         <Trans>Orphaned Genesis</Trans>
                       </DescriptionTerm>
                       <DescriptionDetails>
-                        <Badge color="yellow">
+                        <Badge className="bg-yellow-400/20 text-yellow-700 dark:bg-yellow-400/10 dark:text-yellow-300">
                           <Trans>Yes</Trans>
                         </Badge>
                         {verification.details.orphaned_reason && (
-                          <Text className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                             {verification.details.orphaned_reason}
-                          </Text>
+                          </p>
                         )}
                       </DescriptionDetails>
                     </>
@@ -298,7 +348,7 @@ function ActivityDetailDialogContent({
                 </DescriptionList>
 
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-md">
-                  <Text className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     <Trans>
                       <strong>Hash Chain:</strong> Verifies the sequential
                       integrity of activity logs. "Pending" indicates the hash
@@ -312,7 +362,7 @@ function ActivityDetailDialogContent({
                       anchoring for immutable proof of existence. Bitcoin
                       confirmation takes ~10 minutes.
                     </Trans>
-                  </Text>
+                  </p>
                 </div>
               </div>
             )}
@@ -321,9 +371,9 @@ function ActivityDetailDialogContent({
           {activity.properties &&
             Object.keys(activity.properties).length > 0 && (
               <div>
-                <Heading level={3} className="mb-4">
+                <SectionHeading>
                   <Trans>Additional Properties</Trans>
-                </Heading>
+                </SectionHeading>
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-md">
                   <pre className="text-xs overflow-auto">
                     {JSON.stringify(activity.properties, null, 2)}
@@ -335,7 +385,7 @@ function ActivityDetailDialogContent({
       </DialogBody>
 
       <DialogActions>
-        <Button outline onClick={onClose}>
+        <Button variant="outline" onClick={onClose}>
           <Trans>Close</Trans>
         </Button>
       </DialogActions>
@@ -360,20 +410,25 @@ export function ActivityDetailDialog({
   onClose,
 }: ActivityDetailDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} size="3xl">
-      <DialogTitle>
-        <Trans>Activity Log Details</Trans>
-      </DialogTitle>
-      <DialogDescription>
-        <Trans>View activity log information and verification status</Trans>
-      </DialogDescription>
-      {open ? (
-        <ActivityDetailDialogContent
-          key={`${activity.id}:${activity.updated_at}`}
-          activity={activity}
-          onClose={onClose}
-        />
-      ) : null}
+    <Dialog open={open} onClose={onClose}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent size="3xl">
+          <DialogTitle>
+            <Trans>Activity Log Details</Trans>
+          </DialogTitle>
+          <DialogDescription>
+            <Trans>View activity log information and verification status</Trans>
+          </DialogDescription>
+          {open ? (
+            <ActivityDetailDialogContent
+              key={`${activity.id}:${activity.updated_at}`}
+              activity={activity}
+              onClose={onClose}
+            />
+          ) : null}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

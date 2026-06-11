@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { render, screen, waitFor } from "@testing-library/react";
+import { i18n } from "@lingui/core";
+import { I18nProvider } from "@lingui/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MfaQrCode } from "./MfaQrCode";
 
@@ -18,14 +20,24 @@ vi.mock("qrcode", () => ({
 describe("MfaQrCode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
   });
+
+  function renderQrCode() {
+    return render(
+      <I18nProvider i18n={i18n}>
+        <MfaQrCode value="otpauth://example" alt="MFA setup QR code" />
+      </I18nProvider>
+    );
+  }
 
   it("renders an image when QR generation succeeds", async () => {
     mockQrToString.mockResolvedValueOnce(
       "<svg xmlns='http://www.w3.org/2000/svg'></svg>"
     );
 
-    render(<MfaQrCode value="otpauth://example" alt="MFA setup QR code" />);
+    renderQrCode();
 
     expect(screen.getByText(/generating qr code/i)).toBeInTheDocument();
 
@@ -46,7 +58,7 @@ describe("MfaQrCode", () => {
   it("shows the manual setup fallback when QR generation fails", async () => {
     mockQrToString.mockRejectedValueOnce(new Error("QR failed"));
 
-    render(<MfaQrCode value="otpauth://example" alt="MFA setup QR code" />);
+    renderQrCode();
 
     expect(screen.getByText(/generating qr code/i)).toBeInTheDocument();
 

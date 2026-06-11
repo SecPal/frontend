@@ -2886,6 +2886,10 @@ msgstr "Ausstehend"
 msgid "Organization"
 msgstr "Organisation"
 
+#: src/components/MfaQrCode.tsx
+msgid "Unable to generate QR code."
+msgstr "QR-Code konnte nicht generiert werden."
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
@@ -3115,6 +3119,10 @@ msgstr "Mitarbeiter laden..."
 msgid "Language"
 msgstr "Sprache"
 
+#: src/components/MfaQrCode.tsx
+msgid "Generating QR code..."
+msgstr "QR-Code wird generiert..."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Creating enrollment session..."
 msgstr "Enrollment-Sitzung wird erstellt..."
@@ -3249,6 +3257,7 @@ msgid "Employee Management"
 msgstr "Mitarbeiter-Management"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Verification Status"
 msgstr "Status der Verifizierung"
 

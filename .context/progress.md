@@ -32,6 +32,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Customer/site management pages should share route-scoped helpers in `src/pages/CustomerSites/ui` backed by `src/ui`, native semantic tables/description lists, router links, and lucide icons; keep CRUD behavior in the pages while asserting Radix Select options and explicit field error wiring in route tests.
 - Employee management pages should share route-scoped helpers in `src/pages/Employees/ui` backed by `src/ui`, native semantic tables/description lists, router links, status badges, and Radix dialog/select primitives; keep employee API/update behavior in the pages while testing filters and inline dialogs through public roles plus stable `data-slot` markers.
 - Employee form routes should import all presentation controls through `src/pages/Employees/ui`, including form fieldsets, Radix Select/Switch controls, autocomplete popovers, cards, alerts, labels, descriptions, and errors; keep route-owned validation and API payload normalization unchanged while wiring errors with stable `id`, `aria-invalid`, and `aria-describedby`.
+- Specialized admin pages such as activity logs and provisioning can keep route-local native tables, description lists, and status-badge class helpers while importing shared `src/ui` primitives directly for controls, cards, alerts, and Radix dialogs/selects; keep domain renderers such as verification dots and QR code generation behavior-owned.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
@@ -739,3 +740,25 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: employee form migrations should keep behavior and normalization in route components while moving presentation-only structures into `src/pages/Employees/ui`; tests should select Radix options through public combobox/option roles and assert `data-value` markers for dropdown contents.
   - Gotchas encountered: Radix Select restores focus to its trigger after option selection, which can race with immediate submit-time focus restoration in tests and fast user interactions; invalid-field focusing should reapply on the next macrotask when a recently closed select may still be restoring focus.
+
+## US-008: Activity Log und Android Provisioning migrieren
+- Migrated `ActivityLogList`, `ActivityDetailDialog`, and `AndroidProvisioningPage` from old shared wrappers to direct shared `src/ui` shadcn/Radix primitives, native semantic tables/description lists, Radix Dialog/Select/Checkbox controls, Lucide action icons, and route-local status badge styling.
+- Preserved activity filters, URL-backed pagination, verification detail loading/error states, Android enrollment session creation/revocation, QR-code display, status guidance, capability read-only paths, and defensive unknown status/channel fallbacks.
+- Localized QR-code loading/error text in English and German, updated Lingui catalogs, and expanded regression coverage for Radix select interactions, real dialog semantics, QR states, status markers, and the admin migration boundary.
+- Verified with `npm run typecheck`, `npm run lint`, `npm run i18n:check`, focused story Vitest coverage, and full `npm test`.
+- Files changed:
+  - `src/pages/ActivityLog/ActivityLogList.tsx`
+  - `src/pages/ActivityLog/ActivityLogList.test.tsx`
+  - `src/pages/ActivityLog/ActivityDetailDialog.tsx`
+  - `src/pages/ActivityLog/ActivityDetailDialog.test.tsx`
+  - `src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx`
+  - `src/pages/AndroidProvisioning/AndroidProvisioningPage.test.tsx`
+  - `src/components/MfaQrCode.tsx`
+  - `src/components/MfaQrCode.test.tsx`
+  - `tests/admin-migration-boundary.test.ts`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: specialized admin pages can migrate cleanly with route-local native table/description-list helpers plus direct `src/ui` imports, while domain renderers such as verification dots and QR generation remain behavior-owned at the feature boundary.
+  - Gotchas encountered: Radix Select renders hidden native `<select>/<option>` nodes for form compatibility, so text assertions may need `findAllByText` and interactions should use the full pointerDown/pointerUp/click sequence on trigger and option.
