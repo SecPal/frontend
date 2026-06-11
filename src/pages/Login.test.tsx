@@ -1507,6 +1507,22 @@ describe("Login", () => {
         screen.queryByRole("heading", { name: /second factor required/i })
       ).not.toBeInTheDocument();
     });
+
+    // After the MFA verify settles successfully and the dialog has closed,
+    // the completion spinner must remain mounted until route change unmounts
+    // the page. If `handleVerifyMfa`'s finally block tore the spinner down
+    // on success (the original implementation did this via
+    // `if (shouldSurfaceLoginError) setIsCompletingLogin(false)`), the
+    // credential card would briefly flash back into view between the dialog
+    // close and the unmount commit. Pin the corrected behavior: spinner
+    // still here, credentials still NOT here.
+    expect(screen.getByTestId("login-completing")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /email/i })
+    ).not.toBeInTheDocument();
   });
 
   it("keeps TOTP verification digits-only in the MFA challenge dialog", async () => {
