@@ -6,17 +6,29 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
+  Alert,
+  AlertDescription,
+  Button,
   Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
   DialogActions,
-} from "./dialog";
-import { Button } from "./button";
-import { Input } from "./input";
-import { Textarea } from "./textarea";
-import { Select } from "./select";
-import { Field, Label, ErrorMessage, Description } from "./fieldset";
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from "@/ui";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -220,36 +232,41 @@ function OrganizationalUnitFormDialogContent({
       <form onSubmit={handleSubmit}>
         <DialogBody>
           {!isOnline && (
-            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <div className="font-semibold mb-1">
+            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+              <div className="mb-1 font-semibold">
                 <Trans>You're offline</Trans>
               </div>
-              {mode === "create" ? (
-                <Trans>
-                  Creating organizational units is not possible while offline.
-                  Please reconnect to make changes.
-                </Trans>
-              ) : (
-                <Trans>
-                  Editing organizational units is not possible while offline.
-                  Please reconnect to make changes.
-                </Trans>
-              )}
-            </div>
+              <AlertDescription className="mt-0 text-red-800 dark:text-red-400">
+                {mode === "create" ? (
+                  <Trans>
+                    Creating organizational units is not possible while offline.
+                    Please reconnect to make changes.
+                  </Trans>
+                ) : (
+                  <Trans>
+                    Editing organizational units is not possible while offline.
+                    Please reconnect to make changes.
+                  </Trans>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
 
           {errors.general && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-              {errors.general}
-            </div>
+            <Alert className="mb-4 border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+              <AlertDescription className="mt-0 text-red-600 dark:text-red-400">
+                {errors.general}
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="space-y-6">
             <Field>
-              <Label>
+              <FieldLabel htmlFor="organizational-unit-name">
                 <Trans>Name</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="organizational-unit-name"
                 type="text"
                 value={formData.name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -257,49 +274,77 @@ function OrganizationalUnitFormDialogContent({
                 }
                 placeholder={t`e.g., Berlin Branch`}
                 disabled={isSubmitting}
-                data-invalid={errors.name ? true : undefined}
+                aria-invalid={errors.name ? true : undefined}
+                aria-describedby={
+                  errors.name ? "organizational-unit-name-error" : undefined
+                }
                 autoFocus
               />
-              {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
+              {errors.name && (
+                <FieldError id="organizational-unit-name-error">
+                  {errors.name}
+                </FieldError>
+              )}
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="organizational-unit-type">
                 <Trans>Type</Trans>
-              </Label>
-              <Description>
+              </FieldLabel>
+              <FieldDescription id="organizational-unit-type-description">
                 <Trans>
                   The type determines the unit's role in the hierarchy.
                 </Trans>
-              </Description>
+              </FieldDescription>
               <Select
                 value={formData.type}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  handleChange("type", e.target.value as OrganizationalUnitType)
+                onValueChange={(value) =>
+                  handleChange("type", value as OrganizationalUnitType)
                 }
                 disabled={isSubmitting}
-                data-invalid={errors.type ? true : undefined}
               >
-                {(mode === "create" && parentType
-                  ? getValidChildTypeOptions(parentType)
-                  : getUnitTypeOptions()
-                ).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                <SelectTrigger
+                  id="organizational-unit-type"
+                  aria-invalid={errors.type ? true : undefined}
+                  aria-describedby={
+                    errors.type
+                      ? "organizational-unit-type-error"
+                      : "organizational-unit-type-description"
+                  }
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(mode === "create" && parentType
+                    ? getValidChildTypeOptions(parentType)
+                    : getUnitTypeOptions()
+                  ).map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      data-value={option.value}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-              {errors.type && <ErrorMessage>{errors.type}</ErrorMessage>}
+              {errors.type && (
+                <FieldError id="organizational-unit-type-error">
+                  {errors.type}
+                </FieldError>
+              )}
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="organizational-unit-description">
                 <Trans>Description</Trans>
-              </Label>
-              <Description>
+              </FieldLabel>
+              <FieldDescription id="organizational-unit-description-description">
                 <Trans>Optional description for this unit.</Trans>
-              </Description>
+              </FieldDescription>
               <Textarea
+                id="organizational-unit-description"
                 value={formData.description}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   handleChange("description", e.target.value)
@@ -307,31 +352,43 @@ function OrganizationalUnitFormDialogContent({
                 placeholder={t`Optional description...`}
                 disabled={isSubmitting}
                 rows={3}
-                data-invalid={errors.description ? true : undefined}
+                aria-invalid={errors.description ? true : undefined}
+                aria-describedby={
+                  errors.description
+                    ? "organizational-unit-description-error"
+                    : "organizational-unit-description-description"
+                }
               />
               {errors.description && (
-                <ErrorMessage>{errors.description}</ErrorMessage>
+                <FieldError id="organizational-unit-description-error">
+                  {errors.description}
+                </FieldError>
               )}
             </Field>
 
             {mode === "create" && parentName && (
               <Field>
-                <Label>
+                <FieldLabel>
                   <Trans>Parent Unit</Trans>
-                </Label>
+                </FieldLabel>
                 <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                   {parentName}
                 </div>
-                <Description>
+                <FieldDescription>
                   <Trans>The new unit will be created under this parent.</Trans>
-                </Description>
+                </FieldDescription>
               </Field>
             )}
           </div>
         </DialogBody>
 
         <DialogActions>
-          <Button plain onClick={onClose} disabled={isSubmitting} type="button">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+            type="button"
+          >
             <Trans>Cancel</Trans>
           </Button>
           <Button type="submit" disabled={isSubmitting || !isOnline}>
@@ -375,18 +432,23 @@ export function OrganizationalUnitFormDialog({
 }: OrganizationalUnitFormDialogProps) {
   return (
     <Dialog open={open} onClose={onClose}>
-      {open ? (
-        <OrganizationalUnitFormDialogContent
-          key={`${mode}:${unit?.id ?? parentId ?? "root"}:${parentType ?? "none"}`}
-          onClose={onClose}
-          mode={mode}
-          parentId={parentId}
-          parentName={parentName}
-          parentType={parentType}
-          unit={unit}
-          onSuccess={onSuccess}
-        />
-      ) : null}
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent>
+          {open ? (
+            <OrganizationalUnitFormDialogContent
+              key={`${mode}:${unit?.id ?? parentId ?? "root"}:${parentType ?? "none"}`}
+              onClose={onClose}
+              mode={mode}
+              parentId={parentId}
+              parentName={parentName}
+              parentType={parentType}
+              unit={unit}
+              onSuccess={onSuccess}
+            />
+          ) : null}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

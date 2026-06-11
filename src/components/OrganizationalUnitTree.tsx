@@ -4,17 +4,25 @@
 import { useState, useCallback, useMemo, lazy, Suspense, memo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button } from "./button";
-import { SpinnerContainer } from "./spinner";
-import { Badge } from "./badge";
+import {
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  EllipsisVertical,
+  MapPin,
+  MoveHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { Badge, Button, Card, CardContent, Spinner, cn } from "@/ui";
 import {
   Dropdown,
   DropdownButton,
   DropdownMenu,
   DropdownItem,
 } from "./dropdown";
-import { Heading, Subheading } from "./heading";
-import { Text } from "./text";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -37,102 +45,18 @@ const MoveOrganizationalUnitDialog = lazy(() =>
   }))
 );
 
-/**
- * Icon components for tree visualization
- */
-function ChevronRightIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-      />
-    </svg>
-  );
-}
+const typeBadgeClassNames = {
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  green: "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300",
+  purple:
+    "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
+  orange:
+    "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+  zinc: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+} as const;
 
-function ChevronDownIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-      />
-    </svg>
-  );
-}
-
-function BuildingOfficeIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
-      />
-    </svg>
-  );
-}
-
-function UsersIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-      />
-    </svg>
-  );
-}
-
-function MapPinIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-      />
-    </svg>
-  );
+function getTypeBadgeClassName(type: OrganizationalUnitType) {
+  return typeBadgeClassNames[getTypeBadgeColor(type)];
 }
 
 /**
@@ -142,16 +66,16 @@ function getUnitIcon(type: OrganizationalUnitType) {
   switch (type) {
     case "holding":
     case "company":
-      return <BuildingOfficeIcon className="h-5 w-5 text-blue-500" />;
+      return <Building2 className="h-5 w-5 text-blue-500" />;
     case "department":
     case "division":
-      return <UsersIcon className="h-5 w-5 text-green-500" />;
+      return <Users className="h-5 w-5 text-green-500" />;
     case "branch":
-      return <BuildingOfficeIcon className="h-5 w-5 text-purple-500" />;
+      return <Building2 className="h-5 w-5 text-purple-500" />;
     case "region":
-      return <MapPinIcon className="h-5 w-5 text-orange-500" />;
+      return <MapPin className="h-5 w-5 text-orange-500" />;
     default:
-      return <BuildingOfficeIcon className="h-5 w-5 text-gray-500" />;
+      return <Building2 className="h-5 w-5 text-gray-500" />;
   }
 }
 
@@ -272,9 +196,9 @@ const TreeNode = memo(
             aria-label={isExpanded ? t`Collapse` : t`Expand`}
           >
             {isExpanded ? (
-              <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+              <ChevronDown className="h-4 w-4 text-gray-500" />
             ) : (
-              <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+              <ChevronRight className="h-4 w-4 text-gray-500" />
             )}
           </button>
 
@@ -288,7 +212,7 @@ const TreeNode = memo(
 
           {/* Type Badge - hidden on small screens */}
           <span className="hidden sm:inline-flex shrink-0">
-            <Badge color={getTypeBadgeColor(unit.type)}>
+            <Badge className={getTypeBadgeClassName(unit.type)}>
               {getTypeLabel(unit.type)}
             </Badge>
           </span>
@@ -302,94 +226,30 @@ const TreeNode = memo(
                 className="shrink-0 p-1"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                <svg
-                  className="h-5 w-5 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                  />
-                </svg>
+                <EllipsisVertical className="h-5 w-5 text-gray-500" />
               </DropdownButton>
               <DropdownMenu anchor="bottom end">
                 {canCreateChild && (
                   <DropdownItem onClick={handleCreateChild}>
-                    <svg
-                      data-slot="icon"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
-                    </svg>
+                    <Plus data-slot="icon" className="h-4 w-4" />
                     <Trans>Add child</Trans>
                   </DropdownItem>
                 )}
                 {canEdit && (
                   <DropdownItem onClick={handleEdit}>
-                    <svg
-                      data-slot="icon"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                      />
-                    </svg>
+                    <Pencil data-slot="icon" className="h-4 w-4" />
                     <Trans>Edit</Trans>
                   </DropdownItem>
                 )}
                 {canMove && (
                   <DropdownItem onClick={handleMove}>
-                    <svg
-                      data-slot="icon"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                      />
-                    </svg>
+                    <MoveHorizontal data-slot="icon" className="h-4 w-4" />
                     <Trans>Move</Trans>
                   </DropdownItem>
                 )}
                 {canDelete && (
                   <DropdownItem onClick={handleDelete}>
-                    <svg
-                      data-slot="icon"
-                      className="h-4 w-4 text-red-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                      />
-                    </svg>
+                    <Trash2 data-slot="icon" className="h-4 w-4 text-red-500" />
                     <span className="text-red-600 dark:text-red-400">
                       <Trans>Delete</Trans>
                     </span>
@@ -848,34 +708,46 @@ export function OrganizationalUnitTree({
   }, []);
 
   if (isLoading) {
-    return <SpinnerContainer className={`${className} py-12`} />;
+    return (
+      <div className={cn(className, "flex justify-center py-12")}>
+        <Spinner aria-label={t`Loading`} className="size-6 text-zinc-500" />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div
-        className={`${className} text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg`}
+      <Card
+        className={cn(
+          className,
+          "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+        )}
       >
-        <Text>{error}</Text>
-        <Button plain onClick={refresh} className="mt-2">
+        <CardContent className="p-4">
+        <p className="text-sm">{error}</p>
+        <Button variant="ghost" onClick={refresh} className="mt-2">
           <Trans>Retry</Trans>
         </Button>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (units.length === 0) {
     return (
       <div
-        className={`${className} text-center py-8 text-gray-500 dark:text-gray-400`}
+        className={cn(
+          className,
+          "py-8 text-center text-gray-500 dark:text-gray-400"
+        )}
       >
-        <BuildingOfficeIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-        <Subheading>
+        <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+        <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
           <Trans>No Organizational Units</Trans>
-        </Subheading>
-        <Text className="mt-2">
+        </h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
           <Trans>Get started by creating your first organizational unit.</Trans>
-        </Text>
+        </p>
         {onCreate && (
           <Button onClick={onCreate} className="mt-4">
             <Trans>Create Organizational Unit</Trans>
@@ -888,7 +760,9 @@ export function OrganizationalUnitTree({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
-        <Heading level={3}>{title || <Trans>My Organization</Trans>}</Heading>
+        <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+          {title || <Trans>My Organization</Trans>}
+        </h2>
         {onCreate && (
           <Button onClick={onCreate}>
             <Trans>Add Root Unit</Trans>

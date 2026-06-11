@@ -67,6 +67,48 @@ function submitDialogForm(buttonName: RegExp) {
   fireEvent.submit(form!);
 }
 
+async function openTypeSelect() {
+  const trigger = screen.getByRole("combobox", { name: /type/i });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  return screen.findAllByRole("option");
+}
+
+async function getTypeOptionValues() {
+  const options = await openTypeSelect();
+  return options.map((option) => option.getAttribute("data-value"));
+}
+
+async function selectTypeOption(value: string) {
+  const options = await openTypeSelect();
+  const option = options.find(
+    (candidate) => candidate.getAttribute("data-value") === value
+  );
+  expect(option).toBeInTheDocument();
+
+  fireEvent.pointerDown(option!, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option!, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option!, { button: 0 });
+}
+
 describe("OrganizationalUnitFormDialog", () => {
   const mockUnit: OrganizationalUnit = {
     id: "unit-1",
@@ -141,9 +183,7 @@ describe("OrganizationalUnitFormDialog", () => {
       const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
       fireEvent.change(nameInput, { target: { value: "New Branch" } });
 
-      // Select type
-      const typeSelect = screen.getByRole("combobox");
-      fireEvent.change(typeSelect, { target: { value: "branch" } });
+      await selectTypeOption("branch");
 
       // Submit
       submitDialogForm(/create/i);
@@ -378,7 +418,7 @@ describe("OrganizationalUnitFormDialog", () => {
   });
 
   describe("Type selection", () => {
-    it("renders all type options", () => {
+    it("renders all type options", async () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
           open={true}
@@ -391,11 +431,8 @@ describe("OrganizationalUnitFormDialog", () => {
       const select = screen.getByRole("combobox");
       expect(select).toBeInTheDocument();
 
-      // Check that options are available
-      const options = screen.getAllByRole("option");
-      expect(options.length).toBe(7);
-
-      const optionValues = options.map((opt) => opt.getAttribute("value"));
+      const optionValues = await getTypeOptionValues();
+      expect(optionValues.length).toBe(7);
       expect(optionValues).toContain("holding");
       expect(optionValues).toContain("company");
       expect(optionValues).toContain("region");
@@ -405,7 +442,7 @@ describe("OrganizationalUnitFormDialog", () => {
       expect(optionValues).toContain("custom");
     });
 
-    it("filters type options based on parent hierarchy (branch parent)", () => {
+    it("filters type options based on parent hierarchy (branch parent)", async () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
           open={true}
@@ -418,14 +455,11 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const options = screen.getAllByRole("option");
-
       // Branch has rank 4, so only types with rank > 4 should be available
       // Expected: division (5), department (6), custom (7)
       // NOT branch itself (same-level nesting is invalid)
-      expect(options.length).toBe(3);
-
-      const optionValues = options.map((opt) => opt.getAttribute("value"));
+      const optionValues = await getTypeOptionValues();
+      expect(optionValues.length).toBe(3);
       expect(optionValues).not.toContain("holding");
       expect(optionValues).not.toContain("company");
       expect(optionValues).not.toContain("region");
@@ -435,7 +469,7 @@ describe("OrganizationalUnitFormDialog", () => {
       expect(optionValues).toContain("custom");
     });
 
-    it("filters type options based on parent hierarchy (company parent)", () => {
+    it("filters type options based on parent hierarchy (company parent)", async () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
           open={true}
@@ -448,14 +482,11 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const options = screen.getAllByRole("option");
-
       // Company has rank 2, so only types with rank > 2 should be available
       // Expected: region (3), branch (4), division (5), department (6), custom (7)
       // NOT company itself (same-level nesting is invalid)
-      expect(options.length).toBe(5);
-
-      const optionValues = options.map((opt) => opt.getAttribute("value"));
+      const optionValues = await getTypeOptionValues();
+      expect(optionValues.length).toBe(5);
       expect(optionValues).not.toContain("holding");
       expect(optionValues).not.toContain("company"); // Changed: no same-level nesting
       expect(optionValues).toContain("region");
@@ -465,7 +496,7 @@ describe("OrganizationalUnitFormDialog", () => {
       expect(optionValues).toContain("custom");
     });
 
-    it("shows all types when creating root unit (no parent)", () => {
+    it("shows all types when creating root unit (no parent)", async () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
           open={true}
@@ -475,11 +506,11 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const options = screen.getAllByRole("option");
-      expect(options.length).toBe(7); // All types available
+      const optionValues = await getTypeOptionValues();
+      expect(optionValues.length).toBe(7); // All types available
     });
 
-    it("shows all types in edit mode regardless of parent", () => {
+    it("shows all types in edit mode regardless of parent", async () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
           open={true}
@@ -493,8 +524,8 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const options = screen.getAllByRole("option");
-      expect(options.length).toBe(7); // All types available in edit mode
+      const optionValues = await getTypeOptionValues();
+      expect(optionValues.length).toBe(7); // All types available in edit mode
     });
 
     it("allows changing type selection", async () => {
@@ -520,9 +551,7 @@ describe("OrganizationalUnitFormDialog", () => {
       const nameInput = screen.getByPlaceholderText(/e\.g\., Berlin Branch/i);
       await user.type(nameInput, "HR Department");
 
-      // Change type
-      const typeSelect = screen.getByRole("combobox");
-      await user.selectOptions(typeSelect, "department");
+      await selectTypeOption("department");
 
       // Submit
       await user.click(screen.getByRole("button", { name: /create/i }));

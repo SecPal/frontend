@@ -389,6 +389,10 @@ msgstr "Mitarbeiter Nummer"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to complete MFA action."
+msgstr "MFA-Aktion konnte nicht abgeschlossen werden."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
@@ -538,6 +542,10 @@ msgstr "Onboarding-Einladung senden"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Name is required"
 msgstr "Name ist erforderlich"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Enter a label for this passkey."
+msgstr "Geben Sie eine Bezeichnung für diesen Passkey ein."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Maximum Assignable Rank"
@@ -751,6 +759,10 @@ msgstr "Neuen Mitarbeiter anlegen"
 msgid "Failed to load employee"
 msgstr "Mitarbeiter konnte nicht geladen werden"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to load MFA status."
+msgstr "MFA-Status konnte nicht geladen werden."
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
 msgstr "Standort löschen"
@@ -926,6 +938,10 @@ msgstr "Neuer Kunde"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Employment Details"
 msgstr "Details zur Beschäftigung"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to confirm MFA enrollment."
+msgstr "MFA-Einrichtung konnte nicht bestätigt werden."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -1464,6 +1480,10 @@ msgstr "Taste für manuelle Einstellungen"
 msgid "Which rank range can this user ASSIGN or REMOVE?"
 msgstr "Welchen Rangbereich kann dieser Benutzer ZUWEISEN oder ENTFERNEN?"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to prepare MFA enrollment."
+msgstr "MFA-Einrichtung konnte nicht vorbereitet werden."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Select an option"
 msgstr "Option auswählen"
@@ -1665,6 +1685,10 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Country"
 msgstr "Land"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to register passkey."
+msgstr "Passkey konnte nicht registriert werden."
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1745,8 +1769,13 @@ msgid "Generating BWR Export..."
 msgstr "BWR-Export wird erstellt..."
 
 #: src/pages/Login.tsx
+#: src/pages/Settings/SettingsPage.tsx
 msgid "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
 msgstr "Auf diesem Gerät ist kein Anmeldeinformationsanbieter verfügbar. Prüfen Sie, ob eine passkey-fähige App (z. B. Bitwarden) installiert und in den Geräteeinstellungen als Anmeldeinformationsanbieter aktiviert ist."
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registered, but the enrolled passkey list could not be refreshed."
+msgstr "Passkey wurde registriert, aber die Liste der eingerichteten Passkeys konnte nicht aktualisiert werden."
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "Site Number"
@@ -2414,6 +2443,10 @@ msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einfü
 msgid "You do not have permission to perform this action."
 msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to delete passkey."
+msgstr "Passkey konnte nicht gelöscht werden."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
 msgstr "Keine Qualifikationen zugewiesen"
@@ -2431,6 +2464,10 @@ msgstr "BWR-Status wird gespeichert..."
 #: src/pages/Sites/SitesPage.tsx
 msgid "New Site"
 msgstr "Neuer Standort"
+
+#: src/components/ScopeAssignmentForm.tsx
+msgid "Leave empty for no minimum"
+msgstr "Für kein Minimum leer lassen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Which document are you uploading?"
@@ -2978,6 +3015,10 @@ msgid "Creating enrollment session..."
 msgstr "Enrollment-Sitzung wird erstellt..."
 
 #: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to load passkeys."
+msgstr "Passkeys konnten nicht geladen werden."
+
+#: src/pages/Settings/SettingsPage.tsx
 msgid "Add passkey"
 msgstr "Passkey hinzufügen"
 
@@ -2985,6 +3026,10 @@ msgstr "Passkey hinzufügen"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Relationship"
 msgstr "Beziehung des Notfallkontakts"
+
+#: src/components/ScopeAssignmentForm.tsx
+msgid "0 or empty for non-leadership only"
+msgstr "0 oder leer nur für Nicht-Führungskräfte"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
@@ -3059,6 +3104,14 @@ msgstr "Merkle-Wurzel"
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration was cancelled or not permitted by the browser."
+msgstr "Passkey-Registrierung wurde abgebrochen oder vom Browser nicht erlaubt."
+
+#: src/pages/Profile/ProfilePage.tsx
+msgid "Account information"
+msgstr "Kontoinformationen"
+
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Edit Site"
 msgstr "Standort bearbeiten"
@@ -3093,9 +3146,17 @@ msgstr "Status der Verifizierung"
 msgid "Please use the required format (YYYY-MM-DD)."
 msgstr "Bitte verwenden Sie das erforderliche Format (YYYY-MM-DD)."
 
+#: src/components/ScopeAssignmentForm.tsx
+msgid "0 or empty to prevent any assignment"
+msgstr "0 oder leer, um jede Zuweisung zu verhindern"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment (optional second file)"
 msgstr "Anhang (optionale zweite Datei)"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration timed out. Please try again."
+msgstr "Zeitüberschreitung bei der Passkey-Registrierung. Bitte versuchen Sie es erneut."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
@@ -3190,7 +3251,9 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 msgid "Onboarding Invitation"
 msgstr "Onboarding-Einladung"
 
+#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Login.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "Loading"
 msgstr "Lädt"
 

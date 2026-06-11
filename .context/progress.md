@@ -27,6 +27,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
 - Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
 - Shared app-level shadcn/Radix primitives live in `src/ui`; keep route-local Auth/Onboarding barrels as compatibility layers for prefixed `data-slot`s, route-specific helpers, and legacy-compatible event shapes while delegating shared colors, spacing, radius, focus rings, dark-mode classes, and Radix wrappers to `src/ui`.
+- Migrated admin surfaces should import shared `src/ui` primitives directly for pages, dialogs, fields, cards, alerts, and status controls; keep domain components such as QR code rendering, offline banners, dropdown/listbox compatibility wrappers, and organization data hooks at the feature boundary.
+- Admin Radix Select regressions should open the combobox and assert rendered `role="option"` items with stable `data-value` markers instead of using native `fireEvent.change`/`user.selectOptions`.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
@@ -639,3 +641,29 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: compatibility wrappers can remove the legacy dependency chain without feature-page churn when old event/value shapes are adapted at the wrapper boundary and source-level tests ban Headless/Heroicons/Tailwind Plus reintroduction.
   - Gotchas encountered: Headless `Field` implicitly associated bare labels with controls, so replacing it with plain layout divs breaks label queries unless generated `id`/`htmlFor` wiring is restored; Radix Select also cannot use `""` item values, so empty-string domain values need an internal sentinel mapping.
+
+## US-004: Settings-, Profile- und Organisationsbereich migrieren
+- Migrated `SettingsPage`, `ProfilePage`, and `OrganizationPage` to direct shared `src/ui` shadcn/Radix primitives for cards, dialogs, buttons, fields, alerts, badges, radios, checkbox controls, and loading states while preserving language switching, MFA/passkey behavior, offline banners, and organization detail interactions.
+- Migrated organization admin components (`OrganizationalUnitTree`, `OrganizationalUnitFormDialog`, `MoveOrganizationalUnitDialog`, `DeleteOrganizationalUnitDialog`, `OrganizationalUnitPicker`, and `ScopeAssignmentForm`) off old UI wrappers and inline SVGs onto shared `src/ui`, Radix-backed selects/dialogs/fields, and lucide icons; kept dropdown/listbox compatibility only where those domain controls already wrap Radix behavior.
+- Localized route-owned Settings/Profile/Scope fallback and placeholder copy in English and German, including MFA/passkey error fallbacks and scope-rank placeholder text.
+- Added `tests/admin-migration-boundary.test.ts` to block Headless/Heroicons/Tailwind Plus markers, inline SVGs, and old admin UI wrapper imports across the migrated admin scope; updated organizational unit form tests to drive Radix Select options by opening the combobox and asserting `data-value` markers.
+- Verified with `npm run typecheck`, `npm run lint`, `npm run i18n:check`, focused admin Vitest coverage, and full `npm test`.
+- Files changed:
+  - `src/pages/Settings/SettingsPage.tsx`
+  - `src/pages/Profile/ProfilePage.tsx`
+  - `src/pages/Organization/OrganizationPage.tsx`
+  - `src/components/OrganizationalUnitTree.tsx`
+  - `src/components/OrganizationalUnitFormDialog.tsx`
+  - `src/components/OrganizationalUnitFormDialog.test.tsx`
+  - `src/components/MoveOrganizationalUnitDialog.tsx`
+  - `src/components/DeleteOrganizationalUnitDialog.tsx`
+  - `src/components/ScopeAssignmentForm.tsx`
+  - `src/components/OrganizationalUnitPicker.tsx`
+  - `src/ui/primitives.tsx`
+  - `tests/admin-migration-boundary.test.ts`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: direct `src/ui` imports work well for authenticated admin surfaces when domain-only components remain at the route boundary; source-level migration audits should allow Radix-backed domain compatibility controls intentionally kept for dropdown/listbox behavior.
+  - Gotchas encountered: moving organization type selection from native select to Radix Select requires tests to open portal-rendered options and assert stable `data-value` attributes; native `change` and `selectOptions` helpers silently stop exercising the real control.
