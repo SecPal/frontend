@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Approved `esbuild`'s `postinstall` install script via a project-level `allowScripts` entry in `package.json`, so `npm install` under npm 11 no longer prints the `allow-scripts` pending-approval warning for `esbuild@0.25.12` (the install script only writes the platform-specific native binary that `@esbuild/<platform>` already provides via `optionalDependencies`, so behavior is unchanged). The entry is unpinned (`"esbuild": true`) so future Dependabot bumps do not re-introduce the warning under a fresh version.
 - Fixed `LoginLanguageSwitcher` error handling: locale-load failures now always display the localized fallback message instead of leaking raw internal `Error.message` strings (network errors, chunk URLs) into the UI.
 - Pinned the login legal footer to the bottom of the viewport on every breakpoint (`absolute bottom-4 left-1/2 -translate-x-1/2 px-6`) so it sits flush against the viewport edge instead of sharing the vertically centered flex stack with the credential card; the card now stays perfectly mid-viewport on mobile (previously it was pushed up by the footer + `gap-6`).
 - Switched the `LoginShell` from `min-h-svh` (small viewport height — frozen when the address bar is visible) to `min-h-dvh` (dynamic viewport height) so the auth shell follows the visible viewport instead of leaving a strip of body background exposed when the mobile browser's URL bar collapses.
