@@ -82,7 +82,15 @@ export function LoginShell({
         // over `hidden` because it does not form a scroll-containing block,
         // so `position: sticky` descendants and Radix Portal overlays keep
         // working unchanged.
-        "relative flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-clip bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
+        //
+        // The shell intentionally does NOT vertically center its children;
+        // consumers compose the centered card + bottom footer as siblings in
+        // normal flow (`flex-1` for the centered region, footer afterwards).
+        // A `justify-center` shell with an absolute footer overlaps the card
+        // on short landscape viewports (≈320px) because absolute positioning
+        // leaves the flex flow and `pb-*` padding only buys a fixed amount
+        // of breathing room.
+        "relative flex min-h-dvh flex-col items-center overflow-x-clip bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
         className
       )}
       {...props}
@@ -782,6 +790,18 @@ export function LoginOtpInput({
     onChange(textTransform === "uppercase" ? next.toUpperCase() : next);
   };
 
+  // Strip common autofill/SMS formatting before `input-otp` validates the
+  // paste against `pattern`. Without this, pasting "123 456" or "123-456"
+  // (typical TOTP SMS or password-manager copy) fails the digits-only
+  // regex on the whole string and the field stays empty. Whitespace and
+  // hyphens are never meaningful in either TOTP or recovery codes; the
+  // uppercase normalization keeps recovery codes case-insensitive on paste
+  // (mirrors the on-type behavior of `handleChange`).
+  const pasteTransformer = (pasted: string) => {
+    const stripped = pasted.replace(/[\s\-_]+/g, "");
+    return textTransform === "uppercase" ? stripped.toUpperCase() : stripped;
+  };
+
   // Pre-compute absolute slot offset for each group up front. A render-phase
   // accumulator (`let cursor += groupLength`) would also work but trips the
   // React 19 immutability lint, and a `reduce` accumulator keeps the inner
@@ -801,6 +821,7 @@ export function LoginOtpInput({
       id={idPrefix}
       value={value}
       onChange={handleChange}
+      pasteTransformer={pasteTransformer}
       maxLength={length}
       pattern={pattern}
       inputMode={inputMode}
@@ -861,7 +882,7 @@ export function LoginEmpty({
     <div
       data-slot="login-empty"
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border-dashed p-6 text-center text-balance md:p-12",
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border border-dashed border-zinc-200 p-6 text-center text-balance md:p-12 dark:border-zinc-800",
         className
       )}
       {...props}

@@ -194,6 +194,13 @@ export function Login() {
     "challenge" | "native" | "browser" | "verifying" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
+  // Tracks whether `error` is specifically about the credential pair (wrong
+  // email/password, malformed input). Only that subset of errors should mark
+  // the email/password inputs as `aria-invalid`. Server outages, rate-limit
+  // lockouts, passkey failures, and expired MFA challenges set `error` too
+  // but say nothing about the values currently typed — flagging the fields
+  // invalid in those cases misleads assistive technology users.
+  const [hasCredentialError, setHasCredentialError] = useState(false);
   const [pendingMfaChallenge, setPendingMfaChallenge] =
     useState<MfaChallenge | null>(null);
   const [mfaMethod, setMfaMethod] = useState<MfaVerificationMethod>("totp");
@@ -321,6 +328,7 @@ export function Login() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setHasCredentialError(false);
 
     // Check rate limiting
     if (!canAttemptLogin()) {
@@ -347,21 +355,27 @@ export function Login() {
       console.error("Login error:", err);
       if (err instanceof AuthApiError) {
         if ((err.status ?? 0) >= 500) {
+          // Server outage; the typed values may be perfectly fine.
           setError(TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE);
           return;
         }
 
         if (err.status === 429) {
+          // Rate-limit lockout; the values are not validated at all here.
           syncAuthoritativeLockout(err.retryAfterSeconds);
           setError(getLocalizedLoginErrorMessage(err.message, _));
           return;
         }
 
-        recordFailedAttempt(); // Record failed attempt for rate limiting
+        // Reaching here means the backend rejected the credential pair
+        // (401/403/422). Flag the credential fields invalid for AT.
+        recordFailedAttempt();
         setError(getLocalizedLoginErrorMessage(err.message, _));
+        setHasCredentialError(true);
       } else if (err instanceof Error) {
         recordFailedAttempt();
         setError(getLocalizedLoginErrorMessage(err.message, _));
+        setHasCredentialError(true);
       } else {
         recordFailedAttempt();
         setError(
@@ -369,6 +383,7 @@ export function Login() {
             msg`An unexpected error occurred. Please try again or contact support.`
           )
         );
+        setHasCredentialError(true);
       }
     } finally {
       setIsSubmitting(false);
@@ -396,6 +411,8 @@ export function Login() {
 
   const handlePasskeySignIn = async () => {
     setError(null);
+    // Passkey failures never reflect on the typed email/password values.
+    setHasCredentialError(false);
     setIsSubmittingPasskey(true);
     setPasskeyStep("challenge");
 
@@ -533,6 +550,10 @@ export function Login() {
         setMfaCode("");
         setMfaError(null);
         setError(expiredMessage);
+        // The credential pair was already accepted; expiry of the MFA
+        // challenge is unrelated to what's typed in the email/password
+        // fields, so do not mark them invalid for assistive technology.
+        setHasCredentialError(false);
         return;
       }
 
@@ -547,10 +568,17 @@ export function Login() {
         );
       }
 
-      setMfaError(errorMessage);
-
+      // When `shouldSurfaceLoginError` is true the success branch already
+      // closed the MFA dialog (`setPendingMfaChallenge(null)`), so the
+      // dialog-scoped `mfaError` would never render. Surface the message on
+      // the main login form instead. When false the dialog is still open and
+      // `mfaError` is the right channel.
       if (shouldSurfaceLoginError) {
         setError(errorMessage);
+        // Credential pair was already accepted; failure is post-credential.
+        setHasCredentialError(false);
+      } else {
+        setMfaError(errorMessage);
       }
     } finally {
       setIsVerifyingMfa(false);
@@ -564,242 +592,264 @@ export function Login() {
   };
 
   return (
-    <LoginShell className="pb-32 md:pb-32">
+    <LoginShell>
       {!isCompletingLogin && (
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
           <LoginLanguageSwitcher />
         </div>
       )}
 
-      {isCompletingLogin && (
-        <LoginEmpty data-testid="login-completing" className="w-full max-w-sm">
-          <LoginEmptyHeader>
-            <LoginEmptyMedia variant="icon">
-              {/* role="status" on LoginSpinner is the scoped live region for AT
+      {/*
+        Centered card region. `flex-1` lets it grow to fill the space between
+        the shell's top edge and the natural-flow footer; `items-center
+        justify-center` centers the card/empty within that grown region.
+        Together with a non-absolute footer this guarantees the card and
+        footer never overlap on short landscape viewports.
+      */}
+      <div className="flex w-full flex-1 items-center justify-center">
+        {isCompletingLogin && (
+          <LoginEmpty
+            data-testid="login-completing"
+            className="w-full max-w-sm"
+          >
+            <LoginEmptyHeader>
+              <LoginEmptyMedia variant="icon">
+                {/* role="status" on LoginSpinner is the scoped live region for AT
                   announcements. aria-live must not be placed on the wider
                   LoginEmpty container, which also holds static heading text. */}
-              <LoginSpinner aria-label={_(msg`Loading`)} />
-            </LoginEmptyMedia>
-            <LoginEmptyTitle className="text-sm/relaxed font-bold">
-              <Trans id="login.completing.title">Completing sign-in</Trans>
-            </LoginEmptyTitle>
-            <LoginEmptyDescription>
-              <Trans id="login.completing.description">Please wait…</Trans>
-            </LoginEmptyDescription>
-          </LoginEmptyHeader>
-        </LoginEmpty>
-      )}
+                <LoginSpinner aria-label={_(msg`Loading`)} />
+              </LoginEmptyMedia>
+              <LoginEmptyTitle className="text-sm/relaxed font-bold">
+                <Trans id="login.completing.title">Completing sign-in</Trans>
+              </LoginEmptyTitle>
+              <LoginEmptyDescription>
+                <Trans id="login.completing.description">Please wait…</Trans>
+              </LoginEmptyDescription>
+            </LoginEmptyHeader>
+          </LoginEmpty>
+        )}
 
-      <LoginCard
-        aria-labelledby="login-title"
-        className={isCompletingLogin ? "hidden" : undefined}
-        aria-hidden={isCompletingLogin || undefined}
-      >
-        <LoginForm onSubmit={handleSubmit} aria-label={_(msg`Login form`)}>
-          <LoginFieldGroup>
-            <LoginCardHeader>
-              <div className="flex size-12 items-center justify-center rounded-md">
-                <Logo size="48" />
-              </div>
-              <LoginCardTitle id="login-title">
-                <Trans id="login.title">Welcome to SecPal</Trans>
-              </LoginCardTitle>
-            </LoginCardHeader>
+        <LoginCard
+          aria-labelledby="login-title"
+          className={isCompletingLogin ? "hidden" : undefined}
+          aria-hidden={isCompletingLogin || undefined}
+        >
+          <LoginForm onSubmit={handleSubmit} aria-label={_(msg`Login form`)}>
+            <LoginFieldGroup>
+              <LoginCardHeader>
+                <div className="flex size-12 items-center justify-center rounded-md">
+                  <Logo size="48" />
+                </div>
+                <LoginCardTitle id="login-title">
+                  <Trans id="login.title">Welcome to SecPal</Trans>
+                </LoginCardTitle>
+              </LoginCardHeader>
 
-            {!isOnline && (
-              <LoginStatusMessage
-                id="offline-warning"
-                variant="error"
-                live="assertive"
-                title={
-                  <Trans id="login.offlineWarning.title">
-                    No internet connection
-                  </Trans>
-                }
-              >
-                <p>
-                  <Trans id="login.offlineWarning.message">
-                    Login requires an internet connection. Please check your
-                    connection and try again.
-                  </Trans>
-                </p>
-              </LoginStatusMessage>
-            )}
+              {!isOnline && (
+                <LoginStatusMessage
+                  id="offline-warning"
+                  variant="error"
+                  live="assertive"
+                  title={
+                    <Trans id="login.offlineWarning.title">
+                      No internet connection
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.offlineWarning.message">
+                      Login requires an internet connection. Please check your
+                      connection and try again.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-            {isSystemNotReady && (
-              <LoginStatusMessage
-                id="health-warning"
-                variant="warning"
-                live="assertive"
-                title={
-                  <Trans id="login.healthWarning.title">System not ready</Trans>
-                }
-              >
-                <p>
-                  <Trans id="login.healthWarning.message">
-                    The system is not fully configured. Please contact your
-                    administrator.
-                  </Trans>
-                </p>
-              </LoginStatusMessage>
-            )}
+              {isSystemNotReady && (
+                <LoginStatusMessage
+                  id="health-warning"
+                  variant="warning"
+                  live="assertive"
+                  title={
+                    <Trans id="login.healthWarning.title">
+                      System not ready
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.healthWarning.message">
+                      The system is not fully configured. Please contact your
+                      administrator.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-            {isLocked && (
-              <LoginStatusMessage
-                id="lockout-warning"
-                variant="error"
-                live="assertive"
-                title={
-                  <Trans id="login.rateLimitLocked.title">
-                    Too many failed attempts
-                  </Trans>
-                }
-              >
-                <p>
-                  <Trans id="login.rateLimitLocked.message">
-                    Please wait {remainingLockoutSeconds} seconds before trying
-                    again.
-                  </Trans>
-                </p>
-              </LoginStatusMessage>
-            )}
+              {isLocked && (
+                <LoginStatusMessage
+                  id="lockout-warning"
+                  variant="error"
+                  live="assertive"
+                  title={
+                    <Trans id="login.rateLimitLocked.title">
+                      Too many failed attempts
+                    </Trans>
+                  }
+                >
+                  <p>
+                    <Trans id="login.rateLimitLocked.message">
+                      Please wait {remainingLockoutSeconds} seconds before
+                      trying again.
+                    </Trans>
+                  </p>
+                </LoginStatusMessage>
+              )}
 
-            {error && (
-              <LoginStatusMessage
-                id="login-error"
-                variant="error"
-                live="assertive"
-              >
-                <p>{error}</p>
-                {!isLocked &&
-                  remainingAttempts > 0 &&
-                  remainingAttempts <= 3 && (
-                    <p className="mt-2 text-amber-700 dark:text-amber-400">
-                      <Trans id="login.remainingAttempts">
-                        {remainingAttempts} attempt(s) remaining before
-                        temporary lockout.
-                      </Trans>
-                    </p>
+              {error && (
+                <LoginStatusMessage
+                  id="login-error"
+                  variant="error"
+                  live="assertive"
+                >
+                  <p>{error}</p>
+                  {!isLocked &&
+                    remainingAttempts > 0 &&
+                    remainingAttempts <= 3 && (
+                      <p className="mt-2 text-amber-700 dark:text-amber-400">
+                        <Trans id="login.remainingAttempts">
+                          {remainingAttempts} attempt(s) remaining before
+                          temporary lockout.
+                        </Trans>
+                      </p>
+                    )}
+                </LoginStatusMessage>
+              )}
+
+              <LoginField>
+                <LoginFieldLabel htmlFor="email">
+                  <Trans id="login.email">Email address</Trans>
+                </LoginFieldLabel>
+                <LoginInput
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    // User is editing; drop the credential-invalid flag so the
+                    // field is no longer announced as invalid mid-correction.
+                    if (hasCredentialError) setHasCredentialError(false);
+                  }}
+                  placeholder="you@secpal.app"
+                  aria-invalid={hasCredentialError ? true : undefined}
+                  aria-describedby={ariaDescribedBy}
+                  disabled={areCredentialsDisabled}
+                />
+              </LoginField>
+
+              <LoginField>
+                <LoginFieldLabel htmlFor="password">
+                  <Trans id="login.password">Password</Trans>
+                </LoginFieldLabel>
+                <LoginInput
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (hasCredentialError) setHasCredentialError(false);
+                  }}
+                  placeholder="••••••••"
+                  aria-invalid={hasCredentialError ? true : undefined}
+                  aria-describedby={ariaDescribedBy}
+                  disabled={areCredentialsDisabled}
+                />
+              </LoginField>
+
+              <LoginField>
+                <LoginButton
+                  type="submit"
+                  disabled={isLoginSubmitDisabled}
+                  className="w-full"
+                  aria-busy={isSubmitting}
+                  aria-disabled={
+                    !isOnline ||
+                    isSubmittingPasskey ||
+                    isSystemNotReady ||
+                    isHealthCheckLoading ||
+                    isLocked ||
+                    isMfaChallengeActive
+                  }
+                >
+                  {isHealthCheckLoading ? (
+                    <Trans id="login.checkingSystem">Checking system...</Trans>
+                  ) : isLocked ? (
+                    <Trans id="login.lockedButton">
+                      Locked ({remainingLockoutSeconds}s)
+                    </Trans>
+                  ) : isSubmitting ? (
+                    <Trans id="login.submitting">Logging in...</Trans>
+                  ) : (
+                    <Trans id="login.submit">Log in</Trans>
                   )}
-              </LoginStatusMessage>
-            )}
+                </LoginButton>
+              </LoginField>
 
-            <LoginField>
-              <LoginFieldLabel htmlFor="email">
-                <Trans id="login.email">Email address</Trans>
-              </LoginFieldLabel>
-              <LoginInput
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@secpal.app"
-                aria-invalid={error ? true : undefined}
-                aria-describedby={ariaDescribedBy}
-                disabled={areCredentialsDisabled}
-              />
-            </LoginField>
-
-            <LoginField>
-              <LoginFieldLabel htmlFor="password">
-                <Trans id="login.password">Password</Trans>
-              </LoginFieldLabel>
-              <LoginInput
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                aria-invalid={error ? true : undefined}
-                aria-describedby={ariaDescribedBy}
-                disabled={areCredentialsDisabled}
-              />
-            </LoginField>
-
-            <LoginField>
-              <LoginButton
-                type="submit"
-                disabled={isLoginSubmitDisabled}
-                className="w-full"
-                aria-busy={isSubmitting}
-                aria-disabled={
-                  !isOnline ||
-                  isSubmittingPasskey ||
-                  isSystemNotReady ||
-                  isHealthCheckLoading ||
-                  isLocked ||
-                  isMfaChallengeActive
-                }
-              >
-                {isHealthCheckLoading ? (
-                  <Trans id="login.checkingSystem">Checking system...</Trans>
-                ) : isLocked ? (
-                  <Trans id="login.lockedButton">
-                    Locked ({remainingLockoutSeconds}s)
-                  </Trans>
-                ) : isSubmitting ? (
-                  <Trans id="login.submitting">Logging in...</Trans>
-                ) : (
-                  <Trans id="login.submit">Log in</Trans>
-                )}
-              </LoginButton>
-            </LoginField>
-
-            {supportsPasskeys ? (
-              <>
-                <LoginFieldSeparator>
-                  <Trans id="login.separator">or</Trans>
-                </LoginFieldSeparator>
-                <LoginField>
-                  <LoginButton
-                    type="button"
-                    variant="outline"
-                    onClick={() => void handlePasskeySignIn()}
-                    disabled={isPasskeySubmitDisabled}
-                    className="w-full"
-                    aria-busy={isSubmittingPasskey}
-                  >
-                    {isSubmittingPasskey ? (
-                      passkeyStep === "browser" ? (
-                        <>
-                          <KeyRound className="h-4 w-4" aria-hidden="true" />
-                          <Trans>Check your browser…</Trans>
-                        </>
-                      ) : passkeyStep === "native" ? (
-                        <>
-                          <KeyRound className="h-4 w-4" aria-hidden="true" />
-                          <Trans>Check your device…</Trans>
-                        </>
-                      ) : passkeyStep === "verifying" ? (
-                        <>
-                          <KeyRound className="h-4 w-4" aria-hidden="true" />
-                          <Trans>Verifying passkey…</Trans>
-                        </>
+              {supportsPasskeys ? (
+                <>
+                  <LoginFieldSeparator>
+                    <Trans id="login.separator">or</Trans>
+                  </LoginFieldSeparator>
+                  <LoginField>
+                    <LoginButton
+                      type="button"
+                      variant="outline"
+                      onClick={() => void handlePasskeySignIn()}
+                      disabled={isPasskeySubmitDisabled}
+                      className="w-full"
+                      aria-busy={isSubmittingPasskey}
+                    >
+                      {isSubmittingPasskey ? (
+                        passkeyStep === "browser" ? (
+                          <>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
+                            <Trans>Check your browser…</Trans>
+                          </>
+                        ) : passkeyStep === "native" ? (
+                          <>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
+                            <Trans>Check your device…</Trans>
+                          </>
+                        ) : passkeyStep === "verifying" ? (
+                          <>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
+                            <Trans>Verifying passkey…</Trans>
+                          </>
+                        ) : (
+                          <>
+                            <KeyRound className="h-4 w-4" aria-hidden="true" />
+                            <Trans>Signing in with passkey...</Trans>
+                          </>
+                        )
                       ) : (
                         <>
                           <KeyRound className="h-4 w-4" aria-hidden="true" />
-                          <Trans>Signing in with passkey...</Trans>
+                          <Trans>Sign in with passkey</Trans>
                         </>
-                      )
-                    ) : (
-                      <>
-                        <KeyRound className="h-4 w-4" aria-hidden="true" />
-                        <Trans>Sign in with passkey</Trans>
-                      </>
-                    )}
-                  </LoginButton>
-                </LoginField>
-              </>
-            ) : null}
-          </LoginFieldGroup>
-        </LoginForm>
-      </LoginCard>
+                      )}
+                    </LoginButton>
+                  </LoginField>
+                </>
+              ) : null}
+            </LoginFieldGroup>
+          </LoginForm>
+        </LoginCard>
+      </div>
 
       <LoginLegalFooter />
 
@@ -974,7 +1024,11 @@ function LoginLanguageSwitcher() {
 
 function LoginLegalFooter() {
   return (
-    <footer className="absolute bottom-4 left-1/2 w-full max-w-sm -translate-x-1/2 px-6 text-center text-[11px]">
+    // Natural-flow footer: sits at the bottom of the LoginShell flex column,
+    // pushed there by the centered-card wrapper above (`flex-1`). No absolute
+    // positioning so it cannot overlap the credential card on short landscape
+    // viewports (≈320px tall) where the card itself fills most of the height.
+    <footer className="mt-4 w-full max-w-sm text-center text-[11px]">
       <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
         <a
           href="https://secpal.app"

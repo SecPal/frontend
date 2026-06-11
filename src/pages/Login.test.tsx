@@ -2062,6 +2062,130 @@ describe("Login", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  describe("credential aria-invalid scoping", () => {
+    // `aria-invalid` on the email/password inputs must reflect only failures
+    // caused by the typed values themselves (401/403/422 + opaque network
+    // errors after a credential submit). Server outages, rate-limit
+    // lockouts, passkey failures, and post-credential MFA expiry set the
+    // top-level `error` text but say nothing about the inputs; flagging the
+    // fields invalid in those cases misleads assistive technology users.
+
+    async function getCredentialInputs() {
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+      return {
+        email: screen.getByLabelText(/email/i),
+        password: screen.getByLabelText(/password/i),
+        submit: screen.getByRole("button", { name: /log in/i }),
+      };
+    }
+
+    it("marks the credential inputs invalid after a 401 rejection", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Invalid email or password.", undefined, 401)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "wrong@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "wrong-password" } });
+      fireEvent.click(submit);
+
+      await waitFor(() => {
+        expect(email).toHaveAttribute("aria-invalid", "true");
+        expect(password).toHaveAttribute("aria-invalid", "true");
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does NOT mark the credential inputs invalid on a 5xx server outage", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Internal Server Error", undefined, 500)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "ok@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "ok-password" } });
+      fireEvent.click(submit);
+
+      await screen.findByText(/login is temporarily unavailable/i);
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does NOT mark the credential inputs invalid on a 429 lockout", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError(
+          "Too many login attempts. Please try again later.",
+          undefined,
+          429,
+          undefined,
+          30
+        )
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "ok@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "ok-password" } });
+      fireEvent.click(submit);
+
+      await screen.findByText(/too many login attempts/i);
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("clears aria-invalid when the user starts editing the credentials again", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Invalid email or password.", undefined, 401)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "wrong@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "wrong-password" } });
+      fireEvent.click(submit);
+
+      await waitFor(() => {
+        expect(email).toHaveAttribute("aria-invalid", "true");
+      });
+
+      // Single keystroke in either field clears the invalid flag — the user
+      // is correcting the value and is no longer being told the prior input
+      // is wrong.
+      fireEvent.change(email, { target: { value: "right@secpal.dev" } });
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
   it("disables submit button while submitting", async () => {
     const mockLogin = vi.mocked(authApi.login);
     mockLogin.mockImplementation(
@@ -2903,7 +3027,7 @@ describe("Login", () => {
   });
 
   describe("footer", () => {
-    it("reserves bottom space for the legal footer", async () => {
+    it("places the legal footer below the centered credential card in normal flow", async () => {
       renderLogin();
 
       await waitFor(() => {
@@ -2912,7 +3036,29 @@ describe("Login", () => {
         ).toBeInTheDocument();
       });
 
-      expect(screen.getByRole("main")).toHaveClass("pb-32", "md:pb-32");
+      // The shell is a `flex-col` container, NOT vertically centered. The
+      // centered-card region is the first flex-1 child; the footer follows
+      // it in normal flow. This guarantees the footer never overlaps the
+      // credential card on short landscape viewports (≈320px tall), where
+      // an `absolute`-positioned footer with `pb-32` could collide.
+      const shell = screen.getByRole("main");
+      expect(shell).toHaveClass("min-h-dvh", "flex", "flex-col");
+      expect(shell).not.toHaveClass("justify-center");
+
+      const footer = screen.getByRole("contentinfo");
+      expect(footer).not.toHaveClass("absolute");
+
+      const card = screen
+        .getByRole("button", { name: /log in/i })
+        .closest("section");
+      expect(card).not.toBeNull();
+      // The card lives inside the flex-1 wrapper; the footer is a sibling of
+      // that wrapper, which puts it strictly after the card in document order.
+      // `compareDocumentPosition` returns FOLLOWING (4) when `card` precedes
+      // `footer` in the DOM.
+      expect(card!.compareDocumentPosition(footer)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
     });
 
     it("renders footer with license and source code links", async () => {

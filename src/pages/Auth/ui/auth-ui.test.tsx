@@ -310,6 +310,66 @@ describe("auth login shadcn primitives", () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
+  it("strips whitespace/hyphen/underscore from pasted codes before validation", () => {
+    // Without a pasteTransformer, input-otp would validate the entire pasted
+    // string against `pattern` — a digits-only TOTP would reject "123 456"
+    // (typical SMS or password-manager copy) wholesale and leave the field
+    // empty. The transformer strips inert formatting so the meaningful
+    // characters reach the field.
+    const handleChange = vi.fn();
+
+    render(
+      <LoginOtpInput
+        idPrefix="paste-otp"
+        value=""
+        onChange={handleChange}
+        aria-label="Authenticator code"
+      />
+    );
+
+    const input = screen.getByLabelText("Authenticator code");
+
+    // input-otp dispatches via `onPaste`; simulate the user pasting a
+    // formatted code and check the transformed value reaches `onChange`.
+    fireEvent.paste(input, {
+      clipboardData: {
+        getData: () => "123 456",
+      },
+    });
+
+    // input-otp routes the paste through our `pasteTransformer`, strips the
+    // space, then validates "123456" against REGEXP_ONLY_DIGITS, and emits.
+    expect(handleChange).toHaveBeenCalledWith("123456");
+  });
+
+  it("uppercases pasted recovery codes and strips formatting", () => {
+    const handleChange = vi.fn();
+
+    render(
+      <LoginOtpInput
+        idPrefix="paste-recovery"
+        value=""
+        onChange={handleChange}
+        length={8}
+        groups={[4, 4]}
+        pattern="^[a-zA-Z0-9]+$"
+        inputMode="text"
+        textTransform="uppercase"
+        aria-label="Recovery code"
+      />
+    );
+
+    const input = screen.getByLabelText("Recovery code");
+
+    fireEvent.paste(input, {
+      clipboardData: {
+        getData: () => "b6f4-2q8p",
+      },
+    });
+
+    expect(handleChange).toHaveBeenCalledWith("B6F42Q8P");
+  });
+
   it("scrolls the OTP cluster into view on focus so mobile soft keyboards do not occlude the cells", () => {
     // On landscape mobile the soft keyboard covers the bottom half of
     // the viewport. The MFA dialog is `position: fixed; top: 50%` so
@@ -412,6 +472,15 @@ describe("auth login shadcn primitives", () => {
 
     const empty = screen.getByTestId("empty");
     expect(empty).toHaveAttribute("data-slot", "login-empty");
+    // The shadcn Empty container ships a dashed border. `border-dashed`
+    // alone is a no-op without an explicit border-width — pin both classes
+    // and the light/dark border colors so the dashed chrome actually paints.
+    expect(empty).toHaveClass(
+      "border",
+      "border-dashed",
+      "border-zinc-200",
+      "dark:border-zinc-800"
+    );
 
     expect(
       container.querySelector('[data-slot="login-empty-header"]')
