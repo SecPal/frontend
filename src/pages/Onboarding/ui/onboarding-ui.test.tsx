@@ -3,6 +3,7 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   Alert,
@@ -28,6 +29,37 @@ import {
   Select,
   Textarea,
 } from ".";
+
+const defaultCommandPopoverText = {
+  placeholder: "Select option",
+  searchPlaceholder: "Search options",
+  emptyMessage: "No results found",
+} as const;
+
+function TestCommandPopover({
+  placeholder = defaultCommandPopoverText.placeholder,
+  searchPlaceholder = defaultCommandPopoverText.searchPlaceholder,
+  emptyMessage = defaultCommandPopoverText.emptyMessage,
+  ...props
+}: Omit<
+  ComponentProps<typeof CommandPopover>,
+  keyof typeof defaultCommandPopoverText
+> &
+  Partial<
+    Pick<
+      ComponentProps<typeof CommandPopover>,
+      keyof typeof defaultCommandPopoverText
+    >
+  >) {
+  return (
+    <CommandPopover
+      placeholder={placeholder}
+      searchPlaceholder={searchPlaceholder}
+      emptyMessage={emptyMessage}
+      {...props}
+    />
+  );
+}
 
 describe("onboarding shadcn primitives", () => {
   it("wire labels, descriptions, and error states to form controls", () => {
@@ -219,7 +251,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Nationality"
         value="de"
         onValueChange={handleValueChange}
@@ -242,7 +274,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={vi.fn()}
         options={[
@@ -272,7 +304,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[
@@ -302,7 +334,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={vi.fn()}
         options={[
@@ -342,7 +374,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={vi.fn()}
         options={[
@@ -376,7 +408,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         emptyMessage="No matches"
         onValueChange={vi.fn()}
@@ -399,7 +431,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[
@@ -427,7 +459,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[
@@ -444,12 +476,82 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).not.toHaveBeenCalled();
   });
 
+  it("closes the Radix popover content on outside interaction", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <div>
+        <TestCommandPopover
+          label="Country"
+          onValueChange={vi.fn()}
+          options={[
+            { value: "de", label: "Germany" },
+            { value: "fr", label: "France" },
+          ]}
+        />
+        <button type="button">After country</button>
+      </div>
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    await user.click(trigger);
+
+    expect(
+      screen.getByRole("searchbox", { name: "Search options" })
+    ).toHaveFocus();
+    expect(
+      document.querySelector('[data-slot="onboarding-command-popover-content"]')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "After country" }));
+
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps command popover tab flow predictable before focus leaves", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <div>
+        <TestCommandPopover
+          label="Country"
+          onValueChange={vi.fn()}
+          options={[
+            { value: "de", label: "Germany" },
+            { value: "fr", label: "France" },
+          ]}
+        />
+        <button type="button">After country</button>
+      </div>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+
+    const searchbox = screen.getByRole("searchbox", {
+      name: "Search options",
+    });
+    const options = screen.getAllByRole("option");
+
+    expect(searchbox).toHaveFocus();
+
+    await user.tab();
+    expect(options[0]).toHaveFocus();
+
+    await user.tab();
+    expect(options[1]).toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "After country" })).toHaveFocus();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+  });
+
   it("skips disabled options when navigating with the keyboard", async () => {
     const user = userEvent.setup();
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[
@@ -473,7 +575,7 @@ describe("onboarding shadcn primitives", () => {
 
   it("renders an error message bound to the trigger via aria-describedby and marks it invalid", () => {
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         errorMessage="Country is required"
         onValueChange={vi.fn()}
@@ -491,7 +593,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[{ value: "de", label: "Germany", disabled: true }]}
@@ -509,7 +611,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={vi.fn()}
         options={[
@@ -532,7 +634,7 @@ describe("onboarding shadcn primitives", () => {
     const handleValueChange = vi.fn();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
         options={[
@@ -552,7 +654,7 @@ describe("onboarding shadcn primitives", () => {
     const user = userEvent.setup();
 
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         searchPlaceholder="Search or select country"
         onValueChange={vi.fn()}
@@ -569,7 +671,7 @@ describe("onboarding shadcn primitives", () => {
 
   it("disables the trigger when the disabled prop is set", () => {
     render(
-      <CommandPopover
+      <TestCommandPopover
         label="Country"
         disabled
         onValueChange={vi.fn()}

@@ -21,6 +21,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Auth/Login and Onboarding migration boundaries should be executable Vitest audits over the route scope, checking for forbidden legacy packages, Tailwind Plus license markers, and direct imports from old shared component wrappers so regressions fail in the normal `npm test` path.
 - Shared shadcn-style utilities live in `src/lib/utils.ts` and should be imported through route-local barrels (`src/pages/Auth/ui`, `src/pages/Onboarding/ui`) or the `@/lib/utils` alias when new shared primitives need canonical `cn` behavior.
 - Radix-backed onboarding primitives should keep the route-local API stable where practical: `Select` may accept existing `<option>` children and expose the current trigger `value` for legacy tests, while route tests should select Radix options by opening the combobox and clicking `[data-slot="onboarding-select-item"][data-value]`.
+- Radix-backed command popovers should require caller-provided placeholder/search/empty-state copy, keep filtering/selection behavior local, and let Radix own portal positioning plus outside/focus dismissal; cover trigger, searchbox, option, selected, disabled, empty, Escape, and Tab boundaries in primitive tests.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -487,3 +488,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep Radix-backed onboarding primitives behind the existing onboarding UI barrel and adapt only narrow compatibility seams (`onChange` event shape, option mapping) so feature code can migrate incrementally.
   - Gotchas encountered: closed Radix Select content is unmounted, so tests cannot assert native `<option>` text in the DOM or use `user.selectOptions` against a combobox button.
+
+## US-004: Replace Onboarding Command Popover
+
+- Replaced the onboarding `CommandPopover`'s absolute, hand-rendered popover shell with Radix Popover `Root`/`Trigger`/`Portal`/`Content`, preserving the existing searchable listbox behavior, ArrowUp/ArrowDown/Enter/Escape handling, disabled option behavior, selected option state, empty state, and value callback shape.
+- Made `placeholder`, `searchPlaceholder`, and `emptyMessage` required `CommandPopover` props so all user-facing copy is owned and translated by call sites; existing onboarding nationality and country call sites already pass localized strings.
+- Added primitive regressions for Radix outside interaction dismissal and form-friendly tab flow through the searchbox/options and onward to the next control.
+- Files changed:
+  - `package.json`
+  - `package-lock.json`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: Radix Popover is a good replacement boundary for command-style onboarding controls when the route-local API stays stable and only the popover lifecycle/positioning moves to Radix.
+  - Gotchas encountered: Radix Popover portal content uses a looping focus scope at the content boundary, so command controls that act like form fields need an explicit Tab boundary handler to close the popover and continue to the next control.
