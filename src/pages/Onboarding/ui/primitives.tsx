@@ -478,6 +478,51 @@ export function CardFooter({
   );
 }
 
+export function OnboardingAuthShell({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"main">) {
+  return (
+    <main
+      data-slot="onboarding-auth-shell"
+      className={cn(
+        "min-h-dvh bg-white px-4 py-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function OnboardingAuthCard({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"section">) {
+  return (
+    <section
+      data-slot="onboarding-auth-card"
+      className={cn(
+        "mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-2xl flex-col justify-center rounded-md border border-zinc-200 bg-white p-6 text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 sm:p-8 lg:p-10",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function OnboardingAuthHeader({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="onboarding-auth-header"
+      className={cn("flex items-center justify-between gap-4", className)}
+      {...props}
+    />
+  );
+}
+
 export function Badge({
   className,
   ...props

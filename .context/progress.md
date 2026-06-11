@@ -6,6 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 ## Codebase Patterns
 
 - Onboarding-only shadcn-style primitives live under `src/pages/Onboarding/ui` and are imported from that local barrel so migrated onboarding routes do not depend on Catalyst wrappers in `src/components`.
+- Public onboarding auth-style pages should frame every passive and form state with onboarding-local `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` primitives; keep route behavior, logo, and language-switcher placement in the route while asserting stable `data-slot` and light/dark classes.
 - Migrated onboarding forms should pair local `FieldLabel`/`Input` primitives with stable `id`, `htmlFor`, `aria-invalid`, and `aria-describedby` wiring so existing label-based tests and accessible error descriptions keep working after leaving Headless/Catalyst field wrappers.
 - Authenticated onboarding shell and passive route states should use semantic containers plus onboarding-local `Button`, `Card`, and `Alert` primitives while leaving auth gating and logout sequencing in the route/layout layer.
 - Wizard chrome should use onboarding-local `CardHeader`/`CardContent`, `AlertDescription`, `Badge`, `Progress`, and `Button` primitives while keeping navigation conditions and state transitions in the existing wizard handlers.
@@ -503,3 +504,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: Radix Popover is a good replacement boundary for command-style onboarding controls when the route-local API stays stable and only the popover lifecycle/positioning moves to Radix.
   - Gotchas encountered: Radix Popover portal content uses a looping focus scope at the content boundary, so command controls that act like form fields need an explicit Tab boundary handler to close the popover and continue to the next control.
+
+## US-005: Remove Tailwind Plus AuthLayout
+
+- Removed the `AuthLayout` import from `OnboardingComplete` and replaced the public completion page frame with onboarding-local shadcn-style `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` primitives.
+- Kept the existing SecPal logo, language switcher placement, validating state, invalid-link state, validation rate-limit state, ready form layout, alert variants, and submit behavior intact while centralizing the repeated page chrome in a route-local frame component.
+- Added primitive and route regressions for the new auth shell/card/header `data-slot` markers, light/dark class coverage, and all public onboarding-complete state branches; tightened the migration-boundary audit so scoped auth/onboarding code cannot re-import `src/components/auth-layout`.
+- Files changed:
+  - `src/pages/Onboarding/OnboardingComplete.tsx`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingComplete.test.tsx`
+  - `tests/auth-onboarding-migration-boundary.test.ts`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: public onboarding pages can share a small onboarding-local auth frame while leaving the route-owned validation state machine and submission flow untouched.
+  - Gotchas encountered: the full Vitest suite surfaced a transient unrelated login passkey test failure on the first run; the test passed in isolation and the full suite passed on rerun, so keep noting full-suite flakes separately from story regressions.

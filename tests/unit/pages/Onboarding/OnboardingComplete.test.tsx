@@ -51,6 +51,22 @@ async function waitForFormReady() {
   });
 }
 
+function expectOnboardingAuthFrame() {
+  const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
+  const card = document.querySelector('[data-slot="onboarding-auth-card"]');
+  const header = document.querySelector('[data-slot="onboarding-auth-header"]');
+
+  expect(shell).toBeInTheDocument();
+  expect(shell).toHaveClass("bg-white", "dark:bg-zinc-950");
+  expect(card).toBeInTheDocument();
+  expect(card).toHaveClass("bg-white", "dark:bg-zinc-900");
+  expect(header).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "SecPal" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("combobox", { name: /select language|sprache auswählen/i })
+  ).toBeInTheDocument();
+}
+
 function fillValidFormAndSubmit({
   firstName = "John",
   lastName = "Doe",
@@ -116,6 +132,7 @@ describe("OnboardingComplete", () => {
       expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
     });
 
+    expectOnboardingAuthFrame();
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
     expect(document.querySelector('input[name="password"]')).toBeTruthy();
@@ -391,6 +408,23 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByRole("button", { name: /go to login/i })
     ).toBeInTheDocument();
+    expectOnboardingAuthFrame();
+  });
+
+  it("renders the validating state through the onboarding auth shell", () => {
+    vi.mocked(onboardingApi.validateOnboardingToken).mockReturnValueOnce(
+      new Promise(() => {
+        // Keep the component in its initial validating state.
+      })
+    );
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    expect(screen.getByText(/validating your link/i)).toBeInTheDocument();
+    expectOnboardingAuthFrame();
   });
 
   it("shows a dedicated rate-limit state when token validation returns 429", async () => {
@@ -420,6 +454,7 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByRole("button", { name: /try again/i })
     ).toBeInTheDocument();
+    expectOnboardingAuthFrame();
   });
 
   it("shows singular minute hint when retryAfterSeconds is ≤60", async () => {

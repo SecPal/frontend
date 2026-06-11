@@ -23,6 +23,9 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  OnboardingAuthCard,
+  OnboardingAuthHeader,
+  OnboardingAuthShell,
   Progress,
   RadioGroup,
   RadioGroupItem,
@@ -230,6 +233,43 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Missing fieldsComplete the required fields."
     );
+  });
+
+  it("provides auth shell primitives with stable light and dark mode classes", () => {
+    render(
+      <OnboardingAuthShell>
+        <OnboardingAuthCard aria-label="Complete account setup">
+          <OnboardingAuthHeader>
+            <span>SecPal</span>
+            <button type="button">Language</button>
+          </OnboardingAuthHeader>
+          Account setup
+        </OnboardingAuthCard>
+      </OnboardingAuthShell>
+    );
+
+    const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
+    const card = screen.getByRole("region", {
+      name: "Complete account setup",
+    });
+    const header = document.querySelector('[data-slot="onboarding-auth-header"]');
+
+    expect(shell).toHaveClass(
+      "min-h-dvh",
+      "bg-white",
+      "text-zinc-950",
+      "dark:bg-zinc-950",
+      "dark:text-zinc-50"
+    );
+    expect(card).toHaveAttribute("data-slot", "onboarding-auth-card");
+    expect(card).toHaveClass(
+      "rounded-md",
+      "border-zinc-200",
+      "bg-white",
+      "dark:border-zinc-800",
+      "dark:bg-zinc-900"
+    );
+    expect(header).toHaveClass("flex", "items-center", "justify-between");
   });
 
   it("renders badge and progress primitives with accessible state", () => {
