@@ -11,7 +11,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Wizard chrome should use onboarding-local `CardHeader`/`CardContent`, `AlertDescription`, `Badge`, `Progress`, and `Button` primitives while keeping navigation conditions and state transitions in the existing wizard handlers.
 - Schema-driven wizard field paths should use onboarding-local `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Select`, `Textarea`, `Checkbox`, and `CommandPopover` primitives with deterministic `onboarding-field-*` IDs; keep special upload and address-history blocks isolated until their own migrations.
 - Interaction-heavy onboarding custom blocks can keep their behavior hooks/effects intact while swapping presentation imports to onboarding-local `Field`, `Input`, `Checkbox`, `RadioGroupItem`, `FieldError`, and `CommandPopover`; preserve stable field IDs and explicit `aria-invalid`/`aria-describedby` wiring at the migration boundary.
-- Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and native radio items; keep pending file names outside the file input so navigation guards can still key off selected files.
+- Upload-heavy onboarding blocks should keep file-selection state and submission handlers unchanged while using onboarding-local `Input type="file"`, `FieldLabel`, `FieldDescription`, `FieldError`, and Radix-backed `RadioGroup` controls; keep pending file names outside the file input so navigation guards can still key off selected files.
 - Login-specific shadcn-style primitives live under `src/pages/Auth/ui` and should be imported through that barrel for login, passkey, and MFA surfaces so auth migration work does not depend on Tailwind Plus/Catalyst wrappers.
 - Shadcn login-shell migrations should keep route behavior in `src/pages/Login.tsx` and express the responsive split-shell structure through auth-local primitives such as `LoginShell`, `LoginCard`, and `LoginBrandPanel`; keep footer legal/source links route-local when they are part of the unauthenticated shell.
 - Login credential form migrations should centralize route-owned disabled predicates before passing them into auth-local `LoginFieldGroup`, `LoginInput`, and `LoginFormActions` primitives so offline, health, submit, lockout, passkey, and MFA challenge state stays identical while the markup changes.
@@ -20,6 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Login-specific shared controls such as dialogs and language selectors should stay in `src/pages/Auth/ui` or `src/pages/Login.tsx` with native/shadcn-style markup so unauthenticated auth routes do not pull old Catalyst/Headless component chains through shared app components.
 - Auth/Login and Onboarding migration boundaries should be executable Vitest audits over the route scope, checking for forbidden legacy packages, Tailwind Plus license markers, and direct imports from old shared component wrappers so regressions fail in the normal `npm test` path.
 - Shared shadcn-style utilities live in `src/lib/utils.ts` and should be imported through route-local barrels (`src/pages/Auth/ui`, `src/pages/Onboarding/ui`) or the `@/lib/utils` alias when new shared primitives need canonical `cn` behavior.
+- Radix-backed onboarding primitives should keep the route-local API stable where practical: `Select` may accept existing `<option>` children and expose the current trigger `value` for legacy tests, while route tests should select Radix options by opening the combobox and clicking `[data-slot="onboarding-select-item"][data-value]`.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -466,3 +467,23 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: keep route-local UI barrels as the public import surface, but delegate shared shadcn infrastructure to `@/lib/utils` so Auth and Onboarding cannot diverge.
   - Gotchas encountered: unit tests should assert both class conflict output and function identity through the route barrels; otherwise a future copy-paste helper could still satisfy output-only checks while reintroducing split implementations.
+
+## US-003: Radix-Back Onboarding Controls
+
+- Replaced onboarding-local `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Select`, `FieldLabel`, and `Progress` wrappers with shadcn-style Radix-backed primitives while leaving Button, Input, Textarea, Card, Badge, and Alert as local shadcn-style components.
+- Preserved existing onboarding call sites by adapting Radix Checkbox change events to the previous `event.target.checked` shape and by mapping existing `<Select><option /></Select>` children into Radix Select items.
+- Migrated onboarding radio sections to Radix controlled `value`/`onValueChange` flows in the wizard and residential address history blocks, preserving disabled, invalid, required, label, and dark-mode styling.
+- Updated onboarding primitive and wizard tests for Radix combobox/listbox semantics, radio keyboard behavior, and Radix option selection helpers.
+- Files changed:
+  - `package.json`
+  - `package-lock.json`
+  - `src/pages/Onboarding/ui/primitives.tsx`
+  - `src/pages/Onboarding/ui/onboarding-ui.test.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep Radix-backed onboarding primitives behind the existing onboarding UI barrel and adapt only narrow compatibility seams (`onChange` event shape, option mapping) so feature code can migrate incrementally.
+  - Gotchas encountered: closed Radix Select content is unmounted, so tests cannot assert native `<option>` text in the DOM or use `user.selectOptions` against a combobox button.

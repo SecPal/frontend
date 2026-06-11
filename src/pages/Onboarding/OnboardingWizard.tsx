@@ -3578,7 +3578,6 @@ export function OnboardingWizard() {
                                   </Trans>
                                 </UiFieldDescription>
                                 <UiRadioGroup
-                                  role="radiogroup"
                                   aria-label={_(
                                     msg`Would you like to upload your identity document now?`
                                   )}
@@ -3593,42 +3592,52 @@ export function OnboardingWizard() {
                                       : undefined
                                   }
                                   className="mt-3"
+                                  name={ID_DOCUMENT_UPLOAD_NOW_FIELD}
+                                  value={uploadNowSelection ?? ""}
+                                  onValueChange={(nextValue) => {
+                                    if (nextValue === "yes") {
+                                      setUploadNowSelection("yes");
+                                      clearUploadRequirementErrors();
+                                      setFormData((currentFormData) => ({
+                                        ...currentFormData,
+                                        [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "yes",
+                                      }));
+                                      return;
+                                    }
+
+                                    if (nextValue === "no") {
+                                      setUploadNowSelection("no");
+                                      setIdentityDocumentKind(
+                                        shouldAskIdentityDocumentKind
+                                          ? null
+                                          : "passport"
+                                      );
+                                      clearUploadRequirementErrors();
+                                      setFormData((currentFormData) => ({
+                                        ...currentFormData,
+                                        [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "no",
+                                        [ID_DOCUMENT_KIND_FIELD]: "",
+                                      }));
+                                    }
+                                  }}
                                 >
-                                  <UiFieldLabel className="flex items-center gap-2">
+                                  <UiFieldLabel
+                                    htmlFor="onboarding-field-id-document-upload-now-yes"
+                                    className="flex items-center gap-2"
+                                  >
                                     <UiRadioGroupItem
-                                      name={ID_DOCUMENT_UPLOAD_NOW_FIELD}
+                                      id="onboarding-field-id-document-upload-now-yes"
                                       value="yes"
-                                      checked={uploadNowSelection === "yes"}
-                                      onChange={() => {
-                                        setUploadNowSelection("yes");
-                                        clearUploadRequirementErrors();
-                                        setFormData((currentFormData) => ({
-                                          ...currentFormData,
-                                          [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "yes",
-                                        }));
-                                      }}
                                     />
                                     <span>{_(msg`Yes`)}</span>
                                   </UiFieldLabel>
-                                  <UiFieldLabel className="flex items-center gap-2">
+                                  <UiFieldLabel
+                                    htmlFor="onboarding-field-id-document-upload-now-no"
+                                    className="flex items-center gap-2"
+                                  >
                                     <UiRadioGroupItem
-                                      name={ID_DOCUMENT_UPLOAD_NOW_FIELD}
+                                      id="onboarding-field-id-document-upload-now-no"
                                       value="no"
-                                      checked={uploadNowSelection === "no"}
-                                      onChange={() => {
-                                        setUploadNowSelection("no");
-                                        setIdentityDocumentKind(
-                                          shouldAskIdentityDocumentKind
-                                            ? null
-                                            : "passport"
-                                        );
-                                        clearUploadRequirementErrors();
-                                        setFormData((currentFormData) => ({
-                                          ...currentFormData,
-                                          [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "no",
-                                          [ID_DOCUMENT_KIND_FIELD]: "",
-                                        }));
-                                      }}
                                     />
                                     <span>{_(msg`No`)}</span>
                                   </UiFieldLabel>
@@ -4054,7 +4063,6 @@ export function OnboardingWizard() {
                         </Trans>
                       </UiFieldDescription>
                       <UiRadioGroup
-                        role="radiogroup"
                         aria-label={_(msg`Employment permitted`)}
                         aria-invalid={
                           fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
@@ -4067,46 +4075,38 @@ export function OnboardingWizard() {
                             : undefined
                         }
                         className="mt-3"
+                        name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                        )}
+                        onValueChange={(nextValue) => {
+                          if (nextValue === "yes" || nextValue === "no") {
+                            handleFieldChange(
+                              RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+                              nextValue
+                            );
+                          }
+                        }}
                       >
-                        <UiFieldLabel className="flex items-center gap-2">
+                        <UiFieldLabel
+                          htmlFor="onboarding-field-residence-title-employment-allowed-yes"
+                          className="flex items-center gap-2"
+                        >
                           <UiRadioGroupItem
-                            name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
+                            id="onboarding-field-residence-title-employment-allowed-yes"
                             value="yes"
-                            checked={
-                              getTextValue(
-                                formData[
-                                  RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD
-                                ]
-                              ) === "yes"
-                            }
                             disabled={!isCurrentStepEditable}
-                            onChange={() =>
-                              handleFieldChange(
-                                RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
-                                "yes"
-                              )
-                            }
                           />
                           <span>{_(msg`Yes`)}</span>
                         </UiFieldLabel>
-                        <UiFieldLabel className="flex items-center gap-2">
+                        <UiFieldLabel
+                          htmlFor="onboarding-field-residence-title-employment-allowed-no"
+                          className="flex items-center gap-2"
+                        >
                           <UiRadioGroupItem
-                            name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
+                            id="onboarding-field-residence-title-employment-allowed-no"
                             value="no"
-                            checked={
-                              getTextValue(
-                                formData[
-                                  RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD
-                                ]
-                              ) === "no"
-                            }
                             disabled={!isCurrentStepEditable}
-                            onChange={() =>
-                              handleFieldChange(
-                                RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
-                                "no"
-                              )
-                            }
                           />
                           <span>{_(msg`No`)}</span>
                         </UiFieldLabel>
@@ -4139,7 +4139,6 @@ export function OnboardingWizard() {
                             </Trans>
                           </UiFieldDescription>
                           <UiRadioGroup
-                            role="radiogroup"
                             aria-label={_(
                               msg`Would you like to upload your residence title now?`
                             )}
@@ -4154,44 +4153,50 @@ export function OnboardingWizard() {
                                 : undefined
                             }
                             className="mt-3"
+                            name={RESIDENCE_TITLE_UPLOAD_NOW_FIELD}
+                            value={residenceTitleUploadNowSelection ?? ""}
+                            onValueChange={(nextValue) => {
+                              if (nextValue === "yes") {
+                                setResidenceTitleUploadNowSelection("yes");
+                                clearUploadRequirementErrors();
+                                setFormData((currentFormData) => ({
+                                  ...currentFormData,
+                                  [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "yes",
+                                }));
+                                return;
+                              }
+
+                              if (nextValue === "no") {
+                                setResidenceTitleUploadNowSelection("no");
+                                setUploadFiles([]);
+                                setUploadContext(null);
+                                clearUploadRequirementErrors();
+                                setFormData((currentFormData) => ({
+                                  ...currentFormData,
+                                  [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "no",
+                                }));
+                              }
+                            }}
                           >
-                            <UiFieldLabel className="flex items-center gap-2">
+                            <UiFieldLabel
+                              htmlFor="onboarding-field-residence-title-upload-now-yes"
+                              className="flex items-center gap-2"
+                            >
                               <UiRadioGroupItem
-                                name={RESIDENCE_TITLE_UPLOAD_NOW_FIELD}
+                                id="onboarding-field-residence-title-upload-now-yes"
                                 value="yes"
-                                checked={
-                                  residenceTitleUploadNowSelection === "yes"
-                                }
                                 disabled={!isCurrentStepEditable}
-                                onChange={() => {
-                                  setResidenceTitleUploadNowSelection("yes");
-                                  clearUploadRequirementErrors();
-                                  setFormData((currentFormData) => ({
-                                    ...currentFormData,
-                                    [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "yes",
-                                  }));
-                                }}
                               />
                               <span>{_(msg`Yes`)}</span>
                             </UiFieldLabel>
-                            <UiFieldLabel className="flex items-center gap-2">
+                            <UiFieldLabel
+                              htmlFor="onboarding-field-residence-title-upload-now-no"
+                              className="flex items-center gap-2"
+                            >
                               <UiRadioGroupItem
-                                name={RESIDENCE_TITLE_UPLOAD_NOW_FIELD}
+                                id="onboarding-field-residence-title-upload-now-no"
                                 value="no"
-                                checked={
-                                  residenceTitleUploadNowSelection === "no"
-                                }
                                 disabled={!isCurrentStepEditable}
-                                onChange={() => {
-                                  setResidenceTitleUploadNowSelection("no");
-                                  setUploadFiles([]);
-                                  setUploadContext(null);
-                                  clearUploadRequirementErrors();
-                                  setFormData((currentFormData) => ({
-                                    ...currentFormData,
-                                    [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "no",
-                                  }));
-                                }}
                               />
                               <span>{_(msg`No`)}</span>
                             </UiFieldLabel>

@@ -2,24 +2,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+  Children,
   forwardRef,
+  isValidElement,
   useId,
   useMemo,
   useState,
   type ButtonHTMLAttributes,
+  type ChangeEvent,
   type ComponentPropsWithoutRef,
+  type ElementRef,
   type ForwardedRef,
   type InputHTMLAttributes,
-  type SelectHTMLAttributes,
+  type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import * as SelectPrimitive from "@radix-ui/react-select";
+import { Check, ChevronDown, ChevronUp, Circle } from "lucide-react";
 import { cn } from "./utils";
 
 const controlBase =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 aria-invalid:ring-red-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400";
+  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm transition-colors placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 aria-invalid:ring-red-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-400 dark:focus-visible:ring-offset-zinc-950";
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950";
 
 type ButtonVariant =
   | "default"
@@ -93,56 +103,281 @@ export const Textarea = forwardRef(function Textarea(
   );
 });
 
+const emptySelectValue = "__onboarding_select_empty__";
+
+function toRadixSelectValue(value: unknown) {
+  const stringValue = value === undefined ? undefined : String(value);
+  return stringValue === "" ? emptySelectValue : stringValue;
+}
+
+function fromRadixSelectValue(value: string) {
+  return value === emptySelectValue ? "" : value;
+}
+
+type OnboardingSelectOption = {
+  value: string;
+  label: ReactNode;
+  disabled?: boolean;
+};
+
+function getSelectOptions(children: ReactNode): OnboardingSelectOption[] {
+  return Children.toArray(children).flatMap((child) => {
+    if (
+      !isValidElement<ComponentPropsWithoutRef<"option">>(child) ||
+      child.type !== "option"
+    ) {
+      return [];
+    }
+
+    const label = child.props.children;
+    const value =
+      child.props.value === undefined ? String(label ?? "") : child.props.value;
+
+    return [
+      {
+        value: String(value),
+        label,
+        disabled: child.props.disabled,
+      },
+    ];
+  });
+}
+
+function createSelectChangeEvent({
+  id,
+  name,
+  value,
+}: {
+  id?: string;
+  name?: string;
+  value: string;
+}) {
+  const target = {
+    id,
+    name,
+    value,
+  } as EventTarget & HTMLSelectElement;
+
+  return {
+    target,
+    currentTarget: target,
+  } as ChangeEvent<HTMLSelectElement>;
+}
+
 export const Select = forwardRef(function Select(
-  { className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>,
-  ref: ForwardedRef<HTMLSelectElement>
+  {
+    className,
+    children,
+    value,
+    defaultValue,
+    onChange,
+    disabled,
+    required,
+    name,
+    id,
+    "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
+    "aria-invalid": ariaInvalid,
+    ...props
+  }: Omit<
+    ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
+    "children" | "defaultValue" | "onChange" | "value"
+  > & {
+    children?: ReactNode;
+    value?: string | number;
+    defaultValue?: string | number;
+    name?: string;
+    required?: boolean;
+    onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
+  },
+  ref: ForwardedRef<ElementRef<typeof SelectPrimitive.Trigger>>
 ) {
+  const options = getSelectOptions(children);
+  const selectedValue =
+    value === undefined ? undefined : toRadixSelectValue(value);
+  const initialValue =
+    defaultValue === undefined ? undefined : toRadixSelectValue(defaultValue);
+  const [uncontrolledValue, setUncontrolledValue] = useState(initialValue);
+  const currentValue = selectedValue ?? uncontrolledValue;
+  const emptyOption = options.find((option) => option.value === "");
+
   return (
-    <select ref={ref} className={cn(controlBase, className)} {...props}>
-      {children}
-    </select>
+    <SelectPrimitive.Root
+      value={selectedValue}
+      defaultValue={initialValue}
+      disabled={disabled}
+      required={required}
+      name={name}
+      onValueChange={(nextValue) => {
+        if (value === undefined) {
+          setUncontrolledValue(nextValue);
+        }
+
+        onChange?.(
+          createSelectChangeEvent({
+            id,
+            name,
+            value: fromRadixSelectValue(nextValue),
+          })
+        );
+      }}
+    >
+      <SelectPrimitive.Trigger
+        ref={ref}
+        id={id}
+        data-slot="onboarding-select-trigger"
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
+        aria-required={required || undefined}
+        value={fromRadixSelectValue(currentValue ?? "")}
+        className={cn(
+          controlBase,
+          "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
+          className
+        )}
+        {...props}
+      >
+        <SelectPrimitive.Value placeholder={emptyOption?.label} />
+        <SelectPrimitive.Icon asChild>
+          <ChevronDown
+            className="size-4 opacity-50"
+            aria-hidden="true"
+            data-slot="onboarding-select-trigger-icon"
+          />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          data-slot="onboarding-select-content"
+          position="popper"
+          className="relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+        >
+          <SelectPrimitive.ScrollUpButton
+            data-slot="onboarding-select-scroll-up"
+            className="flex cursor-default items-center justify-center py-1"
+          >
+            <ChevronUp className="size-4" aria-hidden="true" />
+          </SelectPrimitive.ScrollUpButton>
+          <SelectPrimitive.Viewport
+            data-slot="onboarding-select-viewport"
+            className="h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] p-1"
+          >
+            {options.map((option) => (
+              <SelectPrimitive.Item
+                key={option.value}
+                value={toRadixSelectValue(option.value) ?? option.value}
+                disabled={option.disabled}
+                data-slot="onboarding-select-item"
+                data-value={option.value}
+                className="relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-zinc-950 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-zinc-100 data-[disabled]:opacity-50 dark:text-zinc-50 dark:data-[highlighted]:bg-zinc-800"
+              >
+                <span className="absolute right-2 flex size-3.5 items-center justify-center">
+                  <SelectPrimitive.ItemIndicator>
+                    <Check className="size-4" aria-hidden="true" />
+                  </SelectPrimitive.ItemIndicator>
+                </span>
+                <SelectPrimitive.ItemText>
+                  {option.label}
+                </SelectPrimitive.ItemText>
+              </SelectPrimitive.Item>
+            ))}
+          </SelectPrimitive.Viewport>
+          <SelectPrimitive.ScrollDownButton
+            data-slot="onboarding-select-scroll-down"
+            className="flex cursor-default items-center justify-center py-1"
+          >
+            <ChevronDown className="size-4" aria-hidden="true" />
+          </SelectPrimitive.ScrollDownButton>
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
   );
 });
 
 export const Checkbox = forwardRef(function Checkbox(
-  { className, ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, "type">,
-  ref: ForwardedRef<HTMLInputElement>
+  {
+    className,
+    onChange,
+    ...props
+  }: Omit<
+    ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
+    "onChange" | "onCheckedChange"
+  > & {
+    onChange?: InputHTMLAttributes<HTMLInputElement>["onChange"];
+  },
+  ref: ForwardedRef<ElementRef<typeof CheckboxPrimitive.Root>>
 ) {
   return (
-    <input
+    <CheckboxPrimitive.Root
       ref={ref}
-      type="checkbox"
+      data-slot="onboarding-checkbox"
       className={cn(
-        "size-4 rounded border-zinc-300 text-blue-600 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950",
+        "peer flex size-4 shrink-0 items-center justify-center rounded border border-zinc-300 bg-white text-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:border-blue-500 dark:data-[state=checked]:bg-blue-500",
         className
       )}
+      onCheckedChange={(checked) => {
+        if (checked === "indeterminate") {
+          return;
+        }
+
+        const target = {
+          checked,
+          value: props.value,
+          name: props.name,
+          id: props.id,
+        } as EventTarget & HTMLInputElement;
+
+        onChange?.({
+          target,
+          currentTarget: target,
+        } as ChangeEvent<HTMLInputElement>);
+      }}
       {...props}
-    />
+    >
+      <CheckboxPrimitive.Indicator asChild>
+        <Check className="size-3.5" aria-hidden="true" />
+      </CheckboxPrimitive.Indicator>
+    </CheckboxPrimitive.Root>
   );
 });
 
 export function RadioGroup({
   className,
   ...props
-}: ComponentPropsWithoutRef<"fieldset">) {
-  return <fieldset className={cn("space-y-3", className)} {...props} />;
-}
-
-export function RadioGroupItem({
-  className,
-  ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+}: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>) {
   return (
-    <input
-      type="radio"
-      className={cn(
-        "size-4 border-zinc-300 text-blue-600 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950",
-        className
-      )}
+    <RadioGroupPrimitive.Root
+      data-slot="onboarding-radio-group"
+      className={cn("grid gap-3", className)}
       {...props}
     />
   );
 }
+
+export const RadioGroupItem = forwardRef(function RadioGroupItem(
+  {
+    className,
+    ...props
+  }: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>,
+  ref: ForwardedRef<ElementRef<typeof RadioGroupPrimitive.Item>>
+) {
+  return (
+    <RadioGroupPrimitive.Item
+      ref={ref}
+      data-slot="onboarding-radio-group-item"
+      className={cn(
+        "flex size-4 shrink-0 items-center justify-center rounded-full border border-zinc-300 bg-white text-blue-600 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 data-[state=checked]:border-blue-600 dark:border-zinc-700 dark:bg-zinc-950 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:border-blue-500",
+        className
+      )}
+      {...props}
+    >
+      <RadioGroupPrimitive.Indicator asChild>
+        <Circle className="size-2.5 fill-current" aria-hidden="true" />
+      </RadioGroupPrimitive.Indicator>
+    </RadioGroupPrimitive.Item>
+  );
+});
 
 export const Alert = forwardRef(function Alert(
   { className, ...props }: ComponentPropsWithoutRef<"div">,
@@ -259,8 +494,9 @@ export function Progress({
   className,
   value,
   max = 100,
+  style,
   ...props
-}: ComponentPropsWithoutRef<"div"> & {
+}: ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
   value: number;
   max?: number;
 }) {
@@ -269,22 +505,23 @@ export function Progress({
   const percentage = (boundedValue / boundedMax) * 100;
 
   return (
-    <div
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={boundedMax}
-      aria-valuenow={boundedValue}
+    <ProgressPrimitive.Root
+      data-slot="onboarding-progress"
+      value={boundedValue}
+      max={boundedMax}
       className={cn(
         "relative h-2.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800",
         className
       )}
+      style={style}
       {...props}
     >
-      <div
+      <ProgressPrimitive.Indicator
+        data-slot="onboarding-progress-indicator"
         className="h-full rounded-full bg-blue-600 transition-all duration-300 dark:bg-blue-500"
-        style={{ width: `${percentage}%` }}
+        style={{ transform: `translateX(-${100 - percentage}%)` }}
       />
-    </div>
+    </ProgressPrimitive.Root>
   );
 }
 
@@ -302,20 +539,22 @@ export function FieldGroup({
   return <div className={cn("space-y-6", className)} {...props} />;
 }
 
-export function FieldLabel({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"label">) {
+export const FieldLabel = forwardRef(function FieldLabel(
+  { className, ...props }: ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
+  ref: ForwardedRef<ElementRef<typeof LabelPrimitive.Root>>
+) {
   return (
-    <label
+    <LabelPrimitive.Root
+      ref={ref}
+      data-slot="onboarding-field-label"
       className={cn(
-        "text-sm font-medium text-zinc-950 dark:text-zinc-50",
+        "text-sm font-medium text-zinc-950 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-zinc-50",
         className
       )}
       {...props}
     />
   );
-}
+});
 
 export function FieldDescription({
   className,

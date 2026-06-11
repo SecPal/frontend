@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -67,12 +67,12 @@ describe("onboarding shadcn primitives", () => {
       "Use all names from your ID. First names are required."
     );
     expect(screen.getByRole("textbox", { name: "Notes" })).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: "Contract type" })).toHaveValue(
-      "full_time"
-    );
+    expect(
+      screen.getByRole("combobox", { name: "Contract type" })
+    ).toHaveTextContent("Full time");
   });
 
-  it("preserves native disabled states and keyboard focus order", async () => {
+  it("preserves disabled states and keyboard focus order", async () => {
     const user = userEvent.setup();
 
     render(
@@ -98,27 +98,83 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled();
   });
 
-  it("supports accessible radio groups for single-choice onboarding fields", async () => {
+  it("uses Radix radio semantics and keyboard behavior for single-choice fields", async () => {
     const user = userEvent.setup();
+    const handleValueChange = vi.fn();
 
     render(
-      <RadioGroup>
-        <legend>Upload identity document now?</legend>
-        <label>
-          <RadioGroupItem name="upload-now" value="yes" /> Yes
-        </label>
-        <label>
-          <RadioGroupItem name="upload-now" value="no" /> No
-        </label>
+      <RadioGroup
+        aria-label="Upload identity document now?"
+        defaultValue="yes"
+        name="upload-now"
+        onValueChange={handleValueChange}
+      >
+        <FieldLabel
+          htmlFor="upload-now-yes"
+          className="flex items-center gap-2"
+        >
+          <RadioGroupItem id="upload-now-yes" value="yes" /> Yes
+        </FieldLabel>
+        <FieldLabel htmlFor="upload-now-no" className="flex items-center gap-2">
+          <RadioGroupItem id="upload-now-no" value="no" /> No
+        </FieldLabel>
       </RadioGroup>
     );
 
-    await user.click(screen.getByRole("radio", { name: "No" }));
+    const yes = screen.getByRole("radio", { name: "Yes" });
+    const no = screen.getByRole("radio", { name: "No" });
 
     expect(
-      screen.getByRole("group", { name: "Upload identity document now?" })
+      screen.getByRole("radiogroup", {
+        name: "Upload identity document now?",
+      })
     ).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "No" })).toBeChecked();
+    expect(yes).toHaveAttribute("data-state", "checked");
+    expect(yes).toBeChecked();
+
+    yes.focus();
+    await user.keyboard("{ArrowDown}");
+
+    await waitFor(() => expect(no).toHaveFocus());
+    await user.keyboard(" ");
+
+    expect(no).toBeChecked();
+    expect(handleValueChange).toHaveBeenCalledWith("no");
+  });
+
+  it("uses Radix select semantics while preserving option-shaped API", async () => {
+    const user = userEvent.setup();
+    const handleChange = vi.fn();
+
+    render(
+      <Field>
+        <FieldLabel htmlFor="contract-type">Contract type</FieldLabel>
+        <Select
+          id="contract-type"
+          aria-invalid
+          required
+          defaultValue=""
+          onChange={handleChange}
+        >
+          <option value="">Select an option</option>
+          <option value="full_time">Full time</option>
+          <option value="contractor">Contractor</option>
+        </Select>
+      </Field>
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Contract type" });
+    expect(trigger).toHaveAttribute("aria-invalid", "true");
+    expect(trigger).toHaveAttribute("aria-required", "true");
+
+    await user.click(trigger);
+    await user.click(screen.getByRole("option", { name: "Contractor" }));
+
+    expect(handleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: expect.objectContaining({ value: "contractor" }),
+      })
+    );
   });
 
   it("provides alert and card semantics without Catalyst wrappers", () => {

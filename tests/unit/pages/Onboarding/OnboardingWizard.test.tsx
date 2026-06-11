@@ -140,6 +140,36 @@ async function selectNationality(
   await user.keyboard("{ArrowDown}{Enter}");
 }
 
+async function selectOnboardingOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string | RegExp,
+  value: string
+) {
+  const control = screen.getByLabelText(label);
+
+  if (control instanceof HTMLSelectElement) {
+    await user.selectOptions(control, value);
+    return;
+  }
+
+  await user.click(control);
+  const option = await waitFor(() => {
+    const matchingOption = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-slot="onboarding-select-item"]'
+      )
+    ).find((element) => element.dataset.value === value);
+
+    if (!matchingOption) {
+      throw new Error(`Option with value "${value}" not found`);
+    }
+
+    return matchingOption;
+  });
+
+  await user.click(option);
+}
+
 function enableUploadNowSelection(
   documentKind: "id_card" | "passport" = "passport"
 ) {
@@ -173,7 +203,22 @@ function enableUploadNowSelection(
     /which document are you uploading\?|welches dokument laden sie hoch\?/i
   );
   if (documentKindControl) {
-    fireEvent.change(documentKindControl, { target: { value: documentKind } });
+    if (documentKindControl instanceof HTMLSelectElement) {
+      fireEvent.change(documentKindControl, {
+        target: { value: documentKind },
+      });
+    } else {
+      fireEvent.click(documentKindControl);
+      const option = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-slot="onboarding-select-item"]'
+        )
+      ).find((element) => element.dataset.value === documentKind);
+      if (!option) {
+        throw new Error(`Document kind option "${documentKind}" not found`);
+      }
+      fireEvent.click(option);
+    }
   }
 }
 
@@ -580,7 +625,7 @@ describe("OnboardingWizard", () => {
     await user.type(await screen.findByLabelText("Legal Name"), "Jane Doe");
     await user.type(screen.getByLabelText("Age"), "32");
     await user.click(screen.getByLabelText("Confirmed"));
-    await user.selectOptions(screen.getByLabelText("Gender"), "female");
+    await selectOnboardingOption(user, "Gender", "female");
     await user.click(screen.getByLabelText("German"));
     fireEvent.change(screen.getByLabelText("Activities"), {
       target: { value: "Patrol\nGate" },
