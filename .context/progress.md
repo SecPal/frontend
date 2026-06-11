@@ -27,6 +27,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
 - Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
 - Shared app-level shadcn/Radix primitives live in `src/ui`; keep route-local Auth/Onboarding barrels as compatibility layers for prefixed `data-slot`s, route-specific helpers, and legacy-compatible event shapes while delegating shared colors, spacing, radius, focus rings, dark-mode classes, and Radix wrappers to `src/ui`.
+- Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -592,3 +593,30 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: put app-wide shadcn/Radix building blocks and token classes in `src/ui`, then let route-local barrels adapt names, slots, and compatibility seams until routes can move directly to the shared layer.
   - Gotchas encountered: Radix Dialog and Select hide background content while open, so primitive tests must finish or split portal interactions before asserting controls outside the active layer; shared style constants should live in `.ts` files so React Fast Refresh does not flag component modules for exporting non-components.
+
+## US-002: App-Shell, Footer, Sprachumschaltung und Icon-Strategie migrieren
+
+- Migrated the app shell component set (`application-layout`, `stacked-layout`, `sidebar-layout`, `navbar`, `sidebar`, `dropdown`, `avatar`) off Headless/Tailwind Plus internals onto native/router elements plus Radix Dialog and Radix DropdownMenu while preserving existing exported component names and route behavior.
+- Swapped global language switching to the shared Radix Select primitive and updated route/component tests to drive the combobox/options through pointer events.
+- Replaced app-shell and footer UI icons with `lucide-react`, removed inline shell UI icon SVG sources, and kept the footer slogan, AGPL link, source-code link, targets, and rel/target behavior unchanged.
+- Added regressions for mobile shell navigation, Radix user menu behavior, footer presence, language switching, light/dark layout classes, and a source-level shell migration boundary audit.
+- Verified with `npm run typecheck`, `npm run lint`, and `npm test`.
+- Files changed:
+  - `package.json`
+  - `package-lock.json`
+  - `src/components/application-layout.tsx`
+  - `src/components/application-layout.test.tsx`
+  - `src/components/stacked-layout.tsx`
+  - `src/components/sidebar-layout.tsx`
+  - `src/components/navbar.tsx`
+  - `src/components/sidebar.tsx`
+  - `src/components/dropdown.tsx`
+  - `src/components/avatar.tsx`
+  - `src/components/LanguageSwitcher.tsx`
+  - `src/components/LanguageSwitcher.test.tsx`
+  - `src/components/Footer.tsx`
+  - `src/pages/Settings/SettingsPage.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: preserving the old shell wrapper exports makes a broad technical migration possible without forcing route/page call-site churn; the wrappers can translate old props such as dropdown `plain` into no-op compatibility at the boundary while Radix owns behavior.
+  - Gotchas encountered: Radix DropdownMenu and Select need pointer-event based tests, and Radix Dialog hides background content from role queries while open, so old click/change assertions and duplicate-link counts need to be updated to match the accessibility tree.

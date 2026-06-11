@@ -35,11 +35,42 @@ describe("LanguageSwitcher", () => {
     );
   };
 
+  async function selectLanguage(visibleName: string) {
+    const trigger = screen.getByRole("combobox", {
+      name: /select language/i,
+    });
+    fireEvent.pointerDown(trigger, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(trigger, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.click(trigger, { button: 0 });
+
+    const option = await screen.findByRole("option", { name: visibleName });
+    fireEvent.pointerDown(option, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(option, {
+      button: 0,
+      pointerId: 1,
+      pointerType: "mouse",
+    });
+    fireEvent.click(option, { button: 0 });
+  }
+
   it("renders language selector with current locale", () => {
     renderComponent();
     const select = screen.getByRole("combobox", { name: /select language/i });
     expect(select).toBeInTheDocument();
-    expect(select).toHaveValue("en");
+    expect(select).toHaveTextContent("English");
+    expect(select).toHaveAttribute("data-slot", "ui-select-trigger");
   });
 
   it("changes locale when selection changes", async () => {
@@ -49,9 +80,7 @@ describe("LanguageSwitcher", () => {
     mockActivateLocale.mockResolvedValueOnce(undefined);
 
     renderComponent();
-    const select = screen.getByRole("combobox", { name: /select language/i });
-
-    fireEvent.change(select, { target: { value: "de" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       expect(mockActivateLocale).toHaveBeenCalledWith("de");
@@ -68,9 +97,7 @@ describe("LanguageSwitcher", () => {
     );
 
     renderComponent();
-    const select = screen.getByRole("combobox", { name: /select language/i });
-
-    fireEvent.change(select, { target: { value: "de" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       expect(mockActivateLocale).toHaveBeenCalledWith("de");
@@ -89,9 +116,7 @@ describe("LanguageSwitcher", () => {
     mockActivateLocale.mockRejectedValueOnce("Unknown error");
 
     renderComponent();
-    const select = screen.getByRole("combobox", { name: /select language/i });
-
-    fireEvent.change(select, { target: { value: "de" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       const errorMessage = screen.getByRole("alert");
@@ -110,9 +135,7 @@ describe("LanguageSwitcher", () => {
     );
 
     renderComponent();
-    const select = screen.getByRole("combobox", { name: /select language/i });
-
-    fireEvent.change(select, { target: { value: "de" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -120,7 +143,7 @@ describe("LanguageSwitcher", () => {
 
     // Second attempt succeeds
     mockActivateLocale.mockResolvedValueOnce(undefined);
-    fireEvent.change(select, { target: { value: "en" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();

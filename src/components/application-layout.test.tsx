@@ -10,6 +10,8 @@ import {
   afterEach,
   beforeAll,
 } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   act,
   render,
@@ -48,6 +50,17 @@ vi.mock("../lib/analytics", () => ({
 }));
 
 const QUERY_TIMEOUT = 15000;
+const migratedShellFiles = [
+  "src/components/application-layout.tsx",
+  "src/components/stacked-layout.tsx",
+  "src/components/sidebar-layout.tsx",
+  "src/components/navbar.tsx",
+  "src/components/sidebar.tsx",
+  "src/components/dropdown.tsx",
+  "src/components/avatar.tsx",
+  "src/components/LanguageSwitcher.tsx",
+  "src/components/Footer.tsx",
+] as const;
 
 function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
@@ -118,6 +131,16 @@ async function openUserMenu() {
     name: /user menu/i,
   });
 
+  fireEvent.pointerDown(userMenuButton, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(userMenuButton, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
   fireEvent.click(userMenuButton);
 
   await waitFor(
@@ -204,6 +227,21 @@ describe("ApplicationLayout", () => {
       expect(contentSurface?.className).not.toContain("lg:ring-1");
     });
 
+    it("applies the global light and dark layout classes", () => {
+      const { container } = renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const shell = container.querySelector('[data-slot="app-stacked-layout"]');
+      const contentSurface = screen.getByRole("main").firstElementChild;
+
+      expect(shell).toHaveClass("min-h-dvh", "bg-white", "dark:bg-zinc-900");
+      expect(shell).toHaveClass("lg:bg-zinc-100", "dark:lg:bg-zinc-950");
+      expect(contentSurface).toHaveClass("bg-white", "dark:bg-zinc-900");
+    });
+
     it("renders navigation links", () => {
       renderWithProviders(
         <ApplicationLayout>
@@ -224,6 +262,36 @@ describe("ApplicationLayout", () => {
       // In stacked layout, user info is accessible via avatar and dropdown menu
       const userMenuButton = screen.getByRole("button", { name: /user menu/i });
       expect(userMenuButton).toBeInTheDocument();
+    });
+
+    it("opens and closes the mobile sidebar with Radix dialog semantics", async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      await user.click(
+        screen.getByRole("button", { name: /open navigation/i })
+      );
+
+      const dialog = await screen.findByRole("dialog", {
+        name: /navigation/i,
+      });
+      expect(dialog).toHaveAttribute("data-slot", "app-mobile-sidebar-content");
+      expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole("button", { name: /close navigation/i })
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByRole("dialog", { name: /navigation/i })
+        ).not.toBeInTheDocument();
+      });
     });
 
     it("renders user initials in avatar", async () => {
@@ -760,6 +828,22 @@ describe("ApplicationLayout", () => {
   });
 
   describe("footer", () => {
+    it("renders the migrated footer surface", () => {
+      const { container } = renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const footer = container.querySelector('[data-slot="app-footer"]');
+      expect(footer).toBeInTheDocument();
+      expect(footer).toHaveTextContent(
+        "Powered by SecPal – A guard's best friend"
+      );
+      expect(footer).toHaveTextContent("AGPL v3+");
+      expect(footer).toHaveTextContent("Source Code");
+    });
+
     it("renders license link in main content footer", () => {
       renderWithProviders(
         <ApplicationLayout>
@@ -936,6 +1020,27 @@ describe("ApplicationLayout", () => {
       expect(
         screen.queryByRole("link", { name: "Android Provisioning" })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("migration boundary", () => {
+    it("keeps the migrated shell free of Headless, Heroicons and inline UI icon sources", () => {
+      const forbiddenPatterns = [
+        /@headlessui\/react/,
+        /@heroicons\/react/,
+        /LicenseRef-TailwindPlus/,
+        /function \w+Icon\(/,
+        /<svg\s+data-slot="icon"/,
+      ];
+
+      const violations = migratedShellFiles.flatMap((relativePath) => {
+        const source = readFileSync(join(process.cwd(), relativePath), "utf8");
+        return forbiddenPatterns
+          .filter((pattern) => pattern.test(source))
+          .map((pattern) => `${relativePath}: ${pattern}`);
+      });
+
+      expect(violations).toEqual([]);
     });
   });
 });

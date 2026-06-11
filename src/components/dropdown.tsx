@@ -1,101 +1,142 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 "use client";
 
-import * as Headless from "@headlessui/react";
-import clsx from "clsx";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type React from "react";
-import { Button } from "./button";
-import { Link } from "./link";
+import {
+  Link as RouterLink,
+  type LinkProps as RouterLinkProps,
+} from "react-router-dom";
+import { cn } from "@/lib/utils";
 
-export function Dropdown(props: Headless.MenuProps) {
-  return <Headless.Menu {...props} />;
+type DropdownAnchor =
+  | "top"
+  | "top start"
+  | "top end"
+  | "right"
+  | "right start"
+  | "right end"
+  | "bottom"
+  | "bottom start"
+  | "bottom end"
+  | "left"
+  | "left start"
+  | "left end";
+
+function parseAnchor(anchor: DropdownAnchor): {
+  side: "top" | "right" | "bottom" | "left";
+  align: "start" | "center" | "end";
+} {
+  const [side, align] = anchor.split(" ") as [
+    "top" | "right" | "bottom" | "left",
+    "start" | "end" | undefined,
+  ];
+  return { side, align: align ?? "center" };
 }
 
-export function DropdownButton<T extends React.ElementType = typeof Button>({
-  as = Button,
+export function Dropdown(
+  props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>
+) {
+  return <DropdownMenuPrimitive.Root {...props} />;
+}
+
+export function DropdownButton<T extends React.ElementType = "button">({
+  as,
+  children,
+  plain,
+  outline,
+  color,
   ...props
-}: { className?: string } & Omit<Headless.MenuButtonProps<T>, "className">) {
-  return <Headless.MenuButton as={as} {...props} />;
+}: {
+  as?: T;
+  className?: string;
+  children: React.ReactNode;
+  plain?: boolean;
+  outline?: boolean;
+  color?: string;
+} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "children">) {
+  const Component = as ?? "button";
+  void plain;
+  void outline;
+  void color;
+
+  return (
+    <DropdownMenuPrimitive.Trigger asChild>
+      <Component {...props}>{children}</Component>
+    </DropdownMenuPrimitive.Trigger>
+  );
 }
 
 export function DropdownMenu({
   anchor = "bottom",
   className,
+  children,
   ...props
-}: { className?: string } & Omit<Headless.MenuItemsProps, "as" | "className">) {
+}: {
+  anchor?: DropdownAnchor;
+  className?: string;
+  children: React.ReactNode;
+} & Omit<
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>,
+  "asChild" | "className" | "children" | "side" | "align"
+>) {
+  const { side, align } = parseAnchor(anchor);
+
   return (
-    <Headless.MenuItems
-      {...props}
-      transition
-      anchor={anchor}
-      className={clsx(
-        className,
-        // Anchor positioning
-        "[--anchor-gap:--spacing(2)] [--anchor-padding:--spacing(1)] data-[anchor~=end]:[--anchor-offset:6px] data-[anchor~=start]:[--anchor-offset:-6px] sm:data-[anchor~=end]:[--anchor-offset:4px] sm:data-[anchor~=start]:[--anchor-offset:-4px]",
-        // Base styles
-        "isolate w-max rounded-xl p-1",
-        // Invisible border that is only visible in `forced-colors` mode for accessibility purposes
-        "outline outline-transparent focus:outline-hidden",
-        // Handle scrolling when menu won't fit in viewport
-        "overflow-y-auto",
-        // Popover background
-        "bg-white/75 backdrop-blur-xl dark:bg-zinc-800/75",
-        // Shadows
-        "shadow-lg ring-1 ring-zinc-950/10 dark:ring-white/10 dark:ring-inset",
-        // Define grid at the menu level if subgrid is supported
-        "supports-[grid-template-columns:subgrid]:grid supports-[grid-template-columns:subgrid]:grid-cols-[auto_1fr_1.5rem_0.5rem_auto]",
-        // Transitions
-        "transition data-leave:duration-100 data-leave:ease-in data-closed:data-leave:opacity-0"
-      )}
-    />
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        {...props}
+        side={side}
+        align={align}
+        sideOffset={8}
+        collisionPadding={8}
+        data-slot="app-dropdown-menu"
+        className={cn(
+          "z-50 max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] w-max min-w-48 overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-lg outline-none",
+          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
+          "dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+          className
+        )}
+      >
+        {children}
+      </DropdownMenuPrimitive.Content>
+    </DropdownMenuPrimitive.Portal>
   );
 }
 
+type DropdownItemProps = { className?: string; children: React.ReactNode } & (
+  | ({ href?: never } & React.ButtonHTMLAttributes<HTMLButtonElement>)
+  | ({ href: string } & Omit<RouterLinkProps, "to" | "className">)
+);
+
 export function DropdownItem({
   className,
+  children,
   ...props
-}: { className?: string } & (
-  | ({ href?: never } & Omit<
-      Headless.MenuItemProps<"button">,
-      "as" | "className"
-    >)
-  | ({ href: string } & Omit<
-      Headless.MenuItemProps<typeof Link>,
-      "as" | "className"
-    >)
-)) {
-  const classes = clsx(
-    className,
-    // Base styles
-    "group cursor-default rounded-lg px-3.5 py-2.5 focus:outline-hidden sm:px-3 sm:py-1.5",
-    // Text styles
-    "text-left text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white forced-colors:text-[CanvasText]",
-    // Focus
-    "data-focus:bg-blue-500 data-focus:text-white",
-    // Disabled state
-    "data-disabled:opacity-50",
-    // Forced colors mode
-    "forced-color-adjust-none forced-colors:data-focus:bg-[Highlight] forced-colors:data-focus:text-[HighlightText] forced-colors:data-focus:*:data-[slot=icon]:text-[HighlightText]",
-    // Use subgrid when available but fallback to an explicit grid layout if not
-    "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] items-center supports-[grid-template-columns:subgrid]:grid-cols-subgrid",
-    // Icons
-    "*:data-[slot=icon]:col-start-1 *:data-[slot=icon]:row-start-1 *:data-[slot=icon]:mr-2.5 *:data-[slot=icon]:-ml-0.5 *:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:mr-2 sm:*:data-[slot=icon]:size-4",
-    "*:data-[slot=icon]:text-zinc-500 data-focus:*:data-[slot=icon]:text-white dark:*:data-[slot=icon]:text-zinc-400 dark:data-focus:*:data-[slot=icon]:text-white",
-    // Avatar
-    "*:data-[slot=avatar]:mr-2.5 *:data-[slot=avatar]:-ml-1 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:mr-2 sm:*:data-[slot=avatar]:size-5"
+}: DropdownItemProps) {
+  const classes = cn(
+    "group relative flex cursor-default select-none items-center rounded-sm px-3 py-2 text-left text-base/6 text-zinc-950 outline-none transition-colors sm:text-sm/6",
+    "focus:bg-blue-600 focus:text-white data-[highlighted]:bg-blue-600 data-[highlighted]:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    "*:data-[slot=icon]:mr-2.5 *:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-zinc-500 group-focus:*:data-[slot=icon]:text-white group-data-[highlighted]:*:data-[slot=icon]:text-white sm:*:data-[slot=icon]:mr-2 sm:*:data-[slot=icon]:size-4",
+    "*:data-[slot=avatar]:mr-2.5 *:data-[slot=avatar]:-ml-1 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:mr-2 sm:*:data-[slot=avatar]:size-5",
+    "dark:text-zinc-50 dark:*:data-[slot=icon]:text-zinc-400",
+    className
   );
 
-  return typeof props.href === "string" ? (
-    <Headless.MenuItem as={Link} {...props} className={classes} />
-  ) : (
-    <Headless.MenuItem
-      as="button"
-      type="button"
-      {...props}
-      className={classes}
-    />
+  return (
+    <DropdownMenuPrimitive.Item asChild>
+      {"href" in props && typeof props.href === "string" ? (
+        <RouterLink {...props} to={props.href} className={classes}>
+          {children}
+        </RouterLink>
+      ) : (
+        <button {...props} type={props.type ?? "button"} className={classes}>
+          {children}
+        </button>
+      )}
+    </DropdownMenuPrimitive.Item>
   );
 }
 
@@ -103,46 +144,28 @@ export function DropdownHeader({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      {...props}
-      className={clsx(className, "col-span-5 px-3.5 pt-2.5 pb-1 sm:px-3")}
-    />
-  );
+  return <div {...props} className={cn("px-3 pt-2.5 pb-1", className)} />;
 }
 
 export function DropdownSection({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.MenuSectionProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"div">) {
   return (
-    <Headless.MenuSection
-      {...props}
-      className={clsx(
-        className,
-        // Define grid at the section level instead of the item level if subgrid is supported
-        "col-span-full supports-[grid-template-columns:subgrid]:grid supports-[grid-template-columns:subgrid]:grid-cols-[auto_1fr_1.5rem_0.5rem_auto]"
-      )}
-    />
+    <DropdownMenuPrimitive.Group {...props} className={cn("py-1", className)} />
   );
 }
 
 export function DropdownHeading({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.MenuHeadingProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"div">) {
   return (
-    <Headless.MenuHeading
+    <DropdownMenuPrimitive.Label
       {...props}
-      className={clsx(
-        className,
-        "col-span-full grid grid-cols-[1fr_auto] gap-x-12 px-3.5 pt-2 pb-1 text-sm/5 font-medium text-zinc-500 sm:px-3 sm:text-xs/5 dark:text-zinc-400"
+      className={cn(
+        "px-3 pt-2 pb-1 text-sm/5 font-medium text-zinc-500 sm:text-xs/5 dark:text-zinc-400",
+        className
       )}
     />
   );
@@ -151,17 +174,11 @@ export function DropdownHeading({
 export function DropdownDivider({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.MenuSeparatorProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"div">) {
   return (
-    <Headless.MenuSeparator
+    <DropdownMenuPrimitive.Separator
       {...props}
-      className={clsx(
-        className,
-        "col-span-full mx-3.5 my-1 h-px border-0 bg-zinc-950/5 sm:mx-3 dark:bg-white/10 forced-colors:bg-[CanvasText]"
-      )}
+      className={cn("mx-3 my-1 h-px bg-zinc-950/5 dark:bg-white/10", className)}
     />
   );
 }
@@ -174,7 +191,7 @@ export function DropdownLabel({
     <div
       {...props}
       data-slot="label"
-      className={clsx(className, "col-start-2 row-start-1")}
+      className={cn("min-w-0 flex-1", className)}
     />
   );
 }
@@ -182,17 +199,14 @@ export function DropdownLabel({
 export function DropdownDescription({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.DescriptionProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<"div">) {
   return (
-    <Headless.Description
+    <div
       data-slot="description"
       {...props}
-      className={clsx(
-        className,
-        "col-span-2 col-start-2 row-start-2 text-sm/5 text-zinc-500 group-data-focus:text-white sm:text-xs/5 dark:text-zinc-400 forced-colors:group-data-focus:text-[HighlightText]"
+      className={cn(
+        "ml-7 text-sm/5 text-zinc-500 group-data-[highlighted]:text-white sm:text-xs/5 dark:text-zinc-400",
+        className
       )}
     />
   );
@@ -202,31 +216,26 @@ export function DropdownShortcut({
   keys,
   className,
   ...props
-}: { keys: string | string[]; className?: string } & Omit<
-  Headless.DescriptionProps<"kbd">,
-  "as" | "className"
->) {
+}: {
+  keys: string | string[];
+  className?: string;
+} & React.ComponentPropsWithoutRef<"kbd">) {
   return (
-    <Headless.Description
-      as="kbd"
+    <kbd
       {...props}
-      className={clsx(
-        className,
-        "col-start-5 row-start-1 flex justify-self-end"
-      )}
+      className={cn("ml-auto flex pl-6 font-sans text-zinc-400", className)}
     >
       {(Array.isArray(keys) ? keys : keys.split("")).map((char, index) => (
-        <kbd
-          key={index}
-          className={clsx([
-            "min-w-[2ch] text-center font-sans text-zinc-400 capitalize group-data-focus:text-white forced-colors:group-data-focus:text-[HighlightText]",
-            // Make sure key names that are longer than one character (like "Tab") have extra space
-            index > 0 && char.length > 1 && "pl-1",
-          ])}
+        <span
+          key={`${char}-${index}`}
+          className={cn(
+            "min-w-[2ch] text-center capitalize group-data-[highlighted]:text-white",
+            index > 0 && char.length > 1 && "pl-1"
+          )}
         >
           {char}
-        </kbd>
+        </span>
       ))}
-    </Headless.Description>
+    </kbd>
   );
 }

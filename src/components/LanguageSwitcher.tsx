@@ -4,14 +4,20 @@
 import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
-import { Select } from "./select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui";
 
 export function LanguageSwitcher() {
   const { i18n } = useLingui();
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const locale = event.target.value;
+  const handleChange = async (locale: string) => {
     setError(null);
     try {
       await activateLocale(locale);
@@ -25,17 +31,28 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <div>
+    <div data-slot="app-language-switcher">
       <Select
         value={i18n.locale}
-        onChange={handleChange}
-        aria-label="Select language"
+        onValueChange={(locale) => {
+          void handleChange(locale);
+        }}
       >
-        {Object.entries(locales).map(([code, name]) => (
-          <option key={code} value={code}>
-            {name}
-          </option>
-        ))}
+        <SelectTrigger
+          aria-label="Select language"
+          className="h-9 min-h-9 w-auto min-w-[7rem] px-3 py-1.5"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {Object.entries(locales).map(([code, name]) => (
+              <SelectItem key={code} value={code}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
       </Select>
       {error && (
         <p
