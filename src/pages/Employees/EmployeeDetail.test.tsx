@@ -60,6 +60,37 @@ const renderWithProviders = (employeeId: string) => {
   );
 };
 
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp | string
+) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 const mockEmployee: Employee = {
   id: "emp-1",
   employee_number: "E001",
@@ -155,6 +186,37 @@ describe("EmployeeDetail", () => {
     expect(screen.getByText("Developer")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("renders the migrated shadcn/Radix detail surface with dark-mode classes", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "John Doe" })
+      ).toBeInTheDocument();
+    });
+
+    const detailCard = document.querySelector('[data-slot="ui-card"]');
+    expect(detailCard).toHaveClass("bg-white", "dark:bg-zinc-950");
+
+    const statusBadge = document.querySelector(
+      '[data-slot="employee-status-badge"]'
+    );
+    expect(statusBadge).toHaveClass("dark:bg-lime-400/10");
+
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /edit email/i }));
+
+    const dialogContent = await screen.findByRole("dialog", {
+      name: /edit email/i,
+    });
+    expect(dialogContent).toHaveAttribute("data-slot", "ui-dialog-content");
+    expect(dialogContent).toHaveClass("bg-white", "dark:bg-zinc-950");
+    expect(screen.getByLabelText(/^email$/i)).toHaveAttribute(
+      "data-slot",
+      "ui-input"
+    );
   });
 
   it("should render contact details in the contacts tab", async () => {
@@ -672,7 +734,9 @@ describe("EmployeeDetail", () => {
     });
 
     expect(screen.getByText("Not registered")).toBeInTheDocument();
-    expect(screen.getByLabelText(/export format/i)).toHaveValue("csv");
+    expect(
+      screen.getByRole("combobox", { name: /export format/i })
+    ).toHaveTextContent("CSV");
     expect(
       screen.getByRole("button", { name: /generate bwr export/i })
     ).toBeInTheDocument();
@@ -716,9 +780,7 @@ describe("EmployeeDetail", () => {
       ).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/export format/i), {
-      target: { value: "xml" },
-    });
+    await selectRadixOption(/export format/i, /^XML$/i);
     fireEvent.click(
       screen.getByRole("button", { name: /generate bwr export/i })
     );
@@ -815,9 +877,7 @@ describe("EmployeeDetail", () => {
       expect(screen.getByLabelText(/^BWR Status$/i)).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/^BWR Status$/i), {
-      target: { value: "active" },
-    });
+    await selectRadixOption(/^BWR Status$/i, /^Active$/i);
     fireEvent.change(screen.getByLabelText(/^BWR ID$/i), {
       target: { value: "1234567" },
     });

@@ -9,27 +9,36 @@ import type { Employee, EmployeeFilters, EmployeeStatus } from "@/types/api";
 import { fetchEmployees } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Text } from "../../components/text";
-import { Input } from "../../components/input";
-import { Select } from "../../components/select";
-import { Field, Label } from "../../components/fieldset";
 import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPicker";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  DataTable,
+  Field,
+  FieldLabel,
+  Input,
+  LinkButton,
+  PageText,
+  PageTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Spinner,
+  StatusBadge as EmployeeStatusBadge,
   Table,
-  TableHead,
   TableBody,
-  TableRow,
-  TableHeader,
   TableCell,
-} from "../../components/table";
-import { Badge } from "../../components/badge";
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
-/**
- * Status badge component using Catalyst Badge
- */
 function StatusBadge({ status }: { status: EmployeeStatus }) {
   const colors = {
     applicant: "orange",
@@ -47,7 +56,11 @@ function StatusBadge({ status }: { status: EmployeeStatus }) {
     terminated: <Trans>Terminated</Trans>,
   };
 
-  return <Badge color={colors[status]}>{labels[status]}</Badge>;
+  return (
+    <EmployeeStatusBadge color={colors[status]}>
+      {labels[status]}
+    </EmployeeStatusBadge>
+  );
 }
 
 /**
@@ -110,7 +123,7 @@ export function EmployeeList() {
         }
 
         console.error("Failed to load employees:", err);
-        let errorMessage = "Failed to load employees";
+        let errorMessage = _(msg`Failed to load employees`);
 
         if (err instanceof Error) {
           errorMessage = err.message;
@@ -134,7 +147,7 @@ export function EmployeeList() {
     return () => {
       active = false;
     };
-  }, [filters]);
+  }, [_, filters]);
 
   function handleStatusFilter(status: EmployeeStatus | undefined) {
     setLoading(true);
@@ -164,189 +177,218 @@ export function EmployeeList() {
 
   if (loading && employees.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Text>
+      <div className="flex h-64 items-center justify-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+        <Spinner aria-label={_(msg`Loading employees...`)} />
+        <span>
           <Trans>Loading employees...</Trans>
-        </Text>
+        </span>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="sm:flex sm:items-center sm:justify-between mb-6">
-        <Heading>
+    <div className="space-y-6">
+      <div className="sm:flex sm:items-center sm:justify-between">
+        <PageTitle>
           <Trans>Employee Management</Trans>
-        </Heading>
+        </PageTitle>
         {capabilities.actions.employees.create && (
           <div className="mt-4 sm:mt-0">
-            <Button href="/employees/create">
+            <LinkButton to="/employees/create">
               <Trans>Add Employee</Trans>
-            </Button>
+            </LinkButton>
           </div>
         )}
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm rounded-lg p-4 mb-6 dark:bg-zinc-900">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field>
-            <Label>
-              <Trans>Search</Trans>
-            </Label>
-            <Input
-              type="text"
-              name="search"
-              placeholder={_(msg`Search by name or email...`)}
-              value={filters.search || ""}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </Field>
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Field>
+              <FieldLabel htmlFor="employee-search">
+                <Trans>Search</Trans>
+              </FieldLabel>
+              <Input
+                id="employee-search"
+                type="text"
+                name="search"
+                placeholder={_(msg`Search by name or email...`)}
+                value={filters.search || ""}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </Field>
 
-          <Field>
-            <Label>
-              <Trans>Organizational Unit</Trans>
-            </Label>
-            <OrganizationalUnitPicker
-              units={organizationalUnits}
-              value={filters.organizational_unit_id ?? ""}
-              onChange={(unitId) =>
-                handleOrganizationalUnitFilter(unitId || undefined)
-              }
-              disabled={unitsLoading}
-            />
-          </Field>
+            <Field>
+              <FieldLabel htmlFor="employee-organizational-unit">
+                <Trans>Organizational Unit</Trans>
+              </FieldLabel>
+              <OrganizationalUnitPicker
+                units={organizationalUnits}
+                value={filters.organizational_unit_id ?? ""}
+                onChange={(unitId) =>
+                  handleOrganizationalUnitFilter(unitId || undefined)
+                }
+                disabled={unitsLoading}
+                ariaLabel={_(msg`Organizational Unit`)}
+              />
+            </Field>
 
-          <Field>
-            <Label>
-              <Trans>Status</Trans>
-            </Label>
-            <Select
-              name="status"
-              value={filters.status || ""}
-              onChange={(e) =>
-                handleStatusFilter(
-                  e.target.value
-                    ? (e.target.value as EmployeeStatus)
-                    : undefined
-                )
-              }
-            >
-              <option value="">{_(msg`All`)}</option>
-              <option value="applicant">{_(msg`Applicant`)}</option>
-              <option value="pre_contract">{_(msg`Pre-Contract`)}</option>
-              <option value="active">{_(msg`Active`)}</option>
-              <option value="on_leave">{_(msg`On Leave`)}</option>
-              <option value="terminated">{_(msg`Terminated`)}</option>
-            </Select>
-          </Field>
-        </div>
-      </div>
+            <Field>
+              <FieldLabel htmlFor="employee-status-filter">
+                <Trans>Status</Trans>
+              </FieldLabel>
+              <Select
+                name="status"
+                value={filters.status || "all"}
+                onValueChange={(value) =>
+                  handleStatusFilter(
+                    value === "all" ? undefined : (value as EmployeeStatus)
+                  )
+                }
+              >
+                <SelectTrigger id="employee-status-filter">
+                  <SelectValue placeholder={_(msg`All`)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" data-value="all">
+                    {_(msg`All`)}
+                  </SelectItem>
+                  <SelectItem value="applicant" data-value="applicant">
+                    {_(msg`Applicant`)}
+                  </SelectItem>
+                  <SelectItem value="pre_contract" data-value="pre_contract">
+                    {_(msg`Pre-Contract`)}
+                  </SelectItem>
+                  <SelectItem value="active" data-value="active">
+                    {_(msg`Active`)}
+                  </SelectItem>
+                  <SelectItem value="on_leave" data-value="on_leave">
+                    {_(msg`On Leave`)}
+                  </SelectItem>
+                  <SelectItem value="terminated" data-value="terminated">
+                    {_(msg`Terminated`)}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
-          <div className="mb-2 text-4xl">⚠️</div>
-          <Heading level={3} className="text-red-900 dark:text-red-400">
+        <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+          <PageTitle level={3} className="text-red-900 dark:text-red-200">
             <Trans>Error Loading Employees</Trans>
-          </Heading>
-          <Text className="mt-2 text-red-700 dark:text-red-500">{error}</Text>
-        </div>
+          </PageTitle>
+          <AlertDescription className="text-red-700 dark:text-red-300">
+            {error}
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Employee Table */}
-      <Table className="[--gutter:--spacing(6)] lg:[--gutter:--spacing(10)]">
-        <TableHead>
-          <TableRow>
-            <TableHeader>
-              <Trans>Employee</Trans>
-            </TableHeader>
-            <TableHeader>
-              <Trans>Employee #</Trans>
-            </TableHeader>
-            <TableHeader>
-              <Trans>Position</Trans>
-            </TableHeader>
-            <TableHeader>
-              <Trans>Status</Trans>
-            </TableHeader>
-            <TableHeader>
-              <Trans>Unit</Trans>
-            </TableHeader>
-            <TableHeader>
-              <span className="sr-only">
-                <Trans>Actions</Trans>
-              </span>
-            </TableHeader>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {employees.map((employee) => (
-            <TableRow key={employee.id} href={`/employees/${employee.id}`}>
-              <TableCell>
-                <div>
-                  <div className="font-medium">{employee.full_name}</div>
-                  <div className="text-zinc-500 dark:text-zinc-400">
-                    {employee.email}
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-zinc-500">
-                {employee.employee_number}
-              </TableCell>
-              <TableCell>
-                {employee.management_level > 0 ? (
-                  <>
-                    <span className="font-medium">
-                      <Trans>ML</Trans> {employee.management_level}
-                    </span>
-                    {" - "}
-                    {employee.position}
-                  </>
-                ) : (
-                  employee.position
-                )}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={employee.status} />
-              </TableCell>
-              <TableCell className="text-zinc-500">
-                {employee.organizational_unit?.name || "-"}
-              </TableCell>
-              <TableCell>
-                <div className="-mx-3 -my-1.5 sm:-mx-2.5">
-                  <Button outline href={`/employees/${employee.id}`}>
-                    <Trans>View</Trans>
-                  </Button>
-                </div>
-              </TableCell>
+      <DataTable>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeader>
+                <Trans>Employee</Trans>
+              </TableHeader>
+              <TableHeader>
+                <Trans>Employee #</Trans>
+              </TableHeader>
+              <TableHeader>
+                <Trans>Position</Trans>
+              </TableHeader>
+              <TableHeader>
+                <Trans>Status</Trans>
+              </TableHeader>
+              <TableHeader>
+                <Trans>Unit</Trans>
+              </TableHeader>
+              <TableHeader>
+                <span className="sr-only">
+                  <Trans>Actions</Trans>
+                </span>
+              </TableHeader>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {employees.map((employee) => (
+              <TableRow
+                key={employee.id}
+                to={`/employees/${employee.id}`}
+                title={employee.full_name}
+              >
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{employee.full_name}</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">
+                      {employee.email}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  {employee.employee_number}
+                </TableCell>
+                <TableCell>
+                  {employee.management_level > 0 ? (
+                    <>
+                      <span className="font-medium">
+                        <Trans>ML</Trans> {employee.management_level}
+                      </span>
+                      {" - "}
+                      {employee.position}
+                    </>
+                  ) : (
+                    employee.position
+                  )}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={employee.status} />
+                </TableCell>
+                <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  {employee.organizational_unit?.name || "-"}
+                </TableCell>
+                <TableCell>
+                  <LinkButton
+                    variant="outline"
+                    to={`/employees/${employee.id}`}
+                    className="relative z-10"
+                  >
+                    <Trans>View</Trans>
+                  </LinkButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </DataTable>
 
       {/* Pagination */}
       {pagination.last_page > 1 && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg">
+        <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
               onClick={() => handlePageChange(pagination.current_page - 1)}
               disabled={pagination.current_page === 1}
-              outline
+              variant="outline"
             >
               <Trans>Previous</Trans>
             </Button>
             <Button
               onClick={() => handlePageChange(pagination.current_page + 1)}
               disabled={pagination.current_page === pagination.last_page}
-              outline
+              variant="outline"
             >
               <Trans>Next</Trans>
             </Button>
           </div>
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <Text className="text-sm text-gray-700">
+              <PageText>
                 <Trans>
                   Showing{" "}
                   <span className="font-medium">
@@ -362,17 +404,17 @@ export function EmployeeList() {
                   of <span className="font-medium">{pagination.total}</span>{" "}
                   employees
                 </Trans>
-              </Text>
+              </PageText>
             </div>
             <div>
               <nav
                 className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                aria-label="Pagination"
+                aria-label={_(msg`Pagination`)}
               >
                 <Button
                   onClick={() => handlePageChange(pagination.current_page - 1)}
                   disabled={pagination.current_page === 1}
-                  outline
+                  variant="outline"
                   className="rounded-l-md"
                 >
                   <Trans>Previous</Trans>
@@ -380,7 +422,7 @@ export function EmployeeList() {
                 <Button
                   onClick={() => handlePageChange(pagination.current_page + 1)}
                   disabled={pagination.current_page === pagination.last_page}
-                  outline
+                  variant="outline"
                   className="rounded-r-md"
                 >
                   <Trans>Next</Trans>

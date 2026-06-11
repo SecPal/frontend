@@ -12,19 +12,27 @@ import type {
   EmployeeBwrStatus,
 } from "@/types/api";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
-import { Badge } from "../../components/badge";
-import { Button } from "../../components/button";
 import {
-  Description as FieldDescription,
-  ErrorMessage,
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
   Field,
-  Label,
-} from "../../components/fieldset";
-import { Heading } from "../../components/heading";
-import { Input } from "../../components/input";
-import { Select } from "../../components/select";
-import { Text } from "../../components/text";
-import { Textarea } from "../../components/textarea";
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  Input,
+  PageText,
+  PageTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  StatusBadge,
+  Textarea,
+} from "./ui";
 import { ApiError } from "../../services/ApiError";
 import {
   exportEmployeeBwr,
@@ -199,7 +207,9 @@ export function EmployeeBwrPanel({
       }
       setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
     } catch (error) {
-      setPanelError(getBwrErrorMessage(error, "Failed to generate BWR export"));
+      setPanelError(
+        getBwrErrorMessage(error, _(msg`Failed to generate BWR export`))
+      );
       setPanelFieldErrors(
         error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
@@ -231,7 +241,9 @@ export function EmployeeBwrPanel({
       }
       setSuccessMessage(_(msg`BWR status updated.`));
     } catch (error) {
-      setPanelError(getBwrErrorMessage(error, "Failed to update BWR status"));
+      setPanelError(
+        getBwrErrorMessage(error, _(msg`Failed to update BWR status`))
+      );
       setPanelFieldErrors(
         error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
@@ -241,70 +253,85 @@ export function EmployeeBwrPanel({
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-zinc-950/10 p-5 dark:border-white/10">
+    <section className="space-y-4 rounded-md border border-zinc-200 p-5 dark:border-zinc-800">
       <div className="space-y-1">
-        <Heading level={2}>
+        <PageTitle level={2}>
           <Trans>Bewacherregister</Trans>
-        </Heading>
-        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+        </PageTitle>
+        <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
           <Trans>
             Manage the employee's BWR export and registration state from the
             dedicated runtime endpoints.
           </Trans>
-        </Text>
+        </PageText>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="space-y-1 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-          <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>BWR Status</Trans>
-          </Text>
-          <Badge color={getBwrStatusColor(currentStatus)}>
-            {getBwrStatusLabel(currentStatus, _)}
-          </Badge>
-        </div>
-        <div className="space-y-1 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-          <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>BWR ID</Trans>
-          </Text>
-          <Text>{employee.bwr_id || "-"}</Text>
-        </div>
-        <div className="space-y-1 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-          <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>BWR Submission Date</Trans>
-          </Text>
-          <Text>
-            {employee.bwr_submission_date
-              ? formatDate(employee.bwr_submission_date, i18n.locale)
-              : "-"}
-          </Text>
-        </div>
-        <div className="space-y-1 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-          <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-            <Trans>BWR Registered At</Trans>
-          </Text>
-          <Text>
-            {employee.bwr_registered_at
-              ? formatDateTime(employee.bwr_registered_at, i18n.locale)
-              : "-"}
-          </Text>
-        </div>
+        <Card className="shadow-none">
+          <CardContent className="space-y-1 p-4">
+            <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>BWR Status</Trans>
+            </PageText>
+            <StatusBadge color={getBwrStatusColor(currentStatus)}>
+              {getBwrStatusLabel(currentStatus, _)}
+            </StatusBadge>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="space-y-1 p-4">
+            <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>BWR ID</Trans>
+            </PageText>
+            <PageText className="text-zinc-950 dark:text-zinc-50">
+              {employee.bwr_id || "-"}
+            </PageText>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="space-y-1 p-4">
+            <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>BWR Submission Date</Trans>
+            </PageText>
+            <PageText className="text-zinc-950 dark:text-zinc-50">
+              {employee.bwr_submission_date
+                ? formatDate(employee.bwr_submission_date, i18n.locale)
+                : "-"}
+            </PageText>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardContent className="space-y-1 p-4">
+            <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+              <Trans>BWR Registered At</Trans>
+            </PageText>
+            <PageText className="text-zinc-950 dark:text-zinc-50">
+              {employee.bwr_registered_at
+                ? formatDateTime(employee.bwr_registered_at, i18n.locale)
+                : "-"}
+            </PageText>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="space-y-1 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-          <Trans>BWR Notes</Trans>
-        </Text>
-        <Text>{employee.bwr_notes || "-"}</Text>
-      </div>
+      <Card className="shadow-none">
+        <CardContent className="space-y-1 p-4">
+          <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+            <Trans>BWR Notes</Trans>
+          </PageText>
+          <PageText className="text-zinc-950 dark:text-zinc-50">
+            {employee.bwr_notes || "-"}
+          </PageText>
+        </CardContent>
+      </Card>
 
       {panelError ? (
-        <div
-          role="alert"
+        <Alert
           aria-live="assertive"
-          className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200"
+          className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200"
         >
-          <Text>{panelError}</Text>
+          <AlertDescription className="text-rose-800 dark:text-rose-200">
+            {panelError}
+          </AlertDescription>
           {panelFieldErrors.general && panelFieldErrors.general.length > 0 ? (
             <ul className="mt-2 list-disc space-y-1 pl-5">
               {panelFieldErrors.general.map((message) => (
@@ -312,24 +339,24 @@ export function EmployeeBwrPanel({
               ))}
             </ul>
           ) : null}
-        </div>
+        </Alert>
       ) : null}
 
       {successMessage ? (
         <div
           role="status"
           aria-live="polite"
-          className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
+          className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200"
         >
           {successMessage}
         </div>
       ) : null}
 
       {latestExportUrl ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-zinc-50 p-4 dark:bg-white/5">
-          <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+          <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
             <Trans>Latest export</Trans>
-          </Text>
+          </PageText>
           <a
             className="inline-flex items-center justify-center rounded-lg border border-zinc-950/10 px-3.5 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-950/2.5 sm:px-3 sm:py-1.5 dark:border-white/15 dark:text-white dark:hover:bg-white/5"
             href={latestExportUrl}
@@ -342,30 +369,34 @@ export function EmployeeBwrPanel({
       ) : null}
 
       {!canManage ? (
-        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+        <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
           <Trans>
             You can inspect BWR data, but write permission is required to manage
             it.
           </Trans>
-        </Text>
+        </PageText>
       ) : currentStatus === "not_registered" ? (
         <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_auto] md:items-end">
           <Field>
-            <Label htmlFor="bwr-export-format">
+            <FieldLabel htmlFor="bwr-export-format">
               <Trans>Export Format</Trans>
-            </Label>
+            </FieldLabel>
             <Select
-              id="bwr-export-format"
               value={exportFormat}
-              onChange={(event) =>
-                setExportFormat(event.target.value as EmployeeBwrExportFormat)
+              onValueChange={(value) =>
+                setExportFormat(value as EmployeeBwrExportFormat)
               }
             >
-              {BWR_EXPORT_FORMATS.map((format) => (
-                <option key={format} value={format}>
-                  {format.toUpperCase()}
-                </option>
-              ))}
+              <SelectTrigger id="bwr-export-format">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BWR_EXPORT_FORMATS.map((format) => (
+                  <SelectItem key={format} value={format} data-value={format}>
+                    {format.toUpperCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <FieldDescription>
               <Trans>
@@ -387,33 +418,35 @@ export function EmployeeBwrPanel({
         <form className="space-y-4" onSubmit={handleSaveStatus}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field>
-              <Label htmlFor="bwr-status">
+              <FieldLabel htmlFor="bwr-status">
                 <Trans>BWR Status</Trans>
-              </Label>
+              </FieldLabel>
               <Select
-                id="bwr-status"
                 value={selectedStatus}
-                onChange={(event) =>
-                  setSelectedStatus(
-                    event.target.value as EmployeeBwrManagedStatus
-                  )
+                onValueChange={(value) =>
+                  setSelectedStatus(value as EmployeeBwrManagedStatus)
                 }
               >
-                {managedStatusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {getBwrStatusLabel(status, _)}
-                  </option>
-                ))}
+                <SelectTrigger id="bwr-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {managedStatusOptions.map((status) => (
+                    <SelectItem key={status} value={status} data-value={status}>
+                      {getBwrStatusLabel(status, _)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
               {panelFieldErrors.status?.[0] ? (
-                <ErrorMessage>{panelFieldErrors.status[0]}</ErrorMessage>
+                <FieldError>{panelFieldErrors.status[0]}</FieldError>
               ) : null}
             </Field>
 
             <Field>
-              <Label htmlFor="bwr-id">
+              <FieldLabel htmlFor="bwr-id">
                 <Trans>BWR ID</Trans>
-              </Label>
+              </FieldLabel>
               <Input
                 id="bwr-id"
                 value={bwrId}
@@ -422,15 +455,15 @@ export function EmployeeBwrPanel({
                 maxLength={7}
               />
               {panelFieldErrors.bwr_id?.[0] ? (
-                <ErrorMessage>{panelFieldErrors.bwr_id[0]}</ErrorMessage>
+                <FieldError>{panelFieldErrors.bwr_id[0]}</FieldError>
               ) : null}
             </Field>
           </div>
 
           <Field>
-            <Label htmlFor="bwr-notes">
+            <FieldLabel htmlFor="bwr-notes">
               <Trans>BWR Notes</Trans>
-            </Label>
+            </FieldLabel>
             <Textarea
               id="bwr-notes"
               value={notes}
@@ -438,7 +471,7 @@ export function EmployeeBwrPanel({
               rows={4}
             />
             {panelFieldErrors.notes?.[0] ? (
-              <ErrorMessage>{panelFieldErrors.notes[0]}</ErrorMessage>
+              <FieldError>{panelFieldErrors.notes[0]}</FieldError>
             ) : null}
           </Field>
 

@@ -27,6 +27,10 @@ const scopedEntries = [
   "src/pages/Sites/SiteCreate.tsx",
   "src/pages/Sites/SiteEdit.tsx",
   "src/pages/Sites/SiteDetail.tsx",
+  "src/pages/Employees/ui.tsx",
+  "src/pages/Employees/EmployeeList.tsx",
+  "src/pages/Employees/EmployeeDetail.tsx",
+  "src/pages/Employees/EmployeeBwrPanel.tsx",
   "src/components/OrganizationalUnitTree.tsx",
   "src/components/OrganizationalUnitFormDialog.tsx",
   "src/components/MoveOrganizationalUnitDialog.tsx",
@@ -155,7 +159,7 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
 }
 
 describe("admin migration boundary", () => {
-  it("covers migrated admin, customer, site, and organization sources", () => {
+  it("covers migrated admin, customer, site, employee, and organization sources", () => {
     expect(readScopedSources().map((source) => source.path)).toEqual([
       ...scopedEntries,
     ]);
@@ -188,7 +192,7 @@ describe("admin migration boundary", () => {
     // REUSE-IgnoreEnd
   });
 
-  it("keeps scoped admin sources on the shadcn/radix UI layer", () => {
+  it("keeps scoped admin and employee sources on the shadcn/radix UI layer", () => {
     expect(collectAdminMigrationViolations(readScopedSources())).toEqual([]);
   });
 });

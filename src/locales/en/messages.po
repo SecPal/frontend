@@ -217,6 +217,10 @@ msgstr "Confirm with your authenticator app or one recovery code to disable MFA 
 msgid "Previous Residences"
 msgstr "Previous Residences"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Employee not found"
+msgstr "Employee not found"
+
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
@@ -262,6 +266,14 @@ msgstr "Failed to delete file"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "City"
 msgstr "City"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to update BWR status"
+msgstr "Failed to update BWR status"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit email"
+msgstr "Edit email"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
@@ -501,6 +513,10 @@ msgstr "Loading qualifications..."
 msgid "Failed"
 msgstr "Failed"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to confirm onboarding"
+msgstr "Failed to confirm onboarding"
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
@@ -523,6 +539,10 @@ msgstr "GitHub Releases"
 #: src/pages/Sites/SitesPage.tsx
 msgid "Actions"
 msgstr "Actions"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Terminate this employee?"
+msgstr "Terminate this employee?"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "OpenTimestamp Confirmed"
@@ -1303,6 +1323,10 @@ msgstr "Loading activity logs..."
 msgid "You can upload now or continue and add this document later before final submission."
 msgstr "You can upload now or continue and add this document later before final submission."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit phone"
+msgstr "Edit phone"
+
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -1366,6 +1390,10 @@ msgstr "Open the verification email, then return here and check again. If the me
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Confirm Onboarding"
 msgstr "Confirm Onboarding"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to generate BWR export"
+msgstr "Failed to generate BWR export"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract start date is required"
@@ -1715,6 +1743,10 @@ msgstr "Add Child Unit"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Country"
 msgstr "Country"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit postal address"
+msgstr "Edit postal address"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to register passkey."
@@ -2679,6 +2711,10 @@ msgstr "Preparing MFA setup..."
 msgid "The residence title expiry date cannot be in the past."
 msgstr "The residence title expiry date cannot be in the past."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit emergency contacts"
+msgstr "Edit emergency contacts"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "From Date"
 msgstr "From Date"
@@ -2801,6 +2837,10 @@ msgstr "No postal address stored yet."
 msgid "Failed to save draft"
 msgstr "Failed to save draft"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Confirm this onboarding dossier?"
+msgstr "Confirm this onboarding dossier?"
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Back to Customers"
 msgstr "Back to Customers"
@@ -2814,6 +2854,10 @@ msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Settings"
 msgstr "Settings"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to terminate employee"
+msgstr "Failed to terminate employee"
 
 #: src/components/OfflineDataBanner.tsx
 msgid "Showing cached data"
@@ -3032,6 +3076,10 @@ msgstr "Reason"
 msgid "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
 msgstr "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Activate this employee?"
+msgstr "Activate this employee?"
+
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
 msgstr "Unlocking..."
@@ -3209,6 +3257,7 @@ msgid "Please use the required format (YYYY-MM-DD)."
 msgstr "Please use the required format (YYYY-MM-DD)."
 
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Pagination"
 msgstr "Pagination"
@@ -3336,6 +3385,10 @@ msgstr "Loading"
 msgid "You're offline"
 msgstr "You're offline"
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Failed to load employees"
+msgstr "Failed to load employees"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
@@ -3444,3 +3497,7 @@ msgstr "This session has already been used to complete device bootstrap."
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"
 msgstr "Failed to update employee"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to activate employee"
+msgstr "Failed to activate employee"

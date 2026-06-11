@@ -30,6 +30,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Migrated admin surfaces should import shared `src/ui` primitives directly for pages, dialogs, fields, cards, alerts, and status controls; keep domain components such as QR code rendering, offline banners, dropdown/listbox compatibility wrappers, and organization data hooks at the feature boundary.
 - Admin Radix Select regressions should open the combobox and assert rendered `role="option"` items with stable `data-value` markers instead of using native `fireEvent.change`/`user.selectOptions`.
 - Customer/site management pages should share route-scoped helpers in `src/pages/CustomerSites/ui` backed by `src/ui`, native semantic tables/description lists, router links, and lucide icons; keep CRUD behavior in the pages while asserting Radix Select options and explicit field error wiring in route tests.
+- Employee management pages should share route-scoped helpers in `src/pages/Employees/ui` backed by `src/ui`, native semantic tables/description lists, router links, status badges, and Radix dialog/select primitives; keep employee API/update behavior in the pages while testing filters and inline dialogs through public roles plus stable `data-slot` markers.
 - Shared app-shell component migrations should preserve existing component exports (`NavbarItem`, `SidebarItem`, `DropdownItem`, etc.) while replacing internals with native/router elements plus Radix primitives; keep compatibility-only props swallowed at the wrapper boundary and assert source-level bans for Headless, Heroicons, Tailwind Plus markers, and inline UI icon SVGs.
 - Shared legacy widget migrations should preserve existing `src/components` exports and caller contracts while delegating internals to `src/ui`, Radix, native semantic elements, and lucide icons; if replacing Headless `Field` wrappers, keep implicit `<Label>` association through generated-id wiring so existing label-based tests and accessibility stay intact.
 
@@ -695,3 +696,22 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: route-scoped feature UI helpers are useful when a page family needs direct `src/ui` primitives plus repeated domain presentation such as table, detail-list, badge, and router-link styling without expanding the global primitive API.
   - Gotchas encountered: Radix Select cannot be driven by native `fireEvent.change`, and Radix Checkbox emits `CheckedState`, so form tests and handlers must select rendered options by role and normalize checkbox values with `checked === true`.
+
+## US-006: Mitarbeiter-Listen- und Detailoberflächen migrieren
+- Migrated `EmployeeList`, `EmployeeDetail`, and `EmployeeBwrPanel` onto a route-scoped `src/pages/Employees/ui` layer backed by shared `src/ui` shadcn/Radix primitives, native tables/description lists, router links, Radix Select filters, Radix Dialog inline editing, and employee-specific status badges.
+- Preserved employee list search/status/org-unit filtering, pagination, row/detail navigation, detail tabs, contact inline edit dialogs, BWR export/status interactions, action capability gating, and existing update payload behavior while localizing new route-owned labels, confirmation prompts, fallback errors, and validation feedback in English and German.
+- Added regression coverage for Radix list filters including organizational-unit selection, detail dialog interactions, light/dark mode `data-slot` markers, and extended the admin migration boundary to block old shared wrapper imports across the employee list/detail/BWR scope.
+- Files changed:
+  - `src/pages/Employees/ui.tsx`
+  - `src/pages/Employees/EmployeeList.tsx`
+  - `src/pages/Employees/EmployeeList.test.tsx`
+  - `src/pages/Employees/EmployeeDetail.tsx`
+  - `src/pages/Employees/EmployeeDetail.test.tsx`
+  - `src/pages/Employees/EmployeeBwrPanel.tsx`
+  - `tests/admin-migration-boundary.test.ts`
+  - `src/locales/en/messages.po`, `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`, `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: employee pages benefit from the same route-scoped helper layer as customer/site pages when they need direct `src/ui` primitives plus feature-specific tables, detail lists, badges, and link buttons.
+  - Gotchas encountered: migrating native selects in list/detail tests requires switching assertions from `toHaveValue`/`fireEvent.change` to opening the Radix combobox and selecting rendered `role="option"` items; otherwise tests keep passing over behavior that no longer exists in the DOM.
