@@ -681,7 +681,7 @@ export function OnboardingComplete() {
               id="onboarding-password"
               type="password"
               name="password"
-              aria-label="Password"
+              aria-label={_(msg`Password`)}
               value={formData.password}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, password: e.target.value }))

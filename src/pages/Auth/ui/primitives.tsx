@@ -689,7 +689,7 @@ export function LoginOtpInput({
   inputMode = "numeric",
   groups,
   textTransform = "none",
-  "aria-label": ariaLabel = "One-time code",
+  "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
   className,
@@ -724,7 +724,7 @@ export function LoginOtpInput({
    * and the value that reaches the consumer is already normalized.
    */
   textTransform?: "none" | "uppercase";
-  "aria-label"?: string;
+  "aria-label": string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
   className?: string;
@@ -815,12 +815,15 @@ export function LoginOtpInput({
 
 export function LoginSpinner({
   className,
+  "aria-label": ariaLabel,
   ...props
-}: ComponentProps<typeof Loader2>) {
+}: Omit<ComponentProps<typeof Loader2>, "aria-label"> & {
+  "aria-label": string;
+}) {
   return (
     <Loader2
       role="status"
-      aria-label="Loading"
+      aria-label={ariaLabel}
       data-slot="login-spinner"
       className={cn("size-4 animate-spin", className)}
       {...props}

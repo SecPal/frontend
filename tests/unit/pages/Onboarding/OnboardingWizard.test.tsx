@@ -470,6 +470,23 @@ describe("OnboardingWizard", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the step navigation landmark label in German", async () => {
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+
+    renderWizard();
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("navigation", {
+        name: /onboarding-schrittnavigation/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("shows onboarding-required entry feedback only on the first step", async () => {
     renderWizard({ onboardingRequired: true });
 

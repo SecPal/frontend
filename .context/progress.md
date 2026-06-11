@@ -23,6 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Shared shadcn-style utilities live in `src/lib/utils.ts` and should be imported through route-local barrels (`src/pages/Auth/ui`, `src/pages/Onboarding/ui`) or the `@/lib/utils` alias when new shared primitives need canonical `cn` behavior.
 - Radix-backed onboarding primitives should keep the route-local API stable where practical: `Select` may accept existing `<option>` children and expose the current trigger `value` for legacy tests, while route tests should select Radix options by opening the combobox and clicking `[data-slot="onboarding-select-item"][data-value]`.
 - Radix-backed command popovers should require caller-provided placeholder/search/empty-state copy, keep filtering/selection behavior local, and let Radix own portal positioning plus outside/focus dismissal; cover trigger, searchbox, option, selected, disabled, empty, Escape, and Tab boundaries in primitive tests.
+- Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -520,3 +521,22 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: public onboarding pages can share a small onboarding-local auth frame while leaving the route-owned validation state machine and submission flow untouched.
   - Gotchas encountered: the full Vitest suite surfaced a transient unrelated login passkey test failure on the first run; the test passed in isolation and the full suite passed on rerun, so keep noting full-suite flakes separately from story regressions.
+
+## US-006: Localize Remaining UI Defaults
+- Replaced the remaining hardcoded onboarding accessibility labels with Lingui-owned copy: the public completion password `aria-label` and the wizard step-navigation landmark now follow the active locale.
+- Removed English accessibility defaults from auth-local `LoginOtpInput` and `LoginSpinner` by making their labels caller-provided, while existing login route usage continues to pass translated labels.
+- Added German regressions for the password `aria-label` on `/onboarding/complete` and the wizard navigation landmark accessible name.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Onboarding/OnboardingComplete.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingComplete.test.tsx`
+  - `tests/unit/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `src/locales/en/messages.po`
+  - `src/locales/en/messages.mjs`
+  - `src/locales/de/messages.po`
+  - `src/locales/de/messages.mjs`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep localized accessibility copy at route/call-site boundaries, and make primitive-level labels required when the primitive cannot access the active Lingui locale.
+  - Gotchas encountered: label-based queries can pass through the visible `<label>` even when `aria-label` is stale, so regressions for fixed aria labels should assert the attribute or role name that actually changed.

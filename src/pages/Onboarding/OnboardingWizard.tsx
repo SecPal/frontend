@@ -1656,13 +1656,14 @@ function StepNavigation({
   canGoNext: boolean;
   isBusy: boolean;
 }) {
+  const { _ } = useLingui();
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
 
   return (
     <CardFooter
       role="navigation"
-      aria-label="Onboarding step navigation"
+      aria-label={_(msg`Onboarding step navigation`)}
       className="mt-8 flex-col items-stretch justify-between gap-3 border-t border-zinc-200 p-0 pt-6 sm:flex-row sm:items-center dark:border-zinc-800"
     >
       <div>

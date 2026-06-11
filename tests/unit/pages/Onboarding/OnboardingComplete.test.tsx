@@ -143,6 +143,22 @@ describe("OnboardingComplete", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the password aria label in German", async () => {
+    i18n.activate("de");
+
+    renderWithProviders(
+      <OnboardingComplete />,
+      "/onboarding/complete?token=abc&email=test@secpal.dev"
+    );
+
+    await waitForFormReady();
+
+    expect(document.querySelector('input[name="password"]')).toHaveAttribute(
+      "aria-label",
+      "Passwort"
+    );
+  });
+
   it("does not prefill identity fields from token validation", async () => {
     renderWithProviders(
       <OnboardingComplete />,
