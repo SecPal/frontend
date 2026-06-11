@@ -16,14 +16,12 @@ import {
 } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
   Check,
   ChevronDown,
   ChevronUp,
-  Circle,
   Loader2,
   Minus,
 } from "lucide-react";
@@ -334,44 +332,6 @@ export function LoginStatusMessage({
     </div>
   );
 }
-
-export const LoginRadioGroup = forwardRef<
-  ElementRef<typeof RadioGroupPrimitive.Root>,
-  ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
->(function LoginRadioGroup({ className, ...props }, ref) {
-  return (
-    <RadioGroupPrimitive.Root
-      ref={ref}
-      data-slot="login-radio-group"
-      className={cn("grid gap-3", className)}
-      {...props}
-    />
-  );
-});
-
-export const LoginRadioGroupItem = forwardRef<
-  ElementRef<typeof RadioGroupPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(function LoginRadioGroupItem({ className, ...props }, ref) {
-  return (
-    <RadioGroupPrimitive.Item
-      ref={ref}
-      data-slot="login-radio-group-item"
-      className={cn(
-        "aspect-square size-4 shrink-0 rounded-full border border-zinc-300 text-blue-600 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-red-600 dark:border-zinc-700 dark:focus-visible:ring-offset-zinc-950",
-        className
-      )}
-      {...props}
-    >
-      <RadioGroupPrimitive.Indicator
-        data-slot="login-radio-group-indicator"
-        className="relative flex items-center justify-center"
-      >
-        <Circle className="size-2 fill-current text-current" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
-  );
-});
 
 export function LoginSelect(
   props: ComponentProps<typeof SelectPrimitive.Root>
