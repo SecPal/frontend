@@ -1645,6 +1645,13 @@ describe("Login", () => {
       ).not.toBeInTheDocument();
     });
 
+    // isCompletingLogin must be reset: the "Completing sign-in" overlay must
+    // be gone and the credential form must be re-accessible so the user can
+    // retry without reloading the page.
+    expect(screen.queryByTestId("login-completing")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /email/i })).toBeInTheDocument();
+
     consoleErrorSpy.mockRestore();
   });
 
@@ -2289,8 +2296,10 @@ describe("Login", () => {
       renderLogin();
 
       await waitFor(() => {
-        const warning = screen.getByRole("alert");
-        expect(warning).toHaveAttribute("aria-live", "polite");
+        const warning = document.getElementById("health-warning");
+        expect(warning).toBeInTheDocument();
+        expect(warning).toHaveAttribute("role", "alert");
+        expect(warning).toHaveAttribute("aria-live", "assertive");
       });
     });
 
@@ -2666,7 +2675,7 @@ describe("Login", () => {
         const warning = document.getElementById("offline-warning");
         expect(warning).toBeInTheDocument();
         expect(warning).toHaveAttribute("role", "alert");
-        expect(warning).toHaveAttribute("aria-live", "polite");
+        expect(warning).toHaveAttribute("aria-live", "assertive");
       });
     });
 

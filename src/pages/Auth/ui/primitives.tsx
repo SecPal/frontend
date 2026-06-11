@@ -302,9 +302,17 @@ export function LoginStatusMessage({
   live?: "off" | "polite" | "assertive";
   title?: ReactNode;
 }) {
+  // `role="alert"` carries an implicit `aria-live="assertive"` (WAI-ARIA 1.2
+  // §6.3). When the caller requests polite announcements the implicit value
+  // must not be overridden by an explicit `aria-live="polite"` on the same
+  // node — that combination is self-contradicting and screen readers honour
+  // the explicit attribute, silently downgrading urgent alerts to queued
+  // announcements. Derive the role from `live` so the two attributes are
+  // always consistent: assertive → `role="alert"`, polite/off → `role="status"`.
+  const role = live === "assertive" ? "alert" : "status";
   return (
     <div
-      role="alert"
+      role={role}
       aria-live={live}
       className={cn(
         "rounded-md border p-4 text-sm break-words",

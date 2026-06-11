@@ -107,12 +107,16 @@ describe("auth login shadcn primitives", () => {
       </>
     );
 
-    const alerts = screen.getAllByRole("alert");
+    // live="assertive" → role="alert"; default live="polite" → role="status".
+    // role and aria-live are always consistent: role="alert" ↔ aria-live="assertive",
+    // role="status" ↔ aria-live="polite" (WAI-ARIA 1.2 §6.3/§6.6).
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveAttribute("aria-live", "assertive");
+    expect(alert).toHaveTextContent("LockedWait before trying again.");
 
-    expect(alerts).toHaveLength(2);
-    expect(alerts[0]).toHaveAttribute("aria-live", "assertive");
-    expect(alerts[0]).toHaveTextContent("LockedWait before trying again.");
-    expect(alerts[1]).toHaveTextContent(
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveTextContent(
       "System not readyContact your administrator."
     );
   });

@@ -517,10 +517,6 @@ export function Login() {
     } catch (err) {
       console.error("MFA verification error:", err);
 
-      if (shouldSurfaceLoginError) {
-        setIsCompletingLogin(false);
-      }
-
       // Backend invalidates the `challenge_id` after a failed verification
       // (one-shot pattern / exhausted retry budget). A subsequent submit on
       // the same id then returns 404 with a generic body like
@@ -558,6 +554,12 @@ export function Login() {
       }
     } finally {
       setIsVerifyingMfa(false);
+      // Always reset the completion overlay when settling from an error.
+      // Resetting on the success path is a no-op because navigate("/") will
+      // unmount this component before a re-render fires.
+      if (shouldSurfaceLoginError) {
+        setIsCompletingLogin(false);
+      }
     }
   };
 
@@ -608,6 +610,7 @@ export function Login() {
               <LoginStatusMessage
                 id="offline-warning"
                 variant="error"
+                live="assertive"
                 title={
                   <Trans id="login.offlineWarning.title">
                     No internet connection
@@ -627,6 +630,7 @@ export function Login() {
               <LoginStatusMessage
                 id="health-warning"
                 variant="warning"
+                live="assertive"
                 title={
                   <Trans id="login.healthWarning.title">System not ready</Trans>
                 }
