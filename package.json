@@ -156,6 +156,7 @@
     "npm": ">=10.0.0"
   },
   "allowScripts": {
-    "esbuild": true
+    "esbuild": true,
+    "fsevents": true
   }
 }
