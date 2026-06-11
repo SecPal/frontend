@@ -132,9 +132,7 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /Log in/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
   it("renders login form", async () => {
@@ -714,9 +712,7 @@ describe("App", () => {
       await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
     });
 
-    expect(
-      screen.getByRole("heading", { name: /log in/i })
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(consoleWarn).not.toHaveBeenCalledWith(
       "Failed to clear offline vault tables on logout:",
       expect.anything()

@@ -348,6 +348,10 @@ msgstr "Customer Name"
 msgid "Update channel"
 msgstr "Update channel"
 
+#: src/pages/Login.tsx
+msgid "Your verification session expired. Please log in again."
+msgstr "Your verification session expired. Please log in again."
+
 #: src/components/OrganizationalUnitPicker.tsx
 msgid "All Units"
 msgstr "All Units"
@@ -747,6 +751,10 @@ msgstr "Failed to load employee"
 msgid "Delete Site"
 msgstr "Delete Site"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an unsupported login mode."
+msgstr "The passkey sign-in completed with an unsupported login mode."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Your current answers will be saved as a draft before the first file upload."
 msgstr "Your current answers will be saved as a draft before the first file upload."
@@ -754,6 +762,10 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "This field"
+
+#: src/pages/Login.tsx
+msgid "Login form"
+msgstr "Login form"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Pre-Contract is the only status that allows onboarding invitations."
@@ -836,6 +848,10 @@ msgstr "You'll now receive important updates from SecPal"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
+
+#: src/pages/Login.tsx
+msgid "Failed to change language. Please try again."
+msgstr "Failed to change language. Please try again."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Would you like to upload your identity document now?"
@@ -1340,6 +1356,10 @@ msgstr "Employees"
 msgid "Passkey sign-in timed out. Please try again."
 msgstr "Passkey sign-in timed out. Please try again."
 
+#: src/pages/Login.tsx
+msgid "An unexpected MFA verification error occurred. Please try logging in again."
+msgstr "An unexpected MFA verification error occurred. Please try logging in again."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Invalid date. Please use format {format}"
 msgstr "Invalid date. Please use format {format}"
@@ -1351,6 +1371,10 @@ msgstr "Bewacher ID"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Requested"
 msgstr "Invitation Requested"
+
+#: src/pages/Login.tsx
+msgid "MFA verification failed. Please check your code."
+msgstr "MFA verification failed. Please check your code."
 
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Close detail panel"
@@ -1657,6 +1681,11 @@ msgstr "Authenticator app QR code"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
+#: src/pages/Login.tsx
+msgid "Select language"
+msgstr "Select language"
+
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
 msgstr "Recovery code"
@@ -1838,6 +1867,16 @@ msgstr "Checking system..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.completing.description"
+msgstr "Please wait…"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.completing.title"
+msgstr "Completing sign-in"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.email"
 msgstr "Email address"
 
@@ -1872,32 +1911,6 @@ msgid "login.mfa.description"
 msgstr "Your password was accepted. Complete MFA to finish signing in."
 
 #. js-lingui-explicit-id
-#. placeholder {0}: formatDateTime(pendingMfaChallenge.expires_at)
-#: src/pages/Login.tsx
-msgid "login.mfa.expiry"
-msgstr "This verification step expires at {0}."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method"
-msgstr "Verification method"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.recovery_code"
-msgstr "Recovery code"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.totp"
-msgstr "Authenticator code"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.preferred"
-msgstr "recommended"
-
-#. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.recoveryCode"
 msgstr "Recovery code"
@@ -1911,6 +1924,16 @@ msgstr "Enter one unused recovery code exactly as stored."
 #: src/pages/Login.tsx
 msgid "login.mfa.submit"
 msgstr "Verify and continue"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToRecovery"
+msgstr "I don’t have access to my authenticator app"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToTotp"
+msgstr "Use authenticator code instead"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -1959,6 +1982,11 @@ msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
+msgid "login.separator"
+msgstr "or"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
 msgid "login.submit"
 msgstr "Log in"
 
@@ -1970,7 +1998,7 @@ msgstr "Logging in..."
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.title"
-msgstr "Log in"
+msgstr "Welcome to SecPal"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Minijob"
@@ -2061,6 +2089,10 @@ msgstr "Too many requests. Please try again later."
 #: src/components/RouteGuardState.tsx
 msgid "I have verified my email"
 msgstr "I have verified my email"
+
+#: src/pages/Login.tsx
+msgid "An unexpected error occurred. Please try again or contact support."
+msgstr "An unexpected error occurred. Please try again or contact support."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2240,6 +2272,7 @@ msgid "Default"
 msgstr "Default"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
@@ -2328,6 +2361,7 @@ msgid "Password must include at least one symbol"
 msgstr "Password must include at least one symbol"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "Source Code"
 msgstr "Source Code"
 
@@ -2440,6 +2474,10 @@ msgstr "Move"
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Status"
 msgstr "All Status"
+
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an unsupported login mode."
+msgstr "The MFA challenge completed with an unsupported login mode."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Search in descriptions..."
@@ -2988,6 +3026,10 @@ msgstr "Please review the highlighted fields and try again."
 msgid "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 msgstr "Highest rank number the user can view (set to 255 for all, 0 or empty for non-leadership only). Range: 0-255"
 
+#: src/pages/Login.tsx
+msgid "The passkey sign-in completed with an invalid user payload."
+msgstr "The passkey sign-in completed with an invalid user payload."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Save Draft"
 msgstr "Save Draft"
@@ -3081,6 +3123,10 @@ msgstr "Missing token and email. Please use the link from your email."
 msgid "Loading documents..."
 msgstr "Loading documents..."
 
+#: src/pages/Login.tsx
+msgid "The MFA challenge completed with an invalid user payload."
+msgstr "The MFA challenge completed with an invalid user payload."
+
 #: src/components/RouteGuardState.tsx
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Go to Login"
@@ -3092,6 +3138,7 @@ msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
 #: src/components/Footer.tsx
+#: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 
@@ -3134,6 +3181,10 @@ msgstr "Create a new root organizational unit."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Onboarding Invitation"
 msgstr "Onboarding Invitation"
+
+#: src/pages/Login.tsx
+msgid "Loading"
+msgstr "Loading"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
@@ -3187,6 +3238,7 @@ msgstr "Loading..."
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Invitations are only available for employees in pre-contract status."
 
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator code"
 msgstr "Authenticator code"

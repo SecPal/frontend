@@ -41,6 +41,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #09090b;
+  }
 }
 
 #root {

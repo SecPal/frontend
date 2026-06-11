@@ -20,7 +20,9 @@ import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
 import * as passkeyBrowser from "../services/passkeyBrowser";
+import { authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import * as i18nModule from "../i18n";
 
 // Mock only the API functions, not AuthApiError class
 vi.mock("../services/authApi", async () => {
@@ -55,6 +57,15 @@ vi.mock("../services/passkeyBrowser", () => ({
   isPasskeySupported: vi.fn(),
   getPasskeyAssertion: vi.fn(),
 }));
+
+vi.mock("../i18n", async () => {
+  const actual = await vi.importActual("../i18n");
+  return {
+    ...actual,
+    activateLocale: vi.fn(),
+    setLocalePreference: vi.fn(),
+  };
+});
 
 const renderLogin = () => {
   return render(
@@ -133,6 +144,63 @@ async function openMfaDialog() {
   });
   fireEvent.click(screen.getByRole("button", { name: /log in/i }));
   await screen.findByRole("heading", { name: /second factor required/i });
+}
+
+function getTotpInput(): HTMLInputElement {
+  return screen.getByLabelText(/authenticator code/i, {
+    selector: '[autocomplete="one-time-code"]',
+  }) as HTMLInputElement;
+}
+
+function enterTotpCode(code: string) {
+  fireEvent.change(getTotpInput(), { target: { value: code } });
+}
+
+function getRecoveryCodeInput(): HTMLInputElement {
+  // The recovery-code input is the `input-otp` hidden input (always
+  // `data-input-otp`), regardless of its `autocomplete` value — the
+  // alphanumeric path opts out of `one-time-code` so browsers do not
+  // mis-suggest SMS codes for the alphanumeric backup field, so the
+  // `[autocomplete="one-time-code"]` selector no longer matches here.
+  return screen.getByLabelText(/recovery code/i, {
+    selector: "[data-input-otp]",
+  }) as HTMLInputElement;
+}
+
+function enterRecoveryCode(code: string) {
+  fireEvent.change(getRecoveryCodeInput(), { target: { value: code } });
+}
+
+function switchToRecoveryCodeMode() {
+  fireEvent.click(screen.getByRole("button", { name: /authenticator app/i }));
+}
+
+async function selectLanguage(visibleName: string) {
+  const trigger = screen.getByRole("combobox", { name: /select language/i });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: visibleName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
 }
 
 describe("Login", () => {
@@ -240,12 +308,25 @@ describe("Login", () => {
     expect(
       await screen.findByRole("heading", { name: /second factor required/i })
     ).toBeInTheDocument();
+    const totpInput = getTotpInput();
+    expect(totpInput).toBeInTheDocument();
+    expect(totpInput).toHaveAttribute("inputmode", "numeric");
     expect(
-      screen.getByRole("textbox", { name: /authenticator code/i })
-    ).toBeInTheDocument();
+      document.querySelectorAll('[data-slot="login-input-otp-slot"]')
+    ).toHaveLength(6);
+    // The recovery-code fallback is now an inline toggle button below the
+    // OTP input (mirrors the shadcn `input-otp` "Form" example) instead of
+    // a radio-group method picker.
     expect(
-      screen.getByRole("radio", { name: /recovery code/i })
+      screen.getByRole("button", { name: /authenticator app/i })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/password/i)).toBeDisabled();
+    expect(
+      document.querySelector(
+        'form[aria-label="Login form"] button[type="submit"]'
+      )
+    ).toBeDisabled();
   });
 
   it("shows a passkey sign-in action when the browser supports passkeys", async () => {
@@ -253,9 +334,19 @@ describe("Login", () => {
 
     renderLogin();
 
+    const passkeyButton = await screen.findByRole("button", {
+      name: /sign in with passkey/i,
+    });
+
+    expect(passkeyButton).toBeInTheDocument();
+    expect(passkeyButton.querySelector("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true"
+    );
     expect(
-      await screen.findByRole("button", { name: /sign in with passkey/i })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /continue with (apple|google)/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/or continue with/i)).not.toBeInTheDocument();
   });
 
   it("routes passkey sign-in through the native auth bridge without forwarding the typed email", async () => {
@@ -494,6 +585,35 @@ describe("Login", () => {
         authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
       }
     }
+  });
+
+  it("localizes the short invalid-credentials backend message with the active locale", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    mockLogin.mockRejectedValue(
+      new authApi.AuthApiError("Invalid credentials")
+    );
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    renderLogin();
+
+    fireEvent.change(await screen.findByLabelText(/e-mail-adresse/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/passwort/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /einloggen/i }));
+
+    expect(
+      await screen.findByText(/die angegebenen zugangsdaten sind falsch/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
   });
 
   it("shows a localized message for interrupted native passkey flows", async () => {
@@ -1303,12 +1423,7 @@ describe("Login", () => {
 
     await screen.findByRole("heading", { name: /second factor required/i });
 
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      {
-        target: { value: "123456" },
-      }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -1327,6 +1442,138 @@ describe("Login", () => {
       expect(
         screen.queryByRole("heading", { name: /second factor required/i })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows the shadcn Empty/Spinner completion state and hides the login form after a successful MFA verify", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    const completing = await screen.findByTestId("login-completing");
+    expect(completing).not.toHaveAttribute("aria-busy");
+    expect(completing).not.toHaveAttribute("aria-live");
+
+    // AT announcements are scoped to the LoginSpinner's role="status", not the
+    // wider container (which also holds static heading text).
+    expect(
+      screen.getByRole("status", { name: /loading/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/completing sign-in/i)).toBeInTheDocument();
+    expect(screen.getByText(/please wait/i)).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /email/i })
+    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+
+    // After the MFA verify settles successfully and the dialog has closed,
+    // the completion spinner must remain mounted until route change unmounts
+    // the page. If `handleVerifyMfa`'s finally block tore the spinner down
+    // on success (the original implementation did this via
+    // `if (shouldSurfaceLoginError) setIsCompletingLogin(false)`), the
+    // credential card would briefly flash back into view between the dialog
+    // close and the unmount commit. Pin the corrected behavior: spinner
+    // still here, credentials still NOT here.
+    expect(screen.getByTestId("login-completing")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /email/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps TOTP verification digits-only in the MFA challenge dialog", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+
+    mockLogin.mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    renderLogin();
+
+    await screen.findByRole("button", { name: /log in/i });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    await screen.findByRole("heading", { name: /second factor required/i });
+
+    enterTotpCode("12a 34-56");
+
+    expect(getTotpInput()).toHaveValue("");
+    expect(
+      screen.getByRole("button", { name: /verify and continue/i })
+    ).toBeDisabled();
+
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyMfaChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "totp",
+          code: "123456",
+        }
+      );
     });
   });
 
@@ -1369,12 +1616,7 @@ describe("Login", () => {
 
     await screen.findByRole("heading", { name: /second factor required/i });
 
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      {
-        target: { value: "123456" },
-      }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -1382,6 +1624,139 @@ describe("Login", () => {
     expect(
       await screen.findByText(/the login challenge has expired/i)
     ).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("shows a login-form error if session finalization fails after MFA succeeds", async () => {
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.spyOn(authStorage, "setUser").mockRejectedValueOnce(
+      new Error("Failed to persist authenticated session.")
+    );
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    expect(
+      await screen.findByText(/failed to persist authenticated session/i)
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+
+    // isCompletingLogin must be reset: the "Completing sign-in" overlay must
+    // be gone and the credential form must be re-accessible so the user can
+    // retry without reloading the page.
+    expect(screen.queryByTestId("login-completing")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /email/i })).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("localizes known MFA verification failures with the active locale", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError("MFA verification failed")
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /prüfen/i }));
+
+    expect(
+      await screen.findByText(/mfa-verifizierung fehlgeschlagen/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("localizes the backend 'multi-factor authentication code is invalid' wording", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "The provided multi-factor authentication code is invalid."
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+
+    act(() => {
+      i18n.activate("de");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /prüfen/i }));
+
+    expect(
+      await screen.findByText(/mfa-verifizierung fehlgeschlagen/i)
+    ).toBeInTheDocument();
+
+    act(() => {
+      i18n.activate("en");
+    });
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("marks every OTP slot aria-invalid when the MFA verify fails so the red border styling applies", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "The provided multi-factor authentication code is invalid."
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await screen.findByText(
+      /mfa verification failed\. please check your code\./i
+    );
+
+    const slots = document.querySelectorAll<HTMLDivElement>(
+      '[data-slot="login-input-otp-slot"]'
+    );
+    expect(slots).toHaveLength(6);
+    slots.forEach((slot) => {
+      expect(slot).toHaveAttribute("aria-invalid", "true");
+    });
 
     consoleErrorSpy.mockRestore();
   });
@@ -1397,15 +1772,102 @@ describe("Login", () => {
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
   });
 
-  it("switches to the recovery code input when the recovery code method is selected", async () => {
+  it("switches to the recovery code input when the user clicks the lost-device toggle", async () => {
     await openMfaDialog();
-    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+
+    switchToRecoveryCodeMode();
+
+    // The recovery-code input is an alphanumeric input-otp split 4-separator-4
+    // (mirrors the shadcn `input-otp` "Pattern" example): 8 slots and a
+    // single visual separator.
     expect(
-      screen.getByRole("textbox", { name: /recovery code/i })
-    ).toHaveAttribute("placeholder", "B6F42Q8P");
+      document.querySelectorAll('[data-slot="login-input-otp-slot"]')
+    ).toHaveLength(8);
     expect(
-      screen.queryByRole("textbox", { name: /authenticator code/i })
+      document.querySelectorAll('[data-slot="login-input-otp-separator"]')
+    ).toHaveLength(1);
+
+    const recoveryInput = getRecoveryCodeInput();
+    expect(recoveryInput).toHaveAttribute("inputmode", "text");
+    expect(recoveryInput).toHaveAttribute("maxlength", "8");
+
+    // The toggle now offers switching back to TOTP.
+    expect(
+      screen.getByRole("button", { name: /use authenticator code/i })
+    ).toBeInTheDocument();
+  });
+
+  it("verifies an MFA challenge with a recovery code fallback", async () => {
+    const mockVerifyMfaChallenge = vi.mocked(authApi.verifyMfaChallenge);
+    mockVerifyMfaChallenge.mockResolvedValueOnce({
+      user: createAuthUser(),
+      authentication: {
+        mode: "session",
+        mfa_completed: true,
+      },
+    });
+
+    await openMfaDialog();
+    switchToRecoveryCodeMode();
+    // Input-otp accepts lowercase letters too; `textTransform="uppercase"`
+    // normalizes them so the backend never sees mixed-case codes.
+    enterRecoveryCode("b6f42q8p");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(mockVerifyMfaChallenge).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440099",
+        {
+          method: "recovery_code",
+          code: "B6F42Q8P",
+        }
+      );
+    });
+  });
+
+  it("closes the MFA dialog and surfaces an expiry error when the challenge has been invalidated (404)", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    // After a failed verification, the backend invalidates the challenge
+    // id (one-shot pattern). The next submit on the same id returns a 404
+    // with a generic body — "Ressource nicht gefunden." in German — that
+    // would otherwise leak through the MFA dialog as the user's only
+    // feedback. We close the dialog and surface a localized, actionable
+    // expiry message on the password form instead.
+    vi.mocked(authApi.verifyMfaChallenge).mockRejectedValueOnce(
+      new authApi.AuthApiError(
+        "Ressource nicht gefunden.",
+        undefined,
+        404,
+        undefined
+      )
+    );
+
+    await openMfaDialog();
+    enterTotpCode("123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: /verify and continue/i })
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: /second factor required/i })
+      ).not.toBeInTheDocument();
+    });
+
+    expect(
+      await screen.findByText(/your verification session expired/i)
+    ).toBeInTheDocument();
+    // The generic 404 body must NOT leak to the user.
+    expect(
+      screen.queryByText(/ressource nicht gefunden/i)
     ).not.toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it("shows an error when MFA challenge response has an unexpected mode", async () => {
@@ -1420,10 +1882,7 @@ describe("Login", () => {
       },
     });
     await openMfaDialog();
-    fireEvent.change(
-      screen.getByRole("textbox", { name: /authenticator code/i }),
-      { target: { value: "123456" } }
-    );
+    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -1468,6 +1927,11 @@ describe("Login", () => {
       { timeout: 3000 }
     );
     expect(errorElement).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInvalid();
+    expect(screen.getByLabelText(/password/i)).toBeInvalid();
+    expect(screen.getByLabelText(/email/i)).toHaveAccessibleDescription(
+      /the provided credentials are incorrect/i
+    );
   });
 
   it("localizes invalid-credentials login errors with the active locale", async () => {
@@ -1612,6 +2076,130 @@ describe("Login", () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
+  });
+
+  describe("credential aria-invalid scoping", () => {
+    // `aria-invalid` on the email/password inputs must reflect only failures
+    // caused by the typed values themselves (401/403/422 + opaque network
+    // errors after a credential submit). Server outages, rate-limit
+    // lockouts, passkey failures, and post-credential MFA expiry set the
+    // top-level `error` text but say nothing about the inputs; flagging the
+    // fields invalid in those cases misleads assistive technology users.
+
+    async function getCredentialInputs() {
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+      return {
+        email: screen.getByLabelText(/email/i),
+        password: screen.getByLabelText(/password/i),
+        submit: screen.getByRole("button", { name: /log in/i }),
+      };
+    }
+
+    it("marks the credential inputs invalid after a 401 rejection", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Invalid email or password.", undefined, 401)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "wrong@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "wrong-password" } });
+      fireEvent.click(submit);
+
+      await waitFor(() => {
+        expect(email).toHaveAttribute("aria-invalid", "true");
+        expect(password).toHaveAttribute("aria-invalid", "true");
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does NOT mark the credential inputs invalid on a 5xx server outage", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Internal Server Error", undefined, 500)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "ok@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "ok-password" } });
+      fireEvent.click(submit);
+
+      await screen.findByText(/login is temporarily unavailable/i);
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("does NOT mark the credential inputs invalid on a 429 lockout", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError(
+          "Too many login attempts. Please try again later.",
+          undefined,
+          429,
+          undefined,
+          30
+        )
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "ok@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "ok-password" } });
+      fireEvent.click(submit);
+
+      await screen.findByText(/too many login attempts/i);
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("clears aria-invalid when the user starts editing the credentials again", async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      vi.mocked(authApi.login).mockRejectedValueOnce(
+        new authApi.AuthApiError("Invalid email or password.", undefined, 401)
+      );
+
+      renderLogin();
+      const { email, password, submit } = await getCredentialInputs();
+
+      fireEvent.change(email, { target: { value: "wrong@secpal.dev" } });
+      fireEvent.change(password, { target: { value: "wrong-password" } });
+      fireEvent.click(submit);
+
+      await waitFor(() => {
+        expect(email).toHaveAttribute("aria-invalid", "true");
+      });
+
+      // Single keystroke in either field clears the invalid flag — the user
+      // is correcting the value and is no longer being told the prior input
+      // is wrong.
+      fireEvent.change(email, { target: { value: "right@secpal.dev" } });
+      expect(email).not.toHaveAttribute("aria-invalid");
+      expect(password).not.toHaveAttribute("aria-invalid");
+
+      consoleErrorSpy.mockRestore();
+    });
   });
 
   it("disables submit button while submitting", async () => {
@@ -1848,8 +2436,10 @@ describe("Login", () => {
       renderLogin();
 
       await waitFor(() => {
-        const warning = screen.getByRole("alert");
-        expect(warning).toHaveAttribute("aria-live", "polite");
+        const warning = document.getElementById("health-warning");
+        expect(warning).toBeInTheDocument();
+        expect(warning).toHaveAttribute("role", "alert");
+        expect(warning).toHaveAttribute("aria-live", "assertive");
       });
     });
 
@@ -1908,7 +2498,9 @@ describe("Login", () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/provided credentials are incorrect/i)
+        ).toBeInTheDocument();
       });
 
       // Check localStorage has recorded the attempt
@@ -2223,7 +2815,7 @@ describe("Login", () => {
         const warning = document.getElementById("offline-warning");
         expect(warning).toBeInTheDocument();
         expect(warning).toHaveAttribute("role", "alert");
-        expect(warning).toHaveAttribute("aria-live", "polite");
+        expect(warning).toHaveAttribute("aria-live", "assertive");
       });
     });
 
@@ -2402,7 +2994,89 @@ describe("Login", () => {
     });
   });
 
+  describe("language switcher", () => {
+    it("shows the localized fallback error message when locale activation fails", async () => {
+      vi.mocked(i18nModule.activateLocale).mockRejectedValueOnce(
+        new Error("Failed to fetch chunk /assets/de-abc123.js")
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await selectLanguage("Deutsch");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /failed to change language/i
+      );
+
+      expect(
+        screen.queryByText(/failed to fetch chunk/i)
+      ).not.toBeInTheDocument();
+    });
+
+    it("does not show an error when locale activation succeeds", async () => {
+      vi.mocked(i18nModule.activateLocale).mockResolvedValueOnce(undefined);
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await selectLanguage("Deutsch");
+
+      await waitFor(() => {
+        expect(i18nModule.setLocalePreference).toHaveBeenCalledWith("de");
+      });
+
+      expect(
+        screen.queryByRole("alert", { name: /failed to change language/i })
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe("footer", () => {
+    it("places the legal footer below the centered credential card in normal flow", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      // The shell is a `flex-col` container, NOT vertically centered. The
+      // centered-card region is the first flex-1 child; the footer follows
+      // it in normal flow. This guarantees the footer never overlaps the
+      // credential card on short landscape viewports (≈320px tall), where
+      // an `absolute`-positioned footer with `pb-32` could collide.
+      const shell = screen.getByRole("main");
+      expect(shell).toHaveClass("min-h-dvh", "flex", "flex-col");
+      expect(shell).not.toHaveClass("justify-center");
+
+      const footer = screen.getByRole("contentinfo");
+      expect(footer).not.toHaveClass("absolute");
+
+      const card = screen
+        .getByRole("button", { name: /log in/i })
+        .closest("section");
+      expect(card).not.toBeNull();
+      // The card lives inside the flex-1 wrapper; the footer is a sibling of
+      // that wrapper, which puts it strictly after the card in document order.
+      // `compareDocumentPosition` returns FOLLOWING (4) when `card` precedes
+      // `footer` in the DOM.
+      expect(card!.compareDocumentPosition(footer)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    });
+
     it("renders footer with license and source code links", async () => {
       renderLogin();
 

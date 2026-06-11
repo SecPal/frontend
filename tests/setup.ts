@@ -26,9 +26,44 @@ function clearXsrfCookie(): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
 }
 
+// `input-otp` schedules internal `setTimeout(..., 0|10|50)` callbacks on every
+// value/focus change that dispatch React `setState`; if they fire after vitest
+// tears down the JSDOM environment, `resolveUpdatePriority` reads a now-
+// undefined `window` and surfaces as a fatal "Uncaught Exception" in CI.
+//
+// Waiting 60ms unconditionally in `afterEach` flushes those timers but pays
+// ~60ms × 2000+ tests ≈ 2 minutes of pure wall time across the suite even
+// when no OTP input was rendered. Instead, observe the DOM and flip a flag
+// the first time `input-otp` mounts; only that subset of tests pays the
+// flush cost.
+let inputOtpWasMounted = false;
+
+if (typeof document !== "undefined" && typeof MutationObserver === "function") {
+  const matchesInputOtp = (node: Node): boolean =>
+    node instanceof Element &&
+    (node.hasAttribute("data-input-otp") ||
+      node.querySelector?.("[data-input-otp]") !== null);
+
+  const observer = new MutationObserver((mutations) => {
+    if (inputOtpWasMounted) {
+      return;
+    }
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (matchesInputOtp(node)) {
+          inputOtpWasMounted = true;
+          return;
+        }
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 beforeEach(() => {
   clearXsrfCookie();
   document.cookie = `XSRF-TOKEN=${encodeURIComponent("test-csrf-token")};path=/`;
+  inputOtpWasMounted = false;
 });
 
 // React 19 act() warning fix: Cleanup after each test to prevent
@@ -49,8 +84,10 @@ afterEach(async () => {
   window.history.replaceState({}, "", originalLocationHref);
   clearXsrfCookie();
 
-  // Give React a chance to flush any pending updates
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  // Only pay the input-otp flush cost when the test actually mounted one.
+  if (inputOtpWasMounted) {
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  }
 });
 
 // Polyfill for Blob.arrayBuffer() in test environment (JSDOM doesn't have it)
@@ -78,3 +115,43 @@ class MockResizeObserver implements ResizeObserver {
   disconnect() {}
 }
 global.ResizeObserver = MockResizeObserver;
+
+// Stubs for Radix UI primitives (Select, etc.) in JSDOM. Radix relies on
+// pointer-capture and scrollIntoView APIs that JSDOM does not implement; without
+// these stubs, opening a Radix Select trigger in tests throws.
+if (typeof Element !== "undefined") {
+  if (!("hasPointerCapture" in Element.prototype)) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!("setPointerCapture" in Element.prototype)) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!("releasePointerCapture" in Element.prototype)) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!("scrollIntoView" in Element.prototype)) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+}
+
+// Stubs for input-otp in JSDOM. The library schedules timer-driven pointer-
+// reset callbacks that call `document.elementFromPoint(x, y)` (for password-
+// manager-overlay detection) and `window.scrollTo(...)` (when the input
+// nudges itself into view); JSDOM implements neither. Without the stubs
+// `elementFromPoint` surfaces as an "Uncaught TypeError" several seconds
+// after the test that mounted the OTP input, and `scrollTo` floods the
+// console with "Not implemented" warnings.
+if (
+  typeof document !== "undefined" &&
+  typeof document.elementFromPoint !== "function"
+) {
+  (
+    document as Document & { elementFromPoint: () => Element | null }
+  ).elementFromPoint = () => null;
+}
+if (typeof window !== "undefined") {
+  // JSDOM's `scrollTo` throws a "Not implemented" diagnostic instead of
+  // being a real function; replace it with a no-op so the warning does not
+  // pollute the test output.
+  window.scrollTo = () => {};
+}
