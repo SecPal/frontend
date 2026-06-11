@@ -7,6 +7,8 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Code2, KeyRound, Scale } from "lucide-react";
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
+
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -49,8 +51,6 @@ import {
   LoginForm,
   LoginInput,
   LoginOtpInput,
-  LoginRadioGroup,
-  LoginRadioGroupItem,
   LoginSelect,
   LoginSelectContent,
   LoginSelectItem,
@@ -73,6 +73,7 @@ const NATIVE_PASSKEY_TIMEOUT_PATTERN = /^Passkey sign-in timed out\.?$/i;
 const NATIVE_PASSKEY_PROVIDER_UNAVAILABLE_PATTERN =
   /^No credential provider is available on this device\.?$/i;
 const TOTP_CODE_LENGTH = 6;
+const RECOVERY_CODE_LENGTH = 8;
 
 type Translate = ReturnType<typeof useLingui>["_"];
 
@@ -203,8 +204,22 @@ export function Login() {
   const normalizedMfaCode = mfaCode.trim();
   const isIncompleteTotpCode =
     mfaMethod === "totp" && normalizedMfaCode.length !== TOTP_CODE_LENGTH;
+  const isIncompleteRecoveryCode =
+    mfaMethod === "recovery_code" &&
+    normalizedMfaCode.length !== RECOVERY_CODE_LENGTH;
   const isMfaSubmitDisabled =
-    isVerifyingMfa || normalizedMfaCode.length === 0 || isIncompleteTotpCode;
+    isVerifyingMfa ||
+    normalizedMfaCode.length === 0 ||
+    isIncompleteTotpCode ||
+    isIncompleteRecoveryCode;
+  const canSwitchMfaMethod = pendingMfaChallenge
+    ? pendingMfaChallenge.available_methods.length > 1
+    : false;
+  const otherMfaMethod: MfaVerificationMethod =
+    mfaMethod === "totp" ? "recovery_code" : "totp";
+  const isOtherMethodAvailable = pendingMfaChallenge
+    ? pendingMfaChallenge.available_methods.includes(otherMfaMethod)
+    : false;
 
   // Check backend health on component mount and when online status changes
   useEffect(() => {
@@ -371,11 +386,10 @@ export function Login() {
   const handleMfaMethodChange = (method: MfaVerificationMethod) => {
     setMfaMethod(method);
     setMfaError(null);
-    if (method === "totp") {
-      setMfaCode((currentCode) =>
-        currentCode.replace(/\D/g, "").slice(0, TOTP_CODE_LENGTH)
-      );
-    }
+    // Reset the code on every method switch: the previous draft is a
+    // different alphabet/length and almost never carries over meaningfully
+    // (a 6-digit TOTP draft is never a valid recovery code and vice-versa).
+    setMfaCode("");
   };
 
   const handlePasskeySignIn = async () => {
@@ -782,59 +796,6 @@ export function Login() {
         <LoginDialogBody>
           {pendingMfaChallenge && (
             <LoginForm onSubmit={handleVerifyMfa}>
-              <div className="space-y-3">
-                <span
-                  id="mfa-method-label"
-                  className="text-sm font-medium text-zinc-950 dark:text-white"
-                >
-                  <Trans id="login.mfa.method">Verification method</Trans>
-                </span>
-
-                <LoginRadioGroup
-                  value={mfaMethod}
-                  onValueChange={(value) =>
-                    handleMfaMethodChange(value as MfaVerificationMethod)
-                  }
-                  disabled={isVerifyingMfa}
-                  aria-labelledby="mfa-method-label"
-                >
-                  {pendingMfaChallenge.available_methods.map((method) => (
-                    <LoginFieldLabel
-                      key={method}
-                      htmlFor={`mfa-method-${method}`}
-                      className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
-                    >
-                      <LoginRadioGroupItem
-                        id={`mfa-method-${method}`}
-                        value={method}
-                        className="mt-1"
-                        aria-label={
-                          method === "recovery_code"
-                            ? _(msg`Recovery code`)
-                            : _(msg`Authenticator code`)
-                        }
-                      />
-                      <span>
-                        {method === "recovery_code" ? (
-                          <Trans id="login.mfa.method.recovery_code">
-                            Recovery code
-                          </Trans>
-                        ) : (
-                          <Trans id="login.mfa.method.totp">
-                            Authenticator code
-                          </Trans>
-                        )}
-                        {method === pendingMfaChallenge.primary_method ? (
-                          <span className="ml-2 text-xs text-zinc-500 dark:text-zinc-400">
-                            <Trans id="login.mfa.preferred">recommended</Trans>
-                          </span>
-                        ) : null}
-                      </span>
-                    </LoginFieldLabel>
-                  ))}
-                </LoginRadioGroup>
-              </div>
-
               <LoginField>
                 <LoginFieldLabel htmlFor="mfa-code">
                   {mfaMethod === "recovery_code" ? (
@@ -848,7 +809,8 @@ export function Login() {
                 <LoginFieldDescription id="mfa-code-help">
                   {mfaMethod === "recovery_code" ? (
                     <Trans id="login.mfa.recoveryHelp">
-                      Enter one unused recovery code exactly as stored.
+                      Enter one unused 8-character recovery code exactly as
+                      stored.
                     </Trans>
                   ) : (
                     <Trans id="login.mfa.totpHelp">
@@ -858,16 +820,17 @@ export function Login() {
                   )}
                 </LoginFieldDescription>
                 {mfaMethod === "recovery_code" ? (
-                  <LoginInput
-                    id="mfa-code"
-                    name="mfa-code"
-                    type="text"
-                    autoComplete="one-time-code"
-                    required
+                  <LoginOtpInput
+                    idPrefix="mfa-code"
                     value={mfaCode}
-                    onChange={(event) => setMfaCode(event.target.value)}
-                    placeholder="B6F42Q8P"
+                    onChange={setMfaCode}
+                    length={RECOVERY_CODE_LENGTH}
+                    groups={[4, 4]}
+                    pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+                    inputMode="text"
+                    textTransform="uppercase"
                     disabled={isVerifyingMfa}
+                    aria-label={_(msg`Recovery code`)}
                     aria-invalid={mfaError ? true : undefined}
                     aria-describedby={
                       mfaError
@@ -895,6 +858,24 @@ export function Login() {
                   <LoginFieldError id="mfa-code-error">
                     {mfaError}
                   </LoginFieldError>
+                ) : null}
+                {canSwitchMfaMethod && isOtherMethodAvailable ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMfaMethodChange(otherMfaMethod)}
+                    disabled={isVerifyingMfa}
+                    className="mx-auto block text-sm text-zinc-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:focus-visible:ring-offset-zinc-950"
+                  >
+                    {mfaMethod === "totp" ? (
+                      <Trans id="login.mfa.switchToRecovery">
+                        I don&rsquo;t have access to my authenticator app
+                      </Trans>
+                    ) : (
+                      <Trans id="login.mfa.switchToTotp">
+                        Use authenticator code instead
+                      </Trans>
+                    )}
+                  </button>
                 ) : null}
               </LoginField>
 

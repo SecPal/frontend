@@ -49,8 +49,13 @@ afterEach(async () => {
   window.history.replaceState({}, "", originalLocationHref);
   clearXsrfCookie();
 
-  // Give React a chance to flush any pending updates
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  // Give React a chance to flush any pending updates. `input-otp` schedules
+  // internal `setTimeout(..., 0|10|50)` callbacks on every value/focus change
+  // that dispatch React `setState`; if they fire after vitest tears down the
+  // JSDOM environment, `resolveUpdatePriority` reads a now-undefined `window`
+  // and surfaces as an "Uncaught Exception" that fails the CI run.
+  // Wait long enough to flush the 0/10/50ms tier before teardown.
+  await new Promise((resolve) => setTimeout(resolve, 60));
 });
 
 // Polyfill for Blob.arrayBuffer() in test environment (JSDOM doesn't have it)
@@ -95,4 +100,26 @@ if (typeof Element !== "undefined") {
   if (!("scrollIntoView" in Element.prototype)) {
     Element.prototype.scrollIntoView = () => {};
   }
+}
+
+// Stubs for input-otp in JSDOM. The library schedules timer-driven pointer-
+// reset callbacks that call `document.elementFromPoint(x, y)` (for password-
+// manager-overlay detection) and `window.scrollTo(...)` (when the input
+// nudges itself into view); JSDOM implements neither. Without the stubs
+// `elementFromPoint` surfaces as an "Uncaught TypeError" several seconds
+// after the test that mounted the OTP input, and `scrollTo` floods the
+// console with "Not implemented" warnings.
+if (
+  typeof document !== "undefined" &&
+  typeof document.elementFromPoint !== "function"
+) {
+  (
+    document as Document & { elementFromPoint: () => Element | null }
+  ).elementFromPoint = () => null;
+}
+if (typeof window !== "undefined") {
+  // JSDOM's `scrollTo` throws a "Not implemented" diagnostic instead of
+  // being a real function; replace it with a no-op so the warning does not
+  // pollute the test output.
+  window.scrollTo = () => {};
 }

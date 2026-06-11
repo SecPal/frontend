@@ -1908,26 +1908,6 @@ msgstr "Your password was accepted. Complete MFA to finish signing in."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
-msgid "login.mfa.method"
-msgstr "Verification method"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.recovery_code"
-msgstr "Recovery code"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.totp"
-msgstr "Authenticator code"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.preferred"
-msgstr "recommended"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
 msgid "login.mfa.recoveryCode"
 msgstr "Recovery code"
 
@@ -1940,6 +1920,16 @@ msgstr "Enter one unused recovery code exactly as stored."
 #: src/pages/Login.tsx
 msgid "login.mfa.submit"
 msgstr "Verify and continue"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToRecovery"
+msgstr "I don’t have access to my authenticator app"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToTotp"
+msgstr "Use authenticator code instead"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx

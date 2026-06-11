@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+  Fragment,
   forwardRef,
   useContext,
   type ButtonHTMLAttributes,
@@ -18,7 +19,14 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown, ChevronUp, Circle, Loader2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  Loader2,
+  Minus,
+} from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { cn } from "./utils";
 
@@ -636,12 +644,36 @@ export function LoginInputOtpSlot({
   );
 }
 
+export function LoginInputOtpSeparator({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="login-input-otp-separator"
+      role="separator"
+      aria-hidden="true"
+      className={cn(
+        "flex items-center text-zinc-400 dark:text-zinc-500",
+        className
+      )}
+      {...props}
+    >
+      <Minus className="h-4 w-4" />
+    </div>
+  );
+}
+
 export function LoginOtpInput({
   value,
   onChange,
   length = 6,
   idPrefix = "login-otp",
   disabled = false,
+  pattern = REGEXP_ONLY_DIGITS,
+  inputMode = "numeric",
+  groups,
+  textTransform = "none",
   "aria-label": ariaLabel = "One-time code",
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -652,19 +684,72 @@ export function LoginOtpInput({
   length?: number;
   idPrefix?: string;
   disabled?: boolean;
+  /**
+   * Regex source string (input-otp's per-character pattern). Defaults to
+   * digits-only (`REGEXP_ONLY_DIGITS`); pass `REGEXP_ONLY_DIGITS_AND_CHARS`
+   * for alphanumeric inputs such as recovery codes.
+   */
+  pattern?: string;
+  /**
+   * HTML `inputMode` for the hidden input. Defaults to `"numeric"`; switch to
+   * `"text"` for alphanumeric inputs so mobile keyboards do not lock to the
+   * number pad.
+   */
+  inputMode?: ComponentProps<typeof OTPInput>["inputMode"];
+  /**
+   * Slot grouping. Defaults to `[length]` (single group). Pass e.g. `[4, 4]`
+   * to render two groups of four slots separated by `LoginInputOtpSeparator`
+   * (mirrors the shadcn `input-otp` "Pattern" example).
+   */
+  groups?: readonly number[];
+  /**
+   * Visual + value text-transform applied to the OTP value. Defaults to
+   * `"none"`. Use `"uppercase"` for case-insensitive codes such as recovery
+   * codes so the user sees uppercase letters regardless of caps-lock state
+   * and the value that reaches the consumer is already normalized.
+   */
+  textTransform?: "none" | "uppercase";
   "aria-label"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
   className?: string;
 }) {
+  const slotGroups: readonly number[] =
+    groups && groups.length > 0 ? groups : [length];
+  const totalSlots = slotGroups.reduce((sum, n) => sum + n, 0);
+  // Slot grouping must add up to `length` so OTPInput's maxLength and the
+  // rendered slots stay in sync; fall back to a single group when callers
+  // accidentally pass a mismatching `groups` array.
+  const useFallbackGroup = totalSlots !== length;
+  const effectiveGroups: readonly number[] = useFallbackGroup
+    ? [length]
+    : slotGroups;
+
+  const handleChange = (next: string) => {
+    onChange(textTransform === "uppercase" ? next.toUpperCase() : next);
+  };
+
+  // Pre-compute absolute slot offset for each group up front. A render-phase
+  // accumulator (`let cursor += groupLength`) would also work but trips the
+  // React 19 immutability lint, and a `reduce` accumulator keeps the inner
+  // `.map` callback pure.
+  const groupOffsets = effectiveGroups.reduce<number[]>(
+    (offsets, groupLength) => {
+      const last = offsets.length > 0 ? offsets[offsets.length - 1]! : 0;
+      offsets.push(last + groupLength);
+      return offsets;
+    },
+    [0]
+  );
+
   return (
     <LoginInputOtp
       id={idPrefix}
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       maxLength={length}
-      pattern={REGEXP_ONLY_DIGITS}
-      inputMode="numeric"
+      pattern={pattern}
+      inputMode={inputMode}
       autoComplete="one-time-code"
       disabled={disabled}
       aria-label={ariaLabel}
@@ -672,15 +757,29 @@ export function LoginOtpInput({
       aria-invalid={ariaInvalid}
       containerClassName={cn("justify-center", className)}
     >
-      <LoginInputOtpGroup>
-        {Array.from({ length }, (_, index) => (
-          <LoginInputOtpSlot
-            key={`${idPrefix}-${index}`}
-            index={index}
-            aria-invalid={ariaInvalid}
-          />
-        ))}
-      </LoginInputOtpGroup>
+      {effectiveGroups.map((groupLength, groupIndex) => {
+        const offset = groupOffsets[groupIndex]!;
+        const slots = Array.from({ length: groupLength }, (_, slotIndex) => {
+          const absoluteIndex = offset + slotIndex;
+          return (
+            <LoginInputOtpSlot
+              key={`${idPrefix}-${absoluteIndex}`}
+              index={absoluteIndex}
+              aria-invalid={ariaInvalid}
+              className={
+                textTransform === "uppercase" ? "uppercase" : undefined
+              }
+            />
+          );
+        });
+
+        return (
+          <Fragment key={`${idPrefix}-group-${groupIndex}`}>
+            {groupIndex > 0 ? <LoginInputOtpSeparator /> : null}
+            <LoginInputOtpGroup>{slots}</LoginInputOtpGroup>
+          </Fragment>
+        );
+      })}
     </LoginInputOtp>
   );
 }

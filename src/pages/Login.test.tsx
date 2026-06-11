@@ -156,6 +156,20 @@ function enterTotpCode(code: string) {
   fireEvent.change(getTotpInput(), { target: { value: code } });
 }
 
+function getRecoveryCodeInput(): HTMLInputElement {
+  return screen.getByLabelText(/recovery code/i, {
+    selector: '[autocomplete="one-time-code"]',
+  }) as HTMLInputElement;
+}
+
+function enterRecoveryCode(code: string) {
+  fireEvent.change(getRecoveryCodeInput(), { target: { value: code } });
+}
+
+function switchToRecoveryCodeMode() {
+  fireEvent.click(screen.getByRole("button", { name: /authenticator app/i }));
+}
+
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", { name: /select language/i });
   fireEvent.pointerDown(trigger, {
@@ -295,8 +309,11 @@ describe("Login", () => {
     expect(
       document.querySelectorAll('[data-slot="login-input-otp-slot"]')
     ).toHaveLength(6);
+    // The recovery-code fallback is now an inline toggle button below the
+    // OTP input (mirrors the shadcn `input-otp` "Form" example) instead of
+    // a radio-group method picker.
     expect(
-      screen.getByRole("radio", { name: /recovery code/i })
+      screen.getByRole("button", { name: /authenticator app/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeDisabled();
     expect(screen.getByLabelText(/password/i)).toBeDisabled();
@@ -1725,15 +1742,29 @@ describe("Login", () => {
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
   });
 
-  it("switches to the recovery code input when the recovery code method is selected", async () => {
+  it("switches to the recovery code input when the user clicks the lost-device toggle", async () => {
     await openMfaDialog();
-    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
+
+    switchToRecoveryCodeMode();
+
+    // The recovery-code input is an alphanumeric input-otp split 4-separator-4
+    // (mirrors the shadcn `input-otp` "Pattern" example): 8 slots and a
+    // single visual separator.
     expect(
-      screen.getByRole("textbox", { name: /recovery code/i })
-    ).toHaveAttribute("placeholder", "B6F42Q8P");
+      document.querySelectorAll('[data-slot="login-input-otp-slot"]')
+    ).toHaveLength(8);
     expect(
-      screen.queryByRole("group", { name: /authenticator code/i })
-    ).not.toBeInTheDocument();
+      document.querySelectorAll('[data-slot="login-input-otp-separator"]')
+    ).toHaveLength(1);
+
+    const recoveryInput = getRecoveryCodeInput();
+    expect(recoveryInput).toHaveAttribute("inputmode", "text");
+    expect(recoveryInput).toHaveAttribute("maxlength", "8");
+
+    // The toggle now offers switching back to TOTP.
+    expect(
+      screen.getByRole("button", { name: /use authenticator code/i })
+    ).toBeInTheDocument();
   });
 
   it("verifies an MFA challenge with a recovery code fallback", async () => {
@@ -1747,11 +1778,10 @@ describe("Login", () => {
     });
 
     await openMfaDialog();
-
-    fireEvent.click(screen.getByRole("radio", { name: /recovery code/i }));
-    fireEvent.change(screen.getByRole("textbox", { name: /recovery code/i }), {
-      target: { value: "B6F42Q8P" },
-    });
+    switchToRecoveryCodeMode();
+    // Input-otp accepts lowercase letters too; `textTransform="uppercase"`
+    // normalizes them so the backend never sees mixed-case codes.
+    enterRecoveryCode("b6f42q8p");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );

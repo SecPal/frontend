@@ -250,6 +250,60 @@ describe("auth login shadcn primitives", () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
+  it("supports alphanumeric input with split groups, separator and uppercase normalization (recovery-code shape)", () => {
+    const handleChange = vi.fn();
+
+    const { container } = render(
+      <LoginOtpInput
+        idPrefix="auth-recovery"
+        value=""
+        onChange={handleChange}
+        length={8}
+        groups={[4, 4]}
+        pattern="^[a-zA-Z0-9]+$"
+        inputMode="text"
+        textTransform="uppercase"
+        aria-label="Recovery code"
+      />
+    );
+
+    const recoveryInput = screen.getByLabelText("Recovery code");
+    expect(recoveryInput).toHaveAttribute("inputmode", "text");
+    expect(recoveryInput).toHaveAttribute("maxlength", "8");
+
+    // 8 slots rendered in two groups separated by a single shadcn-style
+    // separator (mirrors the shadcn `input-otp` "Pattern" example).
+    expect(
+      container.querySelectorAll('[data-slot="login-input-otp-slot"]')
+    ).toHaveLength(8);
+    const separators = container.querySelectorAll(
+      '[data-slot="login-input-otp-separator"]'
+    );
+    expect(separators).toHaveLength(1);
+    expect(separators[0]).toHaveAttribute("role", "separator");
+    expect(separators[0]).toHaveAttribute("aria-hidden", "true");
+
+    // Slot indices stay monotonic across the separator (0..3 in group 1,
+    // 4..7 in group 2) so input-otp wires keystrokes to the right cell.
+    const slots = container.querySelectorAll(
+      '[data-slot="login-input-otp-slot"]'
+    );
+    slots.forEach((slot) => {
+      expect(slot).toHaveClass("uppercase");
+    });
+
+    // Lowercase input gets normalized to uppercase before reaching the
+    // consumer (so backends never see mixed-case recovery codes).
+    fireEvent.change(recoveryInput, { target: { value: "b6f42q8p" } });
+    expect(handleChange).toHaveBeenCalledWith("B6F42Q8P");
+
+    // Characters outside the alphanumeric pattern are rejected by input-otp's
+    // built-in regex validation.
+    handleChange.mockClear();
+    fireEvent.change(recoveryInput, { target: { value: "b6f4-2q8" } });
+    expect(handleChange).not.toHaveBeenCalled();
+  });
+
   it("renders the shadcn Spinner with accessible status semantics", () => {
     render(<LoginSpinner aria-label="Loading" />);
 

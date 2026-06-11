@@ -204,6 +204,49 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   - Patterns discovered: keep MFA dialog chrome in the auth-local primitive barrel, but keep method-specific sanitization and verification payload construction in `Login.tsx` where challenge state already lives.
   - Gotchas encountered: switching a labeled single input to an OTP group requires moving `htmlFor` to the first OTP cell and asserting the group role in tests so label-based coverage remains stable.
 
+## US-017: MFA-Dialog auf shadcn input-otp "Form"/"Pattern"-Vorlage umstellen
+
+- Direkt aus UX-Review: die Radio-Gruppe "Verification method" mit den zwei Karten (Authenticator / Recovery code) war für den Default-Fall (TOTP) störend prominent. Vorbild ist jetzt das shadcn `input-otp` "Form"-Beispiel: nur die OTP-Eingabe sichtbar, darunter ein dezenter Inline-Toggle für den Recovery-Code-Fallback.
+- Default-Flow (`mfaMethod === "totp"`):
+  - 6-stellige `LoginOtpInput` direkt nach Title/Description sichtbar.
+  - Unter dem Input: Button `Trans id="login.mfa.switchToRecovery"` ("I don't have access to my authenticator app" / "Ich habe keinen Zugriff auf meine Authenticator-App"), nur sichtbar wenn `recovery_code` in `pendingMfaChallenge.available_methods` enthalten ist.
+- Recovery-Flow (`mfaMethod === "recovery_code"`):
+  - Alphanumerischer `LoginOtpInput` mit `length={8}`, `groups={[4, 4]}`, `pattern={REGEXP_ONLY_DIGITS_AND_CHARS}`, `inputMode="text"`, `textTransform="uppercase"` — visuell identisch zum shadcn `input-otp` "Pattern"-Beispiel mit `XXXX – XXXX`-Trenner.
+  - Toggle-Button wechselt zu `Trans id="login.mfa.switchToTotp"` ("Use authenticator code instead" / "Stattdessen Authenticator-Code verwenden"), wenn `totp` in `available_methods` enthalten ist.
+- Neue Primitive in `src/pages/Auth/ui/primitives.tsx`:
+  - `LoginInputOtpSeparator` — `data-slot="login-input-otp-separator"`, `role="separator"`, `aria-hidden="true"`, rendert einen Lucide `Minus`-Icon in `text-zinc-400/dark:text-zinc-500`.
+  - `LoginOtpInput` um drei optionale Props erweitert:
+    - `pattern?: string` (Default `REGEXP_ONLY_DIGITS`) — input-otp's per-Zeichen-Regex.
+    - `groups?: readonly number[]` (Default `[length]`) — z. B. `[4, 4]` rendert zwei `LoginInputOtpGroup` getrennt durch `LoginInputOtpSeparator`. Slot-Offsets werden via `reduce` vorab berechnet (React-19-Lint verbietet mutierende `let`-Akkumulatoren im Render).
+    - `inputMode?: ComponentProps<typeof OTPInput>["inputMode"]` (Default `"numeric"`) — `"text"` für alphanumerische Codes, damit mobile Tastaturen nicht auf den Zahlenblock einrasten.
+    - `textTransform?: "none" | "uppercase"` (Default `"none"`) — uppercased sowohl visuell (`uppercase`-Klasse pro Slot) als auch in der ausgegebenen `onChange`-Value, sodass das Backend nie Mixed-Case-Codes sieht.
+- Validierung in `Login.tsx`:
+  - `RECOVERY_CODE_LENGTH = 8`-Konstante eingeführt.
+  - `isIncompleteRecoveryCode = mfaMethod === "recovery_code" && normalizedMfaCode.length !== RECOVERY_CODE_LENGTH` ergänzt `isMfaSubmitDisabled`, damit der Verify-Button erst klickbar wird wenn alle 8 Slots gefüllt sind (parallel zur bestehenden 6-stelligen TOTP-Längenprüfung).
+  - `handleMfaMethodChange` resettet den Draft-Code immer (alter Code ist nie eine valide Eingabe für das andere Alphabet/length-Pärchen).
+- i18n:
+  - Neue Keys `login.mfa.switchToRecovery`, `login.mfa.switchToTotp` in EN + DE.
+  - Obsolete Keys `login.mfa.method`, `login.mfa.method.totp`, `login.mfa.method.recovery_code`, `login.mfa.preferred` von `sync:purge` automatisch entfernt.
+  - `login.mfa.recoveryHelp` von "exactly as stored" auf "unused 8-character recovery code exactly as stored" / "unbenutzten 8-stelligen Wiederherstellungscode genau wie gespeichert" geschärft, weil die Länge jetzt UI-relevant ist.
+- Tests:
+  - `src/pages/Auth/ui/auth-ui.test.tsx`: neuer Primitive-Test "supports alphanumeric input with split groups, separator and uppercase normalization (recovery-code shape)" deckt die 4-Sep-4-Slot-Struktur, `inputmode="text"`, `maxlength="8"`, Slot-Uppercase-Klasse, `textTransform`-Normalisierung (`b6f42q8p` → `B6F42Q8P`), und Pattern-Reject (`b6f4-2q8` wird nicht durchgelassen) ab.
+  - `src/pages/Login.test.tsx`: drei Bestands-MFA-Tests neu verdrahtet (kein `getByRole("radio")` mehr; `switchToRecoveryCodeMode()`/`enterRecoveryCode()` Helper-Funktionen ergänzt). Asserts auf `data-slot="login-input-otp-slot"` × 8 + `data-slot="login-input-otp-separator"` × 1 + `inputmode="text"` + Backend-Roundtrip mit normalisiertem Uppercase-Code.
+- JSDOM-Hardening (`tests/setup.ts`):
+  - Stub für `document.elementFromPoint` (input-otp's interne Pointer-Reset-Heuristik), damit Tests nicht mit "TypeError: document.elementFromPoint is not a function" einige Sekunden nach Test-Ende crashen.
+  - Stub für `window.scrollTo` (input-otp's Self-Scroll-into-View), damit JSDOM's "Not implemented: Window's scrollTo() method"-Diagnose den Output nicht flutet.
+  - `afterEach`-Flush-Pause von 0ms → 60ms erhöht, damit die 0/10/50ms-Tier-Timer aus `input-otp` (interne `setTimeout(r, 0|10|50)` pro Value/Focus-Change) feuern können, bevor vitest die JSDOM-Umgebung abreißt. Sonst feuert React's `dispatchSetState` → `resolveUpdatePriority` auf einem nicht mehr existierenden `window` und vitest reportet die Suite als rot.
+- Files changed:
+  - `src/pages/Auth/ui/primitives.tsx`
+  - `src/pages/Auth/ui/auth-ui.test.tsx`
+  - `src/pages/Login.tsx`, `src/pages/Login.test.tsx`
+  - `src/locales/{en,de}/messages.po`, `src/locales/{en,de}/messages.mjs`
+  - `tests/setup.ts`
+  - `CHANGELOG.md`, `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: wenn ein OTP-Input zwei wechselbare Code-Formate trägt (z. B. 6-Digit-TOTP vs 8-Char-Recovery), reicht eine einzige Wrapper-Primitive (`LoginOtpInput`) mit `pattern` + `groups` + `inputMode` + `textTransform` aus, um sowohl die `REGEXP_ONLY_DIGITS`- als auch die `REGEXP_ONLY_DIGITS_AND_CHARS`-Variante des shadcn-Examples zu liefern, ohne eine zweite parallele Komponente zu pflegen.
+  - Gotchas encountered: (1) React 19's neuer `react-hooks/immutability`-Linter verbietet `let cursor; cursor += groupLength` im Render — der Slot-Offset-Akkumulator muss als `.reduce<number[]>` vorab berechnet werden. (2) `input-otp` schedult drei `setTimeout(r, 0|10|50)`-Callbacks pro Value/Focus-Change (für selection-restore + Selection-Sync); die feuern asynchron React `setState`, was bei JSDOM-Teardown vor dem Timer einen "ReferenceError: window is not defined" zur Folge hat — die Lösung ist ein 60ms-Flush in `afterEach`, nicht das Mocken von input-otp. (3) `LoginField` ist `space-y-2` (kein flex), also reicht `mx-auto block` für ein zentriertes Inline-Toggle-Button-Element — `self-center` würde stillschweigend ohne Wirkung bleiben.
+  - Process: bei jeder Methodenumschaltung den Code-Draft sofort leeren — ein 6-stelliger TOTP-Draft ist nie ein valider 8-Char-Recovery-Code (und umgekehrt), das Transferieren wäre verwirrend für den Nutzer (Verify-Button wäre disabled mit unklarer Begründung).
+
 ## US-016: Login-Layout auf Landscape-Mobile reparieren
 
 - Reported direkt aus der Hand: auf Mobile im Landscape-Modus (Viewport-Höhe ≈ 390 px) traten zwei Bugs auf der `/login`-Route auf:

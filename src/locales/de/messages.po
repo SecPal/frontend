@@ -1908,38 +1908,28 @@ msgstr "Ihr Passwort wurde akzeptiert. Schließen Sie MFA ab, um die Anmeldung z
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
-msgid "login.mfa.method"
-msgstr "Methode zur Überprüfung"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.recovery_code"
-msgstr "Wiederherstellungscode"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.method.totp"
-msgstr "Authenticator-Code"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.mfa.preferred"
-msgstr "empfohlen"
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
 msgid "login.mfa.recoveryCode"
 msgstr "Wiederherstellungscode"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.recoveryHelp"
-msgstr "Geben Sie einen unbenutzten Wiederherstellungscode genau wie gespeichert ein."
+msgstr "Geben Sie einen unbenutzten 8-stelligen Wiederherstellungscode genau wie gespeichert ein."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.mfa.submit"
 msgstr "Überprüfen und fortfahren"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToRecovery"
+msgstr "Ich habe keinen Zugriff auf meine Authenticator-App"
+
+#. js-lingui-explicit-id
+#: src/pages/Login.tsx
+msgid "login.mfa.switchToTotp"
+msgstr "Stattdessen Authenticator-Code verwenden"
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
