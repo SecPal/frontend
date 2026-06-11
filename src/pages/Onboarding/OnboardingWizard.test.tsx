@@ -1667,6 +1667,131 @@ describe("OnboardingWizard", () => {
     expect(screen.getAllByText(/^passport$/i).length).toBeGreaterThan(0);
   });
 
+  it("keeps migrated wizard controls wired through the route-level nationality, upload, and residence-title flow", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "DE", name: "Germany" },
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      async (id, payload) => ({
+        id,
+        employee_id: "employee-1",
+        form_template_id: "template-1",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+    onboardingApiMocks.uploadOnboardingFile.mockResolvedValueOnce({
+      id: "file-passport",
+      filename: "passport.png",
+    });
+
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await selectOnboardingOption(user, /^gender$/i, "female");
+
+    const nationalityControl = screen.getByLabelText(/^nationalities$/i);
+    expect(nationalityControl).toHaveAttribute("role", "combobox");
+    await user.click(nationalityControl);
+    expect(
+      await screen.findByRole("searchbox", {
+        name: /search and select one nationality/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-slot="onboarding-command-popover-content"]')
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: /turkey/i }));
+
+    const identityUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your identity document now\?/i,
+    });
+    expect(identityUploadGroup).toHaveAttribute(
+      "data-slot",
+      "onboarding-radio-group"
+    );
+    await user.click(
+      within(identityUploadGroup).getByRole("radio", { name: /^(yes|ja)$/i })
+    );
+
+    const identityAttachment = await screen.findByLabelText(/^attachment$/i);
+    expect(identityAttachment).toHaveAttribute("type", "file");
+    await user.upload(
+      identityAttachment,
+      new File(["passport"], "passport.png", { type: "image/png" })
+    );
+    await user.click(screen.getByRole("button", { name: /upload file/i }));
+    expect(await screen.findByText("passport.png")).toBeInTheDocument();
+
+    const residenceTitleType = screen.getByLabelText(/residence title type/i);
+    expect(residenceTitleType).toHaveAttribute("role", "combobox");
+    expect(residenceTitleType).toHaveAttribute(
+      "data-slot",
+      "onboarding-select-trigger"
+    );
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    expect(expiryInput).toHaveAttribute(
+      "id",
+      "onboarding-field-residence-title-expiry"
+    );
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+
+    const employmentGroup = await screen.findByRole("radiogroup", {
+      name: /employment permitted/i,
+    });
+    expect(employmentGroup).toHaveAttribute(
+      "data-slot",
+      "onboarding-radio-group"
+    );
+  });
+
   it("normalizes nationality payloads to a single value before saving", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({

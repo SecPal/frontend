@@ -25,6 +25,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Radix-backed command popovers should require caller-provided placeholder/search/empty-state copy, keep filtering/selection behavior local, and let Radix own portal positioning plus outside/focus dismissal; cover trigger, searchbox, option, selected, disabled, empty, Escape, and Tab boundaries in primitive tests.
 - Editable onboarding autocomplete inputs should keep request, highlight, exact-match, and focus-handoff state in the feature component while moving only the listbox surface to onboarding-local Radix Popover primitives such as `AutocompleteListbox`/`AutocompleteOption`.
 - Auth/Onboarding primitives should not ship English user-facing defaults for accessibility labels, loading labels, placeholders, or empty states; require caller-provided copy or route-owned Lingui translations so selected-language rendering stays consistent.
+- Flow-level route regressions should drive the same public controls users touch after a primitive migration, then assert translated copy, stable roles, `data-slot` markers, and submitted payloads at the route boundary instead of snapshotting implementation markup.
 
 ## US-001: Shadcn-Basis für Onboarding schaffen
 
@@ -555,3 +556,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - **Learnings for future iterations:**
   - Patterns discovered: editable comboboxes do not need to surrender input ownership to Radix; anchoring the existing `Input` with Radix Popover lets feature-owned keyboard and fetch state stay intact while the listbox shell moves to the shared shadcn/Radix layer.
   - Gotchas encountered: Radix Popover auto-focus needs to be prevented for editable suggestions, otherwise opening or closing a suggestions portal can steal focus from the input before the existing blur and focus-handoff logic runs.
+
+## US-008: Add Flow-Level Regression Coverage
+- Added a Login route regression that switches to German through the Radix language selector, verifies translated credential error/status copy, and opens the translated MFA dialog with the migrated OTP entry point still wired.
+- Added an OnboardingWizard route regression that drives schema fields, nationality command selection, identity upload choice, file selection, and residence-title follow-up controls while asserting migrated Radix/shadcn role and `data-slot` boundaries.
+- Re-ran the scoped migration audit, unit suite, typecheck, lint, and Lingui catalog check together for the migrated auth/onboarding surface.
+- Files changed:
+  - `src/pages/Login.test.tsx`
+  - `src/pages/Onboarding/OnboardingWizard.test.tsx`
+  - `.context/progress.md`
+- **Learnings for future iterations:**
+  - Patterns discovered: keep flow-level migration tests on public route controls and a few stable primitive markers, so they catch accidental primitive regressions without becoming full DOM snapshots.
+  - Gotchas encountered: full Vitest surfaced a transient native-passkey Login test failure on the first combined run; the same test passed in isolation and the full suite passed on rerun, so treat that separately from story regressions.
