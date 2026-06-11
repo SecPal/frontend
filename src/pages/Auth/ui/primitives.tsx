@@ -75,7 +75,14 @@ export function LoginShell({
   return (
     <main
       className={cn(
-        "relative flex min-h-dvh flex-col items-center justify-center gap-6 bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
+        // `overflow-x-clip` is the page-level safety net: even if a child
+        // (long German compound word, a misbehaving extension overlay,
+        // sub-pixel-rounded transforms, etc.) sneaks past its container, the
+        // shell never offers a horizontal page scrollbar. `clip` is preferred
+        // over `hidden` because it does not form a scroll-containing block,
+        // so `position: sticky` descendants and Radix Portal overlays keep
+        // working unchanged.
+        "relative flex min-h-dvh flex-col items-center justify-center gap-6 overflow-x-clip bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
         className
       )}
       {...props}
@@ -250,9 +257,16 @@ export function LoginFieldDescription({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
+  // `break-words` lets long German compound words (e.g.
+  // "Wiederherstellungscode", "Authentifizierungscode") wrap mid-word
+  // instead of overflowing the field when the container is narrow
+  // (small mobile viewports, narrow dialogs).
   return (
     <p
-      className={cn("text-sm text-zinc-600 dark:text-zinc-300", className)}
+      className={cn(
+        "text-sm break-words text-zinc-600 dark:text-zinc-300",
+        className
+      )}
       {...props}
     />
   );
@@ -262,10 +276,13 @@ export function LoginFieldError({
   className,
   ...props
 }: ComponentPropsWithoutRef<"p">) {
+  // Localized backend errors can carry long German compound words
+  // ("MFA-Verifizierung", "Wiederherstellungscode") and recovery URLs;
+  // `break-words` keeps them inside the field box on narrow viewports.
   return (
     <p
       className={cn(
-        "text-sm font-medium text-red-600 dark:text-red-500",
+        "text-sm font-medium break-words text-red-600 dark:text-red-500",
         className
       )}
       {...props}
@@ -290,7 +307,7 @@ export function LoginStatusMessage({
       role="alert"
       aria-live={live}
       className={cn(
-        "rounded-md border p-4 text-sm",
+        "rounded-md border p-4 text-sm break-words",
         statusMessageVariants[variant],
         className
       )}
@@ -540,7 +557,10 @@ export const LoginDialogTitle = forwardRef<
     <DialogPrimitive.Title
       ref={ref}
       data-slot="login-dialog-title"
-      className={cn("text-lg font-semibold tracking-normal", className)}
+      className={cn(
+        "text-lg font-semibold tracking-normal break-words",
+        className
+      )}
       {...props}
     />
   );
@@ -554,7 +574,10 @@ export const LoginDialogDescription = forwardRef<
     <DialogPrimitive.Description
       ref={ref}
       data-slot="login-dialog-description"
-      className={cn("mt-2 text-sm text-zinc-600 dark:text-zinc-300", className)}
+      className={cn(
+        "mt-2 text-sm break-words text-zinc-600 dark:text-zinc-300",
+        className
+      )}
       {...props}
     />
   );
@@ -871,7 +894,7 @@ export function LoginEmptyTitle({
     <div
       data-slot="login-empty-title"
       className={cn(
-        "text-lg font-medium tracking-tight text-zinc-950 dark:text-zinc-50",
+        "text-lg font-medium tracking-tight break-words text-zinc-950 dark:text-zinc-50",
         className
       )}
       {...props}
@@ -887,7 +910,7 @@ export function LoginEmptyDescription({
     <p
       data-slot="login-empty-description"
       className={cn(
-        "text-sm/relaxed text-zinc-500 dark:text-zinc-400 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-zinc-950 dark:[&>a:hover]:text-zinc-50",
+        "text-sm/relaxed break-words text-zinc-500 dark:text-zinc-400 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-zinc-950 dark:[&>a:hover]:text-zinc-50",
         className
       )}
       {...props}

@@ -306,6 +306,39 @@ describe("auth login shadcn primitives", () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
+  it("clips horizontal overflow at the LoginShell and wraps long words in text-heavy primitives", () => {
+    // Defense in depth against horizontal scrollbars on the login surface:
+    //   1. `LoginShell` clips horizontal overflow at the page level so a
+    //      misbehaving child (long German compound word, browser-extension
+    //      overlay, sub-pixel-rounded transform) can never offer a
+    //      horizontal page scrollbar.
+    //   2. Text-heavy primitives that render localized backend strings or
+    //      long German compound words (`Wiederherstellungscode`,
+    //      `Authentifizierungscode`, `MFA-Verifizierung`) declare
+    //      `break-words` so they wrap mid-word inside their container
+    //      instead of forcing the container wider.
+    render(
+      <LoginShell data-testid="shell">
+        <LoginField>
+          <LoginFieldDescription data-testid="desc">
+            Geben Sie einen Wiederherstellungscode ein.
+          </LoginFieldDescription>
+          <LoginFieldError data-testid="error">
+            MFA-Verifizierung fehlgeschlagen.
+          </LoginFieldError>
+        </LoginField>
+        <LoginStatusMessage data-testid="status">
+          Anmeldung läuft …
+        </LoginStatusMessage>
+      </LoginShell>
+    );
+
+    expect(screen.getByTestId("shell")).toHaveClass("overflow-x-clip");
+    expect(screen.getByTestId("desc")).toHaveClass("break-words");
+    expect(screen.getByTestId("error")).toHaveClass("break-words");
+    expect(screen.getByTestId("status")).toHaveClass("break-words");
+  });
+
   it("renders the shadcn Spinner with accessible status semantics", () => {
     render(<LoginSpinner aria-label="Loading" />);
 
