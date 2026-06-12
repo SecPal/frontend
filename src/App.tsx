@@ -30,49 +30,34 @@ import {
 import { OnboardingLayout } from "./components/onboarding-layout";
 import { buttonVariants } from "./ui";
 import { RouteContentFallback } from "./components/RouteContentFallback";
+import { routeModuleLoaders } from "./routeModules";
 
 // Lazy load route components for better performance
 // Login page is eagerly loaded as it's the first page users see
 import { Login } from "./pages/Login";
 
 // All other routes are lazy loaded to reduce initial bundle size
-const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage"));
-const ProfilePage = lazy(() => import("./pages/Profile/ProfilePage"));
-const EmployeeList = lazy(() => import("./pages/Employees/EmployeeList"));
-const EmployeeDetail = lazy(() => import("./pages/Employees/EmployeeDetail"));
-const EmployeeCreate = lazy(() => import("./pages/Employees/EmployeeCreate"));
-const EmployeeEdit = lazy(() => import("./pages/Employees/EmployeeEdit"));
-const EmployeeContactsEdit = lazy(
-  () => import("./pages/Employees/EmployeeContactsEdit")
-);
-const OnboardingWizard = lazy(
-  () => import("./pages/Onboarding/OnboardingWizard")
-);
-const OnboardingComplete = lazy(() =>
-  import("./pages/Onboarding/OnboardingComplete").then((m) => ({
-    default: m.OnboardingComplete,
-  }))
-);
-const OnboardingSubmitted = lazy(
-  () => import("./pages/Onboarding/OnboardingSubmitted")
-);
-const OrganizationPage = lazy(
-  () => import("./pages/Organization/OrganizationPage")
-);
-const CustomersPage = lazy(() => import("./pages/Customers/CustomersPage"));
-const CustomerCreate = lazy(() => import("./pages/Customers/CustomerCreate"));
-const CustomerDetail = lazy(() => import("./pages/Customers/CustomerDetail"));
-const CustomerEdit = lazy(() => import("./pages/Customers/CustomerEdit"));
-const SitesPage = lazy(() => import("./pages/Sites/SitesPage"));
-const SiteCreate = lazy(() => import("./pages/Sites/SiteCreate"));
-const SiteDetail = lazy(() => import("./pages/Sites/SiteDetail"));
-const SiteEdit = lazy(() => import("./pages/Sites/SiteEdit"));
-const ActivityLogList = lazy(
-  () => import("./pages/ActivityLog/ActivityLogList")
-);
-const AndroidProvisioningPage = lazy(
-  () => import("./pages/AndroidProvisioning/AndroidProvisioningPage")
-);
+const SettingsPage = lazy(routeModuleLoaders.settings);
+const ProfilePage = lazy(routeModuleLoaders.profile);
+const EmployeeList = lazy(routeModuleLoaders.employeeList);
+const EmployeeDetail = lazy(routeModuleLoaders.employeeDetail);
+const EmployeeCreate = lazy(routeModuleLoaders.employeeCreate);
+const EmployeeEdit = lazy(routeModuleLoaders.employeeEdit);
+const EmployeeContactsEdit = lazy(routeModuleLoaders.employeeContactsEdit);
+const OnboardingWizard = lazy(routeModuleLoaders.onboardingWizard);
+const OnboardingComplete = lazy(routeModuleLoaders.onboardingComplete);
+const OnboardingSubmitted = lazy(routeModuleLoaders.onboardingSubmitted);
+const OrganizationPage = lazy(routeModuleLoaders.organization);
+const CustomersPage = lazy(routeModuleLoaders.customers);
+const CustomerCreate = lazy(routeModuleLoaders.customerCreate);
+const CustomerDetail = lazy(routeModuleLoaders.customerDetail);
+const CustomerEdit = lazy(routeModuleLoaders.customerEdit);
+const SitesPage = lazy(routeModuleLoaders.sites);
+const SiteCreate = lazy(routeModuleLoaders.siteCreate);
+const SiteDetail = lazy(routeModuleLoaders.siteDetail);
+const SiteEdit = lazy(routeModuleLoaders.siteEdit);
+const ActivityLogList = lazy(routeModuleLoaders.activityLogs);
+const AndroidProvisioningPage = lazy(routeModuleLoaders.androidProvisioning);
 
 function Home() {
   return (

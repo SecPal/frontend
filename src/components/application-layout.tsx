@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { usePrefetch } from "../hooks/usePrefetch";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { getAuthTransport } from "../services/authTransport";
 import { getInitials } from "../lib/stringUtils";
@@ -113,9 +114,43 @@ async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { lock, user, logout } = useAuth();
   const capabilities = useUserCapabilities();
+  const { prefetchPathsOnIdle } = usePrefetch();
   const authTransport = useMemo(() => getAuthTransport(), []);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const primaryDestinations = ["/profile", "/settings"];
+
+    if (capabilities.organization) {
+      primaryDestinations.push("/organization");
+    }
+    if (capabilities.customers) {
+      primaryDestinations.push("/customers");
+    }
+    if (capabilities.sites) {
+      primaryDestinations.push("/sites");
+    }
+    if (capabilities.employees) {
+      primaryDestinations.push("/employees");
+    }
+    if (capabilities.activityLogs) {
+      primaryDestinations.push("/activity-logs");
+    }
+    if (capabilities.androidProvisioning) {
+      primaryDestinations.push("/android-provisioning");
+    }
+
+    prefetchPathsOnIdle(primaryDestinations);
+  }, [
+    capabilities.activityLogs,
+    capabilities.androidProvisioning,
+    capabilities.customers,
+    capabilities.employees,
+    capabilities.organization,
+    capabilities.sites,
+    prefetchPathsOnIdle,
+  ]);
 
   const handleLogout = async () => {
     try {

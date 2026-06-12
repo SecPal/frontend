@@ -1,0 +1,166 @@
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+
+const { mockApiFetch, mockRouteModuleLoaders } = vi.hoisted(() => {
+  const createLoader = () =>
+    vi.fn().mockResolvedValue({
+      default: () => null,
+    });
+
+  return {
+    mockApiFetch: vi.fn(),
+    mockRouteModuleLoaders: {
+      settings: createLoader(),
+      profile: createLoader(),
+      employeeList: createLoader(),
+      employeeDetail: createLoader(),
+      employeeCreate: createLoader(),
+      employeeEdit: createLoader(),
+      employeeContactsEdit: createLoader(),
+      onboardingWizard: createLoader(),
+      onboardingComplete: createLoader(),
+      onboardingSubmitted: createLoader(),
+      organization: createLoader(),
+      customers: createLoader(),
+      customerCreate: createLoader(),
+      customerDetail: createLoader(),
+      customerEdit: createLoader(),
+      sites: createLoader(),
+      siteCreate: createLoader(),
+      siteDetail: createLoader(),
+      siteEdit: createLoader(),
+      activityLogs: createLoader(),
+      androidProvisioning: createLoader(),
+    },
+  };
+});
+
+vi.mock("../routeModules", () => ({
+  routeModuleLoaders: mockRouteModuleLoaders,
+}));
+
+vi.mock("../config", () => ({
+  apiConfig: {
+    baseUrl: "",
+  },
+}));
+
+vi.mock("../services/csrf", () => ({
+  apiFetch: mockApiFetch,
+}));
+
+import {
+  getRoutePrefetchPlan,
+  prefetchRoutePath,
+  resetPrefetchCacheForTests,
+  usePrefetch,
+} from "./usePrefetch";
+
+describe("usePrefetch route strategy", () => {
+  beforeEach(() => {
+    resetPrefetchCacheForTests();
+    vi.clearAllMocks();
+    mockApiFetch.mockResolvedValue(new Response("{}"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("plans primary list navigation with route chunk and API data prefetches", () => {
+    expect(getRoutePrefetchPlan("/customers")).toEqual({
+      routeModules: ["customers"],
+      apiPaths: ["/v1/customers?page=1&per_page=15"],
+    });
+
+    expect(getRoutePrefetchPlan("/employees")).toEqual({
+      routeModules: ["employeeList"],
+      apiPaths: [
+        "/v1/employees?page=1&per_page=15",
+        "/v1/organizational-units",
+      ],
+    });
+  });
+
+  it("plans high-frequency detail links with detail chunks and entity data", () => {
+    expect(getRoutePrefetchPlan("/customers/customer-123")).toEqual({
+      routeModules: ["customerDetail"],
+      apiPaths: ["/v1/customers/customer-123"],
+    });
+
+    expect(getRoutePrefetchPlan("/sites/site-123/edit")).toEqual({
+      routeModules: ["siteEdit"],
+      apiPaths: ["/v1/sites/site-123", "/v1/organizational-units"],
+    });
+
+    expect(getRoutePrefetchPlan("/employees/employee-123")).toEqual({
+      routeModules: ["employeeDetail"],
+      apiPaths: ["/v1/employees/employee-123"],
+    });
+  });
+
+  it("prefetches route modules and API data once per resource", async () => {
+    await prefetchRoutePath("/customers");
+    await prefetchRoutePath("/customers");
+
+    expect(mockRouteModuleLoaders.customers).toHaveBeenCalledTimes(1);
+    expect(mockApiFetch).toHaveBeenCalledTimes(1);
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      "/v1/customers?page=1&per_page=15",
+      expect.objectContaining({
+        method: "GET",
+        headers: { Accept: "application/json" },
+      })
+    );
+  });
+
+  it("does not fail navigation when prefetch work rejects", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockRouteModuleLoaders.customerDetail.mockRejectedValueOnce(
+      new Error("chunk unavailable")
+    );
+    mockApiFetch.mockRejectedValueOnce(new Error("network unavailable"));
+
+    await expect(
+      prefetchRoutePath("/customers/customer-123")
+    ).resolves.toBeUndefined();
+
+    warn.mockRestore();
+  });
+
+  it("schedules route chunk warmups on idle through the hook", async () => {
+    vi.useFakeTimers();
+    const requestIdleCallback = vi.fn(
+      (callback: IdleRequestCallback): number => {
+        window.setTimeout(() => {
+          callback({
+            didTimeout: false,
+            timeRemaining: () => 50,
+          });
+        }, 0);
+
+        return 1;
+      }
+    );
+    Object.defineProperty(window, "requestIdleCallback", {
+      configurable: true,
+      value: requestIdleCallback,
+    });
+    const { result } = renderHook(() => usePrefetch());
+
+    act(() => {
+      result.current.prefetchPathOnIdle("/customers");
+    });
+
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    expect(requestIdleCallback).toHaveBeenCalled();
+    expect(mockRouteModuleLoaders.customers).toHaveBeenCalledTimes(1);
+    expect(mockApiFetch).not.toHaveBeenCalled();
+  });
+});

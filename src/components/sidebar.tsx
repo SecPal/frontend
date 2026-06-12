@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import React, { createContext, forwardRef, useContext } from "react";
-import {
-  Link as RouterLink,
-  type LinkProps as RouterLinkProps,
-} from "react-router-dom";
+import type { LinkProps as RouterLinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { PrefetchLink } from "./PrefetchLink";
 
 const SidebarCloseContext = createContext<(() => void) | null>(null);
 
@@ -183,7 +181,7 @@ export const SidebarItem = forwardRef<
     return (
       <span className={cn("relative", className)}>
         {indicator}
-        <RouterLink
+        <PrefetchLink
           {...linkProps}
           to={href}
           className={classes}
@@ -197,7 +195,7 @@ export const SidebarItem = forwardRef<
           }}
         >
           <TouchTarget>{children}</TouchTarget>
-        </RouterLink>
+        </PrefetchLink>
       </span>
     );
   }

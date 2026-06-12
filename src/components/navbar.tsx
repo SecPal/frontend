@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import React, { forwardRef } from "react";
-import {
-  Link as RouterLink,
-  type LinkProps as RouterLinkProps,
-} from "react-router-dom";
+import type { LinkProps as RouterLinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { PrefetchLink } from "./PrefetchLink";
 
 function TouchTarget({ children }: { children: React.ReactNode }) {
   return (
@@ -105,7 +103,7 @@ export const NavbarItem = forwardRef<
     return (
       <span className={cn("relative", className)}>
         {indicator}
-        <RouterLink
+        <PrefetchLink
           {...linkProps}
           to={href}
           className={classes}
@@ -113,7 +111,7 @@ export const NavbarItem = forwardRef<
           ref={ref as React.ForwardedRef<HTMLAnchorElement>}
         >
           <TouchTarget>{children}</TouchTarget>
-        </RouterLink>
+        </PrefetchLink>
       </span>
     );
   }

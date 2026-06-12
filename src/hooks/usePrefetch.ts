@@ -1,157 +1,305 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
+import { apiConfig } from "../config";
+import { routeModuleLoaders, type RouteModuleKey } from "../routeModules";
+import { apiFetch } from "../services/csrf";
 
-/**
- * Prefetch resources on idle or hover for improved perceived performance
- *
- * Implements intelligent prefetching strategies:
- * - On idle: Prefetch when browser has spare CPU cycles
- * - On hover: Prefetch when user hovers over link (anticipate click)
- *
- * @example
- * ```tsx
- * const { prefetchOnIdle, prefetchOnHover } = usePrefetch();
- *
- * // Prefetch when browser is idle
- * useEffect(() => {
- *   prefetchOnIdle('/v1/employees');
- * }, []);
- *
- * // Prefetch when user hovers over link
- * <Link to="/employees/123" {...prefetchOnHover('/v1/employees/123')}>
- *   View Employee
- * </Link>
- * ```
- */
-export const usePrefetch = () => {
-  const prefetchedUrls = useRef<Set<string>>(new Set());
+export interface RoutePrefetchPlan {
+  routeModules: RouteModuleKey[];
+  apiPaths: string[];
+}
 
-  /**
-   * Prefetch resource when browser is idle
-   *
-   * Uses requestIdleCallback to avoid blocking main thread
-   *
-   * @param url - URL to prefetch
-   * @param options - Fetch options
-   */
-  const prefetchOnIdle = useCallback((url: string, options?: RequestInit) => {
-    // Avoid prefetching same URL multiple times
-    if (prefetchedUrls.current.has(url)) {
-      return;
-    }
+interface PrefetchRouteOptions {
+  includeApi?: boolean;
+}
 
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(
-        () => {
-          const fetchOptions: RequestInit = { ...options };
-          // Only add priority if supported (experimental API)
-          if ("priority" in Request.prototype) {
-            (fetchOptions as RequestInit & { priority: string }).priority =
-              "low";
-          }
-          fetch(url, fetchOptions)
-            .then(() => {
-              prefetchedUrls.current.add(url);
-              if (import.meta.env.DEV) {
-                console.log(`[Prefetch] Prefetched on idle: ${url}`);
-              }
-            })
-            .catch((error) => {
-              if (import.meta.env.DEV) {
-                console.warn(`[Prefetch] Failed to prefetch ${url}:`, error);
-              }
-            });
-        },
-        { timeout: 2000 }
-      );
-    } else {
-      // Fallback for browsers without requestIdleCallback
-      setTimeout(() => {
-        fetch(url, options)
-          .then(() => {
-            prefetchedUrls.current.add(url);
-          })
-          .catch(() => {
-            // Silently fail - prefetch is best-effort
-          });
-      }, 100);
-    }
-  }, []);
+type LowPriorityRequestInit = RequestInit & { priority?: "low" };
 
-  /**
-   * Prefetch resource on hover (anticipate user click)
-   *
-   * Returns event handlers for React elements
-   *
-   * @param url - URL to prefetch
-   * @returns Object with onMouseEnter and onTouchStart handlers
-   */
-  const prefetchOnHover = useCallback((url: string) => {
-    // Avoid prefetching same URL multiple times
-    if (prefetchedUrls.current.has(url)) {
-      return {};
-    }
+const completedPrefetches = new Set<string>();
+const pendingPrefetches = new Map<string, Promise<void>>();
 
-    const prefetch = () => {
-      // Use <link rel="prefetch"> for better browser optimization
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = url;
-      link.as = "fetch";
-      document.head.appendChild(link);
+function pathFromUrlLike(value: string): string | null {
+  if (!value.startsWith("/")) {
+    return null;
+  }
 
-      prefetchedUrls.current.add(url);
-      if (import.meta.env.DEV) {
-        console.log(`[Prefetch] Prefetched on hover: ${url}`);
-      }
+  try {
+    const url = new URL(value, window.location.origin);
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return value;
+  }
+}
 
-      // Clean up link after 5 seconds
-      setTimeout(() => {
-        try {
-          if (link.parentNode === document.head) {
-            document.head.removeChild(link);
-          }
-        } catch {
-          // Link already removed or never added; ignore
-        }
-      }, 5000);
-    };
+function encodePathSegment(value: string): string {
+  return encodeURIComponent(decodeURIComponent(value));
+}
 
-    return {
-      onMouseEnter: prefetch,
-      onTouchStart: prefetch, // Also trigger on touch for mobile
-    };
-  }, []);
+function listApiPath(resource: string, params: Record<string, string>): string {
+  const searchParams = new URLSearchParams(params);
 
-  /**
-   * Prefetch multiple URLs in batch
-   *
-   * @param urls - Array of URLs to prefetch
-   * @param options - Fetch options
-   */
-  const prefetchBatch = useCallback(
-    (urls: string[], options?: RequestInit) => {
-      urls.forEach((url) => prefetchOnIdle(url, options));
-    },
-    [prefetchOnIdle]
+  return `/v1/${resource}?${searchParams.toString()}`;
+}
+
+function routePlan(
+  routeModules: RouteModuleKey[],
+  apiPaths: string[] = []
+): RoutePrefetchPlan {
+  return { routeModules, apiPaths };
+}
+
+export function getRoutePrefetchPlan(
+  destination: string
+): RoutePrefetchPlan | null {
+  const path = pathFromUrlLike(destination);
+
+  if (!path) {
+    return null;
+  }
+
+  const pathname = path.split("?")[0] ?? "";
+
+  switch (pathname) {
+    case "/profile":
+      return routePlan(["profile"]);
+    case "/settings":
+      return routePlan(["settings"]);
+    case "/organization":
+      return routePlan(["organization"], [
+        listApiPath("organizational-units", { per_page: "100" }),
+      ]);
+    case "/customers":
+      return routePlan(["customers"], [
+        listApiPath("customers", { page: "1", per_page: "15" }),
+      ]);
+    case "/customers/new":
+      return routePlan(["customerCreate"]);
+    case "/sites":
+      return routePlan(["sites"], [
+        listApiPath("sites", { page: "1", per_page: "15" }),
+      ]);
+    case "/sites/new":
+      return routePlan(["siteCreate"], ["/v1/organizational-units"]);
+    case "/employees":
+      return routePlan(["employeeList"], [
+        listApiPath("employees", { page: "1", per_page: "15" }),
+        "/v1/organizational-units",
+      ]);
+    case "/employees/create":
+      return routePlan(["employeeCreate"], ["/v1/organizational-units"]);
+    case "/activity-logs":
+      return routePlan(["activityLogs"], [
+        listApiPath("activity-logs", {
+          page: "1",
+          per_page: "50",
+          include_verification: "1",
+        }),
+        "/v1/organizational-units",
+      ]);
+    case "/android-provisioning":
+      return routePlan(["androidProvisioning"], [
+        "/v1/android-enrollment-sessions?per_page=15",
+      ]);
+    default:
+      break;
+  }
+
+  const customerMatch = pathname.match(/^\/customers\/([^/]+)$/);
+  if (customerMatch) {
+    const id = encodePathSegment(customerMatch[1] ?? "");
+    return routePlan(["customerDetail"], [`/v1/customers/${id}`]);
+  }
+
+  const customerEditMatch = pathname.match(/^\/customers\/([^/]+)\/edit$/);
+  if (customerEditMatch) {
+    const id = encodePathSegment(customerEditMatch[1] ?? "");
+    return routePlan(["customerEdit"], [`/v1/customers/${id}`]);
+  }
+
+  const customerSitesMatch = pathname.match(/^\/sites\/customer\/([^/]+)$/);
+  if (customerSitesMatch) {
+    return routePlan(["sites"], [
+      listApiPath("sites", {
+        customer_id: encodePathSegment(customerSitesMatch[1] ?? ""),
+        page: "1",
+        per_page: "15",
+      }),
+    ]);
+  }
+
+  const customerSiteCreateMatch = pathname.match(
+    /^\/sites\/new\/customer\/([^/]+)$/
   );
+  if (customerSiteCreateMatch) {
+    const customerId = encodePathSegment(customerSiteCreateMatch[1] ?? "");
+    return routePlan(["siteCreate"], [
+      `/v1/customers/${customerId}`,
+      "/v1/organizational-units",
+    ]);
+  }
 
-  /**
-   * Clear prefetch cache (for testing/debugging)
-   */
+  const siteMatch = pathname.match(/^\/sites\/([^/]+)$/);
+  if (siteMatch) {
+    const id = encodePathSegment(siteMatch[1] ?? "");
+    return routePlan(["siteDetail"], [`/v1/sites/${id}`]);
+  }
+
+  const siteEditMatch = pathname.match(/^\/sites\/([^/]+)\/edit$/);
+  if (siteEditMatch) {
+    const id = encodePathSegment(siteEditMatch[1] ?? "");
+    return routePlan(["siteEdit"], [
+      `/v1/sites/${id}`,
+      "/v1/organizational-units",
+    ]);
+  }
+
+  const employeeContactsMatch = pathname.match(
+    /^\/employees\/([^/]+)\/edit\/contacts$/
+  );
+  if (employeeContactsMatch) {
+    const id = encodePathSegment(employeeContactsMatch[1] ?? "");
+    return routePlan(["employeeContactsEdit"], [`/v1/employees/${id}`]);
+  }
+
+  const employeeEditMatch = pathname.match(/^\/employees\/([^/]+)\/edit$/);
+  if (employeeEditMatch) {
+    const id = encodePathSegment(employeeEditMatch[1] ?? "");
+    return routePlan(["employeeEdit"], [
+      `/v1/employees/${id}`,
+      "/v1/organizational-units",
+    ]);
+  }
+
+  const employeeMatch = pathname.match(/^\/employees\/([^/]+)$/);
+  if (employeeMatch) {
+    const id = encodePathSegment(employeeMatch[1] ?? "");
+    return routePlan(["employeeDetail"], [`/v1/employees/${id}`]);
+  }
+
+  return null;
+}
+
+function runPrefetch(key: string, task: () => Promise<unknown>): Promise<void> {
+  if (completedPrefetches.has(key)) {
+    return Promise.resolve();
+  }
+
+  const pending = pendingPrefetches.get(key);
+  if (pending) {
+    return pending;
+  }
+
+  const promise = Promise.resolve()
+    .then(task)
+    .then(
+      () => {
+        completedPrefetches.add(key);
+      },
+      (error: unknown) => {
+        if (import.meta.env.DEV) {
+          console.warn(`[Prefetch] Failed to prefetch ${key}:`, error);
+        }
+      }
+    )
+    .finally(() => {
+      pendingPrefetches.delete(key);
+    });
+
+  pendingPrefetches.set(key, promise);
+  return promise;
+}
+
+function prefetchRouteModule(routeModule: RouteModuleKey): Promise<void> {
+  return runPrefetch(`route:${routeModule}`, () =>
+    routeModuleLoaders[routeModule]()
+  );
+}
+
+function prefetchApiPath(path: string): Promise<void> {
+  const requestInit: LowPriorityRequestInit = {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  };
+
+  if (typeof Request !== "undefined" && "priority" in Request.prototype) {
+    requestInit.priority = "low";
+  }
+
+  return runPrefetch(`api:${path}`, () =>
+    apiFetch(`${apiConfig.baseUrl}${path}`, requestInit)
+  );
+}
+
+export async function prefetchRoutePath(
+  destination: string,
+  options: PrefetchRouteOptions = {}
+): Promise<void> {
+  const plan = getRoutePrefetchPlan(destination);
+
+  if (!plan) {
+    return;
+  }
+
+  const apiPaths = options.includeApi === false ? [] : plan.apiPaths;
+
+  await Promise.all([
+    ...plan.routeModules.map(prefetchRouteModule),
+    ...apiPaths.map(prefetchApiPath),
+  ]);
+}
+
+export function scheduleRoutePrefetch(
+  destination: string,
+  options: PrefetchRouteOptions = {}
+): void {
+  const prefetch = () => {
+    void prefetchRoutePath(destination, options);
+  };
+
+  if (
+    typeof window !== "undefined" &&
+    "requestIdleCallback" in window &&
+    typeof window.requestIdleCallback === "function"
+  ) {
+    window.requestIdleCallback(prefetch, { timeout: 2000 });
+    return;
+  }
+
+  window.setTimeout(prefetch, 100);
+}
+
+export function resetPrefetchCacheForTests(): void {
+  completedPrefetches.clear();
+  pendingPrefetches.clear();
+}
+
+export function usePrefetch() {
+  const prefetchPath = useCallback((destination: string) => {
+    void prefetchRoutePath(destination);
+  }, []);
+
+  const prefetchPathOnIdle = useCallback((destination: string) => {
+    scheduleRoutePrefetch(destination, { includeApi: false });
+  }, []);
+
+  const prefetchPathsOnIdle = useCallback((destinations: string[]) => {
+    destinations.forEach((destination) => {
+      scheduleRoutePrefetch(destination, { includeApi: false });
+    });
+  }, []);
+
   const clearPrefetchCache = useCallback(() => {
-    prefetchedUrls.current.clear();
-    if (import.meta.env.DEV) {
-      console.log("[Prefetch] Cleared prefetch cache");
-    }
+    resetPrefetchCacheForTests();
   }, []);
 
   return {
-    prefetchOnIdle,
-    prefetchOnHover,
-    prefetchBatch,
+    prefetchPath,
+    prefetchPathOnIdle,
+    prefetchPathsOnIdle,
     clearPrefetchCache,
   };
-};
+}

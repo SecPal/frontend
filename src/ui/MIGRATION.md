@@ -49,3 +49,26 @@ Use shared loading primitives from `src/ui` for all new or migrated surfaces:
 - During background refresh, already-loaded data must stay visible. Do not swap
   a populated table, list, card group, or form back to a full-page loader unless
   the loaded data is no longer valid to show.
+
+## Route And Data Prefetching
+
+Use the shared route prefetch strategy from `src/hooks/usePrefetch.ts` for app
+navigation warmups:
+
+- Route components must be loaded through `src/routeModules.ts` so
+  `React.lazy` and prefetch use the same dynamic import function.
+- Authenticated shell navigation should idle-prefetch route chunks for visible
+  primary destinations. Keep this capability-gated so users do not prefetch
+  areas they cannot discover, and do not run idle API prefetches from the shell
+  because auth bootstrap and E2E `networkidle` waits must stay stable.
+- High-frequency internal links should use `PrefetchLink` directly or through
+  route-local wrappers such as `PageLink` and `LinkButton`. The shared link
+  triggers route and API warmup on hover, focus, and touch intent.
+- Add route plans for predictable list and detail destinations in
+  `getRoutePrefetchPlan`. Include API GET paths only when they match the data
+  the destination page will request on first render.
+- Prefetch is best-effort and must not block navigation or surface errors to
+  users. Failures are swallowed after optional development logging.
+- Regression coverage lives in the prefetch unit tests and the Playwright smoke
+  test that verifies warmed customer navigation does not show the full
+  application route loader.
