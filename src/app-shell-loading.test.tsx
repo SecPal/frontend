@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
@@ -11,6 +11,8 @@ import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import App from "./App";
 import { ApplicationLayout } from "./components/application-layout";
 import { AuthProvider } from "./contexts/AuthContext";
+import { db } from "./lib/db";
+import { clearOfflineVaultSession } from "./lib/offlineVault";
 import { messages as enMessages } from "./locales/en/messages.mjs";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
@@ -143,14 +145,29 @@ async function renderWithI18n() {
 }
 
 describe("authenticated app shell loading behavior", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    if (!db.isOpen()) {
+      await db.open();
+    }
+    await Promise.all([
+      db.analytics.clear(),
+      db.organizationalUnitCache.clear(),
+      db.vaultProfile.clear(),
+      db.vaultAnalytics.clear(),
+      db.vaultOrganizationalUnitCache.clear(),
+    ]);
     localStorage.clear();
+    clearOfflineVaultSession();
     window.history.replaceState({}, "", "/");
     i18n.load("en", enMessages);
     i18n.activate("en");
     mockFetchCsrfToken.mockResolvedValue(undefined);
     profileGate.reset();
+  });
+
+  afterEach(() => {
+    clearOfflineVaultSession();
   });
 
   it("keeps the authenticated shell visible during startup revalidation", async () => {
@@ -166,6 +183,25 @@ describe("authenticated app shell loading behavior", () => {
     expect(
       screen.getByRole("status", { name: /loading page/i })
     ).toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+  });
+
+  it("uses the content fallback instead of a full-screen guard loader for feature routes during startup revalidation", async () => {
+    window.history.replaceState({}, "", "/customers");
+    await seedPersistedAuthUser();
+    mockGetCurrentUser.mockImplementation(() => new Promise(() => {}));
+
+    await renderWithI18n();
+
+    expect(
+      await screen.findByRole("button", { name: /user menu/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading page/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 

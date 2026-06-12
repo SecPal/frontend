@@ -4,6 +4,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
+import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -20,19 +21,19 @@ interface OrganizationalRouteProps {
  * It checks both authentication and organizational permissions.
  */
 export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
+  const auth = useAuth();
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
-    isLoading,
     isVaultLocked = false,
     hasOrganizationalAccess,
     logout,
     retryBootstrap,
     unlock,
     user,
-  } = useAuth();
+  } = auth;
 
-  if (isLoading) {
+  if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
   }
 

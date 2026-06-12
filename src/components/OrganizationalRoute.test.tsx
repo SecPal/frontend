@@ -122,6 +122,83 @@ describe("OrganizationalRoute", () => {
     expect(screen.getByText("Login Page")).toBeInTheDocument();
   });
 
+  it("uses the shared bootstrap loading state until any session snapshot exists", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: true,
+      isAuthenticated: false,
+      bootstrapRecoveryReason: null,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => false),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
+  });
+
+  it("keeps organizational content visible while a user snapshot is revalidated", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Organization Content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the email verification gate before organizational access checks", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       hasPermission: vi.fn(),

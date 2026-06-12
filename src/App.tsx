@@ -19,6 +19,10 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import {
+  isRouteAuthBootstrapPending,
+  isRouteAuthSnapshotRevalidating,
+} from "./components/routeGuardAuth";
+import {
   RouteNotFoundState,
   RouteLoadingState,
   RouteVaultLockedState,
@@ -120,9 +124,9 @@ function HiddenAppRouteState() {
 }
 
 function AppLayoutRoute({ children }: { children: React.ReactNode }) {
-  const { isLoading, user } = useAuth();
+  const auth = useAuth();
 
-  if (isLoading && user) {
+  if (isRouteAuthSnapshotRevalidating(auth)) {
     return (
       <AppAccessRoute>
         <ApplicationLayout>
@@ -149,6 +153,18 @@ function AppLayoutRoute({ children }: { children: React.ReactNode }) {
  * - Legacy aliases redirect to the canonical route once the feature is available.
  */
 function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
+  const auth = useAuth();
+
+  if (isRouteAuthSnapshotRevalidating(auth)) {
+    return (
+      <AppAccessRoute>
+        <ApplicationLayout>
+          <RouteContentFallback />
+        </ApplicationLayout>
+      </AppAccessRoute>
+    );
+  }
+
   return (
     <AppAccessRoute>
       <FeatureRoute
@@ -166,15 +182,15 @@ function NotificationLifecycleCoordinator() {
 }
 
 function LoginRoute() {
+  const auth = useAuth();
   const {
     isAuthenticated,
-    isLoading,
     isVaultLocked = false,
     logout,
     unlock,
-  } = useAuth();
+  } = auth;
 
-  if (isLoading) {
+  if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
   }
 

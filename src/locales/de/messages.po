@@ -3454,7 +3454,6 @@ msgstr "Schließen"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möchten."
 
-#: src/components/RouteGuardState.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx

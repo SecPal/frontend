@@ -4,6 +4,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
+import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
 import {
   RouteBootstrapRecoveryState,
   RouteLoadingState,
@@ -15,18 +16,18 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const auth = useAuth();
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
-    isLoading,
     isVaultLocked = false,
     logout,
     retryBootstrap,
     unlock,
     user,
-  } = useAuth();
+  } = auth;
 
-  if (isLoading) {
+  if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
   }
 

@@ -6,6 +6,7 @@ import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { EmailVerificationGate } from "./EmailVerificationGate";
+import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -30,19 +31,19 @@ export function FeatureRoute({
   requiredAction,
   deniedActionElement = <RouteAccessDeniedState />,
 }: FeatureRouteProps) {
+  const auth = useAuth();
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
-    isLoading,
     isVaultLocked = false,
     logout,
     retryBootstrap,
     unlock,
     user,
-  } = useAuth();
+  } = auth;
   const capabilities = useUserCapabilities();
 
-  if (isLoading) {
+  if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
   }
 

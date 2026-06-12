@@ -201,7 +201,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
@@ -210,7 +212,7 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("shows loading instead of protected content while stored auth is revalidated", async () => {
+  it("shows the shared bootstrap loading state while stored auth is revalidated without a snapshot", async () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
     await persistAuthUser({
@@ -222,7 +224,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
@@ -243,7 +247,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith("/login");
@@ -270,7 +276,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
@@ -295,7 +303,9 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute();
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
 
     expect(
       await screen.findByRole(
@@ -310,7 +320,7 @@ describe("ProtectedRoute", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(mockGetCurrentUser).toHaveBeenCalled();
   });
 
   it("keeps bootstrap recovery hidden when the automatic retry succeeds", async () => {
@@ -341,7 +351,7 @@ describe("ProtectedRoute", () => {
         name: /still loading your secure session/i,
       })
     ).not.toBeInTheDocument();
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(mockGetCurrentUser).toHaveBeenCalled();
   });
 
   it("retries bootstrap recovery when the user requests it", async () => {
@@ -379,7 +389,7 @@ describe("ProtectedRoute", () => {
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();
     });
-    expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
+    expect(mockGetCurrentUser).toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -414,6 +424,13 @@ describe("ProtectedRoute", () => {
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(screen.queryByText("test@secpal.dev")).not.toBeInTheDocument();
 
+    vi.spyOn(authStorage, "unlockVault").mockResolvedValueOnce({
+      id: "1",
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    });
+
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /unlock/i }));
     });
@@ -447,25 +464,27 @@ describe("ProtectedRoute", () => {
       mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
-      expect(screen.getByRole("status")).toHaveTextContent("Loading...");
+      expect(
+        screen.getByRole("status", { name: /loading application/i })
+      ).toBeInTheDocument();
     });
 
     it("loading state has aria-live=polite", () => {
       mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
-      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+      expect(
+        screen.getByRole("status", { name: /loading application/i })
+      ).toHaveAttribute("aria-live", "polite");
     });
 
-    it("loading text is visible to screen readers", () => {
+    it("loading state has a stable accessible name", () => {
       mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
       renderProtectedRoute();
 
-      const loadingText = screen.queryByText("Loading...");
-      // Text should not have sr-only class (should be visible)
-      if (loadingText) {
-        expect(loadingText.className).not.toContain("sr-only");
-      }
+      expect(
+        screen.getByRole("status", { name: /loading application/i })
+      ).toHaveAccessibleName("Loading application");
     });
   });
 

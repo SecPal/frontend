@@ -4,6 +4,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
+import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -34,19 +35,19 @@ export function PermissionRoute({
   permission,
   fallbackPath,
 }: PermissionRouteProps) {
+  const auth = useAuth();
   const {
     bootstrapRecoveryReason,
     hasPermission,
     isAuthenticated,
-    isLoading,
     isVaultLocked = false,
     logout,
     retryBootstrap,
     unlock,
     user,
-  } = useAuth();
+  } = auth;
 
-  if (isLoading) {
+  if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
   }
 

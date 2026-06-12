@@ -153,8 +153,51 @@ describe("PermissionRoute", () => {
       </I18nProvider>
     );
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+  });
+
+  it("should render guarded content during revalidation when a user snapshot exists", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn((perm) => perm === "test.read"),
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/test"]}>
+          <Routes>
+            <Route
+              path="/test"
+              element={
+                <PermissionRoute permission="test.read">
+                  <div>Protected Content</div>
+                </PermissionRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
   });
 
   it("should support wildcard permissions", () => {
