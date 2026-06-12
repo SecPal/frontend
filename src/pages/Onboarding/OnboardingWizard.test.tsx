@@ -3791,6 +3791,520 @@ describe("OnboardingWizard skip step behavior", () => {
   });
 });
 
+describe("OnboardingWizard final-submit auto-submits earlier drafts", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    i18n.load("en", {});
+    i18n.activate("en");
+  });
+
+  it("submits a residential address history draft step when finalizing on a later step", async () => {
+    const validResidentialFormData = {
+      current_address: {
+        street: "Hauptstrasse",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        supplement: "",
+        country: "DE",
+        resided_from: "2010-01-01",
+      },
+      previous_addresses: [],
+      has_current_bewacher_id: "no",
+      bewacher_id: "",
+      bewacher_id_unknown: false,
+    };
+
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    employeeApiMocks.fetchEmployee.mockResolvedValue({ id: "employee-1" });
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Residential Address History",
+        description: "Current and previous residences.",
+        template_id: "template-addresses",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-addresses",
+          employee_id: "employee-1",
+          form_template_id: "template-addresses",
+          form_data: validResidentialFormData,
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-addresses") {
+          return {
+            id: "template-addresses",
+            template_key: "residential_address_history",
+            name: "Residential Address History",
+            title: "Residential Address History",
+            description: "Current and previous residences.",
+            form_schema: {
+              title: "Residential Address History",
+              type: "object",
+              properties: {
+                current_address: {
+                  type: "object",
+                  title: "Current Residential Address",
+                  properties: {},
+                },
+                previous_addresses: {
+                  type: "array",
+                  title: "Previous Residences",
+                  items: {
+                    type: "object",
+                    properties: {},
+                  },
+                },
+              },
+              required: ["current_address"],
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Salary payment.",
+          form_schema: {
+            type: "object",
+            required: ["iban", "account_holder"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+              account_holder: { type: "string", title: "Account Holder" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      async (id, payload) => ({
+        id,
+        employee_id: "employee-1",
+        form_template_id:
+          id === "submission-addresses"
+            ? "template-addresses"
+            : "template-bank",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+
+    onboardingApiMocks.createOnboardingSubmission.mockImplementation(
+      async (payload) => ({
+        id: "submission-bank",
+        employee_id: "employee-1",
+        form_template_id:
+          (payload as { form_template_id?: string }).form_template_id ??
+          "template-bank",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /residential address history/i,
+      })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.updateOnboardingSubmission
+      ).toHaveBeenCalledWith(
+        "submission-addresses",
+        expect.objectContaining({
+          status: "submitted",
+          form_data: expect.objectContaining({
+            current_address: expect.objectContaining({
+              street: "Hauptstrasse",
+            }),
+          }),
+        })
+      );
+    });
+  });
+
+  it("submits an earlier non-residential draft step through the schema validation branch on final review", async () => {
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    employeeApiMocks.fetchEmployee.mockResolvedValue({ id: "employee-1" });
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Tax Identification Number",
+        description: "Tax ID and social security number.",
+        template_id: "template-tax",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-tax",
+          employee_id: "employee-1",
+          form_template_id: "template-tax",
+          form_data: {
+            tax_id: "12345678901",
+            social_security_number: "12 345678 A 901",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-tax") {
+          return {
+            id: "template-tax",
+            name: "Tax Identification Number",
+            title: "Tax Identification Number",
+            description: "Tax ID and social security number.",
+            form_schema: {
+              type: "object",
+              required: ["tax_id", "social_security_number"],
+              properties: {
+                tax_id: {
+                  type: "string",
+                  title: "Tax ID",
+                  pattern: "^\\d{11}$",
+                },
+                social_security_number: {
+                  type: "string",
+                  title: "Social Security Number",
+                  pattern: "^\\d{2}\\s?\\d{6}\\s?[A-Z]\\s?\\d{3}$",
+                },
+              },
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Salary payment.",
+          form_schema: {
+            type: "object",
+            required: ["iban", "account_holder"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+              account_holder: { type: "string", title: "Account Holder" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      async (id, payload) => ({
+        id,
+        employee_id: "employee-1",
+        form_template_id:
+          id === "submission-tax" ? "template-tax" : "template-bank",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+
+    onboardingApiMocks.createOnboardingSubmission.mockImplementation(
+      async (payload) => ({
+        id: "submission-bank",
+        employee_id: "employee-1",
+        form_template_id:
+          (payload as { form_template_id?: string }).form_template_id ??
+          "template-bank",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /tax identification number/i,
+      })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        onboardingApiMocks.updateOnboardingSubmission
+      ).toHaveBeenCalledWith(
+        "submission-tax",
+        expect.objectContaining({
+          status: "submitted",
+          form_data: expect.objectContaining({
+            tax_id: "12345678901",
+            social_security_number: "12 345678 A 901",
+          }),
+        })
+      );
+    });
+  });
+
+  it("bumps the user back to an earlier draft step when the API rejects its final submission", async () => {
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    employeeApiMocks.fetchEmployee.mockResolvedValue({ id: "employee-1" });
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Tax Identification Number",
+        description: "Tax ID and social security number.",
+        template_id: "template-tax",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-tax",
+          employee_id: "employee-1",
+          form_template_id: "template-tax",
+          form_data: {
+            tax_id: "12345678901",
+            social_security_number: "12 345678 A 901",
+          },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: true,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      async (templateId: string) => {
+        if (templateId === "template-tax") {
+          return {
+            id: "template-tax",
+            name: "Tax Identification Number",
+            title: "Tax Identification Number",
+            description: "Tax ID and social security number.",
+            form_schema: {
+              type: "object",
+              required: ["tax_id", "social_security_number"],
+              properties: {
+                tax_id: { type: "string", title: "Tax ID" },
+                social_security_number: {
+                  type: "string",
+                  title: "Social Security Number",
+                },
+              },
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          };
+        }
+
+        return {
+          id: "template-bank",
+          name: "Bank Account Details",
+          title: "Bank Account Details",
+          description: "Salary payment.",
+          form_schema: {
+            type: "object",
+            required: ["iban", "account_holder"],
+            properties: {
+              iban: { type: "string", title: "IBAN" },
+              account_holder: { type: "string", title: "Account Holder" },
+            },
+          },
+          is_required: true,
+          is_system_template: true,
+          sort_order: 2,
+          can_be_deleted: false,
+          can_be_edited: false,
+        };
+      }
+    );
+
+    // The earlier tax step's API submission rejects with a 422, exercising
+    // the error-recovery path that resolves the failing step's schema via
+    // `resolveStepValidationContext` to format a user-facing validation
+    // message.
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      async (id, payload) => {
+        const status =
+          (payload as { status?: "draft" | "submitted" } | undefined)?.status ??
+          "draft";
+        if (id === "submission-tax" && status === "submitted") {
+          throw new ApiError("tax_id is invalid", 422, {
+            tax_id: ["tax_id is invalid"],
+          });
+        }
+        return {
+          id,
+          employee_id: "employee-1",
+          form_template_id:
+            id === "submission-tax" ? "template-tax" : "template-bank",
+          form_data:
+            (payload as { form_data?: Record<string, unknown> } | undefined)
+              ?.form_data ?? {},
+          status,
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        };
+      }
+    );
+
+    onboardingApiMocks.createOnboardingSubmission.mockImplementation(
+      async (payload) => ({
+        id: "submission-bank",
+        employee_id: "employee-1",
+        form_template_id:
+          (payload as { form_template_id?: string }).form_template_id ??
+          "template-bank",
+        form_data:
+          (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
+        status:
+          (payload as { status?: "draft" | "submitted" }).status ?? "draft",
+        created_at: "2026-04-30T00:00:00Z",
+        updated_at: "2026-04-30T00:00:00Z",
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /tax identification number/i,
+      })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "DE44500105175407324931");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /tax identification number/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /you're all set/i })
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("OnboardingWizard initial loading and error states", () => {
   beforeEach(() => {
     vi.clearAllMocks();
