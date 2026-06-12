@@ -6,21 +6,22 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, MapPinned, Trash2 } from "lucide-react";
-import { getCustomer, deleteCustomer } from "../../services/customersApi";
+import { SectionSkeleton, Skeleton } from "@/ui";
+import { deleteCustomer, getCustomer } from "../../services/customersApi";
 import type { Customer } from "../../types/customers";
 import {
-  DescriptionList,
-  DescriptionDetails,
-  DescriptionTerm,
   Alert,
   AlertDescription,
   Button,
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
   Dialog,
   DialogActions,
   DialogBody,
@@ -33,11 +34,20 @@ import {
   PageLink,
   PageText,
   PageTitle,
-  Spinner,
   StatusBadge,
 } from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
+
+function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
+  return (
+    <div className="space-y-8">
+      <SectionSkeleton loadingLabel={loadingLabel} rows={3} />
+      <SectionSkeleton loadingLabel={loadingLabel} rows={3} />
+      <SectionSkeleton loadingLabel={loadingLabel} rows={2} />
+    </div>
+  );
+}
 
 export default function CustomerDetail() {
   const { _ } = useLingui();
@@ -91,18 +101,9 @@ export default function CustomerDetail() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
-        <Spinner aria-label={_(msg`Loading...`)} />
-        <span>
-          <Trans>Loading...</Trans>
-        </span>
-      </div>
-    );
-  }
+  const isInitialLoading = loading && customer === null;
 
-  if (loadError || !customer) {
+  if (!isInitialLoading && (loadError || !customer)) {
     return (
       <div className="text-center py-12">
         <PageText className="text-red-600 dark:text-red-400">
@@ -120,169 +121,195 @@ export default function CustomerDetail() {
     <div className="max-w-4xl">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <PageTitle>{customer.name}</PageTitle>
-          <PageText className="mt-1 text-zinc-500">
-            {customer.customer_number}
-          </PageText>
+          <PageTitle>
+            {customer ? customer.name : <Trans>Customer</Trans>}
+          </PageTitle>
+          {customer ? (
+            <PageText className="mt-1 text-zinc-500">
+              {customer.customer_number}
+            </PageText>
+          ) : (
+            <Skeleton className="mt-3 h-4 w-40" />
+          )}
         </div>
         <div className="flex gap-2">
-          <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
-            {customer.is_active ? (
-              <Trans>Active</Trans>
-            ) : (
-              <Trans>Inactive</Trans>
-            )}
-          </StatusBadge>
+          {customer ? (
+            <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
+              {customer.is_active ? (
+                <Trans>Active</Trans>
+              ) : (
+                <Trans>Inactive</Trans>
+              )}
+            </StatusBadge>
+          ) : (
+            <Skeleton className="h-6 w-20" />
+          )}
         </div>
       </div>
 
-      <div className="space-y-8">
-        {/* Billing Address */}
-        <div>
-          <PageTitle level={2} className="mb-4">
-            <Trans>Billing Address</Trans>
-          </PageTitle>
-          <DescriptionList>
-            <DescriptionTerm>
-              <Trans>Street</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {customer.billing_address.street}
-            </DescriptionDetails>
-
-            <DescriptionTerm>
-              <Trans>City</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {customer.billing_address.postal_code}{" "}
-              {customer.billing_address.city}
-            </DescriptionDetails>
-
-            <DescriptionTerm>
-              <Trans>Country</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {customer.billing_address.country}
-            </DescriptionDetails>
-          </DescriptionList>
-        </div>
-
-        {/* Contact Information */}
-        {customer.contact && (
+      {customer ? (
+        <div className="space-y-8">
+          {/* Billing Address */}
           <div>
             <PageTitle level={2} className="mb-4">
-              <Trans>Contact Person</Trans>
+              <Trans>Billing Address</Trans>
             </PageTitle>
             <DescriptionList>
-              {customer.contact.name && (
-                <>
-                  <DescriptionTerm>
-                    <Trans>Name</Trans>
-                  </DescriptionTerm>
-                  <DescriptionDetails>
-                    {customer.contact.name}
-                  </DescriptionDetails>
-                </>
-              )}
+              <DescriptionTerm>
+                <Trans>Street</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {customer.billing_address.street}
+              </DescriptionDetails>
 
-              {customer.contact.email && (
-                <>
-                  <DescriptionTerm>
-                    <Trans>Email</Trans>
-                  </DescriptionTerm>
-                  <DescriptionDetails>
-                    {isSafeMailtoTarget(customer.contact.email) ? (
-                      <PageLink to={`mailto:${customer.contact.email}`}>
-                        {customer.contact.email}
-                      </PageLink>
-                    ) : (
-                      customer.contact.email
-                    )}
-                  </DescriptionDetails>
-                </>
-              )}
+              <DescriptionTerm>
+                <Trans>City</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {customer.billing_address.postal_code}{" "}
+                {customer.billing_address.city}
+              </DescriptionDetails>
 
-              {customer.contact.phone && (
-                <>
-                  <DescriptionTerm>
-                    <Trans>Phone</Trans>
-                  </DescriptionTerm>
-                  <DescriptionDetails>
-                    {isSafeTelTarget(customer.contact.phone) ? (
-                      <PageLink to={`tel:${customer.contact.phone}`}>
-                        {customer.contact.phone}
-                      </PageLink>
-                    ) : (
-                      customer.contact.phone
-                    )}
-                  </DescriptionDetails>
-                </>
-              )}
+              <DescriptionTerm>
+                <Trans>Country</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {customer.billing_address.country}
+              </DescriptionDetails>
             </DescriptionList>
           </div>
-        )}
 
-        {/* Notes */}
-        {customer.notes && (
+          {/* Contact Information */}
+          {customer.contact && (
+            <div>
+              <PageTitle level={2} className="mb-4">
+                <Trans>Contact Person</Trans>
+              </PageTitle>
+              <DescriptionList>
+                {customer.contact.name && (
+                  <>
+                    <DescriptionTerm>
+                      <Trans>Name</Trans>
+                    </DescriptionTerm>
+                    <DescriptionDetails>
+                      {customer.contact.name}
+                    </DescriptionDetails>
+                  </>
+                )}
+
+                {customer.contact.email && (
+                  <>
+                    <DescriptionTerm>
+                      <Trans>Email</Trans>
+                    </DescriptionTerm>
+                    <DescriptionDetails>
+                      {isSafeMailtoTarget(customer.contact.email) ? (
+                        <PageLink to={`mailto:${customer.contact.email}`}>
+                          {customer.contact.email}
+                        </PageLink>
+                      ) : (
+                        customer.contact.email
+                      )}
+                    </DescriptionDetails>
+                  </>
+                )}
+
+                {customer.contact.phone && (
+                  <>
+                    <DescriptionTerm>
+                      <Trans>Phone</Trans>
+                    </DescriptionTerm>
+                    <DescriptionDetails>
+                      {isSafeTelTarget(customer.contact.phone) ? (
+                        <PageLink to={`tel:${customer.contact.phone}`}>
+                          {customer.contact.phone}
+                        </PageLink>
+                      ) : (
+                        customer.contact.phone
+                      )}
+                    </DescriptionDetails>
+                  </>
+                )}
+              </DescriptionList>
+            </div>
+          )}
+
+          {/* Notes */}
+          {customer.notes && (
+            <div>
+              <PageTitle level={2} className="mb-4">
+                <Trans>Notes</Trans>
+              </PageTitle>
+              <PageText className="whitespace-pre-wrap">
+                {customer.notes}
+              </PageText>
+            </div>
+          )}
+
+          {/* Sites */}
           <div>
             <PageTitle level={2} className="mb-4">
-              <Trans>Notes</Trans>
+              <Trans>Sites</Trans>
             </PageTitle>
-            <PageText className="whitespace-pre-wrap">
-              {customer.notes}
+            <PageText className="mb-4">
+              <Plural
+                value={customer.sites_count || 0}
+                zero="This customer has no sites."
+                one="This customer has # site."
+                other="This customer has # sites."
+              />
             </PageText>
-          </div>
-        )}
-
-        {/* Sites */}
-        <div>
-          <PageTitle level={2} className="mb-4">
-            <Trans>Sites</Trans>
-          </PageTitle>
-          <PageText className="mb-4">
-            <Plural
-              value={customer.sites_count || 0}
-              zero="This customer has no sites."
-              one="This customer has # site."
-              other="This customer has # sites."
-            />
-          </PageText>
-          <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
-            <MapPinned className="size-4" aria-hidden="true" />
-            <Trans>View Sites</Trans>
-          </LinkButton>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-4 pt-4 border-t">
-          {capabilities.actions.customers.update && (
-            <LinkButton to={`/customers/${customer.id}/edit`}>
-              <Edit className="size-4" aria-hidden="true" />
-              <Trans>Edit</Trans>
+            <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
+              <MapPinned className="size-4" aria-hidden="true" />
+              <Trans>View Sites</Trans>
             </LinkButton>
-          )}
-          {capabilities.actions.customers.delete && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteError(null);
-                setShowDeleteDialog(true);
-              }}
-              disabled={deleting}
-            >
-              <Trash2 className="size-4" aria-hidden="true" />
-              <Trans>Delete</Trans>
-            </Button>
-          )}
-          <LinkButton to="/customers" variant="outline">
-            <List className="size-4" aria-hidden="true" />
-            <Trans>Back to List</Trans>
-          </LinkButton>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-4 border-t">
+            {capabilities.actions.customers.update && (
+              <LinkButton to={`/customers/${customer.id}/edit`}>
+                <Edit className="size-4" aria-hidden="true" />
+                <Trans>Edit</Trans>
+              </LinkButton>
+            )}
+            {capabilities.actions.customers.delete && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteError(null);
+                  setShowDeleteDialog(true);
+                }}
+                disabled={deleting}
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+                <Trans>Delete</Trans>
+              </Button>
+            )}
+            <LinkButton to="/customers" variant="outline">
+              <List className="size-4" aria-hidden="true" />
+              <Trans>Back to List</Trans>
+            </LinkButton>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <CustomerDetailSkeleton
+            loadingLabel={_(msg`Loading customer details`)}
+          />
+          <div className="mt-8 flex gap-4 border-t pt-4">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-24" />
+            <LinkButton to="/customers" variant="outline">
+              <List className="size-4" aria-hidden="true" />
+              <Trans>Back to List</Trans>
+            </LinkButton>
+          </div>
+        </>
+      )}
 
       {/* Delete Confirmation Dialog */}
-      {capabilities.actions.customers.delete && (
+      {customer && capabilities.actions.customers.delete && (
         <Dialog
           open={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}

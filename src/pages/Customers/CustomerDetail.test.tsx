@@ -412,6 +412,16 @@ describe("CustomerDetail", () => {
 
     renderWithRouter();
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("status", { name: "Loading customer details" })
+    ).toHaveLength(3);
+    expect(
+      screen.getByRole("heading", { name: "Customer" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /back to list/i })).toHaveAttribute(
+      "href",
+      "/customers"
+    );
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 });

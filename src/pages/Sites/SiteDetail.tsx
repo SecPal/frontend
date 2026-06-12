@@ -12,6 +12,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, Trash2 } from "lucide-react";
+import { LoadingRegion, SectionSkeleton, Skeleton } from "@/ui";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type { Site, Customer } from "../../types/customers";
@@ -35,7 +36,6 @@ import {
   PageLink,
   PageText,
   PageTitle,
-  Spinner,
   StatusBadge,
 } from "../CustomerSites/ui";
 import { formatDate } from "../../lib/dateUtils";
@@ -61,6 +61,9 @@ export default function SiteDetail() {
       if (!id) return;
       setLoading(true);
       setLoadError(null);
+      setSite(null);
+      setCustomer(null);
+      setOrgUnit(null);
       try {
         const siteData = await getSite(id);
         setSite(siteData);
@@ -106,13 +109,46 @@ export default function SiteDetail() {
     }
   }
 
-  if (loading) {
+  const isInitialLoading = loading && site === null;
+  const isAssociationLoading = loading && site !== null;
+
+  if (isInitialLoading) {
     return (
-      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
-        <Spinner aria-label={_(msg`Loading...`)} />
-        <span>
-          <Trans>Loading...</Trans>
-        </span>
+      <div className="max-w-4xl">
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <PageTitle>
+              <Trans>Site</Trans>
+            </PageTitle>
+            <Skeleton className="mt-3 h-4 w-40" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+        </div>
+        <div className="space-y-8">
+          <SectionSkeleton
+            loadingLabel={_(msg`Loading site details`)}
+            rows={4}
+          />
+          <SectionSkeleton
+            loadingLabel={_(msg`Loading site details`)}
+            rows={3}
+          />
+          <SectionSkeleton
+            loadingLabel={_(msg`Loading site details`)}
+            rows={4}
+          />
+          <div className="flex gap-4 border-t pt-4">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-24" />
+            <LinkButton to="/sites" variant="outline">
+              <List className="size-4" aria-hidden="true" />
+              <Trans>Back to List</Trans>
+            </LinkButton>
+          </div>
+        </div>
       </div>
     );
   }
@@ -315,41 +351,54 @@ export default function SiteDetail() {
           <PageTitle level={2} className="mb-4">
             <Trans>Details</Trans>
           </PageTitle>
-          <DescriptionList>
-            <DescriptionTerm>
-              <Trans>Customer</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {customer ? (
-                <PageLink to={`/customers/${site.customer_id}`}>
-                  {customer.name}
-                </PageLink>
-              ) : (
-                site.customer_id
-              )}
-            </DescriptionDetails>
+          <LoadingRegion
+            loading={isAssociationLoading}
+            loadingLabel={_(msg`Loading site lookup data`)}
+          >
+            <DescriptionList>
+              <DescriptionTerm>
+                <Trans>Customer</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {customer ? (
+                  <PageLink to={`/customers/${site.customer_id}`}>
+                    {customer.name}
+                  </PageLink>
+                ) : isAssociationLoading ? (
+                  <Skeleton className="h-4 w-40" />
+                ) : (
+                  site.customer_id
+                )}
+              </DescriptionDetails>
 
-            <DescriptionTerm>
-              <Trans>Organizational Unit</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {orgUnit ? orgUnit.name : site.organizational_unit_id}
-            </DescriptionDetails>
+              <DescriptionTerm>
+                <Trans>Organizational Unit</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {orgUnit ? (
+                  orgUnit.name
+                ) : isAssociationLoading ? (
+                  <Skeleton className="h-4 w-40" />
+                ) : (
+                  site.organizational_unit_id
+                )}
+              </DescriptionDetails>
 
-            <DescriptionTerm>
-              <Trans>Created</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {formatDate(site.created_at, i18n.locale)}
-            </DescriptionDetails>
+              <DescriptionTerm>
+                <Trans>Created</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {formatDate(site.created_at, i18n.locale)}
+              </DescriptionDetails>
 
-            <DescriptionTerm>
-              <Trans>Last Updated</Trans>
-            </DescriptionTerm>
-            <DescriptionDetails>
-              {formatDate(site.updated_at, i18n.locale)}
-            </DescriptionDetails>
-          </DescriptionList>
+              <DescriptionTerm>
+                <Trans>Last Updated</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {formatDate(site.updated_at, i18n.locale)}
+              </DescriptionDetails>
+            </DescriptionList>
+          </LoadingRegion>
         </div>
 
         {/* Actions */}

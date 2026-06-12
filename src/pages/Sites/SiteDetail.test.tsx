@@ -146,6 +146,52 @@ describe("SiteDetail", () => {
     expect(screen.getByText(/80331 München/)).toBeInTheDocument();
   });
 
+  it("keeps the detail frame visible while site data loads", () => {
+    vi.mocked(customersApi.getSite).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+    );
+
+    renderWithRouter();
+
+    expect(screen.getByRole("heading", { name: "Site" })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("status", { name: "Loading site details" })
+    ).toHaveLength(3);
+    expect(screen.getByRole("link", { name: /back to list/i })).toHaveAttribute(
+      "href",
+      "/sites"
+    );
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("renders site details while customer and org unit lookup data loads", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.getOrganizationalUnit>
+          >
+        >(() => {})
+    );
+
+    renderWithRouter();
+
+    expect(await screen.findByText("Munich Office")).toBeInTheDocument();
+    expect(screen.getByText("SITE-2025-001")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading site lookup data" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
   it("displays badges for site type and status", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);

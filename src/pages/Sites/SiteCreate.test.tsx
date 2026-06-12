@@ -381,7 +381,13 @@ describe("SiteCreate", () => {
 
     renderWithRouter();
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /new site/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading site lookup data" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("displays error when data loading fails", async () => {

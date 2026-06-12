@@ -83,6 +83,25 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
   });
 
+  it("keeps the edit frame visible while customer data loads", () => {
+    vi.mocked(customersApi.getCustomer).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
+          () => {}
+        )
+    );
+
+    renderWithRouter();
+
+    expect(
+      screen.getByRole("heading", { name: /edit customer/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading customer form" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
   it(
     "loads contact information",
     async () => {

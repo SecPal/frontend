@@ -259,7 +259,13 @@ describe("SiteEdit", () => {
 
     renderWithRouter();
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /edit site/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading site form" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("displays error when site loading fails", async () => {

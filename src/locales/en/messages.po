@@ -579,6 +579,7 @@ msgstr "Enter a label for this passkey."
 msgid "Maximum Assignable Rank"
 msgstr "Maximum Assignable Rank"
 
+#: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1210,6 +1211,10 @@ msgstr "Documents"
 msgid "Added {0}"
 msgstr "Added {0}"
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Site"
+msgstr "Site"
+
 #. placeholder {0}: customer.name
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
@@ -1701,6 +1706,10 @@ msgstr "Created, but not sent"
 msgid "OpenTimestamp"
 msgstr "OpenTimestamp"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Loading customer details"
+msgstr "Loading customer details"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
@@ -1838,6 +1847,10 @@ msgstr "Failed to update contact field."
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
 msgstr "Generating BWR Export..."
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Loading site details"
+msgstr "Loading site details"
 
 #: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
@@ -2125,6 +2138,11 @@ msgstr "Welcome to SecPal"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Minijob"
 msgstr "Minijob"
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Loading site lookup data"
+msgstr "Loading site lookup data"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Passwords do not match"
@@ -2416,6 +2434,10 @@ msgstr "Temporary"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Position"
 msgstr "Position"
+
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Loading site form"
+msgstr "Loading site form"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Confirm Password"
@@ -2973,6 +2995,10 @@ msgstr "Loading MFA status..."
 msgid "You're offline - showing cached data"
 msgstr "You're offline - showing cached data"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Loading customer form"
+msgstr "Loading customer form"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Additional Properties"
 msgstr "Additional Properties"
@@ -3462,14 +3488,9 @@ msgstr "Close"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Please choose whether you want to upload your identity document now."
 
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Loading..."
 msgstr "Loading..."
 
