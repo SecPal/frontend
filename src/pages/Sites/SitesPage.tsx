@@ -12,6 +12,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Eye, Plus } from "lucide-react";
+import { LoadingRegion, Skeleton } from "@/ui";
 import { listSites } from "../../services/customersApi";
 import type { Site, SiteFilters } from "../../types/customers";
 import {
@@ -31,7 +32,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Spinner,
   StatusBadge,
   Table,
   TableBody,
@@ -41,6 +41,30 @@ import {
   TableRow,
 } from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+
+function SiteTableSkeletonRows({
+  columns,
+  rows,
+}: {
+  columns: number;
+  rows: number;
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, rowIndex) => (
+        <TableRow key={rowIndex}>
+          {Array.from({ length: columns }, (_, columnIndex) => (
+            <TableCell key={columnIndex}>
+              <Skeleton
+                className={columnIndex === 1 ? "h-4 w-40" : "h-4 w-24"}
+              />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  );
+}
 
 export default function SitesPage() {
   const { _ } = useLingui();
@@ -209,20 +233,10 @@ export default function SitesPage() {
       )}
 
       {/* Site Table */}
-      {loading ? (
-        <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
-          <Spinner aria-label={_(msg`Loading...`)} />
-          <span>
-            <Trans>Loading...</Trans>
-          </span>
-        </div>
-      ) : sites.length === 0 ? (
-        <div className="text-center py-12">
-          <PageText className="text-zinc-500 dark:text-zinc-400">
-            <Trans>No sites found</Trans>
-          </PageText>
-        </div>
-      ) : (
+      <LoadingRegion
+        loading={loading}
+        loadingLabel={_(msg`Loading sites table`)}
+      >
         <DataTable>
           <Table>
             <TableHead>
@@ -248,6 +262,10 @@ export default function SitesPage() {
               </TableRow>
             </TableHead>
             <TableBody>
+              {loading && sites.length === 0 ? (
+                <SiteTableSkeletonRows columns={6} rows={5} />
+              ) : null}
+
               {sites.map((site) => (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">
@@ -285,10 +303,20 @@ export default function SitesPage() {
                   </TableCell>
                 </TableRow>
               ))}
+
+              {!loading && sites.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-12 text-center">
+                    <PageText className="text-zinc-500 dark:text-zinc-400">
+                      <Trans>No sites found</Trans>
+                    </PageText>
+                  </TableCell>
+                </TableRow>
+              ) : null}
             </TableBody>
           </Table>
         </DataTable>
-      )}
+      </LoadingRegion>
 
       {/* Pagination */}
       {pagination.last_page > 1 && (

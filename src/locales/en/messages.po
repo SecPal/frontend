@@ -465,6 +465,10 @@ msgstr "Parent Unit"
 msgid "Search customers..."
 msgstr "Search customers..."
 
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Loading customers table"
+msgstr "Loading customers table"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Invalid combination: No employees will be visible with this range."
@@ -1004,6 +1008,10 @@ msgstr "Resided From"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload a second file, for example the reverse side."
 msgstr "Optional: Upload a second file, for example the reverse side."
+
+#: src/pages/Sites/SitesPage.tsx
+msgid "Loading sites table"
+msgstr "Loading sites table"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Required documents for this step"
@@ -3456,14 +3464,12 @@ msgstr "Please choose whether you want to upload your identity document now."
 
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
-#: src/pages/Sites/SitesPage.tsx
 msgid "Loading..."
 msgstr "Loading..."
 

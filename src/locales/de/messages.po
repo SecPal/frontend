@@ -465,6 +465,10 @@ msgstr "Übergeordnete Einheit"
 msgid "Search customers..."
 msgstr "Kunden suchen..."
 
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Loading customers table"
+msgstr "Kundentabelle wird geladen"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: No employees will be visible with this range."
 msgstr "Ungültige Kombination: Es werden keine Mitarbeiter mit diesem Bereich angezeigt."
@@ -1004,6 +1008,10 @@ msgstr "Wohnhaft von"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload a second file, for example the reverse side."
 msgstr "Optional: Laden Sie eine zweite Datei hoch, zum Beispiel die Rückseite."
+
+#: src/pages/Sites/SitesPage.tsx
+msgid "Loading sites table"
+msgstr "Standorttabelle wird geladen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Required documents for this step"
@@ -3456,14 +3464,12 @@ msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möcht
 
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
-#: src/pages/Sites/SitesPage.tsx
 msgid "Loading..."
 msgstr "Laden..."
 
