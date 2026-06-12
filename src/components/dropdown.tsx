@@ -125,17 +125,22 @@ export function DropdownItem({
     className
   );
 
-  return (
-    <DropdownMenuPrimitive.Item asChild>
-      {"href" in props && typeof props.href === "string" ? (
-        <RouterLink {...props} to={props.href} className={classes}>
+  if ("href" in props && typeof props.href === "string") {
+    const { href, ...linkProps } = props;
+    return (
+      <DropdownMenuPrimitive.Item asChild>
+        <RouterLink {...linkProps} to={href} className={classes}>
           {children}
         </RouterLink>
-      ) : (
-        <button {...props} type={props.type ?? "button"} className={classes}>
-          {children}
-        </button>
-      )}
+      </DropdownMenuPrimitive.Item>
+    );
+  }
+
+  return (
+    <DropdownMenuPrimitive.Item asChild>
+      <button {...props} type={props.type ?? "button"} className={classes}>
+        {children}
+      </button>
     </DropdownMenuPrimitive.Item>
   );
 }

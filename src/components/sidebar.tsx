@@ -174,20 +174,23 @@ export const SidebarItem = forwardRef<
     "dark:text-white dark:*:data-[slot=icon]:text-zinc-400 dark:hover:bg-white/5 dark:hover:*:data-[slot=icon]:text-white dark:data-[current=true]:*:data-[slot=icon]:text-white dark:focus-visible:ring-offset-zinc-950"
   );
 
-  return (
-    <span className={cn("relative", className)}>
-      {current ? (
-        <span className="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-zinc-950 dark:bg-white" />
-      ) : null}
-      {"href" in props && typeof props.href === "string" ? (
+  const indicator = current ? (
+    <span className="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-zinc-950 dark:bg-white" />
+  ) : null;
+
+  if ("href" in props && typeof props.href === "string") {
+    const { href, onClick: linkOnClick, ...linkProps } = props;
+    return (
+      <span className={cn("relative", className)}>
+        {indicator}
         <RouterLink
-          {...props}
-          to={props.href}
+          {...linkProps}
+          to={href}
           className={classes}
           data-current={current ? "true" : undefined}
           ref={ref as React.ForwardedRef<HTMLAnchorElement>}
           onClick={(event) => {
-            props.onClick?.(event);
+            linkOnClick?.(event);
             if (!event.defaultPrevented) {
               closeSidebar?.();
             }
@@ -195,17 +198,22 @@ export const SidebarItem = forwardRef<
         >
           <TouchTarget>{children}</TouchTarget>
         </RouterLink>
-      ) : (
-        <button
-          {...props}
-          type={props.type ?? "button"}
-          className={classes}
-          data-current={current ? "true" : undefined}
-          ref={ref as React.ForwardedRef<HTMLButtonElement>}
-        >
-          <TouchTarget>{children}</TouchTarget>
-        </button>
-      )}
+      </span>
+    );
+  }
+
+  return (
+    <span className={cn("relative", className)}>
+      {indicator}
+      <button
+        {...props}
+        type={props.type ?? "button"}
+        className={classes}
+        data-current={current ? "true" : undefined}
+        ref={ref as React.ForwardedRef<HTMLButtonElement>}
+      >
+        <TouchTarget>{children}</TouchTarget>
+      </button>
     </span>
   );
 });

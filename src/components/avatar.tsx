@@ -75,16 +75,21 @@ export const AvatarButton = forwardRef<
     <Avatar src={src} square={square} initials={initials} alt={alt} />
   );
 
-  return "href" in props && typeof props.href === "string" ? (
-    <RouterLink
-      {...props}
-      to={props.href}
-      className={classes}
-      ref={ref as React.ForwardedRef<HTMLAnchorElement>}
-    >
-      {avatar}
-    </RouterLink>
-  ) : (
+  if ("href" in props && typeof props.href === "string") {
+    const { href, ...linkProps } = props;
+    return (
+      <RouterLink
+        {...linkProps}
+        to={href}
+        className={classes}
+        ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+      >
+        {avatar}
+      </RouterLink>
+    );
+  }
+
+  return (
     <button
       {...props}
       type={props.type ?? "button"}
