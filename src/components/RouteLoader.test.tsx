@@ -6,55 +6,51 @@ import { render, screen } from "@testing-library/react";
 import { RouteLoader } from "./RouteLoader";
 
 describe("RouteLoader", () => {
-  it("renders loading spinner", () => {
+  it("renders a shell-equivalent loading placeholder", () => {
     render(<RouteLoader />);
 
-    // Check for the spinner container
-    const spinnerContainer = screen.getByRole("status");
-    expect(spinnerContainer).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "SecPal" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
   });
 
-  it("has correct accessibility attributes", () => {
+  it("has correct accessibility attributes on the content skeleton", () => {
     render(<RouteLoader />);
 
-    const statusElement = screen.getByRole("status");
+    const statusElement = screen.getByRole("status", {
+      name: /loading application/i,
+    });
     expect(statusElement).toHaveAttribute("aria-live", "polite");
+    expect(statusElement).toHaveAttribute("aria-busy", "true");
   });
 
-  it("includes screen reader text", () => {
+  it("does not render the old raw loading copy", () => {
     render(<RouteLoader />);
 
-    // Check for sr-only text
-    const srText = screen.getByText("Loading...");
-    expect(srText).toBeInTheDocument();
-    expect(srText).toHaveClass("sr-only");
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 
-  it("renders with correct styling classes", () => {
+  it("renders with shell styling classes", () => {
     const { container } = render(<RouteLoader />);
 
-    // Check container has flexbox centering
     const outerDiv = container.firstChild as HTMLElement;
     expect(outerDiv).toHaveClass(
+      "relative",
+      "isolate",
       "flex",
-      "items-center",
-      "justify-center",
-      "min-h-screen"
+      "min-h-dvh",
+      "w-full",
+      "flex-col"
     );
   });
 
-  it("renders spinner with animation", () => {
+  it("renders skeleton placeholders instead of a spinner", () => {
     const { container } = render(<RouteLoader />);
 
-    // Find the spinner div
-    const spinner = container.querySelector(".animate-spin");
-    expect(spinner).toBeInTheDocument();
-    expect(spinner).toHaveClass(
-      "rounded-full",
-      "h-12",
-      "w-12",
-      "border-b-2",
-      "border-blue-600"
-    );
+    expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
   });
 });

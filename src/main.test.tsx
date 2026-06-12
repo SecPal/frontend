@@ -6,11 +6,13 @@ import { render } from "@testing-library/react";
 import { screen, waitFor } from "@testing-library/dom";
 import { StrictMode } from "react";
 import { AppWithI18n } from "./main";
+import { authStorage } from "./services/storage";
 
 describe("AppWithI18n Integration", () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
+    authStorage.beginSensitiveLogoutBarrierCleanup();
     window.history.replaceState({}, "", "/login");
   });
 
@@ -21,25 +23,14 @@ describe("AppWithI18n Integration", () => {
       </StrictMode>
     );
 
-    // Initially should show loading state
-    expect(screen.getByRole("status")).toBeInTheDocument();
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
 
-    // After locale loads, app content should appear
     await waitFor(
       () => {
-        // Should render actual app content (not just loading)
-        const loadingElement = screen.queryByText("Loading...");
-        expect(loadingElement).not.toBeInTheDocument();
+        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
-
-    // Verify app actually rendered - should show login page when not authenticated
-    await waitFor(() => {
-      const emailField = screen.getByLabelText(/email/i);
-      expect(emailField).toBeInTheDocument();
-    });
   });
 
   it("loads English locale by default", async () => {

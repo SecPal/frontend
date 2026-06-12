@@ -6,3 +6,8 @@ declare module "*/messages.js" {
   const messages: Record<string, string | string[]>;
   export { messages };
 }
+
+declare module "*/messages.mjs" {
+  const messages: Record<string, string | string[]>;
+  export { messages };
+}

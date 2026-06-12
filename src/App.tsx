@@ -25,6 +25,7 @@ import {
 } from "./components/RouteGuardState";
 import { OnboardingLayout } from "./components/onboarding-layout";
 import { buttonVariants } from "./ui";
+import { RouteContentFallback } from "./components/RouteContentFallback";
 
 // Lazy load route components for better performance
 // Login page is eagerly loaded as it's the first page users see
@@ -119,6 +120,18 @@ function HiddenAppRouteState() {
 }
 
 function AppLayoutRoute({ children }: { children: React.ReactNode }) {
+  const { isLoading, user } = useAuth();
+
+  if (isLoading && user) {
+    return (
+      <AppAccessRoute>
+        <ApplicationLayout>
+          <RouteContentFallback />
+        </ApplicationLayout>
+      </AppAccessRoute>
+    );
+  }
+
   return (
     <ProtectedRoute>
       <AppAccessRoute>

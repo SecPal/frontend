@@ -3,11 +3,12 @@
 
 import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
-import type React from "react";
+import { Suspense, type ReactNode } from "react";
 import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
 import { Button } from "../pages/Onboarding/ui";
+import { RouteContentFallback } from "./RouteContentFallback";
 
 export const LOGOUT_TIMEOUT_MS = 8000;
 
@@ -28,7 +29,7 @@ async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
   }
 }
 
-export function OnboardingLayout({ children }: { children: React.ReactNode }) {
+export function OnboardingLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -56,7 +57,9 @@ export function OnboardingLayout({ children }: { children: React.ReactNode }) {
             <Trans>Sign out</Trans>
           </Button>
         </header>
-        <div className="pt-8">{children}</div>
+        <div className="pt-8">
+          <Suspense fallback={<RouteContentFallback />}>{children}</Suspense>
+        </div>
       </div>
     </main>
   );

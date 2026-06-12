@@ -3137,6 +3137,10 @@ msgstr "Loading employee..."
 msgid "Language"
 msgstr "Language"
 
+#: src/components/RouteContentFallback.tsx
+msgid "Loading page..."
+msgstr "Loading page..."
+
 #: src/components/MfaQrCode.tsx
 msgid "Generating QR code..."
 msgstr "Generating QR code..."

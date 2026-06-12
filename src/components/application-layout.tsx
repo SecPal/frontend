@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -41,6 +41,7 @@ import {
 } from "./sidebar";
 import { StackedLayout } from "./stacked-layout";
 import { Logo } from "./Logo";
+import { RouteContentFallback } from "./RouteContentFallback";
 
 /**
  * Shared user menu items for both navbar and sidebar dropdowns.
@@ -305,7 +306,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
       }
     >
-      {children}
+      <Suspense fallback={<RouteContentFallback />}>{children}</Suspense>
     </StackedLayout>
   );
 }

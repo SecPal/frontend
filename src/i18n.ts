@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { i18n } from "@lingui/core";
+import { messages as defaultMessages } from "./locales/en/messages.mjs";
 
 export const locales = {
   en: "English",
@@ -9,6 +10,9 @@ export const locales = {
 };
 
 export const defaultLocale = "en";
+
+i18n.load(defaultLocale, defaultMessages);
+i18n.activate(defaultLocale);
 
 export async function activateLocale(locale: string) {
   // Validate locale; fallback to defaultLocale if invalid
