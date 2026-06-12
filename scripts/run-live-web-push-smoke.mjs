@@ -23,11 +23,11 @@ const XVFB_DISPLAY_END = 110;
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
 
-// Mirrors `getWorkspacePreviewNameFromBaseUrl` in `tests/e2e/target-urls.ts`.
-// Only `frontend-<workspace>.preview.secpal.dev` URLs are workspace-preview
-// targets; bare `app.secpal.dev` or other HTTPS hosts are not.
-const WORKSPACE_PREVIEW_FRONTEND_PATTERN =
-  /^https:\/\/frontend-([^.]+)\.preview\.secpal\.dev(\/|$)/i;
+// Mirrors `parsePreviewHostname` and `getWorkspacePreviewNameFromBaseUrl` in
+// `tests/e2e/target-urls.ts`. Accept canonical preview hosts as well as
+// `frontend-<workspace>` ones, but reject other repo previews such as `api-*`.
+const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
+  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 
 function detectPolyscopeWorkspaceName() {
   if (POLYSCOPE_WORKSPACE.length > 0) {
@@ -40,15 +40,37 @@ function detectPolyscopeWorkspaceName() {
   return workspaceMatch?.[1] ?? "";
 }
 
+function getResolvableWorkspacePreviewName(baseUrl) {
+  try {
+    const previewMatch = new URL(baseUrl).hostname.match(
+      WORKSPACE_PREVIEW_HOSTNAME_PATTERN
+    );
+
+    if (!previewMatch) {
+      return "";
+    }
+
+    const [, repo, workspace] = previewMatch;
+
+    if (repo && repo.toLowerCase() !== "frontend") {
+      return "";
+    }
+
+    return workspace.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
 function hasResolvableLiveWebPushTarget() {
   if (detectPolyscopeWorkspaceName().length > 0) {
     return true;
   }
 
-  // An explicit PLAYWRIGHT_BASE_URL override is only accepted when it points
-  // at a workspace-preview frontend host; pure live targets such as
+  // An explicit PLAYWRIGHT_BASE_URL override is only accepted when it resolves
+  // to the workspace-preview frontend target; pure live targets such as
   // app.secpal.dev are intentionally not part of the Polyscope E2E surface.
-  return WORKSPACE_PREVIEW_FRONTEND_PATTERN.test(PLAYWRIGHT_BASE_URL);
+  return getResolvableWorkspacePreviewName(PLAYWRIGHT_BASE_URL).length > 0;
 }
 
 function fail(message) {
@@ -146,7 +168,7 @@ async function startVirtualDisplay() {
 async function main() {
   if (!hasResolvableLiveWebPushTarget()) {
     fail(
-      "test:e2e:live:web-push must run inside a Polyscope workspace clone (under ~/.polyscope/clones/<id>/<workspace>) or with PLAYWRIGHT_BASE_URL set to a workspace-preview frontend URL (https://frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
+      "test:e2e:live:web-push must run inside a Polyscope workspace clone (under ~/.polyscope/clones/<id>/<workspace>) or with PLAYWRIGHT_BASE_URL set to a workspace-preview frontend URL (https://frontend-<workspace>.preview.secpal.dev) or canonical workspace preview URL (https://<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
     );
   }
 
