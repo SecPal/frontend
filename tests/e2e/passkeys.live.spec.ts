@@ -3,9 +3,17 @@
 
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { TEST_USER, loginViaUI } from "./auth.setup";
-import { resolvePlaywrightApiBaseUrl } from "./target-urls";
+import {
+  isWorkspacePreviewTarget,
+  resolvePlaywrightApiBaseUrl,
+} from "./target-urls";
 
-const API_BASE_URL = resolvePlaywrightApiBaseUrl() || "https://api.secpal.dev";
+// In the Polyscope workspace preview path (the only path that runs the live
+// passkey proof below), `resolvePlaywrightApiBaseUrl()` always returns the
+// workspace's `api-<workspace>.preview.secpal.dev` origin, so the empty
+// fallback is never reached at runtime; it only exists to keep the type as
+// `string` instead of `string | undefined`.
+const API_BASE_URL = resolvePlaywrightApiBaseUrl() ?? "";
 const LIVE_PASSKEY_ENABLED = process.env.PLAYWRIGHT_LIVE_PASSKEY === "1";
 const PASSKEY_LABEL_PREFIX = "Live E2E Passkey";
 const PASSKEY_RATE_LIMIT_MESSAGE = /too many passkey attempts/i;
@@ -233,13 +241,13 @@ async function clearBrowserAuthState(page: Page, context: BrowserContext) {
 
 test.describe("Live passkey proof", () => {
   test.skip(
-    !LIVE_PASSKEY_ENABLED,
-    "Set PLAYWRIGHT_LIVE_PASSKEY=1 to run the live passkey proof against app.secpal.dev/api.secpal.dev."
+    !isWorkspacePreviewTarget() || !LIVE_PASSKEY_ENABLED,
+    "Set PLAYWRIGHT_LIVE_PASSKEY=1 to run the live passkey proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; the WebAuthn RP id is derived from the page origin, so the proof binds passkeys to the workspace preview's own RP id."
   );
 
   test.describe.configure({ mode: "serial" });
 
-  test("proves registration, consistency, removal, and email-first login against the live stack", async ({
+  test("proves registration, consistency, removal, and email-first login on the Polyscope workspace preview", async ({
     page,
     context,
   }) => {

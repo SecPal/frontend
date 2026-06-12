@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { isRemoteE2ETarget } from "./auth-helpers";
 import { DESKTOP_CHROMIUM_PROJECT_NAME } from "./performance-mode";
 import {
-  detectPolyscopeWorkspaceName,
+  isWorkspacePreviewTarget,
   resolvePlaywrightApiBaseUrl,
   resolvePlaywrightBaseUrl,
 } from "./target-urls";
@@ -23,10 +22,6 @@ function hasExplicitLiveWebPushMode(): boolean {
   return process.env[LIVE_WEB_PUSH_MODE_ENV_VAR] === "1";
 }
 
-function hasExplicitPlaywrightBaseUrl(): boolean {
-  return Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim());
-}
-
 function isPlaywrightBundledChromiumPath(browserPath: string): boolean {
   return /(^|[/\\])ms-playwright([/\\]|$)/.test(browserPath);
 }
@@ -39,13 +34,6 @@ export function getConfiguredLiveWebPushBrowserPath(): string | undefined {
 
 export function shouldEnableLiveWebPushBrowser(): boolean {
   return hasExplicitLiveWebPushMode();
-}
-
-function hasLiveWebPushTarget(): boolean {
-  return (
-    hasExplicitPlaywrightBaseUrl() ||
-    detectPolyscopeWorkspaceName() !== undefined
-  );
 }
 
 export function getLiveWebPushProjectSkipReason(
@@ -67,12 +55,12 @@ export function getLiveWebPushMode(): LiveWebPushMode {
   const baseUrl = resolvePlaywrightBaseUrl();
   const apiBaseUrl = resolvePlaywrightApiBaseUrl();
 
-  if (!hasLiveWebPushTarget() || !isRemoteE2ETarget(baseUrl)) {
+  if (!isWorkspacePreviewTarget(baseUrl)) {
     return {
       baseUrl,
       apiBaseUrl,
       skipReason:
-        "Live browser Web Push smoke requires an HTTPS deployment target via PLAYWRIGHT_BASE_URL or the current Polyscope workspace preview.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
     };
   }
 
@@ -81,7 +69,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
       baseUrl,
       apiBaseUrl,
       skipReason:
-        "Live browser Web Push smoke requires PLAYWRIGHT_LIVE_WEB_PUSH=1 to avoid accidental registration changes on shared deployments.",
+        "Live browser Web Push smoke requires PLAYWRIGHT_LIVE_WEB_PUSH=1 to avoid accidental registration changes on the workspace preview.",
     };
   }
 
@@ -89,7 +77,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
     return {
       baseUrl,
       apiBaseUrl,
-      skipReason: `Live browser Web Push smoke could not resolve the API origin for ${baseUrl}. Set PLAYWRIGHT_API_BASE_URL to the matching HTTPS API deployment.`,
+      skipReason: `Live browser Web Push smoke could not resolve the API origin for ${baseUrl}. The Polyscope workspace preview should expose api-<workspace>.preview.secpal.dev automatically; set PLAYWRIGHT_API_BASE_URL only if you intentionally override it.`,
     };
   }
 
@@ -99,7 +87,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
     return {
       baseUrl,
       apiBaseUrl,
-      skipReason: `Live browser Web Push smoke against ${baseUrl} requires ${LIVE_WEB_PUSH_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on live HTTPS targets.`,
+      skipReason: `Live browser Web Push smoke against ${baseUrl} requires ${LIVE_WEB_PUSH_BROWSER_PATH_ENV_VAR} to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on HTTPS targets.`,
     };
   }
 

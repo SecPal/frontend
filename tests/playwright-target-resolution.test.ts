@@ -154,7 +154,7 @@ describe("playwright target resolution", () => {
       "PLAYWRIGHT_BASE_URL",
       "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
-    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://example.invalid/api");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     vi.stubEnv("CI", "");
     vi.spyOn(process, "cwd").mockReturnValue("/home/user/my-app");
@@ -165,5 +165,19 @@ describe("playwright target resolution", () => {
     expect(resolvePlaywrightApiBaseUrl()).toBe(
       "https://api-grumpy-lynx.preview.secpal.dev"
     );
+  });
+
+  it("returns undefined for non-preview frontend overrides because pure live targets are no longer part of the Polyscope E2E surface", async () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    vi.stubEnv("CI", "");
+    mockNonPolyscopeCwd();
+
+    const { isWorkspacePreviewTarget, resolvePlaywrightApiBaseUrl } =
+      await import("./e2e/target-urls.ts");
+
+    expect(resolvePlaywrightApiBaseUrl()).toBeUndefined();
+    expect(isWorkspacePreviewTarget("https://app.secpal.dev")).toBe(false);
   });
 });

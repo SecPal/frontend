@@ -586,10 +586,10 @@ test.describe("Live browser Web Push smoke", () => {
   test.skip(
     Boolean(liveWebPushMode.skipReason),
     liveWebPushMode.skipReason ??
-      "Set PLAYWRIGHT_LIVE_WEB_PUSH=1 and select an HTTPS deployment target to run the live browser Web Push smoke."
+      "Set PLAYWRIGHT_LIVE_WEB_PUSH=1 and run inside a Polyscope workspace preview to execute the live browser Web Push smoke."
   );
 
-  test("proves bootstrap metadata, authenticated registration, and logout cleanup against the selected deployment", async ({
+  test("proves bootstrap metadata, authenticated registration, and logout cleanup on the Polyscope workspace preview", async ({
     browserName,
   }, testInfo) => {
     const projectSkipReason = getLiveWebPushProjectSkipReason(
@@ -603,7 +603,7 @@ test.describe("Live browser Web Push smoke", () => {
 
     if (!TEST_USER.email || !TEST_USER.password) {
       throw new Error(
-        "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set for the live browser Web Push smoke when targeting a non-preview live deployment."
+        "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set for the live browser Web Push smoke; the Polyscope workspace preview seeds a default user but TEST_USER_* lookups still returned empty."
       );
     }
 

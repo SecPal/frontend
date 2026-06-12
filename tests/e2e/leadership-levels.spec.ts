@@ -3,13 +3,15 @@
 
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./auth.setup";
-import { isRemoteE2ETarget } from "./auth-helpers";
 import {
   buildOfflineLiveMockUser,
   installMockAuthRoutes,
   installStoredMockBrowserSession,
 } from "./offline-live-helpers";
-import { resolvePlaywrightApiBaseUrl } from "./target-urls";
+import {
+  isWorkspacePreviewTarget,
+  resolvePlaywrightApiBaseUrl,
+} from "./target-urls";
 
 const playwrightEnv = globalThis as typeof globalThis & {
   process?: {
@@ -17,9 +19,13 @@ const playwrightEnv = globalThis as typeof globalThis & {
   };
 };
 
+// In the Polyscope workspace preview path (the only path that runs the live
+// employee CRUD proof below), `resolvePlaywrightApiBaseUrl()` always returns
+// the workspace's `api-<workspace>.preview.secpal.dev` origin, so the empty
+// fallback is never reached at runtime; it only exists to keep the type as
+// `string` instead of `string | undefined` for the `page.evaluate` payload.
 const API_BASE_URL =
-  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ||
-  "https://api.secpal.dev";
+  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ?? "";
 const LIVE_EMPLOYEE_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_EMPLOYEE_CRUD === "1";
 
@@ -473,14 +479,14 @@ test.describe("Management level employee flows", () => {
 });
 
 test.describe("Live employee proof", () => {
-  test("creates a non-management employee against the live stack", async ({
+  test("creates a non-management employee on the Polyscope workspace preview", async ({
     authenticatedPage: page,
   }, testInfo) => {
     test.skip(
-      !isRemoteE2ETarget() ||
+      !isWorkspacePreviewTarget() ||
         !LIVE_EMPLOYEE_CRUD_ENABLED ||
         testInfo.project.name !== "chromium",
-      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against app.secpal.dev/api.secpal.dev."
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
     );
 
     const timestamp = Date.now();
@@ -509,14 +515,14 @@ test.describe("Live employee proof", () => {
     }
   });
 
-  test("creates a leadership employee against the live stack", async ({
+  test("creates a leadership employee on the Polyscope workspace preview", async ({
     authenticatedPage: page,
   }, testInfo) => {
     test.skip(
-      !isRemoteE2ETarget() ||
+      !isWorkspacePreviewTarget() ||
         !LIVE_EMPLOYEE_CRUD_ENABLED ||
         testInfo.project.name !== "chromium",
-      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against app.secpal.dev/api.secpal.dev."
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
     );
 
     const timestamp = Date.now();

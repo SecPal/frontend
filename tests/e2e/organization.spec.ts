@@ -3,9 +3,11 @@
 
 import type { Page } from "@playwright/test";
 import { test, expect } from "./auth.setup";
-import { isRemoteE2ETarget } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
-import { resolvePlaywrightApiBaseUrl } from "./target-urls";
+import {
+  isWorkspacePreviewTarget,
+  resolvePlaywrightApiBaseUrl,
+} from "./target-urls";
 import { getCachedOrgUnitsCount } from "../utils/offline-helpers";
 
 const playwrightEnv = globalThis as typeof globalThis & {
@@ -14,11 +16,38 @@ const playwrightEnv = globalThis as typeof globalThis & {
   };
 };
 
+// In the Polyscope workspace preview path (the only path that runs the
+// `Live organization proof` block below), `resolvePlaywrightApiBaseUrl()`
+// always returns the workspace's `api-<workspace>.preview.secpal.dev` origin,
+// so the empty fallback is never reached at runtime; it only exists to keep
+// the type as `string` instead of `string | undefined` for the
+// `page.evaluate` payload in `cleanupLiveOrganizationalUnit`.
 const API_BASE_URL =
-  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ||
-  "https://api.secpal.dev";
+  resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ?? "";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
+/**
+ * Name of the root organizational unit that the API workspace's
+ * `DatabaseSeeder` guarantees on every freshly seeded Polyscope workspace
+ * preview tenant. See `database/seeders/DatabaseSeeder.php` in the API
+ * workspace:
+ *
+ *     OrganizationalUnit::firstOrCreate(
+ *         ['name' => 'Headquarters', 'tenant_id' => $tenantId],
+ *         ['type' => 'holding']
+ *     );
+ *
+ * The live-organization proof block below is therefore deterministic against
+ * any `*.preview.secpal.dev` target driven by the current Polyscope
+ * workspace, and is intentionally skipped against pure live targets such as
+ * `app.secpal.dev` where this seed contract does not hold (see issue #1199).
+ */
+const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "Headquarters";
+const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
+  WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+  "i"
+);
+
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
 const CREATED_CHILD_UNIT_NAME = "Operations Branch";
@@ -847,26 +876,31 @@ test.describe("Organization Management", () => {
   });
 
   test.describe("Live organization proof", () => {
-    test("should show the Headquarters root unit on live targets", async ({
+    test("should show the seeded Headquarters root unit on the Polyscope workspace preview", async ({
       authenticatedPage: page,
     }) => {
       test.skip(
-        !isRemoteE2ETarget(),
-        "Only relevant for the live organization proof on app.secpal.dev."
+        !isWorkspacePreviewTarget(),
+        `Only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev), where the API workspace's DatabaseSeeder contractually guarantees a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
       );
 
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
-      const headquartersTreeItem = page
-        .getByRole("treeitem", { name: /Headquarters/i })
+      const rootTreeItem = page
+        .getByRole("treeitem", {
+          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+        })
         .first();
 
-      await expect(headquartersTreeItem).toBeVisible();
-      await headquartersTreeItem.click();
+      await expect(rootTreeItem).toBeVisible();
+      await rootTreeItem.click();
 
       await expect(
-        page.getByRole("heading", { level: 3, name: /Headquarters/i })
+        page.getByRole("heading", {
+          level: 3,
+          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+        })
       ).toBeVisible();
       await expect(
         page
@@ -876,14 +910,14 @@ test.describe("Organization Management", () => {
       await expect(page.locator("dt", { hasText: /^Parent$/i })).toHaveCount(0);
     });
 
-    test("should create and remove a live child unit under Headquarters", async ({
+    test("should create and remove a live child unit under the seeded Headquarters root on the Polyscope workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isRemoteE2ETarget() ||
+        !isWorkspacePreviewTarget() ||
           !LIVE_ORGANIZATION_CRUD_ENABLED ||
           testInfo.project.name !== "chromium",
-        "Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against app.secpal.dev/api.secpal.dev."
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
       );
 
       const unitName = `Playwright Live Child ${Date.now()}`;
@@ -895,12 +929,14 @@ test.describe("Organization Management", () => {
         await page.goto("/organization");
         await page.waitForLoadState("networkidle");
 
-        const headquartersTreeItem = page
-          .getByRole("treeitem", { name: /Headquarters/i })
+        const rootTreeItem = page
+          .getByRole("treeitem", {
+            name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+          })
           .first();
 
-        await expect(headquartersTreeItem).toBeVisible();
-        await headquartersTreeItem.click();
+        await expect(rootTreeItem).toBeVisible();
+        await rootTreeItem.click();
 
         const createResponsePromise = page.waitForResponse(
           (response) =>
@@ -934,7 +970,7 @@ test.describe("Organization Management", () => {
           page
             .locator("dt", { hasText: /^Parent$/i })
             .locator("xpath=following-sibling::dd[1]")
-        ).toHaveText("Headquarters");
+        ).toHaveText(WORKSPACE_PREVIEW_ROOT_UNIT_NAME);
         await expect(page.getByText(unitDescription)).toBeVisible();
 
         const actionsButton = page.getByRole("button", {
@@ -959,14 +995,14 @@ test.describe("Organization Management", () => {
       }
     });
 
-    test("should keep a live company visible while immediately creating a branch under it", async ({
+    test("should keep a live company visible while immediately creating a branch under it on the Polyscope workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isRemoteE2ETarget() ||
+        !isWorkspacePreviewTarget() ||
           !LIVE_ORGANIZATION_CRUD_ENABLED ||
           testInfo.project.name !== "chromium",
-        "Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against app.secpal.dev/api.secpal.dev."
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
       );
 
       const timestamp = Date.now();
@@ -985,7 +1021,7 @@ test.describe("Organization Management", () => {
 
         createdCompanyId = await createLiveChildUnit(
           page,
-          "Headquarters",
+          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
           companyName,
           "company",
           companyDescription
@@ -1024,14 +1060,14 @@ test.describe("Organization Management", () => {
       }
     });
 
-    test("should move a live branch to a different live parent and keep it editable", async ({
+    test("should move a live branch to a different live parent and keep it editable on the Polyscope workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isRemoteE2ETarget() ||
+        !isWorkspacePreviewTarget() ||
           !LIVE_ORGANIZATION_CRUD_ENABLED ||
           testInfo.project.name !== "chromium",
-        "Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against app.secpal.dev/api.secpal.dev."
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
       );
 
       const timestamp = Date.now();
@@ -1050,14 +1086,14 @@ test.describe("Organization Management", () => {
 
         sourceCompanyId = await createLiveChildUnit(
           page,
-          "Headquarters",
+          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
           sourceCompanyName,
           "company",
           `Source parent created at ${new Date().toISOString()}`
         );
         targetCompanyId = await createLiveChildUnit(
           page,
-          "Headquarters",
+          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
           targetCompanyName,
           "company",
           `Target parent created at ${new Date().toISOString()}`

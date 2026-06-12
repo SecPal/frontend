@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: 2025 SecPal
+# SPDX-FileCopyrightText: 2025-2026 SecPal
 # SPDX-License-Identifier: CC0-1.0
 
 #!/usr/bin/env bash
@@ -48,8 +48,8 @@ echo "  2. DevTools → Network → Reload"
 echo "  3. Check for multiple small JS chunks"
 echo "  4. Main bundle should be ~57KB (14KB gzipped)"
 echo ""
-echo "📊 Run performance tests:"
-echo "  npm run test:e2e:staging -- --grep \"performance\""
+echo "📊 Run performance tests against the current Polyscope workspace preview:"
+echo "  npm run test:e2e:performance:workspace"
 echo "  npm run lighthouse:ci"
 
 ENDSSH
@@ -57,6 +57,6 @@ ENDSSH
 echo ""
 echo "🎉 Deployment successful!"
 echo "Next steps:"
-echo "  1. Run: npm run test:e2e:staging -- --grep \"performance\""
+echo "  1. Run: npm run test:e2e:performance:workspace"
 echo "  2. Run: npm run lighthouse:ci"
 echo "  3. Document results in PR #318"

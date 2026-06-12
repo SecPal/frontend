@@ -106,23 +106,22 @@ describe("auth E2E helpers", () => {
       });
     });
 
-    it("requires explicit credentials for remote targets", () => {
-      expect(buildTestUser({}, "https://app.secpal.dev")).toEqual({
-        email: "",
-        password: "",
-      });
+    it("throws when targeting a non-workspace remote without TEST_USER_*", () => {
+      // Pure live targets such as `app.secpal.dev` are not part of the
+      // Polyscope E2E surface (issue #1199). Silently injecting seeded dev
+      // credentials against an arbitrary production host is a security risk.
+      expect(() =>
+        buildTestUser({}, "https://app.secpal.dev")
+      ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
 
-    it("uses the standard seeded onboarding user for remote targets when live onboarding is enabled", () => {
-      expect(
+    it("throws when targeting a non-workspace remote with live onboarding but no TEST_USER_*", () => {
+      expect(() =>
         buildTestUser(
           { PLAYWRIGHT_LIVE_ONBOARDING: "1" },
           "https://app.secpal.dev"
         )
-      ).toEqual({
-        email: "onboarding@example.com",
-        password: "password",
-      });
+      ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
 
     it("prefers explicitly configured credentials for remote targets", () => {
@@ -282,7 +281,10 @@ describe("auth E2E helpers", () => {
       });
     });
 
-    it("throws when targeting a remote environment without credentials", () => {
+    it("throws when targeting a non-workspace remote without TEST_USER_*", () => {
+      // Pure live targets such as `app.secpal.dev` are not part of the
+      // Polyscope E2E surface (issue #1199); silently injecting seeded dev
+      // credentials against a production host is a security risk.
       expect(() =>
         getConfiguredTestUserOrThrow(
           { PLAYWRIGHT_BASE_URL: "https://app.secpal.dev" },

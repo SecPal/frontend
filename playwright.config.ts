@@ -54,10 +54,17 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
- * 2. Staging/Performance Tests:
- *    - Uses real staging server (https://app.secpal.dev)
- *    - Tests against production-like environment
- *    - Command: `PLAYWRIGHT_BASE_URL=https://app.secpal.dev npx playwright test`
+ * 2. Polyscope Workspace Preview (recommended for "live" suites):
+ *    - Auto-detected from the Polyscope clone path
+ *      (`~/.polyscope/clones/<id>/<workspace>`) or `POLYSCOPE_WORKSPACE=…`
+ *    - Resolves to `https://frontend-<workspace>.preview.secpal.dev` (frontend)
+ *      and `https://api-<workspace>.preview.secpal.dev` (API)
+ *    - The API workspace's `DatabaseSeeder` deterministically provisions the
+ *      seeded test users and organizational units that the live-only suites
+ *      depend on (see issue #1199); pure live targets such as
+ *      `app.secpal.dev` are intentionally not part of the Polyscope E2E
+ *      surface any more.
+ *    - Command: `npx playwright test` (inside the workspace clone)
  *
  * 3. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
@@ -80,10 +87,11 @@ const BASE_URL = resolvePlaywrightBaseUrl();
 
 /**
  * Detect if we're running against a server that Playwright should NOT start
- * locally. isRemotePlaywrightTarget is intentionally used here (not
- * isRemoteE2ETarget) because both real remote targets (app.secpal.dev) and
- * local-HTTPS targets (*.ddev.site) are served by an external process that
- * Playwright must not duplicate with its own webServer.
+ * locally. `isRemotePlaywrightTarget` matches any `https://` target, which
+ * covers both the Polyscope workspace preview (the primary "live" surface)
+ * and local-HTTPS targets (e.g. `*.ddev.site`); both are served by an
+ * external process that Playwright must not duplicate with its own
+ * `webServer`.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 
@@ -192,7 +200,8 @@ export default defineConfig({
   },
 
   // Web server configuration
-  // - Remote target (staging): No local server needed
+  // - Remote target (Polyscope workspace preview or any other HTTPS host):
+  //   no local server needed because an external process already serves it
   // - CI mode: builds and starts preview server automatically
   // - Local dev: reuses existing dev server on localhost:5173
   webServer: isRemoteTarget

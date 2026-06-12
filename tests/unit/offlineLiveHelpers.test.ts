@@ -19,16 +19,18 @@ describe("offlineLiveHelpers", () => {
     vi.restoreAllMocks();
   });
 
-  it("derives the live API domain when remote targets omit PLAYWRIGHT_API_BASE_URL", () => {
+  it("only emits the frontend cookie domain when a non-workspace remote target omits PLAYWRIGHT_API_BASE_URL", () => {
+    // Pure live targets such as `app.secpal.dev` are no longer part of the
+    // Polyscope E2E surface (issue #1199), so `resolvePlaywrightApiBaseUrl`
+    // no longer derives `api.secpal.dev` automatically; operators who really
+    // need a paired API domain for offline-mock cookies must set
+    // `PLAYWRIGHT_API_BASE_URL` themselves.
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     mockNonPolyscopeCwd();
 
-    expect(getMockCookieDomains()).toEqual([
-      "app.secpal.dev",
-      "api.secpal.dev",
-    ]);
+    expect(getMockCookieDomains()).toEqual(["app.secpal.dev"]);
   });
 
   it("derives split workspace preview domains from POLYSCOPE_WORKSPACE", () => {

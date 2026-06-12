@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Live onboarding wizard checks against the configured workspace (HTTPS app URL).
+ * Live onboarding wizard checks against the current Polyscope workspace preview
+ * (`frontend-<workspace>.preview.secpal.dev` + `api-<workspace>.preview.secpal.dev`).
  *
- * Does **not** mock onboarding APIs — traffic goes to the real backend (workflow-bound
- * onboarding endpoints).
+ * Does **not** mock onboarding APIs — traffic goes to the real workspace backend
+ * (workflow-bound onboarding endpoints). Pure live targets such as
+ * `app.secpal.dev` are intentionally **not** part of the Polyscope E2E
+ * surface; every Polyscope workspace ships its own preview backend with a
+ * deterministic seed contract and is the only target this spec runs against.
  *
  * ## Test user
  *
@@ -23,26 +27,19 @@
  * is **skipped** by default (clear message). Set `PLAYWRIGHT_ONBOARDING_WORKFLOW_STRICT=1`
  * to fail hard instead while you align the API seeder.
  *
- * Run (example):
+ * Run (auto-detects the current Polyscope workspace from the working directory):
  *
  * ```bash
- * export PLAYWRIGHT_BASE_URL="https://your-workspace.example"
  * export PLAYWRIGHT_LIVE_ONBOARDING=1
  * npx playwright test tests/e2e/onboarding-wizard.live.spec.ts --project=chromium
  * ```
  *
- * Or: `npm run test:e2e:live:onboarding` (set `PLAYWRIGHT_BASE_URL` to an `https://` app).
- *
- * Velvet Zebra preview workspace (matches typical Polyscope API host
- * `api-velvet-zebra.preview.secpal.dev`):
- *
- * ```bash
- * npm run test:e2e:live:onboarding:velvet-zebra
- * ```
+ * Or: `npm run test:e2e:live:onboarding` (resolves the workspace-preview URL via
+ * `resolvePlaywrightBaseUrl()`).
  */
 
 import { expect, test } from "./auth.setup";
-import { isRemoteE2ETarget } from "./auth-helpers";
+import { isWorkspacePreviewTarget } from "./target-urls";
 import { completeLiveOnboardingWizard } from "./onboarding-wizard-live-helpers";
 
 const LIVE_ONBOARDING = process.env.PLAYWRIGHT_LIVE_ONBOARDING === "1";
@@ -116,8 +113,8 @@ test.describe("Live onboarding wizard (workspace API)", () => {
 
   test.beforeEach(() => {
     test.skip(
-      !isRemoteE2ETarget() || !LIVE_ONBOARDING,
-      "Requires https PLAYWRIGHT_BASE_URL and PLAYWRIGHT_LIVE_ONBOARDING=1 (see file header)."
+      !isWorkspacePreviewTarget() || !LIVE_ONBOARDING,
+      "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a Polyscope workspace preview target (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; see file header."
     );
   });
 

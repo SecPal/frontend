@@ -3,8 +3,8 @@
 
 import { expect, type Page } from "@playwright/test";
 import {
-  isLiveRemoteTarget,
   isRemotePlaywrightTarget,
+  isWorkspacePreviewTarget,
   resolvePlaywrightBaseUrl,
 } from "./target-urls";
 
@@ -87,17 +87,29 @@ export function buildTestUser(
   const resolvedBase = baseUrl ?? resolvePlaywrightBaseUrl(env);
   const liveOnboarding = env.PLAYWRIGHT_LIVE_ONBOARDING === "1";
 
+  // Pure live targets (non-workspace HTTPS) are intentionally not part of the
+  // Polyscope E2E surface (issue #1199). Silently falling back to seeded dev
+  // credentials against an arbitrary production host is a security risk, so we
+  // require explicit TEST_USER_* when the target is a non-workspace remote.
+  if (isRemoteE2ETarget(resolvedBase) && !isWorkspacePreviewTarget(resolvedBase)) {
+    if (!email || !password) {
+      throw new Error(
+        `TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote (${resolvedBase}). ` +
+          "Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface. " +
+          "Either run inside a Polyscope workspace clone or set both TEST_USER_* variables explicitly."
+      );
+    }
+    return { email, password };
+  }
+
+  // The Polyscope workspace preview ships with the standard seeded
+  // `test@example.com` / `password` user (and `onboarding@example.com` /
+  // `password` for the live-onboarding flow). Explicit TEST_USER_* overrides
+  // still win for both flows, allowing operator-driven runs with custom users.
   if (liveOnboarding && isRemoteE2ETarget(resolvedBase)) {
     return {
       email: email || DEFAULT_LIVE_ONBOARDING_USER.email,
       password: password || DEFAULT_LIVE_ONBOARDING_USER.password,
-    };
-  }
-
-  if (isLiveRemoteTarget(resolvedBase)) {
-    return {
-      email,
-      password,
     };
   }
 
@@ -118,9 +130,12 @@ export function getConfiguredTestUserOrThrow(
     return testUser;
   }
 
+  // Defensive fallback: `buildTestUser` always returns non-empty defaults for
+  // local-development and Polyscope-workspace-preview paths, so this throw
+  // only fires if a caller explicitly sets TEST_USER_EMAIL or TEST_USER_PASSWORD
+  // to a blank string.
   throw new Error(
-    "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote environment. " +
-      "Exception: set PLAYWRIGHT_LIVE_ONBOARDING=1 to use the standard seeded onboarding user (onboarding@example.com) when TEST_USER_* is unset."
+    "TEST_USER_EMAIL and TEST_USER_PASSWORD must not be set to blank strings; leave them unset to rely on the seeded default user for the current target."
   );
 }
 
