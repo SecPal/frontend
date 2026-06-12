@@ -82,7 +82,7 @@ export function ListboxOption<T extends string>({
 }) {
   return (
     <SelectItem
-      value={toRadixValue(value) ?? EMPTY_VALUE}
+      value={toRadixValue(value) as string}
       disabled={disabled}
       className={cn("gap-2", className)}
     >

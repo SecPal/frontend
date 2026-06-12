@@ -154,7 +154,7 @@ export const Switch = forwardRef<
         "group relative inline-flex h-6 w-10 shrink-0 cursor-default items-center rounded-full border border-transparent bg-zinc-200 p-[3px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-zinc-950 sm:h-5 sm:w-8 dark:bg-zinc-800 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:bg-zinc-50",
         className
       )}
-      onCheckedChange={onChange}
+      onCheckedChange={(checked) => onChange?.(checked === true)}
       {...props}
     >
       <SwitchPrimitive.Thumb className="pointer-events-none relative block size-4.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-4 sm:size-3.5 sm:data-[state=checked]:translate-x-3 dark:data-[state=checked]:bg-zinc-950">

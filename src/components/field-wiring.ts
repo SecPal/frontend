@@ -28,11 +28,17 @@ export function wireFieldChildren({
   generatedId,
   labelType,
   helperTypes,
+  controlType,
 }: {
   children: ReactNode;
   generatedId: string;
   labelType: ElementType;
   helperTypes: readonly ElementType[];
+  /** Explicit control type for reliable ID injection when the control is not a
+   * direct child alongside helpers (e.g. wrapped in a layout div). When
+   * provided, the first child matching this type is used as the control;
+   * otherwise falls back to the first non-helper child. */
+  controlType?: ElementType;
 }) {
   const childArray = Children.toArray(children);
   const label = childArray.find((child) => isElementOfType(child, labelType));
@@ -41,10 +47,14 @@ export function wireFieldChildren({
     return children;
   }
 
-  const control = childArray.find(
-    (child) =>
-      isValidElement<FieldChildProps>(child) &&
-      !helperTypes.some((helperType) => isElementOfType(child, helperType))
+  const control = (
+    controlType
+      ? childArray.find((child) => isElementOfType(child, controlType))
+      : childArray.find(
+          (child) =>
+            isValidElement<FieldChildProps>(child) &&
+            !helperTypes.some((helperType) => isElementOfType(child, helperType))
+        )
   ) as ReactElement<FieldChildProps> | undefined;
 
   if (!control) {
