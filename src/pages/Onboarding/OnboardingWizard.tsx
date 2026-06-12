@@ -2249,10 +2249,10 @@ export function OnboardingWizard() {
       return { template: null, schema: null };
     }
 
-    if (template && step.template_id === currentStepTemplateId) {
-      return { template, schema: getObjectSchema(template.form_schema) };
-    }
-
+    // The active step's template is always pushed into `templateCacheRef`
+    // when `useEffect` resolves it (see the cache.set near `setTemplate`),
+    // so the cache lookup below also covers the "this is the current step"
+    // case without an extra branch to test.
     const cachedTemplate = templateCacheRef.current.get(step.template_id);
     if (cachedTemplate) {
       return {
@@ -2271,12 +2271,6 @@ export function OnboardingWizard() {
     } catch {
       return { template: null, schema: null };
     }
-  }
-
-  async function resolveStepValidationSchema(
-    step: OnboardingStep | undefined
-  ): Promise<OnboardingObjectSchema | null> {
-    return (await resolveStepValidationContext(step)).schema;
   }
 
   async function submitRequiredDraftSteps(): Promise<boolean> {
@@ -2432,7 +2426,9 @@ export function OnboardingWizard() {
       if (failingStepIndex !== null) {
         const failedStep = steps[failingStepIndex];
         const failedStepState = getOnboardingStepState(failedStep);
-        const failedStepSchema = await resolveStepValidationSchema(failedStep);
+        const failedStepSchema = (
+          await resolveStepValidationContext(failedStep)
+        ).schema;
         if (failedStepSchema) {
           validationSchemaForMessage = failedStepSchema;
         }
