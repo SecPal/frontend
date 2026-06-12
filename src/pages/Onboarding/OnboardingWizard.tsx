@@ -2239,35 +2239,51 @@ export function OnboardingWizard() {
     updateStepAtIndex(currentStepIndex, savedSubmission, status);
   }
 
-  async function resolveStepValidationSchema(
+  async function resolveStepValidationContext(
     step: OnboardingStep | undefined
-  ): Promise<OnboardingObjectSchema | null> {
+  ): Promise<{
+    template: OnboardingFormTemplate | null;
+    schema: OnboardingObjectSchema | null;
+  }> {
     if (!step) {
-      return null;
+      return { template: null, schema: null };
     }
 
     if (template && step.template_id === currentStepTemplateId) {
-      return getObjectSchema(template.form_schema);
+      return { template, schema: getObjectSchema(template.form_schema) };
     }
 
     const cachedTemplate = templateCacheRef.current.get(step.template_id);
     if (cachedTemplate) {
-      return getObjectSchema(cachedTemplate.form_schema);
+      return {
+        template: cachedTemplate,
+        schema: getObjectSchema(cachedTemplate.form_schema),
+      };
     }
 
     try {
       const stepTemplate = await fetchOnboardingTemplate(step.template_id);
       templateCacheRef.current.set(step.template_id, stepTemplate);
-      return getObjectSchema(stepTemplate.form_schema);
+      return {
+        template: stepTemplate,
+        schema: getObjectSchema(stepTemplate.form_schema),
+      };
     } catch {
-      return null;
+      return { template: null, schema: null };
     }
+  }
+
+  async function resolveStepValidationSchema(
+    step: OnboardingStep | undefined
+  ): Promise<OnboardingObjectSchema | null> {
+    return (await resolveStepValidationContext(step)).schema;
   }
 
   async function submitRequiredDraftSteps(): Promise<boolean> {
     const stepsToSubmit: Array<{
       index: number;
       submission: OnboardingSubmission;
+      template: OnboardingFormTemplate | null;
       schema: OnboardingObjectSchema | null;
     }> = [];
 
@@ -2285,11 +2301,13 @@ export function OnboardingWizard() {
         continue;
       }
 
-      const stepSchema = await resolveStepValidationSchema(step);
+      const { template: stepTemplate, schema: stepSchema } =
+        await resolveStepValidationContext(step);
 
       stepsToSubmit.push({
         index,
         submission: step.submission,
+        template: stepTemplate,
         schema: stepSchema,
       });
     }
@@ -2307,50 +2325,69 @@ export function OnboardingWizard() {
       for (const {
         index,
         submission: stepSubmission,
+        template: stepTemplate,
         schema: stepSchema,
       } of stepsToSubmit) {
         failingStepIndex = index;
         const requiredFieldMessage = _(msg`This field is required.`);
-        const stepFormData = sanitizeEmployeeOnboardingFormData(
-          (stepSubmission.form_data as Record<string, unknown> | null) ?? {},
-          stepSchema
-        );
-        const requiredFieldErrors = stepSchema
-          ? validateRequiredFields(
-              stepSchema,
-              stepFormData,
-              requiredFieldMessage
-            )
-          : {};
-        const additionalRequiredFieldErrors = stepSchema
-          ? validateAdditionalRequiredFields(
-              stepSchema,
-              stepFormData,
-              requiredFieldMessage,
-              _(msg`The residence title expiry date cannot be in the past.`),
-              _(
-                msg`The residence title must remain valid after your contract start date.`
-              ),
-              _(
-                msg`A valid residence title without employment authorization cannot be accepted. Please contact HR.`
-              ),
-              true,
-              contractStartDateFallback
-            )
-          : {};
-        const patternFieldErrors = stepSchema
-          ? validatePatternFields(
-              stepSchema,
-              stepFormData,
-              requiredFieldErrors,
-              _
-            )
-          : {};
-        const stepFieldErrors = {
-          ...requiredFieldErrors,
-          ...additionalRequiredFieldErrors,
-          ...patternFieldErrors,
-        };
+        // The residential address history step is rendered by a custom UI and
+        // serializes nested object/array data that the generic JSON-Schema
+        // helpers below cannot validate (`current_address` is `type: "object"`
+        // and would always look "empty" to `isRequiredFieldFilled`). Mirror the
+        // per-step validator used in `validateCurrentStepRequiredFields` so
+        // earlier-saved drafts pass the same check the user already cleared.
+        const isResidentialHistoryStep =
+          isResidentialAddressHistoryTemplate(stepTemplate);
+        const rawStepFormData =
+          (stepSubmission.form_data as Record<string, unknown> | null) ?? {};
+        const stepFormData = isResidentialHistoryStep
+          ? rawStepFormData
+          : sanitizeEmployeeOnboardingFormData(rawStepFormData, stepSchema);
+
+        let stepFieldErrors: FieldErrors;
+        if (isResidentialHistoryStep) {
+          stepFieldErrors = validateResidentialAddressHistoryValue(
+            getResidentialAddressHistoryValue(stepFormData),
+            _
+          );
+        } else {
+          const requiredFieldErrors = stepSchema
+            ? validateRequiredFields(
+                stepSchema,
+                stepFormData,
+                requiredFieldMessage
+              )
+            : {};
+          const additionalRequiredFieldErrors = stepSchema
+            ? validateAdditionalRequiredFields(
+                stepSchema,
+                stepFormData,
+                requiredFieldMessage,
+                _(msg`The residence title expiry date cannot be in the past.`),
+                _(
+                  msg`The residence title must remain valid after your contract start date.`
+                ),
+                _(
+                  msg`A valid residence title without employment authorization cannot be accepted. Please contact HR.`
+                ),
+                true,
+                contractStartDateFallback
+              )
+            : {};
+          const patternFieldErrors = stepSchema
+            ? validatePatternFields(
+                stepSchema,
+                stepFormData,
+                requiredFieldErrors,
+                _
+              )
+            : {};
+          stepFieldErrors = {
+            ...requiredFieldErrors,
+            ...additionalRequiredFieldErrors,
+            ...patternFieldErrors,
+          };
+        }
 
         if (Object.keys(stepFieldErrors).length > 0) {
           const failedStep = steps[index];
