@@ -80,7 +80,9 @@ export default function SiteCreate() {
         setOrgUnits(orgUnitsData.data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : _(msg`Failed to load required data`)
+          err instanceof Error
+            ? err.message
+            : _(msg`Failed to load required data`)
         );
       } finally {
         setLoadingData(false);
@@ -260,7 +262,9 @@ export default function SiteCreate() {
                     : undefined
                 }
               >
-                <SelectValue placeholder={_(msg`Select organizational unit...`)} />
+                <SelectValue
+                  placeholder={_(msg`Select organizational unit...`)}
+                />
               </SelectTrigger>
               <SelectContent>
                 {orgUnits.map((unit) => (
@@ -288,7 +292,9 @@ export default function SiteCreate() {
               required
               value={formData.name}
               aria-invalid={fieldErrors.name ? true : undefined}
-              aria-describedby={fieldErrors.name ? "site-name-error" : undefined}
+              aria-describedby={
+                fieldErrors.name ? "site-name-error" : undefined
+              }
               onChange={(e) => updateField("name", e.target.value)}
             />
             {fieldErrors.name && (
@@ -338,7 +344,9 @@ export default function SiteCreate() {
                 value={formData.address.street}
                 aria-invalid={fieldErrors["address.street"] ? true : undefined}
                 aria-describedby={
-                  fieldErrors["address.street"] ? "site-street-error" : undefined
+                  fieldErrors["address.street"]
+                    ? "site-street-error"
+                    : undefined
                 }
                 onChange={(e) => updateAddress("street", e.target.value)}
               />
@@ -413,7 +421,9 @@ export default function SiteCreate() {
               >
                 <SelectTrigger
                   id="site-country"
-                  aria-invalid={fieldErrors["address.country"] ? true : undefined}
+                  aria-invalid={
+                    fieldErrors["address.country"] ? true : undefined
+                  }
                   aria-describedby={
                     fieldErrors["address.country"]
                       ? "site-country-error"
@@ -561,7 +571,9 @@ export default function SiteCreate() {
             id="site-is-active"
             name="is_active"
             checked={formData.is_active}
-            onCheckedChange={(checked) => updateField("is_active", checked === true)}
+            onCheckedChange={(checked) =>
+              updateField("is_active", checked === true)
+            }
           />
           <FieldLabel htmlFor="site-is-active">
             <Trans>Active</Trans>

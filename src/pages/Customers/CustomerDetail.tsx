@@ -121,7 +121,9 @@ export default function CustomerDetail() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <PageTitle>{customer.name}</PageTitle>
-          <PageText className="mt-1 text-zinc-500">{customer.customer_number}</PageText>
+          <PageText className="mt-1 text-zinc-500">
+            {customer.customer_number}
+          </PageText>
         </div>
         <div className="flex gap-2">
           <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
@@ -226,7 +228,9 @@ export default function CustomerDetail() {
             <PageTitle level={2} className="mb-4">
               <Trans>Notes</Trans>
             </PageTitle>
-            <PageText className="whitespace-pre-wrap">{customer.notes}</PageText>
+            <PageText className="whitespace-pre-wrap">
+              {customer.notes}
+            </PageText>
           </div>
         )}
 
@@ -310,9 +314,17 @@ export default function CustomerDetail() {
                 >
                   <Trans>Cancel</Trans>
                 </Button>
-                <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
                   <Trash2 className="size-4" aria-hidden="true" />
-                  {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+                  {deleting ? (
+                    <Trans>Deleting...</Trans>
+                  ) : (
+                    <Trans>Delete</Trans>
+                  )}
                 </Button>
               </DialogActions>
             </DialogContent>

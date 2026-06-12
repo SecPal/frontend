@@ -724,10 +724,10 @@ export function OrganizationalUnitTree({
         )}
       >
         <CardContent className="p-4">
-        <p className="text-sm">{error}</p>
-        <Button variant="ghost" onClick={refresh} className="mt-2">
-          <Trans>Retry</Trans>
-        </Button>
+          <p className="text-sm">{error}</p>
+          <Button variant="ghost" onClick={refresh} className="mt-2">
+            <Trans>Retry</Trans>
+          </Button>
         </CardContent>
       </Card>
     );

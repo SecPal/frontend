@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useId } from "react";
-import { Field as UiField, FieldDescription, FieldError, FieldLabel } from "@/ui";
+import {
+  Field as UiField,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/ui";
 import { cn } from "@/lib/utils";
 import { wireFieldChildren } from "./field-wiring";
 

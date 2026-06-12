@@ -166,7 +166,10 @@ export function DataTable({
   return (
     <div
       data-slot="customer-site-table-shell"
-      className={cn("overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800", className)}
+      className={cn(
+        "overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800",
+        className
+      )}
       {...props}
     />
   );

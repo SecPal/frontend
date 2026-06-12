@@ -79,7 +79,9 @@ export default function SitesPage() {
           return;
         }
 
-        setError(err instanceof Error ? err.message : _(msg`Failed to load sites`));
+        setError(
+          err instanceof Error ? err.message : _(msg`Failed to load sites`)
+        );
       })
       .finally(() => {
         if (active) {
@@ -132,9 +134,7 @@ export default function SitesPage() {
         </PageTitle>
         {capabilities.actions.sites.create && (
           <LinkButton
-            to={
-              customerId ? `/sites/new/customer/${customerId}` : "/sites/new"
-            }
+            to={customerId ? `/sites/new/customer/${customerId}` : "/sites/new"}
           >
             <Plus className="size-4" aria-hidden="true" />
             <Trans>New Site</Trans>
@@ -183,7 +183,9 @@ export default function SitesPage() {
           <Select
             name="status"
             value={
-              filters.is_active === undefined ? "all" : String(filters.is_active)
+              filters.is_active === undefined
+                ? "all"
+                : String(filters.is_active)
             }
             onValueChange={handleStatusFilter}
           >
@@ -253,7 +255,9 @@ export default function SitesPage() {
                   </TableCell>
                   <TableCell>{site.name}</TableCell>
                   <TableCell>
-                    <StatusBadge color={site.type === "permanent" ? "blue" : "amber"}>
+                    <StatusBadge
+                      color={site.type === "permanent" ? "blue" : "amber"}
+                    >
                       {site.type === "permanent" ? (
                         <Trans>Permanent</Trans>
                       ) : (

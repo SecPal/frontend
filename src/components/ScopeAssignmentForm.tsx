@@ -565,28 +565,28 @@ function ScopeAssignmentFormContent({
 
               <Field className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
                 <div className="flex items-start gap-3">
-                <Checkbox
-                  id="allow-self-access"
-                  checked={formData.allow_self_access ?? false}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      allow_self_access: checked === true,
-                    })
-                  }
-                />
+                  <Checkbox
+                    id="allow-self-access"
+                    checked={formData.allow_self_access ?? false}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        allow_self_access: checked === true,
+                      })
+                    }
+                  />
                   <div className="space-y-2">
-                <FieldLabel htmlFor="allow-self-access">
-                  <Trans>Allow user to view/edit their own HR data</Trans>
-                </FieldLabel>
-                <FieldDescription>
-                  <Trans>
-                    By default (unchecked), users cannot see or edit their own
-                    employee record. This prevents self-manipulation of salary,
-                    rank, etc. Check this box only if you want this user to
-                    access their own HR data.
-                  </Trans>
-                </FieldDescription>
+                    <FieldLabel htmlFor="allow-self-access">
+                      <Trans>Allow user to view/edit their own HR data</Trans>
+                    </FieldLabel>
+                    <FieldDescription>
+                      <Trans>
+                        By default (unchecked), users cannot see or edit their
+                        own employee record. This prevents self-manipulation of
+                        salary, rank, etc. Check this box only if you want this
+                        user to access their own HR data.
+                      </Trans>
+                    </FieldDescription>
                   </div>
                 </div>
               </Field>

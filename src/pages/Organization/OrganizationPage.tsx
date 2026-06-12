@@ -317,87 +317,87 @@ export function OrganizationPage() {
         {/* Detail Panel */}
         <Card>
           <CardContent className="h-full p-4">
-          {selectedUnit ? (
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
-                  {selectedUnit.name}
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Badge className={getTypeBadgeClassName(selectedUnit.type)}>
-                    {getTypeLabel(selectedUnit.type)}
-                  </Badge>
+            {selectedUnit ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+                    {selectedUnit.name}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getTypeBadgeClassName(selectedUnit.type)}>
+                      {getTypeLabel(selectedUnit.type)}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleCloseDetail}
+                      className="min-h-8 px-2 py-1 text-zinc-500"
+                      aria-label={t`Close detail panel`}
+                    >
+                      <X className="h-5 w-5" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <Trans>Type</Trans>
+                    </dt>
+                    <dd className="text-zinc-900 dark:text-white">
+                      {getTypeLabel(selectedUnit.type)}
+                    </dd>
+                  </div>
+                  {selectedUnit.description && (
+                    <div>
+                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                        <Trans>Description</Trans>
+                      </dt>
+                      <dd className="text-zinc-900 dark:text-white">
+                        {selectedUnit.description}
+                      </dd>
+                    </div>
+                  )}
+                  {selectedUnit.parent && (
+                    <div>
+                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                        <Trans>Parent</Trans>
+                      </dt>
+                      <dd className="text-zinc-900 dark:text-white">
+                        {selectedUnit.parent.name}
+                      </dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <Trans>Created</Trans>
+                    </dt>
+                    <dd className="text-zinc-900 dark:text-white">
+                      {formatDate(selectedUnit.created_at, i18n.locale)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                  <Button onClick={() => handleEdit(selectedUnit)}>
+                    <Trans>Edit</Trans>
+                  </Button>
                   <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleCloseDetail}
-                    className="min-h-8 px-2 py-1 text-zinc-500"
-                    aria-label={t`Close detail panel`}
+                    variant="outline"
+                    onClick={() => handleCreateChild(selectedUnit)}
                   >
-                    <X className="h-5 w-5" aria-hidden="true" />
+                    <Trans>Add Child Unit</Trans>
                   </Button>
                 </div>
               </div>
-
-              <dl className="space-y-3 text-sm">
-                <div>
-                  <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                    <Trans>Type</Trans>
-                  </dt>
-                  <dd className="text-zinc-900 dark:text-white">
-                    {getTypeLabel(selectedUnit.type)}
-                  </dd>
-                </div>
-                {selectedUnit.description && (
-                  <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                      <Trans>Description</Trans>
-                    </dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {selectedUnit.description}
-                    </dd>
-                  </div>
-                )}
-                {selectedUnit.parent && (
-                  <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                      <Trans>Parent</Trans>
-                    </dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {selectedUnit.parent.name}
-                    </dd>
-                  </div>
-                )}
-                <div>
-                  <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                    <Trans>Created</Trans>
-                  </dt>
-                  <dd className="text-zinc-900 dark:text-white">
-                    {formatDate(selectedUnit.created_at, i18n.locale)}
-                  </dd>
-                </div>
-              </dl>
-
-              {/* Action buttons */}
-              <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                <Button onClick={() => handleEdit(selectedUnit)}>
-                  <Trans>Edit</Trans>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleCreateChild(selectedUnit)}
-                >
-                  <Trans>Add Child Unit</Trans>
-                </Button>
+            ) : (
+              <div className="flex h-full min-h-[200px] items-center justify-center text-center">
+                <p className="text-sm text-zinc-500">
+                  <Trans>Select an organizational unit to view details</Trans>
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="flex h-full min-h-[200px] items-center justify-center text-center">
-              <p className="text-sm text-zinc-500">
-                <Trans>Select an organizational unit to view details</Trans>
-              </p>
-            </div>
-          )}
+            )}
           </CardContent>
         </Card>
       </div>

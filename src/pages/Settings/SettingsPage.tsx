@@ -641,96 +641,96 @@ export function SettingsPage() {
 
         <Card>
           <CardContent className="pt-6">
-          <div className="space-y-4">
-            {supportsPasskeys ? (
-              <form
-                className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-                onSubmit={handlePasskeyRegistration}
-              >
-                <Field>
-                  <FieldLabel htmlFor="passkey-label">
-                    <Trans>Passkey label</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="passkey-label"
-                    type="text"
-                    value={passkeyLabel}
-                    onChange={(event) => setPasskeyLabel(event.target.value)}
-                    disabled={isRegisteringPasskey}
-                    maxLength={100}
-                  />
-                </Field>
-                <Button type="submit" disabled={isRegisteringPasskey}>
-                  {isRegisteringPasskey ? (
-                    registrationStep === "device" ? (
-                      <Trans>Complete on your device…</Trans>
-                    ) : registrationStep === "saving" ? (
-                      <Trans>Saving passkey…</Trans>
+            <div className="space-y-4">
+              {supportsPasskeys ? (
+                <form
+                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+                  onSubmit={handlePasskeyRegistration}
+                >
+                  <Field>
+                    <FieldLabel htmlFor="passkey-label">
+                      <Trans>Passkey label</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="passkey-label"
+                      type="text"
+                      value={passkeyLabel}
+                      onChange={(event) => setPasskeyLabel(event.target.value)}
+                      disabled={isRegisteringPasskey}
+                      maxLength={100}
+                    />
+                  </Field>
+                  <Button type="submit" disabled={isRegisteringPasskey}>
+                    {isRegisteringPasskey ? (
+                      registrationStep === "device" ? (
+                        <Trans>Complete on your device…</Trans>
+                      ) : registrationStep === "saving" ? (
+                        <Trans>Saving passkey…</Trans>
+                      ) : (
+                        <Trans>Adding passkey...</Trans>
+                      )
                     ) : (
-                      <Trans>Adding passkey...</Trans>
-                    )
-                  ) : (
-                    <Trans>Add passkey</Trans>
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>This browser does not support passkeys.</Trans>
-              </p>
-            )}
-            {passkeyError ? (
-              <p className="text-sm text-red-700 dark:text-red-300">
-                {passkeyError}
-              </p>
-            ) : null}
-            {isLoadingPasskeys ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                <Trans>Loading passkeys...</Trans>
-              </p>
-            ) : !passkeyError &&
-              passkeys.length === 0 &&
-              !isRegisteringPasskey ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>No passkeys enrolled yet.</Trans>
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {passkeys.map((passkey) => (
-                  <div
-                    key={passkey.id}
-                    className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-zinc-950 dark:text-white">
-                          {passkey.label}
-                        </p>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                          <Trans>
-                            Added{" "}
-                            {formatDateTime(passkey.created_at, i18n.locale)}
-                          </Trans>
-                        </p>
+                      <Trans>Add passkey</Trans>
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <Trans>This browser does not support passkeys.</Trans>
+                </p>
+              )}
+              {passkeyError ? (
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {passkeyError}
+                </p>
+              ) : null}
+              {isLoadingPasskeys ? (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <Trans>Loading passkeys...</Trans>
+                </p>
+              ) : !passkeyError &&
+                passkeys.length === 0 &&
+                !isRegisteringPasskey ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <Trans>No passkeys enrolled yet.</Trans>
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {passkeys.map((passkey) => (
+                    <div
+                      key={passkey.id}
+                      className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                            {passkey.label}
+                          </p>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <Trans>
+                              Added{" "}
+                              {formatDateTime(passkey.created_at, i18n.locale)}
+                            </Trans>
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={removingPasskeyId !== null}
+                          onClick={() => void handlePasskeyRemoval(passkey.id)}
+                        >
+                          {removingPasskeyId === passkey.id ? (
+                            <Trans>Removing...</Trans>
+                          ) : (
+                            <Trans>Remove</Trans>
+                          )}
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={removingPasskeyId !== null}
-                        onClick={() => void handlePasskeyRemoval(passkey.id)}
-                      >
-                        {removingPasskeyId === passkey.id ? (
-                          <Trans>Removing...</Trans>
-                        ) : (
-                          <Trans>Remove</Trans>
-                        )}
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -1055,9 +1055,7 @@ export function SettingsPage() {
                 <Button
                   type="submit"
                   variant={
-                    sensitiveAction === "disable"
-                      ? "destructive"
-                      : "default"
+                    sensitiveAction === "disable" ? "destructive" : "default"
                   }
                   disabled={
                     isSubmittingSensitiveAction ||

@@ -78,7 +78,9 @@ export default function SiteDetail() {
           setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
-        setLoadError(err instanceof Error ? err.message : _(msg`Failed to load site`));
+        setLoadError(
+          err instanceof Error ? err.message : _(msg`Failed to load site`)
+        );
       } finally {
         setLoading(false);
       }
@@ -96,7 +98,9 @@ export default function SiteDetail() {
       await deleteSite(site.id);
       navigate("/sites");
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : _(msg`Failed to delete site`));
+      setDeleteError(
+        err instanceof Error ? err.message : _(msg`Failed to delete site`)
+      );
       setDeleting(false);
       // Keep dialog open to show error message
     }
@@ -378,7 +382,10 @@ export default function SiteDetail() {
 
       {/* Delete Confirmation Dialog */}
       {capabilities.actions.sites.delete && (
-        <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
+        <Dialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+        >
           <DialogPortal>
             <DialogOverlay />
             <DialogContent>
@@ -387,8 +394,8 @@ export default function SiteDetail() {
               </DialogTitle>
               <DialogDescription>
                 <Trans>
-                  Are you sure you want to delete this site? This action cannot be
-                  undone.
+                  Are you sure you want to delete this site? This action cannot
+                  be undone.
                 </Trans>
               </DialogDescription>
               <DialogBody>
@@ -401,16 +408,28 @@ export default function SiteDetail() {
                   <Trans>Site:</Trans> <strong>{site.name}</strong>
                 </PageText>
                 <PageText>
-                  <Trans>Site Number:</Trans> <strong>{site.site_number}</strong>
+                  <Trans>Site Number:</Trans>{" "}
+                  <strong>{site.site_number}</strong>
                 </PageText>
               </DialogBody>
               <DialogActions>
-                <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowDeleteDialog(false)}
+                >
                   <Trans>Cancel</Trans>
                 </Button>
-                <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
                   <Trash2 className="size-4" aria-hidden="true" />
-                  {deleting ? <Trans>Deleting...</Trans> : <Trans>Delete</Trans>}
+                  {deleting ? (
+                    <Trans>Deleting...</Trans>
+                  ) : (
+                    <Trans>Delete</Trans>
+                  )}
                 </Button>
               </DialogActions>
             </DialogContent>

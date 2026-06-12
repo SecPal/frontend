@@ -61,7 +61,10 @@ type BadgeButtonProps = BadgeProps & {
   children: React.ReactNode;
 } & (
     | ({ href?: never } & React.ButtonHTMLAttributes<HTMLButtonElement>)
-    | ({ href: string } & Omit<React.ComponentPropsWithoutRef<typeof Link>, "className">)
+    | ({ href: string } & Omit<
+        React.ComponentPropsWithoutRef<typeof Link>,
+        "className"
+      >)
   );
 
 export const BadgeButton = forwardRef(function BadgeButton(

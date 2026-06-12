@@ -98,7 +98,10 @@ export function ListboxLabel({
   return (
     <span
       {...props}
-      className={cn("ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0", className)}
+      className={cn(
+        "ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0",
+        className
+      )}
     />
   );
 }

@@ -295,7 +295,9 @@ export default function CustomerCreate() {
             id="customer-is-active"
             name="is_active"
             checked={formData.is_active}
-            onCheckedChange={(checked) => updateField("is_active", checked === true)}
+            onCheckedChange={(checked) =>
+              updateField("is_active", checked === true)
+            }
           />
           <FieldLabel htmlFor="customer-is-active">
             <Trans>Active</Trans>
@@ -311,7 +313,11 @@ export default function CustomerCreate() {
               <Trans>Create Customer</Trans>
             )}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/customers")}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/customers")}
+          >
             <Trans>Cancel</Trans>
           </Button>
         </div>

@@ -311,7 +311,9 @@ export default function CustomerEdit() {
             id="customer-is-active"
             name="is_active"
             checked={formData.is_active || false}
-            onCheckedChange={(checked) => updateField("is_active", checked === true)}
+            onCheckedChange={(checked) =>
+              updateField("is_active", checked === true)
+            }
           />
           <FieldLabel htmlFor="customer-is-active">
             <Trans>Active</Trans>

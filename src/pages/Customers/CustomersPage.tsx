@@ -76,7 +76,9 @@ export default function CustomersPage() {
           return;
         }
 
-        setError(err instanceof Error ? err.message : _(msg`Failed to load customers`));
+        setError(
+          err instanceof Error ? err.message : _(msg`Failed to load customers`)
+        );
       })
       .finally(() => {
         if (active) {
@@ -147,7 +149,9 @@ export default function CustomersPage() {
           <Select
             name="status"
             value={
-              filters.is_active === undefined ? "all" : String(filters.is_active)
+              filters.is_active === undefined
+                ? "all"
+                : String(filters.is_active)
             }
             onValueChange={handleStatusFilter}
           >

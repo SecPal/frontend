@@ -60,10 +60,7 @@ function UnitTypeIcon({
     case "department":
     case "division":
       return (
-        <Users
-          className={`${className} text-green-500`}
-          aria-hidden="true"
-        />
+        <Users className={`${className} text-green-500`} aria-hidden="true" />
       );
     case "branch":
       return (
@@ -74,10 +71,7 @@ function UnitTypeIcon({
       );
     case "region":
       return (
-        <MapPin
-          className={`${className} text-orange-500`}
-          aria-hidden="true"
-        />
+        <MapPin className={`${className} text-orange-500`} aria-hidden="true" />
       );
     default:
       return (
@@ -93,12 +87,7 @@ function UnitTypeIcon({
  * Root icon for "All Units" option
  */
 function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <Home
-      aria-hidden="true"
-      className={`${className} text-gray-400`}
-    />
-  );
+  return <Home aria-hidden="true" className={`${className} text-gray-400`} />;
 }
 
 /**

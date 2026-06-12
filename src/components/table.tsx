@@ -38,7 +38,10 @@ export function Table({
       <div className="flow-root">
         <div
           {...props}
-          className={cn("-mx-(--gutter) overflow-x-auto whitespace-nowrap", className)}
+          className={cn(
+            "-mx-(--gutter) overflow-x-auto whitespace-nowrap",
+            className
+          )}
         >
           <div
             className={cn(

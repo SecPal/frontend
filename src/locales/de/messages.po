@@ -1907,6 +1907,24 @@ msgstr "{label}: Gültig"
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
 
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.close"
+msgstr "Navigation schließen"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.description"
+msgstr "Hauptnavigation der Anwendung"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.title"
+msgstr "Navigationsmenü"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Auto-refresh (30s)"
 msgstr "Automatisches Aktualisieren (30s)"
@@ -3514,22 +3532,3 @@ msgstr "Fehler beim Aktualisieren des Mitarbeiters"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
 msgstr "Mitarbeiter konnte nicht aktiviert werden"
-
-#. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
-msgid "layout.mobileNavigation.title"
-msgstr "Navigationsmenü"
-
-#. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
-msgid "layout.mobileNavigation.description"
-msgstr "Hauptnavigation der Anwendung"
-
-#. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
-msgid "layout.mobileNavigation.close"
-msgstr "Navigation schließen"
-

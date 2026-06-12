@@ -91,7 +91,9 @@ export default function SiteEdit() {
           valid_until: siteData.valid_until,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : _(msg`Failed to load site`));
+        setError(
+          err instanceof Error ? err.message : _(msg`Failed to load site`)
+        );
       } finally {
         setLoading(false);
       }
@@ -252,7 +254,9 @@ export default function SiteEdit() {
                     : undefined
                 }
               >
-                <SelectValue placeholder={_(msg`Select organizational unit...`)} />
+                <SelectValue
+                  placeholder={_(msg`Select organizational unit...`)}
+                />
               </SelectTrigger>
               <SelectContent>
                 {orgUnits.map((unit) => (
@@ -280,7 +284,9 @@ export default function SiteEdit() {
               required
               value={formData.name || ""}
               aria-invalid={fieldErrors.name ? true : undefined}
-              aria-describedby={fieldErrors.name ? "site-name-error" : undefined}
+              aria-describedby={
+                fieldErrors.name ? "site-name-error" : undefined
+              }
               onChange={(e) => updateField("name", e.target.value)}
             />
             {fieldErrors.name && (
@@ -509,7 +515,9 @@ export default function SiteEdit() {
             id="site-is-active"
             name="is_active"
             checked={formData.is_active}
-            onCheckedChange={(checked) => updateField("is_active", checked === true)}
+            onCheckedChange={(checked) =>
+              updateField("is_active", checked === true)
+            }
           />
           <FieldLabel htmlFor="site-is-active">
             <Trans>Active</Trans>

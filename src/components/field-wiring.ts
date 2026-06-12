@@ -53,7 +53,9 @@ export function wireFieldChildren({
       : childArray.find(
           (child) =>
             isValidElement<FieldChildProps>(child) &&
-            !helperTypes.some((helperType) => isElementOfType(child, helperType))
+            !helperTypes.some((helperType) =>
+              isElementOfType(child, helperType)
+            )
         )
   ) as ReactElement<FieldChildProps> | undefined;
 
