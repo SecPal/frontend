@@ -110,9 +110,9 @@ describe("auth E2E helpers", () => {
       // Pure live targets such as `app.secpal.dev` are not part of the
       // Polyscope E2E surface (issue #1199). Silently injecting seeded dev
       // credentials against an arbitrary production host is a security risk.
-      expect(() =>
-        buildTestUser({}, "https://app.secpal.dev")
-      ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
+      expect(() => buildTestUser({}, "https://app.secpal.dev")).toThrow(
+        "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set"
+      );
     });
 
     it("throws when targeting a non-workspace remote with live onboarding but no TEST_USER_*", () => {

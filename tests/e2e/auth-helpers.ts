@@ -91,7 +91,10 @@ export function buildTestUser(
   // Polyscope E2E surface (issue #1199). Silently falling back to seeded dev
   // credentials against an arbitrary production host is a security risk, so we
   // require explicit TEST_USER_* when the target is a non-workspace remote.
-  if (isRemoteE2ETarget(resolvedBase) && !isWorkspacePreviewTarget(resolvedBase)) {
+  if (
+    isRemoteE2ETarget(resolvedBase) &&
+    !isWorkspacePreviewTarget(resolvedBase)
+  ) {
     if (!email || !password) {
       throw new Error(
         `TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote (${resolvedBase}). ` +
