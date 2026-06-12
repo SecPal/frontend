@@ -25,3 +25,27 @@ Migration rules:
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
+
+## Loading Contract
+
+Use shared loading primitives from `src/ui` for all new or migrated surfaces:
+
+- Use `Skeleton` for decorative placeholder shapes. It is hidden from assistive
+  technology by default, so pair it with a labeled status container when it is
+  the only visible loading feedback.
+- Use `PageSkeleton`, `SectionSkeleton`, `TableSkeleton`, or `FormSkeleton`
+  when no useful data has loaded yet and the page can predict the structure
+  that will appear. Pass a localized `loadingLabel` from the route or feature.
+- Use `LoadingRegion` for non-blocking refreshes after data is already visible.
+  Keep the existing rows, cards, or form values rendered, set the region busy,
+  and expose localized refresh text through `loadingLabel`.
+- Use a full blocking state only when the user cannot safely interact with the
+  surface yet, such as auth/session bootstrap, first-load route guards, or a
+  mutation that must prevent duplicate submission.
+- Use `Spinner` only for action-sized indeterminate work where a skeleton cannot
+  describe the future layout, such as an icon inside a disabled submit button or
+  a short-lived route chunk loader. Page, section, and table loads should use
+  skeleton placeholders instead of ad-hoc `Loading...` text or custom spinners.
+- During background refresh, already-loaded data must stay visible. Do not swap
+  a populated table, list, card group, or form back to a full-page loader unless
+  the loaded data is no longer valid to show.
