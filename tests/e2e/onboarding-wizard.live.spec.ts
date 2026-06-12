@@ -111,12 +111,12 @@ function isOnboardingTemplatesListRequest(url: string): boolean {
 test.describe("Live onboarding wizard (workspace API)", () => {
   test.describe.configure({ mode: "serial" });
 
-  test.beforeEach(() => {
-    test.skip(
-      !isWorkspacePreviewTarget() || !LIVE_ONBOARDING,
-      "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a Polyscope workspace preview target (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; see file header."
-    );
-  });
+  // Describe-level skip prevents `authenticatedPage` from logging in before the
+  // workspace-preview/live-onboarding gate is evaluated.
+  test.skip(
+    !isWorkspacePreviewTarget() || !LIVE_ONBOARDING,
+    "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a Polyscope workspace preview target (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; see file header."
+  );
 
   test("loads onboarding and receives templates and submissions from the live API", async ({
     authenticatedPage: page,
