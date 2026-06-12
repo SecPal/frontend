@@ -3,6 +3,7 @@
 
 "use client";
 
+import { t } from "@lingui/core/macro";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import React, { useState } from "react";
@@ -39,15 +40,26 @@ function MobileSidebar({
           )}
         >
           <DialogPrimitive.Title className="sr-only">
-            Navigation
+            {t({
+              id: "layout.mobileNavigation.title",
+              message: "Navigation",
+            })}
           </DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Main application navigation
+            {t({
+              id: "layout.mobileNavigation.description",
+              message: "Main application navigation",
+            })}
           </DialogPrimitive.Description>
           <div className="flex h-full flex-col rounded-md bg-white shadow-lg ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
             <div className="-mb-3 px-4 pt-3">
               <DialogPrimitive.Close asChild>
-                <NavbarItem aria-label="Close navigation">
+                <NavbarItem
+                  aria-label={t({
+                    id: "layout.mobileNavigation.close",
+                    message: "Close navigation",
+                  })}
+                >
                   <X data-slot="icon" aria-hidden="true" />
                 </NavbarItem>
               </DialogPrimitive.Close>

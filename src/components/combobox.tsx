@@ -44,6 +44,14 @@ export function Combobox<T>({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      setQuery("");
+    }
+  };
+
   const filteredOptions = useMemo(
     () =>
       query === ""
@@ -51,31 +59,35 @@ export function Combobox<T>({
         : options.filter((option) =>
             filter
               ? filter(option, query)
-              : displayValue(option)?.toLowerCase().includes(query.toLowerCase())
+              : displayValue(option)
+                  ?.toLowerCase()
+                  .includes(query.toLowerCase())
           ),
     [displayValue, filter, options, query]
   );
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <ComboboxOptionContext.Provider
         value={{
           selectedValue: value,
           selectValue: (nextValue) => {
             onChange?.(nextValue as T);
-            setOpen(false);
-            setQuery("");
+            handleOpenChange(false);
           },
           renderValue: (nextValue) => displayValue(nextValue as T),
         }}
       >
-        <div data-slot="control" className={cn("relative block w-full", className)}>
+        <div
+          data-slot="control"
+          className={cn("relative block w-full", className)}
+        >
           <PopoverPrimitive.Anchor asChild>
             <Input
               autoFocus={autoFocus}
               aria-label={ariaLabel}
               disabled={disabled}
-              value={open ? query : displayValue(value ?? null) ?? ""}
+              value={open ? query : (displayValue(value ?? null) ?? "")}
               onFocus={() => setOpen(true)}
               onChange={(event) => {
                 setQuery(event.target.value);
@@ -104,7 +116,9 @@ export function Combobox<T>({
             className="z-50 max-h-96 min-w-[var(--radix-popover-trigger-width)] overflow-y-auto rounded-md border border-zinc-200 bg-white p-1 text-zinc-950 shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
             onOpenAutoFocus={(event) => event.preventDefault()}
           >
-            {filteredOptions.map((option) => children(option as NonNullable<T>))}
+            {filteredOptions.map((option) =>
+              children(option as NonNullable<T>)
+            )}
           </PopoverPrimitive.Content>
         </PopoverPrimitive.Portal>
       </ComboboxOptionContext.Provider>
@@ -151,7 +165,10 @@ export function ComboboxLabel({
   return (
     <span
       {...props}
-      className={cn("ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0", className)}
+      className={cn(
+        "ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0",
+        className
+      )}
     />
   );
 }

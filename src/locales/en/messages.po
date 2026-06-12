@@ -3514,3 +3514,22 @@ msgstr "Failed to update employee"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
 msgstr "Failed to activate employee"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.title"
+msgstr "Navigation"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.description"
+msgstr "Main application navigation"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.close"
+msgstr "Close navigation"
+
