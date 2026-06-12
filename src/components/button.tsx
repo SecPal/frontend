@@ -98,9 +98,13 @@ function getClasses({
   color,
   outline,
   plain,
-}: Pick<ButtonProps, "className" | "color" | "outline" | "plain">) {
+  isLink = false,
+}: Pick<ButtonProps, "className" | "color" | "outline" | "plain"> & {
+  isLink?: boolean;
+}) {
   return cn(
-    "relative isolate cursor-default",
+    "relative isolate",
+    isLink ? "cursor-pointer" : "cursor-default",
     color && !outline && !plain ? colorClasses[color] : undefined,
     className
   );
@@ -110,10 +114,17 @@ export const Button = forwardRef(function Button(
   { color, outline, plain, className, children, ...props }: ButtonProps,
   ref: React.ForwardedRef<HTMLElement>
 ) {
-  const classes = getClasses({ className, color, outline, plain });
+  const isLink = "href" in props && typeof props.href === "string";
+  const classes = getClasses({
+    className,
+    color,
+    outline,
+    plain,
+    isLink,
+  });
   const variant = getVariant({ color, outline, plain });
 
-  if ("href" in props && typeof props.href === "string") {
+  if (isLink) {
     const { href, ...linkProps } = props;
     return (
       <Link

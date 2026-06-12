@@ -224,6 +224,7 @@ export function EmployeeList() {
                 <Trans>Organizational Unit</Trans>
               </FieldLabel>
               <OrganizationalUnitPicker
+                id="employee-organizational-unit"
                 units={organizationalUnits}
                 value={filters.organizational_unit_id ?? ""}
                 onChange={(unitId) =>

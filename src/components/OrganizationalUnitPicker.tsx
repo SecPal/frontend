@@ -107,6 +107,8 @@ function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
 export interface OrganizationalUnitPickerProps {
   /** Available organizational units */
   units: OrganizationalUnit[];
+  /** ID applied to the select trigger for label association */
+  id?: string;
   /** Currently selected unit ID (empty string for "All Units") */
   value: string;
   /** Callback when selection changes */
@@ -131,6 +133,7 @@ export interface OrganizationalUnitPickerProps {
  */
 export function OrganizationalUnitPicker({
   units,
+  id,
   value,
   onChange,
   disabled = false,
@@ -195,6 +198,7 @@ export function OrganizationalUnitPicker({
       disabled={disabled}
     >
       <SelectTrigger
+        id={id}
         aria-label={ariaLabel || t`Select organizational unit`}
         className="min-h-10"
       >
