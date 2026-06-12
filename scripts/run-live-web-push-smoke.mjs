@@ -5,9 +5,10 @@ import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { promisify } from "node:util";
 
+import { hasResolvableWorkspacePreviewTarget } from "./polyscope-workspace.mjs";
+
 const execFileAsync = promisify(execFile);
 
-const PLAYWRIGHT_BASE_URL = process.env.PLAYWRIGHT_BASE_URL?.trim() ?? "";
 const CHROME_PATH = process.env.CHROME_PATH?.trim() ?? "";
 const DISPLAY = process.env.DISPLAY?.trim() ?? "";
 const WAYLAND_DISPLAY = process.env.WAYLAND_DISPLAY?.trim() ?? "";
@@ -108,9 +109,9 @@ async function startVirtualDisplay() {
 }
 
 async function main() {
-  if (!/^https:\/\//.test(PLAYWRIGHT_BASE_URL)) {
+  if (!hasResolvableWorkspacePreviewTarget()) {
     fail(
-      "PLAYWRIGHT_BASE_URL must be set to an https:// app URL before running test:e2e:live:web-push"
+      "test:e2e:live:web-push must run inside a Polyscope workspace clone (under ~/.polyscope/clones/<id>/<workspace>) or with PLAYWRIGHT_BASE_URL set to a workspace-preview frontend URL (https://frontend-<workspace>.preview.secpal.dev) or canonical workspace preview URL (https://<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
     );
   }
 

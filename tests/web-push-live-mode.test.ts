@@ -14,7 +14,7 @@ describe("web push live mode", () => {
     vi.resetModules();
   });
 
-  it("skips when no remote HTTPS deployment target is selected", async () => {
+  it("skips when no Polyscope workspace preview is selected", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
@@ -28,25 +28,47 @@ describe("web push live mode", () => {
       baseUrl: "http://localhost:5173",
       apiBaseUrl: undefined,
       skipReason:
-        "Live browser Web Push smoke requires an HTTPS deployment target via PLAYWRIGHT_BASE_URL or the current Polyscope workspace preview.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
     });
   });
 
-  it("skips when live web push mode was not explicitly opted in", async () => {
+  it("skips when an explicit non-workspace HTTPS deployment target is selected", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
-    vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "");
+    vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "1");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     mockNonPolyscopeCwd();
 
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
+    // Pure live targets such as `app.secpal.dev` are no longer part of the
+    // Polyscope E2E surface (issue #1199), so they are short-circuited at the
+    // workspace-preview gate before the explicit opt-in flag is even checked.
+    // The explicit `PLAYWRIGHT_API_BASE_URL` override is still passed through
+    // verbatim because operators may legitimately need that for diagnostics.
     expect(getLiveWebPushMode()).toEqual({
       baseUrl: "https://app.secpal.dev",
       apiBaseUrl: "https://api.secpal.dev",
       skipReason:
-        "Live browser Web Push smoke requires PLAYWRIGHT_LIVE_WEB_PUSH=1 to avoid accidental registration changes on shared deployments.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
+    });
+  });
+
+  it("skips when live web push mode was not explicitly opted in on a workspace preview", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+
+    const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
+
+    expect(getLiveWebPushMode()).toEqual({
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
+      skipReason:
+        "Live browser Web Push smoke requires PLAYWRIGHT_LIVE_WEB_PUSH=1 to avoid accidental registration changes on the workspace preview.",
     });
   });
 
@@ -67,60 +89,40 @@ describe("web push live mode", () => {
     });
   });
 
-  it("requires an explicit API origin for non-canonical HTTPS deployment targets", async () => {
+  it("requires a stable Chrome or Chromium binary on the workspace preview", async () => {
     vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://demo.example.invalid");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "1");
-    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-    mockNonPolyscopeCwd();
-
-    const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
-
-    expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://demo.example.invalid",
-      apiBaseUrl: undefined,
-      skipReason:
-        "Live browser Web Push smoke could not resolve the API origin for https://demo.example.invalid. Set PLAYWRIGHT_API_BASE_URL to the matching HTTPS API deployment.",
-    });
-  });
-
-  it("requires a stable Chrome or Chromium binary for live web push mode", async () => {
-    vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
-    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
-    vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "1");
     vi.stubEnv("CHROME_PATH", "");
-    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-    mockNonPolyscopeCwd();
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
 
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://app.secpal.dev",
-      apiBaseUrl: "https://api.secpal.dev",
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
       skipReason:
-        "Live browser Web Push smoke against https://app.secpal.dev requires CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on live HTTPS targets.",
+        "Live browser Web Push smoke against https://frontend-grumpy-lynx.preview.secpal.dev requires CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on HTTPS targets.",
     });
   });
 
-  it("rejects the bundled Playwright Chromium snapshot for live web push mode", async () => {
+  it("rejects the bundled Playwright Chromium snapshot on the workspace preview", async () => {
     vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
-    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIVE_WEB_PUSH", "1");
     vi.stubEnv(
       "CHROME_PATH",
       "/home/runner/.cache/ms-playwright/chromium-1234/chrome-linux/chrome"
     );
-    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-    mockNonPolyscopeCwd();
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
 
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://app.secpal.dev",
-      apiBaseUrl: "https://api.secpal.dev",
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live browser Web Push smoke requires CHROME_PATH to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.",
     });

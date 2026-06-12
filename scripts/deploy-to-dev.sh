@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 # SPDX-License-Identifier: CC0-1.0
 
 # Deploy Performance Optimizations to app.secpal.dev
@@ -41,8 +41,8 @@ echo "   - Check DevTools → Network → JS files"
 echo "   - Verify code splitting (multiple chunks)"
 echo "   - Run Lighthouse audit"
 echo ""
-echo "7. Test performance:"
-echo "   npm run test:e2e:staging -- --grep 'performance'"
+echo "7. Test performance against the current Polyscope workspace preview:"
+echo "   npm run test:e2e:performance:workspace"
 echo ""
 
 read -p "Connect to Uberspace now? (y/n) " -n 1 -r

@@ -8,8 +8,6 @@ import {
 
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
-const LIVE_FRONTEND_ORIGIN = "https://app.secpal.dev";
-const LIVE_API_ORIGIN = "https://api.secpal.dev";
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:5173";
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
@@ -171,12 +169,6 @@ export function resolvePlaywrightApiBaseUrl(
     );
   }
 
-  if (
-    configuredBaseUrl &&
-    getUrlOrigin(configuredBaseUrl) === LIVE_FRONTEND_ORIGIN
-  ) {
-    return LIVE_API_ORIGIN;
-  }
   return undefined;
 }
 
@@ -190,12 +182,4 @@ export function isWorkspacePreviewTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
   return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
-}
-
-export function isLiveRemoteTarget(
-  baseUrl = resolvePlaywrightBaseUrl()
-): boolean {
-  return (
-    isRemotePlaywrightTarget(baseUrl) && !isWorkspacePreviewTarget(baseUrl)
-  );
 }

@@ -68,24 +68,23 @@ describe("performance audit mode", () => {
     });
   });
 
-  it("skips live Lighthouse audits unless they are explicitly opted in", async () => {
+  it("skips Polyscope-detected workspace preview Lighthouse audits unless they are explicitly opted in via PLAYWRIGHT_LIVE_LIGHTHOUSE", async () => {
     vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_LIGHTHOUSE", "1");
     vi.stubEnv("PLAYWRIGHT_LIVE_LIGHTHOUSE", "");
-    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-    mockNonPolyscopeCwd();
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
     vi.resetModules();
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditMode()).toEqual({
-      baseUrl: "https://app.secpal.dev",
+      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live Lighthouse audits require PLAYWRIGHT_LIVE_LIGHTHOUSE=1 until issue #957 is resolved.",
     });
   });
 
-  it("skips workspace preview Lighthouse audits unless they are explicitly opted in", async () => {
+  it("skips explicit workspace preview Lighthouse audits unless they are explicitly opted in via PLAYWRIGHT_LIVE_LIGHTHOUSE", async () => {
     vi.stubEnv("CI", "");
     vi.stubEnv(
       "PLAYWRIGHT_BASE_URL",
@@ -205,9 +204,24 @@ describe("performance audit mode", () => {
     });
   });
 
-  it("uses a relaxed performance threshold for live Lighthouse targets", async () => {
+  it("uses a relaxed performance threshold for HTTPS Lighthouse targets such as Polyscope workspace previews", async () => {
     vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+    vi.resetModules();
+    const { getPerformanceAuditThresholds } =
+      await import("./e2e/performance-mode");
+
+    expect(getPerformanceAuditThresholds()).toEqual({
+      performance: 85,
+      accessibility: 90,
+      "best-practices": 90,
+    });
+  });
+
+  it("keeps strict default Lighthouse thresholds for local HTTPS targets (e.g. *.ddev.site)", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://frontend.ddev.site");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     mockNonPolyscopeCwd();
     vi.resetModules();
@@ -215,7 +229,7 @@ describe("performance audit mode", () => {
       await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditThresholds()).toEqual({
-      performance: 85,
+      performance: 90,
       accessibility: 90,
       "best-practices": 90,
     });

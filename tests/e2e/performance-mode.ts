@@ -3,8 +3,8 @@
 
 import {
   detectPolyscopeWorkspaceName,
-  isLiveRemoteTarget,
   isRemotePlaywrightTarget,
+  isWorkspacePreviewTarget,
   resolvePlaywrightBaseUrl,
 } from "./target-urls";
 
@@ -51,7 +51,10 @@ export const getConfiguredLighthouseBrowserPath = () => {
 export const getPerformanceAuditThresholds = (
   baseUrl = resolvePlaywrightBaseUrl()
 ) =>
-  isLiveRemoteTarget(baseUrl)
+  // Only Polyscope workspace previews receive the relaxed threshold; local
+  // HTTPS targets such as *.ddev.site keep the stricter default so they
+  // don't mask regressions that CI would catch.
+  isWorkspacePreviewTarget(baseUrl)
     ? LIVE_LIGHTHOUSE_THRESHOLDS
     : DEFAULT_LIGHTHOUSE_THRESHOLDS;
 
