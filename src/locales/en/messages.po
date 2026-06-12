@@ -145,6 +145,10 @@ msgstr "Valid Until"
 msgid "Emergency Contacts"
 msgstr "Emergency Contacts"
 
+#: src/components/OrganizationalUnitTree.tsx
+msgid "Loading organizational structure"
+msgstr "Loading organizational structure"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
@@ -1218,7 +1222,7 @@ msgstr "Verifying..."
 msgid "Documents"
 msgstr "Documents"
 
-#. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
+#. placeholder {0}: formatDateTime( passkey.created_at, i18n.locale )
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Added {0}"
 msgstr "Added {0}"
@@ -3452,7 +3456,6 @@ msgstr "Create a new root organizational unit."
 msgid "Onboarding Invitation"
 msgstr "Onboarding Invitation"
 
-#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Login.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Loading"

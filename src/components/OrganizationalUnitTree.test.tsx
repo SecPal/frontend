@@ -249,7 +249,32 @@ describe("OrganizationalUnitTree", () => {
     );
   });
 
-  it("renders loading state initially", () => {
+  it("renders the tree header and a section skeleton while initially loading", () => {
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: [],
+      rootUnitIds: [],
+      loading: true,
+    });
+
+    renderWithI18n(<OrganizationalUnitTree onCreate={vi.fn()} />);
+
+    expect(
+      screen.getByRole("heading", { name: /my organization/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add root unit/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", {
+        name: /loading organizational structure/i,
+      })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("tree")).not.toBeInTheDocument();
+    expect(document.querySelector(".animate-spin")).not.toBeInTheDocument();
+  });
+
+  it("keeps cached tree data visible during a refresh", () => {
     vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
       ...mockHookResponse,
       loading: true,
@@ -257,8 +282,13 @@ describe("OrganizationalUnitTree", () => {
 
     renderWithI18n(<OrganizationalUnitTree />);
 
-    // Loading spinner should be visible
-    expect(document.querySelector(".animate-spin")).toBeInTheDocument();
+    expect(screen.getByRole("tree")).toBeInTheDocument();
+    expect(screen.getByText("Test Company")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", {
+        name: /loading organizational structure/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("renders organizational units after loading", async () => {

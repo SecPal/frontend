@@ -94,6 +94,36 @@ describe("OrganizationPage", () => {
     });
   });
 
+  it("keeps the page frame and tree controls visible while units initially load", () => {
+    vi.mocked(
+      organizationalUnitsHook.useOrganizationalUnitsWithOffline
+    ).mockReturnValue({
+      units: [],
+      loading: true,
+      error: null,
+      isOffline: false,
+      isStale: false,
+      rootUnitIds: [],
+      lastSynced: null,
+      refresh: vi.fn(),
+    });
+
+    renderWithProviders(<OrganizationPage />);
+
+    expect(screen.getByText("Organization Structure")).toBeInTheDocument();
+    expect(
+      screen.getByText("Select an organizational unit to view details")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add root unit/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", {
+        name: /loading organizational structure/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("renders page description", async () => {
     renderWithProviders(<OrganizationPage />);
 

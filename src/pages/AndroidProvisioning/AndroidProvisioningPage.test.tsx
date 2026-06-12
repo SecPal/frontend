@@ -134,6 +134,23 @@ describe("AndroidProvisioningPage", () => {
     expect((init!.headers as Headers).get("Accept")).toBe("application/json");
   });
 
+  it("keeps the form and sessions heading visible while sessions initially load", () => {
+    vi.mocked(apiFetch).mockImplementation(() => new Promise(() => {}));
+
+    renderPage();
+
+    expect(
+      screen.getByRole("heading", { name: /android provisioning/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Device label")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /enrollment sessions/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading enrollment sessions/i })
+    ).toBeInTheDocument();
+  });
+
   it("renders human-readable session state and rollout guidance", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ok: true,
@@ -425,6 +442,7 @@ describe("AndroidProvisioningPage", () => {
     expect(
       await screen.findByText("Failed to revoke Android enrollment session")
     ).toBeInTheDocument();
+    expect(screen.getByText("Front desk tablet")).toBeInTheDocument();
 
     promptSpy.mockRestore();
   });

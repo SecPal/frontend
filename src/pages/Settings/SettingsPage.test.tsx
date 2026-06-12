@@ -236,6 +236,34 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps settings sections and controls visible during initial MFA and passkey loads", () => {
+    vi.mocked(authApi.getMfaStatus).mockImplementation(
+      () => new Promise(() => {})
+    );
+    vi.mocked(authApi.getPasskeys).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    expect(
+      screen.getByRole("heading", { name: /settings/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /multi-factor authentication/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading mfa status/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /passkeys/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/passkey label/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading passkeys/i })
+    ).toBeInTheDocument();
+  });
+
   it("loads the generated locale catalogs used by the passkey settings flow", () => {
     expect(Object.keys(deMessages).length).toBeGreaterThan(0);
     expect(Object.keys(enMessages).length).toBeGreaterThan(0);
@@ -349,6 +377,41 @@ describe("SettingsPage", () => {
     });
 
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
+  });
+
+  it("keeps passkey rows visible while refreshing after registration", async () => {
+    vi.mocked(authApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockImplementationOnce(() => new Promise(() => {}));
+    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationChallengeResponse()
+    );
+    vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
+      id: "new-credential-id",
+      raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
+      type: "public-key",
+      response: {
+        client_data_json: "Y2xpZW50",
+        attestation_object: "YXR0ZXN0YXRpb24",
+        transports: ["usb"],
+      },
+    });
+    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
+      createPasskeyRegistrationVerificationResponse()
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(await screen.findByText(/security key/i)).toBeInTheDocument();
+    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading passkeys/i })
+    ).toBeInTheDocument();
   });
 
   it("shows a browser-check prompt while waiting for the credential provider", async () => {

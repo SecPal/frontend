@@ -145,6 +145,10 @@ msgstr "Gültig bis"
 msgid "Emergency Contacts"
 msgstr "Notfallkontakte"
 
+#: src/components/OrganizationalUnitTree.tsx
+msgid "Loading organizational structure"
+msgstr "Organisationsstruktur wird geladen"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Grund für das Scheitern der Einladung"
@@ -1218,7 +1222,7 @@ msgstr "Überprüfen..."
 msgid "Documents"
 msgstr "Dokumente"
 
-#. placeholder {0}: formatDateTime(passkey.created_at, i18n.locale)
+#. placeholder {0}: formatDateTime( passkey.created_at, i18n.locale )
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Added {0}"
 msgstr "Hinzugefügt am {0}"
@@ -3452,7 +3456,6 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 msgid "Onboarding Invitation"
 msgstr "Onboarding-Einladung"
 
-#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Login.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Loading"

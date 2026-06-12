@@ -163,7 +163,7 @@ describe("ActivityLogList", () => {
     expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 
-  it("should display loading state", () => {
+  it("keeps filters and table headers visible during the initial load", () => {
     vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
@@ -173,7 +173,39 @@ describe("ActivityLogList", () => {
 
     renderWithProviders();
 
+    expect(
+      screen.getByRole("heading", { name: /activity logs/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/search in descriptions/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /date\/time/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /description/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /refresh/i })
+    ).toBeInTheDocument();
     expect(screen.getByText(/loading activity logs/i)).toBeInTheDocument();
+  });
+
+  it("keeps existing rows visible during manual refresh", async () => {
+    renderWithProviders();
+
+    expect(await screen.findByText("User logged in")).toBeInTheDocument();
+
+    vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /refresh/i }));
+
+    expect(screen.getByText("User logged in")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading activity logs/i })
+    ).toBeInTheDocument();
   });
 
   it("should display error message on fetch failure", async () => {

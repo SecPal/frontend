@@ -28,11 +28,13 @@ import {
   Field,
   FieldLabel,
   Input,
+  LoadingRegion,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   cn,
 } from "@/ui";
 import {
@@ -99,6 +101,44 @@ function MutedText({ className, ...props }: ComponentPropsWithoutRef<"p">) {
       className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)}
       {...props}
     />
+  );
+}
+
+function EnrollmentSessionSkeletonList({
+  loadingLabel,
+}: {
+  loadingLabel: string;
+}) {
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      className="space-y-3"
+    >
+      <span className="sr-only">{loadingLabel}</span>
+      {Array.from({ length: 3 }, (_, index) => (
+        <div
+          key={index}
+          className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+          aria-hidden="true"
+        >
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-4 w-48 max-w-full" />
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <Skeleton className="h-4 w-80 max-w-full" />
+            </div>
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -221,6 +261,7 @@ export default function AndroidProvisioningPage() {
 
   const canCreate = capabilities.actions.androidProvisioning.create;
   const canRevoke = capabilities.actions.androidProvisioning.revoke;
+  const sessionsLoadingLabel = _(msg`Loading enrollment sessions...`);
 
   useEffect(() => {
     let active = true;
@@ -453,10 +494,10 @@ export default function AndroidProvisioningPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {loading ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>Loading enrollment sessions...</Trans>
-              </p>
+            {loading && sessions.length === 0 ? (
+              <EnrollmentSessionSkeletonList
+                loadingLabel={sessionsLoadingLabel}
+              />
             ) : null}
             {!loading && sessions.length === 0 ? (
               <p className="text-sm text-zinc-600 dark:text-zinc-300">
@@ -466,60 +507,67 @@ export default function AndroidProvisioningPage() {
               </p>
             ) : null}
 
-            {!loading ? (
-              <div className="space-y-3">
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="flex flex-col gap-3 rounded-md border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                        {session.device_label ||
-                          _(msg`Unnamed Android enrollment session`)}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={getStatusBadgeClass(session.status)}>
-                          {getStatusLabel(session.status, _)}
-                        </Badge>
+            {sessions.length > 0 ? (
+              <LoadingRegion
+                loading={loading}
+                loadingLabel={sessionsLoadingLabel}
+              >
+                <div className="space-y-3">
+                  {sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="flex flex-col gap-3 rounded-md border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                          {session.device_label ||
+                            _(msg`Unnamed Android enrollment session`)}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            className={getStatusBadgeClass(session.status)}
+                          >
+                            {getStatusLabel(session.status, _)}
+                          </Badge>
+                          <MutedText>
+                            {getChannelLabel(session.update_channel, _)}
+                          </MutedText>
+                          <MutedText>
+                            <Trans>Expires</Trans>:{" "}
+                            {formatDateTime(session.bootstrap_token_expires_at)}
+                          </MutedText>
+                        </div>
                         <MutedText>
-                          {getChannelLabel(session.update_channel, _)}
+                          {getStatusGuidance(session.status, _)}
                         </MutedText>
-                        <MutedText>
-                          <Trans>Expires</Trans>:{" "}
-                          {formatDateTime(session.bootstrap_token_expires_at)}
-                        </MutedText>
+                        {session.revocation_reason ? (
+                          <MutedText>
+                            <Trans>Reason</Trans>: {session.revocation_reason}
+                          </MutedText>
+                        ) : null}
                       </div>
-                      <MutedText>
-                        {getStatusGuidance(session.status, _)}
-                      </MutedText>
-                      {session.revocation_reason ? (
-                        <MutedText>
-                          <Trans>Reason</Trans>: {session.revocation_reason}
-                        </MutedText>
-                      ) : null}
-                    </div>
 
-                    {canRevoke && session.status === "pending" ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => void handleRevoke(session)}
-                      >
-                        <RotateCcw className="size-4" aria-hidden="true" />
-                        <Trans>Revoke</Trans>
-                      </Button>
-                    ) : (
-                      <MutedText>
-                        {session.revoked_at ? (
-                          <Trans>Revoked</Trans>
-                        ) : (
-                          <Trans>No action available</Trans>
-                        )}
-                      </MutedText>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      {canRevoke && session.status === "pending" ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => void handleRevoke(session)}
+                        >
+                          <RotateCcw className="size-4" aria-hidden="true" />
+                          <Trans>Revoke</Trans>
+                        </Button>
+                      ) : (
+                        <MutedText>
+                          {session.revoked_at ? (
+                            <Trans>Revoked</Trans>
+                          ) : (
+                            <Trans>No action available</Trans>
+                          )}
+                        </MutedText>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </LoadingRegion>
             ) : null}
           </CardContent>
         </Card>

@@ -28,11 +28,13 @@ import {
   Field,
   FieldLabel,
   Input,
+  LoadingRegion,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   cn,
 } from "@/ui";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
@@ -65,6 +67,45 @@ function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
       )}
       {...props}
     />
+  );
+}
+
+function ActivityTableSkeletonRows({
+  columns,
+  rows,
+}: {
+  columns: number;
+  rows: number;
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, rowIndex) => (
+        <tr key={rowIndex}>
+          {Array.from({ length: columns }, (_, columnIndex) => (
+            <td
+              key={columnIndex}
+              className={cn(
+                "px-4 py-3",
+                columnIndex === 2 ? "hidden md:table-cell" : "",
+                columnIndex === 3 ? "hidden lg:table-cell" : "",
+                columnIndex === 4 ? "hidden xl:table-cell" : ""
+              )}
+            >
+              <Skeleton
+                className={cn(
+                  "h-4",
+                  columnIndex === 1
+                    ? "w-56 max-w-full"
+                    : columnIndex === columns - 1
+                      ? "w-12"
+                      : "w-28 max-w-full"
+                )}
+              />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
   );
 }
 
@@ -162,7 +203,7 @@ export function ActivityLogList() {
         }
 
         setError(errorMessage);
-        setActivities([]);
+        setActivities((current) => (current.length > 0 ? current : []));
       })
       .finally(() => {
         setLoading(false);
@@ -218,7 +259,7 @@ export function ActivityLogList() {
         }
 
         setError(errorMessage);
-        setActivities([]);
+        setActivities((current) => (current.length > 0 ? current : []));
       })
       .finally(() => {
         if (active) {
@@ -301,15 +342,9 @@ export function ActivityLogList() {
     // Intentionally keep selectedActivity; ActivityDetailDialog resets its internal state when it opens.
   }
 
-  if (loading && activities.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-sm text-zinc-600 dark:text-zinc-300">
-          <Trans>Loading activity logs...</Trans>
-        </p>
-      </div>
-    );
-  }
+  const showInitialActivitySkeleton = loading && activities.length === 0;
+  const showActivityRows = activities.length > 0;
+  const activityTableLoadingLabel = _(msg`Loading activity logs...`);
 
   return (
     <div>
@@ -334,7 +369,10 @@ export function ActivityLogList() {
               variant="outline"
               title={_(msg`Refresh activity logs`)}
             >
-              <RefreshCw className="size-4" aria-hidden="true" />
+              <RefreshCw
+                className={cn("size-4", loading ? "animate-spin" : "")}
+                aria-hidden="true"
+              />
               <Trans>Refresh</Trans>
             </Button>
             <label
@@ -484,57 +522,61 @@ export function ActivityLogList() {
       )}
 
       {/* Table */}
-      {activities.length === 0 && !loading ? (
-        <div className="text-center py-12">
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            <Trans>No activity logs found.</Trans>
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
-            <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+      <LoadingRegion loading={loading} loadingLabel={activityTableLoadingLabel}>
+        <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
+          <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+            <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                >
+                  <Trans>Date/Time</Trans>
+                </th>
+                <th
+                  scope="col"
+                  className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                >
+                  <Trans>Description</Trans>
+                </th>
+                <th
+                  scope="col"
+                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+                >
+                  <Trans>Log Name</Trans>
+                </th>
+                <th
+                  scope="col"
+                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+                >
+                  <Trans>Causer</Trans>
+                </th>
+                <th
+                  scope="col"
+                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+                >
+                  <Trans>Organizational Unit</Trans>
+                </th>
+                <th scope="col" className="w-20 px-4 py-3">
+                  <span className="sr-only">
+                    <Trans>Verification Status</Trans>
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+              {showInitialActivitySkeleton ? (
+                <ActivityTableSkeletonRows columns={6} rows={5} />
+              ) : !showActivityRows ? (
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                  >
-                    <Trans>Date/Time</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                  >
-                    <Trans>Description</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Log Name</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Causer</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Organizational Unit</Trans>
-                  </th>
-                  <th scope="col" className="w-20 px-4 py-3">
-                    <span className="sr-only">
-                      <Trans>Verification Status</Trans>
-                    </span>
-                  </th>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                      <Trans>No activity logs found.</Trans>
+                    </p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
-                {activities.map((activity) => (
+              ) : (
+                activities.map((activity) => (
                   <tr
                     key={activity.id}
                     className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
@@ -571,37 +613,37 @@ export function ActivityLogList() {
                       />
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Pagination */}
-          {pagination.last_page > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <Button
-                variant="outline"
-                disabled={pagination.current_page === 1}
-                onClick={() => handlePageChange(pagination.current_page - 1)}
-              >
-                <Trans>Previous</Trans>
-              </Button>
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>
-                  Page {pagination.current_page} of {pagination.last_page}
-                </Trans>
-              </p>
-              <Button
-                variant="outline"
-                disabled={pagination.current_page === pagination.last_page}
-                onClick={() => handlePageChange(pagination.current_page + 1)}
-              >
-                <Trans>Next</Trans>
-              </Button>
-            </div>
-          )}
-        </>
-      )}
+        {/* Pagination */}
+        {pagination.last_page > 1 && showActivityRows && (
+          <div className="mt-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              disabled={pagination.current_page === 1}
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+            >
+              <Trans>Previous</Trans>
+            </Button>
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
+              <Trans>
+                Page {pagination.current_page} of {pagination.last_page}
+              </Trans>
+            </p>
+            <Button
+              variant="outline"
+              disabled={pagination.current_page === pagination.last_page}
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+            >
+              <Trans>Next</Trans>
+            </Button>
+          </div>
+        )}
+      </LoadingRegion>
 
       {/* Detail Dialog */}
       {selectedActivity && (
