@@ -293,19 +293,20 @@ describe("auth E2E helpers", () => {
       ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
 
-    it("returns the standard onboarding user for remote live onboarding without TEST_USER_*", () => {
-      const result = getConfiguredTestUserOrThrow(
-        {
-          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
-          PLAYWRIGHT_LIVE_ONBOARDING: "1",
-        },
-        "https://app.secpal.dev"
-      );
-
-      expect(result).toEqual({
-        email: "onboarding@example.com",
-        password: "password",
-      });
+    it("throws on a non-workspace remote with live onboarding but no TEST_USER_*", () => {
+      // Pure live targets such as `app.secpal.dev` are not part of the
+      // Polyscope E2E surface (issue #1199); the seeded onboarding fallback
+      // user is workspace-preview-only, so silently injecting it against a
+      // production host would be a security risk.
+      expect(() =>
+        getConfiguredTestUserOrThrow(
+          {
+            PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
+            PLAYWRIGHT_LIVE_ONBOARDING: "1",
+          },
+          "https://app.secpal.dev"
+        )
+      ).toThrow("TEST_USER_EMAIL and TEST_USER_PASSWORD must be set");
     });
 
     it("returns the standard onboarding user for workspace preview live onboarding without TEST_USER_*", () => {
