@@ -122,24 +122,17 @@ export function buildTestUser(
   };
 }
 
+// `buildTestUser` either throws (for non-workspace remote targets without
+// TEST_USER_*) or returns non-empty credentials (local development,
+// Polyscope workspace preview, configured TEST_USER_* overrides). This
+// helper exists only as a named entry point for call sites that document
+// the throw contract; it intentionally has no additional fallback branch.
 export function getConfiguredTestUserOrThrow(
   env: NodeJS.ProcessEnv = process.env,
   baseUrl?: string
 ): TestUserCredentials {
   const resolvedBase = baseUrl ?? resolvePlaywrightBaseUrl(env);
-  const testUser = buildTestUser(env, resolvedBase);
-
-  if (testUser.email && testUser.password) {
-    return testUser;
-  }
-
-  // Defensive fallback: `buildTestUser` always returns non-empty defaults for
-  // local-development and Polyscope-workspace-preview paths, so this throw
-  // only fires if a caller explicitly sets TEST_USER_EMAIL or TEST_USER_PASSWORD
-  // to a blank string.
-  throw new Error(
-    "TEST_USER_EMAIL and TEST_USER_PASSWORD must not be set to blank strings; leave them unset to rely on the seeded default user for the current target."
-  );
+  return buildTestUser(env, resolvedBase);
 }
 
 function normalizeAuthCacheKeyPart(value: string): string {

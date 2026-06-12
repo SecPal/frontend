@@ -43,10 +43,6 @@ const LIVE_ORGANIZATION_CRUD_ENABLED =
  * `app.secpal.dev` where this seed contract does not hold (see issue #1199).
  */
 const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "Headquarters";
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
-  WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
-  "i"
-);
 
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
@@ -62,6 +58,14 @@ const TARGET_PARENT_NAME = "Northern Region";
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+// Defensive escape so the pattern stays a literal match even if the seeded
+// root unit name ever picks up a regex meta-character. Defined after
+// `escapeRegExp` to avoid temporal-dead-zone confusion.
+const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
+  escapeRegExp(WORKSPACE_PREVIEW_ROOT_UNIT_NAME),
+  "i"
+);
 
 async function cleanupLiveOrganizationalUnit(
   page: Page,
@@ -876,14 +880,19 @@ test.describe("Organization Management", () => {
   });
 
   test.describe("Live organization proof", () => {
+    // Describe-level skip so the `authenticatedPage` fixture (which performs
+    // a real UI login through `auth.setup.ts`) never spins up against a
+    // non-workspace remote. A per-test `test.skip(...)` inside the body would
+    // run AFTER the fixture, leaking login traffic to retired live targets
+    // such as `app.secpal.dev`.
+    test.skip(
+      !isWorkspacePreviewTarget(),
+      `Only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev), where the API workspace's DatabaseSeeder contractually guarantees a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
+    );
+
     test("should show the seeded Headquarters root unit on the Polyscope workspace preview", async ({
       authenticatedPage: page,
     }) => {
-      test.skip(
-        !isWorkspacePreviewTarget(),
-        `Only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev), where the API workspace's DatabaseSeeder contractually guarantees a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
-      );
-
       await page.goto("/organization");
       await page.waitForLoadState("networkidle");
 
@@ -914,10 +923,8 @@ test.describe("Organization Management", () => {
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isWorkspacePreviewTarget() ||
-          !LIVE_ORGANIZATION_CRUD_ENABLED ||
-          testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
+        !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const unitName = `Playwright Live Child ${Date.now()}`;
@@ -999,10 +1006,8 @@ test.describe("Organization Management", () => {
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isWorkspacePreviewTarget() ||
-          !LIVE_ORGANIZATION_CRUD_ENABLED ||
-          testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
+        !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const timestamp = Date.now();
@@ -1064,10 +1069,8 @@ test.describe("Organization Management", () => {
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
-        !isWorkspacePreviewTarget() ||
-          !LIVE_ORGANIZATION_CRUD_ENABLED ||
-          testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Intentionally skipped against pure live targets such as app.secpal.dev where the "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" seed contract does not hold (see issue #1199).`
+        !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const timestamp = Date.now();

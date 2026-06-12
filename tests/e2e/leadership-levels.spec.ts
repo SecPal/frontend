@@ -479,14 +479,22 @@ test.describe("Management level employee flows", () => {
 });
 
 test.describe("Live employee proof", () => {
+  // Describe-level skip so the `authenticatedPage` fixture (which performs a
+  // real UI login through `auth.setup.ts`) never spins up against a
+  // non-workspace remote. A per-test `test.skip(...)` inside the body would
+  // run AFTER the fixture, leaking login traffic to retired live targets
+  // such as `app.secpal.dev`.
+  test.skip(
+    !isWorkspacePreviewTarget(),
+    "Live employee proof only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
+  );
+
   test("creates a non-management employee on the Polyscope workspace preview", async ({
     authenticatedPage: page,
   }, testInfo) => {
     test.skip(
-      !isWorkspacePreviewTarget() ||
-        !LIVE_EMPLOYEE_CRUD_ENABLED ||
-        testInfo.project.name !== "chromium",
-      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
+      !LIVE_EMPLOYEE_CRUD_ENABLED || testInfo.project.name !== "chromium",
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level."
     );
 
     const timestamp = Date.now();
@@ -519,10 +527,8 @@ test.describe("Live employee proof", () => {
     authenticatedPage: page,
   }, testInfo) => {
     test.skip(
-      !isWorkspacePreviewTarget() ||
-        !LIVE_EMPLOYEE_CRUD_ENABLED ||
-        testInfo.project.name !== "chromium",
-      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
+      !LIVE_EMPLOYEE_CRUD_ENABLED || testInfo.project.name !== "chromium",
+      "Set PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1 to run the live employee CRUD proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level."
     );
 
     const timestamp = Date.now();
