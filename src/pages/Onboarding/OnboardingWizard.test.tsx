@@ -3909,7 +3909,10 @@ describe("OnboardingWizard final-submit auto-submits earlier drafts", () => {
       async (id, payload) => ({
         id,
         employee_id: "employee-1",
-        form_template_id: id,
+        form_template_id:
+          id === "submission-addresses"
+            ? "template-addresses"
+            : "template-bank",
         form_data:
           (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
         status:
@@ -4071,7 +4074,8 @@ describe("OnboardingWizard final-submit auto-submits earlier drafts", () => {
       async (id, payload) => ({
         id,
         employee_id: "employee-1",
-        form_template_id: id,
+        form_template_id:
+          id === "submission-tax" ? "template-tax" : "template-bank",
         form_data:
           (payload as { form_data?: Record<string, unknown> }).form_data ?? {},
         status:
@@ -4223,9 +4227,10 @@ describe("OnboardingWizard final-submit auto-submits earlier drafts", () => {
       }
     );
 
-    // The earlier tax step's API submission rejects with a 422, exercising the
-    // error-recovery path that calls the `resolveStepValidationSchema` wrapper
-    // to format a user-facing validation message.
+    // The earlier tax step's API submission rejects with a 422, exercising
+    // the error-recovery path that resolves the failing step's schema via
+    // `resolveStepValidationContext` to format a user-facing validation
+    // message.
     onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
       async (id, payload) => {
         const status =
@@ -4239,7 +4244,8 @@ describe("OnboardingWizard final-submit auto-submits earlier drafts", () => {
         return {
           id,
           employee_id: "employee-1",
-          form_template_id: id,
+          form_template_id:
+            id === "submission-tax" ? "template-tax" : "template-bank",
           form_data:
             (payload as { form_data?: Record<string, unknown> } | undefined)
               ?.form_data ?? {},
