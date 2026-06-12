@@ -1996,10 +1996,6 @@ msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, we
 msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 msgstr "Benachrichtigungen sind an dieses angemeldete Browserprofil und die ausgewählte Deployment-Domain gebunden."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Validating your link..."
-msgstr "Validierung Ihres Links..."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional"
 msgstr "Optional"
@@ -3165,10 +3161,6 @@ msgstr "Diesen Mitarbeiter aktivieren?"
 msgid "Unlocking..."
 msgstr "Wird entsperrt..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Loading onboarding..."
-msgstr "Onboarding laden..."
-
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Search by name or email..."
 msgstr "Suche nach Name oder E-Mail..."
@@ -3325,6 +3317,10 @@ msgstr "Melden Sie sich erneut an, bevor SecPal diesen Browser mit dem Server sy
 msgid "Saving passkey…"
 msgstr "Passkey speichern …"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Validating onboarding link"
+msgstr ""
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -3388,6 +3384,10 @@ msgstr "BWR-Status speichern"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Freelance"
 msgstr "Freiberuflich"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Loading onboarding"
+msgstr ""
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."

@@ -1996,10 +1996,6 @@ msgstr "Based on the selected nationality, please specify which valid German res
 msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 msgstr "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 
-#: src/pages/Onboarding/OnboardingComplete.tsx
-msgid "Validating your link..."
-msgstr "Validating your link..."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional"
 msgstr "Optional"
@@ -3165,10 +3161,6 @@ msgstr "Activate this employee?"
 msgid "Unlocking..."
 msgstr "Unlocking..."
 
-#: src/pages/Onboarding/OnboardingWizard.tsx
-msgid "Loading onboarding..."
-msgstr "Loading onboarding..."
-
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Search by name or email..."
 msgstr "Search by name or email..."
@@ -3325,6 +3317,10 @@ msgstr "Sign in again before SecPal can sync this browser with the server."
 msgid "Saving passkey…"
 msgstr "Saving passkey…"
 
+#: src/pages/Onboarding/OnboardingComplete.tsx
+msgid "Validating onboarding link"
+msgstr "Validating onboarding link"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -3388,6 +3384,10 @@ msgstr "Save BWR Status"
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Freelance"
 msgstr "Freelance"
+
+#: src/pages/Onboarding/OnboardingWizard.tsx
+msgid "Loading onboarding"
+msgstr "Loading onboarding"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."

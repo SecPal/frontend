@@ -35,6 +35,34 @@ describe("OnboardingComplete", () => {
     });
   });
 
+  it("keeps the completion card mounted while validating the onboarding link", () => {
+    onboardingApiMocks.validateOnboardingToken.mockImplementation(
+      () => new Promise(() => undefined)
+    );
+
+    render(
+      <MemoryRouter
+        initialEntries={["/?token=test-token&email=new.guard%40example.com"]}
+      >
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route path="/" element={<OnboardingComplete />} />
+          </Routes>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /secpal/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /validating onboarding link/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/validating your link\.\.\./i)
+    ).not.toBeInTheDocument();
+  });
+
   it("fails closed when onboarding completion omits email_verified", async () => {
     onboardingApiMocks.completeOnboarding.mockResolvedValue({
       data: {

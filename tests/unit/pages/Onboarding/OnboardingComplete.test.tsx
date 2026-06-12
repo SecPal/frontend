@@ -439,7 +439,12 @@ describe("OnboardingComplete", () => {
       "/onboarding/complete?token=abc&email=test@secpal.dev"
     );
 
-    expect(screen.getByText(/validating your link/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /validating onboarding link/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/validating your link/i)
+    ).not.toBeInTheDocument();
     expectOnboardingAuthFrame();
   });
 

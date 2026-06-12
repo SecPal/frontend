@@ -4312,7 +4312,7 @@ describe("OnboardingWizard initial loading and error states", () => {
     i18n.activate("en");
   });
 
-  it("announces the initial loading state on the inner CardContent (not the outer Card)", () => {
+  it("renders the initial onboarding skeleton inside the wizard frame", () => {
     let resolveSteps: (value: unknown[]) => void = () => {};
     onboardingApiMocks.fetchOnboardingSteps.mockImplementation(
       () =>
@@ -4324,14 +4324,213 @@ describe("OnboardingWizard initial loading and error states", () => {
 
     renderWithProviders();
 
-    const loadingRegion = screen.getByRole("status");
-    expect(loadingRegion).toHaveTextContent(/loading onboarding/i);
+    expect(
+      screen.getByRole("heading", { name: /welcome to secpal onboarding/i })
+    ).toBeInTheDocument();
+    const loadingRegion = screen.getByRole("status", {
+      name: /loading onboarding/i,
+    });
     expect(loadingRegion).toHaveAttribute("aria-live", "polite");
-    // The role/aria-live must live on the inner CardContent, not the outer Card,
-    // so a region landmark is not promoted on the surrounding container.
+    expect(
+      screen.queryByText(/loading onboarding\.\.\./i)
+    ).not.toBeInTheDocument();
     expect(loadingRegion.tagName.toLowerCase()).toBe("div");
 
     resolveSteps([]);
+  });
+
+  it("keeps the wizard frame mounted while a step transition loads the next template", async () => {
+    const user = userEvent.setup();
+    let resolveNextTemplate: (value: unknown) => void = () => {};
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Personal Information",
+        description: "Tell us who you are.",
+        template_id: "template-1",
+        is_required: true,
+        is_completed: false,
+        submission: {
+          id: "submission-1",
+          employee_id: "employee-1",
+          form_template_id: "template-1",
+          form_data: {},
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+      {
+        step_number: 2,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-2",
+        is_required: false,
+        is_completed: false,
+        submission: null,
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockImplementation(
+      (templateId: string) => {
+        if (templateId === "template-1") {
+          return Promise.resolve({
+            id: "template-1",
+            name: "Personal Information",
+            title: "Personal Information",
+            description: "Tell us who you are.",
+            form_schema: {
+              type: "object",
+              required: [],
+              properties: {
+                birth_name: { type: "string", title: "Birth Name" },
+              },
+            },
+            is_required: true,
+            is_system_template: true,
+            sort_order: 1,
+            can_be_deleted: false,
+            can_be_edited: false,
+          });
+        }
+
+        return new Promise((resolve) => {
+          resolveNextTemplate = resolve;
+        });
+      }
+    );
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    onboardingApiMocks.updateOnboardingSubmission.mockResolvedValue({
+      id: "submission-1",
+      employee_id: "employee-1",
+      form_template_id: "template-1",
+      form_data: {},
+      status: "draft",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information/i })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(
+      screen.getByRole("heading", { name: /welcome to secpal onboarding/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/step 2 of 2/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading onboarding/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/loading onboarding\.\.\./i)
+    ).not.toBeInTheDocument();
+
+    resolveNextTemplate({
+      id: "template-2",
+      name: "Bank Account Details",
+      title: "Bank Account Details",
+      description: "Salary payment.",
+      form_schema: {
+        type: "object",
+        required: [],
+        properties: {
+          iban: { type: "string", title: "IBAN" },
+        },
+      },
+      is_required: false,
+      is_system_template: true,
+      sort_order: 2,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the current onboarding form mounted while saving a draft", async () => {
+    const user = userEvent.setup();
+    let resolveSave: (value: unknown) => void = () => {};
+
+    onboardingApiMocks.fetchOnboardingSteps.mockResolvedValue([
+      {
+        step_number: 1,
+        title: "Bank Account Details",
+        description: "Salary payment.",
+        template_id: "template-bank",
+        is_required: false,
+        is_completed: false,
+        submission: {
+          id: "submission-bank",
+          employee_id: "employee-1",
+          form_template_id: "template-bank",
+          form_data: { iban: "DE123" },
+          status: "draft",
+          created_at: "2026-04-30T00:00:00Z",
+          updated_at: "2026-04-30T00:00:00Z",
+        },
+      },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValue({
+      id: "template-bank",
+      name: "Bank Account Details",
+      title: "Bank Account Details",
+      description: "Bank info",
+      form_schema: {
+        type: "object",
+        required: [],
+        properties: {
+          iban: { type: "string", title: "IBAN" },
+        },
+      },
+      is_required: false,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([]);
+    onboardingApiMocks.updateOnboardingSubmission.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+
+    renderWithProviders();
+
+    const ibanInput = await screen.findByLabelText(/iban/i);
+    await user.clear(ibanInput);
+    await user.type(ibanInput, "DE456");
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+
+    expect(
+      screen.getByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/iban/i)).toHaveValue("DE456");
+    expect(screen.getByRole("button", { name: /save draft/i })).toBeDisabled();
+    expect(
+      screen.queryByRole("status", { name: /loading onboarding/i })
+    ).not.toBeInTheDocument();
+
+    resolveSave({
+      id: "submission-bank",
+      employee_id: "employee-1",
+      form_template_id: "template-bank",
+      form_data: { iban: "DE456" },
+      status: "draft",
+      created_at: "2026-04-30T00:00:00Z",
+      updated_at: "2026-04-30T00:00:00Z",
+    });
+
+    expect(
+      await screen.findByText(/draft saved\. you can continue later\./i)
+    ).toBeInTheDocument();
   });
 
   it("focuses the top-level error alert when steps fail to load", async () => {
